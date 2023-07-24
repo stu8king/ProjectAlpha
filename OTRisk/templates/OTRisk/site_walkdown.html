@@ -1,0 +1,145 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <link href="{% static 'css/menus.css' %}" rel="stylesheet">
+    <link href="{% static 'css/workflow.css' %}" rel="stylesheet">
+    <style>
+
+</style>
+<body>
+<script>openTab(1, "ICS Physical Security")</script>
+    <div class="top-menu">
+        <ul>
+            <li><a href="#">Home</a></li>
+            <li><a href="#">Assessments</a></li>
+            <li><a href="#">Workshops</a></li>
+            <li><a href="#">Walkthroughs</a></li>
+            <li><a href="#">Reports</a></li>
+        </ul>
+    </div>
+    <div class="container">
+    <div class="workflow">
+        <table cellpadding="10">
+            <tr>
+                <td>
+                    <div class="workflow-step">Step 1</div>
+                </td>
+                <td>
+                    <div class="workflow-step ">Step 2</div>
+                </td>
+                <td>
+                    <div class="workflow-step">Step 3</div>
+                </td>
+                <td>
+                    <div class="workflow-step active">Step 4</div>
+                </td>
+                <td>
+                    <div class="workflow-step">Step 5</div>
+
+                </td>
+                <td>
+                    <div class="workflow-step">Step 6</div>
+                </td>
+                <td>
+                    <div class="workflow-step">Step 7</div>
+                </td>
+                <td>
+                    <div class="workflow-step">Step 8</div>
+                </td>
+                <td>
+                    <div class="workflow-step">Step 9</div>
+                </td>
+            </tr>
+            <tr>
+                <td align="center">
+                    CyberPHA Set-Up
+                </td>
+                <td align="center">
+                    Team Members
+                </td>
+                <td align="center">
+                    Threat Assessment
+                </td>
+                <td align="center">
+                    Site Walkdown
+                </td>
+                <td align="center">
+                    <a href="{% url 'OTRisk:workshop_setup' %}">Workshop</a>
+                </td>
+                <td align="center">
+                    Scenarios
+                </td>
+                <td align="center">
+                    Risk Assessment
+                </td>
+                <td align="center">
+                    Actions
+                </td>
+                <td align="center">
+                    Reports
+                </td>
+            </tr>
+        </table>
+    </div>
+    </div>
+    <h1>Site Walkdown Questionnaire</h1>
+
+    <H1>Session {{ request.session.post_id  }}</H1>
+    <div id="tabs">
+        <table width="50%"><tr>
+        <td>
+        {% for category in categories %}
+        <button class="tab-button" onclick="openTab(event, '{{ category }}')">{{ category }}</button>
+        {% endfor %}
+        </td>
+        </tr></table>
+    </div>
+
+    {% for category in categories %}
+    <div id="{{ category }}" class="tab-content">
+        <table border="1">
+            <tr>
+                <th>Question</th>
+                <th>Question</th>
+                <th>Guidance</th>
+                <th>User Response</th>
+                <th>Details</th>
+                <th></th>
+            </tr>
+            {% for questionnaire in questionnaires %}
+            {% if questionnaire.Category == category %}
+            <tr>
+                <td>{{ questionnaire.ID }}</td>
+                <td>{{ questionnaire.WalkdownQuestion }}</td>
+                <td>{{ questionnaire.WalkdownGuidance }}</td>
+                <td><input type="text" id="{{ questionnaire.WalkdownQuestionID }}YesNo"></td>
+                <td><input type="text" id="{{ questionnaire.WalkdownQuestionID }}Details"></td>
+                <td><a href="{% url 'OTRisk:site_walkdown' %}">Link</a></td>
+            </tr>
+            {% endif %}
+            {% endfor %}
+        </table>
+    </div>
+    {% endfor %}
+
+    <script>
+        function openTab(evt, categoryName) {
+            var i, tabContent, tabButton;
+
+            tabContent = document.getElementsByClassName("tab-content");
+            for (i = 0; i < tabContent.length; i++) {
+                tabContent[i].style.display = "none";
+            }
+
+            tabButton = document.getElementsByClassName("tab-button");
+            for (i = 0; i < tabButton.length; i++) {
+                tabButton[i].classList.remove("active");
+            }
+
+            document.getElementById(categoryName).style.display = "block";
+            evt.currentTarget.classList.add("active");
+        }
+    </script>
+</body>
+</html>

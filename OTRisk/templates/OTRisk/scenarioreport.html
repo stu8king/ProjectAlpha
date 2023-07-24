@@ -1,0 +1,260 @@
+{% load static %}
+{% load custom_filters %}
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://kit.fontawesome.com/9d1d9a82d2.js" crossorigin="anonymous"></script>
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.js"></script>
+     <link href="{% static 'css/jquery-gauge.css' %}" rel="stylesheet">
+    <script src="{% static 'OTRisk/jquery-gauge.min.js' %}"></script>
+    {% load bootstrap5 %}
+    {% bootstrap_css %}
+    {% bootstrap_javascript %}
+    <meta charset="UTF-8">
+    <title>CyberPHA Report</title>
+    <style>
+
+        .impactGauge, .impactDangerGauge, .impactProductionGauge, .impactFinanceGauge, .impactReputationGauge, .impactEnvironmentGauge, .impactRegulationGauge, .impactDataGauge {
+            position: relative;
+            width: 8vw;
+            height: 8vw;
+            box-sizing: border-box;
+            float:left;
+            margin:20px
+        }
+
+
+        .gaugebg {
+          background-color: #97979A;
+        }
+        .chartbg {
+          background-color: #97979A;
+        }
+
+          .chart-container {
+            width: 50%;
+            height: 50%;
+            margin: auto;
+          }
+
+</style>
+
+
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#">ARAFOT</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav">
+        <li class="nav-item">
+          <a class="nav-link active" aria-current="page" href="{% url 'OTRisk:risk_assessment' %}">Risk Assessment Worksheet</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'OTRisk:cyber_pha_manager' %}">CyberPHA Manager</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'OTRisk:site_walkdown' %}">Site Walkdown</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'OTRisk:walkdown' %}" tabindex="-1" >New Walkdown</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+<div class="row">
+    <div class="col col-mb-4 text-center"><h4>
+        OT Cyber Risk Assessment for {{ scenarioheader.FacilityName}}<br>
+        Assessment Facility: {{ scenarioheader.FacilityType}}</h4>
+ </div>
+    <div class="col col-mb-4 text-center" >
+        Assessment unit: {{ scenarioheader.AssessmentUnit}}<br>
+        Assessment zone: {{ scenarioheader.AssessmentZone}}<br>
+        Assessment node: {{ scenarioheader.AssessmentNode}}
+</div>
+  <div class="col col-mb-4 text-center">
+      Assessment Leader: {{ scenarioheader.PHALeader}}<br>
+        Leader Email: {{ scenarioheader.PHALeaderEmail }}<br>
+        Facility Leader: {{ scenarioheader.FacilityOwner }}<br>
+
+
+    </div>
+<br>
+
+
+    <div class="row text-center ">
+
+
+        <div class="col-md-6 align-content-center text-center gaugebg">
+            <h5>Business Impact Analysis</h5><h6>(all scenarios considered)</h6>
+            <br>
+            <div class="row">
+                <div class="col-md-3">
+                    Safety
+                    <div class="gauge1 impactGauge" id="impactGauge"></div>
+                </div>
+                <div class="col-md-3">
+                    Danger to Life
+                    <div class="gauge2 impactDangerGauge" id="impactDangerGauge"></div>
+                </div>
+                <div class="col-md-3">
+                    Output and Ops
+                    <div class="gauge impactProductionGauge" id="impactProductionGauge"></div>
+                </div>
+                <div class="col-md-3">
+                    Financial
+                    <div class="gauge impactFinanceGauge" id="impactFinanceGauge"></div><br>
+                </div>
+            </div>
+            <div class="row">
+                    <div class="col-md-3">
+                    Regulation
+                    <div class="gauge1 impactRegulationGauge" id="impactRegulationGauge"></div>
+                </div>
+                <div class="col-md-3">
+                    Environment
+                    <div class="gauge2 impactEnvironmentGauge" id="impactEnvironmentGauge"></div>
+                </div>
+                <div class="col-md-3">
+                    Reputation
+                    <div class="gauge impactReputationGauge" id="impactReputationGauge"></div>
+                </div>
+                <div class="col-md-3">
+                    Data and IP
+                    <div class="gauge impactDataGauge" id="impactDataGauge"></div><br>
+                </div>
+            </div>
+
+    </div>
+    <div class="col-md-6 align-content-center text-center chartbg d-flex align-content-center align-items-center">
+        <div class="card chart-container">
+          <canvas id="chart"></canvas>
+        </div>
+
+    </div>
+
+    </div>
+
+
+
+
+
+    <div class="row">
+    <div class="col">
+        <table class="table align-middle table-striped table-sm small">
+            <thead>
+                <tr>
+                    <th>Scenario</th>
+                    <th>Countermeasure</th>
+                    <th>Threat Class</th>
+                    <th>Threat Agent</th>
+                    <th>Threat Action</th>
+                    <th>Risk Category</th>
+                    <th>Safety Impact</th>
+                    <th>Danger Impact</th>
+                    <th>Prod Impact</th>
+                    <th>Finance Impact</th>
+                    <th>Repute Impact</th>
+                    <th>Env Impact</th>
+                    <th>Data Impact</th>
+                    <!-- Add other field headers here -->
+                </tr>
+            </thead>
+            <tbody>
+                {% for scenario in scenarios %}
+                <tr>
+                    <td>{{ scenario.Scenario }}</td>
+                    <td>{{ scenario.Countermeasures }}</td>
+                    <td>{{ scenario.ThreatClass }}</td>
+                    <td>{{ scenario.ThreatAgent }}</td>
+                    <td>{{ scenario.ThreatAction }}</td>
+                     <td>{{ scenario.RiskCategory }}</td>
+                     <td style="{% if scenario.impactSafety|impact_level == 'Low' %}background-color: green;{% elif scenario.impactSafety|impact_level == 'Low/Med' %}background-color: yellow;{% elif scenario.impactSafety|impact_level == 'Med' %}background-color: orange;{% elif scenario.impactSafety|impact_level == 'Med/High' %}background-color: purple;{% else %}background-color: red;{% endif %}">
+                       {{ scenario.impactSafety|impact_level }}
+                     </td>
+                    <td style="{% if scenario.impactDanger|impact_level == 'Low' %}background-color: green;{% elif scenario.impactDanger|impact_level == 'Low/Med' %}background-color: yellow;{% elif scenario.impactDanger|impact_level == 'Med' %}background-color: orange;{% elif scenario.impactDanger|impact_level == 'Med/High' %}background-color: purple;{% else %}background-color: red;{% endif %}">
+                        {{ scenario.impactDanger|impact_level }}
+                    </td>
+                    <td style="{% if scenario.impactProduction|impact_level == 'Low' %}background-color: green;{% elif scenario.impactProduction|impact_level == 'Low/Med' %}background-color: yellow;{% elif scenario.impactProduction|impact_level == 'Med' %}background-color: orange;{% elif scenario.impactProduction|impact_level == 'Med/High' %}background-color: purple;{% else %}background-color: red;{% endif %}">
+                         {{ scenario.impactProduction|impact_level }}
+                    </td>
+                    <td style="{% if scenario.impactFinance|impact_level == 'Low' %}background-color: green;{% elif scenario.impactFinance|impact_level == 'Low/Med' %}background-color: yellow;{% elif scenario.impactFinance|impact_level == 'Med' %}background-color: orange;{% elif scenario.impactFinance|impact_level == 'Med/High' %}background-color: purple;{% else %}background-color: red;{% endif %}">
+                       {{ scenario.impactFinance|impact_level }}
+                    </td>
+                    <td style="{% if scenario.impactReputation|impact_level == 'Low' %}background-color: green;{% elif scenario.impactReputation|impact_level == 'Low/Med' %}background-color: yellow;{% elif scenario.impactReputation|impact_level == 'Med' %}background-color: orange;{% elif scenario.impactReputation|impact_level == 'Med/High' %}background-color: purple;{% else %}background-color: red;{% endif %}">
+                        {{ scenario.impactReputation|impact_level }}
+                    </td>
+                    <td style="{% if scenario.impactEnvironment|impact_level == 'Low' %}background-color: green;{% elif scenario.impactEnvironment|impact_level == 'Low/Med' %}background-color: yellow;{% elif scenario.impactEnvironment|impact_level == 'Med' %}background-color: orange;{% elif scenario.impactEnvironment|impact_level == 'Med/High' %}background-color: purple;{% else %}background-color: red;{% endif %}">
+                         {{ scenario.impactEnvironment|impact_level }}
+                    </td>
+                    <td style="{% if scenario.impactData|impact_level == 'Low' %}background-color: green;{% elif scenario.impactData|impact_level == 'Low/Med' %}background-color: yellow;{% elif scenario.impactData|impact_level == 'Med' %}background-color: orange;{% elif scenario.impactData|impact_level == 'Med/High' %}background-color: purple;{% else %}background-color: red;{% endif %}">
+                        {{ scenario.impactData|impact_level }}
+                    </td>
+
+                    <!-- Add other fields here -->
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+
+    var gauges = {}
+
+    function initializeGauges() {
+        var ids = ['impactGauge', 'impactDangerGauge', 'impactProductionGauge', 'impactFinanceGauge', 'impactRegulationGauge', 'impactEnvironmentGauge', 'impactReputationGauge', 'impactDataGauge'];
+        var values = [{{ avg_impact_safety|mul:10  }}, {{ avg_impactDanger|mul:10  }}, {{ avg_impactProduction|mul:10  }}, {{ avg_impactFinance|mul:10  }}, {{ avg_impactReputation|mul:10  }}, {{ avg_impactEnvironment |mul:10 }}, {{ avg_impactRegulation|mul:10  }}, {{ avg_impactData|mul:10  }}];
+
+        for (var i=0; i < ids.length; i++) {
+            gauges[ids[i]] = new Gauge($('.' + ids[i]), {
+                values: { 0: '0', 10: '1', 20: '2', 30: '3', 40: '4', 50: '5', 60: '6', 70: '7', 80: '8', 90: '9', 100: '10' },
+                angles: [150, 390]
+            });
+
+            gauges[ids[i]].setValue(values[i]);
+        }
+    }
+
+    $(document).ready(function() {
+        initializeGauges();
+    });
+
+
+    window.onload = function() {
+      const ctx = document.getElementById("chart").getContext('2d');
+      const myChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ["Risk (no controls)", "Risk (current controls)", "Risk (planned controls)"],
+          datasets: [{
+            label: 'Risk Exposure (before and after controls)',
+            backgroundColor: ['#484848','#AAAAAA','#39CCCC'],
+            borderColor: '#484848',
+            data: [{{avg_rru}}, {{avg_rrm}}, {{avg_rra}}],
+          }]
+        },
+        options: {
+          scales: {
+            yAxes: [{
+              ticks: {
+                beginAtZero: true,
+              }
+            }]
+          }
+        },
+      });
+    }
+
+</script>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,634 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.1/font/bootstrap-icons.css" rel="stylesheet">
+
+    {% load bootstrap5 %}
+    {% bootstrap_css %}
+    {% bootstrap_javascript %}
+ <title>Risk Assessment Worksheet</title>
+
+  <style>
+        .small-font {
+        font-size: 0.8rem; /* adjust as needed */
+        }
+
+    .navbar-scroll .nav-link,
+    .navbar-scroll .navbar-toggler-icon,
+    .navbar-scroll .navbar-brand {
+      color: #262626;
+    }
+
+    /* Color of the navbar BEFORE scroll */
+    .navbar-scroll {
+      background-color: #FFC017;
+    }
+
+    /* Color of the links AFTER scroll */
+    .navbar-scrolled .nav-link,
+    .navbar-scrolled .navbar-toggler-icon,
+    .navbar-scroll .navbar-brand {
+      color: #262626;
+    }
+
+    </style>
+</head>
+
+<script>
+
+fetchTableData()
+</script>
+
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-scroll fixed-top shadow-0 border-bottom border-dark">
+  <div class="container-fluid">
+   <a class="navbar-brand" href="{% url 'OTRisk:home' %}">iOTa</a>
+      <h4 class="navbar-text text-center" align="center">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;          Risk Assessment Worksheet</h4>
+
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ms-auto">
+
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'OTRisk:risk_assessment' %}"><i class="bi bi-journal-text"></i> Risk Assessment</a>
+        </li>
+        <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="bi bi-diagram-3"></i> CyberPHA
+              </a>
+              <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                <li><a class="dropdown-item" href="{% url 'OTRisk:cyber_pha_manager' %}"> CyberPHA Manager</a></li>
+                <li><a class="dropdown-item" href="{% url 'OTRisk:walkdown' %}"> Site Walkdown</a></li>
+                <li><a class="dropdown-item" href="#">Workshop</a></li>
+              </ul>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'OTRisk:site_walkdown' %}"><i class="bi bi-building"></i> Site Walkdown</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'OTRisk:walkdown' %}" tabindex="-1" ><i class="bi bi-kanban"></i> New Walkdown</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Reports</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#" tabindex="-1" ><i class="bi bi-ui-checks-grid"></i> Admin</a>
+      </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'accounts:profile' %}">
+          <i class="bi bi-person-fill"></i> User: {{ user.first_name }} {{ user.last_name }}
+        </a>
+
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+<br><br><br>
+
+
+<div class="row">
+    <div class="col-md-5">
+        <div>
+            <br>
+              <div id="riskregister" class="border border-dark">
+                  <form id="RiskRegister">
+                    <table class="small-font table" >
+                        <thead>
+                          <tr>
+                            <th>ID</th>
+                            <th>Title</th>
+                            <th>Date</th>
+                            <th>Business</th>
+                            <th>Status</th>
+                            <th>Scenarios</th>
+                              <th>Risk</th>
+                          </tr>
+                        </thead>
+                        <tbody id="riskTableBody">
+                          <!-- Table rows will be dynamically generated using JavaScript -->
+                        </tbody>
+                    </table>
+                    <!-- Add pagination buttons -->
+                    <div id="paginationButtons" style="display: flex; align-items: center; justify-content: center;">
+                    <!-- buttons are generated dynamically by javascript -->
+                    </div>
+                <br>
+                </form>
+              </div>
+</div>
+    </div>
+
+    <div class="col-md-4 small-font">
+        <h4 style="display: flex; justify-content: center;">Risk Assessment Worksheet</h4>
+            <form id="riskForm" method="post" action="{% url 'OTRisk:save_or_update_tblRAWorksheet' %}">
+            {% csrf_token %}
+            <div class="row">
+
+                <div class="col-md-6">
+                    <label for="title" class="form-label">Assessment Title</label>
+                    <input type="text" class="form-control" id="title" name="title" value="{% if raworksheet %}{{ raworksheet.RATitle }}{% endif %}">
+
+                    <label for="date" class="form-label">Date:</label>
+                    <input type="date"  class="form-control" id="date" name="date" value="{% if raworksheet %}{{ raworksheet.RADate }}{% endif %}">
+
+                    <label for="businessUnit" class="form-label">Business Unit:</label>
+                    <input type="text"  class="form-control"  id="BusinessUnit" name="BusinessUnit" value="{% if raworksheet %}{{ raworksheet.BusinessUnit }}{% endif %}">
+
+                    <label for="FacilityType" class="form-label">Facility Type:</label>
+                    <Select id="BusinessUnitType" name="BusinessUnitType" class="form-control" value="{% if raworksheet %}{{ raworksheet.BusinessUnitType }}{% endif %}">
+                        <option></option>
+                        <option value="Corporate Office" >Corporate Office</option>
+                        <option value="Manufacturing" >Manufacturing</option>
+                        <option value="Refining" >Refining</option>
+                        <option value="Pipeline" >Pipeline</option>
+                        <option value="Call Center" >Call Center</option>
+                        <option value="Warehouse" >Warehouse</option>
+                        <option value="Distribution Center" >Distribution Center</option>
+                        <option value="Medical Facility" >Medical Facility/option>
+                        <option value="Commercial" >Commercial</option>
+                        <option value="Data Center" >Data Center</option>
+                    </Select>
+
+                    <label for="regulatoryOversight" class="form-label">Regulatory:</label>
+                    <Select id="oversight" name="oversight" class="form-control" value="{% if raworksheet %}{{ raworksheet.RegulatoryOversight }}{% endif %}">
+                        <option></option>
+                        <option value="N/A" >N/A</option>
+                        <option value="Industry" >Industry Optional</option>
+                        <option value="Refining" >Industry Mandatory</option>
+                        <option value="Pipeline" >Law - National</option>
+                        <option value="Call Center" >Law - International </option>
+                    </Select>
+
+                </div>
+                <div class="col-md-6">
+                    <label for="description" class="form-label">Description:</label>
+                    <input type="text" class="form-control"  id="description" name="description" value="{% if raworksheet %}{{ raworksheet.RADescription }}{% endif %}">
+
+                    <label for="synopsis" class="form-label">Synopsis:</label>
+                    <input type="text"   class="form-control" id="synopsis" name="synopsis" value="{% if raworksheet %}{{ raworksheet.RASynopsis }}{% endif %}">
+
+                    <label for="employeeCount" class="form-label">Head Count:</label>
+                    <input type="text"  class="form-control" id="EmployeeCount" name="EmployeeCount" value="{% if raworksheet %}{{ raworksheet.EmployeeCount }}{% endif %}">
+
+                    <label for="RATrigger" class="form-label">Trigger:</label>
+                    <Select id="RATrigger" name="RATrigger" class="form-control" value="{% if raworksheet %}{{ raworksheet.RATragger }}{% endif %}">
+                        <option></option>
+                        <option value="Annual Assessment" >Annual Assessment</option>
+                        <option value="Change Request" >Change Request</option>
+                        <option value="Compliance Audit" >Compliance Audit</option>
+                        <option value="Incident" >Incident</option>
+                        <option value="Internal Audit" >Internal Audit</option>
+                        <option value="Site Visit/Walkdown" >Site Visit/Walkdown</option>
+                    </Select>
+
+                    <label for="StatusFlag" class="form-label">Status:</label>
+                    <Select id="StatusFlag" name="StatusFlag" class="form-control" value="{% if raworksheet %}{{ raworksheet.StatusFlag }}{% endif %}">
+                        <option></option>
+                        <option value="Open" >Open</option>
+                        <option value="Closed" >Closed</option>
+                        <option value="Under Review" >Under Review</option>
+                    </Select>
+                </div>
+            </div>
+            <br>
+            <div class="row">
+                <br>
+                <p style: align="center">
+                <button type="submit" name="addNewRA" class="btn-primary" onclick="addNew()">Clear Form</button>
+                <button type="submit" name="saveRAHeader" class="btn-primary" onclick="submitForm()">Save New</button>
+                </p>
+            </div>
+    <br>
+
+        <script>
+        function addNew() {
+            // Assuming the form's id is "myForm"
+            // document.getElementById("riskForm").reset();
+
+        }
+        </script>
+        </form>
+        <!-- end of header items form -->
+</div>
+
+
+    <div class="col-md-3"></div>
+
+
+</div>
+
+    <div class="container">
+
+
+    <div class="item3">
+      <!-- Item 3 content goes here -->
+    </div>
+
+
+
+    <!-- risk scenario data entry -->
+    <div class="item5">
+        <div class="row1">
+            <form id="RAWScenario">
+                <div id="column1" >
+                    <h4 style="text-align: center">Risk Scenarios</h4>
+                    <table id="riskTable" name="riskTable" class="fl-table" width="100%" >
+                    <tbody>
+                        <tr>
+                            <td style="vertical-align: top; align-items: left;">
+                                <label for="scenario1" style="margin-right: 5px; text-align: left;">Scenario Type:</label><br>
+                                <select name="scenarioType">
+                                    <option></option>
+                                    <option value="Cloud">Cloud Incident</option>
+                                    <option value="Compliance">Compliance Issues</option>
+                                    <option value="CustomerFruad">Customer Fraud</option>
+                                    <option value="CyberEspionage">Cyber Espionage</option>
+                                    <option value="Data">Data Compromise</option>
+                                    <option value="DoS">Denial of Service</option>
+                                    <option value="IPTheft">IP Theft</option>
+                                    <option value="Insider Threat">Malicious Employee</option>
+                                    <option value="Malware">Malware</option>
+                                    <option value="Mobile">Mobile Compromise</option>
+                                    <option value="NationState">Nation State</option>
+                                    <option value="OT Comproimise">OT System Compromise</option>
+                                    <option value="Phishing">Phishing</option>
+                                    <option value="PhysicalBreach">Physical Security Breach</option>
+                                    <option value="SupplyChain">Supply Chain Attack</option>
+                                    <option value="Vendor">Vendor Incident</option>
+                                    <option value="WebSiteAttack">Web Site Attack</option>
+                                </select>
+                            </td>
+                            <td style="vertical-align: top;">
+
+                                    <label for="scenario1" style="margin-right: 5px;">Enter a description of a risk scenario:</label><br>
+                                    <textarea class="textareastyle" id="scenario1" name="scenario1" rows="2" value=""></textarea>
+
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <table class="fl-table">
+                    <tr>
+                        <td style="vertical-align: top; ">
+                            <div style="display: flex; flex-direction: row; justify-content: space-between;">
+                                <div style="margin-right: 10px; align-items: center; text-align: center">
+                                    <span id="captionValue1"></span><br>
+                                    <input type="range" min="0" max="100" onchange="calculateSlider(this,'captionValue1')" name="threatscore" style="color: linear-gradient(to right, green 0%, red 100%);">
+                                    <br>Threat Exposure
+                                </div>
+
+                                <div style="margin-right: 10px; align-items: center; text-align: center">
+                                    <span id="captionValue2"></span><br>
+                                    <input type="range" min="0" max="100" onchange="calculateSlider(this,'captionValue2')" name="vulnerabilityscore">
+                                    <br>Vulnerability Level
+                                </div>
+                                <div style="margin-right: 10px; align-items: center; text-align: center">
+                                     <span id="captionValue3"></span><br>
+                                    <input type="range" min="0" max="100" onchange="calculateSlider(this,'captionValue3')" name="reputationscore">
+                                    <input type="hidden" name="reputationWeight" value="1">
+                                    <br>Reputation Impact
+                                </div>
+                                <div style="margin-right: 10px; align-items: center; text-align: center">
+                                     <span id="captionValue4"></span><br>
+                                    <input type="range" min="0" max="100" onchange="calculateSlider(this,'captionValue4')" name="financialscore">
+                                    <input type="hidden" name="financialWeight" value="2">
+                                    <br>Financial Impact
+                                </div>
+                            </div>
+                            </td>
+                    </tr>
+                    <tr>
+                            <td>
+                                <div style="display: flex; flex-direction: row; justify-content: space-between;">
+
+                                <div style="margin-right: 10px; align-items: center; text-align: center">
+                                     <span id="captionValue5"></span><br>
+                                    <input type="range" min="0" max="100" onchange="calculateSlider(this,'captionValue5')" name="operationalscore">
+                                    <input type="hidden" name="operationalWeight" value="4">
+                                    <br>Operational Impact
+                                </div>
+                                <div style="margin-right: 10px; align-items: center; text-align: center">
+                                    <span id="captionValue6"></span><br>
+                                    <input type="range" min="0" max="100" onchange="calculateSlider(this,'captionValue6')" name="safetyscore">
+                                    <input type="hidden" name="safetyWeight" value="6">
+                                    <br>Safety Impact
+                                </div>
+                                <div style="margin-right: 10px; align-items: center; text-align: center">
+                                     <span id="captionValue7"></span><br>
+                                    <input type="range" min="0" max="100" onchange="calculateSlider(this,'captionValue7')" name="supplychainscore">
+                                    <input type="hidden" name="supplychainWeight" value="5">
+                                    <br>Supply Chain Impact
+                                </div>
+                                <div style="margin-right: 10px; align-items: center; text-align: center">
+                                     <span id="captionValue8"></span><br>
+                                    <input type="range" min="0" max="100" onchange="calculateSlider(this,'captionValue8')" name="datascore" >
+                                    <input type="hidden" name="dataWeight" value="3">
+                                    <br>Data Impact
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="vertical-align: top;align: left ">
+                            <br>
+                            <label for="riskScore" style="margin-right: 5px;">Risk Score:</label>
+                            <input type="text" id="riskscore" name="riskscore" value=0 >
+                            <input type="text" id="riskstatus" name="riskstatus" value="">
+                        </td>
+                    </tr>
+                </table>
+                <br>
+                    <p style="align-items: center; width: 100%"></p>
+                <div align="center">
+                    <p align="right">
+                    <button class="button-17" role="button" id="saveDataButton" onclick="saveScenario(event)">Add Scenario >>> </button>
+                    <label  id="saved_label"></label>
+                    </p>
+                </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+
+    <!-- risk scenario table -->
+    <div class="item6">
+
+        <div id="column2">
+            <table class="fl-table" name="tblListScenarios" width="100%">
+                <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Scenario</th>
+                      <th>Threats</th>
+                      <th>Vulns</th>
+                      <th>Risk Score</th>
+
+                    </tr>
+                </thead>
+                  <tbody id="scenarioTableBody">
+                    <!-- Table rows will be dynamically generated using JavaScript -->
+                  </tbody>
+            </table>
+        </div>
+    </div>
+
+
+
+    <div class="item7">
+
+      <div class="row1" >
+            <form id="RAWActionItems">
+                <div id="column1" >
+                    <h4 style="text-align: center">Actions and Recommendations</h4>
+                    <table id="actionTable" name="actionTable" class="fl-table">
+                    <tbody>
+                        <tr>
+                            <td>
+                            <label for="actionTitle" style="margin-right: 5px;" >Title</label>
+                               <input type="text" style="width:200x" id="actionTitle" name="actionTitle">
+                            </td>
+                            <td>
+                            <label for="actionDesc" style="margin-right: 5px;">Description</label>
+                           <textarea  id="actionDescription" name="actionDescription" rows="2" style="word-wrap: normal"></textarea>
+                            </td>
+                             <td>
+                            <label for="ActionOwner" style="margin-right: 5px;" >Owner</label>
+                               <input type="text" style="width:200x" id="actionOwner" name="actionOwner">
+                            </td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td>
+                `               <label for="actionTargetDate" style="margin-right: 5px;" >Target Date</label>
+                               <input type="date" style="width:200x" id="actionTargetDate" name="actionTargetDate">
+                            </td>
+                            <td>
+                `               <label for="actionTargetDate" style="margin-right: 5px;" >Level of Effort</label>
+                                <select name="actionEffort" id="actionEffort" >
+                                    <option value="">-- Select level of effort --</option>
+                                    <option value="Low">Low</option>
+                                    <option value="Medium">Low</option>
+                                    <option value="High">High</option>
+                                </select>
+                            </td>
+                            <td>
+                                <label for="actionCost" style="margin-right: 5px;" >Cost</label>
+                                <select name="actionCost" id="actionCost">
+                                    <option value="">-- Select level of effort --</option>
+                                    <option value="Low">Low</option>
+                                    <option value="Medium">Low</option>
+                                    <option value="High">High</option>
+                               </select>
+                            </td>
+                        </tr>
+                    </table>
+                    <br>
+                    <div align="center">
+                        <p align="right">
+                        <button class="button-17" role="button" id="saveActionButton" onclick="saveAction(event)">Add Action >>> </button>
+                        <label  id="saved_label"></label>
+                        </p>
+                     </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+
+
+    <div class="item8">
+      <div id="column2" >
+    <table class="fl-table" name="tblActionItemLists" id="tblActionItemLists" width="100%">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Action</th>
+              <th>Owner</th>
+              <th>Effort</th>
+              <th>Cost</th>
+            </tr>
+          </thead>
+        <tbody id="actionTableBody">
+    <!-- Table rows will be dynamically generated using JavaScript -->
+  </tbody>
+</table>
+</div>
+    </div>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script>
+    // Get the CSRF token
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+
+    function submitForm() {
+        alert("submitForm");
+        document.getElementById("saveForm").submit();
+    }
+
+    function setFormEnabled(enabled) {
+        // Get all the input, select and textarea elements in the "riskTable" table
+        var inputs = document.querySelectorAll('#riskTable input, #riskTable select, #riskTable textarea');
+
+        // Iterate over each input, select and textarea element
+        for (var i = 0; i < inputs.length; i++) {
+            // Set the "disabled" property of the element to the opposite of the "enabled" parameter
+            inputs[i].disabled = !enabled;
+        }
+    }
+</script>
+
+<!-- populated the risk register table -->
+<script>
+
+    let page = 1; // Initialize current page
+
+    // Function to populate and present the table
+    function populateTable(data) {
+        const tableBody = document.getElementById('riskTableBody');
+        tableBody.innerHTML = ''; // Clear previous table rows
+
+        const rowsPerPage = 10; // Set the desired number of rows per page
+        const start = (page - 1) * rowsPerPage;
+        const end = page * rowsPerPage;
+
+        for (let i = start; i < end && i < data.length; i++) {
+            const item = data[i];
+
+            const row = document.createElement('tr');
+
+            row.innerHTML = `
+                <td>${item.ID}</td>
+                <td>${item.RATitle}</td>
+                <td>${item.RADate}</td>
+                <td>${item.BusinessUnit}</td>
+                <td>${item.StatusFlag}</td>
+                <td>${item.scenario_count}</td>
+                <td>${item.RiskStatus}</td>
+            `;
+
+               // Add a click event listener to each row
+                row.addEventListener('click', function() {
+                  // Perform an action based on the selected ID
+                  const selectedID = item.ID;
+                  fetch(`/OTRisk/fill_raw_from_table/${selectedID}`)
+                      .then(response => response.json())
+                      .then(data => {
+                          document.getElementById('title').value = data.RATitle;
+                          document.getElementById('description').value = data.RADescription;
+                          document.getElementById('date').value = data.RADate;
+                          document.getElementById('synopsis').value = data.RASynopsis;
+                          document.getElementById('BusinessUnit').value = data.BusinessUnit;
+                          document.getElementById('EmployeeCount').value = data.EmployeeCount;
+                          document.getElementById('BusinessUnitType').value = data.BusinessUnitType;
+                          document.getElementById('oversight').value = data.RegulatoryOversight;
+                          document.getElementById('RATrigger').value = data.RATrigger;
+                          document.getElementById('StatusFlag').value = data.StatusFlag;
+                          // update the scenario table with any scenarios that are related to this risk assessmenty
+                          // the updateTable function is within saveScenario.js
+                          updateTable();
+
+                      })
+
+                });
+            tableBody.appendChild(row);
+        }
+
+    }
+
+    // Function to fetch the table data and populate the table
+    function fetchTableData() {
+        fetch('{% url 'OTRisk:risk_register_data' %}') // Replace with the correct URL mapped to the view function
+            .then((response) => response.json())
+            .then((data) => {
+                populateTable(data);
+                updatePaginationButtons(data);
+                //addRowClickListeners();  // Add the click event listeners to the rows after populating the table
+            })
+            .catch((error) => {
+                console.error('Error fetching table data:', error);
+            });
+    }
+
+    // Call fetchTableData() after the page loads
+    window.addEventListener('DOMContentLoaded', (event) => {
+        fetchTableData();
+    });
+
+    function fetchRAWorksheet(id) {
+    return fetch(`OTRisk:api/ra_worksheet/${id}`) // Replace with the correct URL
+        .then(response => response.json());
+    }
+
+
+
+    // Function to update pagination buttons
+    function updatePaginationButtons(data) {
+      const paginationButtons = document.getElementById('paginationButtons');
+      paginationButtons.innerHTML = ''; // Clear previous buttons
+
+      const totalPages = Math.ceil(data.length / 5); // Calculate total pages
+
+      if (page > 1) {
+         const previousButton = document.createElement('a');
+        previousButton.innerHTML = '<i class="bi bi-arrow-left"></i> Previous';
+        previousButton.classList.add('previous', 'btn', 'btn-primary'); // Add classes to previous button
+
+        previousButton.onclick = () => {
+          page--;
+          populateTable(data);
+          updatePaginationButtons(data);
+        };
+        paginationButtons.appendChild(previousButton);
+      }
+
+      if (page < totalPages) {
+        const nextButton = document.createElement('a');
+        nextButton.innerHTML = 'Next <i class="bi bi-arrow-right"></i>';
+        nextButton.classList.add('next', 'btn', 'btn-primary');
+        nextButton.onclick = () => {
+          page++;
+          populateTable(data);
+          updatePaginationButtons(data);
+        };
+        paginationButtons.appendChild(nextButton);
+      }
+    }
+    // Function to fetch RAWorksheet data and populate the form
+    function fetchRAWorksheetAndPopulate(id) {
+        fetchRAWorksheet(id)
+            .then(function(raWorksheetData) {
+                populateRiskForm(raWorksheetData);
+            });
+    }
+
+    // Function to refresh the table
+    function refreshTable() {
+      fetchTableData();
+    }
+
+
+</script>
+<script src="{% static 'OTRisk/rawscore.js' %}"></script>
+<script src="{% static 'OTRisk/savescenario.js' %}"></script>
+<script src="{% static 'OTRisk/saveaction.js' %}"></script>
+</body>
+</html>

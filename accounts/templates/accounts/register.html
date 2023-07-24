@@ -1,0 +1,138 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Registration</title>
+    <!-- Add the Bootstrap CSS link here -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+
+      <style>
+       .navbar-scroll .nav-link,
+    .navbar-scroll .navbar-toggler-icon,
+    .navbar-scroll .navbar-brand {
+      color: #262626;
+    }
+
+    /* Color of the navbar BEFORE scroll */
+    .navbar-scroll {
+      background-color: #FFC017;
+    }
+
+    /* Color of the links AFTER scroll */
+    .navbar-scrolled .nav-link,
+    .navbar-scrolled .navbar-toggler-icon,
+    .navbar-scroll .navbar-brand {
+      color: #262626;
+    }
+
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-scroll fixed-top shadow-0 border-bottom border-dark">
+  <div class="container-fluid">
+   <a class="navbar-brand" href="#"><img src="{% static 'images/iOTa_small.png' %}"></a>
+    <button class="navbar-toggler" type="button" data-mdb-toggle="collapse"
+      data-mdb-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
+      aria-label="Toggle navigation">
+      <i class="fas fa-bars"></i>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'OTRisk:risk_assessment' %}"><i class="bi bi-journal-text"></i> Risk Assessment</a>
+        </li>
+        <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="bi bi-diagram-3"></i> CyberPHA
+              </a>
+              <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                <li><a class="dropdown-item" href="{% url 'OTRisk:cyber_pha_manager' %}"> CyberPHA Manager</a></li>
+                <li><a class="dropdown-item" href="{% url 'OTRisk:walkdown' %}"> Site Walkdown</a></li>
+                <li><a class="dropdown-item" href="#">Workshop</a></li>
+              </ul>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'OTRisk:site_walkdown' %}"><i class="bi bi-building"></i> Site Walkdown</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'OTRisk:walkdown' %}" tabindex="-1" ><i class="bi bi-kanban"></i> New Walkdown</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Reports</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#" tabindex="-1" ><i class="bi bi-ui-checks-grid"></i> Admin</a>
+      </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<div class="row">
+    <div class="col-md-3"></div>
+    <div class="col-md-6">
+        <h4><br><br><br>iOTa User Registration</h4>
+    <form method="post" class="needs-validation" novalidate>
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="id_first_name" class="form-label">First Name:</label>
+            <input type="text" name="first_name" id="id_first_name" class="form-control" required>
+            <div class="invalid-feedback">Please provide your first name.</div>
+        </div>
+        <div class="mb-3">
+            <label for="id_last_name" class="form-label">Last Name:</label>
+            <input type="text" name="last_name" id="id_last_name" class="form-control" required>
+            <div class="invalid-feedback">Please provide your last name.</div>
+        </div>
+        <div class="mb-3">
+            <label for="id_email" class="form-label">Email:</label>
+            <input type="email" name="email" id="id_email" class="form-control" required>
+            <div class="invalid-feedback">Please provide a valid email address.</div>
+        </div>
+        <div class="mb-3">
+            <label for="id_organization" class="form-label">Organization:</label>
+            <input type="text" name="organization" id="id_organization" class="form-control" required>
+            <div class="invalid-feedback">Please provide your organization name.</div>
+        </div>
+        <div class="mb-3 form-check">
+            <input type="checkbox" name="is_superuser" id="id_is_superuser" class="form-check-input">
+            <label class="form-check-label" for="id_is_superuser">Is Superuser</label>
+        </div>
+        {{ form.username.errors }}
+        <div class="mb-3">
+            <label for="id_username" class="form-label">Username:</label>
+            <input type="text" name="username" id="id_username" class="form-control" required>
+            <div class="invalid-feedback">{{ form.username.errors }}</div>
+        </div>
+        {{ form.password1.errors }}
+        <div class="mb-3">
+            <label for="id_password1" class="form-label">Password:</label>
+            <input type="password" name="password1" id="id_password1" class="form-control" required>
+            <div class="invalid-feedback">{{ form.password1.errors }}</div>
+        </div>
+        {{ form.password2.errors }}
+        <div class="mb-3">
+            <label for="id_password2" class="form-label">Confirm Password:</label>
+            <input type="password" name="password2" id="id_password2" class="form-control" required>
+            <div class="invalid-feedback">{{ form.password2.errors }}</div>
+        </div>
+
+        {{ form.as_hidden }}
+        <button type="submit" class="btn btn-primary">Register</button>
+    </form>
+
+
+
+
+    </div>
+    <div class="col-md-3"></div>
+</div>
+
+
+
+    <!-- Add the Bootstrap JS script here -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,157 @@
+{% load static %}
+<head>
+
+    <link rel="stylesheet" href="{% static 'css/scenario_detail.css' %}">
+
+</head>
+
+
+{% block content %}
+    <h1 align="center">Scenario Detail</h1>
+
+    <h2 align = "center">{{ scenario.ScenarioName }}</h2>
+    <table class="centered-table" cellpadding="10">
+    <tr>
+    <td>
+    Vulnerability Rating<br><br>
+    <div class="threat-score-circle">
+        {% if scenario.VulnScore == 'H' %}
+            <div class="circle red">H</div>
+        {% elif scenario.VulnScore == 'M' %}
+            <div class="circle orange">M</div>
+        {% elif scenario.VulnScore == 'L' %}
+            <div class="circle green">L</div>
+        {% elif scenario.VulnScore == 'L/M' %}
+            <div class="circle yellow">L/M</div>
+        {% elif scenario.VulnScore == 'M/H' %}
+            <div class="circle darkorange">M/H</div>
+        {% elif scenario.VulnScore == 'L-' %}
+            <div class="circle lightgreen">L-</div>
+        {% elif scenario.VulnScore == 'H+' %}
+            <div class="circle darkred">H+</div>
+        {% endif %}
+    </div>
+    </td>
+    <td>
+    Threat Rating<br><br>
+    <div class="threat-score-circle">
+        {% if scenario.ThreatScore == 'H' %}
+            <div class="circle red">H</div>
+        {% elif scenario.ThreatScore == 'M' %}
+            <div class="circle orange">M</div>
+        {% elif scenario.ThreatScore == 'L' %}
+            <div class="circle green">L</div>
+        {% elif scenario.ThreatScore == 'L/M' %}
+            <div class="circle yellow">L/M</div>
+        {% elif scenario.ThreatScore == 'M/H' %}
+            <div class="circle darkorange">M/H</div>
+        {% elif scenario.ThreatScore == 'L-' %}
+            <div class="circle lightgreen">L-</div>
+        {% elif scenario.ThreatScore == 'H+' %}
+            <div class="circle darkred">H+</div>
+        {% endif %}
+    </div>
+    </td>
+    <td>
+    Financial Impact<br><br>
+    <div class="threat-score-circle">
+        {% if scenario.FinancialImpact == 'H' %}
+            <div class="circle red">H</div>
+        {% elif scenario.FinancialImpact == 'M' %}
+            <div class="circle orange">M</div>
+        {% elif scenario.FinancialImpact == 'L' %}
+            <div class="circle green">L</div>
+        {% elif scenario.FinancialImpact == 'L/M' %}
+            <div class="circle yellow">L/M</div>
+        {% elif scenario.FinancialImpact == 'M/H' %}
+            <div class="circle darkorange">M/H</div>
+        {% elif scenario.FinancialImpact == 'L-' %}
+            <div class="circle lightgreen">L-</div>
+        {% elif scenario.FinancialImpact == 'H+' %}
+            <div class="circle darkred">H+</div>
+        {% endif %}
+    </div>
+    </td>
+     <td>
+    Operational Impact<br><br>
+    <div class="threat-score-circle">
+        {% if scenario.OperationalImpact == 'H' %}
+            <div class="circle red">H</div>
+        {% elif scenario.OperationalImpact == 'M' %}
+            <div class="circle orange">M</div>
+        {% elif scenario.OperationalImpact == 'L' %}
+            <div class="circle green">L</div>
+        {% elif scenario.OperationalImpact == 'L/M' %}
+            <div class="circle yellow">L/M</div>
+        {% elif scenario.OperationalImpact == 'M/H' %}
+            <div class="circle darkorange">M/H</div>
+        {% elif scenario.OperationalImpact == 'L-' %}
+            <div class="circle lightgreen">L-</div>
+        {% elif scenario.OperationalImpact == 'H+' %}
+            <div class="circle darkred">H+</div>
+        {% endif %}
+    </div>
+    </td>
+     <td>
+    Reputation Impact<br><br>
+    <div class="threat-score-circle">
+        {% if scenario.ReputationImpact == 'H' %}
+            <div class="circle red">H</div>
+        {% elif scenario.ReputationImpact == 'M' %}
+            <div class="circle orange">M</div>
+        {% elif scenario.ReputationImpact == 'L' %}
+            <div class="circle green">L</div>
+        {% elif scenario.ReputationImpact == 'L/M' %}
+            <div class="circle yellow">L/M</div>
+        {% elif scenario.ReputationImpact == 'M/H' %}
+            <div class="circle darkorange">M/H</div>
+        {% elif scenario.ReputationImpact == 'L-' %}
+            <div class="circle lightgreen">L-</div>
+        {% elif scenario.ReputationImpact == 'H+' %}
+            <div class="circle darkred">H+</div>
+        {% endif %}
+    </div>
+    </td>
+    </tr>
+    </table>
+
+    <form method="POST" action="{% url 'OTRisk:scenario_update' scenario.pk %}">
+    {% csrf_token %}
+    {{ form.as_p }}
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+    </form>
+
+    <!-- Include jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(function() {
+            $('#editForm').submit(function(event) {
+                event.preventDefault();
+
+                // Disable the save button
+                $('button[type="submit"]').prop('disabled', true);
+
+                // Send the form data using AJAX
+                $.ajax({
+                    url: $(this).data('url'),
+                    type: 'POST',
+                    data: $(this).serialize(),
+                    success: function(response) {
+                        // Handle the success response
+                        // Optionally, you can update the scenario details on the page
+
+                        // Enable the save button
+                        $('button[type="submit"]').prop('disabled', false);
+                    },
+                    error: function(xhr, textStatus, error) {
+                        // Handle the error response
+                        // Optionally, you can display an error message
+
+                        // Enable the save button
+                        $('button[type="submit"]').prop('disabled', false);
+                    }
+                });
+            });
+        });
+    </script>
+{% endblock %}

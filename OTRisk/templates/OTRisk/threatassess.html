@@ -1,0 +1,58 @@
+<!-- threat_form.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Threat Assessment Form</title>
+</head>
+<body>
+    <h1>Threat Assessment Form</h1>
+
+    <form method="POST" action="{% url 'OTRisk:save_threat' %}">
+        {% csrf_token %}
+
+        <label for="ThreatAssessmentID">Threat Assessment ID:</label>
+        <input type="number" name="ThreatAssessmentID" required><br>
+
+        <label for="post_id">Post ID:</label>
+        <input type="number" name="post_id" required><br>
+
+        <label for="ThreatType">Threat Type:</label>
+        <input type="text" name="ThreatType" maxlength="255" required><br>
+
+        <label for="ThreatImpactDescription">Threat Impact Description:</label>
+        <input type="text" name="ThreatImpactDescription" maxlength="255" required><br>
+
+        <label for="ThreatImpactScore">Threat Impact Score:</label>
+        <input type="number" name="ThreatImpactScore" required><br>
+
+        <label for="ThreatLikelihoodDescription">Threat Likelihood Description:</label>
+        <input type="text" name="ThreatLikelihoodDescription" maxlength="255" required><br>
+
+        <label for="ThreatLikelihoodScore">Threat Likelihood Score:</label>
+        <input type="number" name="ThreatLikelihoodScore" required><br>
+
+        <label for="IndustryAttackHistory">Industry Attack History:</label>
+        <input type="text" name="IndustryAttackHistory" maxlength="255" required><br>
+
+        <label for="HasAttackedYesNo">Has Attacked (Yes/No):</label>
+        <input type="text" name="HasAttackedYesNo" maxlength="255" required><br>
+
+        <label for="HasBusinessImpactYesNo">Has Business Impact (Yes/No):</label>
+        <input type="text" name="HasBusinessImpactYesNo" maxlength="255" required><br>
+
+        <label for="AttackExpectedYesNo">Attack Expected (Yes/No):</label>
+        <input type="text" name="AttackExpectedYesNo" maxlength="255" required><br>
+
+        <label for="KnownExposureYesNo">Known Exposure (Yes/No):</label>
+        <input type="text" name="KnownExposureYesNo" maxlength="255" required><br>
+
+        <label for="Comments">Comments:</label>
+        <textarea name="Comments" rows="4" cols="50" maxlength="255" required></textarea><br>
+
+        <label for="OverallThreatRatingHML">Overall Threat Rating (H/M/L):</label>
+        <input type="text" name="OverallThreatRatingHML" maxlength="255" required><br>
+
+        <input type="submit" value="Save">
+    </form>
+</body>
+</html>

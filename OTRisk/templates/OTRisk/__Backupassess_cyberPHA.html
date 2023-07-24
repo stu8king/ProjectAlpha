@@ -1,0 +1,1580 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="{% static 'OTRisk/jquery-gauge.js' %}"></script>
+    <script src="{% static 'OTRisk/jquery-gauge.min.js' %}"></script>
+
+    <title>Assess CyberPHA</title>
+    <link href="{% static 'css/jquery-gauge.css' %}" rel="stylesheet">
+    <style>
+
+         .scenarioTableContainer {
+              max-height: 200px;
+              overflow-y: auto;
+            }
+
+              #scenarioTable {
+                width: 100%;
+                table-layout: fixed;
+                  background: url(http://i.stack.imgur.com/ynxjD.png) repeat-y;
+              }
+
+              #scenarioTable td {
+                word-wrap: break-word;
+              }
+
+               .consequenceTableContainer {
+              max-height: 200px;
+              overflow-y: auto;
+            }
+
+              #consequenceTable {
+                width: 100%;
+                table-layout: fixed;
+                  background: url(http://i.stack.imgur.com/ynxjD.png) repeat-y;
+              }
+
+              #consequenceTable td {
+                word-wrap: break-word;
+              }
+
+
+        .selected-row {
+              background-color: #e1e1e1;
+            }
+
+        section { border:white; padding:10px; overflow:hidden; }
+            section > section { float:left; }
+            .indent-1 { padding-left:120px; }
+
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid black;
+            margin-bottom: 20px;
+        }
+
+        th {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        td {
+            vertical-align: top;
+            horiz-align: center;
+            padding: 8px;
+        }
+
+        .form-row {
+            margin-bottom: 10px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .form-control {
+            width: 55%;
+            padding: 8px;
+            font-size: 14px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+
+        .select-wrapper:hover .select-dropdown {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .select-option {
+            padding: 8px;
+            cursor: pointer;
+        }
+
+        .select-option:hover {
+            background-color: #f2f2f2;
+        }
+
+        .button-row {
+            margin-top: 20px;
+            text-align: right;
+        }
+
+        .button-row button {
+            margin-left: 10px;
+        }
+
+
+
+        /* Dropdown Button */
+.dropbtn {
+  background-color: #484848;
+  color: white;
+  padding: 10px;
+  font-size: 14px;
+  border: none;
+  cursor: pointer;
+}
+
+/* Dropdown button on hover & focus */
+.dropbtn:hover, .dropbtn:focus {
+  background-color: #3e8e41;
+}
+
+/* The search field */
+#myInput {
+  box-sizing: border-box;
+  background-image: url('searchicon.png');
+  background-position: 14px 12px;
+  background-repeat: no-repeat;
+  font-size: 16px;
+  padding: 14px 20px 12px 45px;
+  border: none;
+  border-bottom: 1px solid #ddd;
+}
+
+textarea {
+  margin-left: 10px; /* Adjust the margin as needed */
+}
+/* The search field when it gets focus/clicked on */
+#myInput:focus {outline: 3px solid #ddd;}
+
+/* The container <div> - needed to position the dropdown content */
+.dropdown {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+}
+
+/* Dropdown Content (Hidden by Default) */
+.dropdown-content {
+  display: none;
+  position: absolute;
+  background-color: #f6f6f6;
+  min-width: 230px;
+  border: 1px solid #ddd;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  padding: 12px 16px;
+  z-index: 1;
+    max-height: 400px; /* Adjust the height as needed */
+    overflow-y: auto;
+}
+
+/* Links inside the dropdown */
+.dropdown-content a {
+  color: black;
+  padding: 12px 16px;
+  text-decoration: none;
+  display: block;
+}
+
+/* Change color of dropdown links on hover */
+.dropdown-content a:hover {background-color: #f1f1f1}
+
+.show {
+            display: block;
+        }
+
+.scenariotext {
+ /* background: url(http://i.stack.imgur.com/ynxjD.png) repeat-y; */
+ font: normal 12px verdana;
+ line-height: 20px;
+ padding: 2px 10px;
+ border: solid 1px #ddd;
+    resize: none;
+}
+
+
+.sidenav {
+  height: 100%;
+  width: 160px;
+  position: fixed;
+  z-index: 1;
+  top: 0;
+  left: 0;
+  background-color: #111;
+  overflow-x: hidden;
+  padding-top: 20px;
+}
+
+.sidenav a {
+  padding: 6px 8px 6px 16px;
+  text-decoration: none;
+  font-size: 14px;
+  color: #818181;
+  display: block;
+}
+
+.sidenav a:hover {
+  color: #f1f1f1;
+}
+
+
+option {
+  padding: 0;
+}
+
+/* The slider itself */
+.slider {
+  -webkit-appearance: slider-vertical;  /* Override default CSS styles */
+  appearance: slider-vertical;
+  width: 50%; /* Full-width */
+  height: 150px; /* Specified height */
+  background: #d3d3d3; /* Grey background */
+    color: black;
+  outline: black; /* Remove outline */
+  opacity: 0.7; /* Set transparency (for mouse-over effects on hover) */
+  -webkit-transition: .2s; /* 0.2 seconds transition on hover */
+  transition: opacity .2s;
+    writing-mode: bt-lr;
+}
+
+
+/* Mouse-over effects */
+.slider:hover {
+  opacity: 1; /* Fully shown on mouse-over */
+}
+
+/* The slider handle (use -webkit- (Chrome, Opera, Safari, Edge) and -moz- (Firefox) to override default look) */
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: slider-vertical; /* Override default look */
+  appearance: none;
+  width: 25px; /* Set a specific slider handle width */
+  height: 25px; /* Slider handle height */
+  background: #04AA6D; /* Green background */
+  cursor: pointer; /* Cursor on hover */
+}
+
+.slider::-moz-range-thumb {
+  width: 25px; /* Set a specific slider handle width */
+  height: 25px; /* Slider handle height */
+  background: #04AA6D; /* Green background */
+  cursor: pointer; /* Cursor on hover */
+}
+
+        .impactGauge {
+            position: relative;
+            width: 7vw;
+            height: 7vw;
+            box-sizing: border-box;
+            float:left;
+            margin:20px
+        }
+        .RRGauge {
+            position: relative;
+            width: 7vw;
+            height: 7vw;
+            box-sizing: border-box;
+            float:left;
+            margin:20px
+        }
+
+
+    </style>
+</head>
+<body>
+
+
+<table>
+    <tr>
+        <td width="10%">
+            <div class="sidenav">
+            <h3 style="font-family: verdana; color: white; align-items: center">Servalan</h3>
+            <br>
+            <br>
+            <a href="{% url 'OTRisk:risk_assessment' %}">Risk Assessment Worksheet</a>
+            <!--<a href="{% url 'OTRisk:post_create' %}">CyberPHA</a>-->
+            <a href="{% url 'OTRisk:cyber_pha_manager' %}">CyberPHA Manager</a>
+            <a href="{% url 'OTRisk:site_walkdown' %}">Site Walkdown</a>
+            <a href="{% url 'OTRisk:walkdown' %}">New Walkdown</a>
+            <a href="#">Reports</a>
+            <a href="#">Admin</a>
+            <br>
+            <br>
+            <a href="#">Logout</a>
+            </div>
+        </td>
+        <td>
+            <form id="cyberpha-form" method="POST" action="{% url 'OTRisk:save_or_update_cyberpha' %}">
+             {% csrf_token %}
+            <section class="indent-1">
+                <h2>CyberPHA Scenario Analysis - <span id="facilityName"></span></h2>
+
+                <script>
+                  document.getElementById('facilityName').textContent = sessionStorage.getItem('clickedRowFacilityName');
+                </script>
+            </section>
+            <section class="indent-1">
+            <!-- Section 1 -->
+            <section class="indent-1">
+            </section>
+            <!-- Section with scenario selection -->
+            <section style="width: 600px">
+                <div>
+                   <label>Search for a scenario or enter your own in the text field below: </label><input type="text" id="scenarioSearch" name="scenarioSearch" onkeyup="filterTable()" placeholder="Search...">
+                    <div class="scenarioTableContainer">
+                      <table id="scenarioTable" >
+                        <thead>
+                          <tr>
+                            <th>Scenario</th>
+                          </tr>
+                        </thead>
+                        <tbody id="scenarioTableBody">
+                          {% for scenario in scenarios %}
+                          <tr onclick="selectScenario(this)">
+                            <td>{{ scenario.Scenario }}</td>
+                          </tr>
+                          {% endfor %}
+                        </tbody>
+                      </table>
+
+                    </div>
+                    <textarea id="txtScenario" name="txtScenario" class="scenariotext" rows="3" cols="50"></textarea>
+
+                    <script>
+                    function filterTable() {
+                      var input = document.getElementById("scenarioSearch");
+                      var filter = input.value.toUpperCase();
+                      var table = document.getElementById("scenarioTable");
+                      var rows = table.getElementsByTagName("tr");
+
+                      for (var i = 0; i < rows.length; i++) {
+                        var description = rows[i].getElementsByTagName("td")[0]; // Update index to 0
+                        if (description) {
+                          var txtValue = description.textContent || description.innerText;
+                          if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                            rows[i].style.display = "";
+                          } else {
+                            rows[i].style.display = "none";
+                          }
+                        }
+                      }
+                    }
+
+                        document.addEventListener("DOMContentLoaded", function () {
+                          var table = document.getElementById("scenarioTable");
+                          var rows = table.getElementsByTagName("tr");
+
+                          for (var i = 0; i < rows.length; i++) {
+                            rows[i].addEventListener("click", function () {
+                              var description = this.getElementsByTagName("td")[1];
+                              var txtScenario = document.getElementById("txtScenario");
+                              if (description && txtScenario) {
+                                var scenarioText = description.textContent || description.innerText;
+                                txtScenario.value = scenarioText;
+                              }
+                            });
+                          }
+                        });
+
+                    function selectScenario(row) {
+                      const tableRows = document.querySelectorAll("#scenarioTableBody tr");
+                      tableRows.forEach((row) => row.classList.remove("selected-row"));
+
+                      row.classList.add("selected-row");
+
+                      const scenario = row.getElementsByTagName("td")[0].textContent;
+                      const txtScenario = document.getElementById("txtScenario");
+                      txtScenario.value = scenario;
+                    }
+
+                    </script>
+
+                 </div>
+
+        </section>
+        <!-- end of scenario section -->
+        <!-- empty section -->
+        <section class="indent-1">
+        </section>
+        <!-- end of empty section -->
+
+        <!-- Section 2 -->
+        <section style="width: 600px">
+
+            <div style="border: black; border-style: solid">
+                 <div>
+                    <label> Search and select up to 5 consequences or enter your own</label><input type="text" placeholder="Search.." id="consequenceSearch" name="consequenceSearch" onkeyup="filterFunction2()">
+                  </div>
+                  <div class="consequenceTableContainer">
+                      <table id="consequenceTable">
+                        <thead>
+                          <tr>
+                            <th>Consequence</th>
+                          </tr>
+                        </thead>
+                        <tbody id="consequenceTableBody">
+                          {% for consequence in consequences %}
+                          <tr onclick="selectConsequence('{{ consequence.Consequence }}')">
+                            <td>{{ consequence.Consequence }}</td>
+                          </tr>
+                          {% endfor %}
+                        </tbody>
+                      </table>
+                    </div>
+                    <div>
+                      <textarea id="txtConsequence" name="txtConsequence" class="scenariotext" rows="5" cols="50"></textarea>
+                    </div>
+
+                    <script>
+
+                          function filterFunction2() {
+                            var input = document.getElementById("consequenceSearch");
+                            var filter = input.value.toUpperCase();
+                            var table = document.getElementById("consequenceTable");
+                            var rows = table.getElementsByTagName("tr");
+
+                            for (var i = 0; i < rows.length; i++) {
+                              var consequence = rows[i].getElementsByTagName("td")[0];
+                              if (consequence) {
+                                var txtValue = consequence.textContent || consequence.innerText;
+                                if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                                  rows[i].style.display = "";
+                                } else {
+                                  rows[i].style.display = "none";
+                                }
+                              }
+                            }
+                          }
+
+                    function getConsequences() {
+                        var tableBody = document.getElementById("consequenceTableBody");
+                        if (tableBody.classList.contains("show")) {
+                          tableBody.classList.remove("show");
+                        } else {
+                          // Clear previous table content
+                          tableBody.innerHTML = "";
+
+                          // Fetch consequences from the server
+                          $.ajax({
+                            url: '/OTRisk/get_consequences',
+                            type: 'GET',
+                            dataType: 'json',
+                            success: function(response) {
+                              var data = response.consequences;
+                              data.forEach(consequence => {
+                                var row = document.createElement("tr");
+                                var column = document.createElement("td");
+                                column.textContent = consequence.Consequence;
+                                row.appendChild(column);
+                                row.onclick = function() {
+                                  selectConsequence(consequence.Consequence);
+                                };
+                                tableBody.appendChild(row);
+                              });
+
+                              // Show the table
+                              tableBody.classList.add("show");
+                            },
+                            error: function(error) {
+                              console.error('Failed to fetch consequences:', error);
+                            }
+                          });
+                        }
+                      }
+
+
+                 function selectConsequence(consequence) {
+                    var txtConsequence = document.getElementById("txtConsequence");
+                    var existingConsequences = txtConsequence.value.trim();
+
+                    // Split the existing consequences into an array
+                    var selectedConsequences = existingConsequences.split("\n\n");
+
+                    // Check if the maximum limit of 5 records is reached
+                    if (selectedConsequences.length >= 5) {
+                      alert("You can select up to 5 consequences.");
+                      return;
+                    }
+
+                    // Check if the selected consequence is already added
+                    if (selectedConsequences.includes(consequence)) {
+                      alert("This consequence is already selected.");
+                      return;
+                    }
+
+                    // Add the selected consequence to the array
+                    selectedConsequences.push(consequence);
+
+                    // Update the textarea with the selected consequences
+                    txtConsequence.value = selectedConsequences.join("\n\n");
+
+                    // Clear the search input
+                    var consequenceSearchInput = document.getElementById("consequenceSearch");
+                    if (consequenceSearchInput) {
+                      consequenceSearchInput.value = "";
+                      consequenceSearchInput.dispatchEvent(new Event("input"));
+                    }
+                  }
+
+                  function deleteLastConsequence() {
+                          var txtConsequence = document.getElementById("txtConsequence");
+                          var lines = txtConsequence.value.split('\n');
+                          if (lines.length > 1) {
+                            lines.splice(-2, 1); // Remove the second-to-last element from the array
+                            txtConsequence.value = lines.join('\n');
+                          }
+                        }
+
+                 document.addEventListener("DOMContentLoaded", function() {
+                    getConsequences();
+                  });
+                </script>
+                </div>
+
+        </section>
+
+    </section>
+    <section class="indent-1">
+        <!-- Section 1 -->
+        <section >
+            <div>
+                <div style="width: 400px; background-color: #8caae6; padding: 10px">
+                        <label class="form-label" for="threat-intelligence">Threat Class</label>
+                        <select class="form-control" name="threat-intelligence" id="threat-intelligence">
+                            <option value="">Select a threat class</option>
+                            {% for threat_intelligence in threat_intelligence %}
+                                <option value="{{ threat_intelligence.id }}">{{ threat_intelligence.ThreatDescription }}</option>
+                            {% endfor %}
+                        </select>
+                        <br>
+                    <textarea id="txtThreatClass" name="txtThreatClass" class="scenariotext" rows="3" cols="40"></textarea>
+
+                    <script>
+                      document.getElementById("threat-intelligence").addEventListener("change", function () {
+                        var dropdown = document.getElementById("threat-intelligence");
+                        var selectedOption = dropdown.options[dropdown.selectedIndex].text;
+                        var txtThreatClass = document.getElementById("txtThreatClass");
+                        // Append the selected safeguard to the textarea
+                        txtThreatClass.value = selectedOption;
+                      });
+                    </script>
+                </div>
+            </div>
+
+        </section>
+        <section>
+            <div >
+                <div style="width: 400px; background-color: #8caae6; padding: 10px">
+                        <label class="form-label" for="threatsources">Threat Agent</label>
+                        <select class="form-control" name="threatsources" id="threatsources">
+                          <option value="">Select a threat agent</option>
+                          {% for threatsources in threatsources %}
+                            <option value="{{ threatsources.id }}">{{ threatsources.ThreatSource }}</option>
+                          {% endfor %}
+                        </select>
+                        <br>
+                    <textarea id="txtThreatAgent" name="txtThreatAgent" class="scenariotext" rows="3" cols="40"></textarea>
+
+                    <script>
+                      document.getElementById("threatsources").addEventListener("change", function () {
+                        var dropdown = document.getElementById("threatsources");
+                        var selectedOption = dropdown.options[dropdown.selectedIndex].text;
+                        var txtThreatAgent = document.getElementById("txtThreatAgent");
+                        // Append the selected safeguard to the textarea
+                        txtThreatAgent.value = selectedOption;
+                      });
+                    </script>
+                    </div>
+
+
+            </div>
+
+        </section>
+         <section>
+            <div>
+                <div style="width: 400px; background-color: #8caae6; padding: 10px">
+                        <label class="form-label" for="threatactions">Threat Action</label>
+                        <select class="form-control" name="threatactions" id="threatactions">
+                            <option value="">Select a threat action</option>
+                            {% for threataction in threatactions %}
+                                <option value="{{ threataction.id }}">{{ threataction.ThreatAction }}</option>
+                            {% endfor %}
+                        </select>
+                        <br>
+                    <textarea id="txtthreatactions" name="txtthreatactions" class="scenariotext" rows="3" cols="40"></textarea>
+
+                    <script>
+                      document.getElementById("threatactions").addEventListener("change", function () {
+                        var dropdown = document.getElementById("threatactions");
+                        var selectedOption = dropdown.options[dropdown.selectedIndex].text;
+                        var txtthreatactions = document.getElementById("txtthreatactions");
+                        // Append the selected safeguard to the textarea
+                        txtthreatactions.value = selectedOption;
+                      });
+                    </script>
+                    </div>
+                </div>
+
+        </section>
+        <section>
+            <div>
+                <div style="width: 400px; background-color: #8caae6; padding: 10px">
+                        <label class="form-label" for="mitigation-measure">Countermeasures</label>
+                        <select class="form-control" name="mitigation-measure" id="mitigation-measure">
+                            <option value="">Select Countermeasures</option>
+                            {% for mitigation_measure in mitigation_measures %}
+                                <option value="{{ mitigation_measure.id }}">{{ mitigation_measure.ControlObjective }}</option>
+                            {% endfor %}
+                        </select>
+                         <br>
+                    <textarea id="txtmm" name="txtmm" class="scenariotext" rows="3" cols="40"></textarea>
+
+                    <script>
+                      document.getElementById("mitigation-measure").addEventListener("change", function () {
+                        var dropdown = document.getElementById("mitigation-measure");
+                        var selectedOption = dropdown.options[dropdown.selectedIndex].text;
+                        var txtmm = document.getElementById("txtmm");
+                        // Append the selected safeguard to the textarea
+                        txtmm.value = selectedOption;
+                      });
+                    </script>
+                    </div>
+                </div>
+
+        </section>
+
+    </section>
+
+    <section style="border: red; border-style: solid">
+         <section>
+            <div>
+                <div class="form-row">
+                    <label class="form-label" for="safeguards">Safeguards</label>
+                        <select class="form-control" name="safeguards" id="safeguards">
+                          <option value="">Select a Safeguard</option>
+                          {% for safeguard in safeguards %}
+                            <option value="{{ safeguard.Safeguard }}">{{safeguard.Safeguard }}</option>
+                          {% endfor %}
+                        </select>
+                </div>
+                <div>
+                        <textarea id="txtSafeguards" name="txtSafeguards" class="scenariotext" rows="3" cols="40"></textarea>
+
+                        <script>
+                          document.getElementById("safeguards").addEventListener("change", function () {
+                            var dropdown = document.getElementById("safeguards");
+                            var selectedOption = dropdown.options[dropdown.selectedIndex].value;
+                            var txtSafeguards = document.getElementById("txtSafeguards");
+
+                            // Append the selected safeguard to the textarea
+                            txtSafeguards.value += selectedOption + "\n";
+                          });
+                        </script>
+                </div>
+            </div>
+        </section>
+        <section>
+            <div>
+                <div class="form-row">
+                        <label class="form-label" for="risk-category">Risk Category</label>
+                        <select class="form-control" name="risk-category" id="risk-category">
+                          <option value="">Select a risk category</option>
+                          {% for risk_category in risk_categories %}
+                            <option value="{{ risk_category.CategoryName }}">{{ risk_category.CategoryName }}</option>
+                          {% endfor %}
+                        </select>
+                    </div>
+
+
+            </div>
+
+        </section>
+
+    </section>
+
+
+   <div style="border: black;border-style: solid;">
+    <section class="indent-1">
+
+        <!-- Section 1 -->
+        <section style="background-color: #4ACBD6 ">
+            <h4>Impact Analysis</h4>
+                <div>
+                    <p>Severity Analysis</p>Weight: <input type="number" min="1" max="10" id="S_Weight" value="1" onchange="calculateRiskScore()">
+                        <div class="slider-container">
+                            <p><label id="severityrange" align="right"></label></p>
+                                <input type="range" min="1" max="5" value="1" class="slider" id="range_severity">
+
+
+                                  <script>
+                                      var slider = document.getElementById("range_severity");
+                                        var output = document.getElementById("severityrange");
+
+                                        // Display the default slider value
+                                        output.innerHTML = getSeverityLabel(slider.value);
+                                        // Update the current slider value (each time you drag the slider handle)
+                                        slider.oninput = function() {
+                                          output.innerHTML = getSeverityLabel(this.value);
+                                          calculateRiskScore();
+                                        };
+
+                                        function getSeverityLabel(value) {
+                                             switch (parseInt(value)) {
+                                            case 1:
+                                              return "Low";
+                                            case 2:
+                                              return "Low/Medium";
+                                            case 3:
+                                              return "Medium";
+                                            case 4:
+                                              return "Medium/High";
+                                            case 5:
+                                              return "High";
+                                            default:
+                                              return "";
+                                          }
+                                        }
+                                  </script>
+                        </div>
+                </div>
+        </section>
+        <section style="background-color: #4ACBD6 ">
+            <h4 style="color: #4ACBD6">-</h4>
+            <div>
+                    <p>Frequency Analysis</p>Weight: <input type="number" min="1" max="10" id="F_Weight" value="1" onchange="calculateRiskScore()">
+                    <div class="slider-container">
+                        <p><label id="frequencyrange" align="right"></label></p>
+                        <input type="range" min="1" max="5" value="1" class="slider" id="range_frequency">
+                        <script>
+                            var slider2 = document.getElementById("range_frequency");
+                            var output2 = document.getElementById("frequencyrange");
+
+                            // Display the default slider value
+                            output2.innerHTML = getfrequencyLabel(slider2.value);
+
+                            // Update the current slider value (each time you drag the slider handle)
+                            slider2.oninput = function() {
+                              output2.innerHTML = getfrequencyLabel(this.value);
+                              calculateRiskScore()
+                            };
+
+                            function getfrequencyLabel(value) {
+
+                              switch (parseInt(value)) {
+                                case 1:
+                                  return "Low";
+                                case 2:
+                                  return "Low/Medium";
+                                case 3:
+                                  return "Medium";
+                                case 4:
+                                  return "Medium/High";
+                                case 5:
+                                  return "High";
+                                default:
+                                  return "";
+                              }
+                            }
+                        </script>
+                    </div>
+                </div>
+
+        </section>
+
+        <!-- Section 2 -->
+        <section style="background-color: #4ACBD6 ">
+            <h4 style="color: #4ACBD6">-</h4>
+            <div >
+                    <p>Exposure Level</p>Weight: <input type="number" min="1" max="10" id="E_Weight" value="1" onchange="calculateRiskScore()">
+                    <div class="slider-container">
+                        <p><label id="exposurerange" align="right"></label></p>
+                        <input type="range" min="1" max="5" value="1" class="slider" id="range_exposure">
+                        <script>
+                            var slider3 = document.getElementById("range_exposure");
+                            var output3 = document.getElementById("exposurerange");
+
+                            // Display the default slider value
+                            output3.innerHTML = getexposureLabel(slider3.value);
+
+                            // Update the current slider value (each time you drag the slider handle)
+                            slider3.oninput = function() {
+                              output3.innerHTML = getexposureLabel(this.value);
+                              calculateRiskScore()
+                            };
+
+                            function getexposureLabel(value) {
+                              switch (parseInt(value)) {
+                                case 1:
+                                  return "Low";
+                                case 2:
+                                  return "Low/Medium";
+                                case 3:
+                                  return "Medium";
+                                case 4:
+                                  return "Medium/High";
+                                case 5:
+                                  return "High";
+                                default:
+                                  return "";
+                              }
+                            }
+                        </script>
+                    </div>
+                </div>
+             </section>
+        <section style="background-color: #4ACBD6 ">
+            <h4 style="color: #4ACBD6">-</h4>
+            <div >
+                <p>Resilience to Attack</p>Weight: <input type="number" min="1" max="10" id="R_Weight" value="1" onchange="calculateRiskScore()">
+                    <div class="slider-container">
+                        <p><label id="resiliencerange" align="right"></label></p>
+                        <input type="range" min="1" max="5" value="1" class="slider" id="range_resilience">
+                        <script>
+                            var slider4 = document.getElementById("range_resilience");
+                            var output4 = document.getElementById("resiliencerange");
+
+                            // Display the default slider value
+                            output4.innerHTML = getresilienceLabel(slider4.value);
+
+                            // Update the current slider value (each time you drag the slider handle)
+                            slider4.oninput = function() {
+                              output4.innerHTML = getresilienceLabel(this.value);
+                              calculateRiskScore()
+                            };
+
+                            function getresilienceLabel(value) {
+                              switch (parseInt(value)) {
+                                case 1:
+                                  return "Low";
+                                case 2:
+                                  return "Low/Medium";
+                                case 3:
+                                  return "Medium";
+                                case 4:
+                                  return "Medium/High";
+                                case 5:
+                                  return "High";
+                                default:
+                                  return "";
+                              }
+                            }
+                        </script>
+                    </div>
+                </div>
+             </section>
+        <section style="background-color: white">
+
+
+        </section>
+
+        <section style="background-color: #8caae6">
+            <h4>Unmitigated Risk</h4>
+            <div >
+                    <p>Likelihood w/o Controls (UEL)</p>
+                    <div class="slider-container">
+                        <p><label id="UELrange" align="right"></label></p>
+                        <input type="range" min="1" max="5" value="1" class="slider" id="range_UEL">
+                        <script>
+                            var slider5 = document.getElementById("range_UEL");
+                            var output5 = document.getElementById("UELrange");
+
+                            // Display the default slider value
+                            output5.innerHTML = getUELLabel(slider5.value);
+
+                            // Update the current slider value (each time you drag the slider handle)
+                            slider5.oninput = function() {
+                              output5.innerHTML = getUELLabel(this.value);
+                                calculateUnmitigatedRisk();
+                            };
+
+                            function getUELLabel(value) {
+                              switch (parseInt(value)) {
+                                case 1:
+                                  return "Low";
+                                case 2:
+                                  return "Low/Medium";
+                                case 3:
+                                  return "Medium";
+                                case 4:
+                                  return "Medium/High";
+                                case 5:
+                                  return "High";
+                                default:
+                                  return "";
+                              }
+                            }
+                        </script>
+                    </div>
+                </div>
+             </section>
+        <section style="background-color: #8caae6 ">
+            <h4 style="color: #8caae6">-</h4>
+            <div >
+                    <p>Unmitigated Risk (RRu)</p>
+                    <div class="slider-container">
+                        <p><label id="Unmitigatedrange" align="right"></label></p>
+                        <input type="range" min="1" max="5" value="1" class="slider" id="range_Unmitigated">
+                        <script>
+                            var slider6 = document.getElementById("range_Unmitigated");
+                            var output6 = document.getElementById("Unmitigatedrange");
+
+                            // Display the default slider value
+                            output6.innerHTML = getUnmitigatedLabel(slider6.value);
+
+                            // Update the current slider value (each time you drag the slider handle)
+                            slider6.oninput = function() {
+                              output6.innerHTML = getUnmitigatedLabel(this.value);
+                              calculateUnmitigatedRisk();
+                            };
+
+                            function getUnmitigatedLabel(value) {
+                              switch (parseInt(value)) {
+                                case 1:
+                                  return "Low";
+                                case 2:
+                                  return "Low/Medium";
+                                case 3:
+                                  return "Medium";
+                                case 4:
+                                  return "Medium/High";
+                                case 5:
+                                  return "High";
+                                default:
+                                  return "";
+                              }
+                            }
+                        </script>
+                    </div>
+                </div>
+             </section>
+        <section style="background-color: #8caae6 ">
+            <h4 style="color: #8caae6">-</h4>
+            <div >
+                    <p>Safety Level Target (SL-T)</p>
+                    <div class="slider-container">
+                        <p><label id="SLTrange" align="right"></label></p>
+                        <input type="range" min="1" max="5" value="1" class="slider" id="range_SLT">
+                        <script>
+                            var slider7 = document.getElementById("range_SLT");
+                            var output7 = document.getElementById("SLTrange");
+
+                            // Display the default slider value
+                            output7.innerHTML = getSLTLabel(slider7.value);
+
+                            // Update the current slider value (each time you drag the slider handle)
+                            slider7.oninput = function() {
+                              output7.innerHTML = getSLTLabel(this.value);
+                              calculateUnmitigatedRisk();
+                            };
+
+                            function getSLTLabel(value) {
+                              switch (parseInt(value)) {
+                                case 1:
+                                  return "Low";
+                                case 2:
+                                  return "Low/Medium";
+                                case 3:
+                                  return "Medium";
+                                case 4:
+                                  return "Medium/High";
+                                case 5:
+                                  return "High";
+                                default:
+                                  return "";
+                              }
+                            }
+                        </script>
+                    </div>
+
+                </div>
+             </section>
+
+            <!-- Gauge control here -->
+            <div class="gauge1 impactGauge" id="impactGauge"></div>
+            <div class="gauge2 RRGauge" id="RRGauge"></div>
+
+            <script>
+
+                  var gauge1, gauge2;
+                    function initializeGauge() {
+                        gauge1 = new Gauge($('.gauge1'), {
+                          values: { 0: '0', 10: '1', 20: '2', 30: '3', 40: '4', 50: '5', 60: '6', 70: '7', 80: '8', 90: '9', 100: '10' },
+                          angles: [150, 390]
+                        });
+
+                        gauge2 = new Gauge($('.gauge2'), {
+                          values: { 0: '0', 10: '1', 20: '2', 30: '3', 40: '4', 50: '5', 60: '6', 70: '7', 80: '8', 90: '9', 100: '10' },
+                          angles: [150, 390]
+                        });
+
+                        gauge1.setValue(20); // Set the initial value of the gauge
+                        gauge2.setValue(10); // Set the initial value of the gauge
+                      }
+
+                </script>
+
+
+
+   </div>
+
+
+<div style="border: solid black;">
+    <section class="indent-1">
+        <!-- Section 1 -->
+        <section style="background-color: #3dcd58 ">
+            <h4>Mitigated Risk (Current Controls)</h4>
+            <div>
+                <p>Severity Mitigated (Sm)</p>
+                <div class="slider-container">
+                    <p><label id="Smrange" align="right"></label></p>
+                  <input type="range" min="1" max="5" value="1" class="slider" id="range_Sm">
+                  <script>
+                      var slider8 = document.getElementById("range_Sm");
+                        var output8 = document.getElementById("Smrange");
+
+                        // Display the default slider value
+                        output8.innerHTML = getSmLabel(slider8.value);
+
+                        // Update the current slider value (each time you drag the slider handle)
+                        slider8.oninput = function() {
+                          output8.innerHTML = getSmLabel(this.value);
+                        };
+
+                        function getSmLabel(value) {
+                          switch (parseInt(value)) {
+                            case 1:
+                              return "Low";
+                            case 2:
+                              return "Low/Medium";
+                            case 3:
+                              return "Medium";
+                            case 4:
+                              return "Medium/High";
+                            case 5:
+                              return "High";
+                            default:
+                              return "";
+                          }
+                        }
+                  </script>
+                </div>
+
+            </div>
+
+        </section>
+        <section style="background-color: #3dcd58 ">
+            <h4 style="color: #3dcd58">-</h4>
+            <div>
+                    <p>Mitigated Exposure (MEL)</p>
+                    <div class="slider-container">
+                        <p><label id="MELrange" align="right"></label></p>
+                        <input type="range" min="1" max="5" value="1" class="slider" id="range_MEL">
+                        <script>
+                            var slider9 = document.getElementById("range_MEL");
+                            var output9 = document.getElementById("MELrange");
+
+                            // Display the default slider value
+                            output9.innerHTML = getMELLabel(slider9.value);
+
+                            // Update the current slider value (each time you drag the slider handle)
+                            slider9.oninput = function() {
+                              output9.innerHTML = getMELLabel(this.value);
+                            };
+
+                            function getMELLabel(value) {
+                              switch (parseInt(value)) {
+                                case 1:
+                                  return "Low";
+                                case 2:
+                                  return "Low/Medium";
+                                case 3:
+                                  return "Medium";
+                                case 4:
+                                  return "Medium/High";
+                                case 5:
+                                  return "High";
+                                default:
+                                  return "";
+                              }
+                            }
+                        </script>
+                    </div>
+                </div>
+
+        </section>
+
+        <!-- Section 2 -->
+        <section style="background-color: #3dcd58 ">
+            <h4 style="color: #3dcd58">-</h4>
+            <div >
+                    <p>Residual Risk (RRm)</p>
+                    <div class="slider-container">
+                        <p><label id="RRmrange" align="right"></label></p>
+                        <input type="range" min="1" max="5" value="1" class="slider" id="range_RRm">
+                        <script>
+                            var slider10 = document.getElementById("range_RRm");
+                            var output10 = document.getElementById("RRmrange");
+
+                            // Display the default slider value
+                            output10.innerHTML = getRRmLabel(slider10.value);
+
+                            // Update the current slider value (each time you drag the slider handle)
+                            slider10.oninput = function() {
+                              output10.innerHTML = getRRmLabel(this.value);
+                            };
+
+                            function getRRmLabel(value) {
+                              switch (parseInt(value)) {
+                                case 1:
+                                  return "Low";
+                                case 2:
+                                  return "Low/Medium";
+                                case 3:
+                                  return "Medium";
+                                case 4:
+                                  return "Medium/High";
+                                case 5:
+                                  return "High";
+                                default:
+                                  return "";
+                              }
+                            }
+                        </script>
+                    </div>
+                </div>
+             </section>
+
+        <section style="background-color: white">
+        </section>
+
+        <section style="background-color: #7d929e ">
+            <h4>Adjusted Risk (After Action)</h4>
+            <div >
+                    <p>Severity Adjusted (Sa)</p>
+                    <div class="slider-container">
+                        <p><label id="SEVArange" align="right"></label></p>
+                        <input type="range" min="1" max="5" value="1" class="slider" id="range_SEVA">
+                        <script>
+                            var slider11 = document.getElementById("range_SEVA");
+                            var output11 = document.getElementById("SEVArange");
+
+                            // Display the default slider value
+                            output11.innerHTML = getSEVALabel(slider11.value);
+
+                            // Update the current slider value (each time you drag the slider handle)
+                            slider11.oninput = function() {
+                              output11.innerHTML = getSEVALabel(this.value);
+                            };
+
+                            function getSEVALabel(value) {
+                              switch (parseInt(value)) {
+                                case 1:
+                                  return "Low";
+                                case 2:
+                                  return "Low/Medium";
+                                case 3:
+                                  return "Medium";
+                                case 4:
+                                  return "Medium/High";
+                                case 5:
+                                  return "High";
+                                default:
+                                  return "";
+                              }
+                            }
+                        </script>
+                    </div>
+                </div>
+             </section>
+        <section style="background-color: #7d929e ">
+            <h4 style="color: #7d929e">-</h4>
+            <div>
+                    <p>Mitigated Exposure (MELa)</p>
+                    <div class="slider-container">
+                        <p><label id="MELarange" align="right"></label></p>
+                        <input type="range" min="1" max="5" value="1" class="slider" id="range_MELa">
+                        <script>
+                            var slider12 = document.getElementById("range_MELa");
+                            var output12 = document.getElementById("MELarange");
+
+                            // Display the default slider value
+                            output12.innerHTML = getMELaLabel(slider12.value);
+
+                            // Update the current slider value (each time you drag the slider handle)
+                            slider12.oninput = function() {
+                              output12.innerHTML = getMELaLabel(this.value);
+                            };
+
+                            function getMELaLabel(value) {
+                              switch (parseInt(value)) {
+                                case 1:
+                                  return "Low";
+                                case 2:
+                                  return "Low/Medium";
+                                case 3:
+                                  return "Medium";
+                                case 4:
+                                  return "Medium/High";
+                                case 5:
+                                  return "High";
+                                default:
+                                  return "";
+                              }
+                            }
+                        </script>
+                    </div>
+                </div>
+             </section><section style="background-color: #7d929e ">
+            <h4 style="color: #7d929e">-</h4>
+            <div >
+                    <p>Residual Risk (RRa)</p>
+                    <div class="slider-container">
+                        <p><label id="RRarange" align="right"></label></p>
+                        <input type="range" min="1" max="5" value="1" class="slider" id="range_RRa">
+                        <script>
+                            var slider13 = document.getElementById("range_RRa");
+                            var output13 = document.getElementById("RRarange");
+
+                            // Display the default slider value
+                            output13.innerHTML = getRRaLabel(slider13.value);
+
+                            // Update the current slider value (each time you drag the slider handle)
+                            slider13.oninput = function() {
+                              output13.innerHTML = getRRaLabel(this.value);
+                            };
+
+                            function getRRaLabel(value) {
+                              switch (parseInt(value)) {
+                                case 1:
+                                  return "Low";
+                                case 2:
+                                  return "Low/Medium";
+                                case 3:
+                                  return "Medium";
+                                case 4:
+                                  return "Medium/High";
+                                case 5:
+                                  return "High";
+                                default:
+                                  return "";
+                              }
+                            }
+                        </script>
+                    </div>
+                </div>
+
+
+             </section>
+
+    </section>
+       </div>
+
+
+
+        <div class="button-row">
+            <button type="button" id="addScenarioBtn">Add Scenario</button>
+            <button type="submit">Save</button>
+        </div>
+
+        <script>
+        //scoring functions for the gauge controls
+        function calculateRiskScore() {
+
+        var severity = parseInt(document.getElementById("range_severity").value);
+          var severityWeight = parseInt(document.getElementById("S_Weight").value);
+          var frequency = parseInt(document.getElementById("range_frequency").value);
+          var frequencyWeight = parseInt(document.getElementById("F_Weight").value);
+          var exposure = parseInt(document.getElementById("range_exposure").value);
+          var exposureWeight = parseInt(document.getElementById("E_Weight").value);
+          var resilience = parseInt(document.getElementById("range_resilience").value);
+          var resilienceWeight = parseInt(document.getElementById("R_Weight").value);
+
+          // Calculate the raw score
+          var rawScore = (severity * severityWeight) + (frequency * frequencyWeight) + (exposure * exposureWeight) + (resilience * resilienceWeight);
+
+          // Normalize the score between 1 and 10
+          var minScore = 0; // Update this if a minimum possible score is defined
+          var maxScore = 200; // Update this if a maximum possible score is defined
+          var normalizedScore = (rawScore - minScore) / (maxScore - minScore) * 9 + 1;
+
+          // Round the normalized score to two decimal places
+          normalizedScore = Math.round(normalizedScore * 100) / 100;
+
+          // Generate the corresponding rating based on the normalized score
+          var rating;
+          if (normalizedScore <= 2) {
+            rating = "Low";
+          } else if (normalizedScore <= 4) {
+            rating = "Low/Medium";
+          } else if (normalizedScore <= 6) {
+            rating = "Medium";
+          } else if (normalizedScore <= 8) {
+            rating = "Medium/High";
+          } else {
+            rating = "High";
+          }
+
+            gauge1.setValue(normalizedScore*10);
+        }
+
+        function calculateUnmitigatedRisk() {
+
+          // Calculate unmitigated risk
+            var likelihood = parseInt(document.getElementById("range_UEL").value);
+            var severity = parseInt(document.getElementById("range_Unmitigated").value);
+            var slt = parseInt(document.getElementById("range_SLT").value);
+
+          const unmitigatedRisk = likelihood * severity;
+
+          // Normalize the unmitigated risk to a score between 0 and 10
+          const normalizedScore = (unmitigatedRisk - 1) / 4 * 10;
+            gauge2.setValue(normalizedScore*10);
+          // Compare the normalized score with Safety Level Target (SL-T)
+          if (normalizedScore <= slt) {
+            return 'Low risk';
+          } else if (normalizedScore > slt && normalizedScore <= 2 * slt) {
+            return 'Medium risk';
+          } else {
+            return 'High risk';
+          }
+
+
+        }
+
+        // Function to save or update CyberPHA data
+        function saveOrUpdateCyberPHA(formData) {
+          // Get the CSRF token from the cookie
+          const csrftoken = getCookie('csrftoken');
+
+          // Create a new XMLHttpRequest object
+          const xhr = new XMLHttpRequest();
+
+          // Set up the request
+          xhr.open('POST', "{% url 'OTRisk:save_or_update_cyberpha' %}", true);
+
+          xhr.setRequestHeader('X-CSRFToken', csrftoken);
+
+
+          // Define the callback function for when the request is completed
+          xhr.onload = function() {
+            if (xhr.status === 200) {
+              console.log('CyberPHA data saved or updated successfully');
+              // Optionally, perform any additional actions or show a success message
+            } else {
+              console.error('Failed to save or update CyberPHA data');
+              // Optionally, handle the error or show an error message
+            }
+          };
+
+          // Send the request with the form data
+          xhr.send(formData);
+        }
+
+
+        function getCookie(name) {
+          const cookieValue = document.cookie
+            .split(';')
+            .map(cookie => cookie.trim())
+            .find(cookie => cookie.startsWith(name + '='));
+
+          if (cookieValue) {
+            return cookieValue.split('=')[1];
+          }
+
+          return null;
+        }
+
+          // Event listener for form submission
+          document.getElementById('cyberpha-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            // Get the values of the form fields
+            const scenario = document.getElementById('txtScenario').value;
+            const controlObjective = document.getElementById('control-objective').value;
+            const riskCategory = document.getElementById('risk-category').value;
+            const mitigationMeasures = document.getElementById('mitigation-measure').value;
+            const threatIntelligence = document.getElementById('threat-intelligence').value;
+            const likelihood = document.getElementById('likelihood').value;
+            const impact = document.getElementById('impact').value;
+
+
+            // Create a new FormData object and pass the form as a parameter
+            const formData = new FormData(document.getElementById('cyberpha-form'));
+
+            // Set the form field values in the FormData object
+            formData.set('assessment_name', scenario);
+            formData.set('control-objective', controlObjective);
+            formData.set('risk-category', riskCategory);
+            formData.set('mitigation-measure', mitigationMeasures);
+            formData.set('threat-intelligence', threatIntelligence);
+            formData.set('likelihood', likelihood);
+            formData.set('impact', impact);
+
+            // Call the saveOrUpdateCyberPHA function
+            saveOrUpdateCyberPHA(formData);
+          });
+        </script>
+    </form>
+
+
+    <script>
+        // Function to calculate risk level based on likelihood and impact
+        function calculateRiskLevel(likelihood, impact) {
+            // Implement your calculation logic here and return the calculated risk level
+        }
+
+        // Function to add a new scenario row to the table
+        function addScenarioRow() {
+            var scenarioCount = document.querySelectorAll('#scenarioTable tbody tr').length + 1;
+            var row = document.createElement('tr');
+            row.id = 'scenarioRow' + scenarioCount;
+
+            // Create table cells for each field
+            var assessmentNameCell = document.createElement('td');
+            var scenarioCell = document.createElement('td');
+            var controlObjectiveCell = document.createElement('td');
+            var riskCategoryCell = document.createElement('td');
+            var mitigationMeasuresCell = document.createElement('td');
+            var likelihoodCell = document.createElement('td');
+            var impactCell = document.createElement('td');
+            var riskLevelCell = document.createElement('td');
+
+            // Create form elements for each field
+            var assessmentNameInput = document.createElement('input');
+            assessmentNameInput.type = 'text';
+            assessmentNameInput.name = 'assessment_name';
+            assessmentNameCell.appendChild(assessmentNameInput);
+
+            var scenarioInput = document.createElement('input');
+            scenarioInput.type = 'text';
+            scenarioInput.name = 'scenarios[' + scenarioCount + '][scenario]';
+            scenarioCell.appendChild(scenarioInput);
+
+            var controlObjectiveSelect = document.createElement('select');
+            controlObjectiveSelect.name = 'scenarios[' + scenarioCount + '][control_objective]';
+            // Populate control objectives dynamically
+
+            var riskCategorySelect = document.createElement('select');
+            riskCategorySelect.name = 'scenarios[' + scenarioCount + '][CategoryName]';
+            // Populate risk categories dynamically
+
+
+            var mitigationMeasuresSelect = document.createElement('select');
+            mitigationMeasuresSelect.name = 'scenarios[' + scenarioCount + '][mitigation_measures]';
+            // Populate mitigation measures dynamically
+
+            var likelihoodInput = document.createElement('input');
+            likelihoodInput.type = 'number';
+            likelihoodInput.name = 'scenarios[' + scenarioCount + '][likelihood]';
+            likelihoodCell.appendChild(likelihoodInput);
+
+            var impactInput = document.createElement('input');
+            impactInput.type = 'number';
+            impactInput.name = 'scenarios[' + scenarioCount + '][impact]';
+            impactCell.appendChild(impactInput);
+
+            var riskLevelInput = document.createElement('input');
+            riskLevelInput.type = 'text';
+            riskLevelInput.name = 'scenarios[' + scenarioCount + '][risk_level]';
+            riskLevelInput.disabled = true;
+            riskLevelCell.appendChild(riskLevelInput);
+
+            // Append form elements to the cells
+            assessmentNameCell.appendChild(assessmentNameInput);
+            scenarioCell.appendChild(scenarioInput);
+            controlObjectiveCell.appendChild(controlObjectiveSelect);
+            riskCategoryCell.appendChild(riskCategorySelect);
+            mitigationMeasuresCell.appendChild(mitigationMeasuresSelect);
+            likelihoodCell.appendChild(likelihoodInput);
+            impactCell.appendChild(impactInput);
+            riskLevelCell.appendChild(riskLevelInput);
+
+            // Append cells to the row
+            row.appendChild(assessmentNameCell);
+            row.appendChild(scenarioCell);
+            row.appendChild(controlObjectiveCell);
+            row.appendChild(riskCategoryCell);
+            row.appendChild(mitigationMeasuresCell);
+            row.appendChild(likelihoodCell);
+            row.appendChild(impactCell);
+            row.appendChild(riskLevelCell);
+
+            // Append row to the table
+            document.getElementById('scenarioTable').appendChild(row);
+        }
+
+        // Event listener for adding a new scenario row
+        document.getElementById('addScenarioBtn').addEventListener('click', function() {
+            addScenarioRow();
+        });
+
+        // Event listener for calculating risk level based on likelihood and impact
+        document.addEventListener('input', function(event) {
+            var element = event.target;
+            if (element.tagName === 'INPUT' && (element.name.includes('likelihood') || element.name.includes('impact'))) {
+                var row = element.closest('tr');
+                var likelihood = parseInt(row.querySelector('input[name$="[likelihood]"]').value) || 0;
+                var impact = parseInt(row.querySelector('input[name$="[impact]"]').value) || 0;
+                var riskLevelInput = row.querySelector('input[name$="[risk_level]"]');
+                var calculatedRiskLevel = calculateRiskLevel(likelihood, impact);
+                riskLevelInput.value = calculatedRiskLevel;
+            }
+        });
+
+        // Function to fetch and populate the mitigation measures dynamically
+        function populateMitigationMeasures(controlObjectiveSelect) {
+            fetch('/OTRisk/get_mitigation_measures/')
+                .then(response => response.json())
+                .then(data => {
+                    data.forEach(measure => {
+                        let option = document.createElement('option');
+                        option.value = measure;
+                        option.text = measure;
+                        controlObjectiveSelect.appendChild(option);
+                    });
+                })
+                .catch(error => {
+                    console.log('Error fetching mitigation measures:', error);
+                });
+        }
+
+        // Event listener to populate the mitigation measures when the control objective is selected
+        document.addEventListener('change', function(event) {
+            const element = event.target;
+            if (element.tagName === 'SELECT' && element.name.includes('control_objective')) {
+                const controlObjectiveSelect = element;
+                const mitigationMeasuresSelect = controlObjectiveSelect.closest('tr').querySelector('select[name$="[mitigation_measures]"]');
+                // Clear previous options
+                while (mitigationMeasuresSelect.firstChild) {
+                    mitigationMeasuresSelect.removeChild(mitigationMeasuresSelect.firstChild);
+                }
+                // Populate mitigation measures based on selected control objective
+                populateMitigationMeasures(mitigationMeasuresSelect);
+            }
+        });
+
+        $(".slider")
+
+        $(document).ready(function() {
+            initializeGauge();
+
+          });
+
+</script>
+
+        </td>
+    </tr>
+</table>
+</body>
+</html>

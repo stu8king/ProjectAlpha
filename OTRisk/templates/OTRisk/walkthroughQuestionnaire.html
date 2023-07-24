@@ -1,0 +1,59 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Site Walkthrough</title>
+    <!-- Include Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link href="{% static 'css/menus.css' %}" rel="stylesheet">
+</head>
+<body>
+    <div class="top-menu">
+        <ul>
+            <li><a href="#">Home</a></li>
+            <li><a href="#">Assessments</a></li>
+            <li><a href="#">Workshops</a></li>
+            <li><a href="#">Walkthroughs</a></li>
+            <li><a href="#">Reports</a></li>
+        </ul>
+    </div>
+    <div class="container">
+        <div class="sidebar">
+            <ul>
+                <li><a href="{% url 'OTRisk:post_create' %}">Add New</a></li>
+                <li><a href="{% url 'OTRisk:add_team_members' %}">Add Team</a></li>
+                <li><a href="#">Add Workshop</a></li>
+                <li><a href="#">Add Scenarios</a></li>
+                <li><a href="#">Add Assets</a></li>
+                <li><a href="#">Add Workshop</a></li>
+                <li><a href="#">Add Walkthrough</a></li>
+            </ul>
+        </div>
+        <div class="content">
+    <h1>Walkthrough Questionnaire</h1>
+    <p>Total Questionnaires: {{ query_results|length }}</p>
+    <ul>
+        {% for result in query_results %}
+            <li>
+                <strong>Questionnaire ID:</strong> {{ result.id }}<br>
+                <strong>Title:</strong> {{ result.title }}<br>
+                <strong>Description:</strong> {{ result.description }}<br>
+                <strong>Question Theme:</strong> {{ result.questionthemes__QuestionTheme }}<br>
+                <strong>Question Number:</strong> {{ result.questionthemes__questions__questionnumber }}<br>
+                <strong>Question Text:</strong> {{ result.questionthemes__questions__questiontext }}<br>
+                <br>
+            </li>
+        {% endfor %}
+    </ul>
+</div>
+    </div>
+
+    <!-- Include jQuery and Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+
+
+

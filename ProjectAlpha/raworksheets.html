@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>OT Risk Assessment Worksheet</title>
+    <style>
+        /* Apple.com inspired style */
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+
+        .top-menu {
+            background-color: #000;
+            width: 100%;
+            padding: 10px 0;
+            margin: 0;
+        }
+
+        .top-menu ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+        }
+
+        .top-menu li {
+            margin-right: 15px;
+        }
+
+        .top-menu li a {
+            text-decoration: none;
+            color: #fff;
+            font-size: 18px;
+            font-weight: 600;
+            transition: color 0.3s ease;
+        }
+
+        .top-menu li a:hover {
+            color: #ccc;
+        }
+
+        .content {
+            display: flex;
+            width: 100%;
+            justify-content: space-between;
+            margin-top: 40px;
+        }
+
+        .column {
+            flex: 1;
+            background-color: #fff;
+            box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            overflow: hidden;
+            padding: 30px;
+        }
+
+        .column h2 {
+            font-size: 28px;
+            font-weight: 800;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+            background-color: #000;
+            color: #fff;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .form-group input[type="text"],
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        .form-group textarea {
+            height: 100px;
+        }
+
+        .button-container {
+            text-align: center;
+        }
+
+        .button-container button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #000;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="top-menu">
+        <ul>
+            <li><a href="#">Home</a></li>
+            <li><a href="#">Assessments</a></li>
+            <li><a href="#">Workshops</a></li>
+            <li><a href="#">Walkthroughs</a></li>
+            <li><a href="#">Reports</a></li>
+        </ul>
+    </div>
+    <div class="content">
+        <div class="column">
+            <h2>Scenario</h2>
+            <div class="form-group">
+                <label for="scenario">Scenario:</label>
+                    <!-- Display the initiating_event values in a dropdown select element -->
+                    <select id="scenario-field">
+                        {% for event in initiating_events %}
+                            <option value="{{ event }}">{{ event }}</option>
+                        {% endfor %}
+                    </select>
+            </div>
+            <div class="form-group">
+                <label for="consequence">Consequence:</label>
+                <input type="text" id="consequence" name="consequence" placeholder="Enter a consequence">
+            </div>
+            <div class="form-group">
+                <label for="threat-source">Threat Source:</label>
+                <input type="text" id="threat-source" name="threat-source" placeholder="Enter a threat source">
+            </div>
+            <div class="form-group">
+                <label for="threat-action">Threat Action:</label>
+                <textarea id="threat-action" name="threat-action" placeholder="Enter a threat action"></textarea>
+            </div>
+            <div class="button-container">
+                <button type="submit">Submit</button>
+            </div>
+        </div>
+        <div class="column" id="center-column">
+            <h2>Severity</h2>
+                <Table width="100%">
+                    <tr>
+                        <td width="25%">Severity (S)</td>
+                        <td width="25%">Frequency (F)</td>
+                        <td width="25%">Exposure (E)</td>
+                        <td width="25%">Resilience (R)</td>
+                        <td width="25%">Max Score</td>
+                    </tr>
+                    <tr>
+                        <td width="25%"><input type="number" id="severity" min="0" max="5"></td>
+                        <td width="25%"><input type="number" id="frequency" min="0" max="5"></td>
+                        <td width="25%"><input type="number" id="exposure" min="0" max="5"></td>
+                        <td width="25%"><input type="number" id="resilience" min="0" max="5"></td>
+                        <td width="25%"><input type="number" id="max-score" min="0" max="5"></td>
+                    </tr>
+                </Table>
+
+
+  <h2>Unmitigated Risk</h2>
+  <table width = 100%>
+      <tr>
+          <td width="25%">Unmitigated Event Likelihood (UEL)</td>
+          <td width="50%" align="center">Realized Risk (unmitigated) (RRu)</td>
+          <td width="25%" align="right">Severity Index (SL)</td>
+      </tr>
+      <tr>
+          <td width="25%"><input type="number" id="unmitigated-likelihood" min="0" max="5"></td>
+          <td width="50%" align="center">
+              <select id="realized-risk">
+                  <option value="FC">FC: Full Controls</option>
+                  <option value="NC">NC: No Controls</option>
+                  <option value="AC">AC: All Controls</option>
+                  <option value="PC">PC: Partial Controls</option>
+                  <option value="URC">URC: Unreliable Controls</option>
+                  <option value="DRC">DRC: Deferred Controls</option>
+                  <option value="PLC">PLC: Planned Controls</option>
+                  <option value="RC">RC: Redundant Controls</option>
+                  <option value="OC">OC: Outdated Controls</option>
+                  <option value="NAC">NAC: Not Applicable Controls</option>
+                  <option value="NRC">NRC: No Relevant Controls</option>
+                </select>
+          </td>
+          <td width="25%" align="right"><input type="number" id="severity-index" min="0" max="5"></td>
+      </tr>
+  </table>
+
+
+  <h2>Mitigated Risk</h2>
+  <table width = "100%">
+      <tr>
+          <td width="25%">Severity (mitigated) (Sm)</td>
+          <td width="35%" align="center">Mitigated Exposure Level (MEL)</td>
+          <td width="40%" align="right">Residual Risk (mitigated) (RRm)</td>
+      </tr>
+      <tr>
+          <td width="25%"><input type="number" id="mitigated-severity" min="0" max="5"></td>
+          <td width="35%"align="center"><input type="number" id="mitigated-exposure" min="0" max="5"></td>
+          <td width="40%" align="right">
+              <select id="residual-risk-mitigated">
+                  <option value="FC">FC: Full Controls</option>
+                  <option value="NC">NC: No Controls</option>
+                  <option value="AC">AC: All Controls</option>
+                  <option value="PC">PC: Partial Controls</option>
+                  <option value="URC">URC: Unreliable Controls</option>
+                  <option value="DRC">DRC: Deferred Controls</option>
+                  <option value="PLC">PLC: Planned Controls</option>
+                  <option value="RC">RC: Redundant Controls</option>
+                  <option value="OC">OC: Outdated Controls</option>
+                  <option value="NAC">NAC: Not Applicable Controls</option>
+                  <option value="NRC">NRC: No Relevant Controls</option>
+                </select>
+          </td>
+      </tr>
+  </table>
+
+
+
+  <h2>Adjusted Risk</h2>
+  <table width = "100%">
+      <tr>
+          <td width="25%">Severity (after action) (Sa)</td>
+          <td width="35%" align="center">Mitigated Exposure Level (after action) (MELa)</td>
+          <td width="40%" align="right">Residual Risk (after action) (RRa)</td>
+      </tr>
+      <tr>
+          <td width="25%"><input type="number" id="after-action-severity" min="0" max="5"></td>
+          <td width="35%"align="center"><input type="number" id="after-action-exposure" min="0" max="5"></td>
+          <td width="40%" align="right">
+              <select id="residual-risk-after-action">
+                  <option value="FC">FC: Full Controls</option>
+                  <option value="NC">NC: No Controls</option>
+                  <option value="AC">AC: All Controls</option>
+                  <option value="PC">PC: Partial Controls</option>
+                  <option value="URC">URC: Unreliable Controls</option>
+                  <option value="DRC">DRC: Deferred Controls</option>
+                  <option value="PLC">PLC: Planned Controls</option>
+                  <option value="RC">RC: Redundant Controls</option>
+                  <option value="OC">OC: Outdated Controls</option>
+                  <option value="NAC">NAC: Not Applicable Controls</option>
+                  <option value="NRC">NRC: No Relevant Controls</option>
+                </select>
+          </td>
+      </tr>
+  </table>
+        </div>
+        <div class="column">
+            <h2>Scenarios</h2>
+            <!-- Add scenario-related fields and controls here -->
+        </div>
+    </div>
+</body>
+</html>

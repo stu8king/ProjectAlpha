@@ -1,0 +1,332 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CyberPHA Manager</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" ></script>
+
+
+</html>
+
+    <script>
+        $(document).ready(function() {
+            // Function to handle row click event in tblcyberPHAList
+            $('#tblcyberPHAList tbody tr').click(function() {
+                // Remove the active class from all rows
+                $('#tblcyberPHAList tbody tr').removeClass('active');
+
+                // Add the active class to the clicked row
+                $(this).addClass('active');
+
+                // Set the active-cyberPHA value
+                var activeCyberPHA = $(this).attr('data-id');
+                sessionStorage.setItem('active-cyberpha', activeCyberPHA);
+                // Set the session cookie for active-cyberpha
+
+                // Set the session value as a cookie
+                document.cookie = "active_cyberpha=" + activeCyberPHA;
+
+                // Get the link element
+                var link = document.getElementById('cyberpha-link');
+
+                // Update the href attribute with the active-cyberpha value
+                link.href = link.href + "?active_cyberpha=" + activeCyberPHA;
+
+               // Populate the data fields within CyberPHAOverview
+                var facilityName = $(this).find('.facility-name').text();
+                var phaLeader = $(this).find('.pha-leader').text();
+                var phaLeaderEmail = $(this).find('.pha-leader-email').text();
+                var facilityOwner = $(this).find('.facility-owner').text();
+                var facilityScope = $(this).find('.facility-scope').text();
+                var description = $(this).find('.description').text();
+                var notes = $(this).find('.notes').text();
+
+                $('#facility-name').val(facilityName);
+                $('#pha-leader').val(phaLeader);
+                $('#pha-leader-email').val(phaLeaderEmail);
+                $('#facility-owner').val(facilityOwner);
+                $('#facility-scope').val(facilityScope);
+                $('#description').val(description);
+                $('#notes').val(notes);
+
+                // Populate the related records from tblCyberPHATeam
+                // You need to implement this part in your views.py
+                $.ajax({
+                    url: '/OTRisk/team-members/',
+                    type: 'GET',
+                    data: { cyberPHAID: activeCyberPHA },
+                    success: function(response) {
+                        $('#TeamMembersTable').html(response);
+                    }
+                });
+            });
+
+            // Function to handle add record button click event
+            $('#add-record-btn').click(function() {
+                // Validate and retrieve the data entered by the user
+                var name = $('#name').val();
+                var company = $('#company').val();
+                var title = $('#title').val();
+                var expertise = $('#expertise').val();
+                var experience = $('#experience').val();
+                var comments = $('#comments').val();
+
+                // You can perform further validation here
+
+                // Save the new record to tblCyberPHATeam using AJAX
+                var activeCyberPHA = sessionStorage.getItem('active-cyberpha');
+                $.ajax({
+                    url: '/OTRisk/add-team-member/',
+                    type: 'POST',
+                    data: {
+                        csrfmiddlewaretoken: '{{ csrf_token }}',
+                        cyberPHAID: activeCyberPHA,
+                        name: name,
+                        company: company,
+                        title: title,
+                        expertise: expertise,
+                        experience: experience,
+                        comments: comments
+                    },
+                    success: function(response) {
+                        // Clear the input fields
+                        $('#name').val('');
+                        $('#company').val('');
+                        $('#title').val('');
+                        $('#expertise').val('');
+                        $('#experience').val('');
+                        $('#comments').val('');
+
+                        // Update the team members table
+                        $('#TeamMembersTable').html(response.team_members);
+
+                        // Set the active-cyberPHA value to the newly created record
+                        sessionStorage.setItem('active-cyberpha', response.new_cyber_pha_id);
+                    }
+                });
+            });
+
+            // Function to handle add new record button click event
+            $('#add-new-record-btn').click(function() {
+                // Clear the input fields and active-cyberpha session variable
+                $('#facility-name').val('');
+                $('#pha-leader').val('');
+                $('#pha-leader-email').val('');
+                $('#facility-owner').val('');
+                $('#facility-scope').val('');
+                $('#description').val('');
+                $('#notes').val('');
+                sessionStorage.setItem('active-cyberpha', '0');
+
+                // Remove the active class from all rows
+                $('#tblcyberPHAList tbody tr').removeClass('active');
+            });
+        });
+    </script>
+
+</head>
+<body>
+
+<table >
+    <tr>
+        <td >
+            <div class="sidenav">
+            <h3>Servalan</h3>
+            <br>
+            <br>
+            <a href="{% url 'OTRisk:risk_assessment' %}">Risk Assessment Worksheet</a>
+            <!--<a href="{% url 'OTRisk:post_create' %}">CyberPHA</a>-->
+            <a href="{% url 'OTRisk:cyber_pha_manager' %}">CyberPHA Manager</a>
+            <a href="{% url 'OTRisk:site_walkdown' %}">Site Walkdown</a>
+            <a href="{% url 'OTRisk:walkdown' %}">New Walkdown</a>
+            <a href="#">Reports</a>
+            <a href="#">Admin</a>
+            <br>
+            <br>
+            <a href="#">Logout</a>
+            </div>
+        </td>
+        <td>
+            <section >
+            <form id="cyberPHAForm" method="POST" action="{% url 'OTRisk:save_cyberpha' %}">
+                <h3>CyberPHA Details</h3>
+                {% csrf_token %}
+                <table>
+                    <tr>
+                        <td >
+                            <table >
+                                <tr>
+                                    <td>Facility Type</td>
+                                    <td>
+                                        <select class="form-control" name="facilityType" id="facilityType">
+                                        <option value="">Select the facility Type</option>
+                                        </select>
+                                    </td>
+                                    <td>Assessment Leader</td>
+                                    <td>
+                                        <input type="text" id="pha-leader" name="phaLeader" placeholder="Assessment Leader" required><br>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Facility</td>
+                                    <td><input type="text" id="facility-name" name="facilityName" placeholder="Facility" required><br></td>
+                                    <td>Facility Leader</td>
+                                    <td><input type="text" id="facility-owner" name="facilityOwner" placeholder="Facility Leader" required><br></td>
+                                </tr>
+                                <tr>
+                                    <td>Unit</td>
+                                    <td><input type="text" id="facilityUnit" name="facilityUnit" placeholder="Unit" required><br></td>
+                                    <td>Assessment Scope</td>
+                                    <td><input type="text" id="facility-scope" name="facilityScope" placeholder="Assessment Scope" required><br></td>
+
+                                </tr>
+                                <tr>
+                                    <td>Zone</td>
+                                    <td><input type="text" id="facilityZone" name="facilityZone" placeholder="Zone" ><br></td>
+                                </tr>
+                                <tr>
+                                    <td>Node</td>
+                                    <td><input type="text" id="facilityNode" name="facilityNode" placeholder="Node" ><br></td>
+                                </tr>
+
+
+                                <tr>
+                                    <td>Leader Email</td>
+                                    <td><input type="email" id="pha-leader-email" name="phaLeaderEmail" placeholder="PHA Leader Email" required><br></td>
+                                </tr>
+
+                                <tr>
+
+                                </tr>
+                                <tr>
+                                    <td>Scope Description</td>
+                                    <td><textarea id="description" name="description" placeholder="Description" required></textarea><br></td>
+                                </tr>
+                                <tr>
+                                    <td>Notes</td>
+                                    <td><textarea id="notes" name="notes" placeholder="Notes" required></textarea><br></td>
+                                </tr>
+                            </table>
+                            <input type="submit" value="Save">
+                            <button id="add-new-record-btn">Add New Record</button>
+                        </td>
+                    </tr>
+                </table>
+            </form>
+
+            </section>
+        </td>
+    </tr>
+</table>
+
+<br>
+<div class="container">
+    <div>
+        <br><br>
+
+    </div>
+
+    <div >
+        <div id="CyberPHAOverview">
+            <!-- Form to create or update a record in tblCyberPHA -->
+                <a href="{% url 'OTRisk:assess_cyberpha' %}" id="cyberpha-link">Go to CyberPHA Assessment</a>
+
+
+
+                         <td>
+                            <div id="CyberPHAList">
+                            <!-- Table listing current records in tblCyberPHA -->
+                                <div class="table-container">
+                                <table id="tblcyberPHAList">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Facility Name</th>
+                                            <th>Facility Scope</th>
+                                            <th style="visibility: hidden;width: 0"></th>
+                                            <th style="visibility: hidden"></th>
+                                            <th style="visibility: hidden"></th>
+                                            <th style="visibility: hidden"></th>
+                                            <th style="visibility: hidden"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                    <!-- Django code to iterate over tblCyberPHA records -->
+                                    {% for cyberPHA in tblCyberPHAList %}
+                                    <tr data-id="{{ cyberPHA.ID }}">
+                                        <td>{{ cyberPHA.ID }}</td>
+                                        <td class="facility-name">{{ cyberPHA.FacilityName }}</td>
+                                        <td class="facility-scope">{{ cyberPHA.FacilityScope }}</td>
+                                        <td class="description" style="visibility: hidden;width: 0;white-space: nowrap;overflow: hidden">{{ cyberPHA.Description }}</td>
+                                        <td class="notes" >{{ cyberPHA.Notes }}</td>
+                                        <td class="pha-leader" >{{ cyberPHA.PHALeader }}</td>
+                                        <td class="pha-leader-email" >{{ cyberPHA.PHALeaderEmail }}</td>
+                                        <td class="facility-owner">{{ cyberPHA.FacilityOwner }}</td>
+
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                                </table>
+                                </div>
+                        </td>
+                    </tr>
+                </table>
+                <br><br>
+            </form>
+        </div>
+
+                <div id="TeamMembers">
+                <table>
+                    <tr>
+                        <td>
+                            <table id="TeamMembersTable">
+                                <!-- Django code to iterate over tblCyberPHATeam records -->
+                                {% for member in team_members %}
+                                <tr>
+                                    <td>{{ member.Name }}</td>
+                                    <td>{{ member.Company }}</td>
+                                    <td>{{ member.Title }}</td>
+                                    <td>{{ member.Expertise }}</td>
+                                    <td>{{ member.Experience }}</td>
+                                    <td>{{ member.Comments }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6">No team members found.</td>
+                                </tr>
+                                {% endfor %}
+                            </table>
+
+                        </td>
+                        <td>
+                            <table>
+                                <tr>
+                                    <td>
+                                        <input type="text" id="name" placeholder="Name" required>
+                                        <input type="text" id="company" placeholder="Company" required>
+                                        <input type="text" id="title" placeholder="Title" required>
+                                        <textarea id="expertise" placeholder="Expertise" required></textarea>
+                                        <input type="text" id="experience" placeholder="Experience" required>
+                                        <textarea id="comments" placeholder="Comments" required></textarea>
+                                        <button id="add-record-btn">Add Record</button>
+
+                                    </td>
+                                </tr>
+                            </table>
+
+
+                        </td>
+
+                    </tr>
+                </table>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+</body>
+</html>

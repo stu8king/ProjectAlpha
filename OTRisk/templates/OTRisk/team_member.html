@@ -1,0 +1,187 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <link href="{% static 'css/menus.css' %}" rel="stylesheet">
+    <link href="{% static 'css/workflow.css' %}" rel="stylesheet">
+    <style>
+
+</style>
+<body>
+    <div class="top-menu">
+        <ul>
+            <li><a href="#">Home</a></li>
+            <li><a href="#">Assessments</a></li>
+            <li><a href="#">Workshops</a></li>
+            <li><a href="#">Walkthroughs</a></li>
+            <li><a href="#">Reports</a></li>
+        </ul>
+    </div>
+    <div class="container">
+    <div class="workflow">
+        <table cellpadding="10">
+            <tr>
+                <td>
+                    <div class="workflow-step">Step 1</div>
+                </td>
+                <td>
+                    <div class="workflow-step active">Step 2</div>
+                </td>
+                <td>
+                    <div class="workflow-step">Step 3</div>
+                </td>
+                <td>
+                    <div class="workflow-step">Step 4</div>
+                </td>
+                <td>
+                    <div class="workflow-step">Step 5</div>
+                </td>
+                <td>
+                    <div class="workflow-step">Step 6</div>
+                </td>
+                <td>
+                    <div class="workflow-step">Step 7</div>
+                </td>
+                <td>
+                    <div class="workflow-step">Step 8</div>
+                </td>
+                <td>
+                    <div class="workflow-step">Step 9</div>
+                </td>
+            </tr>
+            <tr>
+                <td align="center">
+                    CyberPHA Set-Up
+                </td>
+                <td align="center">
+                    Team Members
+                </td>
+                <td align="center">
+                    Threat Assessment
+                </td>
+                <td align="center">
+                    Site Walkdown
+                </td>
+                <td align="center">
+                    Workshop
+                </td>
+                <td align="center">
+                    Scenarios
+                </td>
+                <td align="center">
+                    Risk Assessment
+                </td>
+                <td align="center">
+                    Actions
+                </td>
+                <td align="center">
+                    Reports
+                </td>
+            </tr>
+        </table>
+    </div>
+
+        <section id="right-column">
+            <div class="team-members">
+                <div class="team-members-header">
+                    <h2>Assessment Team Members</h2>
+                    <form method="POST" action="{% url 'OTRisk:add_team_members' %}">
+                        {% csrf_token %}
+                        <div class="form-field">
+                            <label for="id_first_name">First Name</label>
+                            <input type="text" id="FirstName" name="FirstName" required>
+                        </div>
+                        <div class="form-field">
+                            <label for="id_last_name">Last Name</label>
+                            <input type="text" id="LastName" name="LastName" required>
+                        </div>
+                        <div class="form-field">
+                            <label for="id_title">Title</label>
+                            <input type="text" id="Title" name="Title" required>
+                        </div>
+                        <div class="form-field">
+                            <label for="id_organization">Organization</label>
+                            <input type="text" id="Organization" name="Organization" required>
+                        </div>
+                        <div class="form-field">
+                            <label for="id_department">Department</label>
+                            <input type="text" id="Department" name="Department" required>
+                        </div>
+                        <div class="form-field">
+                            <label for="id_notes">Notes</label>
+                            <textarea id="Notes" name="Notes"></textarea>
+                        </div>
+                        <div class="form-field">
+                            <button type="submit" {% if post_id <= 0 %}disabled{% endif %}>Add Team Member</button>
+                        </div>
+                    </form>
+                    <div id="team-members-table-wrapper">
+                        <table class="team-members-table">
+                            <thead>
+                                <tr>
+                                    <th>First Name</th>
+                                    <th>Last Name</th>
+                                    <th>Department</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for team_member in team_members %}
+                                    <tr>
+                                        <td>{{ team_member.FirstName }}</td>
+                                        <td>{{ team_member.LastName }}</td>
+                                        <td>{{ team_member.Department }}</td>
+                                        <td>
+                                            <a href="#">Edit</a>
+                                            <a href="#">Delete</a>
+                                        </td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="4">No team members found.</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    <!-- Include jQuery and Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            var formset = "{{ formset.prefix }}";
+            var formsetTotalForms = "{{ formset.total_form_count }}";
+            var maxForms = 5; // Maximum number of forms including the initial form
+
+            // Hide the additional empty forms
+            for (var i = parseInt(formsetTotalForms); i < maxForms; i++) {
+                $("#id_" + formset + "-" + i).closest("tr").hide();
+            }
+
+            $("#add_row_button").click(function() {
+                var formCount = parseInt(formsetTotalForms);
+                if (formCount < maxForms) {
+                    // Show the next hidden form
+                    $("#id_" + formset + "-" + formCount).closest("tr").show();
+                    formCount++;
+                    formsetTotalForms++;
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+

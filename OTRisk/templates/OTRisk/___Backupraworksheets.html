@@ -1,0 +1,525 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>OT Risk Assessment Worksheet</title>
+        <link href="{% static 'css/raworksheets.css' %}" rel="stylesheet">
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.1/themes/base/jquery-ui.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" />
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        function saveScenario() {
+            const txtInitiatingEvents = document.getElementById("txtInitiatingEvents").value;
+            const consequence = document.getElementById("consequence").value;
+            const threatSource = document.getElementById("threat-source").value;
+            const threatAction = document.getElementById("threat-action").value;
+            const countermeasures = document.getElementById("countermeasures").value;
+            const severity = document.getElementById("severity").value;
+            const frequency = document.getElementById("frequency").value;
+            const exposure = document.getElementById("exposure").value;
+            const resilience = document.getElementById("resilience").value;
+            const inputRRu = document.getElementById("Input_RRu").value;
+            const unmitigatedLikelihood = document.getElementById("unmitigated-likelihood").value;
+            const severityIndex = document.getElementById("severity-index").value;
+            const mitigateSeverity = document.getElementById("mitigated-severity").value;
+            const mitigateExposure = document.getElementById("mitigated-exposure").value;
+            const residualRiskMitigated = document.getElementById("residual-risk-mitigated").value;
+            const afterActionSeverity = document.getElementById("after-action-severity").value;
+            const afterActionExposure = document.getElementById("after-action-exposure").value;
+            const residualRiskAfterAction = document.getElementById("residual-risk-after-action").value;
+
+            // Perform AJAX request to save scenario data
+            $.ajax({
+                url: "{% url 'OTRisk:save_scenario' %}",
+                type: "POST",
+                data: {
+                    'txtInitiatingEvents': txtInitiatingEvents,
+                    'consequence': consequence,
+                    'threatSource': threatSource,
+                    'threatAction': threatAction,
+                    'countermeasures': countermeasures,
+                    'severity': severity,
+                    'frequency': frequency,
+                    'exposure': exposure,
+                    'resilience': resilience,
+                    'inputRRu': inputRRu,
+                    'unmitigatedLikelihood': unmitigatedLikelihood,
+                    'severityIndex': severityIndex,
+                    'mitigateSeverity': mitigateSeverity,
+                    'mitigateExposure': mitigateExposure,
+                    'residualRiskMitigated': residualRiskMitigated,
+                    'afterActionSeverity': afterActionSeverity,
+                    'afterActionExposure': afterActionExposure,
+                    'residualRiskAfterAction': residualRiskAfterAction,
+                },
+                success: function (response) {
+                    // Handle success response
+                    if (response.success) {
+                        // Save the current_scenario ID in session
+                        alert("success");
+                        sessionStorage.setItem('current_scenario', response.current_scenario);
+
+                        // Save recommendations to tblScenarioRecommendations if populated
+                        const recommendation1 = document.getElementById("Recommendations1").value;
+                        const recommendation2 = document.getElementById("Recommendations2").value;
+                        const recommendation3 = document.getElementById("Recommendations3").value;
+                        const current_scenario = response.current_scenario;
+
+                        if (recommendation1) {
+                            saveRecommendation(recommendation1, current_scenario);
+                        }
+                        if (recommendation2) {
+                            saveRecommendation(recommendation2, current_scenario);
+                        }
+                        if (recommendation3) {
+                            saveRecommendation(recommendation3, current_scenario);
+                        }
+
+                        alert("Scenario saved successfully!");
+                    } else {
+                        alert("1 An error occurred while saving the scenario. Error: " + response.error);
+                    }
+                },
+                error: function (xhr, textStatus, errorThrown) {
+                    alert("2 An error occurred while saving the scenario. Error: " + errorThrown);
+                }
+            });
+        }
+
+        function calculateMaxScore() {
+            const severity = parseFloat(document.getElementById("severity").value);
+            const frequency = parseFloat(document.getElementById("frequency").value);
+            const exposure = parseFloat(document.getElementById("exposure").value);
+            const resilience = parseFloat(document.getElementById("resilience").value);
+            const sWeight = parseFloat(document.getElementById("s_weight").value);
+            const fWeight = parseFloat(document.getElementById("f_weight").value);
+            const eWeight = parseFloat(document.getElementById("e_weight").value);
+            const rWeight = parseFloat(document.getElementById("r_weight").value);
+
+            const maxScore = (severity * sWeight) + (frequency * fWeight) + (exposure * eWeight) + (resilience * rWeight);
+
+            document.getElementById("CalcMaxScore").value = maxScore;
+        }
+
+        function saveRecommendation(recommendation, riskPostID) {
+            $.ajax({
+                url: "{% url 'OTRisk:save_recommendation' %}",
+                type: "POST",
+                data: {
+                    'recommendation': recommendation,
+                    'riskPostID': riskPostID,
+                },
+                success: function (response) {
+                    if (!response.success) {
+                        console.error("An error occurred while saving the recommendation.");
+                    }
+                },
+                error: function () {
+                    console.error("An error occurred while saving the recommendation.");
+                }
+            });
+        }
+
+        document.getElementById("save-scenario-btn").addEventListener("click", saveScenario);
+    });
+</script>
+
+
+</head>
+<body>
+{% if request.session.post_id %}
+      <p>Session variable post_id: {{ request.session.post_id }}</p>
+    {% endif %}
+    <div class="top-menu">
+        <ul>
+            <li><a href="#">Home</a></li>
+            <li><a href="#">Assessments</a></li>
+            <li><a href="#">Workshops</a></li>
+            <li><a href="#">Walkthroughs</a></li>
+            <li><a href="#">Reports</a></li>
+        </ul>
+    </div>
+
+   <button type="button" id="save-scenario-btn" style="float: right;">Save Scenario</button>
+
+
+
+  <!-- Code from the detail page passed from the table list of base.html >-->
+    <div id="content">
+    <h2 align="middle">CyberPHA Worksheet</h2>
+    <h3 align="middle">{{ post.process_description }}</h3>
+    <table align="center" width="60%">
+        <thead>
+            <tr>
+                <th>Risk Causes</th>
+                <th>Consequences</th>
+                <th>Risk Assessment Trigger</th>
+                <th>Protection Measures</th>
+                <th>Impact Analysis</th>
+            </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td align="center">{{ post.causes }}</td>
+            <td align="center">{{ post.consequences }}</td>
+            <td align="center">{{ post.trigger_event }}</td>
+            <td align="center">{{ post.layers_of_protection }}</td>
+            <td align="center">{{ post.impact_analysis }}</td>
+        </tr>
+        </tbody>
+        <tr></tr>
+         <thead>
+            <tr>
+                <th>Residual Risk</th>
+                <th>Vulnerabilities</th>
+                <th>Threats</th>
+                <th>Status</th>
+                <th>Owner</th>
+            </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td align="center">{{ post.risk_residual_level }}</td>
+            <td align="center">{{ post.vulnerabilities }}</td>
+            <td align="center">{{ post.threats }}</td>
+            <td align="center">{{ post.submit_status }}</td>
+            <td align="center">{{ post.riskauthor }}</td>
+        </tr>
+        </tbody>
+    </table>
+
+    <!-- end of code from base.html-->
+
+    <div class="content">
+        <div class="column">
+            <h2>Scenarios</h2>
+            <h5>Select up to three scenario's for this worksheet</h5>
+            <div id="scenarios-table-container">
+                <table id="scenarios-table">
+                    {% for scenario in scenarios %}
+                    <tr data-id="{{ scenario.id }}">
+                        <td>{{ scenario.InitiatingEvent }}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+            </div>
+            <!-- Add scenario-related fields and controls here -->
+        </div>
+        <div class="column">
+            <h2>Scenario</h2>
+            <form id="risk_form" method="POST" action="{% url 'OTRisk:raworksheets' %}">
+            <div class="form-group">
+                <label for="scenario">Scenario/s:</label>
+                <textarea id="txtInitiatingEvents"placeholder="Select up to three scenario's from the scenario list or type in a new scenario."></textarea>
+             </div>
+
+            <div class="form-group">
+                <label for="consequence">Consequences:</label>
+                <textarea id="consequence" name="consequence" placeholder="Enter a description of the likely consequences of this scenario"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="threat-source">Threat Source:</label>
+                <input type="text" id="threat-source" name="threat-source" placeholder="Enter the source of the threat: e.g. malware, internal unauthorized user, external hacker etc">
+            </div>
+            <div class="form-group">
+                <label for="threat-action">Threat Action:</label>
+                <textarea id="threat-action" name="threat-action" placeholder="Enter the action or activity that the threat source must take that will give the result of the entered scenarios"></textarea>
+            </div>
+                <div class="form-group">
+                <label for="countermeasures">Countermeasures:</label>
+                <textarea id="countermeasures" name="countermeasures" placeholder="Enter the countermeasures that are currently in place to mitigate the scenario/s"></textarea>
+            </div>
+
+            </form>
+        </div>
+        <div class="column" id="center-column">
+            <h2>Severity</h2>
+                <Table width="100%">
+                    <tr>
+                        <td width="25%">
+                            <div class="tooltip-container">
+                            Severity (S)
+                                <span class="tooltip-text">
+                                    Acceptable values:<br>
+                                    1 = Low Severity<br>
+                                    2 = Medium Severity<br>
+                                    3 = High Severity<br>
+                                    4 = Critical Severity
+                                </span>
+                            </div>
+                        </td>
+                        <td width="25%">
+                            <div class="tooltip-container">
+                            Frequency (F)
+                                <span class="tooltip-text">
+                                    Acceptable values:<br>
+                                    1 = Frequent<br>
+                                    2 = Notable Chance<br>
+                                    3 = Acceptable Chance<br>
+                                    4 = Possible Chance
+                                </span>
+                            </div>
+                        </td>
+                        <td width="25%">
+                            <div class="tooltip-container">
+                            Exposure (E)
+                                <span class="tooltip-text">
+                                    Acceptable values:<br>
+                                    1 = High<br>
+                                    2 = Medium<br>
+                                    3 = Low
+                                </span>
+                            </div>
+                        </td>
+                        <td width="25%">
+                            <div class="tooltip-container">
+                            Resilience (R)
+                                <span class="tooltip-text">
+                                    Acceptable values:<br>
+                                    1 = Low<br>
+                                    2 = Medium<br>
+                                    3 = High
+                                </span>
+                            </div>
+                        </td>
+                        <td width="25%"></td>
+                    </tr>
+                    <tr>
+                        <td width="25%"><input type="number" id="severity" min="0" max="4" oninput="calculateMaxScore()" value=0></td>
+                        <td width="25%"><input type="number" id="frequency" min="0" max="4" oninput="calculateMaxScore()" value=0></td>
+                        <td width="25%"><input type="number" id="exposure" min="0" max="3" oninput="calculateMaxScore()" value=0></td>
+                        <td width="25%"><input type="number" id="resilience" min="0" max="3" oninput="calculateMaxScore()" value=0></td>
+                        <td width="25%"></td>
+                    </tr>
+                    <!-- add a row for weighted values -->
+                    <tr>
+                        <td width="25%">
+                            <div class="tooltip-container">
+                            S Weighting
+                                <span class="tooltip-text">
+                                    Acceptable values are from 1 to 4:<br>
+                                </span>
+                            </div>
+                        </td>
+                        <td width="25%">
+                            <div class="tooltip-container">
+                            F Weighting
+                                <span class="tooltip-text">
+                                    Acceptable values are from 1 to 4:<br>
+                                </span>
+                            </div>
+                        </td>
+                        <td width="25%">
+                            <div class="tooltip-container">
+                            E Weighting
+                                <span class="tooltip-text">
+                                    Acceptable values are from 1 to 4:<br>
+                                </span>
+                            </div>
+                        </td>
+                        <td width="25%">
+                            <div class="tooltip-container">
+                            R Weighting
+                                <span class="tooltip-text">
+                                    Acceptable values are from 1 to 4:<br>
+                                </span>
+                            </div>
+                        </td>
+                        <td width="25%">Max Score</td>
+                            </tr>
+                            <tr>
+                                <td width="25%"><input type="number" id="s_weight" min="0" max="4" oninput="calculateMaxScore()" value=0> </td>
+                                <td width="25%"><input type="number" id="f_weight" min="0" max="4" oninput="calculateMaxScore()" value=0></td>
+                                <td width="25%"><input type="number" id="e_weight" min="0" max="4" oninput="calculateMaxScore()" value=0></td>
+                                <td width="25%"><input type="number" id="r_weight" min="0" max="4" oninput="calculateMaxScore()" value=0></td>
+                                <td width="25%"><input type="text" maxlength="5" id="CalcMaxScore" oninput="calculateMaxScore()" value=0></td>
+                            </tr>
+                </Table>
+                <br><br>
+
+              <h2>Unmitigated Risk</h2>
+              <table width = 100%>
+                  <tr>
+                      <td width="25%">
+                            <div class="tooltip-container">
+                            Unmitigated Event Likelihood (UEL)
+                                <span class="tooltip-text">
+                                    Acceptable values:<br>
+                                    1 = Very Low Likelihood<br>
+                                    2 = Low Likelihood<br>
+                                    3 = Moderate Likelihood<BR>
+                                    4 = High Likelihood<<br>
+                                    5 = Very High Likelihood
+                                </span>
+                            </div>
+                        </td>
+                        <td width="25%">
+                            <div class="tooltip-container">
+                            Realized Risk (unmitigated) (RRu)
+                                <span class="tooltip-text">
+                                    Residual Risk Unmitigated (RRu): The level of risk that remains after considering existing controls or mitigation measures. It represents the potential impact or consequences if no additional actions are taken to reduce the risk.
+                                    <br>
+                                    1 = Very Low Residual Risk<br>
+                                    2 = Low Residual Risk<br>
+                                    3 = Moderate Residual Risk<br>
+                                    4 = High Residual Risk<br>
+                                    5 = High Residual Risk
+                                 </span>
+                            </div>
+                        </td>
+                        <td width="25%" align="right">
+                            <div class="tooltip-container">
+                            Safety Level Target (SL-T)
+                            <span class="tooltip-text">
+                                    1 = Very Low (Limited protection)<br>
+                                    2 = Low (Moderate protection)<br>
+                                    3 = Moderate (Reasonable protection.)<br>
+                                    4 = High(High level of protection.)<br>
+                                    5 = Very High  (Exceptional protection.)<br>
+                                 </span>
+                            </div>
+                         </td>
+                    </tr>
+                    <tr>
+                      <td width="25%"><input type="number" id="unmitigated-likelihood" min="0" max="5"></td>
+                      <td width="50%" align="center"><input type="number" id="Input_RRu" min="0" max="5">
+                      </td>
+                      <td width="25%" align="right"><input type="number" id="severity-index" min="0" max="5"></td>
+                    </tr>
+                </table>
+                <br><br>
+                <h2>Mitigated Risk</h2>
+                <table width = "100%">
+                      <tr>
+                          <td width="25%">Severity (mitigated) (Sm)</td>
+                          <td width="35%" align="center">Mitigated Exposure Level (MEL)</td>
+                          <td width="40%" align="right">Residual Risk (mitigated) (RRm)</td>
+                      </tr>
+                      <tr>
+                          <td width="25%"><input type="number" id="mitigated-severity" min="0" max="5"></td>
+                          <td width="35%"align="center"><input type="number" id="mitigated-exposure" min="0" max="5"></td>
+                          <td width="40%" align="right">
+                              <select id="residual-risk-mitigated">
+                                  <option value="FC">FC: Full Controls</option>
+                                  <option value="NC">NC: No Controls</option>
+                                  <option value="AC">AC: All Controls</option>
+                                  <option value="PC">PC: Partial Controls</option>
+                                  <option value="URC">URC: Unreliable Controls</option>
+                                  <option value="DRC">DRC: Deferred Controls</option>
+                                  <option value="PLC">PLC: Planned Controls</option>
+                                  <option value="RC">RC: Redundant Controls</option>
+                                  <option value="OC">OC: Outdated Controls</option>
+                                  <option value="NAC">NAC: Not Applicable Controls</option>
+                                  <option value="NRC">NRC: No Relevant Controls</option>
+                                </select>
+                          </td>
+                      </tr>
+                </table>
+            </div>
+
+    </div>
+    <div class="content">
+    <div class="column" id="bottom-left">
+        <h2>Recommendations</h2>
+        <h5>Enter the recommended action items to address the scenario/s on this worksheet</h5>
+        <div class="form-group">
+                <label for="Recommendations">Recommendations:</label>
+            <table width="95%">
+                <tr>
+                    <td align="right">Recommendation 1: </td>
+                    <td width="70%" align="left">
+                        <textarea id="Recommendations1" name="Recommendations1" placeholder="Enter a recommended action items for addressing this scenario"></textarea>
+                    </td>
+                </tr>
+                <tr>
+                    <td align="right">Recommendation 2: </td>
+                    <td>
+                        <textarea id="Recommendations2" name="Recommendations2" placeholder="Enter a recommended action items for addressing this scenario"></textarea>
+                    </td>
+                </tr>
+                <tr>
+                    <td align="right">Recommendation 3: </td>
+                    <td>
+                        <textarea id="Recommendations3" name="Recommendations3" placeholder="Enter a recommended action items for addressing this scenario"></textarea>
+                    </td>
+                </tr>
+
+            </table>
+        </div>
+    </div>
+    <div class="column" id="bottom-right">
+        <h2>Adjusted Risk</h2>
+        <h5>Re-consider risk scores based on the effectiveness and outcomes of the recommendations</h5>
+        <div class="form-group">
+            <table width = "100%">
+              <tr>
+                  <td width="25%">Severity (after action) (Sa)</td>
+                  <td width="35%" align="center">Mitigated Exposure Level (after action) (MELa)</td>
+                  <td width="40%" align="right">Residual Risk (after action) (RRa)</td>
+              </tr>
+      <tr>
+          <td width="25%"><input type="number" id="after-action-severity" min="0" max="5"></td>
+          <td width="35%"align="center"><input type="number" id="after-action-exposure" min="0" max="5"></td>
+          <td width="40%" align="right">
+              <select id="residual-risk-after-action">
+                  <option value="FC">FC: Full Controls</option>
+                  <option value="NC">NC: No Controls</option>
+                  <option value="AC">AC: All Controls</option>
+                  <option value="PC">PC: Partial Controls</option>
+                  <option value="URC">URC: Unreliable Controls</option>
+                  <option value="DRC">DRC: Deferred Controls</option>
+                  <option value="PLC">PLC: Planned Controls</option>
+                  <option value="RC">RC: Redundant Controls</option>
+                  <option value="OC">OC: Outdated Controls</option>
+                  <option value="NAC">NAC: Not Applicable Controls</option>
+                  <option value="NRC">NRC: No Relevant Controls</option>
+                </select>
+          </td>
+      </tr>
+  </table>
+        </div>
+    </div>
+
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.13.1/jquery-ui.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+
+<script>
+    $(document).ready(function() {
+        var selectedIds = [];
+        var selectedTexts = {};
+
+        $('#scenarios-table tr').click(function() {
+            var id = $(this).data('id');
+            var text = $(this).find('td').text();
+
+            if (selectedIds.includes(id)) {
+                // If the id is already selected, unselect it
+                selectedIds = selectedIds.filter(function(item) {
+                    return item !== id;
+                });
+                $(this).removeClass('selected-row');
+                delete selectedTexts[id];
+            } else if (selectedIds.length < 3) {
+                // If less than 3 ids are selected, select the new one
+                selectedIds.push(id);
+                $(this).addClass('selected-row');
+                selectedTexts[id] = text;
+            }
+
+            // Update the textarea field
+            var combinedText = Object.values(selectedTexts).join('\n\n');
+            $('#txtInitiatingEvents').val(combinedText);
+        });
+    });
+</script>
+
+<script src="{% static 'OTRisk/ajaxcode.js' %}"></script>
+
+
+</body>
+</html>

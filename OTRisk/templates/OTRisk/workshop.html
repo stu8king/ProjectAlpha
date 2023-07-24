@@ -1,0 +1,127 @@
+{% block content %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Workshop</title>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+</head>
+<body>
+
+<H1> Workshop</H1>
+
+
+    <div class="container">
+    <div class="row">
+        <div class="col">
+            <h2>Continue or Edit a Workshop</h2>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Workshop Start Date</th>
+                        <th>Workshop Name</th>
+                        <th>Workshop Status</th>
+                        <th>Workshop Type</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for workshop in workshops %}
+                    <tr>
+                        <td>{{ workshop.ID }}</td>
+                        <td>{{ workshop.WorkshopStartDate }}</td>
+                        <td>{{ workshop.WorkshopName }}</td>
+                        <td>{{ workshop.WorkshopStatus }}</td>
+                        <td>{{ workshop.WorkshopType }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="col">
+            <h2>Start a new Risk Workshop</h2>
+            <form action="{% url 'OTRisk:workshop_without_id' %}" method="post">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="workshoptype">Risk Assessment Type</label>
+                    <select class="form-control" id="workshoptype" name="workshoptype">
+                        <option value="RA">Cybersecurity Risk Assessment</option>
+                        <option value="PHA">CyberPHA</option>
+                    </select>
+                </div>
+               <div class="form-group">
+                    <label for="workshopstartdate">Start Date</label>
+                    <input type="text" class="form-control" id="workshopstartdate" name="workshopstartdate">
+                </div>
+                <div class="form-group">
+                    <label for="workshopname">Workshop Name</label>
+                    <input type="text" class="form-control" id="workshopname" name="workshopname">
+                </div>
+                <div class="form-group">
+                    <label for="workshopobjectives">Workshop Objectives</label>
+                    <textarea class="form-control" id="workshopobjectives" name="workshopobjectives"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Create Workshop</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+
+<div class="container">
+    <h2>Workshop Details</h2>
+    <p>Workshop Name: {{ workshop.WorkshopName }}</p>
+    <p>Workshop Start Date: {{ workshop.WorkshopStartDate }}</p>
+    <p>Workshop Type: {{ workshop.WorkshopType }}</p>
+</div>
+    <div class="container">
+         <ul class="nav nav-tabs">
+            {% for section in sections %}
+            <li class="nav-item">
+                <a class="nav-link" data-toggle="tab" href="#section{{ section.TopSection|slugify }}">{{ section.TopSection }}</a>
+            </li>
+            {% endfor %}
+        </ul>
+
+        <div class="tab-content">
+            {% for section in sections %}
+            <div id="section{{ section.TopSection|slugify }}" class="tab-pane fade">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Question Number</th>
+                            <th>SubSection</th>
+                            <th>Workshop Question</th>
+                            <th>Response</th>
+                            <th>Additional Response</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for question in section.questions %}
+                        <tr>
+                            <td>{{ question.ID }}</td>
+                            <td>{{ question.SubSection }}</td>
+                            <td>{{ question.WorkshopQuestion }}</td>
+                            <td><input type="text" class="form-control"></td>
+                            <td><textarea class="form-control"></textarea></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+<script>
+$(document).ready(function(){
+    $('.nav-tabs a:first').tab('show');
+});
+</script>
+
+</body>
+</html>
+{% endblock %}

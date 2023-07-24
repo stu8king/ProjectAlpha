@@ -1,0 +1,239 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <link href="{% static 'css/menus.css' %}" rel="stylesheet">
+    <link href="{% static 'css/workflow.css' %}" rel="stylesheet">
+    <style>
+
+</style>
+</head>
+<body>
+    <div class="top-menu">
+        <ul>
+            <li><a href="#">Home</a></li>
+            <li><a href="#">Assessments</a></li>
+            <li><a href="#">Workshops</a></li>
+            <li><a href="#">Walkthroughs</a></li>
+            <li><a href="#">Reports</a></li>
+        </ul>
+    </div>
+<br>
+<div class="container">
+    <div class="workflow">
+        <table cellpadding="10">
+            <tr>
+                <td>
+                    <div class="workflow-step active">Step 1</div>
+                </td>
+                    <div class="workflow-step {% if request.session.WorkflowStep == 2 %}active{% endif %}">
+                        {% if request.session.WorkflowStep == 2 %}
+                            <a href="{% url 'OTRisk:add_team_members' %}">Step 2</a>
+                        {% else %}
+                            Step 2
+                        {% endif %}
+                    </div>
+                <td>
+                    <div class="workflow-step"><a href="{% url 'OTRisk:site_walkdown' %}">Step 3</a></div>
+                </td>
+                <td>
+                    <div class="workflow-step"><a href ="{% url 'OTRisk:save_threat' %}">Step 4</a></div>
+                </td>
+                <td>
+                    <div class="workflow-step">Step 5</div>
+                </td>
+                <td>
+                    <div class="workflow-step">Step 6</div>
+                </td>
+                <td>
+                    <div class="workflow-step">Step 7</div>
+                </td>
+                <td>
+                    <div class="workflow-step">Step 8</div>
+                </td>
+                <td>
+                    <div class="workflow-step">Step 9</div>
+                </td>
+            </tr>
+            <tr>
+                <td align="center">
+                    CyberPHA Set-Up
+                </td>
+                <td align="center">
+                    Team Members
+                </td>
+                <td align="center">
+                    Threat Assessment
+                </td>
+                <td align="center">
+                    Site Walkdown
+                </td>
+                <td align="center">
+                    Workshop
+                </td>
+                <td align="center">
+                    Scenarios
+                </td>
+                <td align="center">
+                    Risk Assessment
+                </td>
+                <td align="center">
+                    Actions
+                </td>
+                <td align="center">
+                    Reports
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>
+    <div>
+    <section id="left-column">
+        <div class="content">
+            {% block content %}
+            <h1>Begin a new CyberPHA</h1>
+            <form id="risk_form" method="POST" action="/OTRisk/post/create/">
+                {% csrf_token %}
+                <div class="form-field">
+                    <label for="process_description">CyberPHA Title</label>
+                    <textarea id="process_description" name="process_description" {% if saved %}disabled{% endif %}>{{ post_form.instance.process_description }}</textarea>
+                </div>
+                <div class="form-field">
+                    <label for="hazardous_events">Description</label>
+                    <textarea id="hazardous_events" name="hazardous_events" {% if saved %}disabled{% endif %}>{{ post_form.instance.hazardous_events }}</textarea>
+                </div>
+                <div class="form-field">
+                    <label for="facility">Location Name</label>
+                    <textarea id="facility" name="facility" {% if saved %}disabled{% endif %}>{{ post_form.instance.facility }}</textarea>
+                </div>
+                <div class="form-field">
+                    <label for="business_unit">Plant or Facility Name</label>
+                    <textarea id="business_unit" name="business_unit" {% if saved %}disabled{% endif %}>{{ post_form.instance.business_unit }}</textarea>
+                </div>
+                <div class="form-field">
+                    <label for="project_name">Project Name</label>
+                    <textarea id="project_name" name="project_name" {% if saved %}disabled{% endif %}>{{ post_form.instance.project_name }}</textarea>
+                </div>
+                <div class="form-field">
+                    <label for="scope">Assessment Scope</label>
+                    <textarea id="scope" name="scope" {% if saved %}disabled{% endif %}>{{ post_form.instance.scope }}</textarea>
+                </div>
+                <div class="form-field">
+                    <label for="objective">Assessment Objectives</label>
+                    <textarea id="objective" name="objective" {% if saved %}disabled{% endif %}>{{ post_form.instance.objective }}</textarea>
+                </div>
+                <div class="form-field">
+                    <label for="assumptions">Assumptions</label>
+                    <textarea id="assumptions" name="assumptions" {% if saved %}disabled{% endif %}>{{ post_form.instance.assumptions }}</textarea>
+                </div>
+                <div class="form-field">
+                    <label for="SystemName">System Name</label>
+                    <textarea id="SystemName" name="SystemName" {% if saved %}disabled{% endif %}>{{ post_form.instance.SystemName }}</textarea>
+                </div>
+                <div class="form-field">
+                    <label for="SystemDescription">System Description</label>
+                    <textarea id="SystemDescription" name="SystemDescription" {% if saved %}disabled{% endif %}>{{ post_form.instance.SystemDescription }}</textarea>
+                </div>
+                <div class="form-field">
+                    <label for="SystemOwner">System Owner</label>
+                    <textarea id="SystemOwner" name="SystemOwner" {% if saved %}disabled{% endif %}>{{ post_form.instance.SystemOwner }}</textarea>
+                </div>
+                <div class="form-field">
+                    <label for="SystemScope">System Scope</label>
+                    <textarea id="SystemScope" name="SystemScope" {% if saved %}disabled{% endif %}>{{ post_form.instance.SystemScope }}</textarea>
+                </div>
+                <div>
+                    <label for="trigger_event">Trigger Events</label>
+                    <select id="trigger_event" name="trigger_event" {% if saved %}disabled{% endif %}>{{ post_form.instance.trigger_event }}
+                        <option value="Audit">Audit</option>
+                        <option value="Incident">Incident</option>
+                        <option value="Change Request">Change Request</option>
+                        <option value="Internal Request">Internal Request</option>
+                    </select>
+                </div>
+                <input type="hidden" name="riskauthor" id="riskauthor" value=1>
+                <input type="hidden" name="causes" value="A">
+                <input type="hidden" name="consequences" value="A">
+                <input type="hidden" name="layers_of_protection" value="A">
+                <input type="hidden" name="risk_ranking" value="L">
+                <input type="hidden" name="risk_reduction_measures" value="A">
+                <input type="hidden" name="risk_residual_level" value="A">
+                <input type="hidden" name="acceptability_criteria" value="A">
+                <input type="hidden" name="threats" value="A">
+                <input type="hidden" name="vulnerabilities" value="A">
+                <input type="hidden" name="impact_analysis" value="L">
+                <input type="hidden" name="likelihood_assessment" value="A">
+                <input type="hidden" name="risk_evaluation" value="A">
+                <input type="hidden" name="risk_mitigation" value="A">
+                <input type="hidden" name="submit_status" value="S">
+                <input type="hidden" id="editflag" name="editflag" value="0">
+                <div class="form-field">
+                    {% if saved %}
+                        <button type="button" onclick="enableForm()">    Edit    </button>
+                        <button type="submit" disabled>    Save    </button>
+                    {% else %}
+                        <button type="submit">    Save    </button>
+                    {% endif %}
+                    <button type="button" onclick="createNewCyberPHA()">Create New CyberPHA</button>
+                </div>
+            </form>
+        {% endblock %}
+        </div>
+    </section>
+
+
+</div>
+
+<script>
+    function enableForm() {
+        var form = document.getElementById("risk_form");
+        var inputs = form.getElementsByTagName("input");
+        var textareas = form.getElementsByTagName("textarea");
+        var selects = form.getElementsByTagName("select");
+        document.getElementById("editflag").value = "1";
+        for (var i = 0; i < inputs.length; i++) {
+            inputs[i].removeAttribute("disabled");
+        }
+
+        for (var i = 0; i < textareas.length; i++) {
+            textareas[i].removeAttribute("disabled");
+        }
+
+        for (var i = 0; i < selects.length; i++) {
+            selects[i].removeAttribute("disabled");
+        }
+
+        var editButton = form.querySelector('button[type="button"]');
+        var saveButton = form.querySelector('button[type="submit"]');
+
+        editButton.disabled = true;
+        saveButton.disabled = false;
+    }
+
+    function createNewCyberPHA() {
+        var form = document.getElementById("risk_form");
+        var inputs = form.getElementsByTagName("input");
+        var textareas = form.getElementsByTagName("textarea");
+        document.getElementById("editflag").value = "0";
+        for (var i = 0; i < inputs.length; i++) {
+            inputs[i].removeAttribute("disabled");
+            inputs[i].style.backgroundColor = "rgba(255, 255, 192, 0.5)";
+        }
+
+        for (var i = 0; i < textareas.length; i++) {
+            textareas[i].removeAttribute("disabled");
+            textareas[i].style.backgroundColor = "rgba(255, 255, 192, 0.5)";
+        }
+
+        var createButton = form.querySelector('button[type="button"]');
+        var saveButton = form.querySelector('button[type="submit"]');
+
+        createButton.disabled = true;
+        saveButton.disabled = false;
+
+        document.getElementById("risk_form").reset();
+
+    }
+</script>
+</body>
+</html>

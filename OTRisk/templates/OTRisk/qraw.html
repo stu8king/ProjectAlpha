@@ -1,0 +1,1590 @@
+{% load static %}
+<!DOCTYPE html>
+<!--suppress ALL -->
+<html lang="">
+<head>
+<!-- Bootstrap CSS -->
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css">
+
+<!-- Bootstrap Select CSS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.1/css/bootstrap-select.min.css">
+
+<!-- Bootstrap Icons -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.1/font/bootstrap-icons.css" rel="stylesheet">
+
+<!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- Bootstrap JS -->
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.bundle.min.js"></script>
+
+<!-- Bootstrap Select JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.1/js/bootstrap-select.min.js"></script>
+
+
+
+
+    <link rel="stylesheet" href="http://cdn.datatables.net/1.10.2/css/jquery.dataTables.min.css">
+    <script type="text/javascript" src="http://cdn.datatables.net/1.10.2/js/jquery.dataTables.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-beta.1/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-beta.1/dist/js/select2.min.js"></script>
+    <script>
+        $('select').selectpicker();
+    </script>
+
+
+ {% load bootstrap5 %}
+ {% bootstrap_css %}
+ {% bootstrap_javascript %}
+
+ <title>Risk Assessment Worksheet</title>
+
+  <style>
+    .small-font {
+        font-size: 0.8rem; /* adjust as needed */
+   }
+
+    .navbar-scroll .nav-link,
+    .navbar-scroll .navbar-toggler-icon,
+    .navbar-scroll .navbar-brand {
+      color: #ffffff;
+    }
+
+    /* Color of the navbar BEFORE scroll */
+    .navbar-scroll {
+      background-color: #000000;
+        text-decoration-color: #FFFFFF;
+    }
+
+
+    /* Color of the links AFTER scroll */
+    .navbar-scrolled .nav-link,
+    .navbar-scrolled .navbar-toggler-icon,
+    .navbar-scroll .navbar-brand {
+      color: #262626;
+    }
+
+    .navbar-logo {
+    position: absolute;
+    top: 5px; /* Adjust this as needed */
+    left: 5; /* Adjust this as needed */
+    height: 100px; /* Adjust this as needed */
+    z-index: 10;
+}
+
+    #rawtable tbody tr:hover {
+        background-color: #f5f5f5; /* Change this to the color you want */
+    }
+
+        .impactGauge {
+            position: relative;
+            width: 7vw;
+            height: 7vw;
+            box-sizing: border-box;
+            float:left;
+            margin:20px
+        }
+        .RRGauge {
+            position: relative;
+            width: 7vw;
+            height: 7vw;
+            box-sizing: border-box;
+            float:left;
+            margin:20px
+        }
+
+
+        .tab-content {
+          border: 1px solid #dee2e6;
+          border-top: transparent;
+          padding: 15px;
+        }
+
+        .tab-content .tab-pane {
+          background-color: #FFF;
+          color: #0080FF;
+          min-height: 300px;
+          height: auto;
+        }
+
+.custom-bg {
+    background-color: lightgrey;
+}
+
+    </style>
+</head>
+   <script>
+      // Initialize sliders when the page loads
+      window.onload = function() {
+        initSlider("range_safety_1", "safetyrange_1");
+        initSlider("range_life_1", "liferange_1");
+        initSlider("range_production_1", "productionrange_1");
+        initSlider("range_finance_1", "financerange_1");
+        initSlider("range_reputation_1", "reputationrange_1");
+        initSlider("range_environment_1", "environmentrange_1");
+        initSlider("range_regulatory_1", "regulatoryrange_1");
+        initSlider("range_data_1", "datarange_1");
+        // init other sliders...
+      };
+      </script>
+<body>
+<script>
+    //disable all controls and reset local session variable when form loads
+    document.addEventListener('DOMContentLoaded', function() {
+        sessionStorage.setItem('editMode', '0');
+        sessionStorage.setItem('scenario1id', '');
+        sessionStorage.setItem('scenario2id', '');
+        sessionStorage.setItem('scenario3id', '');
+        sessionStorage.setItem('scenario4id', '');
+        sessionStorage.setItem('scenario5id', '');
+        sessionStorage.setItem('rawid', '');
+        document.getElementById("txtTitle").setAttribute('disabled', true);
+        document.getElementById("txtLeader").setAttribute('disabled', true);
+        document.getElementById("txtBU").setAttribute('disabled', true);
+        document.getElementById("txtDescription").setAttribute('disabled', true);
+        document.getElementById("selectIndustry").setAttribute('disabled', true);
+        document.getElementById("selectFacility").setAttribute('disabled', true);
+        document.getElementById("selectTrigger").setAttribute('disabled', true);
+        document.getElementById("txtScenarioDescription_1").setAttribute('disabled', true);
+        document.getElementById("txtScenarioDescription_2").setAttribute('disabled', true);
+        document.getElementById("txtScenarioDescription_3").setAttribute('disabled', true);
+        document.getElementById("txtScenarioDescription_4").setAttribute('disabled', true);
+        document.getElementById("txtScenarioDescription_5").setAttribute('disabled', true);
+        document.getElementById("selectThreat_1").setAttribute('disabled', true);
+        document.getElementById("selectThreat_2").setAttribute('disabled', true);
+        document.getElementById("selectThreat_3").setAttribute('disabled', true);
+        document.getElementById("selectThreat_4").setAttribute('disabled', true);
+        document.getElementById("selectThreat_5").setAttribute('disabled', true);
+        document.getElementById("selectTactics_1").setAttribute('disabled', true);
+        document.getElementById("selectTactics_2").setAttribute('disabled', true);
+        document.getElementById("selectTactics_3").setAttribute('disabled', true);
+        document.getElementById("selectTactics_4").setAttribute('disabled', true);
+        document.getElementById("selectTactics_5").setAttribute('disabled', true);
+        document.getElementById("txtJustify_1").setAttribute('disabled', true);
+        document.getElementById("txtJustify_2").setAttribute('disabled', true);
+        document.getElementById("txtJustify_3").setAttribute('disabled', true);
+        document.getElementById("txtJustify_4").setAttribute('disabled', true);
+        document.getElementById("txtJustify_5").setAttribute('disabled', true);
+
+    });
+
+</script>
+
+<nav class="navbar navbar-expand-lg navbar-scroll fixed-top shadow-0 border-bottom border-dark rounded">
+  <div class="container-fluid d-flex justify-content-between">
+   <a class="navbar-brand" href="{% url 'OTRisk:dashboardhome' %}"><img src="/static/images/logo1-2.jpg" style="height: 140px; width: 140px" class="navbar-logo" alt="">  </a>
+      <h4 class="my-auto text-center flex-grow-1"><font color="white">Risk Assessment Worksheet</font></h4>
+
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ms-auto">
+
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'OTRisk:qraw' %}"><i class="bi bi-journal-text"></i> Risk Assessment</a>
+        </li>
+        <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="bi bi-diagram-3"></i> CyberPHA
+              </a>
+              <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                <li><a class="dropdown-item" href="{% url 'OTRisk:cyber_pha_manager' %}"> CyberPHA Manager</a></li>
+                <li><a class="dropdown-item" href="{% url 'OTRisk:walkdown' %}"> Site Walkdown</a></li>
+                <li><a class="dropdown-item" href="#">Workshop</a></li>
+              </ul>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'OTRisk:site_walkdown' %}"><i class="bi bi-building"></i> Site Walkdown</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'OTRisk:walkdown' %}" tabindex="-1" ><i class="bi bi-kanban"></i> New Walkdown</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Reports</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#" tabindex="-1" ><i class="bi bi-ui-checks-grid"></i> Admin</a>
+      </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'accounts:profile' %}">
+          <i class="bi bi-person-fill"></i> User: {{ user.first_name }} {{ user.last_name }}
+        </a>
+
+        </li>
+      </ul>
+    </div>
+  </div>
+
+</nav>
+
+<form name="frmRAW" id="frmRAW" method="POST" action="{% url 'OTRisk:qraw' %}">
+{% csrf_token %}
+<div class="row rounded-3">
+    <div class="col-md-1 bg-black"></div>
+    <div class="col-md-10 custom-bg rounded-3">
+        <br><br><br>
+        <label for="rawtable" class="form-label">Select a record in the table to view and edit the assessment</label>
+        <table id="rawtable" class="table table-striped table-bordered small-font">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Title</th>
+                <th>Status</th>
+                <th>Date</th>
+                <th>Trigger</th>
+                <th>Facility Type</th>
+                <th>Industry</th>
+                <th>Business Unit</th>
+                <th>Leader</th>
+                <!-- Add more <th> elements for each field in the RAWorksheet model -->
+            </tr>
+        </thead>
+        <tbody>
+            {% for raws in raws %}
+                <tr data-description="{{ raws.Description }}">
+                    <td>{{ raws.ID }}</td>
+                    <td>{{ raws.RATitle }}</td>
+                    <td>{{ raws.StatusFlag }}</td>
+                    <td>{{ raws.RADate }}</td>
+                    <td>{{ raws.RATrigger }}</td>
+                    <td>{{ raws.BusinessUnitType }}</td>
+                    <td>{{ raws.industry }}</td>
+                    <td>{{ raws.BusinessUnit }}</td>
+                    <td>{{ raws.AssessorName }}</td>
+                    <!-- Add more <td> elements for each field in the RAWorksheet model -->
+                </tr>
+            {% endfor %}
+        </tbody>
+        </table>
+
+    </div> <!-- table view of existing risk assessments -->
+    <div class="col-md-1 bg-black"></div>
+    <div class="row p-3">
+        <div class="col-md-2"></div>
+        <div class="col-md-2"><button class="form-control" id="addNewBtn" type="button"   data-bs-toggle="tooltip" data-bs-placement="top" title="Click this button to clear the form and enter and begin a new risk assessment">New</button></div>
+        <div class="col-md-2"><button class="form-control" id="editBtn" type="button" data-bs-toggle="tooltip" data-bs-placement="top" title="Click this button to edit the current risk assessment and scenarios">Edit</button></div>
+        <div class="col-md-2"><button class="form-control" type="submit" id="saveBtn" data-bs-toggle="tooltip" data-bs-placement="top" title="Click this button to save the risk assessment and scenarios">Save</button></div>
+        <div class="col-md-2"><button class="form-control" type="button" id="actionBtn" data-bs-toggle="tooltip" data-bs-placement="top" title="Click this button to enter action items"><A href="{% url 'OTRisk:raw_action' %}">Actions</A></button></div>
+
+        <!-- clear and reset scenario tabs -->
+        <script>
+
+            document.addEventListener('DOMContentLoaded', function() {
+              var enableButton = document.getElementById('addNewBtn');
+
+              enableButton.addEventListener('click', function() {
+                sessionStorage.setItem('editMode', '0');
+                sessionStorage.setItem('addNew', '1');
+                document.getElementById("edit_mode").value="0";
+                document.getElementById("txtTitle").disabled = false;
+                document.getElementById("txtTitle").value = "";
+                document.getElementById("txtLeader").disabled = false;
+                document.getElementById("txtLeader").value = "";
+                document.getElementById("txtBU").disabled = false;
+                document.getElementById("txtBU").value = "";
+                document.getElementById("txtDescription").disabled = false;
+                document.getElementById("txtDescription").value = "";
+                document.getElementById("selectIndustry").disabled = false;
+                document.getElementById("selectIndustry").selectedIndex = 0;
+                document.getElementById("selectFacility").disabled = false;
+                document.getElementById("selectFacility").selectedIndex = 0;
+                document.getElementById("selectTrigger").disabled = false;
+                document.getElementById("selectTrigger").selectedIndex = 0;
+
+                document.getElementById("scenario2-tab").click();
+                document.getElementById("txtScenarioDescription_2").disabled = false;
+                document.getElementById("txtScenarioDescription_2").value = "";
+                document.getElementById("selectThreat_2").disabled = false;
+                document.getElementById("selectThreat_2").value = "";
+                document.getElementById("selectTactics_2").disabled = false;
+                document.getElementById("selectTactics_2").value = "";
+                 document.getElementById("txtJustify_2").disabled = false;
+                 document.getElementById("txtJustify_2").value = "";
+
+                document.getElementById("scenario3-tab").click();
+                document.getElementById("txtScenarioDescription_3").disabled = false;
+                document.getElementById("txtScenarioDescription_3").value = "";
+                document.getElementById("selectThreat_3").disabled = false;
+                document.getElementById("selectThreat_3").value = "";
+                document.getElementById("selectTactics_3").disabled = false;
+                document.getElementById("selectTactics_3").value = "";
+                document.getElementById("txtJustify_3").disabled = false;
+                document.getElementById("txtJustify_3").value = "";
+
+                document.getElementById("scenario4-tab").click();
+                document.getElementById("selectThreat_4").disabled = false;
+                document.getElementById("selectThreat_4").value = "";
+                document.getElementById("selectTactics_4").disabled = false;
+                document.getElementById("selectTactics_4").value = "";
+                document.getElementById("txtJustify_4").disabled = false;
+                document.getElementById("txtJustify_4").value = "";
+                document.getElementById("txtScenarioDescription_4").disabled = false;
+                document.getElementById("txtScenarioDescription_4").value = "";
+
+                document.getElementById("scenario5-tab").click();
+                document.getElementById("selectThreat_5").disabled = false;
+                document.getElementById("selectThreat_5").value = "";
+                document.getElementById("selectTactics_5").disabled = false;
+                document.getElementById("selectTactics_5").value = "";
+                document.getElementById("txtJustify_5").disabled = false;
+                document.getElementById("txtJustify_5").value = "";
+                document.getElementById("txtScenarioDescription_5").disabled = false;
+                document.getElementById("txtScenarioDescription_5").value = "";
+
+                document.getElementById("scenario1-tab").click();
+                document.getElementById("selectThreat_1").value = "";
+                document.getElementById("selectTactics_1").disabled = false;
+                document.getElementById("selectTactics_1").value = "";
+                document.getElementById("txtJustify_1").disabled = false;
+                document.getElementById("txtJustify_1").value = "";
+                document.getElementById("txtScenarioDescription_1").disabled = false;
+                document.getElementById("txtScenarioDescription_1").value = "";
+                document.getElementById("selectThreat_1").disabled = false;
+                document.getElementById("editBtn").disabled = true;
+
+               });
+            });
+
+            document.addEventListener('DOMContentLoaded', function() {
+              var enableButton = document.getElementById('editBtn');
+
+              enableButton.addEventListener('click', function() {
+                sessionStorage.setItem('editMode', '1');
+                sessionStorage.setItem('addNew', '0');
+                document.getElementById("edit_mode").value="1";
+                document.getElementById("txtTitle").disabled = false;
+                document.getElementById("txtLeader").disabled = false;
+                document.getElementById("txtBU").disabled = false;
+                document.getElementById("txtDescription").disabled = false;
+                document.getElementById("selectIndustry").disabled = false;
+                document.getElementById("selectFacility").disabled = false;
+                document.getElementById("selectTrigger").disabled = false;
+
+                document.getElementById("scenario2-tab").click();
+                document.getElementById("txtScenarioDescription_2").disabled = false;
+                document.getElementById("selectThreat_2").disabled = false;
+                document.getElementById("selectTactics_2").disabled = false;
+                 document.getElementById("txtJustify_2").disabled = false;
+
+                document.getElementById("scenario3-tab").click();
+                document.getElementById("txtScenarioDescription_3").disabled = false;
+                document.getElementById("selectThreat_3").disabled = false;
+                document.getElementById("selectTactics_3").disabled = false;
+                document.getElementById("txtJustify_3").disabled = false;
+
+                document.getElementById("scenario4-tab").click();
+                document.getElementById("selectThreat_4").disabled = false;
+                document.getElementById("selectTactics_4").disabled = false;
+                document.getElementById("txtJustify_4").disabled = false;
+                document.getElementById("txtScenarioDescription_4").disabled = false;
+
+                document.getElementById("scenario5-tab").click();
+                document.getElementById("selectThreat_5").disabled = false;
+                document.getElementById("selectTactics_5").disabled = false;
+                document.getElementById("txtJustify_5").disabled = false;
+                document.getElementById("txtScenarioDescription_5").disabled = false;
+
+                document.getElementById("scenario1-tab").click();
+                document.getElementById("selectTactics_1").disabled = false;
+                document.getElementById("txtJustify_1").disabled = false;
+                document.getElementById("txtScenarioDescription_1").disabled = false;
+                document.getElementById("selectThreat_1").disabled = false;
+               });
+            });
+
+        </script>
+        <div class="col-md-2"></div>
+
+    </div> <!-- user buttons -->
+
+    <div class="col-md-1 "></div>
+</div>
+<br>
+    <input type="hidden" name="edit_mode" id="edit_mode">
+    <input type="hidden" name="scenarioCount" id="scenarioCount">
+    <input type="hidden" name="hdnRawID" id="hdnRawID">
+    <div class="row">
+    <div class="col-md-1"></div>
+    <div class="col-md-10 border border-dark shadow small-font rounded-3">
+        <div class="row">
+            <div class="col-md-4">
+
+                <label for="txtTitle" >Assessment Title</label>
+                <input type="text" class="form-control" name="txtTitle" id="txtTitle" required/>
+                <br>
+                <label for="txtBU">Business Unit</label>
+                <input type="text" class="form-control" name="txtBU" id="txtBU" required>
+                <br>
+                <label for="txtLeader">Assessment Leader</label>
+                <input type="text" class="form-control" name="txtLeader" id="txtLeader" required>
+                <br>
+            </div>
+
+            <div class="col-md-4">
+
+                <label for="selectIndustry">Industry</label>
+                <select id="selectIndustry" name="selectIndustry" class="form-control">
+                    <option value="">-- Select Industry --</option>
+                    {% for industry in industries %}
+                        <option value="{{ industry.Industry }}">{{ industry.Industry }}</option>
+                    {% endfor %}
+                </select>
+            <br>
+                <label for="selectFacility">Facility Type</label>
+                <select id="selectFacility" name="selectFacility" class="form-control">
+                    <option value="">-- Select Facility --</option>
+                    {% for facility in facilities %}
+                        <option value="{{ facility.FacilityType}}">{{ facility.FacilityType }}</option>
+                    {% endfor %}
+                </select>
+            <br>
+                <label for="selectTrigger" >Trigger Event</label>
+                <select id="selectTrigger" name="selectTrigger" class="form-control">
+                    <option value="">-- Select Assessment Trigger --</option>
+                    <option value="Audit - External">Audit - External</option>
+                    <option value="Audit - Internal">Audit - Internal</option>
+                    <option value="Change Request">Change Request</option>
+                    <option value="Incident">Incident</option>
+                    <option value="Scheduled Assessment">Scheduled Assessment</option>
+                    <option value="Site Walkdown">Site Walkdown</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label for="txtDescription">Description</label>
+                <textarea class="form-control" name="txtDescription" id="txtDescription" rows="5" style="resize: none; word-wrap: normal"></textarea>
+                <br>
+            </div>
+
+    </div>
+    <div class="col-md-1"></div>
+</div>
+</div>
+<br>
+
+<div class="row">
+  <div class="col-md-1"></div>
+<div class="col-md-10">
+    <div class="container-fluid small-font rounded-3">
+      <ul class="nav nav-tabs">
+        <li class="nav-item">
+          <a class="nav-link active" id="scenario1-tab" data-bs-toggle="tab" href="#scenario1">Scenario 1</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" id="scenario2-tab" data-bs-toggle="tab" href="#scenario2">Scenario 2</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" id="scenario3-tab" data-bs-toggle="tab" href="#scenario3">Scenario 3</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" id="scenario4-tab" data-bs-toggle="tab" href="#scenario4">Scenario 4</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" id="scenario5-tab" data-bs-toggle="tab" href="#scenario5">Scenario 5</a>
+        </li>
+      </ul>
+
+      <div class="tab-content">
+        <div class="tab-pane active" id="scenario1">
+            <div class="row">
+            <div class="col-md-4 small-font">
+               <!-- tab 1 left column -->
+                <input type="hidden" name="hdnScenarioID_1" id="hdnScenarioID_1">
+              <label for="txtScenarioDescription_1" class="form-control border-0 align-text-bottom small-font">Scenario Description</label>
+              <textarea class="form-control small-font" name="txtScenarioDescription_1" id="txtScenarioDescription_1" rows="3" style="resize: none; word-wrap: normal"></textarea>
+              <label for="selectThreat_1" class="form-control border-0 small-font">Threat Source</label>
+              <select id="selectThreat_1" name="selectThreat_1" class="form-control small-font">
+                <option value="">-- Select Threat Source --</option>
+                {% for threatsources in threatsources %}
+                    <option value="{{ threatsources.ThreatSource}}">{{ threatsources.ThreatSource }}</option>
+                {% endfor %}
+              </select>
+              <label for="selectTactics_1" class="form-control border-0 small-font">Threat Tactics (Mitre)</label>
+              <select id="selectTactics_1" name="selectTactics_1" class="form-control small-font">
+                <option value="">-- Select Threat Tactics --</option>
+                {% for mitreTactics in mitreTactics %}
+                    <option value="{{ mitreTactics.tactic}}">{{ mitreTactics.tactic }}</option>
+                {% endfor %}
+              </select>
+                <br>
+                    <label for="txtJustify_1" class="form-control border-0 align-text-bottom small-font">Scenario Notes:</label>
+                    <textarea class="form-control small-font" name="txtJustify_1" id="txtJustify_1" rows="3" style="resize: none; word-wrap: normal" placeholder="Add notes to support scenario 1"></textarea>
+            </div>
+            <div class="col-md-4 small-font">
+                <h5>Business Impact Analysis</h5>
+                    <!--slider for safety rating -->
+                    <div class="slider-container d-flex align-items-center" >
+                        <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the overall impact on safety of the selected scenario">Safety</label></div>
+                        <div class="col-7">
+                            <label for="range_safety_1"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_safety_1" name="range_safety_1" onchange="initSlider('range_safety_1', 'safetyrange_1')">
+                        </div>
+                        <div class="col-3"><label id="safetyrange_1" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></div>
+                      </div>
+                    <!--slider for life rating -->
+                    <div class="slider-container d-flex align-items-center">
+                        <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the danger to life of the selected scenario">Life</label></div>
+                        <div class="col-7">
+                            <label for="range_life_1"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_life_1" name="range_life_1" onchange="initSlider('range_life_1', 'liferange_1')">
+                        </div>
+                        <div class="col-3"><h6><label id="liferange_1" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                    </div>
+                    <!--slider for safety rating -->
+                    <div class="slider-container d-flex align-items-center">
+                        <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the production and operational impacts of the selected scenario">Production</label></div>
+                        <div class="col-7">
+                            <label for="range_production_1"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_production_1" name="range_production_1" onchange="initSlider('range_production_1', 'productionrange_1')">
+                        </div>
+                        <div class="col-3"><h6><label id="productionrange_1" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                    </div>
+                     <!--slider for safety rating -->
+                    <div class="slider-container d-flex align-items-center">
+                        <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the cost impact of the selected scenario">Financial</label></div>
+                        <div class="col-7">
+                            <label for="range_finance_1"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_finance_1" name="range_finance_1" onchange="initSlider('range_finance_1', 'financerange_1')">
+                        </div>
+                        <div class="col-3"><h6><label id="financerange_1" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                    </div>
+                    <!--slider for safety rating -->
+                    <div class="slider-container d-flex align-items-center">
+                        <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the impact on the organization's public reputation of the selected scenario">Reputation</label></div>
+                        <div class="col-7">
+                            <label for="range_reputation_1"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_reputation_1" name="range_reputation_1" onchange="initSlider('range_reputation_1', 'reputationrange_1');">
+                        </div>
+                        <div class="col-3"><h6><label id="reputationrange_1" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                    </div>
+                    <!--slider for environment impact rating -->
+                    <div class="slider-container d-flex align-items-center">
+                        <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the environmental impact of the selected scenario">Environment</label></div>
+                        <div class="col-7">
+                            <label for="range_environment_1"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_environment_1" name="range_environment_1" onchange="initSlider('range_environment_1', 'environmentrange_1');">
+                        </div>
+                        <div class="col-3"><h6><label id="environmentrange_1" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                    </div>
+                    <!--slider for regulatory impact rating -->
+                    <div class="slider-container d-flex align-items-center">
+                        <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the regulatory compliance impact of the selected scenario">Regulatory</label></div>
+                        <div class="col-7">
+                            <label for="range_regulatory_1"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_regulatory_1" name="range_regulatory_1" onchange="initSlider('range_regulatory_1', 'regulatoryrange_1');">
+                        </div>
+                        <div class="col-3"><h6><label id="regulatoryrange_1" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                    </div>
+                    <!--slider for data impact rating -->
+                    <div class="slider-container d-flex align-items-center">
+                        <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the impact on data of the selected scenario">Data/IP</label></div>
+                        <div class="col-7">
+                            <label for="range_data_1"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_data_1" name="range_data_1" onchange="initSlider('range_data_1', 'datarange_1');">
+                        </div>
+                        <div class="col-3"><h6><label id="datarange_1" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                    </div>
+                <h5>Vulnerability and Likelihood Analysis</h5>
+                    <!--slider for vulnerability rating -->
+                    <div class="slider-container d-flex align-items-center" >
+                        <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the overall impact on safety of the selected scenario">Vulnerability</label></div>
+                        <div class="col-7">
+                            <label for="range_vuln_1"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_vuln_1" name="range_vuln_1" onchange="initSlider('range_vuln_1', 'vulnrange_1')">
+                        </div>
+                        <div class="col-3"><label id="vulnrange_1" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></div>
+                    </div>
+                    <!--slider for safety rating -->
+                    <div class="slider-container d-flex align-items-center">
+                        <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the danger to life of the selected scenario">Threat</label></div>
+                        <div class="col-7">
+                            <label for="range_threat_1"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_threat_1" name="range_threat_1" onchange="initSlider('range_threat_1', 'threatrange_1');">
+                        </div>
+                        <div class="col-3"><h6><label id="threatrange_1" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                    </div>
+                    <!--slider for frequency-->
+                    <div class="slider-container d-flex align-items-center">
+                        <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the frequency of this event (per year) ">Frequency</label></div>
+                        <div class="col-7">
+                            <label for="range_frequency_1"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_frequency_1" name="range_frequency_1" onchange="initFrequencySlider('range_frequency_1', 'frequencyrange_1');">
+                        </div>
+                        <div class="col-3"><h6><label id="frequencyrange_1" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                    </div>
+
+            </div>
+            <div class="col-md-4 small-font">
+ <!-- Your HTML content goes here -->
+
+    <!-- Risk Assessment Button -->
+    <button id="risk-assessment-btn" type="button" class="btn btn-link">Click here to execute the risk assessment</button><br>
+                <!-- Add this HTML element where you want to display the loading spinner -->
+                <div id="loadingSpinner" class="spinner-border" role="status" style="display: none;">
+                  <span class="visually-hidden">Loading...</span>
+                </div>
+                <label class="form-label">Risk Score: </label><label id="lblriskScore_1" name="lblriskScore_1" class="form-label"></label><br>
+                <label class="form-label">Risk Rating: </label><label id="lblriskRating_1" class="form-label"></label><br>
+                <label class="form-label">Risk Summary: </label><label id="lblriskSummary_1" class="form-label"></label>
+
+
+            </div>
+            </div>
+        </div>
+        <div class="tab-pane" id="scenario2">
+          <!-- Scenario 2 controls -->
+            <div class="row">
+            <div class="col-md-4 small-font">
+                <!-- tab 1 left column -->
+            <input type="hidden" name="hdnScenarioID_2" id="hdnScenarioID_2">
+              <label for="txtScenarioDescription_2" class="form-control border-0 align-text-bottom small-font">Scenario Description</label>
+              <textarea class="form-control small-font" name="txtScenarioDescription_2" id="txtScenarioDescription_2" rows="3" style="resize: none; word-wrap: normal"></textarea>
+              <label for="selectThreat_2" class="form-control border-0">Threat Source</label>
+              <select id="selectThreat_2" name="selectThreat_2" class="form-control small-font">
+                <option value="">-- Select Threat Source --</option>
+                {% for threatsources in threatsources %}
+                    <option value="{{ threatsources.ThreatSource}}">{{ threatsources.ThreatSource }}</option>
+                {% endfor %}
+              </select>
+              <label for="selectTactics_2" class="form-control border-0">Threat Tactics (Mitre)</label>
+              <select id="selectTactics_2" name="selectTactics_2" class="form-control">
+                <option value="">-- Select Threat Tactics --</option>
+                {% for mitreTactics in mitreTactics %}
+                    <option value="{{ mitreTactics.tactic}}">{{ mitreTactics.tactic }}</option>
+                {% endfor %}
+              </select>
+
+          </div>
+            <div class="col-md-4 small-font">
+
+                <h5>Business Impact Analysis</h5>
+                    <!--slider for safety rating -->
+                    <div class="slider-container d-flex align-items-center" >
+                        <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the overall impact on safety of the selected scenario">Safety</label></div>
+                        <div class="col-7">
+                            <label for="range_safety_2"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_safety_2" name="range_safety_2" onchange="initSlider('range_safety_2', 'safetyrange_2');calculateBIA();">
+                        </div>
+                        <div class="col-3"><label id="safetyrange_2" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></div>
+                    </div>
+                    <!--slider for life rating -->
+                    <div class="slider-container d-flex align-items-center">
+                        <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the danger to life of the selected scenario">Life</label></div>
+                        <div class="col-7">
+                            <label for="range_life_2"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_life_2" name="range_life_2" onchange="initSlider('range_life_2', 'liferange_2');calculateBIA() ">
+                        </div>
+                        <div class="col-3"><h6><label id="liferange_2" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                    </div>
+                    <!--slider for safety rating -->
+                    <div class="slider-container d-flex align-items-center">
+                        <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the production and operational impacts of the selected scenario">Production</label></div>
+                        <div class="col-7">
+                            <label for="range_production_2"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_production_2" name="range_production_2" onchange="initSlider('range_production_2', 'productionrange_2');calculateBIA();">
+                        </div>
+                        <div class="col-3"><h6><label id="productionrange_2" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                    </div>
+                     <!--slider for safety rating -->
+                    <div class="slider-container d-flex align-items-center">
+                        <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the cost impact of the selected scenario">Financial</label></div>
+                        <div class="col-7">
+                            <label for="range_finance_2"></label>
+                            <input type="range" min="1" max="10" value="1" class="form-range" id="range_finance_2" name="range_finance_2" onchange="initSlider('range_finance_2', 'financerange_2');calculateBIA();">
+                        </div>
+                        <div class="col-3"><h6><label id="financerange_2" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                    </div>
+                    <!--slider for safety rating -->
+                    <div class="slider-container d-flex align-items-center">
+                        <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the impact on the organization's public reputation of the selected scenario">Reputation</label></div>
+                        <div class="col-7">
+                            <label for="range_reputation_2"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_reputation_2" name="range_reputation_2" onchange="initSlider('range_reputation_2', 'reputationrange_2');calculateBIA();">
+                        </div>
+                        <div class="col-3"><h6><label id="reputationrange_2" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                    </div>
+                    <!--slider for environment impact rating -->
+                    <div class="slider-container d-flex align-items-center">
+                        <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the environmental impact of the selected scenario">Environment</label></div>
+                        <div class="col-7">
+                            <label for="range_environment_2"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_environment_2" name="range_environment_2" onchange="initSlider('range_environment_2', 'environmentrange_2');calculateBIA();">
+                        </div>
+                        <div class="col-3"><h6><label id="environmentrange_2" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                    </div>
+                    <!--slider for regulatory impact rating -->
+                    <div class="slider-container d-flex align-items-center">
+                        <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the regulatory compliance impact of the selected scenario">Regulatory</label></div>
+                        <div class="col-7">
+                            <label for="range_regulatory_2"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_regulatory_2" name="range_regulatory_2" onchange="initSlider('range_regulatory_2', 'regulatoryrange_2');calculateBIA();">
+                        </div>
+                        <div class="col-3"><h6><label id="regulatoryrange_2" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                    </div>
+                    <!--slider for data impact rating -->
+                    <div class="slider-container d-flex align-items-center">
+                        <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the impact on data of the selected scenario">Data/IP</label></div>
+                        <div class="col-7">
+                            <label for="range_data_2"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_data_2" name="range_data_2" onchange="initSlider('range_data_2', 'datarange_2');calculateBIA();">
+                        </div>
+                        <div class="col-3"><h6><label id="datarange_2" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                    </div>
+            </div>
+            <div class="col-md-4 small-font">
+                <h5>Vulnerability and Likelihood Analysis</h5>
+                    <!--slider for vulnerability rating -->
+                    <div class="slider-container d-flex align-items-center" >
+                        <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the overall impact on safety of the selected scenario">Vulnerability</label></div>
+                        <div class="col-7">
+                            <label for="range_vuln_2"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_vuln_2" name="range_vuln_2" onchange="initSlider('range_vuln_2', 'vulnrange_2')">
+                        </div>
+                        <div class="col-3">
+                            <label id="vulnrange_2" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label>
+                        </div>
+                    </div>
+                    <!--slider for safety rating -->
+                    <div class="slider-container d-flex align-items-center">
+                        <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the danger to life of the selected scenario">Threat</label></div>
+                        <div class="col-7">
+                            <label for="range_threat_2"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_threat_2" name="range_threat_2" onchange="initSlider('range_threat_2', 'threatrange_2');">
+                        </div>
+                        <div class="col-3"><h6><label id="threatrange_2" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                    </div>
+                    <br>
+                    <label for="txtJustify_2" class="form-control border-0 align-text-bottom">Scenario Notes:</label>
+                    <textarea class="form-control" name="txtJustify_2" id="txtJustify_2" rows="5" style="resize: none; word-wrap: normal" placeholder="Add notes to support scenario 2"></textarea>
+
+            </div>
+            </div>
+        </div>
+        <div class="tab-pane " id="scenario3">
+          <!-- Scenario 3 controls -->
+            <div class="row">
+          <div class="col-md-3 small-font">
+                <input type="hidden" name="hdnScenarioID_3" id="hdnScenarioID_3">
+              <label for="txtScenarioDescription_3" class="form-control border-0 align-text-bottom small-font">Scenario Description</label>
+              <textarea class="form-control small-font" name="txtScenarioDescription_3" id="txtScenarioDescription_3" rows="3" style="resize: none; word-wrap: normal"></textarea>
+              <label for="selectThreat_3" class="form-control border-0 small-font">Threat Source</label>
+              <select id="selectThreat_3" name="selectThreat_3" class="form-control">
+                <option value="">-- Select Threat Source --</option>
+                {% for threatsources in threatsources %}
+                    <option value="{{ threatsources.ThreatSource}}">{{ threatsources.ThreatSource }}</option>
+                {% endfor %}
+              </select>
+              <label for="selectTactics_3" class="form-control border-0 small-font">Threat Tactics (Mitre)</label>
+              <select id="selectTactics_3" name="selectTactics_3" class="form-control">
+                <option value="">-- Select Threat Tactics --</option>
+                {% for mitreTactics in mitreTactics %}
+                    <option value="{{ mitreTactics.tactic}}">{{ mitreTactics.tactic }}</option>
+                {% endfor %}
+              </select>
+
+
+          </div>
+            <div class="col-md-6 small-font">
+
+                <h5>Business Impact Analysis</h5>
+                    <!--slider for safety rating -->
+                    <div class="slider-container d-flex align-items-center" >
+                        <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the overall impact on safety of the selected scenario">Safety</label></div>
+                        <div class="col-7">
+                            <label for="range_safety_3"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_safety_3" name="range_safety_3" onchange="initSlider('range_safety_3', 'safetyrange_3');calculateBIA();">
+                        </div>
+                        <div class="col-3"><label id="safetyrange_3" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></div>
+                    </div>
+                    <!--slider for life rating -->
+                    <div class="slider-container d-flex align-items-center">
+                        <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the danger to life of the selected scenario">Life</label></div>
+                        <div class="col-7">
+                            <label for="range_life_3"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_life_3" name="range_life_3" onchange="initSlider('range_life_3', 'liferange_3');calculateBIA() ">
+                        </div>
+                        <div class="col-3"><h6><label id="liferange_3" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                    </div>
+                    <!--slider for safety rating -->
+                    <div class="slider-container d-flex align-items-center">
+                        <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the production and operational impacts of the selected scenario">Production</label></div>
+                        <div class="col-7">
+                            <label for="range_production_3"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_production_3" name="range_production_3" onchange="initSlider('range_production_3', 'productionrange_3');calculateBIA();">
+                        </div>
+                        <div class="col-3"><h6><label id="productionrange_3" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                    </div>
+                     <!--slider for safety rating -->
+                    <div class="slider-container d-flex align-items-center">
+                        <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the cost impact of the selected scenario">Financial</label></div>
+                        <div class="col-7">
+                            <label for="range_finance_3"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_finance_3" name="range_finance_3" onchange="initSlider('range_finance_3', 'financerange_3');calculateBIA();">
+                        </div>
+                        <div class="col-3"><h6><label id="financerange_3" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                    </div>
+                    <!--slider for safety rating -->
+                    <div class="slider-container d-flex align-items-center">
+                        <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the impact on the organization's public reputation of the selected scenario">Reputation</label></div>
+                        <div class="col-7">
+                            <label for="range_reputation_3"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_reputation_3" name="range_reputation_3" onchange="initSlider('range_reputation_3', 'reputationrange_3');calculateBIA();">
+                        </div>
+                        <div class="col-3"><h6><label id="reputationrange_3" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                    </div>
+                    <!--slider for environment impact rating -->
+                    <div class="slider-container d-flex align-items-center">
+                        <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the environmental impact of the selected scenario">Environment</label></div>
+                        <div class="col-7">
+                            <label for="range_environment_3"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_environment_3" name="range_environment_3" onchange="initSlider('range_environment_3', 'environmentrange_3');calculateBIA();">
+                        </div>
+                        <div class="col-3"><h6><label id="environmentrange_3" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                    </div>
+                    <!--slider for regulatory impact rating -->
+                    <div class="slider-container d-flex align-items-center">
+                        <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the regulatory compliance impact of the selected scenario">Regulatory</label></div>
+                        <div class="col-7">
+                            <label for="range_regulatory_3"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_regulatory_3" name="range_regulatory_3" onchange="initSlider('range_regulatory_3', 'regulatoryrange_3');calculateBIA();">
+                        </div>
+                        <div class="col-3"><h6><label id="regulatoryrange_3" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                    </div>
+                    <!--slider for data impact rating -->
+                    <div class="slider-container d-flex align-items-center">
+                        <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the impact on data of the selected scenario">Data/IP</label></div>
+                        <div class="col-7">
+                            <label for="range_data_3"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_data_3" name="range_data_3" onchange="initSlider('range_data_3', 'datarange_3');calculateBIA();">
+                        </div>
+                        <div class="col-3"><h6><label id="datarange_3" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                    </div>
+
+            </div>
+            <div class="col-md-3 small-font">
+                <h5>Vulnerability and Likelihood Analysis</h5>
+                    <!--slider for vulnerability rating -->
+                    <div class="slider-container d-flex align-items-center" >
+                        <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the overall impact on safety of the selected scenario">Vulnerability</label></div>
+                        <div class="col-7">
+                            <label for="range_vuln_3"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_vuln_3" name="range_vuln_3" onchange="initSlider('range_vuln_3', 'vulnrange_3')">
+                        </div>
+                        <div class="col-3"><label id="vulnrange_3" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></div>
+                    </div>
+                    <!--slider for safety rating -->
+                    <div class="slider-container d-flex align-items-center">
+                        <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the danger to life of the selected scenario">Threat</label></div>
+                        <div class="col-7">
+                            <label for="range_threat_3"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_threat_3" name="range_threat_3" onchange="initSlider('range_threat_3', 'threatrange_3');">
+                        </div>
+                        <div class="col-3"><h6><label id="threatrange_3" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                    </div>
+                    <br>
+                    <label for="txtJustify_3" class="form-control border-0 align-text-bottom">Scenario Notes:</label>
+                    <textarea class="form-control" name="txtJustify_3" id="txtJustify_3" rows="5" style="resize: none; word-wrap: normal" placeholder="Add notes to support scenario 3"></textarea>
+            </div>
+            </div>
+        </div>
+        <div class="tab-pane" id="scenario4">
+          <!-- Scenario 4 controls -->
+            <div class="row">
+          <div class="col-md-4 small-font">
+                <input type="hidden" name="hdnScenarioID_4" id="hdnScenarioID_4">
+              <label for="txtScenarioDescription_4" class="form-control border-0 align-text-bottom small-font">Scenario Description</label>
+              <textarea class="form-control small-font" name="txtScenarioDescription_4" id="txtScenarioDescription_4" rows="3" style="resize: none; word-wrap: normal"></textarea>
+              <label for="selectThreat_4" class="form-control border-0">Threat Source</label>
+              <select id="selectThreat_4" name="selectThreat_4" class="form-control small-font">
+                <option value="">-- Select Threat Source --</option>
+                {% for threatsources in threatsources %}
+                    <option value="{{ threatsources.ThreatSource}}">{{ threatsources.ThreatSource }}</option>
+                {% endfor %}
+              </select>
+              <label for="selectTactics_4" class="form-control border-0">Threat Tactics (Mitre)</label>
+              <select id="selectTactics_4" name="selectTactics_4" class="form-control small-font">
+                <option value="">-- Select Threat Tactics --</option>
+                {% for mitreTactics in mitreTactics %}
+                    <option value="{{ mitreTactics.tactic}}">{{ mitreTactics.tactic }}</option>
+                {% endfor %}
+              </select>
+
+
+          </div>
+            <div class="col-md-4 small-font">
+               <h5>Business Impact Analysis</h5>
+                    <!--slider for safety rating -->
+                    <div class="slider-container d-flex align-items-center" >
+                        <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the overall impact on safety of the selected scenario">Safety</label></div>
+                        <div class="col-7">
+                            <label for="range_safety_4"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_safety_4" name="range_safety_4" onchange="initSlider('range_safety_4', 'safetyrange_4');calculateBIA();">
+                        </div>
+                        <div class="col-3"><label id="safetyrange_4" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></div>
+                    </div>
+                    <!--slider for life rating -->
+                    <div class="slider-container d-flex align-items-center">
+                        <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the danger to life of the selected scenario">Life</label></div>
+                        <div class="col-7">
+                            <label for="range_life_4"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_life_4" name="range_life_4" onchange="initSlider('range_life_4', 'liferange_4');calculateBIA() ">
+                        </div>
+                        <div class="col-3"><h6><label id="liferange_4" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                    </div>
+                    <!--slider for safety rating -->
+                    <div class="slider-container d-flex align-items-center">
+                        <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the production and operational impacts of the selected scenario">Production</label></div>
+                        <div class="col-7">
+                            <label for="range_production_4"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_production_4" name="range_production_4" onchange="initSlider('range_production_4', 'productionrange_4');calculateBIA();">
+                        </div>
+                        <div class="col-3"><h6><label id="productionrange_4" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                    </div>
+                     <!--slider for safety rating -->
+                    <div class="slider-container d-flex align-items-center">
+                        <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the cost impact of the selected scenario">Financial</label></div>
+                        <div class="col-7">
+                            <label for="range_finance_4"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_finance_4" name="range_finance_4" onchange="initSlider('range_finance_4', 'financerange_4');calculateBIA();">
+                        </div>
+                        <div class="col-3"><h6><label id="financerange_4" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                    </div>
+                    <!--slider for safety rating -->
+                    <div class="slider-container d-flex align-items-center">
+                        <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the impact on the organization's public reputation of the selected scenario">Reputation</label></div>
+                        <div class="col-7">
+                            <label for="range_reputation_4"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_reputation_4" name="range_reputation_4" onchange="initSlider('range_reputation_4', 'reputationrange_4');calculateBIA();">
+                        </div>
+                        <div class="col-3"><h6><label id="reputationrange_4" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                    </div>
+                    <!--slider for environment impact rating -->
+                    <div class="slider-container d-flex align-items-center">
+                        <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the environmental impact of the selected scenario">Environment</label></div>
+                        <div class="col-7">
+                            <label for="range_environment_4"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_environment_4" name="range_environment_4" onchange="initSlider('range_environment_4', 'environmentrange_4');calculateBIA();">
+                        </div>
+                        <div class="col-3"><h6><label id="environmentrange_4" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                    </div>
+                    <!--slider for regulatory impact rating -->
+                    <div class="slider-container d-flex align-items-center">
+                        <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the regulatory compliance impact of the selected scenario">Regulatory</label></div>
+                        <div class="col-7">
+                            <label for="range_regulatory_4"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_regulatory_4" name="range_regulatory_4" onchange="initSlider('range_regulatory_4', 'regulatoryrange_4');calculateBIA();">
+                        </div>
+                        <div class="col-3"><h6><label id="regulatoryrange_4" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                    </div>
+                    <!--slider for data impact rating -->
+                    <div class="slider-container d-flex align-items-center">
+                        <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the impact on data of the selected scenario">Data/IP</label></div>
+                        <div class="col-7">
+                            <label for="range_data_4"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_data_4" name="range_data_4" onchange="initSlider('range_data_4', 'datarange_4');calculateBIA();">
+                        </div>
+                        <div class="col-3"><h6><label id="datarange_4" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                    </div>
+
+            </div>
+            <div class="col-md-4 small-font">
+                <h5>Vulnerability and Likelihood Analysis</h5>
+                    <!--slider for vulnerability rating -->
+                    <div class="slider-container d-flex align-items-center" >
+                        <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the overall impact on safety of the selected scenario">Vulnerability</label></div>
+                        <div class="col-7">
+                            <label for="range_vuln_4"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_vuln_4" name="range_vuln_4" onchange="initSlider('range_vuln_4', 'vulnrange_4')">
+                        </div>
+                        <div class="col-3"><label id="vulnrange_4" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></div>
+                    </div>
+                    <!--slider for safety rating -->
+                    <div class="slider-container d-flex align-items-center">
+                        <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the danger to life of the selected scenario">Threat</label></div>
+                        <div class="col-7">
+                            <label for="range_threat_4"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_threat_4" name="range_threat_4" onchange="initSlider('range_threat_4', 'threatrange_4');">
+                        </div>
+                        <div class="col-3"><h6><label id="threatrange_4" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                    </div>
+                    <br>
+                    <label for="txtJustify_4" class="form-control border-0 align-text-bottom">Scenario Notes:</label>
+                    <textarea class="form-control" name="txtJustify_4" id="txtJustify_4" rows="5" style="resize: none; word-wrap: normal" placeholder="Add notes to support scenario 4"></textarea>
+            </div>
+            </div>
+        </div>
+        <div class="tab-pane" id="scenario5">
+          <!-- Scenario 5 controls -->
+            <div class="row">
+            <div class="col-md-4 small-font">
+            <input type="hidden" name="hdnScenarioID_5" id="hdnScenarioID_5">
+              <label for="txtScenarioDescription_5" class="form-control border-0 align-text-bottom small-font">Scenario Description</label>
+              <textarea class="form-control small-font" name="txtScenarioDescription_5" id="txtScenarioDescription_5" rows="3" style="resize: none; word-wrap: normal"></textarea>
+              <label for="selectThreat_5" class="form-control border-0">Threat Source</label>
+              <select id="selectThreat_5" name="selectThreat_5" class="form-control small-font">
+                <option value="">-- Select Threat Source --</option>
+                {% for threatsources in threatsources %}
+                    <option value="{{ threatsources.ThreatSource}}">{{ threatsources.ThreatSource }}</option>
+                {% endfor %}
+              </select>
+              <label for="selectTactics_5" class="form-control border-0 small-font">Threat Tactics (Mitre)</label>
+              <select id="selectTactics_5" name="selectTactics_5" class="form-control">
+                <option value="">-- Select Threat Tactics --</option>
+                {% for mitreTactics in mitreTactics %}
+                    <option value="{{ mitreTactics.tactic}}">{{ mitreTactics.tactic }}</option>
+                {% endfor %}
+              </select>
+
+          </div>
+            <div class="col-md-4 small-font">
+
+                <h5>Business Impact Analysis</h5>
+                    <!--slider for safety rating -->
+                    <div class="slider-container d-flex align-items-center" >
+                        <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the overall impact on safety of the selected scenario">Safety</label></div>
+                        <div class="col-7">
+                            <label for="range_safety_5"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_safety_5" name="range_safety_5" onchange="initSlider('range_safety_5', 'safetyrange_5');calculateBIA();">
+                        </div>
+                        <div class="col-3"><label id="safetyrange_5" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></div>
+                    </div>
+                    <!--slider for life rating -->
+                    <div class="slider-container d-flex align-items-center">
+                        <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the danger to life of the selected scenario">Life</label></div>
+                        <div class="col-7">
+                            <label for="range_life_5"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_life_5" name="range_life_5" onchange="initSlider('range_life_5', 'liferange_5');calculateBIA() ">
+                        </div>
+                        <div class="col-3"><h6><label id="liferange_5" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                    </div>
+                    <!--slider for safety rating -->
+                    <div class="slider-container d-flex align-items-center">
+                        <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the production and operational impacts of the selected scenario">Production</label></div>
+                        <div class="col-7">
+                            <label for="range_production_5"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_production_5" name="range_production_5" onchange="initSlider('range_production_5', 'productionrange_5');calculateBIA();">
+                        </div>
+                        <div class="col-3"><h6><label id="productionrange_5" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                    </div>
+                     <!--slider for safety rating -->
+                    <div class="slider-container d-flex align-items-center">
+                        <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the cost impact of the selected scenario">Financial</label></div>
+                        <div class="col-7">
+                            <label for="range_finance_5"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_finance_5" name="range_finance_5" onchange="initSlider('range_finance_5', 'financerange_5');calculateBIA();">
+                        </div>
+                        <div class="col-3"><h6><label id="financerange_5" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                    </div>
+                    <!--slider for safety rating -->
+                    <div class="slider-container d-flex align-items-center">
+                        <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the impact on the organization's public reputation of the selected scenario">Reputation</label></div>
+                        <div class="col-7">
+                            <label for="range_reputation_5"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_reputation_5" name="range_reputation_5" onchange="initSlider('range_reputation_5', 'reputationrange_5');calculateBIA();">
+                        </div>
+                        <div class="col-3"><h6><label id="reputationrange_5" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                    </div>
+                    <!--slider for environment impact rating -->
+                    <div class="slider-container d-flex align-items-center">
+                        <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the environmental impact of the selected scenario">Environment</label></div>
+                        <div class="col-7">
+                            <label for="range_environment_5"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_environment_5" name="range_environment_5" onchange="initSlider('range_environment_5', 'environmentrange_5');calculateBIA();">
+                        </div>
+                        <div class="col-3"><h6><label id="environmentrange_5" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                    </div>
+                    <!--slider for regulatory impact rating -->
+                    <div class="slider-container d-flex align-items-center">
+                        <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the regulatory compliance impact of the selected scenario">Regulatory</label></div>
+                        <div class="col-7">
+                            <label for="range_regulatory_5"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_regulatory_5" name="range_regulatory_5" onchange="initSlider('range_regulatory_5', 'regulatoryrange_5');calculateBIA();">
+                        </div>
+                        <div class="col-3"><h6><label id="regulatoryrange_5" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                    </div>
+                    <!--slider for data impact rating -->
+                    <div class="slider-container d-flex align-items-center">
+                        <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the impact on data of the selected scenario">Data/IP</label></div>
+                        <div class="col-7">
+                            <label for="range_data_5"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_data_5" name="range_data_5" onchange="initSlider('range_data_5', 'datarange_5');calculateBIA();">
+                        </div>
+                        <div class="col-3"><h6><label id="datarange_5" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                    </div>
+
+
+            </div>
+            <div class="col-md-4 small-font">
+                <h5>Vulnerability and Likelihood Analysis</h5>
+                    <!--slider for vulnerability rating -->
+                    <div class="slider-container d-flex align-items-center" >
+                        <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the overall impact on safety of the selected scenario">Vulnerability</label></div>
+                        <div class="col-7">
+                            <label for="range_vuln_5"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_vuln_5" name="range_vuln_5" onchange="initSlider('range_vuln_5', 'vulnrange_5')">
+                        </div>
+                        <div class="col-3"><label id="vulnrange_5" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></div>
+                    </div>
+                    <!--slider for safety rating -->
+                    <div class="slider-container d-flex align-items-center">
+                        <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the danger to life of the selected scenario">Threat</label></div>
+                        <div class="col-7">
+                            <label for="range_threat_5"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_threat_5" name="range_threat_5" onchange="initSlider('range_threat_5', 'threatrange_5');">
+                        </div>
+                        <div class="col-3"><h6><label id="threatrange_5" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                    </div>
+                    <br>
+                    <label for="txtJustify_5" class="form-control border-0 align-text-bottom">Scenario Notes:</label>
+                    <textarea class="form-control" name="txtJustify_5" id="txtJustify_5" rows="5" style="resize: none; word-wrap: normal" placeholder="Add notes to support scenario 5"></textarea>
+            </div>
+            </div>
+        </div>
+      </div>
+    </div>
+</div>
+<div class="col-md-1"></div>
+</div>>
+
+</form>
+
+ <form method="post" action="{% url 'OTRisk:openai_assess_risk' %}">
+        {% csrf_token %}
+        <button type="submit">Assess Risk</button>
+    </form>
+
+    {% if reply %}
+        <h2>Risk Assessment:</h2>
+        <p>{{ reply }}</p>
+    {% endif %}
+
+
+
+<script>
+        // AJAX function call on button click
+        $(document).ready(function () {
+            $("#risk-assessment-btn").click(function () {
+                // Call the function to assess the risk
+                assessRisk(1);
+            });
+        });
+
+        // AJAX function to call the Django view
+        function assessRisk(buttonNumber) {
+            $('#loadingSpinner').show();
+            // Gather the necessary data for the AJAX request (impact scores and scenario information)
+            var safetyImpact = document.getElementById('range_safety_' + buttonNumber).value;
+            var lifeImpact = document.getElementById('range_life_' + buttonNumber).value;
+            var productionImpact = document.getElementById('range_production_' + buttonNumber).value;
+            var financialImpact = document.getElementById('range_finance_' + buttonNumber).value;
+            var reputationImpact = document.getElementById('range_reputation_' + buttonNumber).value;
+            var environmentImpact = document.getElementById('range_environment_' + buttonNumber).value;
+            var regulatoryImpact = document.getElementById('range_regulatory_' + buttonNumber).value;
+            var dataImpact = document.getElementById('range_data_' + buttonNumber).value;
+            var threatSource = document.getElementById('selectThreat_' + buttonNumber).value;
+            var threatTactic = document.getElementById('selectTactics_' + buttonNumber).value;
+            var vulnerabilityExposure = document.getElementById('range_vuln_' + buttonNumber).value;
+            var threatExposure = document.getElementById('range_threat_' + buttonNumber).value;
+            var industry = document.getElementById('selectIndustry').value;
+            var facilityType = document.getElementById('selectFacility').value;
+            var scenario = document.getElementById('txtScenarioDescription_' + buttonNumber).value;
+
+
+            // Make the AJAX call to the Django view using a separate endpoint for risk assessment
+            $.ajax({
+                type: "GET",
+                url: "{% url 'OTRisk:openai_assess_risk' %}",  // URL for the Django view
+                data: {
+                    // Pass the impact scores and scenario information as parameters
+                    safety_impact: safetyImpact,
+                    life_impact: lifeImpact,
+                    production_impact: productionImpact,
+                    financial_impact: financialImpact,
+                    reputation_impact: reputationImpact,
+                    environment_impact: environmentImpact,
+                    regulatory_impact: regulatoryImpact,
+                    data_impact: dataImpact,
+                    threat_source: threatSource,
+                    threat_tactic: threatTactic,
+                    vulnerability_exposure: vulnerabilityExposure,
+                    threat_exposure: threatExposure,
+                    industry: industry,
+                    facility_type: facilityType,
+                    scenario: scenario,
+                },
+                success: function (response) {
+
+                    // Extract the risk score and risk rating from the response
+                    var riskRating = response[0];
+                    var riskScore = response[1];
+                    var riskSummary = response[2]
+
+
+                    $('#lblriskScore_' +buttonNumber).text(riskScore);
+                    $('#lblriskRating_' + buttonNumber).text(riskRating);
+                    $('#lblriskSummary_' + buttonNumber).text(riskSummary);
+                    $('#loadingSpinner').hide();
+
+                    // Set the background and foreground colors based on the risk rating
+                    if (riskRating.includes('Low')) {
+                        $('#lblriskRating_' + buttonNumber).css('background-color', 'green');
+                        $('#lblriskRating_' + buttonNumber).css('color', 'black');
+                    } else if (riskRating.includes('Medium')) {
+                        $('#lblriskRating_' + buttonNumber).css('background-color', 'yellow');
+                        $('#lblriskRating_' + buttonNumber).css('color', 'black');
+                    } else if (riskRating.includes('High')) {
+                        $('#lblriskRating_' + buttonNumber).css('background-color', 'red');
+                        $('#lblriskRating_' + buttonNumber).css('color', 'black');
+                    } else {
+                        // Default styles if the risk rating doesn't match any of the above
+                        $('#lblriskRating_' + buttonNumber).css('background-color', 'white');
+                        $('#lblriskRating_' + buttonNumber).css('color', 'black');
+                    }
+                    $('#loadingSpinner').hide();
+
+                },
+                error: function (xhr, status, error) {
+                    // Handle any errors that occur during the AJAX call
+                    console.error(error);
+                    $('#loadingSpinner').hide();
+                },
+            });
+        }
+
+
+    document.addEventListener('DOMContentLoaded', function() {
+      var rangeVuln2 = document.getElementById('range_vuln_2');
+      var txtVuln2Container = document.getElementById('txtVuln_2_container');
+      var txtVuln2 = document.getElementById('txtVuln_2');
+      // var closeTxtVuln2 = document.getElementById('closeTxtVuln_2');
+
+      rangeVuln2.addEventListener('click', function() {
+        txtVuln2Container.style.display = 'block';
+      });
+
+      //closeTxtVuln2.addEventListener('click', function() {
+       // txtVuln2Container.style.display = 'none';
+     // });
+    });
+
+  // Preserve input values when switching tabs
+  $(document).ready(function() {
+    $('a[data-bs-toggle="tab"]').on('shown.bs.tab', function (e) {
+      var target = $(e.target).attr("href"); // Get the target tab id
+      var previousTab = $(e.relatedTarget).attr("href"); // Get the previous tab id
+
+      // Store the input values of the previous tab
+      $(previousTab).find(':input').each(function() {
+        var inputId = $(this).attr('id');
+        var inputValue = $(this).val();
+        localStorage.setItem(inputId, inputValue);
+      });
+
+      // Restore the input values of the target tab
+      $(target).find(':input').each(function() {
+        var inputId = $(this).attr('id');
+        var savedValue = localStorage.getItem(inputId);
+        if (savedValue !== null) {
+          $(this).val(savedValue);
+        }
+      });
+    });
+  });
+
+
+
+
+
+
+$(document).ready(function(){
+    $('#rawtable').dataTable( {
+        "pageLength": 5,
+            "lengthChange": false
+
+    } );
+});
+
+$(document).ready(function() {
+    $('#selectIndustry').select2();
+});
+
+$(document).ready(function() {
+    $('#selectFacility').select2();
+});
+
+$(document).ready(function() {
+    $('#selectTrigger').select2();
+});
+
+//following code to load raw data and scenarios from the clicked raw record in the table
+$(document).ready(function() {
+    $('#rawtable').on('click', 'tbody tr', function() {
+
+        sessionStorage.setItem('scenario1id', '');
+        sessionStorage.setItem('scenario2id', '');
+        sessionStorage.setItem('scenario3id', '');
+        sessionStorage.setItem('scenario4id', '');
+        sessionStorage.setItem('scenario5id', '');
+
+        document.getElementById("txtScenarioDescription_1").value = "";
+
+        document.getElementById("txtScenarioDescription_2").value = "";
+        document.getElementById("scenario3-tab").click();
+        document.getElementById("txtScenarioDescription_3").value = "";
+        document.getElementById("txtScenarioDescription_4").value = "";
+        document.getElementById("txtScenarioDescription_5").value = "";
+        document.getElementById("txtJustify_1").value = "";
+        document.getElementById("txtJustify_2").value = "";
+        document.getElementById("txtJustify_3").value = "";
+        document.getElementById("txtJustify_4").value = "";
+        document.getElementById("txtJustify_5").value = "";
+        document.getElementById("editBtn").disabled= false;
+        document.getElementById("scenario1-tab").click();
+
+        // Get the data from the clicked row
+        var title = $(this).find('td:eq(1)').text();
+        var businessUnit = $(this).find('td:eq(7)').text();
+        var leader = $(this).find('td:eq(8)').text();
+        var facility = $(this).find('td:eq(5)').text();
+        var industry = $(this).find('td:eq(6)').text();
+        var trigger = $(this).find('td:eq(4)').text(); // Adjust this based on your table structure
+        var description = $(this).data('description');
+        var raw_id = $(this).find('td:eq(0)').text();
+        document.getElementById("hdnRawID").value = raw_id;
+        sessionStorage.setItem('rawid',raw_id);
+        sessionStorage.setItem('editMode','0');
+        sessionStorage.setItem('addNew','0');
+        sessionStorage.setItem('RATitle',title);
+        sessionStorage.setItem('RABU',businessUnit);
+
+
+
+        // Set the values of the form controls
+        $('#txtTitle').val(title);
+        $('#txtBU').val(businessUnit);
+        $('#txtLeader').val(leader);
+        $('#selectFacility').val(facility).trigger('change'); // Use .trigger('change') to update the Select2 control
+        $('#selectIndustry').val(industry).trigger('change'); // Use .trigger('change') to update the Select2 control
+        $('#selectTrigger').val(trigger).trigger('change'); // Use .trigger('change') to update the Select2 control
+        $('#txtDescription').val(description);
+
+        // Send an AJAX request to get the matching scenarios
+        $.ajax({
+            url: '/OTRisk/get_scenarios/', // Replace with the actual URL of your view
+            data: {
+                'raw_id': raw_id
+            },
+            dataType: 'json',
+
+            success: function(scenarios) {
+                  document.getElementById("scenarioCount").value = "1";
+
+                  if (scenarios.length >= 2) {
+                      document.getElementById("scenarioCount").value = "2";
+                      document.getElementById("scenario2-tab").click();
+                      document.getElementById("hdnScenarioID_2").value = scenarios[1].pk;
+                      sessionStorage.setItem('scenario2id',scenarios[1].pk);
+                      document.getElementById("txtScenarioDescription_2").value = scenarios[1].fields.ScenarioDescription;
+                      document.getElementById("selectThreat_2").value = scenarios[1].fields.threatSource;
+                      document.getElementById("selectTactics_2").value = scenarios[1].fields.threatTactic;
+                      document.getElementById("range_safety_2").value = scenarios[1].fields.SafetyScore;
+                      initSlider('range_safety_2', 'safetyrange_2')
+                      document.getElementById("range_life_2").value = scenarios[1].fields.lifeScore;
+                      initSlider('range_life_2', 'liferange_2')
+                      document.getElementById("range_production_2").value = scenarios[1].fields.productionScore;
+                      initSlider('range_production_2', 'productionrange_2')
+                      document.getElementById("range_finance_2").value = scenarios[1].fields.FinancialScore;
+                      initSlider('range_finance_1', 'financerange_2')
+                      document.getElementById("range_reputation_2").value = scenarios[1].fields.ReputationScore;
+                      initSlider('range_reputation_2', 'reputationrange_2')
+                      document.getElementById("range_environment_2").value = scenarios[1].fields.environmentScore;
+                      initSlider('range_environment_2', 'environmentrange_2')
+                      document.getElementById("range_regulatory_1").value = scenarios[1].fields.regulatoryScore;
+                      initSlider('range_regulatory_2', 'regulatoryrange_2')
+                      document.getElementById("range_data_2").value = scenarios[1].fields.DataScore;
+                      initSlider('range_data_2', 'datarange_2')
+                      document.getElementById("range_vuln_2").value = scenarios[1].fields.VulnScore;
+                      initSlider('range_vuln_2', 'vulnrange_2')
+                      document.getElementById("range_threat_2").value = scenarios[1].fields.ThreatScore;
+                      initSlider('range_threat_2', 'threatrange_2')
+                      document.getElementById("txtJustify_2").value = scenarios[1].fields.notes;
+                      }
+                  if (scenarios.length >= 3) {
+                      document.getElementById("scenarioCount").value = "3";
+                      document.getElementById("scenario3-tab").click();
+                      document.getElementById("hdnScenarioID_3").value = scenarios[2].pk;
+                      sessionStorage.setItem('scenario3id',scenarios[2].pk);
+                      document.getElementById("txtScenarioDescription_3").value = scenarios[2].fields.ScenarioDescription;
+                      document.getElementById("selectThreat_3").value = scenarios[2].fields.threatSource;
+                      document.getElementById("selectTactics_3").value = scenarios[2].fields.threatTactic;
+                      document.getElementById("range_safety_3").value = scenarios[2].fields.SafetyScore;
+                      initSlider('range_safety_3', 'safetyrange_3')
+                      document.getElementById("range_life_3").value = scenarios[2].fields.lifeScore;
+                      initSlider('range_life_3', 'liferange_3')
+                      document.getElementById("range_production_3").value = scenarios[2].fields.productionScore;
+                      initSlider('range_production_3', 'productionrange_3')
+                      document.getElementById("range_finance_3").value = scenarios[2].fields.FinancialScore;
+                      initSlider('range_finance_3', 'financerange_3')
+                      document.getElementById("range_reputation_3").value = scenarios[2].fields.ReputationScore;
+                      initSlider('range_reputation_3', 'reputationrange_3')
+                      document.getElementById("range_environment_3").value = scenarios[2].fields.environmentScore;
+                      initSlider('range_environment_3', 'environmentrange_3')
+                      document.getElementById("range_regulatory_3").value = scenarios[2].fields.regulatoryScore;
+                      initSlider('range_regulatory_3', 'regulatoryrange_3')
+                      document.getElementById("range_data_3").value = scenarios[2].fields.DataScore;
+                      initSlider('range_data_3', 'datarange_3')
+                      document.getElementById("range_vuln_3").value = scenarios[2].fields.VulnScore;
+                      initSlider('range_vuln_3', 'vulnrange_3')
+                      document.getElementById("range_threat_3").value = scenarios[2].fields.ThreatScore;
+                      initSlider('range_threat_3', 'threatrange_3')
+                      document.getElementById("txtJustify_3").value = scenarios[2].fields.notes;
+                      }
+                  if (scenarios.length >= 4) {
+                      document.getElementById("scenarioCount").value = "4";
+                      document.getElementById("scenario4-tab").click();
+                      document.getElementById("hdnScenarioID_4").value = scenarios[3].pk;
+                      sessionStorage.setItem('scenario4id',scenarios[3].pk);
+                      document.getElementById("txtScenarioDescription_4").value = scenarios[3].fields.ScenarioDescription;
+                      document.getElementById("selectThreat_4").value = scenarios[3].fields.threatSource;
+                      document.getElementById("selectTactics_4").value = scenarios[3].fields.threatTactic;
+                      document.getElementById("range_safety_4").value = scenarios[3].fields.SafetyScore;
+                      initSlider('range_safety_4', 'safetyrange_4')
+                      document.getElementById("range_life_4").value = scenarios[3].fields.lifeScore;
+                      initSlider('range_life_4', 'liferange_4')
+                      document.getElementById("range_production_4").value = scenarios[3].fields.productionScore;
+                      initSlider('range_production_4', 'productionrange_4')
+                      document.getElementById("range_finance_4").value = scenarios[3].fields.FinancialScore;
+                      initSlider('range_finance_4', 'financerange_4')
+                      document.getElementById("range_reputation_4").value = scenarios[3].fields.ReputationScore;
+                      initSlider('range_reputation_4', 'reputationrange_4')
+                      document.getElementById("range_environment_4").value = scenarios[3].fields.environmentScore;
+                      initSlider('range_environment_4', 'environmentrange_4')
+                      document.getElementById("range_regulatory_4").value = scenarios[3].fields.regulatoryScore;
+                      initSlider('range_regulatory_4', 'regulatoryrange_4')
+                      document.getElementById("range_data_4").value = scenarios[3].fields.DataScore;
+                      initSlider('range_data_4', 'datarange_4')
+                      document.getElementById("range_vuln_4").value = scenarios[3].fields.VulnScore;
+                      initSlider('range_vuln_4', 'vulnrange_4')
+                      document.getElementById("range_threat_4").value = scenarios[3].fields.ThreatScore;
+                      initSlider('range_threat_4', 'threatrange_4')
+                      document.getElementById("txtJustify_4").value = scenarios[3].fields.notes;
+                      }
+                  if (scenarios.length >= 5) {
+                      document.getElementById("scenarioCount").value = "5";
+                      document.getElementById("scenario5-tab").click();
+                      document.getElementById("hdnScenarioID_5").value = scenarios[4].pk;
+                      sessionStorage.setItem('scenario5id',scenarios[4].pk);
+                      document.getElementById("txtScenarioDescription_5").value = scenarios[4].fields.ScenarioDescription;
+                      document.getElementById("selectThreat_5").value = scenarios[4].fields.threatSource;
+                      document.getElementById("selectTactics_5").value = scenarios[4].fields.threatTactic;
+                      document.getElementById("range_safety_5").value = scenarios[4].fields.SafetyScore;
+                      initSlider('range_safety_5', 'safetyrange_5')
+                      document.getElementById("range_life_5").value = scenarios[4].fields.lifeScore;
+                      initSlider('range_life_5', 'liferange_5')
+                      document.getElementById("range_production_5").value = scenarios[4].fields.productionScore;
+                      initSlider('range_production_5', 'productionrange_5')
+                      document.getElementById("range_finance_5").value = scenarios[4].fields.FinancialScore;
+                      initSlider('range_finance_5', 'financerange_5')
+                      document.getElementById("range_reputation_5").value = scenarios[4].fields.ReputationScore;
+                      initSlider('range_reputation_5', 'reputationrange_5')
+                      document.getElementById("range_environment_5").value = scenarios[4].fields.environmentScore;
+                      initSlider('range_environment_5', 'environmentrange_5')
+                      document.getElementById("range_regulatory_1").value = scenarios[4].fields.regulatoryScore;
+                      initSlider('range_regulatory_5', 'regulatoryrange_1')
+                      document.getElementById("range_data_5").value = scenarios[4].fields.DataScore;
+                      initSlider('range_data_5', 'datarange_5')
+                      document.getElementById("range_vuln_5").value = scenarios[4].fields.VulnScore;
+                      initSlider('range_vuln_5', 'vulnrange_5')
+                      document.getElementById("range_threat_5").value = scenarios[4].fields.ThreatScore;
+                      initSlider('range_threat_5', 'threatrange_5')
+                      document.getElementById("txtJustify_5").value = scenarios[4].fields.notes;
+                      }
+
+                  document.getElementById("scenario1-tab").click();
+                  document.getElementById("hdnScenarioID_1").value = scenarios[0].pk;
+                  sessionStorage.setItem('scenario1id',scenarios[0].pk);
+                  document.getElementById("txtScenarioDescription_1").value = scenarios[0].fields.ScenarioDescription;
+                  document.getElementById("selectThreat_1").value = scenarios[0].fields.threatSource;
+                  document.getElementById("selectTactics_1").value = scenarios[0].fields.threatTactic;
+                  document.getElementById("range_safety_1").value = scenarios[0].fields.SafetyScore;
+                  initSlider('range_safety_1', 'safetyrange_1')
+                  document.getElementById("range_life_1").value = scenarios[0].fields.lifeScore;
+                  initSlider('range_life_1', 'liferange_1')
+                  document.getElementById("range_production_1").value = scenarios[0].fields.productionScore;
+                  initSlider('range_production_1', 'productionrange_1')
+                  document.getElementById("range_finance_1").value = scenarios[0].fields.FinancialScore;
+                  initSlider('range_finance_1', 'financerange_1')
+                  document.getElementById("range_reputation_1").value = scenarios[0].fields.ReputationScore;
+                  initSlider('range_reputation_1', 'reputationrange_1')
+                  document.getElementById("range_environment_1").value = scenarios[0].fields.environmentScore;
+                  initSlider('range_environment_1', 'environmentrange_1')
+                  document.getElementById("range_regulatory_1").value = scenarios[0].fields.regulatoryScore;
+                  initSlider('range_regulatory_1', 'regulatoryrange_1')
+                  document.getElementById("range_data_1").value = scenarios[0].fields.DataScore;
+                  initSlider('range_data_1', 'datarange_1')
+                  document.getElementById("range_vuln_1").value = scenarios[0].fields.VulnScore;
+                  initSlider('range_vuln_1', 'vulnrange_1')
+                  document.getElementById("range_threat_1").value = scenarios[0].fields.ThreatScore;
+                  initSlider('range_threat_1', 'threatrange_1')
+                  document.getElementById("txtJustify_1").value = scenarios[0].fields.notes;
+                 }
+        });
+    });
+
+});
+
+function initFrequencySlider(sliderId, outputId) {
+    var slider = document.getElementById(sliderId);
+    var output = document.getElementById(outputId);
+
+    output.innerHTML = "Never/Very Rare";
+
+    switch (parseInt(slider.value)) {
+        case 1: output.innerHTML = "Never/Very Rare";
+        case 2: output.innerHTML = "Rarely";
+        case 3: output.innerHTML = "Once in 5 yrs";
+        case 4: output.innerHTML = "Once in 3 years";
+        case 5: output.innerHTML = "Once in 2 years";
+        case 6: output.innerHTML = "Up to once a year"
+        case 7: output.innerHTML = "At least once a year"
+        case 8: output.innerHTML = "At least twice a year"
+        case 9: output.innerHTML = "Multiple times a year"
+        case 10: output.innerHTML = "Continuously"
+   }
+}
+
+  function initSlider(sliderId, outputId) {
+    var slider = document.getElementById(sliderId);
+    var output = document.getElementById(outputId);
+
+    // Display the default slider value
+    output.innerHTML = getSeverityLabel(slider.value);
+
+    // Update the current slider value (each time you drag the slider handle)
+    slider.oninput = function() {
+      output.innerHTML = getSeverityLabel(this.value);
+      // calculateRiskScore();
+    };
+  }
+
+  function getSeverityLabel(value) {
+    switch (parseInt(value)) {
+      case 1:
+        case 2:
+        return "Low";
+      case 3:
+        case 4:
+        return "Low/Medium";
+      case 5:
+        case 6:
+        return "Medium";
+      case 7:
+        case 8:
+        return "Medium/High";
+      case 9:
+        case 10:
+        return "High";
+      default:
+        return "";
+    }
+  }
+
+
+
+
+
+
+
+function calculateRiskScore() {
+
+        var severity = parseInt(document.getElementById("range_severity").value);
+      var severityWeight = parseInt(document.getElementById("S_Weight").value);
+      var frequency = parseInt(document.getElementById("range_frequency").value);
+      var frequencyWeight = parseInt(document.getElementById("F_Weight").value);
+      var exposure = parseInt(document.getElementById("range_exposure").value);
+      var exposureWeight = parseInt(document.getElementById("E_Weight").value);
+      var resilience = parseInt(document.getElementById("range_resilience").value);
+      var resilienceWeight = parseInt(document.getElementById("R_Weight").value);
+
+      // Calculate the raw score
+      var rawScore = (severity * severityWeight) + (frequency * frequencyWeight) + (exposure * exposureWeight) + (resilience * resilienceWeight);
+
+      // Normalize the score between 1 and 10
+      var minScore = 0; // Update this if a minimum possible score is defined
+      var maxScore = 200; // Update this if a maximum possible score is defined
+      var normalizedScore = (rawScore - minScore) / (maxScore - minScore) * 9 + 1;
+
+      // Round the normalized score to two decimal places
+      normalizedScore = Math.round(normalizedScore * 100) / 100;
+
+      // Generate the corresponding rating based on the normalized score
+      var rating;
+      if (normalizedScore <= 2) {
+        rating = "Low";
+      } else if (normalizedScore <= 4) {
+        rating = "Low/Medium";
+      } else if (normalizedScore <= 6) {
+        rating = "Medium";
+      } else if (normalizedScore <= 8) {
+        rating = "Medium/High";
+      } else {
+        rating = "High";
+      }
+
+        // gauge1.setValue(normalizedScore*10);
+    }
+
+
+
+</script>
+
+
+</body>
+</html>

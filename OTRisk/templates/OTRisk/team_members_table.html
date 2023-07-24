@@ -1,0 +1,15 @@
+<!-- team_members_table.html -->
+{% for member in team_members %}
+<tr>
+    <td>{{ member.Name }}</td>
+    <td>{{ member.Company }}</td>
+    <td>{{ member.Title }}</td>
+    <td>{{ member.Expertise }}</td>
+    <td>{{ member.Experience }}</td>
+    <td>{{ member.Comments }}</td>
+</tr>
+{% empty %}
+<tr>
+    <td colspan="6">No team members found.</td>
+</tr>
+{% endfor %}

@@ -1,0 +1,18 @@
+{% extends "OTRisk/base.html" %}
+{% block title %}OT Risk{% endblock %}
+{% block content %}
+<h1>OT Risk Assessment</h1>
+{%  for post in posts %}
+<h2>
+<a href="{{ post.get_absolute_url }}">
+    {{ post.process_description }}
+</a>
+
+</h2>
+<p class="date">
+    Submitted {{ post.startdate }} by {{ post.riskauthor }}
+</p>
+{{ post.body|truncatewords:30|linebreaks }}
+{% endfor %}
+    {% include "pagination.html" with page=page_obj %}
+{% endblock %}

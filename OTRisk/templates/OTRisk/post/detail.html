@@ -1,0 +1,218 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Post Detail</title>
+    <link href="{% static 'css/OTRisk.css' %}" rel="stylesheet">
+
+</head>
+<body>
+<div id="content">
+    <h2 align="middle">OT Risk Assessment</h2>
+    <h3 align="middle">{{ post.process_description }}</h3>
+    <table align="center" width="60%">
+        <thead>
+            <tr>
+                <th>Risk Causes</th>
+                <th>Consequences</th>
+                <th>Risk Assessment Trigger</th>
+                <th>Protection Measures</th>
+                <th>Impact Analysis</th>
+            </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td align="center">{{ post.causes }}</td>
+            <td align="center">{{ post.consequences }}</td>
+            <td align="center">{{ post.trigger_event }}</td>
+            <td align="center">{{ post.layers_of_protection }}</td>
+            <td align="center">{{ post.impact_analysis }}</td>
+        </tr>
+        </tbody>
+        <tr></tr>
+         <thead>
+            <tr>
+                <th>Residual Risk</th>
+                <th>Vulnerabilities</th>
+                <th>Threats</th>
+                <th>Status</th>
+                <th>Owner</th>
+            </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td align="center">{{ post.risk_residual_level }}</td>
+            <td align="center">{{ post.vulnerabilities }}</td>
+            <td align="center">{{ post.threats }}</td>
+            <td align="center">{{ post.submit_status }}</td>
+            <td align="center">{{ post.riskauthor }}</td>
+        </tr>
+        </tbody>
+    </table>
+
+
+
+    <div class="detail-section">
+        <h2>Risk Scenarios</h2>
+         <ul>
+            {% for scenario in post.riskscenarios.all %}
+                <li>
+                    <strong>Scenario Name:</strong>
+                    <a href="{% url 'OTRisk:scenario_detail' scenario.id %}">{{ scenario.ScenarioName }}</a>
+                    - Likelihood: {{ scenario.probability }}
+                    - Threat: {{ scenario.ThreatScore }}
+                    - Vulnerabilities: {{ scenario.VulnScore }}
+                    - Financial Impact: {{ scenario.FinancialImpact }}
+                    - Reputation Impact: {{ scenario.ReputationImpact }}
+                    - Operational Impact: {{ scenario.OperationalImpact }}
+                </li>
+                </li>
+            {% endfor %}
+        </ul>
+        <form method="POST" action="{% url 'OTRisk:scenario_create' post.pk %}">
+            {% csrf_token %}
+            <h3>Create New Risk Scenario</h3>
+            <table>
+
+                <tr>
+                    <td align="top">
+                        <label for="scenario_name">Scenario Name:</label><br>
+                    </td>
+                    <td>
+                        <input type="text" id="scenario_name" name="scenario_name" class="form-control" required>
+                    </td>
+
+                    <td>
+                        <label for="risk_ranking">Risk Ranking:</label><br>
+                    </td>
+                    <td>
+                        <select id="risk_ranking" name="risk_ranking" class="form-control" required>
+                            <option value="H">High</option>
+                            <option value="M">Medium</option>
+                            <option value="L">Low</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                     <td>
+                        <label for="probability">Likelihood:</label><br>
+                    </td>
+                    <td>
+                         <select id="probability" name="probability" class="form-control" required>
+                            <option value="L-">Very Low</option>
+                            <option value="L">Low</option>
+                            <option value="L/M">Low to Medium</option>
+                            <option value="M">Medium</option>
+                             <option value="M/H">Medium to High</option>
+                            <option value="H">High</option>
+                            <option value="H+">Very High</option>
+                        </select>
+                    </td>
+                    <td>
+                        <label for="ThreatScore">Threats:</label><br>
+                    </td>
+                    <td>
+                         <select id="ThreatScore" name="ThreatScore" class="form-control" required>
+                            <option value="L-">Very Low</option>
+                            <option value="L">Low</option>
+                            <option value="L/M">Low to Medium</option>
+                            <option value="M">Medium</option>
+                             <option value="M/H">Medium to High</option>
+                            <option value="H">High</option>
+                            <option value="H+">Very High</option>
+                        </select>
+                    </td>
+                    <td>
+                        <label for="VulnScore">Vulnerabilities:</label><br>
+                    </td>
+                    <td>
+                         <select id="VulnScore" name="VulnScore" class="form-control" required>
+                            <option value="L-">Very Low</option>
+                            <option value="L">Low</option>
+                            <option value="L/M">Low to Medium</option>
+                            <option value="M">Medium</option>
+                             <option value="M/H">Medium to High</option>
+                            <option value="H">High</option>
+                            <option value="H+">Very High</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <label for="FinancialImpact">Impacts: Financial:</label><br>
+                    </td>
+                    <td>
+                         <select id="FinancialImpact" name="FinancialImpact" class="form-control" required>
+                            <option value="L-">Very Low</option>
+                            <option value="L">Low</option>
+                            <option value="L/M">Low to Medium</option>
+                            <option value="M">Medium</option>
+                             <option value="M/H">Medium to High</option>
+                            <option value="H">High</option>
+                            <option value="H+">Very High</option>
+                        </select>
+                    </td>
+                    <td>
+                        <label for="OperationalImpact">Impacts: Operational:</label><br>
+                    </td>
+                    <td>
+                         <select id="OperationalImpact" name="OperationalImpact" class="form-control" required>
+                            <option value="L-">Very Low</option>
+                            <option value="L">Low</option>
+                            <option value="L/M">Low to Medium</option>
+                            <option value="M">Medium</option>
+                             <option value="M/H">Medium to High</option>
+                            <option value="H">High</option>
+                            <option value="H+">Very High</option>
+                        </select>
+                    </td>
+                    <td>
+                        <label for="ReputationImpact">Impacts: Reputation:</label><br>
+                    </td>
+                    <td>
+                         <select id="ReputationImpact" name="ReputationImpact" class="form-control" required>
+                            <option value="L-">Very Low</option>
+                            <option value="L">Low</option>
+                            <option value="L/M">Low to Medium</option>
+                            <option value="M">Medium</option>
+                             <option value="M/H">Medium to High</option>
+                            <option value="H">High</option>
+                            <option value="H+">Very High</option>
+                        </select>
+                    </td>
+                </tr>
+             </table>
+
+            <div class="form-group">
+                <label for="scenario_description">Scenario Description:</label><br>
+                <textarea rows="5" cols="50" id="scenario_description" name="scenario_description" class="form-control"></textarea><br>
+                <label for="consequence_analysis">Describe Scenario Consequences:</label><br>
+                <textarea rows="5" cols="50" id="consequence_analysis" name="consequence_analysis" class="form-control" required></textarea>
+            </div>
+
+
+
+        <div class="form-group">
+            <label for="initiating_event">Describe Initiating Events:</label><BR>
+            <textarea rows="5" cols="50" id="initiating_event" name="initiating_event" class="form-control" required></textarea><br>
+            <label for="risk_evaluation">Describe Scenario Risk:</label><br>
+            <textarea rows="5" cols="50" id="risk_evaluation" name="risk_evaluation" class="form-control" required></textarea><br>
+        </div>
+
+
+            <div class="form-group">
+                <label for="RiskScore">Risk Score (out of 10):</label><br>
+                <input type="text" id="RiskScore" name="RiskScore" class="form-control" required><br>
+                <label for="weight">Importance Weighting:</label><br>
+                <input type="text" id="weight" name="weight" class="form-control" required><br>
+                 <label for="OverallRiskScore">Overall Risk Score</label><br>
+                <input type="text" id="OverallRiskScore" name="OverallRiskScore" class="form-control" required><br>
+            </div>
+
+            <br>
+        <button type="submit" class="btn btn-primary">Create</button>
+    </form>
+    </div>
+</div>
+</body>
+</html>

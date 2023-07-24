@@ -1,0 +1,68 @@
+{% block content %}
+<html>
+<head>
+
+
+</head>
+<body>
+
+
+    <div class="container">
+    <div class="row">
+        <div class="col">
+            <h2>Continue or Edit a Workshop</h2>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Workshop Start Date</th>
+                        <th>Workshop Name</th>
+                        <th>Workshop Status</th>
+                        <th>Workshop Type</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for workshop in workshops %}
+                    <tr>
+                        <td>{{ workshop.ID }}</td>
+                        <td>{{ workshop.WorkshopStartDate }}</td>
+                        <td>{{ workshop.WorkshopName }}</td>
+                        <td>{{ workshop.WorkshopStatus }}</td>
+                        <td>{{ workshop.WorkshopType }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="col">
+            <h2>Start a new Risk Workshop</h2>
+            <form action="{% url 'OTRisk:workshop_without_id' %}" method="post">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="workshoptype">Risk Assessment Type</label>
+                    <select class="form-control" id="workshoptype" name="workshoptype">
+                        <option value="RA">Cybersecurity Risk Assessment</option>
+                        <option value="PHA">CyberPHA</option>
+                    </select>
+                </div>
+               <div class="form-group">
+                    <label for="workshopstartdate">Start Date</label>
+                    <input type="text" class="form-control" id="workshopstartdate" name="workshopstartdate">
+                </div>
+                <div class="form-group">
+                    <label for="workshopname">Workshop Name</label>
+                    <input type="text" class="form-control" id="workshopname" name="workshopname">
+                </div>
+                <div class="form-group">
+                    <label for="workshopobjectives">Workshop Objectives</label>
+                    <textarea class="form-control" id="workshopobjectives" name="workshopobjectives"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Create Workshop</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+</body>
+</html>
