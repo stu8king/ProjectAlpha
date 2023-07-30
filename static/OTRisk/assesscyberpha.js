@@ -6,13 +6,7 @@
 // Example function to handle form submission
 
 
-function fillScenario(saved_scenarios){
-    var dropdown = document.getElementById("risk-category");
-    alert("fill");
-    // Set its value to the RiskCategory of the clicked row
-    dropdown.value = saved_scenarios.fields.RiskCategory;
 
-}
 
       function filterTable() {
         var input = document.getElementById("scenarioSearch");
@@ -33,21 +27,6 @@ function fillScenario(saved_scenarios){
         }
       }
 
-          document.addEventListener("DOMContentLoaded", function () {
-            var table = document.getElementById("scenarioTable");
-            var rows = table.getElementsByTagName("tr");
-
-            for (var i = 0; i < rows.length; i++) {
-              rows[i].addEventListener("click", function () {
-                var description = this.getElementsByTagName("td")[1];
-                var txtScenario = document.getElementById("txtScenario");
-                if (description && txtScenario) {
-                  var scenarioText = description.textContent || description.innerText;
-                  txtScenario.value = scenarioText;
-                }
-              });
-            }
-          });
 
       function selectScenario(row) {
         const tableRows = document.querySelectorAll("#scenarioTableBody tr");
@@ -80,49 +59,13 @@ function filterFunction2() {
                             }
                           }
 
-                    function getConsequences() {
-                        var tableBody = document.getElementById("consequenceTableBody");
-                        if (tableBody.classList.contains("show")) {
-                          tableBody.classList.remove("show");
-                        } else {
-                          // Clear previous table content
-                          tableBody.innerHTML = "";
-
-                          // Fetch consequences from the server
-                          $.ajax({
-                            url: '/OTRisk/get_consequences',
-                            type: 'GET',
-                            dataType: 'json',
-                            success: function(response) {
-                              var data = response.consequences;
-                              data.forEach(consequence => {
-                                var row = document.createElement("tr");
-                                var column = document.createElement("td");
-                                column.textContent = consequence.Consequence;
-                                row.appendChild(column);
-                                row.onclick = function() {
-                                  selectConsequence(consequence.Consequence);
-                                };
-                                tableBody.appendChild(row);
-                              });
-
-                              // Show the table
-                              tableBody.classList.add("show");
-                            },
-                            error: function(error) {
-                              console.error('Failed to fetch consequences:', error);
-                            }
-                          });
-                        }
-                      }
-
 
                  function selectConsequence(consequence) {
                     var txtConsequence = document.getElementById("txtConsequence");
                     var existingConsequences = txtConsequence.value.trim();
 
                     // Split the existing consequences into an array
-                    var selectedConsequences = existingConsequences.split("\n\n");
+                    var selectedConsequences = existingConsequences.split("\n");
 
                     // Check if the maximum limit of 5 records is reached
                     if (selectedConsequences.length >= 5) {
@@ -140,7 +83,7 @@ function filterFunction2() {
                     selectedConsequences.push(consequence);
 
                     // Update the textarea with the selected consequences
-                    txtConsequence.value = selectedConsequences.join("\n\n");
+                    txtConsequence.value = selectedConsequences.join("\n");
 
                     // Clear the search input
                     var consequenceSearchInput = document.getElementById("consequenceSearch");
@@ -150,37 +93,6 @@ function filterFunction2() {
                     }
                   }
 
-                  function deleteLastConsequence() {
-                          var txtConsequence = document.getElementById("txtConsequence");
-                          var lines = txtConsequence.value.split('\n');
-                          if (lines.length > 1) {
-                            lines.splice(-2, 1); // Remove the second-to-last element from the array
-                            txtConsequence.value = lines.join('\n');
-                          }
-                        }
-
-                 document.addEventListener("DOMContentLoaded", function() {
-                    getConsequences();
-                  });
-
-function handleFormSubmit(event) {
-    event.preventDefault();
-
-    // Get form data
-    const form = event.target;
-    const formData = new FormData(form);
-
-    // Perform necessary operations with the form data
-    // ...
-
-    // Reset form after submission
-    cyberphaForm.reset();
-}
-
-
-// Add event listener to form submit event
-const cyberphaForm = document.getElementById('cyberpha-form');
-cyberphaForm.addEventListener('submit', handleFormSubmit);
 
 
 // Function to handle scenario selection
@@ -225,16 +137,4 @@ function filterScenarios(event) {
     }
   });
 }
-
-// Event listener for scenario search input
-const scenarioSearchInput = document.getElementById('scenarioSearch');
-scenarioSearchInput.addEventListener('input', filterScenarios);
-
-// Event delegation for scenario selection
-document.addEventListener('click', function(event) {
-  const target = event.target;
-  if (target.classList.contains('select-option')) {
-    handleScenarioSelection(event);
-  }
-});
 

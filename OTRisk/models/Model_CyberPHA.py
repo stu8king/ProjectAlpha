@@ -1,6 +1,14 @@
 from django.db import models
 
 
+class tblStandards(models.Model):
+    id = models.AutoField(primary_key=True)
+    standard = models.TextField()
+
+    class Meta:
+        db_table = 'tblStandards'
+
+
 class auditlog(models.Model):
     id = models.AutoField(primary_key=True)
     userID = models.IntegerField()
@@ -101,6 +109,11 @@ class tblCyberPHAHeader(models.Model):
     Timestamp = models.DateField
     Deleted = models.IntegerField()
     facilityAddress = models.CharField(max_length=255)
+    title = models.TextField()
+    safetySummary = models.TextField()
+    chemicalSummary = models.TextField()
+    physicalSummary = models.TextField()
+    otherSummary = models.TextField()
 
     class Meta:
         db_table = 'tblCyberPHAHeader'
@@ -227,7 +240,7 @@ class tblCyberPHAScenario(models.Model):
     RRM = models.IntegerField()
     SA = models.IntegerField()
     MELA = models.IntegerField()
-    RRa = models.IntegerField()
+    RRa = models.TextField()
     recommendations = models.CharField(max_length=1000)
     Deleted = models.IntegerField()
     timestamp = models.DateTimeField()
@@ -235,6 +248,7 @@ class tblCyberPHAScenario(models.Model):
     sle = models.IntegerField()
     ale = models.IntegerField()
     countermeasureCosts = models.IntegerField()
+    control_recommendations = models.TextField()
 
     class Meta:
         db_table = 'tblCyberPHAScenario'

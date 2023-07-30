@@ -93,21 +93,22 @@
 
 
     <style>
-
-        .small-font {
+   .small-font {
         font-size: 0.8rem; /* adjust as needed */
-        }
+   }
 
     .navbar-scroll .nav-link,
     .navbar-scroll .navbar-toggler-icon,
     .navbar-scroll .navbar-brand {
-      color: #262626;
+      color: #ffffff;
     }
 
     /* Color of the navbar BEFORE scroll */
     .navbar-scroll {
-      background-color: #FFC017;
+      background-color: #000000;
+        text-decoration-color: #FFFFFF;
     }
+
 
     /* Color of the links AFTER scroll */
     .navbar-scrolled .nav-link,
@@ -115,6 +116,14 @@
     .navbar-scroll .navbar-brand {
       color: #262626;
     }
+
+    .navbar-logo {
+    position: absolute;
+    top: 5px; /* Adjust this as needed */
+    left: 5; /* Adjust this as needed */
+    height: 100px; /* Adjust this as needed */
+    z-index: 10;
+}
 
 
 
@@ -148,28 +157,29 @@
 </head>
 <body>
 
-<nav class="navbar navbar-expand-lg navbar-scroll fixed-top shadow-0 border-bottom border-dark">
-  <div class="container-fluid">
-   <a class="navbar-brand" href="#">industrial OT assessment - iOTa</a>
-    <button class="navbar-toggler" type="button" data-mdb-toggle="collapse"
-      data-mdb-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
-      aria-label="Toggle navigation">
-      <i class="fas fa-bars"></i>
-    </button>
+<nav class="navbar navbar-expand-lg navbar-scroll fixed-top shadow-0 border-bottom border-dark rounded">
+  <div class="container-fluid d-flex justify-content-between">
+   <a class="navbar-brand" href="{% url 'OTRisk:dashboardhome' %}"><img src="/static/images/logo1-2.jpg" style="height: 140px; width: 140px" class="navbar-logo" alt="">  </a>
+      <h4 class="my-auto text-center flex-grow-1"><font color="white">Facility Walkdown and Visual Inspection</font></h4>
+
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
       <ul class="navbar-nav ms-auto">
+
         <li class="nav-item">
-          <a class="nav-link" href="{% url 'OTRisk:risk_assessment' %}"><i class="bi bi-journal-text"></i> Risk Assessment</a>
+          <a class="nav-link" href="{% url 'OTRisk:qraw' %}"><i class="bi bi-journal-text"></i> Risk Assessment</a>
         </li>
         <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                 <i class="bi bi-diagram-3"></i> CyberPHA
               </a>
               <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                <li><a class="dropdown-item" href="{% url 'OTRisk:cyber_pha_manager' %}"> CyberPHA Manager</a></li>
+                <li><a class="dropdown-item" href="{% url 'OTRisk:iotaphamanager' %}"> CyberPHA Manager</a></li>
                 <li><a class="dropdown-item" href="{% url 'OTRisk:walkdown' %}"> Site Walkdown</a></li>
                 <li><a class="dropdown-item" href="#">Workshop</a></li>
               </ul>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'OTRisk:walkdown' %}" tabindex="-1" ><i class="bi bi-kanban"></i> New Walkdown</a>
         </li>
         <li class="nav-item">
           <a class="nav-link" href="#" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Reports</a>
@@ -177,12 +187,20 @@
         <li class="nav-item">
           <a class="nav-link" href="#" tabindex="-1" ><i class="bi bi-ui-checks-grid"></i> Admin</a>
       </li>
-    <li class="nav-item">
-          <a class="nav-link" href="#"><i class="bi bi-person-fill"></i> User: {{ user.first_name }} {{ user.last_name }}</a>
+          <li class="nav-item">
+          <a href="#" onclick="window.open('{% static 'OTRisk/help_pha.html' %}', 'newwindow', 'width=600,height=400'); return false;"><i class="bi bi-question-circle"></i> Help</a>
+
+      </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'accounts:profile' %}">
+          <i class="bi bi-person-fill"></i> User: {{ user.first_name }} {{ user.last_name }}
+        </a>
+
         </li>
       </ul>
     </div>
   </div>
+
 </nav>
 
 <div class="row">

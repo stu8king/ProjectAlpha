@@ -7,13 +7,18 @@ from django.contrib.auth.models import User
 from .models import customer
 from django.contrib import messages
 from django.db import connection
+from accounts.models import UserProfile, SubscriptionType, Organization
 
 
 @login_required
 def profile_view(request):
     user = request.user
+    profile = UserProfile.objects.get(user=user)
+    print(f"Profile: {profile}")
+    print(f"Organization: {profile.organization.name}")
     context = {
-        'user': user
+        'user': user,
+        'profile': profile,
     }
     return render(request, 'accounts/profile.html', context)
 
@@ -48,6 +53,12 @@ def login_view(request):
         if form.is_valid():
             user = form.get_user()
             login(request, user)
+            # Get the organization name
+            profile = UserProfile.objects.get(user=user)
+            organization_name = profile.organization.name
+            # Save organization in session
+            request.session['organization_id'] = profile.organization.id
+            request.session['organization_name'] = organization_name
             return redirect('OTRisk:dashboardhome')
     else:
         form = AuthenticationForm()

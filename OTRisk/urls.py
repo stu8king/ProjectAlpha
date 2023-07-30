@@ -94,6 +94,12 @@ urlpatterns = [
     path('raw_action', views.raw_action, name='raw_action'),
     path('get_techniques/', views.GetTechniquesView.as_view(), name='get_techniques'),
     path('dashboardhome', views.dashboardhome, name='dashboardhome'),
+    path('iotaphamanager', views.iotaphamanager, name='iotaphamanager'),
+    path('facility_risk_profile', views.facility_risk_profile, name='facility_risk_profile'),
+    path('get_headerrecord', views.get_headerrecord, name='get_headerrecord'),
+    path('scenario_analysis',views.scenario_analysis, name='scenario_analysis'),
+    path('phascenarioreport',views.phascenarioreport, name='phascenarioreport'),
+    path('getSingleScenario/', views.getSingleScenario, name='getSingleScenario'),
 ]
 
 if settings.DEBUG:

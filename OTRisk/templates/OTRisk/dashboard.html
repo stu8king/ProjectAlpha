@@ -25,6 +25,8 @@
 
 
     <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.3/css/jquery.dataTables.css">
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.js"></script>
 
 
 
@@ -84,7 +86,7 @@
                 <i class="bi bi-diagram-3"></i> CyberPHA
               </a>
               <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                <li><a class="dropdown-item" href="{% url 'OTRisk:cyber_pha_manager' %}"> CyberPHA Manager</a></li>
+                <li><a class="dropdown-item" href="{% url 'OTRisk:iotaphamanager' %}"> CyberPHA Manager</a></li>
                 <li><a class="dropdown-item" href="{% url 'OTRisk:walkdown' %}"> Site Walkdown</a></li>
                 <li><a class="dropdown-item" href="#">Workshop</a></li>
               </ul>
@@ -102,10 +104,15 @@
           <a class="nav-link" href="#" tabindex="-1" ><i class="bi bi-ui-checks-grid"></i> Admin</a>
       </li>
         <li class="nav-item">
-          <a class="nav-link" href="{% url 'accounts:profile' %}">
-          <i class="bi bi-person-fill"></i> User: {{ user.first_name }} {{ user.last_name }}
-        </a>
+            <a class="nav-link" href="{% url 'accounts:profile' %}">
+                <i class="bi bi-person-fill"></i> {{ user.first_name }} {{ user.last_name }} | {{ user.userprofile.organization.name }}
+            </a>
+        </li>
 
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'logout' %}">
+                <i class="bi bi-box-arrow-right"></i> Logout
+            </a>
         </li>
       </ul>
     </div>
@@ -192,12 +199,19 @@
        </div>
         <div class="col-md-1 "></div>
     </div> <!-- dark grey stripe -->
-
+<div class="row">
+    <div class="col-md-1" style="background-color: black"></div>
+    <div class="col-md-1" style="background-color: darkgray"></div>
+    <div class="col-md-6" style="background-color: lightgrey"><h4 style="text-align: center">Risk Assessment Scenario Summary</h4></div>
+    <div class="col-md-2" style="background-color: white"></div>
+    <div class="col-md-1" style="background-color: darkgray"></div>
+    <div class="col-md-1"></div>
+</div>
 <div class="row" style="height: 400px">
     <div class="col-md-1"></div>
     <div class="col-md-1" style="background-color: darkgray"></div>
         <!-- Doughnut Safety Chart -->
-     <div class="col-md-3" style="background-color: lightgrey">
+     <div class="col-md-2" style="background-color: lightgrey">
             <div class="row" style="height: 1px">
                 <h5 style="text-align: center; font-weight: lighter; color: darkslategrey; " > Safety: </h5>
             </div>
@@ -206,25 +220,34 @@
 
                         <div id="safetyChart"><br></div>
                     </div>
-
-
             </div>
 
     </div>
     <!-- end of div for doughnut safety chart -->
-            <!-- Doughnut Danger Chart -->
-     <div class="col-md-3" style="background-color: lightgrey">
-            <div class="row" style="height: 1px">
-                <h5 style="text-align: center; font-weight: lighter; color: darkslategrey; " > Danger to Life: </h5>
+    <!-- Doughnut Danger Chart -->
+    <div class="col-md-2" style="background-color: lightgrey">
+        <div class="row" style="height: 1px">
+            <h5 style="text-align: center; font-weight: lighter; color: darkslategrey; " > Danger to Life: </h5>
+        </div>
+        <div class="row">
+            <div class="d-flex justify-content-center">
+                <div id="dangerChart"><br></div>
             </div>
-            <div class="row">
-                    <div class="d-flex justify-content-center">
+        </div>
+    </div>
 
-                        <div id="dangerChart"><br></div>
-                    </div>
+                <!-- Environment Chart -->
+     <div class="col-md-2" style="background-color: lightgrey">
 
+     <div class="row" style="height: 1px">
+        <h5 style="text-align: center; font-weight: lighter; color: darkslategrey; " > Environment: </h5>
+     </div>
+     <div class="row">
+        <div class="d-flex justify-content-center">
 
-            </div>
+            <div id="environmentChart"><br></div>
+        </div>
+    </div>
 
     </div>
     <!-- end of div for doughnut safety chart -->
@@ -248,6 +271,81 @@
 
 </div>
 
+<div class="row">
+    <div class="col-md-1 "></div>
+    <div class="col-md-10 ">
+    <div class="row" style="background-color: darkgray; height: 10px"></div>
+    </div>
+    <div class="col-md-1 "></div>
+</div>  <!-- dark grey stripe -->
+
+<div class="row">
+    <div class="col-md-1" style="background-color: black"></div>
+    <div class="col-md-1" style="background-color: darkgray"></div>
+    <div class="col-md-6" style="background-color: lightgrey"><h4 style="text-align: center">CyberPHA Scenario Summary</h4></div>
+    <div class="col-md-2" style="background-color: white"></div>
+    <div class="col-md-1" style="background-color: darkgray"></div>
+    <div class="col-md-1"></div>
+</div>
+
+<div class="row" style="height: 400px">
+    <div class="col-md-1"></div>
+    <div class="col-md-1" style="background-color: darkgray"></div>
+
+    <div class="col-md-2" style="background-color: lightgrey">
+        <div class="row" style="height: 1px">
+            <h5 style="text-align: center; font-weight: lighter; color: darkslategrey; " > Safety: </h5>
+        </div>
+        <div class="row">
+            <div class="d-flex justify-content-center">
+                <div id="phasafetyChart"><br></div>
+            </div>
+        </div>
+    </div>
+    <!-- Doughnut Danger Chart -->
+    <div class="col-md-2" style="background-color: lightgrey">
+        <div class="row" style="height: 1px">
+            <h5 style="text-align: center; font-weight: lighter; color: darkslategrey; " > Danger to Life: </h5>
+        </div>
+        <div class="row">
+            <div class="d-flex justify-content-center">
+                <div id="phadangerChart"><br></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Environment Chart -->
+    <div class="col-md-2" style="background-color: lightgrey">
+        <div class="row" style="height: 1px">
+            <h5 style="text-align: center; font-weight: lighter; color: darkslategrey; " > Environment: </h5>
+        </div>
+        <div class="row">
+            <div class="d-flex justify-content-center">
+                <div id="phaenvironmentChart"><br></div>
+            </div>
+        </div>
+    </div>
+    <!-- end of div for doughnut safety chart -->
+
+    <div class="col-md-2" style="background-color: white">
+        <div class="row">
+                <h5 style="text-align: center; font-weight: lighter; color: darkslategrey; " > CyberPHA Scenarios by Category: </h5>
+        </div>
+        <br>
+        <div class="row">
+        <!-- Canvas for StatusFlag Chart -->
+            <div>
+                <div id="">
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-1" style="background-color: darkgray"></div>
+    <div class="col-md-1"></div>
+</div>
+
 
 
 
@@ -259,62 +357,86 @@
         <div class="col-md-1 "></div>
     </div>  <!-- dark grey stripe -->
 
-<div class="row" style="height: 300px">
-    <div class="col-md-1"></div>
-    <div class="col-md-1" style="background-color: darkgray"></div>
-    <div class="col-md-2" style="background-color: lightgrey"><!-- Canvas for BusinessUnitType Chart -->
-            <div class="row">
-                <label class="form-label text-center">Facilities</label>
-            </div>
-            <br>
-            <div class="row">
+<div class="row" style="height: 50px">
+    <div class="col-md-1 "></div>
+    <div class="col-md-1 " style="background-color: darkgray"></div>
+        <div class="col-md-8 ">
 
-            <canvas id="" width="200" height="200"></canvas>
+        <div class="row justify-content-center" style="background-color: white;">
+            <div class="col-md-5 m-3 p-3 border border-dark shadow-lg ">
+                <h4>Risk Assessment Worksheets</h4><br>
+                <table id="myTable" class="display" >
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Business Unit</th>
+                            <th>Business Unit Type</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for facility in raw_facilities %}
+                            <tr onclick="getAssessment({{ facility.0 }})">
+                                <td>{{ facility.0 }}</td>
+                                <td>{{ facility.1 }}</td>
+                                <td>{{ facility.2 }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
 
+            <div class="col-md-5 m-3 p-3 border border-dark shadow-lg">
+                <h4>CyberPHA Assessments</h4><br>
+                <table id="phaTable" class="display">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Business Unit</th>
+                            <th>Business Unit Type</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for phafacility in pha_facilities %}
+                            <tr onclick="getAssessment({{ phafacility.0 }})">
+                                <td>{{ phafacility.0 }}</td>
+                                <td>{{ phafacility.1 }}</td>
+                                <td>{{ phafacility.2 }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
-
-    <div class="col-md-3" style="background-color: lightgrey"><!-- Canvas for BusinessUnitType Chart -->
-            <div class="row">
-                <label class="form-label text-center">Facilities</label>
-            </div>
-            <br>
-            <div class="row">
-                    <div id="businessUnits"></div>
-
-            </div>
-
-    </div><!--businessUnits bar chart -->
-    <div class="col-md-1" style="background-color: lightgrey">
-        <div class="row">
-            <label class="form-label text-center">Triggers</label>
-        </div>
-        <br>
-         <div class="row">
-         <!-- Canvas for RATrigger Chart -->
-            <div >
-                <canvas id="" width="200" height="200"></canvas>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-2" style="background-color: lightgrey">
-        <div class="row">
-            <label class="form-label text-center">Industry</label>
-        </div>
-        <br>
-        <div class="row">
-            <!-- Canvas for Industry Chart -->
-            <div style="">
-                <canvas id="" width="200" height="200"></canvas>
-            </div>
-        </div>
-
-    </div>
-    <div class="col-md-1" style="background-color: darkgray"></div>
-    <div class="col-md-1"></div>
-
+    <div class="col-md-1 " style="background-color: darkgray"></div>
+    <div class="col-md-1 "></div>
 </div>
+
+
+
 <script>
+
+$(document).ready( function () {
+    $('#myTable').DataTable({
+        "pageLength": 5
+    });
+} );
+$(document).ready( function () {
+    $('#phaTable').DataTable({
+        "pageLength": 5
+    });
+} );
+
+function getAssessment(id) {
+    // Your code here
+    console.log(id);
+}
+function getPHA(id) {
+    // Your code here
+    console.log(id);
+}
+
+
 function createChart(containerId, data, field) {
     let margin = {top: 20, right: 20, bottom: 110, left: 40},
         width = 300 - margin.left - margin.right,
@@ -366,82 +488,97 @@ function createChart(containerId, data, field) {
 
 //let recordsByBusinessUnitType = {{ records_by_business_unit_type|safe }};
 let recordsByStatusFlag = {{ records_by_status_flag|safe }};
-let recordsByRiskStatus = {{ scenario_risk_status|safe }}
-
+let recordsByRiskStatus = {{ scenario_risk_status|safe }};
 createChart("#assessmentStatus", recordsByStatusFlag, 'StatusFlag');
 createChart("#riskStatus", recordsByRiskStatus, 'RiskStatus');
 
-
 function createDoughnutChart(containerId, data, colorAttribute) {
-    let width = 400,
-        height = 400,
-        margin = 10;
+    try {
+        let width = 400,
+            height = 400,
+            margin = 10;
 
-    let radius = Math.min(width, height) / 2 - margin;
+        let radius = Math.min(width, height) / 2 - margin;
 
-    let svg = d3.select(containerId)
-        .append("svg")
-        .attr("width", width)
-        .attr("height", height)
-        .append("g")
-        .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+        let svg = d3.select(containerId)
+            .append("svg")
+            .attr("width", width)
+            .attr("height", height)
+            .append("g")
+            .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
 
-    let color = d3.scaleLinear()
-        .domain([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
-        .range(["green", "#88cc00", "#aaff00", "#ccff00", "#ffff00", "#ffcc00", "#ffaa00", "#ff8800", "#ff4400", "red"]);
-
-
-    let pie = d3.pie()
-        .sort(null)
-        .value(function(d) { return d.count; });
+        let color = d3.scaleLinear()
+            .domain([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
+            .range(["green", "#88cc00", "#aaff00", "#ccff00", "#ffff00", "#ffcc00", "#ffaa00", "#ff8800", "#ff4400", "red"]);
 
 
-    let data_ready = pie(data);
+        let pie = d3.pie()
+            .sort(null)
+            .value(function (d) {
+                return d.count;
+            });
 
-    let arcGenerator = d3.arc()
-        .innerRadius(radius * 0.5)  // This is the size of the hole in the middle
-        .outerRadius(radius * 0.8);
+        let data_ready = pie(data);
 
-    svg
-        .selectAll('mySlices')
-        .data(data_ready)
-        .enter()
-        .append('path')
-        .attr('d', arcGenerator)
-        .attr('fill', function(d) { return color(d.data[colorAttribute]); })
-        .attr("stroke", "white")
-        .style("stroke-width", "2px")
-        .style("opacity", 0.7);
+        let arcGenerator = d3.arc()
+            .innerRadius(radius * 0.5)  // This is the size of the hole in the middle
+            .outerRadius(radius * 0.8);
 
-    svg
-        .selectAll('mySlices')
-        .data(data_ready)
-        .enter()
-        .append('text')
-        .text(function(d) { return d.data.count; })
-        .attr("transform", function(d) { return "translate(" + arcGenerator.centroid(d) + ")"; })
-        .style("text-anchor", "middle")
-        .style("font-size", 17);
+        svg
+            .selectAll('mySlices')
+            .data(data_ready)
+            .enter()
+            .append('path')
+            .attr('d', arcGenerator)
+            .attr('fill', function (d) {
+                return color(d.data[colorAttribute]);
+            })
+            .attr("stroke", "white")
+            .style("stroke-width", "2px")
+            .style("opacity", 0.7);
 
-    // Append a group for the text to the SVG
-    let textGroup = svg.append("g")
-        .attr("transform", "translate(0,0)");
+        svg
+            .selectAll('mySlices')
+            .data(data_ready)
+            .enter()
+            .append('text')
+            .text(function (d) {
+                return d.data.count;
+            })
+            .attr("transform", function (d) {
+                return "translate(" + arcGenerator.centroid(d) + ")";
+            })
+            .style("text-anchor", "middle")
+            .style("font-size", 17);
 
-    // Append text to the group
-    textGroup.append("text")
-        .attr("text-anchor", "middle")
-        .attr("dominant-baseline", "middle")
-        .style("font-size", "12px")
-        .text("Green: low risk | Red: high risk");
+        // Append a group for the text to the SVG
+        let textGroup = svg.append("g")
+            .attr("transform", "translate(0,0)");
 
+        // Append text to the group
+        textGroup.append("text")
+            .attr("text-anchor", "middle")
+            .attr("dominant-baseline", "middle")
+            .style("font-size", "12px")
+            .text("Green: low risk | Red: high risk");
+    } catch (error) {
+        console.error("An error occurred while creating the doughnut chart: ", error);
+    }
 }
 
 let doughnutData = {{ doughnut_data|safe }};
 let dangerData = {{ life_scores_list|safe }};
+let environmentData = {{ environment_scores_list|safe }};
+let phaSafetyData = {{ pha_safety_scores_list|safe }};
+let phaDangerData = {{ pha_danger_scores_list|safe  }};
+let phaEnvironmentData = {{ pha_environment_scores_list|safe  }};
 
 createDoughnutChart("#safetyChart", doughnutData, 'SafetyScore');
 createDoughnutChart("#dangerChart", dangerData, 'lifeScore');
-
+createDoughnutChart("#environmentChart", environmentData, 'environmentScore');
+createDoughnutChart("#phasafetyChart", phaSafetyData, 'impactSafety');
+createDoughnutChart("#phadangerChart", phaDangerData, 'impactDanger');
+createDoughnutChart("#phaenvironmentChart", phaEnvironmentData, 'impactEnvironment');
 </script>
 
 </body>

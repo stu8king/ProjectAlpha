@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.template.loader import render_to_string
 from django.utils.html import mark_safe
 from OTRisk.models.raw import RAWorksheet, RAWorksheetScenario
+from django.contrib.auth.decorators import login_required
 from OTRisk.models.Model_CyberPHA import tblCyberPHAHeader, tblCyberPHAScenario
 from django.db.models import Count
 from django.db.models import Avg
@@ -9,6 +10,7 @@ from django.db.models import Avg
 import json
 
 
+@login_required()
 def dashboardhome(request):
     records_by_business_unit_type = RAWorksheet.objects.values('BusinessUnitType').annotate(count=Count('ID'))
     records_by_status_flag = RAWorksheet.objects.values('StatusFlag').annotate(count=Count('ID'))
@@ -16,15 +18,34 @@ def dashboardhome(request):
     records_by_industry = RAWorksheet.objects.values('industry').annotate(count=Count('ID'))
     records_by_risk_score = RAWorksheetScenario.objects.values('RiskScore').annotate(count=Count('ID'))
     scenario_risk_status = RAWorksheetScenario.objects.values('RiskStatus').annotate(count=Count('ID'))
+
     raw_count = RAWorksheet.objects.all().count()
     # raw_scenarios = RAWorksheetScenario.objects.all()
     scenarios_count = RAWorksheetScenario.objects.all().count()
     cyberpha_count = tblCyberPHAHeader.objects.all().count()
     cyberpha_scenario_count = tblCyberPHAScenario.objects.all().count()
-    safety_scores = RAWorksheetScenario.objects.values('SafetyScore').annotate(count=Count('ID')).order_by('SafetyScore')
+    safety_scores = RAWorksheetScenario.objects.values('SafetyScore').annotate(count=Count('ID')).order_by(
+        'SafetyScore')
     safety_scores_list = list(safety_scores)
     danger_scores = RAWorksheetScenario.objects.values('lifeScore').annotate(count=Count('ID')).order_by('lifeScore')
     life_scores_list = list(danger_scores)
+
+    pha_safety_scores = tblCyberPHAScenario.objects.values('impactSafety').annotate(count=Count('ID')).order_by('impactSafety')
+    pha_safety_scores_list = list(pha_safety_scores)
+    pha_danger_scores = tblCyberPHAScenario.objects.values('impactDanger').annotate(count=Count('ID')).order_by('impactDanger')
+    pha_danger_scores_list = list(pha_danger_scores)
+    pha_environment_scores = tblCyberPHAScenario.objects.values('impactEnvironment').annotate(count=Count('ID')).order_by('impactEnvironment')
+    pha_environment_scores_list = list(pha_environment_scores)
+
+    environment_scores = RAWorksheetScenario.objects.values('environmentScore').annotate(count=Count('ID')).order_by('environmentScore')
+    environment_scores_list = list(environment_scores)
+    # risk assessment facilities
+    raw_facilities = RAWorksheet.objects.values_list('ID', 'BusinessUnit', 'BusinessUnitType')
+    # cyberPHA facilities
+    pha_facilities = tblCyberPHAHeader.objects.values_list('ID', 'FacilityName', 'FacilityType')
+
+    num_records = raw_facilities.count()
+    print(num_records)
 
     context = {
         'records_by_business_unit_type': list(records_by_business_unit_type),
@@ -38,7 +59,13 @@ def dashboardhome(request):
         'cyberpha_count': cyberpha_count,
         'cyberpha_scenario_count': cyberpha_scenario_count,
         'doughnut_data': safety_scores_list,
-        'life_scores_list': life_scores_list
+        'life_scores_list': life_scores_list,
+        'raw_facilities': raw_facilities,
+        'pha_facilities': pha_facilities,
+        'environment_scores_list': environment_scores_list,
+        'pha_safety_scores_list': pha_safety_scores_list,
+        'pha_danger_scores_list': pha_danger_scores_list,
+        'pha_environment_scores_list': pha_environment_scores_list
     }
 
     return render(request, 'dashboard.html', context)

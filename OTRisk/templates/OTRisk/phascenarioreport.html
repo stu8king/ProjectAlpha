@@ -1,0 +1,421 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard Home</title>
+ <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css">
+    <!-- Bootstrap Select CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.1/css/bootstrap-select.min.css">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.1/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.bundle.min.js"></script>
+     <!-- Bootstrap Select JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.1/js/bootstrap-select.min.js"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link rel="stylesheet" href="http://cdn.datatables.net/1.10.2/css/jquery.dataTables.min.css">
+    <script type="text/javascript" src="http://cdn.datatables.net/1.10.2/js/jquery.dataTables.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-beta.1/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-beta.1/dist/js/select2.min.js"></script>
+    <script>
+        $('select').selectpicker();
+    </script>
+    {% load bootstrap5 %}
+     {% bootstrap_css %}
+     {% bootstrap_javascript %}
+
+    <style>
+
+        #headertable tbody tr:hover {
+        background-color: #f5f5f5; /* Change this to the color you want */
+        }
+
+       .navbar-scroll .nav-link,
+        .navbar-scroll .navbar-toggler-icon,
+        .navbar-scroll .navbar-brand {
+          color: #ffffff;
+        }
+
+        /* Color of the navbar BEFORE scroll */
+        .navbar-scroll {
+          background-color: #000000;
+            text-decoration-color: #FFFFFF;
+        }
+
+
+        /* Color of the links AFTER scroll */
+        .navbar-scrolled .nav-link,
+        .navbar-scrolled .navbar-toggler-icon,
+        .navbar-scroll .navbar-brand {
+          color: #262626;
+        }
+
+        .navbar-logo {
+        position: absolute;
+        top: 5px; /* Adjust this as needed */
+        left: 5px; /* Adjust this as needed */
+        height: 100px; /* Adjust this as needed */
+        z-index: 10;
+        }
+
+            .col-md-2 {
+        place-items: center;
+        background-color: lightgrey;
+    }
+
+    .small-font {
+        font-size: 0.8rem; /* adjust as needed */
+   }
+        .gauge {
+      width: 100%;
+      max-width: 250px;
+      font-family: "Roboto", sans-serif;
+      font-size: 32px;
+      color: #004033;
+    }
+
+    .gauge__body {
+      width: 100%;
+      height: 0;
+      padding-bottom: 50%;
+      background: #b4c0be;
+      position: relative;
+      border-top-left-radius: 100% 200%;
+      border-top-right-radius: 100% 200%;
+      overflow: hidden;
+    }
+
+    .gauge__fill {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      width: inherit;
+      height: 100%;
+      background: #009578;
+      transform-origin: center top;
+      transform: rotate(0.25turn);
+      transition: transform 0.2s ease-out;
+    }
+
+    .gauge__cover {
+      width: 75%;
+      height: 150%;
+      background: #ffffff;
+      border-radius: 50%;
+      position: absolute;
+      top: 25%;
+      left: 50%;
+      transform: translateX(-50%);
+
+      /* Text */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding-bottom: 25%;
+      box-sizing: border-box;
+    }
+
+    .gauge__fill--green {
+      background: #008000; /* Adjust color as needed */
+    }
+
+    .gauge__fill--yellow {
+      background: #FFFF00; /* Adjust color as needed */
+    }
+
+    .gauge__fill--red {
+      background: #FF0000; /* Adjust color as needed */
+    }
+
+    </style>
+</head>
+<body style="background-color: black">
+<nav class="navbar navbar-expand-lg navbar-scroll fixed-top shadow-0 border-bottom border-dark rounded">
+  <div class="container-fluid d-flex justify-content-between">
+   <a class="navbar-brand" href="{% url 'OTRisk:dashboardhome' %}"><img src="/static/images/logo1-2.jpg" style="height: 140px; width: 140px" class="navbar-logo" alt="">  </a>
+      <h4 class="my-auto text-center flex-grow-1"><font color="white">CyberPHA Report</font></h4>
+
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ms-auto">
+
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'OTRisk:qraw' %}"><i class="bi bi-journal-text"></i> Risk Assessment</a>
+        </li>
+        <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="bi bi-diagram-3"></i> CyberPHA
+              </a>
+              <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                <li><a class="dropdown-item" href="{% url 'OTRisk:iotaphamanager' %}"> CyberPHA Manager</a></li>
+                <li><a class="dropdown-item" href="{% url 'OTRisk:walkdown' %}"> Site Walkdown</a></li>
+                <li><a class="dropdown-item" href="#">Workshop</a></li>
+              </ul>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'OTRisk:site_walkdown' %}"><i class="bi bi-building"></i> Site Walkdown</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'OTRisk:walkdown' %}" tabindex="-1" ><i class="bi bi-kanban"></i> New Walkdown</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Reports</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#" tabindex="-1" ><i class="bi bi-ui-checks-grid"></i> Admin</a>
+      </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'accounts:profile' %}">
+          <i class="bi bi-person-fill"></i> User: {{ user.first_name }} {{ user.last_name }}
+        </a>
+
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+<br>
+<div class="row" style="height: 50px">
+    <div class="col-md-1 "></div>
+    <div class="col-md-10 ">
+   </div>
+    <div class="col-md-1 "></div>
+</div> <!-- dark grey stripe -->
+
+<div class="row" style="height: 50px">
+    <div class="col-md-1 "></div>
+    <div class="col-md-10 ">
+        <div class="row justify-content-center" style="background-color: white;">
+        <!-- First container -->
+            <div class="col-md-3 m-3 p-3 border border-warning shadow-lg">
+                <H3>{{ cyberPHAHeader.FacilityName }}</H3>
+                <H6>{{ cyberPHAHeader.facilityAddress }}</H6>
+           </div>
+
+            <!-- Second container -->
+            <div class="col-md-3 m-3 p-3 border border-warning shadow-lg">
+                <H6>Facility Type: {{ cyberPHAHeader.FacilityType }}</H6>
+                <H6>Industry: {{ cyberPHAHeader.Industry }}</H6>
+            </div>
+
+              <div class="col-md-3 m-3 p-3 border border-warning shadow-lg">
+                <H6>Assessment Leader: {{ cyberPHAHeader.PHALeader }}</H6>
+                <H6>Leader Email: {{ cyberPHAHeader.PHALeaderEmail }}</H6>
+            </div>
+        </div>
+        <div class="row justify-content-center" style="background-color: white;">
+            <div class="col-md-3 m-3 p-3 border border-warning shadow-lg">
+                <H4>Safety Summary</H4><br>
+                <H6>{{ cyberPHAHeader.safetySummary }}</H6>
+           </div>
+
+            <!-- Second container -->
+            <div class="col-md-3 m-3 p-3 border border-warning shadow-lg">
+                <H4>Chemical Hazards</H4><br>
+                <H6>{{ cyberPHAHeader.chemicalSummary }}</H6>
+           </div>
+
+            <div class="col-md-3 m-3 p-3 border border-warning shadow-lg">
+                <H4>Physical Security</H4><br>
+                <H6>{{ cyberPHAHeader.physicalSummary }}</H6>
+           </div>
+        </div>
+        <div class="row justify-content-center" style="background-color: white;">
+            <div class="col-md-9 m-3 p-3 border border-warning shadow-lg">
+                    <div class="row" style="align-content: center">
+                        <div class="col-md-3">
+                            <h4 style="text-align: center">Safety Impacts</h4>
+                            <div class="gauge" id="safetygauge" style="width: 250px; margin: auto;">
+                              <div class="gauge__body">
+                                <div class="gauge__fill"></div>
+                                <div class="gauge__cover"></div>
+                              </div>
+                            </div>
+                        </div>
+                       <div class="col-md-3">
+                           <h4 style="text-align: center">Danger Impacts</h4>
+                            <div class="gauge" id="lifegauge" style="width: 250px; margin: auto;">
+                              <div class="gauge__body">
+                                <div class="gauge__fill"></div>
+                                <div class="gauge__cover"></div>
+                              </div>
+                            </div>
+                       </div>
+                        <div class="col-md-3">
+                                <h4 style="text-align: center">Environment Impacts</h4>
+                            <div class="gauge" id="environmentgauge" style="width: 250px; margin: auto;">
+                              <div class="gauge__body">
+                                <div class="gauge__fill"></div>
+                                <div class="gauge__cover"></div>
+                              </div>
+                            </div>
+                       </div>
+                         <div class="col-md-3">
+                            <h4 style="text-align: center">Operations Impact</h4>
+                            <div class="gauge" id="productiongauge" style="width: 250px; margin: auto;">
+                              <div class="gauge__body">
+                                <div class="gauge__fill"></div>
+                                <div class="gauge__cover"></div>
+                              </div>
+                            </div>
+                       </div>
+                    </div>
+                <br>
+                <div class="row" style="align-content: center">
+                        <div class="col-md-3">
+                            <h4 style="text-align: center">Reputation Impacts</h4>
+                            <div class="gauge" id="reputationgauge" style="width: 250px; margin: auto;">
+                              <div class="gauge__body">
+                                <div class="gauge__fill"></div>
+                                <div class="gauge__cover"></div>
+                              </div>
+                            </div>
+                        </div>
+                       <div class="col-md-3">
+                           <h4 style="text-align: center">Cost Impacts</h4>
+                            <div class="gauge" id="financegauge" style="width: 250px; margin: auto;">
+                              <div class="gauge__body">
+                                <div class="gauge__fill"></div>
+                                <div class="gauge__cover"></div>
+                              </div>
+                            </div>
+                       </div>
+                        <div class="col-md-3">
+                            <h4 style="text-align: center">Regulatory Impacts</h4>
+                            <div class="gauge" id="regulationgauge" style="width: 250px; margin: auto;">
+                              <div class="gauge__body">
+                                <div class="gauge__fill"></div>
+                                <div class="gauge__cover"></div>
+                              </div>
+                            </div>
+                       </div>
+                         <div class="col-md-3">
+                            <h4 style="text-align: center">Data Impact</h4>
+                            <div class="gauge" id="datagauge" style="width: 250px; margin: auto;">
+                              <div class="gauge__body">
+                                <div class="gauge__fill"></div>
+                                <div class="gauge__cover"></div>
+                              </div>
+                            </div>
+                       </div>
+                    </div>
+
+
+                <script>
+                    const gaugeElement = document.querySelector(".gauge");
+
+                    function setGaugeValue(gauge, value) {
+                      if (value < 0 || value > 10) {
+                        return;
+                      }
+
+                      let colorClass;
+                      if (value < 4) {
+                        colorClass = 'gauge__fill--green';
+                      } else if (value < 7) {
+                        colorClass = 'gauge__fill--yellow';
+                      } else {
+                        colorClass = 'gauge__fill--red';
+                      }
+
+                      const gaugeFill = gauge.querySelector(".gauge__fill");
+                      gaugeFill.style.transform = `rotate(${value / 20}turn)`;
+                      gaugeFill.className = `gauge__fill ${colorClass}`;
+
+                      gauge.querySelector(".gauge__cover").textContent = `${Math.round(value)}`;
+                    }
+
+                    const gauge1 = document.querySelector("#safetygauge");
+                    setGaugeValue(safetygauge, {{ average_impact_safety }});
+                    const gauge2 = document.querySelector("#lifegauge");
+                    setGaugeValue(lifegauge, {{ average_impact_danger }});
+                    const gauge3 = document.querySelector("#environmentgauge");
+                    setGaugeValue(environmentgauge, {{ average_impact_environment }});
+                    const gauge4 = document.querySelector("#productiongauge");
+                    setGaugeValue(productiongauge, {{ average_impact_production }});
+
+                    const gauge5 = document.querySelector("#reputationgauge");
+                    setGaugeValue(reputationgauge, {{ average_impact_reputation }});
+                    const gauge6 = document.querySelector("#financegauge");
+                    setGaugeValue(financegauge, {{ average_impact_finance }});
+                    const gauge7 = document.querySelector("#regulationgauge");
+                    setGaugeValue(regulationgauge, {{ average_impact_regulation }});
+                    const gauge8 = document.querySelector("#datagauge");
+                    setGaugeValue(datagauge, {{ average_impact_data }});
+                </script>
+
+
+           </div>
+
+        </div>
+
+        {% for scenario in cyberScenarios %}
+        <div class="row justify-content-center" style="background-color: white;">
+            <div class="col-md-9 m-3 p-3 border border-warning shadow-lg">
+            <h4>Scenario {{ forloop.counter }}</h4><br>
+                <div class="row justify-content-center" style="background-color: white;">
+                    <div class="col-md-3 m-3 p-3 border border-black shadow-lg">
+                        <h5>Scenario</h5><br>
+                        {{ scenario.Scenario }}
+
+                    </div>
+                    <div class="col-md-3 m-3 p-3 border border-black shadow-lg">
+                        <h5>Consequences</h5><br>
+                        {{ scenario.Consequence }}
+                    </div>
+                    <div class="col-md-2 m-3 p-2 border border-black shadow-lg" style="background-color: white">
+                        <h5 style="text-align: center">Business Impact Analysis</h5>
+                        <ul>
+                        <li>Safety Impact: {{ scenario.impactSafety }}/10</li>
+                        <li>Danger Impact: {{ scenario.impactDanger }}/10</li>
+                        <li>Operational Impact: {{ scenario.impactProduction }}/10</li>
+                        <li>Cost Impact: {{ scenario.impactFinance }}/10</li>
+                        <li>Reputation Impact: {{ scenario.impactReputation}}/10</li>
+                        <li>Environmental Impact: {{ scenario.impactEnvironment }}/10</li>
+                        <li>Regulatory Impact: {{ scenario.impactRegulator}}/10</li>
+                        <li>Data Impact: {{ scenario.impactData }}/10</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-2 m-3 p-2 border border-black shadow-lg" style="background-color: white">
+                        <h5 style="text-align: center">Risk Analysis</h5>
+                        <ul>
+                        <li>UEL: {{ scenario.UEL }}/10</li>
+                        <li>RRu: {{ scenario.RRU }}/10</li>
+                            -----
+                        <li>Sm: {{ scenario.SM }}/10</li>
+                        <li>MEL: {{ scenario.MEL }}/10</li>
+                        <li>RRm: {{ scenario.RRM}}/10</li>
+                            -----
+                        <li>Sa: {{ scenario.SA }}/10</li>
+                        <li>MELa: {{ scenario.MELA}}/10</li>
+                        <li>RRa: {{ scenario.RRa }}/10</li>
+                        </ul>
+                    </div>
+
+                </div>
+
+                <div class="row justify-content-center" style="background-color: white;">
+                    <div class="col-md-5 m-3 p-3 border border-warning shadow-lg">
+                        <ul>
+                            <li><b>Threats:</b>T {{ scenario.ThreatClass }}</li>
+                            <li><b>Threat Actions: </b>T{{ scenario.ThreatAction}}</li>
+                            <li><b>Risk Category:</b>T {{ scenario.RiskCategory }}</li>
+                            <li><b>Existing Controls: </b>T{{ scenario.Countermeasures }}</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-5 m-3 p-3 border border-warning shadow-lg">
+                        {{ scenario.recommendations }}
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+
+    </div>
+    <div class="col-md-1 "></div>
+</div> <!-- dark grey stripe -->
+
+
+</body>
+</html>

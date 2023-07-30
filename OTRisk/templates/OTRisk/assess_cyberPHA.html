@@ -2,13 +2,17 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.1/font/bootstrap-icons.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.3/css/jquery.dataTables.css">
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-beta.1/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-beta.1/dist/js/select2.min.js"></script>
 
-    <link href="{% static 'css/jquery-gauge.css' %}" rel="stylesheet">
-    <script src="{% static 'OTRisk/jquery-gauge.js' %}"></script>
-    <script src="{% static 'OTRisk/jquery-gauge.min.js' %}"></script>
+
     <script src="{% static 'OTRisk/assesscyberpha.js' %}"></script>
     {% load bootstrap5 %}
     {% bootstrap_css %}
@@ -16,16 +20,22 @@
 
     <title>Assess CyberPHA</title>
     <style>
-       .navbar-scroll .nav-link,
+    .small-font {
+        font-size: 0.8rem; /* adjust as needed */
+   }
+
+    .navbar-scroll .nav-link,
     .navbar-scroll .navbar-toggler-icon,
     .navbar-scroll .navbar-brand {
-      color: #262626;
+      color: #ffffff;
     }
 
     /* Color of the navbar BEFORE scroll */
     .navbar-scroll {
-      background-color: #FFC017;
+      background-color: #000000;
+        text-decoration-color: #FFFFFF;
     }
+
 
     /* Color of the links AFTER scroll */
     .navbar-scrolled .nav-link,
@@ -33,49 +43,24 @@
     .navbar-scroll .navbar-brand {
       color: #262626;
     }
+
+    .navbar-logo {
+    position: absolute;
+    top: 5px; /* Adjust this as needed */
+    left: 5; /* Adjust this as needed */
+    height: 100px; /* Adjust this as needed */
+    z-index: 10;
+}
         .table-wrap {
-          height: 400px;
+          height: 200px;
           overflow-y: auto;
-        }
-        .impactGauge {
-            position: relative;
-            width: 7vw;
-            height: 7vw;
-            box-sizing: border-box;
-            float:left;
-            margin:20px
-        }
-        .RRGauge {
-            position: relative;
-            width: 7vw;
-            height: 7vw;
-            box-sizing: border-box;
-            float:left;
-            margin:20px
         }
 
         .small-font {
         font-size: 0.8rem; /* adjust as needed */
         }
 
-        .circle {
-          display: inline-block;
-          width: 40px;
-          height: 40px;
-          border-radius: 50%;
-          text-align: center;
-          line-height: 40px;
-        }
 
-        .circle.green {
-          background-color: green;
-          color: white;
-        }
-
-        .circle.red {
-          background-color: red;
-          color: white;
-        }
     </style>
     <script>
       // Initialize sliders when the page loads
@@ -100,31 +85,26 @@
 </head>
 <body>
 
-<nav class="navbar navbar-expand-lg navbar-scroll fixed-top shadow-0 border-bottom border-dark">
-  <div class="container-fluid">
-   <a class="navbar-brand" href="#">OT Risk Master</a>
-    <button class="navbar-toggler" type="button" data-mdb-toggle="collapse"
-      data-mdb-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
-      aria-label="Toggle navigation">
-      <i class="fas fa-bars"></i>
-    </button>
+<nav class="navbar navbar-expand-lg navbar-scroll fixed-top shadow-0 border-bottom border-dark rounded">
+  <div class="container-fluid d-flex justify-content-between">
+   <a class="navbar-brand" href="{% url 'OTRisk:dashboardhome' %}"><img src="/static/images/logo1-2.jpg" style="height: 140px; width: 140px" class="navbar-logo" alt="">  </a>
+      <h4 class="my-auto text-center flex-grow-1"><font color="white">CyberPHA Scenario Analysis</font></h4>
+
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
       <ul class="navbar-nav ms-auto">
+
         <li class="nav-item">
-          <a class="nav-link" href="{% url 'OTRisk:risk_assessment' %}"><i class="bi bi-journal-text"></i> Risk Assessment</a>
+          <a class="nav-link" href="{% url 'OTRisk:qraw' %}"><i class="bi bi-journal-text"></i> Risk Assessment</a>
         </li>
         <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                 <i class="bi bi-diagram-3"></i> CyberPHA
               </a>
               <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                <li><a class="dropdown-item" href="{% url 'OTRisk:cyber_pha_manager' %}"> CyberPHA Manager</a></li>
+                <li><a class="dropdown-item" href="{% url 'OTRisk:iotaphamanager' %}"> CyberPHA Manager</a></li>
                 <li><a class="dropdown-item" href="{% url 'OTRisk:walkdown' %}"> Site Walkdown</a></li>
                 <li><a class="dropdown-item" href="#">Workshop</a></li>
               </ul>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="{% url 'OTRisk:site_walkdown' %}"><i class="bi bi-building"></i> Site Walkdown</a>
         </li>
         <li class="nav-item">
           <a class="nav-link" href="{% url 'OTRisk:walkdown' %}" tabindex="-1" ><i class="bi bi-kanban"></i> New Walkdown</a>
@@ -135,6 +115,10 @@
         <li class="nav-item">
           <a class="nav-link" href="#" tabindex="-1" ><i class="bi bi-ui-checks-grid"></i> Admin</a>
       </li>
+          <li class="nav-item">
+          <a href="#" onclick="window.open('{% static 'OTRisk/help_pha.html' %}', 'newwindow', 'width=600,height=400'); return false;"><i class="bi bi-question-circle"></i> Help</a>
+
+      </li>
         <li class="nav-item">
           <a class="nav-link" href="{% url 'accounts:profile' %}">
           <i class="bi bi-person-fill"></i> User: {{ user.first_name }} {{ user.last_name }}
@@ -144,9 +128,31 @@
       </ul>
     </div>
   </div>
+
 </nav>
 
+<form id="cyberpha-form">
+{% csrf_token %}
+
+<div class="row" style="height: 10px; padding-top: 20px; background-color: black">
+    <div class="col-md-1" style="background-color: black"></div>
+    <div class="col-md-1" style="background-color: darkgray"></div>
+    <div class="col-md-8 " ></div>
+    <div class="col-md-1" style="background-color: darkgray"></div>
+    <div class="col-md-1 " style="background-color: black"></div>
+</div> <!-- dark grey stripe -->
+<div class="row" style="height: 10px; padding-top: 20px; background-color: black">
+    <div class="col-md-1" style="background-color: black"></div>
+    <div class="col-md-1" style="background-color: darkgray"></div>
+    <div class="col-md-8" style="background-color: white" ></div>
+    <div class="col-md-1" style="background-color: darkgray"></div>
+    <div class="col-md-1 " style="background-color: black"></div>
+</div> <!-- white stripe -->
+
 <div class="row">
+    <div class="col-md-1" style="background-color: black"></div>
+    <div class="col-md-1" style="background-color: darkgray"></div>
+    <div class="col-md-8" style="background-color: #FFC017">
     <figure class="text-center">
 
     <h4><br><br>CyberPHA Scenario Analysis - <span id="facilityName"></span></h4>
@@ -155,243 +161,388 @@
 
     </figure>
     <script>
-        console.log(sessionStorage.getItem('industry'));
+        console.log(sessionStorage.getItem('sessionIndustry'));
 
-        document.getElementById('facilityName').textContent = sessionStorage.getItem('clickedRowFacilityName');
-        document.getElementById('facilityName2').textContent = sessionStorage.getItem('industry');
-        document.getElementById('hdnID').textContent = sessionStorage.getItem('active-cyberpha');
- </script>
+        document.getElementById('facilityName').textContent = sessionStorage.getItem('sessionFacility');
+        document.getElementById('facilityName2').textContent = sessionStorage.getItem('sessionIndustry');
+        //document.getElementById('hdnID').value = sessionStorage.getItem('activeCyberPHA');
+
+     </script>
+    </div>
+    <div class="col-md-1" style="background-color: darkgray"></div>
+    <div class="col-md-1" style="background-color: black"></div>
 </div>
+<div class="row" style="height: 10px;">
+    <div class="col-md-1" style="background-color: black"></div>
+    <div class="col-md-1" style="background-color: darkgray"></div>
+    <div class="col-md-8" style="background-color: darkgray"></div>
+    <div class="col-md-1" style="background-color: darkgray"></div>
+    <div class="col-md-1 " style="background-color: black"></div>
+</div> <!-- grey stripe -->
 
-<form id="cyberpha-form" method="POST" action="{% url 'OTRisk:save_or_update_cyberpha' %}">
-{% csrf_token %}
-<input type="hidden" id="hdnID" name="hdnID" >
+<div class="row" style="height: 300px">
+    <div class="col-md-1" style="background-color: black">
+        <button type="button" id="addScenarioBtn" class="form-control  btn-link" onclick="resetformcontrols()" style="background-color: black; color: white;">New Scenario</button>
+        <script>
+            function resetformcontrols() {
+                // document.getElementById("mitigation-measure").selectedIndex=0;
+                // document.getElementById("hdnScenarioID").value=0;
+            }
+        </script>
+        <br>
+
+            <!-- Modify the submit button to open the confirmation modal -->
+            <button type="button" class="form-control btn-link" data-bs-toggle="modal" style="background-color: black; color: white;" onclick="processFormData()">Save Scenario</button>
+
+        <br>
+            <button type="button" class="form-control btn-link" onclick="getCyberPHAReport()" style="background-color: black; color: white;" >Scenario Report</button>
+            <script>
+                function goToScenarioReport() {
+                    // var hdnID = document.getElementById('hdnID').value;  // assuming 'hdnID' is the id of your input field
+                    // window.location.href = "{% url 'OTRisk:scenarioreport' %}?hdnID=" + hdnID;
+                }
+            </script>
+
+    </div>
+    <div class="col-md-1" style="background-color: darkgray"></div>
+    <div class="col-md-8 " style="background-color: #FFC017; padding: 20px">
+        <div class="table-wrap rounded-3" style="border: 3px #97979A; border-radius: 10px; box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5);  padding: 20px; background-color: white; height: 250px">
+            <table id="userscenarioList" class="table table-hover table-bordered small small-font overflow-auto" style="background-color: white;">
+                <thead>
+                    <tr>
+                        <th rowspan="2">ID</th>
+                        <th rowspan="2">Scenario</th>
+                        <th colspan="8">Impact Assessment Scores (Max = 10)</th>
+                        <th rowspan="2">Threat</th>
+                        <th rowspan="2">Risk</th>
+                        <th rowspan="2"></th>
+                    </tr>
+                    <tr>
+                        <th>Sfty</th>
+                        <th>Dgr</th>
+                        <th>Env</th>
+                        <th>Cst</th>
+                        <th>Ops</th>
+                        <th>Data</th>
+                        <th>Regs</th>
+                        <th>Rep</th>
+                    </tr>
+                </thead>
+
+                <tbody id="userscenarioListBody">
+                  {% for saved_scenarios in saved_scenarios %}
+                  <tr onclick="fillScenario({{ saved_scenarios.ID}})">
+                    <td>{{ saved_scenarios.ID }}</td>
+                    <td>{{ saved_scenarios.Scenario }}</td>
+                    <td>{{ saved_scenarios.impactSafety }}</td>
+                    <td>{{ saved_scenarios.impactDanger}}</td>
+                    <td>{{ saved_scenarios.impactEnvironment }}</td>
+                    <td>{{ saved_scenarios.impactFinance}}</td>
+                    <td>{{ saved_scenarios.impactProduction}}</td>
+                    <td>{{ saved_scenarios.impactData}}</td>
+                    <td>{{ saved_scenarios.impactRegulation}}</td>
+                    <td>{{ saved_scenarios.impactReputation}}</td>
+                    <td>{{ saved_scenarios.ThreatClass }}</td>
+                    <td>{{ saved_scenarios.RiskCategory }}</td>
+                    <td>
+                        <a href="{% url 'OTRisk:deletescenario' saved_scenarios.ID saved_scenarios.CyberPHA %}" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this record? (Note that if you proceed, the record will be virtually deleted and can be recovered if necessary)')">Del</a>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+                <script>
+                function fillScenario(scenarioId) {
+                    $('#mitigation-measure').val([]);
+                    $('#mitigation-measure').trigger('change');
+                    $('#threatactions').val([]);
+                    $('#threatactions').trigger('change');
+                    // Send a GET request to the getSingleScenario view
+                    $.get("{% url 'OTRisk:getSingleScenario' %}", { id: scenarioId }, function(data) {
+                        // Fill the form fields with the returned data
+                        $('#txtScenario').val(data.Scenario);
+                        $('#txtConsequence').val(data.Consequence);
+                        $('#threat-intelligence').val(data.ThreatClass);
+                        // Split the Countermeasures string into an array and set the selected values of the dropdown
+
+                        var countermeasuresArray = data.Countermeasures.split(',');
+                        $('#mitigation-measure').val(countermeasuresArray);
+                        $('#mitigation-measure').trigger('change');
+
+                        var threatactionsArray = data.ThreatAction.split(',');
+                        $('#threatactions').val(threatactionsArray);
+                        $('#threatactions').trigger('change');
+
+                         $('#risk-category').val(data.RiskCategory);
+                         $('#range_safety').val(data.impactSafety);
+                         $('#range_life').val(data.impactDanger);
+                         $('#range_production').val(data.impactProduction);
+                         $('#range_finance').val(data.impactFinance);
+                         $('#range_reputation').val(data.impactReputation);
+                         $('#range_environment').val(data.impactEnvironment);
+                         $('#range_regulation').val(data.impactRegulation);
+                         $('#range_data').val(data.impactData);
+                         // $('#selStandards').val(data.RiskCategory);
+
+                        $('#txtScenarioAnalysis').val(data.recommendations);
+                        $('#SMrange').val(data.SM);
+                        $('#MELrange').val(data.MEL);
+                        $('#RRMrange').val(data.RRM);
+                        $('#SArange').val(data.SA);
+                        $('#MELarange').val(data.MELA);
+                         $('#txtRRa').val(data.RRa);
+                        $('#txtControlAnalysis').val(data.control_recommendations);
+                        });
+                    }
+            </script>
+
+        </div>
+    </div>
+    <div class="col-md-1" style="background-color: darkgray"></div>
+    <div class="col-md-1" style="background-color: black"></div>
+</div> <!-- list of user entered scenarios -->
+
+
+
+
+<div class="row" style="height: 10px;">
+    <div class="col-md-1" style="background-color: black"></div>
+    <div class="col-md-1" style="background-color: darkgray"></div>
+    <div class="col-md-8" style="background-color: darkgray"></div>
+    <div class="col-md-1" style="background-color: darkgray"></div>
+    <div class="col-md-1 " style="background-color: black"></div>
+</div> <!-- grey stripe -->
+
+
+
+
+<div class="row small-font" >
+    <div class="col-md-1" style="background-color: black"></div>
+    <div class="col-md-1" style="background-color: darkgray"></div>
+    <div class="col-md-8">
+        <div class="row" style="background-color: #FFC017">
+            <h5><p class="form-container" style="text-align: center; color: #494949">Scenario Selection</p></h5>
+        </div>
+        <div class ="row" style="background-color: #FFC017">
+            <div class="col-md-6 d-flex justify-content-center">
+                <br><br>
+                <div class="table-wrap border border-warning rounded p-3" style="border: 3px #97979A; border-radius: 10px; box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5);  padding: 20px; background-color: white;">
+                    <table id="scenarioList" class="table table-hover table-bordered small small-font overflow-auto" style="width: 100%; background-color: white">
+                        <thead>
+                            <tr>
+                                <th>Scenario</th>
+                            </tr>
+                        </thead>
+                        <tbody id="scenarioListBody">
+                            {% for scenario in scenarios %}
+                            <tr onclick="selectScenario(this)">
+                                <td>{{ scenario.Scenario }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <script>
+                    $(document).ready(function() {
+                        $('#scenarioList').DataTable();
+                    });
+                </script>
+            </div>
+            <div class="col-md-6">
+                <div class="row  rounded p-3">
+                    <textarea id="txtScenario" name="txtScenario" class="form-control" rows="6" placeholder="Select a scenario from the table or enter your own...." style="resize: none; border: 3px #97979A; border-radius: 10px; box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5);  padding: 20px; background-color: white"></textarea>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <div class="col-md-1" style="background-color: darkgray"></div>
+    <div class="col-md-1" style="background-color: black"></div>
+</div> <!-- scenario list table -->
+
+<div class="row" style="height: 10px;">
+    <div class="col-md-1" style="background-color: black"></div>
+    <div class="col-md-1" style="background-color: darkgray"></div>
+    <div class="col-md-8" style="background-color: #FFC017; box-shadow: 0px 10px 10px rgba(0, 0, 0, 0.5);"></div>
+    <div class="col-md-1" style="background-color: darkgray"></div>
+    <div class="col-md-1 " style="background-color: black"></div>
+</div> <!-- white stripe -->
+<div class="row" style="height: 10px;">
+    <div class="col-md-1" style="background-color: black"></div>
+    <div class="col-md-1" style="background-color: darkgray"></div>
+    <div class="col-md-8" style="background-color: darkgray"></div>
+    <div class="col-md-1" style="background-color: darkgray"></div>
+    <div class="col-md-1 " style="background-color: black"></div>
+</div> <!-- grey stripe -->
+
+<div class="row small-font">
+    <div class="col-md-1" style="background-color: black"></div>
+    <div class="col-md-1" style="background-color: darkgray"></div>
+    <div class="col-md-8">
+        <div class="row" style="background-color: #FFC017">
+            <h5><p class="form-container" style="text-align: center; color: #494949">Consequence Selection</p></h5>
+        </div>
+        <div class ="row" style="background-color: #FFC017">
+            <div class="col-md-6 d-flex justify-content-center">
+                <br><br>
+                <div class="table-wrap border border-warning rounded p-3" style="border: 3px #97979A; border-radius: 10px; box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5);  padding: 20px; background-color: white;">
+                    <table id="consequenceListTable" class="table table-hover table-bordered small small-font overflow-auto" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>Consequence</th>
+                            </tr>
+                        </thead>
+                        <tbody id="consequenceListTableBody">
+                            {% for consequenceList in consequenceList %}
+                            <tr onclick="selectConsequence('{{ consequenceList.Consequence }}')">
+                                <td>{{ consequenceList.Consequence }}</td>
+                              </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <script>
+                    $(document).ready(function() {
+                        $('#consequenceListTable').DataTable();
+                    });
+                </script>
+            </div>
+            <div class="col-md-6">
+                <div class="row  rounded p-3">
+                    <textarea id="txtConsequence" name="txtConsequence" class="form-control" rows="6" placeholder="Select up to three consequences from the table or enter your own...." style="resize: none; border: 3px #97979A; border-radius: 10px; box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5);  padding: 20px; background-color: white"></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+
+
+
+    <div class="col-md-1" style="background-color: darkgray"></div>
+    <div class="col-md-1" style="background-color: black"></div>
+</div> <!-- consequence list table -->
+
+<div class="row" style="height: 10px;">
+    <div class="col-md-1" style="background-color: black"></div>
+    <div class="col-md-1" style="background-color: darkgray"></div>
+    <div class="col-md-8" style="background-color: #ffc017; box-shadow: 0px 10px 10px rgba(0, 0, 0, 0.5);"></div>
+    <div class="col-md-1" style="background-color: darkgray"></div>
+    <div class="col-md-1 " style="background-color: black"></div>
+</div> <!-- white stripe -->
+<div class="row" style="height: 10px;">
+    <div class="col-md-1" style="background-color: black"></div>
+    <div class="col-md-1" style="background-color: darkgray"></div>
+    <div class="col-md-8" style="background-color: darkgray"></div>
+    <div class="col-md-1" style="background-color: darkgray"></div>
+    <div class="col-md-1 " style="background-color: black"></div>
+</div> <!-- grey stripe -->
+
+    <input type="hidden" id="hdnID" name="hdnID" >
 <input type="hidden" id="hdnScenario" name="hdnScenario" value = {{ scenarioID }}>
 <script>
 
-    document.getElementById('hdnID').value = sessionStorage.getItem('active-cyberpha');
+    // document.getElementById('hdnID').value = sessionStorage.getItem('activeCyberPHA');
 
 </script>
-<div class="container-fluid">
-  <div class="row mb-3 ">
-    <div class="col col-md-3" style=" padding-right: 10px">
-         <div class="table-wrap">
-            <div class="row border-1">
-            <input type="text" id="scenarioSearch" name="scenarioSearch" onkeyup="filterTable()" placeholder="Search...">
-            </div>
-             <table id="scenarioTable" class="table table-hover table-bordered small small-font overflow-auto">
-                <thead class="table-dark">
-                    <tr>
-                        <th>Scenario</th>
-                    </tr>
-                </thead>
-                <tbody id="scenarioTableBody">
-                  {% for scenario in scenarios %}
-                  <tr onclick="selectScenario(this)">
-                    <td>{{ scenario.Scenario }}</td>
-                  </tr>
-                  {% endfor %}
-                </tbody>
-              </table>
-        </div>
-        <div class="row border-light-subtle" style="padding-right: 15px; padding-left: 10px">
-            <textarea id="txtScenario" name="txtScenario" class="form-control small-font" rows="3" cols="50" placeholder="Select a scenario from the table or enter your own...." style="resize: none"></textarea>
-        </div>
-    </div>
 
-    <div class="col col-md-5">
 
-        <div class="col">
-            <div class="row">
-                <figure class="text-center">
-                Use the drop-down fields to select threats and countermeasures relevant to the current scenario. You can select multiple countermeasures
-                </figure>
-            </div>
 
-          <div class="row">
-            <div class="col-6 col-sm-6">
-                  <label class="form-label" for="threat-intelligence">Threat Class</label>
-                    <select class="form-control" name="threat-intelligence" id="threat-intelligence">
-                        <option value="">Select a threat class</option>
-                        {% for threat_intelligence in threat_intelligence %}
-                            <option value="{{ threat_intelligence.ThreatDescription }}">{{ threat_intelligence.ThreatDescription }}</option>
-                        {% endfor %}
-                    </select>
-                    <br>
-                  <label class="form-label" for="threatsources">Threat Actor</label>
-                    <select class="form-control" name="threatsources" id="threatsources">
-                      <option value="">Select a threat agent</option>
-                      {% for threatsources in threatsources %}
-                        <option value="{{ threatsources.ThreatSource }}">{{ threatsources.ThreatSource }}</option>
-                      {% endfor %}
-                    </select>
-                    <br>
-                    <label class="form-label" for="threatactions">Threat Action</label>
-                    <select class="form-control" name="threatactions" id="threatactions">
-                        <option value="">Select a threat action</option>
-                        {% for threatactions in threatactions  %}
-                            <option value="{{ threatactions.ThreatAction }}">{{ threatactions.ThreatAction }}</option>
-                        {% endfor %}
-                    </select>
-            </div>
-            <div class="col-6 col-sm-6">
-                <label class="form-label" for="mitigation-measure">Countermeasures</label>
-                <select class="form-control" name="mitigation-measure" id="mitigation-measure">
-                    <option value="">Select Countermeasures</option>
-                    {% for mitigation_measure in mitigation_measures %}
-                        <option value="{{ mitigation_measure.ControlObjective }}">{{ mitigation_measure.ControlObjective }}</option>
-                    {% endfor %}
-                </select>
-                    <textarea id="txtmm" name="txtmm" rows="3" class="form-control small-font" style="resize: none;"></textarea>
+<div class="row" style="height: 10px">
+    <div class="col-md-1" style="background-color: black"></div>
+    <div class="col-md-10 " style="background-color: darkgray; height: 10px"></div>
+    <div class="col-md-1 " style="background-color: black"></div>
+</div> <!-- dark grey stripe -->
 
-                    <script>
-                      var selectedOptions = []; // Store selected options
 
-                      document.getElementById("mitigation-measure").addEventListener("change", function () {
-                        var dropdown = document.getElementById("mitigation-measure");
-                        var selectedOption = dropdown.options[dropdown.selectedIndex].text;
-                        var txtmm = document.getElementById("txtmm");
-
-                        // Only add the selected option if count is less than or equal to 5
-                        if (selectedOptions.length < 5) {
-                          selectedOptions.push(selectedOption);
-
-                          // Join selected options with newline and bullet point and set textarea value
-                          txtmm.value = selectedOptions.map(function(option) {
-                            return "• " + option;
-                          }).join("\n");
-                        }
-                      });
-                    </script>
-                 <br>
-                    <label class="form-label" for="risk-category">Risk Category</label>
-                        <select class="form-control" name="risk-category" id="risk-category">
-                          <option value="">Select a risk category</option>
-                          {% for risk_category in risk_categories %}
-                            <option value="{{ risk_category.CategoryName }}">{{ risk_category.CategoryName }}</option>
-                          {% endfor %}
-                        </select>
-            </div>
-      </div>
+<div class="row" >
+    <div class="col-md-1" style="background-color: black"></div>
+    <div class="col-md-1" style="background-color: darkgray"></div>
+    <div class="col-md-4 " style="background-color: #FFC017">
+        <label class="form-label" for="threat-intelligence">Threat Source</label>
+        <select class="form-control" name="threat-intelligence" id="threat-intelligence" style="border: 3px #97979A; border-radius: 10px; box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5);  padding: 10px; background-color: white">
+            <option value="">-- Select a threat source --</option>
+            {% for threat_intelligence in threat_intelligence %}
+                <option value="{{ threat_intelligence.ThreatDescription }}">{{ threat_intelligence.ThreatDescription }}</option>
+            {% endfor %}
+        </select>
         <br>
-    </div>
-        <div class="row"><div class="form-group shadow-textarea">
-          <label for="scenariorecommendations">Scenario Recommendations</label>
-          <textarea class="form-control z-depth-1" id="scenariorecommendations" name="scenariorecommendations" rows="3" placeholder="Write scenario recommendations in here..."></textarea>
-        </div></div>
-     </div>
 
-    <div class="col col-md-4">
-        <div class="button-row">
-            <button type="button" id="addScenarioBtn" class="btn btn-secondary btn-lg" onclick="resetformcontrols()">Add Scenario</button>
-            <script>
-                function resetformcontrols() {
-                    document.getElementById("mitigation-measure").selectedIndex=0;
-                    document.getElementById("hdnScenarioID").value=0;
-
-                }
-
-            </script>
-
-            <div class="modal fade" id="confirmationModal" tabindex="-1" role="dialog" aria-labelledby="confirmationModalLabel" aria-hidden="true">
-              <div class="modal-dialog">
-                <div class="modal-content">
-                  <div class="modal-header">
-                    <h5 class="modal-title" id="confirmationModalLabel">Confirmation</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                  </div>
-                  <div class="modal-body">
-                    Are you sure you want to save the scenario?
-                  </div>
-                  <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Modify the submit button to open the confirmation modal -->
-            <button type="button" class="btn btn-primary btn-lg" data-bs-toggle="modal" data-bs-target="#confirmationModal">Save Scenario</button>
-            <button type="button" class="btn btn-primary btn-lg" onclick="goToScenarioReport()">Scenario Report</button>
+        <label class="form-label" for="threatactions">Threat Action</label>
+        <select class="form-control" name="threatactions" id="threatactions" multiple="multiple" style="border: 3px solid #97979A; border-radius: 10px; box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5);  padding: 20px; background-color: white">
+        <option value="">Select a threat action</option>
+        {% for threatactions in threatactions  %}
+            <option value="{{ threatactions.ThreatAction }}">{{ threatactions.ThreatAction }}</option>
+        {% endfor %}
+    </select>
 
         <script>
-        function goToScenarioReport() {
-            var hdnID = document.getElementById('hdnID').value;  // assuming 'hdnID' is the id of your input field
-            window.location.href = "{% url 'OTRisk:scenarioreport' %}?hdnID=" + hdnID;
-        }
+        $(document).ready(function() {
+            $('#threatactions').select2({
+                placeholder: "Select Threat Actions",
+                allowClear: true
+            });
+        });
         </script>
-            <div class="table-wrap">
-            <table id="scenarioList" class="table table-hover table-bordered small small-font overflow-auto">
-                <thead class="table-dark">
-                    <tr>
-                        <th>ID</th>
-                        <th>Scenario</th>
-                        <th>Threat</th>
-                        <th>Risk</th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody id="scenarioListBody">
-                  {% for saved_scenarios in saved_scenarios %}
-                  <tr onclick="fillScenario({{ saved_scenarios | escapejs }})">
-                    <td>{{ saved_scenarios.ID }}</td>
-                  <td>{{ saved_scenarios.Scenario }}</td>
-                  <td>{{ saved_scenarios.ThreatClass }}</td>
-                  <td>{{ saved_scenarios.RiskCategory }}</td>
-                  <td>
-                    <a href="{% url 'OTRisk:deletescenario' saved_scenarios.ID saved_scenarios.CyberPHA %}" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this record? (Note that if you proceed, the record will be virtually deleted and can be recovered if necessary)')">Del</a>
-                  </td>
-                  </tr>
-                  {% endfor %}
-                </tbody>
-              </table>
-                </div>
-
-
-        </div>
     </div>
+    <div class="col-md-4 " style="background-color: #FFC017">
+        <label class="form-label" for="mitigation-measure">Current Controls</label>
+        <select class="form-control" name="mitigation-measure" id="mitigation-measure" multiple="multiple" title="Select one or more existing controls implemented within the environment" style="border: 3px #97979A; border-radius: 10px; box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5);  padding: 20px; background-color: white">
+        <option value="">-- Select Controls --</option>
+        {% for mitigation_measure in mitigation_measures %}
+            <option value="{{ mitigation_measure.ControlObjective }}">{{ mitigation_measure.ControlObjective }}</option>
+        {% endfor %}
+        </select>
 
+        <script>
+        $(document).ready(function() {
+            $('#mitigation-measure').select2({
+                placeholder: "Select Current Controls",
+                allowClear: true
+            });
+        });
+        </script>
+
+        <br><br>
+        <label class="form-label" for="risk-category">Risk Category</label>
+            <select class="form-control" name="risk-category" id="risk-category" style="border: 3px #97979A; border-radius: 10px; box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5);  padding: 10px; background-color: white">
+              <option value="">Select a risk category</option>
+              {% for risk_category in risk_categories %}
+                <option value="{{ risk_category.CategoryName }}">{{ risk_category.CategoryName }}</option>
+              {% endfor %}
+            </select>
+
+
+    </div>
+    <div class="col-md-1" style="background-color: darkgray"></div>
+    <div class="col-md-1 " style="background-color: black"></div>
 </div>
-  <div class="row mb-3">
-    <div class="col col-md-3">
-        <div class="table-wrap">
-            <div class="row border-1">
-            <input type="text" placeholder="Search.." id="consequenceSearch" name="consequenceSearch" onkeyup="filterFunction2()">
-            </div>
-            <table id="consequenceTable" class="table table-hover table-bordered small small-font overflow-auto">
-                <thead class="table-dark">
-                  <tr>
-                    <th>Consequence</th>
-                  </tr>
-                </thead>
-                <tbody id="consequenceTableBody">
-                  {% for consequence in consequences %}
-                  <tr onclick="selectConsequence('{{ consequence.Consequence }}')">
-                    <td>{{ consequence.Consequence }}</td>
-                  </tr>
-                  {% endfor %}
-                </tbody>
-              </table>
-            </div>
-             <div class="row border-light-subtle" style="padding-right: 15px; padding-left: 10px">
-              <textarea id="txtConsequence" name="txtConsequence"  rows=8 class="form-control small-font" style="resize: none" placeholder="Select consequences/bad-outcomes from the table or add and edit your own..."></textarea>
-                </div>
+<div class="row" style="height: 10px">
+    <div class="col-md-1" style="background-color: black"></div>
+    <div class="col-md-1" style="background-color: darkgray"></div>
+    <div class="col-md-8 " style="background-color: #FFC017; height: 10px"></div>
+    <div class="col-md-1" style="background-color: darkgray"></div>
+    <div class="col-md-1 " style="background-color: black"></div>
+</div> <!-- white stripe -->
 
-        </div>
-
-    <div class="col col-md-6">
-      <!-- put slider controls in here -->
-        <div class="row">
-            <div class="col-6 col-sm-6">
-              <h4>Impact Analysis</h4>
+<div class="row" style="height: 10px">
+    <div class="col-md-1" style="background-color: black"></div>
+    <div class="col-md-10 " style="background-color: darkgray; height: 10px"></div>
+    <div class="col-md-1 " style="background-color: black"></div>
+</div> <!-- dark grey stripe -->
 
 
-                <!--slider for safety rating -->
+<div class="row">
+    <div class="col-md-1" style="background-color: black"></div>
+    <div class="col-md-1" style="background-color: darkgray"></div>
+    <div class="col-md-4" style="background-color: #FFC017">
+        <h4>Impact Analysis</h4>
+         <!--slider for safety rating -->
                 <div class="slider-container d-flex align-items-center">
                     <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the overall impact on safety of the selected scenario">Safety</label></div>
                     <div class="col-7">
-                      <input type="range" min="1" max="10" value="1" class="form-range" id="range_safety" name="range_safety" onchange="initSlider('range_safety', 'safetyrange');calculateBIA();">
+                      <input type="range" min="1" max="10" value="1" class="form-range" id="range_safety" name="range_safety" onchange="initSlider('range_safety', 'safetyrange');">
                     </div>
                     <div class="col-3"><label id="safetyrange" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></div>
                 </div>
@@ -399,7 +550,7 @@
                 <div class="slider-container d-flex align-items-center">
                     <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the danger to life of the selected scenario">Life</label></div>
                     <div class="col-7">
-                      <input type="range" min="1" max="10" value="1" class="form-range" id="range_life" name="range_life" onchange="calculateBIA(); initSlider('range_life', 'liferange');">
+                      <input type="range" min="1" max="10" value="1" class="form-range" id="range_life" name="range_life" onchange="initSlider('range_life', 'liferange');">
                     </div>
                     <div class="col-3"><h6><label id="liferange" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                 </div>
@@ -407,7 +558,7 @@
                 <div class="slider-container d-flex align-items-center">
                     <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the production and operational impacts of the selected scenario">Production</label></div>
                     <div class="col-7">
-                      <input type="range" min="1" max="10" value="1" class="form-range" id="range_production" name="range_production" onchange="initSlider('range_production', 'productionrange');calculateBIA();">
+                      <input type="range" min="1" max="10" value="1" class="form-range" id="range_production" name="range_production" onchange="initSlider('range_production', 'productionrange');">
                     </div>
                     <div class="col-3"><h6><label id="productionrange" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                 </div>
@@ -415,7 +566,7 @@
                 <div class="slider-container d-flex align-items-center">
                     <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the cost impact of the selected scenario">Financial</label></div>
                     <div class="col-7">
-                      <input type="range" min="1" max="10" value="1" class="form-range" id="range_finance" name="range_finance" onchange="initSlider('range_finance', 'financerange');calculateBIA();">
+                      <input type="range" min="1" max="10" value="1" class="form-range" id="range_finance" name="range_finance" onchange="initSlider('range_finance', 'financerange');">
                     </div>
                     <div class="col-3"><h6><label id="financerange" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                 </div>
@@ -423,7 +574,7 @@
                 <div class="slider-container d-flex align-items-center">
                     <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the impact on the organization's public reputation of the selected scenario">Reputation</label></div>
                     <div class="col-7">
-                      <input type="range" min="1" max="10" value="1" class="form-range" id="range_reputation" name="range_reputation" onchange="initSlider('range_reputation', 'reputationrange');calculateBIA();">
+                      <input type="range" min="1" max="10" value="1" class="form-range" id="range_reputation" name="range_reputation" onchange="initSlider('range_reputation', 'reputationrange');">
                     </div>
                     <div class="col-3"><h6><label id="reputationrange" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                 </div>
@@ -431,7 +582,7 @@
                 <div class="slider-container d-flex align-items-center">
                     <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the environmental impact of the selected scenario">Environment</label></div>
                     <div class="col-7">
-                      <input type="range" min="1" max="10" value="1" class="form-range" id="range_environment" name="range_environment" onchange="initSlider('range_environment', 'environmentrange');calculateBIA();">
+                      <input type="range" min="1" max="10" value="1" class="form-range" id="range_environment" name="range_environment" onchange="initSlider('range_environment', 'environmentrange');">
                     </div>
                     <div class="col-3"><h6><label id="environmentrange" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                 </div>
@@ -439,7 +590,7 @@
                 <div class="slider-container d-flex align-items-center">
                     <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the regulatory compliance impact of the selected scenario">Regulatory</label></div>
                     <div class="col-7">
-                      <input type="range" min="1" max="10" value="1" class="form-range" id="range_regulatory" name="range_regulatory" onchange="initSlider('range_regulatory', 'regulatoryrange');calculateBIA();">
+                      <input type="range" min="1" max="10" value="1" class="form-range" id="range_regulatory" name="range_regulatory" onchange="initSlider('range_regulatory', 'regulatoryrange');">
                     </div>
                     <div class="col-3"><h6><label id="regulatoryrange" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                 </div>
@@ -447,37 +598,19 @@
                 <div class="slider-container d-flex align-items-center">
                     <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the impact on data of the selected scenario">Data/IP</label></div>
                     <div class="col-7">
-                      <input type="range" min="1" max="10" value="1" class="form-range" id="range_data" name="range_data" onchange="initSlider('range_data', 'datarange');calculateBIA();">
+                      <input type="range" min="1" max="10" value="1" class="form-range" id="range_data" name="range_data" onchange="initSlider('range_data', 'datarange');">
                     </div>
                     <div class="col-3"><h6><label id="datarange" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                 </div>
-                <br>
-                <h4>Unmitigated Risk Assessment</h4>
-                <!--slider for UEL - likelikelihood without controls-->
-                <div class="slider-container d-flex align-items-center">
-                    <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate extent to which the system is vulnerable to the threat">Vulnerability</label></div>
-                    <div class="col-7">
-                      <input type="range" min="1" max="5" value="1" class="form-range" id="UELrange" name="UELrange" onchange="initSlider('UELrange','range_UEL');">
-                    </div>
-                    <div class="col-3"><h6><label id="range_UEL" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
-                </div>
-                <!--slider for RRu - unmitigated risk-->
-                <div class="slider-container d-flex align-items-center">
-                    <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the degree of exposure to the threat selected above">Threats</label></div>
-                    <div class="col-7">
-                      <input type="range" min="1" max="5" value="1" class="form-range" id="RRurange" name="RRurange" onchange="initSlider('RRurange','range_RRu');">
-                    </div>
-                    <div class="col-3"><h6><label id="range_RRu" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
-                </div>
+    </div>
 
-            </div>
-            <div class="col-6 col-sm-6">
-                <h4>Assessment - Current Controls</h4>
+    <div class="col-md-4" style="background-color: #FFC017">
+        <h4>Assessment - Current Controls</h4>
                 <!--slider for UEL - likelihood without controls-->
                 <div class="slider-container d-flex align-items-center">
                     <div class="col-2"><label class="small-font d-flex align-items-center " >Severity Mitigated (Sm)</label></div>
                     <div class="col-7">
-                      <input type="range" min="1" max="5" value="1" class="form-range" id="SMrange" name="SMrange" onchange="initSlider('SMrange','range_SM');">
+                      <input type="range" min="1" max="10" value="1" class="form-range" id="SMrange" name="SMrange" onchange="initSlider('SMrange','range_SM');">
                     </div>
                     <div class="col-3"><h6><label id="range_SM" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                 </div>
@@ -485,7 +618,7 @@
                 <div class="slider-container d-flex align-items-center">
                     <div class="col-2"><label class="small-font d-flex align-items-center " >Mitigated Exposure (MEL)</label></div>
                     <div class="col-7">
-                      <input type="range" min="1" max="5" value="1" class="form-range" id="MELrange" name="MELrange" onchange="initSlider('MELrange','range_MEL');">
+                      <input type="range" min="1" max="10" value="1" class="form-range" id="MELrange" name="MELrange" onchange="initSlider('MELrange','range_MEL');">
                     </div>
                     <div class="col-3"><h6><label id="range_MEL" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                 </div>
@@ -493,17 +626,86 @@
                 <div class="slider-container d-flex align-items-center">
                     <div class="col-2"><label class="small-font d-flex align-items-center " >Residual Risk (RRm)</label></div>
                     <div class="col-7">
-                      <input type="range" min="1" max="5" value="1" class="form-range" id="RRMrange" name="RRMrange" onchange="initSlider('RRMrange','range_RRM');">
+                      <input type="range" min="1" max="10" value="1" class="form-range" id="RRMrange" name="RRMrange" onchange="initSlider('RRMrange','range_RRM');">
                     </div>
                     <div class="col-3"><h6><label id="range_RRM" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                 </div>
-                <br><br>
-                <h4>Adjusted Risk (After Action)</h4>
+                    <row>
+                        <div class=col-md-6>
+                            <label class="form-label" for="selStandards">Standards</label>
+                            <select class="form-control" name="selStandards" id="selStandards" title="Select which standards to align with for recommendations">
+                            <option value="">-- Select Standard --</option>
+                            {% for standardslist in standardslist %}
+                                <option value="{{ standardslist.standard }}">{{ standardslist.standard}}</option>
+                            {% endfor %}
+                            </select>
+
+                        </div>
+                        <div class=col-md-6>
+                            <button id="risk-assessment-btn" type="button" class="btn-primary">Assess Scenario</button><br>
+                            <div id="loadingSpinner" class="spinner-border" role="status" style="display: none;">
+                              <span class="visually-hidden">Loading...</span>
+                            </div>
+
+                                <script>
+                                 // AJAX function call on button click
+                                $(document).ready(function () {
+                                    $("#risk-assessment-btn").click(function () {
+                                        // Call the function to assess the risk
+                                        assessScenario();
+                                    });
+                                });
+                                </script>
+                        </div>
+
+                    </row>
+
+    </div>
+
+    <div class="col-md-1" style="background-color: darkgray"></div>
+     <div class="col-md-1" style="background-color: black"></div>
+</div>
+
+<div class="row" style="height: 10px">
+    <div class="col-md-1" style="background-color: black"></div>
+    <div class="col-md-10 " style="background-color: darkgray; height: 10px"></div>
+    <div class="col-md-1 " style="background-color: black"></div>
+</div> <!-- dark grey stripe -->
+
+<div class="row">
+    <div class="col-md-1" style="background-color: black"></div>
+    <div class="col-md-1" style="background-color: darkgray"></div>
+    <div class="col-md-4" style="background-color: white">
+        <div class="row  rounded p-3 ">
+            <label for="txtControlAnalysis" class="small-font">Control Recommendations:</label>
+            <textarea id="txtControlAnalysis" name="txtControlAnalysis" class="form-control border border-danger" rows="6"  style="resize: none"></textarea><br>
+        </div>
+
+    </div>
+    <div class="col-md-4" style="background-color: white">
+        <div class="row  rounded p-3 ">
+            <label for="txtScenarioAnalysis" class="small-font">Recommendations will align with selected standards:</label>
+            <textarea id="txtScenarioAnalysis" name="txtScenarioAnalysis" class="form-control border border-danger" rows="6"  style="resize: none"></textarea>
+        </div>
+
+    </div>
+    <div class="col-md-1" style="background-color: darkgray"></div>
+     <div class="col-md-1" style="background-color: black"></div>
+</div>
+
+
+
+
+<div class="row">
+    <div class="col-md-1" style="background-color: black"></div>
+    <div class="col-md-1" style="background-color: darkgray"></div>
+    <div class="col-md-4" style="background-color: white">
+        <h4>Adjusted Risk (After Action)</h4>
                 <!--slider for Severity level (Sa) -->
                 <div class="slider-container d-flex align-items-center">
                     <div class="col-2"><label class="small-font d-flex align-items-center " >Severity Adjusted(Sa)</label></div>
                     <div class="col-7">
-                      <input type="range" min="1" max="5" value="1" class="form-range" id="SArange" name="SArange" onchange="initSlider('SArange','range_SA');">
+                      <input type="range" min="1" max="10" value="1" class="form-range" id="SArange" name="SArange" onchange="initSlider('SArange','range_SA');">
                     </div>
                     <div class="col-3"><h6><label id="range_SA" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                 </div>
@@ -511,497 +713,135 @@
                 <div class="slider-container d-flex align-items-center">
                     <div class="col-2"><label class="small-font d-flex align-items-center " >Mitigated Exposure (MELa)</label></div>
                     <div class="col-7">
-                      <input type="range" min="1" max="5" value="1" class="form-range" id="MELarange" name="MELarange" onchange="initSlider('MELarange','range_MELa');">
+                      <input type="range" min="1" max="10" value="1" class="form-range" id="MELarange" name="MELarange" onchange="initSlider('MELarange','range_MELa');">
                     </div>
                     <div class="col-3"><h6><label id="range_MELa" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                 </div>
                 <!--slider for Residual Risk (RRa) -->
                 <div class="slider-container d-flex align-items-center">
                     <div class="col-2"><label class="small-font d-flex align-items-center " >Residual Risk (RRa)</label></div>
-                    <div class="col-7">
-                      <input type="range" min="1" max="5" value="1" class="form-range" id="RRarange" name="RRarange" onchange="initSlider('RRarange','range_RRa');">
+                    <div class="col-7"><input type="text" id="txtRRa" name="txtRRa" class="form-control">
+                      <!-- <input type="range" min="1" max="10" value="1" class="form-range" id="RRarange" name="RRarange" onchange="initSlider('RRarange','range_RRa');"> -->
                     </div>
                     <div class="col-3"><h6><label id="range_RRa" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                 </div>
 
-
-            </div>
-
-        </div>
-
     </div>
-    <div class="col-md-3">
-
-    <div class="form-group small-font">
+     <div class="col-md-4" style="background-color: white">
         <h4>Quantitative Assessment</h4>
-                  <div class="form-group">
-                    <label for="aro">Annualized Rate of Occurrence (ARO):</label>
-                    <input type="range" class="form-control-range" id="aro" name="aro" min="0" max="12" step="1" oninput="updatearoOutput(this.value)">
-                    <output for="aro" id="aroOutput">0</output>
-                  </div>
-                    <br>
-                  <div class="form-group">
-                    <label for="sle">Event Costs (SLE):</label>
-                    <input type="range" class="form-control-range" id="sle" name="sle" min="0" max="10000000" step="1000">
-                    <output for="sle" id="sleOutput">$0</output>
-                  </div>
-                    <br>
-                  <div class="form-group">
-                    <label for="ale">Annualized Loss Expectancy (ALE):</label>
-                    <output id="ale">$0</output>
-                  </div>
-                    <br>
-                <div class="form-group">
-                  <label for="countermeasureCosts">Cost of Countermeasures:</label>
-                  <input type="range" class="form-control-range" id="countermeasureCostsRange" name="countermeasureCostsRange" min="0" max="1000000" step="1000" oninput="updateCountermeasureCostsOutput(this.value)">
-                  <output for="countermeasureCostsRange" id="countermeasureCostsOutput">$0</output>
-                </div>
-
-
-                 <script>
-                    function updatearoOutput(value) {
-                      document.getElementById('aroOutput').textContent = value;
-                      calculateALE();
-                    }
-                    function updateCountermeasureCostsOutput(value) {
-                      document.getElementById('countermeasureCostsOutput').textContent = value;
-                    }
-
-                    $(document).ready(function() {
-                      $('#eventCosts').on('input', function() {
-                        var cost = parseInt($(this).val()).toLocaleString();
-                        $('#eventCostsOutput').text('$' + cost);
-                        calculateALE();
-                      });
-
-                      function calculateALE() {
-                        var aro = parseInt($('#aro').val());
-                        var eventCosts = parseInt($('#eventCosts').val());
-                        var sle = eventCosts;
-                        var aro = aro;
-                        var ale = sle * aro;
-                        $('#ale').text('$' + ale.toLocaleString());
-                      }
-                    });
-                  </script>
-    </div>
-
-
-
-</div>
-</div>
- <div class="col col-md-3">
-      <!-- Gauge control here -->
-        <div class="gauge1 impactGauge" id="impactGauge"></div>
-        <div class="gauge2 RRGauge" id="RRGauge"></div>
-
-        <script>
-
-              var gauge1, gauge2;
-                function initializeGauge() {
-                    gauge1 = new Gauge($('.gauge1'), {
-                      values: { 0: '0', 10: '1', 20: '2', 30: '3', 40: '4', 50: '5', 60: '6', 70: '7', 80: '8', 90: '9', 100: '10' },
-                      angles: [150, 390]
-                    });
-
-                    gauge2 = new Gauge($('.gauge2'), {
-                      values: { 0: '0', 10: '1', 20: '2', 30: '3', 40: '4', 50: '5', 60: '6', 70: '7', 80: '8', 90: '9', 100: '10' },
-                      angles: [150, 390]
-                    });
-
-                    gauge1.setValue(20); // Set the initial value of the gauge
-                    gauge2.setValue(10); // Set the initial value of the gauge
-                  }
-
-            </script>
-
-
-    </div>
-
-<table>
-
-
-
-   <div style="border: black;border-style: solid;">
-
-
-        <script>
-
-var industryWeights = {
-  "Information Technology": {
-    "safety": 0.8,
-    "life": 0.8,
-    "production": 1.2,
-    "finance": 1.5,
-    "reputation": 1.2,
-    "environment": 0.8,
-    "regulatory": 1.0,
-    "data": 1.5
-  },
-  "Aerospace": {
-    "safety": 1.5,
-    "life": 1.2,
-    "production": 1.3,
-    "finance": 1.2,
-    "reputation": 1.2,
-    "environment": 1.0,
-    "regulatory": 1.5,
-    "data": 1.2
-  },
-  "Automotive": {
-    "safety": 1.4,
-    "life": 1.0,
-    "production": 1.4,
-    "finance": 1.2,
-    "reputation": 1.1,
-    "environment": 1.2,
-    "regulatory": 1.3,
-    "data": 1.0
-  },
-  "Communications": {
-    "safety": 0.8,
-    "life": 0.8,
-    "production": 1.2,
-    "finance": 1.4,
-    "reputation": 1.5,
-    "environment": 0.8,
-    "regulatory": 1.2,
-    "data": 1.5
-  },
-  "Cloud Provider": {
-    "safety": 0.8,
-    "life": 0.8,
-    "production": 1.0,
-    "finance": 1.5,
-    "reputation": 1.2,
-    "environment": 0.8,
-    "regulatory": 1.2,
-    "data": 1.5
-  },
-  "Business": {
-    "safety": 1.0,
-    "life": 1.0,
-    "production": 1.2,
-    "finance": 1.5,
-    "reputation": 1.3,
-    "environment": 0.8,
-    "regulatory": 1.3,
-    "data": 1.2
-  },
-  "Building Automation": {
-    "safety": 1.3,
-    "life": 1.0,
-    "production": 1.4,
-    "finance": 1.2,
-    "reputation": 1.1,
-    "environment": 1.3,
-    "regulatory": 1.2,
-    "data": 1.1
-  },
-  "Biotech": {
-    "safety": 1.5,
-    "life": 1.5,
-    "production": 1.2,
-    "finance": 1.3,
-    "reputation": 1.2,
-    "environment": 1.0,
-    "regulatory": 1.5,
-    "data": 1.2
-  },
-  "Banking and Finance": {
-    "safety": 1.0,
-    "life": 1.0,
-    "production": 1.0,
-    "finance": 1.5,
-    "reputation": 1.5,
-    "environment": 0.8,
-    "regulatory": 1.5,
-    "data": 1.5
-  },
-  "Chemical": {
-    "safety": 1.5,
-    "life": 1.3,
-    "production": 1.4,
-    "finance": 1.2,
-    "reputation": 1.1,
-    "environment": 1.5,
-    "regulatory": 1.4,
-    "data": 1.0
-  },
-  "Construction": {
-    "safety": 1.5,
-    "life": 1.2,
-    "production": 1.4,
-    "finance": 1.1,
-    "reputation": 1.1,
-    "environment": 1.2,
-    "regulatory": 1.3,
-    "data": 0.9
-  },
-  "Energy (includes Power and Utilities)": {
-    "safety": 1.25,
-    "life": 1.2,
-    "production": 1.5,
-    "finance": 1.3,
-    "reputation": 1.2,
-    "environment": 1.5,
-    "regulatory": 1.4,
-    "data": 1.1
-  },
-"Food and Beverage": {
-    "safety": 1.4,
-    "life": 1.1,
-    "production": 1.4,
-    "finance": 1.1,
-    "reputation": 1.3,
-    "environment": 1.4,
-    "regulatory": 1.3,
-    "data": 1.0
-  },
-  "Unknown": {
-    "safety": 1.0,
-    "life": 1.0,
-    "production": 1.0,
-    "finance": 1.0,
-    "reputation": 1.0,
-    "environment": 1.0,
-    "regulatory": 1.0,
-    "data": 1.0
-  },
-  "Other": {
-    "safety": 1.0,
-    "life": 1.0,
-    "production": 1.0,
-    "finance": 1.0,
-    "reputation": 1.0,
-    "environment": 1.0,
-    "regulatory": 1.0,
-    "data": 1.0
-  },
-  "Oil and Gas": {
-    "safety": 1.5,
-    "life": 1.3,
-    "production": 1.5,
-    "finance": 1.3,
-    "reputation": 1.2,
-    "environment": 1.5,
-    "regulatory": 1.5,
-    "data": 1.1
-  },
-  "Packaging": {
-    "safety": 1.2,
-    "life": 0.8,
-    "production": 1.3,
-    "finance": 1.1,
-    "reputation": 1.1,
-    "environment": 1.2,
-    "regulatory": 1.2,
-    "data": 1.0
-  },
-  "Transportation": {
-    "safety": 1.5,
-    "life": 1.3,
-    "production": 1.4,
-    "finance": 1.2,
-    "reputation": 1.3,
-    "environment": 1.3,
-    "regulatory": 1.4,
-    "data": 1.0
-  },
-  "Mining": {
-    "safety": 1.5,
-    "life": 1.3,
-    "production": 1.5,
-    "finance": 1.2,
-    "reputation": 1.2,
-    "environment": 1.5,
-    "regulatory": 1.4,
-    "data": 1.0
-  },
-  "Government": {
-    "safety": 1.2,
-    "life": 1.1,
-    "production": 1.0,
-    "finance": 1.2,
-    "reputation": 1.4,
-    "environment": 0.9,
-    "regulatory": 1.5,
-    "data": 1.4
-  },
-  "Healthcare": {
-    "safety": 1.5,
-    "life": 1.5,
-    "production": 1.3,
-    "finance": 1.3,
-    "reputation": 1.4,
-    "environment": 1.0,
-    "regulatory": 1.5,
-    "data": 1.4
-  },
-  "Information Technology": {
-    "safety": 0.8,
-    "life": 0.8,
-    "production": 1.2,
-    "finance": 1.5,
-    "reputation": 1.5,
-    "environment": 0.8,
-    "regulatory": 1.2,
-    "data": 1.5
-  },
-  "Manufacturing": {
-    "safety": 1.5,
-    "life": 1.1,
-    "production": 1.4,
-    "finance": 1.2,
-    "reputation": 1.2,
-    "environment": 1.3,
-    "regulatory": 1.3,
-    "data": 1.1
-  },
-  "Pharmaceutical": {
-    "safety": 1.4,
-    "life": 1.4,
-    "production": 1.2,
-    "finance": 1.3,
-    "reputation": 1.4,
-    "environment": 1.0,
-    "regulatory": 1.5,
-    "data": 1.4
-  },
-"Telecommunications": {
-    "safety": 0.9,
-    "life": 0.8,
-    "production": 1.3,
-    "finance": 1.4,
-    "reputation": 1.5,
-    "environment": 0.9,
-    "regulatory": 1.3,
-    "data": 1.5
-  },
-  "Transportation (includes Shipping, Maritime, Rail, Trucking)": {
-    "safety": 1.5,
-    "life": 1.2,
-    "production": 1.4,
-    "finance": 1.3,
-    "reputation": 1.2,
-    "environment": 1.3,
-    "regulatory": 1.4,
-    "data": 1.0
-  },
-  "Utilities": {
-    "safety": 1.4,
-    "life": 1.2,
-    "production": 1.4,
-    "finance": 1.3,
-    "reputation": 1.2,
-    "environment": 1.4,
-    "regulatory": 1.4,
-    "data": 1.0
-  }
-}
-              function initSlider(sliderId, outputId) {
-                var slider = document.getElementById(sliderId);
-                var output = document.getElementById(outputId);
-
-                // Display the default slider value
-                output.innerHTML = getSeverityLabel(slider.value);
-
-                // Update the current slider value (each time you drag the slider handle)
-                slider.oninput = function() {
-                  output.innerHTML = getSeverityLabel(this.value);
-                  calculateRiskScore();
-                };
-              }
-
-              function getSeverityLabel(value) {
-                switch (parseInt(value)) {
-                  case 1:
-                    case 2:
-                    return "Low";
-                  case 3:
-                    case 4:
-                    return "Low/Medium";
-                  case 5:
-                    case 6:
-                    return "Medium";
-                  case 7:
-                    case 8:
-                    return "Medium/High";
-                  case 9:
-                    case 10:
-                    return "High";
-                  default:
-                    return "";
-                }
-              }
-
-              // Initialize sliders
-              initSlider("range_severity", "severityrange");
-              // Add more sliders as needed
-              // initSlider("another_slider_id", "another_output_id");
-
-
-
-
-    function calculateBIA() {
-    // Fetch industry
-        var industry = sessionStorage.getItem('industry');
-
-        // Check if industry is null or undefined
-        if (!industry) {
-            console.error('Session storage did not contain an industry.');
-            return;
-        }
-
-        // Trim the industry string
-        industry = industry.trim();
-        console.log(`Industry from session storage: '${industry}'`);
-
-        var weights;
-
-        // Check if industryWeights is defined and iterable
-        if (!industryWeights || typeof industryWeights !== 'object') {
-            console.error('industryWeights is not defined or not an object.');
-            return;
-        }
-
-         // Fetch weights for this industry
-        // Iterate over the keys in industryWeights
-        for (var key in industryWeights) {
-            // If the first 5 letters of the key match the first 5 letters of the industry
-            if (key.substring(0, 5) === industry.substring(0, 5)) {
-                // Assign the weights for that key
-                weights = industryWeights[key];
-                break;
+        <div class="form-group">
+            <label for="aro">Annualized Rate of Occurrence (ARO):</label>
+            <input type="range" class="form-control-range" id="aro" name="aro" min="0" max="12" step="1" oninput="updatearoOutput(this.value)">
+            <output for="aro" id="aroOutput">0</output>
+        </div>
+        <br>
+        <div class="form-group">
+            <label for="sle">Event Costs (SLE):</label>
+            <input type="range" class="form-control-range" id="sle" name="sle" min="0" max="10000000" step="1000">
+            <output for="sle" id="sleOutput">$0</output>
+        </div>
+        <br>
+        <div class="form-group">
+            <label for="ale">Annualized Loss Expectancy (ALE):</label>
+            <output id="ale">$0</output>
+        </div>
+        <br>
+        <div class="form-group">
+            <label for="countermeasureCosts">Cost of Countermeasures:</label>
+            <input type="range" class="form-control-range" id="countermeasureCostsRange" name="countermeasureCostsRange" min="0" max="1000000" step="1000" oninput="updateCountermeasureCostsOutput(this.value)">
+            <output for="countermeasureCostsRange" id="countermeasureCostsOutput">$0</output>
+        </div>
+         <script>
+            function updatearoOutput(value) {
+              document.getElementById('aroOutput').textContent = value;
+              // calculateALE();
             }
+            function updateCountermeasureCostsOutput(value) {
+              document.getElementById('countermeasureCostsOutput').textContent = value;
+            }
+
+            $(document).ready(function() {
+              $('#eventCosts').on('input', function() {
+                var cost = parseInt($(this).val()).toLocaleString();
+                $('#eventCostsOutput').text('$' + cost);
+                //calculateALE();
+              });
+
+              function calculateALE() {
+                var aro = parseInt($('#aro').val());
+                var eventCosts = parseInt($('#eventCosts').val());
+                var sle = eventCosts;
+                var aro = aro;
+                var ale = sle * aro;
+                $('#ale').text('$' + ale.toLocaleString());
+              }
+            });
+          </script>
+    </div>
+    <div class="col-md-1" style="background-color: darkgray"></div>
+     <div class="col-md-1" style="background-color: black"></div>
+</div>
+<div class="row" style="height: 10px">
+    <div class="col-md-1" style="background-color: black"></div>
+    <div class="col-md-1" style="background-color: darkgray"></div>
+    <div class="col-md-8 " style="background-color: white; height: 10px"></div>
+    <div class="col-md-1" style="background-color: darkgray"></div>
+    <div class="col-md-1 " style="background-color: black"></div>
+</div> <!-- white stripe -->
+<div class="row" style="height: 10px">
+    <div class="col-md-1" style="background-color: black"></div>
+    <div class="col-md-10 " style="background-color: darkgray; height: 10px"></div>
+    <div class="col-md-1 " style="background-color: black"></div>
+</div> <!-- dark grey stripe -->
+
+
+
+<script>
+
+      function initSlider(sliderId, outputId) {
+        var slider = document.getElementById(sliderId);
+        var output = document.getElementById(outputId);
+
+        // Display the default slider value
+        output.innerHTML = getSeverityLabel(slider.value);
+
+        // Update the current slider value (each time you drag the slider handle)
+        slider.oninput = function() {
+          output.innerHTML = getSeverityLabel(this.value);
+          //calculateRiskScore();
+        };
+      }
+
+      function getSeverityLabel(value) {
+        switch (parseInt(value)) {
+          case 1:
+            case 2:
+            return "Low";
+          case 3:
+            case 4:
+            return "Low/Medium";
+          case 5:
+            case 6:
+            return "Medium";
+          case 7:
+            case 8:
+            return "Medium/High";
+          case 9:
+            case 10:
+            return "High";
+          default:
+            return "";
         }
+      }
 
-        // If we didn't find a match, we should probably return or throw an error
-        if (!weights) {
-            console.error(`Could not find weights for industry '${industry.substring(0, 5)}'`);
-            return;
-        }
+      // Initialize sliders
+      // initSlider("range_severity", "severityrange");
+      // Add more sliders as needed
+      // initSlider("another_slider_id", "another_output_id");
 
-        // Continue as before...
-        // Fetch values of each slider
-    var safety = parseFloat(document.getElementById('range_safety').value) * weights.safety;
-    var life = parseFloat(document.getElementById('range_life').value) * weights.life;
-    var production = parseFloat(document.getElementById('range_production').value) * weights.production;
-    var finance = parseFloat(document.getElementById('range_finance').value) * weights.finance;
-    var reputation = parseFloat(document.getElementById('range_reputation').value) * weights.reputation;
-    var environment = parseFloat(document.getElementById('range_environment').value) * weights.environment;
-    var regulatory = parseFloat(document.getElementById('range_regulatory').value) * weights.regulatory;
-    var data = parseFloat(document.getElementById('range_data').value) * weights.data;
 
-    // Calculate BIA
-    var BIA = ((safety + life + production + finance + reputation + environment + regulatory + data) / 80) * 100;
-    // Store BIA value in session variable
-    sessionStorage.setItem('BIA', BIA);
-        // Set the gauge value
-        gauge1.setValue(BIA);
 
-        return BIA;
-    }
+
 
         //scoring functions for the gauge controls
     function calculateRiskScore() {
@@ -1040,7 +880,6 @@ var industryWeights = {
         rating = "High";
       }
 
-        gauge1.setValue(normalizedScore*10);
     }
 
         function calculateUnmitigatedRisk() {
@@ -1054,7 +893,6 @@ var industryWeights = {
 
           // Normalize the unmitigated risk to a score between 0 and 10
           const normalizedScore = (unmitigatedRisk - 1) / 4 * 10;
-            gauge2.setValue(normalizedScore*10);
           // Compare the normalized score with Safety Level Target (SL-T)
           if (normalizedScore <= slt) {
             return 'Low risk';
@@ -1066,6 +904,37 @@ var industryWeights = {
 
 
         }
+
+
+          // Function to save or update CyberPHA data
+        function getCyberPHAReport() {
+            const cyberPHAID = sessionStorage.getItem('activeCyberPHA');
+
+            // Create a form
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = "{% url 'OTRisk:phascenarioreport' %}";
+
+            // Add CSRF token
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = 'csrfmiddlewaretoken';
+            csrfInput.value = getCookie('csrftoken');
+            form.appendChild(csrfInput);
+
+            // Add cyberPHAID
+            const cyberPHAIDInput = document.createElement('input');
+            cyberPHAIDInput.type = 'hidden';
+            cyberPHAIDInput.name = 'cyberPHAID';
+            cyberPHAIDInput.value = cyberPHAID;
+            form.appendChild(cyberPHAIDInput);
+
+            // Append the form to body and submit
+            document.body.appendChild(form);
+            form.submit();
+        }
+
+
 
         // Function to save or update CyberPHA data
         function saveOrUpdateCyberPHA(formData) {
@@ -1084,7 +953,7 @@ var industryWeights = {
           // Define the callback function for when the request is completed
           xhr.onload = function() {
             if (xhr.status === 200) {
-              console.log('CyberPHA data saved or updated successfully');
+              location.reload()
               // Optionally, perform any additional actions or show a success message
             } else {
               console.error('Failed to save or update CyberPHA data');
@@ -1094,6 +963,7 @@ var industryWeights = {
 
           // Send the request with the form data
           xhr.send(formData);
+          $('#confirmationModal').modal('hide');
         }
 
 
@@ -1111,43 +981,78 @@ var industryWeights = {
         }
 
           // Event listener for form submission
-          document.getElementById('cyberpha-form').addEventListener('submit', function(event) {
-            event.preventDefault();
-
+          function processFormData() {
+            $('#loadingSpinner').show();
             // Get the values of the form fields
             const scenario = document.getElementById('txtScenario').value;
-            const controlObjective = document.getElementById('control-objective').value;
+            const consequence = document.getElementById('txtConsequence').value
+            const threatSource = document.getElementById('threat-intelligence').value;
+            const threatactions = document.getElementById('threatactions');
+            let selectedThreatOptions = Array.from(threatactions.selectedOptions).map(option => option.value);
+            const mitigationMeasures = document.getElementById('mitigation-measure');
+            let selectedMitigationOptions = Array.from(mitigationMeasures.selectedOptions).map(option => option.value);
             const riskCategory = document.getElementById('risk-category').value;
-            const mitigationMeasures = document.getElementById('mitigation-measure').value;
-            const threatIntelligence = document.getElementById('threat-intelligence').value;
-            const likelihood = document.getElementById('likelihood').value;
-            const impact = document.getElementById('impact').value;
+            const safety = document.getElementById('range_safety').value;
+            const life = document.getElementById('range_life').value;
+            const production = document.getElementById('range_production').value;
+            const financial = document.getElementById('range_finance').value;
+            const reputation = document.getElementById('range_reputation').value;
+            const environment = document.getElementById('range_environment').value;
+            const regulatory = document.getElementById('range_regulatory').value;
+            const data = document.getElementById('range_data').value;
+            const sm = document.getElementById('SMrange').value;
+            const mel = document.getElementById('MELrange').value;
+            const rrm = document.getElementById('RRMrange').value;
+            const sa = document.getElementById('SArange').value;
+            const mela = document.getElementById('MELarange').value;
+            const cyberpha = sessionStorage.getItem('activeCyberPHA')
+            const recommendations = document.getElementById('txtScenarioAnalysis').value
+            const controls = document.getElementById('txtControlAnalysis').value
+            const rra =  document.getElementById('txtRRa').value
+
+            // const likelihood = document.getElementById('likelihood').value;
+            //onst impact = document.getElementById('impact').value;
+
+            // Create a FormData object
+                const formData = new FormData();
+                formData.append('scenario', scenario);
+                formData.append('consequence', consequence);
+                formData.append('threatSource', threatSource);
+                formData.append('threatAction', selectedThreatOptions);
+                formData.append('mitigationMeasures', selectedMitigationOptions);
+                formData.append('riskCategory', riskCategory);
+                formData.append('safety', safety);
+                formData.append('life', life);
+                formData.append('production', production);
+                formData.append('financial', financial);
+                formData.append('reputation', reputation);
+                formData.append('environment', environment);
+                formData.append('regulatory', regulatory);
+                formData.append('data', data);
+                formData.append('sm', sm);
+                formData.append('mel', mel);
+                formData.append('rrm', rrm);
+                formData.append('sa', sa);
+                formData.append('mela', mela);
+                formData.append('rra', rra);
+                formData.append('recommendations',recommendations)
+                formData.append('cyberpha', cyberpha);
+                formData.append('controls', controls);
+
+                // Call the saveOrUpdateCyberPHA function
+                saveOrUpdateCyberPHA(formData);
+
+                $('#loadingSpinner').hide();
+          }
 
 
-            // Create a new FormData object and pass the form as a parameter
-            const formData = new FormData(document.getElementById('cyberpha-form'));
 
-            // Set the form field values in the FormData object
-            formData.set('assessment_name', scenario);
-            formData.set('control-objective', controlObjective);
-            formData.set('risk-category', riskCategory);
-            formData.set('mitigation-measure', mitigationMeasures);
-            formData.set('threat-intelligence', threatIntelligence);
-            formData.set('likelihood', likelihood);
-            formData.set('impact', impact);
-
-            // Call the saveOrUpdateCyberPHA function
-            saveOrUpdateCyberPHA(formData);
-          });
         </script>
     </form>
 
 
+
     <script>
-        // Function to calculate risk level based on likelihood and impact
-        function calculateRiskLevel(likelihood, impact) {
-            // Implement your calculation logic here and return the calculated risk level
-        }
 
         // Function to add a new scenario row to the table
         function addScenarioRow() {
@@ -1234,18 +1139,7 @@ var industryWeights = {
             addScenarioRow();
         });
 
-        // Event listener for calculating risk level based on likelihood and impact
-        document.addEventListener('input', function(event) {
-            var element = event.target;
-            if (element.tagName === 'INPUT' && (element.name.includes('likelihood') || element.name.includes('impact'))) {
-                var row = element.closest('tr');
-                var likelihood = parseInt(row.querySelector('input[name$="[likelihood]"]').value) || 0;
-                var impact = parseInt(row.querySelector('input[name$="[impact]"]').value) || 0;
-                var riskLevelInput = row.querySelector('input[name$="[risk_level]"]');
-                var calculatedRiskLevel = calculateRiskLevel(likelihood, impact);
-                riskLevelInput.value = calculatedRiskLevel;
-            }
-        });
+
 
         // Function to fetch and populate the mitigation measures dynamically
         function populateMitigationMeasures(controlObjectiveSelect) {
@@ -1282,9 +1176,86 @@ var industryWeights = {
         $(".slider")
 
         $(document).ready(function() {
-            initializeGauge();
+
 
           });
+
+         // AJAX function to call the Django view
+        function assessScenario() {
+            $('#loadingSpinner').show();
+
+            let scenario = document.getElementById('txtScenario').value;
+            let consequence = document.getElementById('txtConsequence').value
+            let threatsource = document.getElementById('threat-intelligence').value;
+            let threatactions = document.getElementById('threatactions');
+            let selectedThreatOptions = Array.from(threatactions.selectedOptions).map(option => option.value);
+            let mitigationMeasures = document.getElementById('mitigation-measure');
+            let selectedMitigationOptions = Array.from(mitigationMeasures.selectedOptions).map(option => option.value);
+            let riskCategory = document.getElementById('risk-category').value;
+            let safety = document.getElementById('range_safety').value;
+            let life = document.getElementById('range_life').value;
+            let production = document.getElementById('range_production').value;
+            let financial = document.getElementById('range_finance').value;
+            let reputation = document.getElementById('range_reputation').value;
+            let environment = document.getElementById('range_environment').value;
+            let regulatory = document.getElementById('range_regulatory').value;
+            let data = document.getElementById('range_data').value;
+            let sm = document.getElementById('SMrange').value;
+            let mel = document.getElementById('MELrange').value;
+            let rrm = document.getElementById('RRMrange').value;
+            let sa = document.getElementById('SArange').value;
+            let mela = document.getElementById('MELarange').value;
+            let industry = sessionStorage.getItem('sessionIndustry')
+            let facilityType = sessionStorage.getItem('sessionFacilityType')
+            let standards = document.getElementById('selStandards').value;
+
+
+
+            // Make the AJAX call to the Django view using a separate endpoint for risk assessment
+            $.ajax({
+                type: "GET",
+                url: "{% url 'OTRisk:scenario_analysis' %}",  // URL for the Django view
+                data: {
+                    // Pass the impact scores and scenario information as parameters
+                    industry: industry,
+                    facility_type: facilityType,
+                    scenario: scenario,
+                    consequence: consequence,
+                    threatsource: threatsource,
+                    selectedThreatOptions: selectedThreatOptions,
+                    selectedMitigationOptions: selectedMitigationOptions,
+                    safety: safety,
+                    life: life,
+                    production: production,
+                    reputation: reputation,
+                    environment: environment,
+                    regulatory: regulatory,
+                    data: data,
+                    sm: sm,
+                    mel: mel,
+                    rrm: sa,
+                    standards: standards
+
+                },
+                success: function (response) {
+
+                   document.getElementById('SArange').value = response.adjustedSeverity;
+                   document.getElementById('MELarange').value = response.adjustedExposure;
+                   document.getElementById('txtRRa').value = response.adjustedRR
+
+                   document.getElementById('txtControlAnalysis').value = response.controls;
+                   document.getElementById('txtScenarioAnalysis').value = response.recommendations;
+                     $('#loadingSpinner').hide();
+
+                },
+                error: function (xhr, status, error) {
+                    // Handle any errors that occur during the AJAX call
+                    console.error(error);
+                    $('#loadingSpinner').hide();
+                },
+            });
+        }
+
 
 </script>
 

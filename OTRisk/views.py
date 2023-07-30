@@ -24,7 +24,7 @@ from OTRisk.models.Model_Workshop import tblWorkshopNarrative, tblWorkshopInform
 from OTRisk.models.Model_CyberPHA import tblCyberPHAEntry, tblCyberPHAHeader, tblRiskCategories, tblCyberPHATeam, \
     tblControlObjectives, \
     tblThreatIntelligence, tblMitigationMeasures, tblScenarios, tblSafeguards, tblThreatSources, tblThreatActions, \
-    tblNodes, tblUnits, tblZones, tblCyberPHAScenario, tblIndustry, auditlog
+    tblNodes, tblUnits, tblZones, tblCyberPHAScenario, tblIndustry, auditlog, tblStandards
 from OTRisk.models.Model_Mitre import MitreICSTactics
 from django.shortcuts import render, redirect
 from django.template.loader import render_to_string
@@ -38,7 +38,7 @@ from xml.etree import ElementTree as ET
 from bs4 import BeautifulSoup
 from .raw_views import qraw, openai_assess_risk, GetTechniquesView, raw_action
 from .dashboard_views import dashboardhome
-
+from .pha_views import iotaphamanager, facility_risk_profile, get_headerrecord, scenario_analysis, phascenarioreport, getSingleScenario
 
 app_name = 'OTRisk'
 
@@ -94,140 +94,68 @@ def scenarioreport(request):
 
 
 def save_or_update_cyberpha(request):
+    print(f"{request.POST}")
     if request.method == 'POST':
         # Get the form data
-        cyberphaid = request.POST.get('hdnID')
-        scenario = request.POST.get('txtScenario')
-        threatclass = request.POST.get('threat-intelligence')
-        threatagent = request.POST.get('threatsources')
-        threataction = request.POST.get('threatactions')
-        countermeasures = request.POST.get('txtmm')
-        riskcategory = request.POST.get('risk-category')
-        consequence = request.POST.get('txtConsequence')
-        impactsafety = request.POST.get('range_safety')
-        impactdanger = request.POST.get('range_life')
-        impactproduction = request.POST.get('range_production')
-        impactfinance = request.POST.get('range_finance')
-        impactreputation = request.POST.get('range_reputation')
-        impactenvironment = request.POST.get('range_environment')
-        impactregulation = request.POST.get('range_regulatory')
-        impactdata = request.POST.get('range_data')
-        uel = request.POST.get('UELrange')
-        rru = request.POST.get('RRurange')
-        sm = request.POST.get('SMrange')
-        mel = request.POST.get('MELrange')
-        rrm = request.POST.get('RRMrange')
-        sa = request.POST.get('SArange')
-        mela = request.POST.get('MELarange')
-        rra = request.POST.get('RRarange')
-        currentScenario = request.POST.get('hdnScenario')
-        recommendations = request.POST.get('scenariorecommendations')
-        aro = request.POST.get('aro')
-        sle = request.POST.get('sle')
-        ale = request.POST.get('ale')
-        countermeasureCosts = request.POST.get('countermeasureCostsRange')
+        cyberphaid = request.POST.get('cyberpha')
+        scenario = request.POST.get('scenario')
+        threatclass = request.POST.get('threatSource')
+        threataction = request.POST.get('threatAction')
+        countermeasures = request.POST.get('mitigationMeasures')
+        riskcategory = request.POST.get('riskCategory')
+        consequence = request.POST.get('consequence')
+        impactsafety = request.POST.get('safety')
+        impactdanger = request.POST.get('life')
+        impactproduction = request.POST.get('production')
+        impactfinance = request.POST.get('financial')
+        impactreputation = request.POST.get('reputation')
+        impactenvironment = request.POST.get('environment')
+        impactregulation = request.POST.get('regulatory')
+        impactdata = request.POST.get('data')
+        sm = request.POST.get('sm')
+        mel = request.POST.get('mel')
+        rrm = request.POST.get('rrm')
+        sa = request.POST.get('sa')
+        mela = request.POST.get('mela')
+        rra = request.POST.get('rra')
+        recommendations = request.POST.get('recommendations')
+        controlrecs = request.POST.get('controls')
+        deleted = 0
 
-        DeleteFlag = 0
-        if not currentScenario:
-            currentScenario = 0
-        else:
-            try:
-                currentScenario = int(currentScenario)
-            except ValueError:
-                currentScenario = 0  # or handle the error in some other way
-        scenarioID = 0
+        cyberpha_entry, created = tblCyberPHAScenario.objects.update_or_create(
+            CyberPHA=cyberphaid,
+            Scenario=scenario,
+            ThreatClass=threatclass,
+            defaults={
+                'ThreatAction': threataction,
+                'Countermeasures': countermeasures,
+                'RiskCategory': riskcategory,
+                'Consequence': consequence,
+                'impactSafety': impactsafety,
+                'impactDanger': impactdanger,
+                'impactProduction': impactproduction,
+                'impactFinance': impactfinance,
+                'impactReputation': impactreputation,
+                'impactEnvironment': impactenvironment,
+                'impactRegulation': impactregulation,
+                'impactData': impactdata,
+                'recommendations': recommendations,
+                'SM': sm,
+                'MEL': mel,
+                'RRM': rrm,
+                'SA': sa,
+                'MELA': mela,
+                'RRa': rra,
+                'Deleted': deleted,
+                'control_recommendations': controlrecs
+            }
+        )
 
-        if currentScenario == 0:  # Create a new record
+        scenarioID = cyberpha_entry.pk
+        request.session['cyberPHAID'] = cyberphaid  # Set the session variable
 
-            cyberpha_entry = tblCyberPHAScenario.objects.create(
-                CyberPHA=cyberphaid,
-                Scenario=scenario,
-                ThreatClass=threatclass,
-                ThreatAgent=threatagent,
-                ThreatAction=threataction,
-                Countermeasures=countermeasures,
-                RiskCategory=riskcategory,
-                Consequence=consequence,
-                impactSafety=impactsafety,
-                impactDanger=impactdanger,
-                impactProduction=impactproduction,
-                impactFinance=impactfinance,
-                impactReputation=impactreputation,
-                impactEnvironment=impactenvironment,
-                impactRegulation=impactregulation,
-                impactData=impactdata,
-                UEL=uel,
-                RRU=rru,
-                SM=sm,
-                MEL=mel,
-                RRM=rrm,
-                SA=sa,
-                MELA=mela,
-                RRa=rra,
-                recommendations=recommendations,
-                Deleted=DeleteFlag,
-                aro=aro,
-                sle=sle,
-                ale=ale,
-                countermeasureCosts=countermeasureCosts
-            )
-            cyberpha_entry.save()
-        elif currentScenario > 0:
-
-            try:
-                cyberpha_entry = tblCyberPHAScenario.objects.get(ID=currentScenario)
-                # Then update fields as needed...
-                cyberpha_entry.CyberPHA = cyberphaid
-                cyberpha_entry.Scenario = scenario
-                cyberpha_entry.ThreatClass = threatclass
-                cyberpha_entry.ThreatAgent = threatagent
-                cyberpha_entry.ThreatAction = threataction
-                cyberpha_entry.Countermeasures = countermeasures
-                cyberpha_entry.RiskCategory = riskcategory
-                cyberpha_entry.Consequence = consequence
-                cyberpha_entry.impactSafety = impactsafety
-                cyberpha_entry.impactDanger = impactdanger
-                cyberpha_entry.impactProduction = impactproduction
-                cyberpha_entry.impactFinance = impactfinance
-                cyberpha_entry.impactReputation = impactreputation
-                cyberpha_entry.impactEnvironment = impactenvironment
-                cyberpha_entry.impactRegulation = impactregulation
-                cyberpha_entry.impactData = impactdata
-                cyberpha_entry.UEL = uel
-                cyberpha_entry.RRU = rru
-                cyberpha_entry.SM = sm
-                cyberpha_entry.MEL = mel
-                cyberpha_entry.RRM = rrm
-                cyberpha_entry.SA = sa
-                cyberpha_entry.MELA = mela
-                cyberpha_entry.RRa = rra
-                cyberpha_entry.recommendations = recommendations
-                cyberpha_entry.aro = aro
-                cyberpha_entry.sle = sle
-                cyberpha_entry.ale = ale
-                cyberpha_entry.countermeasureCosts = countermeasureCosts
-                cyberpha_entry.Deleted = 0
-                # ...
-                cyberpha_entry.save()
-            except tblCyberPHAScenario.DoesNotExist:
-                print(f"No record with ID {currentScenario} to update.")
-
-            scenarioID = cyberpha_entry.pk
-
-        # return with the list of scenarios for the given CyberPHA to populate the scenario table
-        saved_scenarios = tblCyberPHAScenario.objects.filter(CyberPHA=cyberphaid, Deleted=0)
-
-    return render(request, 'assess_cyberPHA.html', {
-        'scenarios': tblScenarios.objects.all(),
-        'control_objectives': tblControlObjectives.objects.all(),
-        'mitigation_measures': tblMitigationMeasures.objects.all(),
-        'threat_intelligence': tblThreatIntelligence.objects.all(),
-        'threatsources': tblThreatSources.objects.all().order_by('ThreatSource'),
-        'threataction': tblThreatActions.objects.all().order_by('ThreatAction'),
-        'risk_categories': tblRiskCategories.objects.all(),
-        'saved_scenarios': saved_scenarios,
-        'scenarioID': scenarioID
-    })
+        # Call the assess_cyberpha function
+        return assess_cyberpha(request)
 
 
 def set_active_cyberpha(request):
@@ -263,7 +191,9 @@ def edit_cyberpha(request, cyberpha_id):
 
 
 def assess_cyberpha(request):
-    active_cyberpha = request.GET.get('active_cyberpha', 0)
+    active_cyberpha = request.GET.get('active_cyberpha', None)
+    if active_cyberpha is None:
+        active_cyberpha = request.session.get('cyberPHAID', 0)
     scenarios = tblScenarios.objects.all()
     control_objectives = tblControlObjectives.objects.all()
     mitigation_measures = tblMitigationMeasures.objects.all()
@@ -272,6 +202,8 @@ def assess_cyberpha(request):
     safeguards = tblSafeguards.objects.order_by('Safeguard').values('Safeguard').distinct()
     threatsources = tblThreatSources.objects.all().order_by('ThreatSource')
     threatactions = tblThreatActions.objects.all().order_by('ThreatAction')
+    consequenceList = tblConsequence.objects.all().order_by('Consequence')
+    standardslist = tblStandards.objects.all().order_by('standard')
 
     control_objectives = [json.loads(obj.ControlObjective) for obj in control_objectives]
     active_cyberpha_id = request.GET.get('active_cyberpha')
@@ -298,6 +230,7 @@ def assess_cyberpha(request):
 
     clicked_row_facility_name = request.session.get('clickedRowFacilityName', None)
     saved_scenarios = tblCyberPHAScenario.objects.filter(CyberPHA=active_cyberpha, Deleted=0)
+
     return render(request, 'assess_cyberpha.html', {
         'scenarios': scenarios,
         'control_objectives': control_objectives,
@@ -309,7 +242,9 @@ def assess_cyberpha(request):
         'threatsources': threatsources,
         'threatactions': threatactions,
         'clicked_row_facility_name': clicked_row_facility_name,
-        'saved_scenarios': saved_scenarios
+        'saved_scenarios': saved_scenarios,
+        'consequenceList': consequenceList,
+        'standardslist': standardslist
     })
 
 

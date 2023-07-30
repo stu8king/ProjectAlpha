@@ -97,6 +97,11 @@ class RAActions(models.Model):
     actionPriority = models.IntegerField()
     actionAssets = models.TextField()
     ScenarioID = models.ForeignKey(RAWorksheetScenario, on_delete=models.CASCADE, db_column='ScenarioID')
+    outageRequired = models.TextField()
+    safetyPrecautions = models.TextField()
+    environmentPrecautions = models.TextField()
+    regulatoryNotifications = models.TextField()
+    actionAffinity = models.TextField()
 
     class Meta:
         db_table = 'tblRawActions'

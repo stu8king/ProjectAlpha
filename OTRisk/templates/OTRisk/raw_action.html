@@ -118,7 +118,7 @@
 <nav class="navbar navbar-expand-lg navbar-scroll fixed-top shadow-0 border-bottom border-dark rounded">
   <div class="container-fluid d-flex justify-content-between">
    <a class="navbar-brand" href="{% url 'OTRisk:dashboardhome' %}"><img src="/static/images/logo1-2.jpg" style="height: 140px; width: 140px" class="navbar-logo" alt="">  </a>
-      <h4 class="my-auto text-center flex-grow-1"><font color="white">Actions</font></h4>
+      <h4 class="my-auto text-center flex-grow-1"><font color="white">Risk Assessment Actions</font></h4>
 
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
       <ul class="navbar-nav ms-auto">
@@ -160,6 +160,9 @@
 
 </nav>
 <br><br><br>
+    <form name="frm_raw_action" id="frm_raw_action" method="POST" action="{% url 'OTRisk:raw_action' %}">
+    {% csrf_token %}
+    <input type="hidden" name="hdnRAWorksheetID" id="hdnRAWorksheetID">
     <div class="row">
         <div class="col-md-1 "></div>
         <div class="col-md-10 ">
@@ -167,7 +170,7 @@
        </div>
         <div class="col-md-1 "></div>
     </div> <!-- dark grey stripe -->
-    <div class="row" style="height: 200px">
+    <div class="row" style="height: 250px">
         <div class="col-md-1"></div>
         <div class="col-md-1" style="background-color: darkgray"></div>
         <div class="col-md-8" id="statDisplay" style="background-color: lightgrey">
@@ -219,11 +222,22 @@
         <div class="col-md-1 "></div>
         <div class="col-md-10 ">
          <div class="row" style="background-color: darkgray; height: 40px; border: 1px solid black;">
-             <div class="col-md-6 text-left">
-                <h5>New Action Item</h5>
-            </div>
+             <div class="col-md-1 text-left">
+                 <div class="dropdown">
+                    <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        &#9776;
+                    </button>
+                    <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                        <a class="dropdown-item" href="#">Action Tracker</a>
+                    </div>
+                </div>
+             </div>
+             <div class="col-md-2 text-left">
+                <h5>Action Item</h5>
+             </div>
+             <div class="col-md-3 text-left"></div>
             <div class="col-md-6 text-right">
-                <button type="button" class="btn btn-primary">Submit</button>
+                <button type="submit" class="btn btn-primary">Submit</button>
                 <button type="button" class="btn btn-secondary">Reset</button>
             </div>
         </div>
@@ -244,6 +258,7 @@
             <label id="lblRAid"></label>
             <script>
                 document.getElementById('lblRAid').textContent = sessionStorage.getItem('rawid');
+                document.getElementById('hdnRAWorksheetID').value = sessionStorage.getItem('rawid');
             </script>
             <h6>Facility:</h6>
             <label id="lblBU"></label>
@@ -259,7 +274,8 @@
             <label class="form-label">Difficulty</label><br><br><br>
             <label class="form-label">Precautions (Safety)</label><br><br><br>
             <label class="form-label">Assets</label><br><br><br>
-            <label class="form-label">Outage</label><br><br>
+            <label class="form-label">Outage</label><br><br><br>
+            <label class="form-label">Risk Affinity</label><br><br>
 
        </div>
         <div class="col-md-3" style="background-color: lightgrey">
@@ -268,19 +284,27 @@
             <input type="date" id="actionDate" name="actionDate" class="form-control" /><br>
             <select id="actionDifficulty" name="actionDifficulty" class="form-control"><br>
                 <option>-- Select Difficulty Level --</option>
-                <option>1 - Easy</option>
-                <option>2 - Challenging</option>
-                <option>3 - Complex</option>
+                <option value="1 - Easy">1 - Easy</option>
+                <option value="2 - Challenging">2 - Challenging</option>
+                <option value="3 - Complex">3 - Complex</option>
             </select>
             <br>
 
-            <textarea class="form-control" rows="2" id="safetyPrecautions" style="resize: none"></textarea><br>
-            <textarea class="form-control" rows="2" id="actionAssets" style="resize: none"></textarea><br>
+            <textarea class="form-control" rows="2" id="safetyPrecautions" name="safetyPrecautions" style="resize: none"></textarea><br>
+            <textarea class="form-control" rows="2" id="actionAssets" name="actionAssets" style="resize: none"></textarea><br>
 
                 <label for="yes">Yes</label>
                 <input type="radio" id="yes" name="actionOutageYesNo" value="yes">
                 <label for="no">No</label>
                 <input type="radio" id="no" name="actionOutageYesNo" value="no">
+            <br><br>
+            <select id="actionEffective" name="actionEffective" class="form-control">
+                <option>-- Risk Affinity --</option>
+                <option value="Low">Low</option>
+                <option value="Medium">Medium</option>
+                <option value="High">High</option>
+            </select>
+            <br>
 
        </div>
         <div class="col-md-1" style="background-color: lightgrey">
@@ -290,43 +314,65 @@
             <label class="form-label">Cost</label><br><br>
             <label class="form-label">Precautions (Environment)</label><br><br><br>
             <label class="form-label">Description</label><br><br><br>
-            <label class="form-label">Notify Regulatory</label><br><br>
+            <label class="form-label">Notify Regulatory</label><br><br><br>
+            <label class="form-label">Due Date</label><br><br>
        </div>
         <div class="col-md-3" style="background-color: lightgrey">
             <br>
             <input type="text" id="actionOwner" name="actionOwner" class="form-control" /><br>
             <select id="actionEffort" name="actionEffort" class="form-control">
                 <option>-- Select Effort Level --</option>
-                <option>1 - Low</option>
-                <option>2 - Medium</option>
-                <option>3 - High</option>
+                <option value="1 - Low">1 - Low</option>
+                <option value="2 - Medium">2 - Medium</option>
+                <option value="3 - High">3 - High</option>
             </select>
             <br>
             <select id="actionCost" name="actionCost" class="form-control"><br>
                 <option>-- Select Cost Level --</option>
-                <option>1 - ($0 - $1000)</option>
-                <option>2 - ($1000 - $5000)</option>
-                <option>3 - ($5000 - $10,000)</option>
-                <option>4 - ($10,000 - $20,000)</option>
-                <option>5 - ($20,000 - $50,000)</option>
-                <option>6 - ($50,000 - $100,000)</option>
-                <option>7 - ($100,000+)</option>
+                <option value="1 - ($0 - $1000)">1 - ($0 - $1000)</option>
+                <option value="2 - ($1000 - $5000)">2 - ($1000 - $5000)</option>
+                <option value="3 - ($5000 - $10,000)">3 - ($5000 - $10,000)</option>
+                <option value="4 - ($10,000 - $20,000)">4 - ($10,000 - $20,000)</option>
+                <option value="5 - ($20,000 - $50,000)">5 - ($20,000 - $50,000)</option>
+                <option value="6 - ($50,000 - $100,000)">6 - ($50,000 - $100,000)</option>
+                <option value="7 - ($100,000+)">7 - ($100,000+)</option>
             </select>
             <br>
-            <textarea class="form-control" rows="2" id="safetyPrecautions" style="resize: none"></textarea>
+            <textarea class="form-control" rows="2" id="environmentPrecautions" name="environmentPrecautions" style="resize: none"></textarea>
             <br>
-            <textarea class="form-control" rows="2" id="actionDescription" style="resize: none"></textarea>
+            <textarea class="form-control" rows="2" id="actionDescription" name="actionDescription" style="resize: none"></textarea>
 
             <br>
                 <label for="yes">Yes</label>
                 <input type="radio" id="yes" name="actionRegsYesNo" value="yes">
                 <label for="no">No</label>
                 <input type="radio" id="no" name="actionRegsYesNo" value="no">
+            <br><br>
+            <input type="date" id="dueDate" name="dueDate" class="form-control" oninput="validateDate()" />
+            <span id="dateError" style="color: red;"></span>
+
+            <script>
+                function validateDate() {
+                    var inputDate = new Date(document.getElementById('dueDate').value);
+                    var currentDate = new Date();
+
+                    // Set the time of both dates to midnight for a fair comparison
+                    inputDate.setHours(0, 0, 0, 0);
+                    currentDate.setHours(0, 0, 0, 0);
+
+                    if (inputDate < currentDate) {
+                        document.getElementById('dateError').textContent = 'The due date cannot be prior to the current date';
+                        document.getElementById('dueDate').value = '';
+                    } else {
+                        document.getElementById('dateError').textContent = '';
+                    }
+                }
+            </script>
        </div>
         <div class="col-md-1" style="background-color: darkgray"></div>
         <div class="col-md-1"></div>
     </div>
-
+    </form>
 
 
 <script>
@@ -337,6 +383,31 @@
 
     } );
 });
+
+
+//    /following code to load raw data and scenarios from the clicked raw record in the table
+// $(document).ready(function() {
+//    $('#actionTable').on('click', 'tbody tr', function () {
+//        var actionId = $(this).data('id');  // assumes each table row has a data-id attribute with the action ID
+
+//        $.ajax({
+//            url: '/get_action/',  // the URL of the view that will handle the request
+//            data: {
+//                'action_id': actionId
+//            },
+//            dataType: 'json',
+//            success: function (data) {
+                // data is the JSON object returned by the server
+                // you can use it to update the fields on the page
+//                $('#actionTitle').val(data.actionTitle);
+                // update other fields...
+//            }
+//        });
+//    });
+//});
+
+
+
 
 </script>
 </body>
