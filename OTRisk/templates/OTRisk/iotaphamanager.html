@@ -28,6 +28,11 @@
      {% bootstrap_javascript %}
 
     <style>
+        .custom-btn {
+                width: 150px;  /* Adjust this value as needed */
+                height: 50px;  /* Adjust this value as needed */
+            }
+
 
         #headertable tbody tr:hover {
         background-color: #f5f5f5; /* Change this to the color you want */
@@ -69,13 +74,49 @@
     .small-font {
         font-size: 0.8rem; /* adjust as needed */
    }
+
+        .spinner {
+        border: 16px solid #f3f3f3;
+        border-top: 16px solid #3498db;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        animation: spin 2s linear infinite;
+        display: none; /* Initially hidden */
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
     </style>
 </head>
 <body style="background-color: black">
+<script>
+fetch('https://restcountries.com/v3.1/all')
+    .then(response => response.json())
+    .then(data => {
+        // Sort the countries alphabetically
+        data.sort((a, b) => a.name.common.localeCompare(b.name.common));
+
+        // Populate the dropdown
+        data.forEach(country => {
+            const countryName = country.name.common;
+            $('#countrySelector').append(new Option(countryName, countryName));
+        });
+    })
+    .then(() => {
+        $('#countrySelector').select2();
+    })
+    .catch(error => {
+        console.error("There was an error fetching the country list:", error);
+    });
+</script>
 <nav class="navbar navbar-expand-lg navbar-scroll fixed-top shadow-0 border-bottom border-dark rounded">
   <div class="container-fluid d-flex justify-content-between">
-   <a class="navbar-brand" href="{% url 'OTRisk:dashboardhome' %}"><img src="/static/images/logo1-2.jpg" style="height: 140px; width: 140px" class="navbar-logo" alt="">  </a>
-      <h4 class="my-auto text-center flex-grow-1"><font color="white">CyberPHA Manager</font></h4>
+   <a class="navbar-brand" href="{% url 'OTRisk:home' %}"><img src="/static/images/logo1-2.jpg" style="height: 140px; width: 140px" class="navbar-logo" alt="">  </a>
+      <h4 class="my-auto text-center flex-grow-1"><font color="white">CyberPHA Header</font></h4>
 
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
       <ul class="navbar-nav ms-auto">
@@ -88,13 +129,10 @@
                 <i class="bi bi-diagram-3"></i> CyberPHA
               </a>
               <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                <li><a class="dropdown-item" href="{% url 'OTRisk:cyber_pha_manager' %}"> CyberPHA Manager</a></li>
+                <li><a class="dropdown-item" href="{% url 'OTRisk:iotaphamanager' %}"> CyberPHA Manager</a></li>
                 <li><a class="dropdown-item" href="{% url 'OTRisk:walkdown' %}"> Site Walkdown</a></li>
                 <li><a class="dropdown-item" href="#">Workshop</a></li>
               </ul>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="{% url 'OTRisk:walkdown' %}" tabindex="-1" ><i class="bi bi-kanban"></i> Site Walkdown</a>
         </li>
         <li class="nav-item">
           <a class="nav-link" href="#" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Reports</a>
@@ -103,13 +141,12 @@
           <a class="nav-link" href="#" tabindex="-1" ><i class="bi bi-ui-checks-grid"></i> Admin</a>
       </li>
         <li class="nav-item">
-          <a class="nav-link" href="{% url 'accounts:profile' %}">
-          <i class="bi bi-person-fill"></i> User: {{ user.first_name }} {{ user.last_name }}
-        </a>
-
+            <a class="nav-link" href="{% url 'accounts:profile' %}">
+                <i class="bi bi-person-fill"></i> {{ user.first_name }} {{ user.last_name }} | {{ user.userprofile.organization.name }}
+            </a>
         </li>
 
-        <li class="nav-item">
+          <li class="nav-item">
             <a class="nav-link" href="{% url 'logout' %}">
                 <i class="bi bi-box-arrow-right"></i> Logout
             </a>
@@ -117,6 +154,7 @@
       </ul>
     </div>
   </div>
+
 </nav>
 
 <form name="frmHeader" id="frmRAW" method="POST" action="{% url 'OTRisk:iotaphamanager' %}">
@@ -133,19 +171,20 @@
     <div class="col-md-10 ">
      <div class="row" style="background-color: darkgray; height: 10px"></div>
    </div>
-    <div class="col-md-1 "></div>
+    <div class="col-md-1 " style="background-color: darkgray;"></div>
 </div> <!-- dark grey stripe -->
 
 <div class="row">
     <div class="col-md-1 bg-black"></div>
     <div class="col-md-1" style="background-color: darkgray"></div>
-    <div class="col-md-8 bg-white">
+    <div class="col-md-9 bg-white">
         <br>
         <label for="headertable" class="form-label">Select a record in the table to view and edit the CyberPHA</label>
         <table id="headertable" class="table table-striped table-bordered small-font">
         <thead>
             <tr>
                 <th>ID</th>
+                <th>Title</th>
                 <th>Site</th>
                 <th>Type</th>
                 <th>Unit</th>
@@ -159,12 +198,13 @@
             {% for pha_header_records in pha_header_records %}
                 <tr data-id="{{ pha_header_records.ID }}">
                     <td>{{ pha_header_records.ID }}</td>
+                    <td>{{ pha_header_records.title }}</td>
                     <td>{{ pha_header_records.FacilityName }}</td>
                     <td>{{ pha_header_records.FacilityType }}</td>
                     <td>{{ pha_header_records.AssessmentUnit }}</td>
                     <td>{{ pha_header_records.AssessmentZone }}</td>
                     <td>{{ pha_header_records.PHALeader }}</td>
-                    <td>{{ pha_header_records.Date }}</td>
+                    <td>{{ pha_header_records.AssessmentStartDate|date:"m/d/Y" }}</td>
                     <!-- Add more <td> elements for each field in the RAWorksheet model -->
                 </tr>
             {% endfor %}
@@ -175,6 +215,8 @@
             $('#headertable').on('click', 'tbody tr', function () {
                 var recordId = $(this).data('id');  // get the ID of the clicked row
                 sessionStorage.setItem('activeCyberPHA', recordId);
+                // Set the value of the hidden text field
+                document.getElementById('txtHdnCyberPHAID').value = recordId;
                 $.ajax({
                     url: '/OTRisk/get_headerrecord',  // the URL of the view that will handle the request
                     data: {
@@ -198,11 +240,15 @@
                         $('#txtPhysical').val(data.physicalsummary);
                         $('#txtOther').val(data.othersummary);
                         $('#txtAddress').val(data.address);
-                        $('#btnformSubmit').prop('disabled', true);
+                        $('#countrySelector').val(data.country).trigger('change');
+                        console.log("Country from data:", data.country);
+
+                        // $('#btnformSubmit').prop('disabled', true);
 
                         sessionStorage.setItem('sessionIndustry', data.industry);
                         sessionStorage.setItem('sessionFacilityType', data.facilitytype);
                         sessionStorage.setItem('sessionFacility', data.facility);
+                        sessionStorage.setItem('sessionCountry', data.country);
 
 
                     }
@@ -214,8 +260,8 @@
 
     </script>
     </div> <!-- table view of existing risk assessments -->
-    <div class="col-md-1" style="background-color: darkgray"></div>
-    <div class="col-md-1 bg-black"></div>
+
+    <div class="col-md-1" style="background-color: darkgray;"></div>
 </div>
 
 <div class="row" style="height: 10px">
@@ -223,109 +269,150 @@
     <div class="col-md-10 ">
      <div class="row" style="background-color: darkgray; height: 10px"></div>
    </div>
-    <div class="col-md-1 "></div>
+    <div class="col-md-1 " style="background-color: darkgray;"></div>
 </div> <!-- dark grey stripe -->
-<div class="row">
-        <div class="col-md-1 "></div>
-        <div class="col-md-10 ">
-         <div class="row" style="background-color: darkgray; height: 40px; border: 1px solid black;">
-             <div class="col-md-1 text-left">
-             </div>
-             <div class="col-md-2 text-left" style="background-color: darkgray">
-                <h5 style="background-color: darkgray">CyberPHA Header</h5>
-             </div>
-             <div class="col-md-3 text-left"></div>
-            <div class="col-md-6 text-right">
-                <button type="submit" id="btnformSubmit" class="btn btn-primary">Submit</button>
-                <button type="button" class="btn btn-secondary" id="resetButton">Reset</button>
-                <script>
-                $(document).ready(function() {
-                    $('#resetButton').on('click', function() {
-                        // Reset textboxes and textareas
-                        $('#txtTitle, #txtLeader, #txtUnit, #txtStartDate, #txtAddress, #txtFacility, #txtLeaderEmail, #txtEndDate, #txtSafetySummary, #txtChemical, #txtPhysical, #txtOther').val('');
 
-                        // Reset select dropdowns
-                        $('#selIndustry, #selFacilityType, #selZone').prop('selectedIndex', 0);
-                        $('#btnformSubmit').prop('disabled', false);
-                    });
-                });
-
-            </script>
-                <button type="button" class="btn btn-dark" id="scenarioButton">Scenarios</button>
-
-                <script>
-                     $(document).ready(function() {
-                        $('#scenarioButton').on('click', function() {
-                            window.location.href = "{% url 'OTRisk:assess_cyberpha' %}?active_cyberpha=" + sessionStorage.getItem('activeCyberPHA');
-                        });
-                     });
-                </script>
-             </div>
-        </div>
-
-       </div>
-        <div class="col-md-1 "></div>
-    </div> <!-- dark grey stripe with submit/reset buttons-->
 <div class="row" style="height: 10px">
     <div class="col-md-1 "></div>
     <div class="col-md-10 ">
      <div class="row" style="background-color: darkgray; height: 10px"></div>
    </div>
-    <div class="col-md-1 "></div>
+    <div class="col-md-1 " style="background-color: darkgray;"></div>
 </div> <!-- dark grey stripe -->
-
+    <input type="hidden" name="txtHdnCyberPHAID" id="txtHdnCyberPHAID" value="0">
 <div class="row small-font">
     <div class="col-md-1 bg-black"></div>
     <div class="col-md-1" style="background-color: darkgray"></div>
     <div class="col-md-3 bg-white">
-        <label for="txtTitle">Title</label><input type="text" class="form-control" name="txtTitle" id="txtTitle">
-        <label for="txtLeader">Leader</label><input type="text" class="form-control" name="txtLeader" id="txtLeader">
-        <label for="selIndustry">Industry</label>
-        <select class="form-control" name="selIndustry" id="selIndustry">
-            <option> -- Select Industry -- </option>
-            {% for industries in industries %}
-                    <option value="{{ industries.Industry }}">{{  industries.Industry }}</option>
-                {% endfor %}
-        </select>
-        <label for="txtUnit">Unit</label><input type="text" class="form-control" name="txtUnit" id="txtUnit">
-        <label for="txtStartDate">Start Date</label><input type="date" class="form-control" name="txtStartDate" id="txtStartDate">
-        <label for="txtAddress">Address</label><textarea class="form-control" rows="2" name="txtAddress" id="txtAddress" style="resize: none"></textarea>
+        <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+            <div class="card-body">
+                <label for="txtTitle">Title</label><input type="text" class="form-control" name="txtTitle" id="txtTitle" value="{{ current_pha_header.title }}"  required>
+            </div>
+        </div>
+        <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+            <div class="card-body">
+                <label for="txtLeader">Leader</label><input type="text" class="form-control" name="txtLeader" id="txtLeader" value="{{ current_pha_header.PHALeader }} "required>
+            </div>
+        </div>
+        <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+            <div class="card-body">
+                <label for="selIndustry">Industry</label>
+                <select class="form-control" name="selIndustry" id="selIndustry">
+                    <option> -- Select Industry -- </option>
+                    {% for industry in industries %}
+                        <option value="{{ industry.Industry }}"
+                                {% if current_pha_header.Industry == industry.Industry %}selected{% endif %}>
+                            {{ industry.Industry }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+            <div class="card-body">
+                <label for="txtUnit">Unit</label><input type="text" class="form-control" name="txtUnit" id="txtUnit" value="{{ current_pha_header.AssessmentUnit }}" required>
+            </div>
+        </div>
+        <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+            <div class="card-body">
+                <label for="txtStartDate">Start Date</label><input type="date" class="form-control" name="txtStartDate" id="txtStartDate" value="{{ current_pha_header.AssessmentStartDate }}" required>
+            </div>
+        </div>
+        <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+            <div class="card-body">
+                <label for="txtAddress">Address</label>
+                <textarea class="form-control" rows="2" name="txtAddress" id="txtAddress" style="resize: none" required>{{ current_pha_header.facilityAddress }}</textarea>
+            </div>
+        </div>
         <br>
 
     </div>
     <div class="col-md-3 bg-white">
-        <label for="txtFacility">Facility</label><input type="text" class="form-control" name="txtFacility" id="txtFacility">
-        <label for="txtLeaderEmail">Leader Email</label><input type="text" class="form-control" name="txtLeaderEmail" id="txtLeaderEmail">
-        <label for="selFacilityType">Facility Type</label>
-        <select class="form-control" name="selFacilityType" id="selFacilityType">
-            <option> -- Select Facility Type -- </option>
-            {% for facilities in facilities %}
-                    <option value="{{ facilities.FacilityType }}">{{  facilities.FacilityType }}</option>
-                {% endfor %}
-        </select>
-        <label for="selZone">Zone</label>
-        <select class="form-control" name="selZone" id="selZone">
-            <option> -- Select Plant Zone -- </option>
-            {% for zones in zones %}
-                    <option value="{{ zones.PlantZone }}">{{  zones.PlantZone }}</option>
-            {% endfor %}
-        </select>
-        <script>
-            $(document).ready(function() {
-                $('#selZone').select2();
-            });
-        </script>
-        <label for="txtEndDate">End Date</label><input type="date" class="form-control" name="txtEndDate" id="txtEndDate">
+        <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+            <div class="card-body">
+                <label for="txtFacility">Facility</label><input type="text" class="form-control" name="txtFacility" id="txtFacility" value="{{ current_pha_header.FacilityName }}" required>
+            </div>
+        </div>
+        <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+            <div class="card-body">
+                <label for="txtLeaderEmail">Leader Email</label><input type="text" class="form-control" name="txtLeaderEmail" id="txtLeaderEmail" value="{{ current_pha_header.PHALeaderEmail }}" required>
+            </div>
+        </div>
+        <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+            <div class="card-body">
+                <label for="selFacilityType">Facility Type</label>
+                <select class="form-control" name="selFacilityType" id="selFacilityType">
+                    <option> -- Select Facility Type -- </option>
+                    {% for facilities in facilities %}
+                            <option value="{{ facilities.FacilityType }}"
+                            {% if current_pha_header.FacilityType == facilities.FacilityType %}selected{% endif %}>
+                            {{  facilities.FacilityType }}</option>
+                        {% endfor %}
+                </select>
+            </div>
+        </div>
+        <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+            <div class="card-body">
+                <label for="selZone">Zone</label>
+                <select class="form-control" name="selZone" id="selZone">
+                    <option> -- Select Plant Zone -- </option>
+                    {% for zone in zones %}
+                        <option value="{{ zone.PlantZone }}"
+                        {% if current_pha_header.AssessmentZone == zone.PlantZone %}selected{% endif %}>
+                            {{ zone.PlantZone }}</option>
+                    {% endfor %}
+                </select>
+                <script>
+                    $(document).ready(function() {
+                        $('#selZone').select2();
+                    });
+                </script>
+            </div>
+        </div>
+        <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+            <div class="card-body">
+                <label for="txtEndDate">End Date</label><input type="date" class="form-control" name="txtEndDate" id="txtEndDate" value="{{ current_pha_header.AssessmentEndDate }}">
+            </div>
+        </div>
+
+    <div class="card mb-3 shadow-sm">
+            <div class="card-body">
+                <label for="country">Country</label><a href="#" data-bs-toggle="modal" data-bs-target="#countryModal">❓</a><br><select id="countrySelector" name="countrySelector" style="width: 400px;"></select>
+
+            </div>
+        </div>
 
     </div>
 
-    <div class="col-md-3" style="background-color: darkgray">
-        <button id="risk-assessment-btn" type="button" class="btn btn-link">Assess Facility Profile</button><br>
-        <p style="font-size: 10px">A valid address, industry, and facility name must be entered for the risk profile to be accurately assessed. Profiles are generated by a machine-learning algorithm and may slightly vary given the same inputs at different times</p>
-        <label for="txtSafetySummary">Safety Summary:</label><textarea rows="2" name="txtSafetySummary" id="txtSafetySummary" class="form-control" style="resize: none"></textarea>
-        <label for="txtChemical">Chemical Storage:</label><textarea rows="2" name="txtChemical" id="txtChemical" class="form-control" style="resize: none"></textarea>
-        <label for="txtPhysical">Physical Security:</label><textarea rows="2" name="txtPhysical" id="txtPhysical" class="form-control" style="resize: none"></textarea>
-        <label for="txtOther">Other Local Risks:</label><textarea rows="2" name="txtOther" id="txtOther" class="form-control" style="resize: none"></textarea>
+    <div class="col-md-3 row" style="background-color: darkgray">
+        <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+            <div class="card-body">
+                <button id="risk-assessment-btn" type="button" class="btn btn-link">Assess Facility Profile</button><br>
+                <div class="spinner" id="loadingSpinner"></div>
+
+                <p style="font-size: 10px">A valid address, industry, and facility name must be entered for the risk profile to be accurately assessed. Profiles are generated by a machine-learning algorithm and may slightly vary given the same inputs at different times</p>
+                <div class="card mb-3 shadow-sm">
+                    <div class="card-body">
+                        <label for="txtSafetySummary">Safety Summary:</label><textarea rows="3" name="txtSafetySummary" id="txtSafetySummary" class="form-control" style="resize: none" >{{ current_pha_header.safetySummary }}</textarea>
+                    </div>
+                </div>
+                <div class="card mb-3 shadow-sm">
+                    <div class="card-body">
+                        <label for="txtChemical">Chemical Storage:</label><textarea rows="3" name="txtChemical" id="txtChemical" class="form-control" style="resize: none" >{{ current_pha_header.chemicalSummary }}</textarea>
+                    </div>
+                </div>
+                <div class="card mb-3 shadow-sm">
+                    <div class="card-body">
+                        <label for="txtPhysical">Physical Security:</label><textarea rows="3" name="txtPhysical" id="txtPhysical" class="form-control" style="resize: none" >{{ current_pha_header.physicalSummary }}</textarea>
+                    </div>
+                </div>
+                <div class="card mb-3 shadow-sm">
+                    <div class="card-body">
+                        <label for="txtOther">Other Local Risks:</label><textarea rows="3" name="txtOther" id="txtOther" class="form-control" style="resize: none" >{{ current_pha_header.otherSummary }}</textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
 
     <script>
         // AJAX function call on button click
@@ -333,6 +420,7 @@
             $("#risk-assessment-btn").click(function () {
                 // Call the function to assess the risk
                 assessRisk();
+
             });
         });
 
@@ -343,7 +431,8 @@
             let address = document.getElementById('txtAddress').value;
             let facilityType = document.getElementById('selFacilityType').value;
             let industry = document.getElementById('selIndustry').value;
-
+            let country = document.getElementById('countrySelector').value;
+            let facility = document.getElementById('txtFacility').value;
 
             // Make the AJAX call to the Django view using a separate endpoint for risk assessment
             $.ajax({
@@ -353,7 +442,9 @@
                     // Pass the impact scores and scenario information as parameters
                     industry: industry,
                     facility_type: facilityType,
-                    address: address
+                    address: address,
+                    country: country,
+                    facility: facility
                 },
                 success: function (response) {
 
@@ -379,8 +470,58 @@
 
 
     </div>
-    <div class="col-md-1 bg-black"></div>
+    <div class="col-md-1" style="background-color: darkgray;"></div>
 </div>
+
+
+<div class="row">
+        <div class="col-md-1 "></div>
+        <div class="col-md-10 ">
+         <div class="row" style="background-color: darkgray; height: 200px; ">
+             <div class="col-md-1 text-left">
+             </div>
+             <div class="col-md-2 text-left" style="background-color: darkgray">
+             </div>
+             <div class="col-md-3 text-left"></div>
+            <div class="col-md-6 text-right">
+                <button type="submit" id="btnformSubmit" class="btn btn-primary custom-btn">Save Header </button>
+                <button type="button" class="btn btn-primary  custom-btn" id="resetButton"> New CyberPHA</button>
+                <script>
+                $(document).ready(function() {
+                    $('#resetButton').on('click', function() {
+                        // Reset textboxes and textareas
+                        $('#txtTitle, #txtLeader, #txtUnit, #txtStartDate, #txtAddress, #txtFacility, #txtLeaderEmail, #txtEndDate, #txtSafetySummary, #txtChemical, #txtPhysical, #txtOther').val('');
+
+                        // Reset select dropdowns
+                        $('#selIndustry, #selFacilityType, #selZone').prop('selectedIndex', 0);
+                        $('#btnformSubmit').prop('disabled', false);
+
+                        //reset session variables
+                        sessionStorage.setItem('activeCyberPHA', '0');
+                        // Set the value of the hidden text field
+                        document.getElementById('txtHdnCyberPHAID').value = '0';
+
+                    });
+                });
+
+            </script>
+                <button type="button" class="btn btn-primary custom-btn" id="scenarioButton">Add Scenarios</button>
+
+                <script>
+                     $(document).ready(function() {
+                        $('#scenarioButton').on('click', function() {
+                            window.location.href = "{% url 'OTRisk:assess_cyberpha' %}?active_cyberpha=" + sessionStorage.getItem('activeCyberPHA');
+                        });
+                     });
+                </script>
+
+             </div>
+        </div>
+
+       </div>
+        <div class="col-md-1 " style="background-color: darkgray;"></div>
+    </div> <!-- dark grey stripe with submit/reset buttons-->
+
 
 
 </form>
@@ -395,5 +536,21 @@
 });
 
 </script>
+
+<div class="modal fade" id="countryModal" tabindex="-1" aria-labelledby="countryModal" aria-hidden="true">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="dataModal_Label">Country Selection</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>Selecting the correct country in which the facility is located improves the accuracy of the scenario event cost estimation</p>
+        <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>

@@ -4,7 +4,7 @@ from django.utils.html import mark_safe
 from OTRisk.models.raw import RAWorksheet, RAWorksheetScenario
 from django.contrib.auth.decorators import login_required
 from OTRisk.models.Model_CyberPHA import tblCyberPHAHeader, tblCyberPHAScenario
-from django.db.models import Count
+from django.db.models import Count, Sum
 from django.db.models import Avg
 
 import json
@@ -18,6 +18,8 @@ def dashboardhome(request):
     records_by_industry = RAWorksheet.objects.values('industry').annotate(count=Count('ID'))
     records_by_risk_score = RAWorksheetScenario.objects.values('RiskScore').annotate(count=Count('ID'))
     scenario_risk_status = RAWorksheetScenario.objects.values('RiskStatus').annotate(count=Count('ID'))
+    total_scenario_cost = RAWorksheetScenario.objects.aggregate(sum_scenarioCost=Sum('scenarioCost'))['sum_scenarioCost']
+    formatted_scenario_cost = "${:,.0f}".format(total_scenario_cost)
 
     raw_count = RAWorksheet.objects.all().count()
     # raw_scenarios = RAWorksheetScenario.objects.all()
@@ -44,6 +46,9 @@ def dashboardhome(request):
     # cyberPHA facilities
     pha_facilities = tblCyberPHAHeader.objects.values_list('ID', 'FacilityName', 'FacilityType')
 
+    total_sle = tblCyberPHAScenario.objects.aggregate(sum_sle=Sum('sle'))['sum_sle']
+    formatted_sle = "${:,.0f}".format(total_sle)
+
     num_records = raw_facilities.count()
     print(num_records)
 
@@ -65,7 +70,9 @@ def dashboardhome(request):
         'environment_scores_list': environment_scores_list,
         'pha_safety_scores_list': pha_safety_scores_list,
         'pha_danger_scores_list': pha_danger_scores_list,
-        'pha_environment_scores_list': pha_environment_scores_list
+        'pha_environment_scores_list': pha_environment_scores_list,
+        'formatted_sle': formatted_sle,
+        'formatted_scenario_cost': formatted_scenario_cost
     }
 
     return render(request, 'dashboard.html', context)

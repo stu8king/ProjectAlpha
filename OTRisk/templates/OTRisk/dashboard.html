@@ -92,12 +92,6 @@
               </ul>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="{% url 'OTRisk:site_walkdown' %}"><i class="bi bi-building"></i> Site Walkdown</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="{% url 'OTRisk:walkdown' %}" tabindex="-1" ><i class="bi bi-kanban"></i> New Walkdown</a>
-        </li>
-        <li class="nav-item">
           <a class="nav-link" href="#" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Reports</a>
         </li>
         <li class="nav-item">
@@ -123,14 +117,90 @@
     <div class="row">
         <div class="col-md-1 "></div>
         <div class="col-md-10 ">
-         <div class="row" style="background-color: darkgray; height: 10px"></div>
+         <div class="row" style="background-color: white; height: 10px"></div>
        </div>
         <div class="col-md-1 "></div>
     </div> <!-- dark grey stripe -->
 
 <div class="row" style="height: 150px">
     <div class="col-md-1"></div>
-    <div class="col-md-1" style="background-color: darkgray"></div>
+    <div class="col-md-1" style="background-color: white"></div>
+    <div class="col-md-2" id="statDisplay" style="background-color: lightgrey">
+        <div class="card shadow-lg" style="background-color: white; border-radius: 10px; margin: 10px 10px 20px 10px; height: 70%;">
+            <div class="card-body">
+                <div class="row">
+                    <h5 class="card-title text-center text-black" style="font-weight: lighter;">Open Risk Exposure (CyberPHA):</h5>
+                </div>
+                <div class="row">
+                    <h1 class="card-text text-center text-black">{{ formatted_sle }}</h1>
+                </div>
+                <div class="row">
+                    <h5 class="text-center"></h5>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+
+    <div class="col-md-2" id="statDisplay" style="background-color: lightgrey">
+        <div class="card shadow-lg" style="background-color: white; border-radius: 10px; margin: 10px 10px 20px 10px; height: 70%;">
+            <div class="card-body">
+                <div class="row">
+                    <h5 class="card-title text-center text-black" style="font-weight: lighter;">Open Risk Exposure (QRAW):</h5>
+                </div>
+                <div class="row">
+                    <h1 class="card-text text-center text-black">{{ formatted_scenario_cost }}</h1>
+                </div>
+                <div class="row">
+                    <h5 class="text-center"></h5>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-2" id="statDisplay" style="background-color: lightgrey">
+        <div style="background-color: #8B89CC; border-radius: 10px; margin: 10px 10px 20px 10px; height: 70%;">
+            <div class="row" >
+                    <h5 style="text-align: center; font-weight: lighter; color: white"> CyberPHAs: </h5>
+            </div>
+            <div class="row">
+                <h1 style="text-align: center; color: white">{{ cyberpha_count }}</h1>
+            </div>
+            <div class="row">
+                    <h5 style="text-align: center"> </h5>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-2" id="statDisplay" style="background-color: lightgrey">
+        <div style="background-color: #9B2321; border-radius: 10px; margin: 10px 10px 20px 10px; height: 70%;">
+            <div class="row" >
+                    <h5 style="text-align: center; font-weight: lighter; color: white"> CyberPHA Scenarios: </h5>
+            </div>
+            <div class="row">
+                <h1 style="text-align: center; color: white">{{ cyberpha_scenario_count }}</h1>
+            </div>
+            <div class="row">
+                    <h5 style="text-align: center"> </h5>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-1" style="background-color: white"></div>
+    <div class="col-md-1"></div>
+</div>
+
+
+
+
+
+
+
+
+<div class="row" style="height: 150px">
+    <div class="col-md-1"></div>
+    <div class="col-md-1" style="background-color: white"></div>
     <div class="col-md-2" id="statDisplay" style="background-color: lightgrey">
         <div style="background-color: #0C6EFC; border-radius: 10px; margin: 10px 10px 20px 10px; height: 70%;">
             <div class="row" >
@@ -188,28 +258,28 @@
         </div>
     </div>
 
-    <div class="col-md-1" style="background-color: darkgray"></div>
+    <div class="col-md-1" style="background-color: white"></div>
     <div class="col-md-1"></div>
 </div>
 
     <div class="row">
         <div class="col-md-1 "></div>
         <div class="col-md-10 ">
-         <div class="row" style="background-color: darkgray; height: 10px"></div>
+         <div class="row" style="background-color: white; height: 10px"></div>
        </div>
         <div class="col-md-1 "></div>
     </div> <!-- dark grey stripe -->
 <div class="row">
     <div class="col-md-1" style="background-color: black"></div>
-    <div class="col-md-1" style="background-color: darkgray"></div>
+    <div class="col-md-1" style="background-color: white"></div>
     <div class="col-md-6" style="background-color: lightgrey"><h4 style="text-align: center">Risk Assessment Scenario Summary</h4></div>
     <div class="col-md-2" style="background-color: white"></div>
-    <div class="col-md-1" style="background-color: darkgray"></div>
+    <div class="col-md-1" style="background-color: white"></div>
     <div class="col-md-1"></div>
 </div>
 <div class="row" style="height: 400px">
     <div class="col-md-1"></div>
-    <div class="col-md-1" style="background-color: darkgray"></div>
+    <div class="col-md-1" style="background-color: white"></div>
         <!-- Doughnut Safety Chart -->
      <div class="col-md-2" style="background-color: lightgrey">
             <div class="row" style="height: 1px">
@@ -266,7 +336,7 @@
         </div>
     </div>
 
-    <div class="col-md-1" style="background-color: darkgray"></div>
+    <div class="col-md-1" style="background-color: white"></div>
     <div class="col-md-1"></div>
 
 </div>
@@ -274,23 +344,23 @@
 <div class="row">
     <div class="col-md-1 "></div>
     <div class="col-md-10 ">
-    <div class="row" style="background-color: darkgray; height: 10px"></div>
+    <div class="row" style="background-color: white; height: 10px"></div>
     </div>
     <div class="col-md-1 "></div>
 </div>  <!-- dark grey stripe -->
 
 <div class="row">
     <div class="col-md-1" style="background-color: black"></div>
-    <div class="col-md-1" style="background-color: darkgray"></div>
+    <div class="col-md-1" style="background-color: white"></div>
     <div class="col-md-6" style="background-color: lightgrey"><h4 style="text-align: center">CyberPHA Scenario Summary</h4></div>
     <div class="col-md-2" style="background-color: white"></div>
-    <div class="col-md-1" style="background-color: darkgray"></div>
+    <div class="col-md-1" style="background-color: white"></div>
     <div class="col-md-1"></div>
 </div>
 
 <div class="row" style="height: 400px">
     <div class="col-md-1"></div>
-    <div class="col-md-1" style="background-color: darkgray"></div>
+    <div class="col-md-1" style="background-color: white"></div>
 
     <div class="col-md-2" style="background-color: lightgrey">
         <div class="row" style="height: 1px">
@@ -342,7 +412,7 @@
         </div>
     </div>
 
-    <div class="col-md-1" style="background-color: darkgray"></div>
+    <div class="col-md-1" style="background-color: white"></div>
     <div class="col-md-1"></div>
 </div>
 
@@ -352,14 +422,14 @@
 <div class="row">
         <div class="col-md-1 "></div>
         <div class="col-md-10 ">
-         <div class="row" style="background-color: darkgray; height: 10px"></div>
+         <div class="row" style="background-color: white; height: 10px"></div>
        </div>
         <div class="col-md-1 "></div>
     </div>  <!-- dark grey stripe -->
 
 <div class="row" style="height: 50px">
     <div class="col-md-1 "></div>
-    <div class="col-md-1 " style="background-color: darkgray"></div>
+    <div class="col-md-1 " style="background-color: white"></div>
         <div class="col-md-8 ">
 
         <div class="row justify-content-center" style="background-color: white;">
@@ -408,7 +478,7 @@
             </div>
         </div>
     </div>
-    <div class="col-md-1 " style="background-color: darkgray"></div>
+    <div class="col-md-1 " style="background-color: white"></div>
     <div class="col-md-1 "></div>
 </div>
 

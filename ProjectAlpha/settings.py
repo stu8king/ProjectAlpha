@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'accounts',
     'bootstrap5',
     'captcha',
+    'survey',
 ]
 
 MIDDLEWARE = [
@@ -133,6 +134,12 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
 ]
 
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 5000  # or any other number that suits your needs
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-LOGIN_REDIRECT_URL = 'OTRisk:home'  # Assuming 'home' is the name of the URL pattern for the desired page
+LOGIN_REDIRECT_URL = 'OTRisk:dashboardhome'  # Assuming 'dashboardhome' is the name of the URL pattern for the desired page
+
+# Media files (uploads)
+MEDIA_URL = '/OTRisk/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')

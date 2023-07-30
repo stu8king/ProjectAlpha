@@ -3,13 +3,9 @@ from OTRisk.models.post import Post
 from OTRisk.models.asset import Asset
 
 
-
 class AssetInline(admin.StackedInline):
     model = Asset
     extra = 1
-
-
-
 
 
 @admin.register(Asset)
@@ -20,11 +16,7 @@ class AssetAdmin(admin.ModelAdmin):
     ]
 
 
-
-
 admin.site.unregister(Asset)
-
-
 
 
 # @admin.register(Asset)

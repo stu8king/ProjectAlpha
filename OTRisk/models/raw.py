@@ -1,4 +1,6 @@
 from django.db import models
+from django.contrib.auth.models import User
+
 
 
 # risk assessment worksheet
@@ -42,6 +44,7 @@ class RAWorksheet(models.Model):
     RegulatoryOversight = models.CharField(max_length=5)
     WalkdownID = models.IntegerField()
     industry = models.CharField(max_length=30)
+    cyberPHAID = models.IntegerField()
 
     class Meta:
         db_table = 'tblRAWorksheet'
@@ -77,6 +80,16 @@ class RAWorksheetScenario(models.Model):
     productionScore = models.IntegerField()
     environmentScore = models.IntegerField()
     regulatoryScore = models.IntegerField()
+    riskSummary = models.TextField()
+    scenarioCost = models.IntegerField()
+    justifySafety = models.TextField()
+    justifyLife = models.TextField()
+    justifyProduction = models.TextField()
+    justifyFinancial = models.TextField()
+    justifyReputation = models.TextField()
+    justifyEnvironment = models.TextField()
+    justifyRegulation= models.TextField()
+    justifyData = models.TextField()
 
     class Meta:
         db_table = 'tblRAWorksheetScenario'
@@ -85,6 +98,7 @@ class RAWorksheetScenario(models.Model):
 class RAActions(models.Model):
     ID = models.AutoField(primary_key=True)
     RAWorksheetID = models.ForeignKey(RAWorksheet, on_delete=models.CASCADE, db_column='RAWorksheetID')
+    phaID = models.IntegerField()
     actionTitle = models.CharField(max_length=255)
     actionOwner = models.CharField(max_length=255)
     actionDate = models.CharField(max_length=255)
@@ -102,6 +116,12 @@ class RAActions(models.Model):
     environmentPrecautions = models.TextField()
     regulatoryNotifications = models.TextField()
     actionAffinity = models.TextField()
+    outageWWW = models.CharField(max_length=3)
+    outagePS = models.CharField(max_length=3)
+    outageIT = models.CharField(max_length=3)
+    outageEMS = models.CharField(max_length=3)
+    outageICS = models.CharField(max_length=3)
+    outageSIS = models.CharField(max_length=3)
 
     class Meta:
         db_table = 'tblRawActions'

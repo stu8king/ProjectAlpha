@@ -100,7 +100,14 @@ urlpatterns = [
     path('scenario_analysis',views.scenario_analysis, name='scenario_analysis'),
     path('phascenarioreport',views.phascenarioreport, name='phascenarioreport'),
     path('getSingleScenario/', views.getSingleScenario, name='getSingleScenario'),
+    path('check_vulnerabilities/', views.check_vulnerabilities, name='check_vulnerabilities'),
+    path('rawreport/<int:raworksheet_id>/', views.rawreport, name='rawreport'),
+    path('raw_from_walkdown/', views.raw_from_walkdown, name='raw_from_walkdown'),
+    path('survey/', views.survey_view, name='survey_view'),
+    path('save_ra_action', views.save_ra_action, name='save_ra_action'),
+    path('get_rawactions/', views.get_rawactions, name='get_rawactions'),
 ]
 
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -12,27 +12,39 @@ from django.core.exceptions import ObjectDoesNotExist
 import openai
 import re
 from django.db.models import Avg
+import concurrent.futures
 
 
 @login_required
 def iotaphamanager(request):
+    print(f"{request.POST}")
+    pha_header = None
     if request.method == 'POST':
-        pha_header = tblCyberPHAHeader(
-            PHALeader=request.POST.get('txtLeader'),
-            PHALeaderEmail=request.POST.get('txtLeaderEmail'),
-            FacilityName=request.POST.get('txtFacility'),
-            Industry=request.POST.get('selIndustry'),
-            FacilityType=request.POST.get('selFacilityType'),
-            AssessmentUnit=request.POST.get('txtUnit'),
-            AssessmentZone=request.POST.get('selZone'),
-            AssessmentStartDate=request.POST.get('txtStartDate'),
-            AssessmentEndDate=request.POST.get('txtEndDate'),
-            facilityAddress=request.POST.get('txtAddress'),
-            safetySummary=request.POST.get('txtSafetySummary'),
-            chemicalSummary=request.POST.get('txtChemical'),
-            physicalSummary=request.POST.get('txtPhysical'),
-            otherSummary=request.POST.get('txtOther')
-        )
+        pha_id = request.POST.get('txtHdnCyberPHAID')
+        if pha_id and int(pha_id) > 0:
+            # Update existing record
+            pha_header, created = tblCyberPHAHeader.objects.get_or_create(ID=pha_id)
+        else:
+            # Create a new record
+            pha_header = tblCyberPHAHeader()
+
+        pha_header.title = request.POST.get('txtTitle')
+        pha_header.PHALeader = request.POST.get('txtLeader')
+        pha_header.PHALeaderEmail = request.POST.get('txtLeaderEmail')
+        pha_header.FacilityName = request.POST.get('txtFacility')
+        pha_header.Industry = request.POST.get('selIndustry')
+        pha_header.FacilityType = request.POST.get('selFacilityType')
+        pha_header.AssessmentUnit = request.POST.get('txtUnit')
+        pha_header.AssessmentZone = request.POST.get('selZone')
+        pha_header.AssessmentStartDate = request.POST.get('txtStartDate')
+        pha_header.AssessmentEndDate = request.POST.get('txtEndDate')
+        pha_header.facilityAddress = request.POST.get('txtAddress')
+        pha_header.safetySummary = request.POST.get('txtSafetySummary')
+        pha_header.chemicalSummary = request.POST.get('txtChemical')
+        pha_header.physicalSummary = request.POST.get('txtPhysical')
+        pha_header.otherSummary = request.POST.get('txtOther')
+        pha_header.country = request.POST.get('countrySelector')
+        pha_header.UserID = request.user.id
         pha_header.save()
 
     pha_header_records = tblCyberPHAHeader.objects.all().order_by('ID')
@@ -46,7 +58,8 @@ def iotaphamanager(request):
         'industries': industries,
         'facilities': facilities,
         'zones': zones,
-        'standardslist': standardslist
+        'standardslist': standardslist,
+        'current_pha_header': pha_header
     })
 
 
@@ -72,10 +85,29 @@ def get_headerrecord(request):
         'safetysummary': headerrecord.safetySummary,
         'chemicalsummary': headerrecord.chemicalSummary,
         'physicalsummary': headerrecord.physicalSummary,
-        'othersummary': headerrecord.otherSummary
+        'othersummary': headerrecord.otherSummary,
+        'country': headerrecord.country
     }
 
     return JsonResponse(headerrecord_data)
+
+
+def get_response(user_message):
+    message = [
+        {
+            "role": "system",
+            "content": "You are an expert and experienced process and safety engineer conducting a cybersecurity risk analysis for a cyberPHA (where P=Process, H=Hazards, A=Analysis) scenario related to industrial automation and control systems."
+        },
+        user_message
+    ]
+
+    response = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=message,
+        temperature=0,
+        max_tokens=500
+    )
+    return response['choices'][0]['message']['content']
 
 
 def scenario_analysis(request):
@@ -98,8 +130,9 @@ def scenario_analysis(request):
         mitigatedexposure = request.GET.get('mel')
         residualrisk = request.GET.get('rrm')
         standards = request.GET.get('standard')
+        country = request.GET.get('country')
 
-        openai.api_key = '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'
+        openai.api_key = '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'
         # Define the common part of the user message
         common_content = f"Given the scenario {scenario} with consequences {consequences} affecting a {facility_type} in the {industry} industry, the threat source {threatSource} performing actions {threatActions}, and current controls {currentControls}. The business impact assessment, giving scores out of 10 where 10 represents maximum impact,  rates safety as {safetyimpact}, danger to life as {lifeimpact}, production and operations as {productionimpact}, company reputation as {reputationimpact}, environmental consequences as {environmentimpact}, regulatory consequences as {regulatoryimpact}, and data and intellectual property as {dataimpact}. The effectiveness of current controls is analyzed as severity of the threat mitigated {severitymitigated}, risk exposure mitigated {mitigatedexposure}, and residual risk {residualrisk}."
 
@@ -114,39 +147,27 @@ def scenario_analysis(request):
             {"role": "user",
              "content": common_content + " In the context of a cyber Process Hazard Analysis (cyberPHA), the Adjusted Residual Risk (RRa) is a measure of the remaining risk after all mitigation measures or controls have been implemented.Without any additional text or commentary, giving only the single word response, provide the residual risk rating (Low, Medium, or High) after applying new controls for {scenario}."},
             {"role": "user",
-             "content": common_content + f" Using {standards} as the source, provide a list, without any additional commentary, text, or headings other than the specific requested information, a maximum of 5 key recommendations  that are most relevant to the CyberPHA and an assessment of operational technology - OT - with a paeticular focus on safety and environmental controls (make it the top 5 that give the most value and risk mitigation and do not include any currently implemented controls listed in the following: {currentControls}), to address the scenario aligned with the specifically named {standards} standards. Each recommendation should be in the format '[recommendation text] ([reference])', where '[reference]' is the relevant section from {standards}. References should be given in a manner that enables the user to quickly identify where to locate the related information within {standards}"},
+             "content": common_content + f"In the context of a cybersecurity assessment and associated Process Hazard Analysis (cyberPHA),  analyse the following scenario then estimate a likely cost impact (as the total expences related to regulatory penalties, reparations, compensation, event recovery, investigations, repairing and replacing equipment, and other extra costs that might be relevant) of a single occurance of the scenario in the currency of {country} at the specified facility . Your response must be a single number to represent the estimated cost of the event. Do not offer or provide any additional text or commentary or explanation. Only respond with a value. Include the correct currency symbol for the given country. The scenario is: {scenario}. The scenario occurs at a {facility_type} in {country} within the {industry} industry. Experts in the business have conducted a business impact analysis (BIA) of this scenario.  The BIA scores are: impacts on personnel and public safety {safetyimpact}/10; danger to life {lifeimpact}/10; impact on production and operations {productionimpact}/10; impact on company reputation {reputationimpact}/10; impact on the local environment {environmentimpact}/10;  impacts relating to regulatory requirements:{regulatoryimpact}/10, and impacts relating to company data and intellectual: {dataimpact}/10. (where 1/10 is minimal/low impact and 10/10 is maximum/catastrophic impact).  Determine how to apply any necessary weightings to the BIA scores based on the given country, industry and facility type. Use any available public sources or industry reports for a credible estimation. If no such data is available, provide a best estimate using Artificial Intelligence. Provide the result as a numeric value to represent a currency amount using the correct currency symbol for {country}. Do not include any additional dialogue or explanation - only the integer value representing the result so that it can be stored in the integer field of a database table"},
+            {"role": "user",
+             "content": common_content + f" Using {standards} as a reference, provide a list, without any additional commentary, text, or headings other than the specific requested information, a maximum of 5 key recommendations  that are most relevant to the CyberPHA and an assessment of operational technology - OT - with a particular focus on safety and environmental controls (make it the top 5 that give the most value and risk mitigation and do not include any currently implemented controls listed in the following: {currentControls}), to address the scenario aligned with the specifically named {standards} standards. Each recommendation should be in the format '[recommendation text] ([reference])', where '[reference]' is the relevant section from {standards}. References should be given in a manner that enables the user to quickly identify where to locate the related information within {standards}"},
         ]
 
         # Initialize an empty list to store the responses
         responses = []
 
-        # Make the API calls to the OpenAI GPT-3 API using the user messages
-        for user_message in user_messages:
-            message = [
-                {
-                    "role": "system",
-                    "content": "You are a process and safety engineer conducting a risk analysis for a cyberPHA scenario related to industrial automation and control systems."
-                },
-                user_message
-            ]
+        # Use ThreadPoolExecutor to parallelize the API calls
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            responses = list(executor.map(get_response, user_messages))
 
-            response = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo",  # Use the GPT-3 engine
-                messages=message,
-                temperature=0,
-                max_tokens=256
-            )
-
-            # Extract the generated response from the API and add it to the responses list
-            responses.append(response['choices'][0]['message']['content'])
-
+        print(f"cost={responses[4]}")
         # Return the responses as variables
         return JsonResponse({
             'controls': responses[0],
             'adjustedSeverity': responses[1],
             'adjustedExposure': responses[2],
             'adjustedRR': responses[3],
-            'recommendations': responses[4]
+            'costs': responses[4],
+            'recommendations': responses[5]
         })
 
 
@@ -157,46 +178,70 @@ def facility_risk_profile(request):
         Industry = request.GET.get('industry')
         facility_type = request.GET.get('facility_type')
         address = request.GET.get('address')
-
-        Industry = Industry
-        facility_type = facility_type
-        address = address
+        country = request.GET.get('country')
+        facility = request.GET.get('txtFacility')
 
         # Prepare the request data for the OpenAI GPT-3 API in the chat format
         message = [
             {
                 "role": "system",
-                "content": "As a physical security and cybersecurity risk assessment professional, I need you to assess and determine the risk profile of a given location based on it’s address and the type of facility that it represents."
+                "content": "As a physical security and cybersecurity risk assessment professional, you must assess and determine the risk profile of a given location based on it’s address, country, and the type of facility that it represents."
             },
             {
                 "role": "user",
-                "content": f"Provide, without any commentary or additional information only the four specific pieces of information that are asked for. Profile a one sentence narrative for each of the four specific piece of information: 1. Summary of most likely safety hazards. 2. Summary of most likely chemicals stored at the facility and their associated hazards. 3. Summary of most likely physical security status and challenges. 4. Any other localized risks to note:\nAddress - {address}, Industry - {Industry}, facility type - {facility_type} Provide only the four pieces of information that have been requested. No title or header. The output must be given as simply <safety summary>|<chemical summary>|<physical security summary>|<other summary>."
+                "content": f"Provide, without any commentary or additional information only the four specific pieces of information that are asked for. Give a one sentence reply to each of the four specific pieces of information being asked for. If there is no information to offer, use judgement to state either Not Known or make an AI estimate. The four pieces are information needed as follows: 1. Provide a summary of the most likely safety hazards for the {facility} {facility_type}, {address}, {country}. 2. Provide a sentence about the most likely chemicals stored or used at the {facility} {facility_type}, {address}, {country} and their associated hazards. 3. Give a summary of the most likely physical security standards and challenges for {facility} {facility_type} with the {Industry} industry at {address} in {country}. 4. Give a sentence that summarizes any other localized risks to note for this {facility_type} at {address} in {country}:\nAddress - {address}, Country - {country}, Industry - {Industry}, facility type - {facility_type} Provide only the four pieces of information that have been requested. No title or header. The output must be given in the following format where the | symbol denotes a delimited between variables. <safety summary>|<chemical summary>|<physical security summary>|<other summary>."
             }
         ]
 
-        openai.api_key = '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'
+        openai.api_key = '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'
 
-        # Make the API call to the OpenAI GPT-3 API using the message
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",  # Use the GPT-3 engine
-            messages=message,
-            temperature=0.3,
-            max_tokens=256
-        )
+        try:
+            # Make the API call to the OpenAI GPT-3 API using the message
+            response = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",  # Use the GPT-3 engine
+                messages=message,
+                temperature=0.3,
+                max_tokens=256
+            )
 
-        # Extract the generated response from the API
-        generated_response = response['choices'][0]['message']['content']
+            # Extract the generated response from the API
+            generated_response = response['choices'][0]['message']['content']
 
-        # Split the generated response into individual parts
-        safety_summary, chemical_summary, physical_security_summary, other_summary = generated_response.split("|")
+            # Split the generated response into individual parts
+            split_response = generated_response.split("|")
 
-        # Return the individual parts as variables
-        return JsonResponse({
-            'safety_summary': safety_summary,
-            'chemical_summary': chemical_summary,
-            'physical_security_summary': physical_security_summary,
-            'other_summary': other_summary
-        })
+            # Check if the split response has the expected number of values
+            if len(split_response) != 4:
+                raise ValueError("The model's response did not match the expected format.")
+
+            # Split the generated response into individual parts
+            safety_summary, chemical_summary, physical_security_summary, other_summary = generated_response.split("|")
+
+            # Return the individual parts as variables
+            return JsonResponse({
+                'safety_summary': safety_summary,
+                'chemical_summary': chemical_summary,
+                'physical_security_summary': physical_security_summary,
+                'other_summary': other_summary
+            })
+
+        except openai.error.OpenAIError as e:
+            # Handle any OpenAI API related errors
+            return JsonResponse({
+                'error': f"OpenAI API Error: {str(e)}"
+            })
+
+        except ValueError as ve:
+            # Handle the unexpected response format
+            return JsonResponse({
+                'error': str(ve)
+            })
+
+        except Exception as ex:
+            # Handle any other unexpected errors
+            return JsonResponse({
+                'error': f"An unexpected error occurred: {str(ex)}"
+            })
 
 
 def phascenarioreport(request):

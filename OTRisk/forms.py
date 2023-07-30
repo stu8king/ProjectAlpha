@@ -1,6 +1,19 @@
 from django import forms
 from OTRisk.models.RiskScenario import RiskScenario
 from OTRisk.models.post import Post, AssessmentTeam
+from .models.raw import RAWorksheet, RAActions
+
+
+class RAActionsForm(forms.ModelForm):
+    class Meta:
+        model = RAActions
+        fields = '__all__'
+
+
+class RAWorksheetForm(forms.ModelForm):
+    class Meta:
+        model = RAWorksheet
+        fields = ['cyberPHAID']
 
 
 class LoginForm(forms.Form):

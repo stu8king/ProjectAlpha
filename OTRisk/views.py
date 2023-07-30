@@ -36,11 +36,60 @@ import json
 import requests
 from xml.etree import ElementTree as ET
 from bs4 import BeautifulSoup
-from .raw_views import qraw, openai_assess_risk, GetTechniquesView, raw_action
+from .raw_views import qraw, openai_assess_risk, GetTechniquesView, raw_action, check_vulnerabilities, rawreport, \
+    raw_from_walkdown, save_ra_action, get_rawactions
 from .dashboard_views import dashboardhome
-from .pha_views import iotaphamanager, facility_risk_profile, get_headerrecord, scenario_analysis, phascenarioreport, getSingleScenario
+from .pha_views import iotaphamanager, facility_risk_profile, get_headerrecord, scenario_analysis, phascenarioreport, \
+    getSingleScenario
+from survey.models import Survey, Category
+from survey.models.response import Response
+from survey.models.answer import Answer
+import uuid
 
 app_name = 'OTRisk'
+
+
+def survey_view(request):
+    survey = Survey.objects.first()  # Fetch the first survey; adjust as needed
+
+    # If the request is POST, save the user's responses
+    if request.method == 'POST':
+        # Create or get the response object for this user and survey
+        response, _ = Response.objects.get_or_create(
+            user=request.user.id,
+            survey=survey,
+            interview_uuid=str(uuid.uuid4())  # Generate a new UUID for each response
+        )
+        for key, value in request.POST.items():
+            if key.startswith('question-'):
+                question_id = int(key.split('-')[1])
+                question = Question.objects.get(id=question_id)
+                response.save_answer(question, value)
+
+        # Redirect to the same page to show the saved responses
+        return redirect('survey_template.html')
+
+    categories = survey.categories.all()  # Assuming Category has a ForeignKey to Survey
+
+    questions = survey.questions.all()
+    question_list = []
+    for question in questions:
+        user_answer = Answer.objects.filter(question=question, response__user=request.user.id).first()
+        question_dict = {
+            "id": question.id,
+            "text": question.text,
+            "category": question.category,
+            "choice_list": question.choices.split(','),
+            "user_response": user_answer.body if user_answer else None
+        }
+        question_list.append(question_dict)
+
+    context = {
+        'survey': survey,
+        'categories': categories,
+        'questions': question_list
+    }
+    return render(request, 'survey_template.html', context)
 
 
 def get_consequences(request):
@@ -120,6 +169,16 @@ def save_or_update_cyberpha(request):
         rra = request.POST.get('rra')
         recommendations = request.POST.get('recommendations')
         controlrecs = request.POST.get('controls')
+        justifySafety = request.POST.get('justifySafety')
+        justifyLife = request.POST.get('justifyLife')
+        justifyProduction = request.POST.get('justifyProduction')
+        justifyFinance = request.POST.get('justifyFinance')
+        justifyReputation = request.POST.get('justifyReputation')
+        justifyEnvironment = request.POST.get('justifyEnvironment')
+        justifyRegulation = request.POST.get('justifyRegulation')
+        justifyData = request.POST.get('dataRegulation')
+        sle_string = request.POST.get('sle')
+        sle = int(sle_string.replace('$', '').replace(',', ''))
         deleted = 0
 
         cyberpha_entry, created = tblCyberPHAScenario.objects.update_or_create(
@@ -147,7 +206,17 @@ def save_or_update_cyberpha(request):
                 'MELA': mela,
                 'RRa': rra,
                 'Deleted': deleted,
-                'control_recommendations': controlrecs
+                'control_recommendations': controlrecs,
+                'justifySafety': justifySafety,
+                'justifyLife': justifyLife,
+                'justifyProduction': justifyProduction,
+                'justifyFinancial': justifyFinance,
+                'justifyReputation': justifyReputation,
+                'justifyEnvironment': justifyEnvironment,
+                'justifyRegulation': justifyRegulation,
+                'justifyData': justifyData,
+                'userID': request.user,
+                'sle': sle
             }
         )
 
@@ -709,7 +778,6 @@ def create_walkdown_risk_assessment(request):
     return JsonResponse({'success': True})
 
 
-@login_required
 def home(request):
     ra_worksheets = RAWorksheet.objects.all()
     worksheet_data = []
@@ -728,8 +796,6 @@ def home(request):
                             scenario.FinancialScore is not None]
         safety_scores = [scenario.SafetyScore for scenario in scenario_scores if scenario.SafetyScore is not None]
         data_scores = [scenario.DataScore for scenario in scenario_scores if scenario.DataScore is not None]
-        supply_chain_scores = [scenario.SupplyChainScore for scenario in scenario_scores if
-                               scenario.SupplyChainScore is not None]
 
         avg_threat_score = sum(threat_scores) / len(threat_scores) if threat_scores else 0
         avg_risk_score = sum(risk_scores) / len(risk_scores) if risk_scores else 0
@@ -739,7 +805,6 @@ def home(request):
         avg_financial_score = sum(financial_scores) / len(financial_scores) if financial_scores else 0
         avg_safety_score = sum(safety_scores) / len(safety_scores) if safety_scores else 0
         avg_data_score = sum(data_scores) / len(data_scores) if data_scores else 0
-        avg_supply_chain_score = sum(supply_chain_scores) / len(supply_chain_scores) if supply_chain_scores else 0
 
         worksheet_data.append({
             'id': worksheet.ID,
@@ -754,8 +819,7 @@ def home(request):
             'avg_operation_score': avg_operation_score,
             'avg_financial_score': avg_financial_score,
             'avg_safety_score': avg_safety_score,
-            'avg_data_score': avg_data_score,
-            'avg_supply_chain_score': avg_supply_chain_score,
+            'avg_data_score': avg_data_score
         })
 
     # latest ICS vulnerabilities

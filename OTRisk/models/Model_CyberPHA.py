@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import User
 
 
 class tblStandards(models.Model):
@@ -114,6 +115,7 @@ class tblCyberPHAHeader(models.Model):
     chemicalSummary = models.TextField()
     physicalSummary = models.TextField()
     otherSummary = models.TextField()
+    country = models.TextField()
 
     class Meta:
         db_table = 'tblCyberPHAHeader'
@@ -249,9 +251,29 @@ class tblCyberPHAScenario(models.Model):
     ale = models.IntegerField()
     countermeasureCosts = models.IntegerField()
     control_recommendations = models.TextField()
+    justifySafety = models.TextField()
+    justifyLife = models.TextField()
+    justifyProduction = models.TextField()
+    justifyFinancial = models.TextField()
+    justifyReputation = models.TextField()
+    justifyEnvironment = models.TextField()
+    justifyRegulation = models.TextField()
+    justifyData = models.TextField()
+    userID = models.ForeignKey(User, on_delete=models.CASCADE, db_column='userID')
 
     class Meta:
         db_table = 'tblCyberPHAScenario'
+
+    def save(self, *args, **kwargs):
+        # If the record is being created and there's a user available, set the userID
+        if not self.pk and hasattr(self, '_current_user'):
+            self.userID = self._current_user
+
+        super(tblCyberPHAScenario, self).save(*args, **kwargs)
+
+    @classmethod
+    def set_current_user(cls, user):
+        cls._current_user = user
 
 
 class tblCyberPHAControlObjective(models.Model):

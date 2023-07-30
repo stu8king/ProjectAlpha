@@ -60,6 +60,9 @@
         font-size: 0.8rem; /* adjust as needed */
         }
 
+    .clickable-label:hover {
+        cursor: pointer;
+    }
 
     </style>
     <script>
@@ -87,8 +90,8 @@
 
 <nav class="navbar navbar-expand-lg navbar-scroll fixed-top shadow-0 border-bottom border-dark rounded">
   <div class="container-fluid d-flex justify-content-between">
-   <a class="navbar-brand" href="{% url 'OTRisk:dashboardhome' %}"><img src="/static/images/logo1-2.jpg" style="height: 140px; width: 140px" class="navbar-logo" alt="">  </a>
-      <h4 class="my-auto text-center flex-grow-1"><font color="white">CyberPHA Scenario Analysis</font></h4>
+   <a class="navbar-brand" href="{% url 'OTRisk:home' %}"><img src="/static/images/logo1-2.jpg" style="height: 140px; width: 140px" class="navbar-logo" alt="">  </a>
+      <h4 class="my-auto text-center flex-grow-1"><font color="white">Dashboard</font></h4>
 
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
       <ul class="navbar-nav ms-auto">
@@ -107,23 +110,21 @@
               </ul>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="{% url 'OTRisk:walkdown' %}" tabindex="-1" ><i class="bi bi-kanban"></i> New Walkdown</a>
-        </li>
-        <li class="nav-item">
           <a class="nav-link" href="#" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Reports</a>
         </li>
         <li class="nav-item">
           <a class="nav-link" href="#" tabindex="-1" ><i class="bi bi-ui-checks-grid"></i> Admin</a>
       </li>
-          <li class="nav-item">
-          <a href="#" onclick="window.open('{% static 'OTRisk/help_pha.html' %}', 'newwindow', 'width=600,height=400'); return false;"><i class="bi bi-question-circle"></i> Help</a>
-
-      </li>
         <li class="nav-item">
-          <a class="nav-link" href="{% url 'accounts:profile' %}">
-          <i class="bi bi-person-fill"></i> User: {{ user.first_name }} {{ user.last_name }}
-        </a>
+            <a class="nav-link" href="{% url 'accounts:profile' %}">
+                <i class="bi bi-person-fill"></i> {{ user.first_name }} {{ user.last_name }} | {{ user.userprofile.organization.name }}
+            </a>
+        </li>
 
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'logout' %}">
+                <i class="bi bi-box-arrow-right"></i> Logout
+            </a>
         </li>
       </ul>
     </div>
@@ -152,7 +153,7 @@
 <div class="row">
     <div class="col-md-1" style="background-color: black"></div>
     <div class="col-md-1" style="background-color: darkgray"></div>
-    <div class="col-md-8" style="background-color: #FFC017">
+    <div class="col-md-8" style="background-color: white">
     <figure class="text-center">
 
     <h4><br><br>CyberPHA Scenario Analysis - <span id="facilityName"></span></h4>
@@ -161,11 +162,10 @@
 
     </figure>
     <script>
-        console.log(sessionStorage.getItem('sessionIndustry'));
 
         document.getElementById('facilityName').textContent = sessionStorage.getItem('sessionFacility');
         document.getElementById('facilityName2').textContent = sessionStorage.getItem('sessionIndustry');
-        //document.getElementById('hdnID').value = sessionStorage.getItem('activeCyberPHA');
+
 
      </script>
     </div>
@@ -185,8 +185,46 @@
         <button type="button" id="addScenarioBtn" class="form-control  btn-link" onclick="resetformcontrols()" style="background-color: black; color: white;">New Scenario</button>
         <script>
             function resetformcontrols() {
-                // document.getElementById("mitigation-measure").selectedIndex=0;
-                // document.getElementById("hdnScenarioID").value=0;
+                var isConfirmed = window.confirm("Are you sure you want to begin a new scenario and reset the form? All unsaved changes will be lost.");
+                if (isConfirmed) {
+                    document.getElementById('txtScenario').value = '';
+                    document.getElementById('txtConsequence').value = '';
+                    document.getElementById('threat-intelligence').value = "";
+                    $("#mitigation-measure").val([]).trigger("change.select2");
+                    document.getElementById('mitigation-measure').value = "Select Current Controls";
+                    $("#threatactions").val([]).trigger("change.select2");
+                    document.getElementById('threatactions').value = "Select Threat Actons";
+                    document.getElementById('risk-category').value = "";
+                    document.getElementById('range_safety').value = 0;
+                    document.getElementById('range_life').value = 0;
+                    document.getElementById('range_production').value = 0;
+                    document.getElementById('range_finance').value = 0;
+                    document.getElementById('range_reputation').value = 0;
+                    document.getElementById('range_environment').value = 0;
+                    document.getElementById('range_regulatory').value = 0;
+                    document.getElementById('range_data').value = 0;
+                    document.getElementById('SMrange').value = 0;
+                    document.getElementById('MELrange').value = 0;
+                    document.getElementById('RRMrange').value = 0;
+                    document.getElementById('SArange').value = 0;
+                    document.getElementById('MELarange').value = 0;
+                    document.getElementById('txtsafetyJustify').value = "";
+                    document.getElementById('txtlifeJustify').value = "";
+                    document.getElementById('txtproductionJustify').value = "";
+                    document.getElementById('txtfinanceJustify').value = "";
+                    document.getElementById('txtreputationJustify').value = "";
+                    document.getElementById('txtenvironmentJustify').value = "";
+                    document.getElementById('txtregulatoryJustify').value = "";
+                    document.getElementById('txtdataJustify').value = "";
+                    document.getElementById('SMrange').value = 0;
+                    document.getElementById('MELrange').value = 0;
+                    document.getElementById('RRMrange').value = 0;
+                    document.getElementById('SArange').value = 0;
+                    document.getElementById('MELarange').value = 0;
+                    document.getElementById('txtScenarioAnalysis').value = 0;
+                    document.getElementById('txtControlAnalysis').value = 0;
+                    const rra = document.getElementById('txtRRa').value = 0;
+                }
             }
         </script>
         <br>
@@ -202,10 +240,25 @@
                     // window.location.href = "{% url 'OTRisk:scenarioreport' %}?hdnID=" + hdnID;
                 }
             </script>
+        <br>
+
+    <button class="form-control" type="button" id="actionBtn" onclick="showRAActionsModal()" style="background-color: black; color: white;">Add Remediation Action</button>
+
+        <script>
+            function showRAActionsModal() {
+                var phaid = sessionStorage.getItem('activeCyberPHA');  // Get the value from session storage
+
+                if (phaid === null || phaid === "") {
+                    alert("Please select a CyberPHA assessment from the table first before creating an action item.");
+                } else {
+                    $('#RAActionsModal').modal('show');  // Show the modal if rawid has a value
+                }
+            }
+        </script>
 
     </div>
     <div class="col-md-1" style="background-color: darkgray"></div>
-    <div class="col-md-8 " style="background-color: #FFC017; padding: 20px">
+    <div class="col-md-8 " style="background-color: white; padding: 20px">
         <div class="table-wrap rounded-3" style="border: 3px #97979A; border-radius: 10px; box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5);  padding: 20px; background-color: white; height: 250px">
             <table id="userscenarioList" class="table table-hover table-bordered small small-font overflow-auto" style="background-color: white;">
                 <thead>
@@ -320,13 +373,14 @@
     <div class="col-md-1" style="background-color: black"></div>
     <div class="col-md-1" style="background-color: darkgray"></div>
     <div class="col-md-8">
-        <div class="row" style="background-color: #FFC017">
+        <div class="row" style="background-color: white">
+            <p></p>
             <h5><p class="form-container" style="text-align: center; color: #494949">Scenario Selection</p></h5>
         </div>
-        <div class ="row" style="background-color: #FFC017">
+        <div class ="row" style="background-color: white">
             <div class="col-md-6 d-flex justify-content-center">
                 <br><br>
-                <div class="table-wrap border border-warning rounded p-3" style="border: 3px #97979A; border-radius: 10px; box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5);  padding: 20px; background-color: white;">
+                <div class="table-wrap border border-black rounded p-3" style="border: 3px #97979A; border-radius: 10px; box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5);  padding: 20px; background-color: white;">
                     <table id="scenarioList" class="table table-hover table-bordered small small-font overflow-auto" style="width: 100%; background-color: white">
                         <thead>
                             <tr>
@@ -363,7 +417,7 @@
 <div class="row" style="height: 10px;">
     <div class="col-md-1" style="background-color: black"></div>
     <div class="col-md-1" style="background-color: darkgray"></div>
-    <div class="col-md-8" style="background-color: #FFC017; box-shadow: 0px 10px 10px rgba(0, 0, 0, 0.5);"></div>
+    <div class="col-md-8" style="background-color: white; box-shadow: 0px 10px 10px rgba(0, 0, 0, 0.5);"></div>
     <div class="col-md-1" style="background-color: darkgray"></div>
     <div class="col-md-1 " style="background-color: black"></div>
 </div> <!-- white stripe -->
@@ -379,13 +433,14 @@
     <div class="col-md-1" style="background-color: black"></div>
     <div class="col-md-1" style="background-color: darkgray"></div>
     <div class="col-md-8">
-        <div class="row" style="background-color: #FFC017">
+        <div class="row" style="background-color: white">
+            <p></p>
             <h5><p class="form-container" style="text-align: center; color: #494949">Consequence Selection</p></h5>
         </div>
-        <div class ="row" style="background-color: #FFC017">
+        <div class ="row" style="background-color: white">
             <div class="col-md-6 d-flex justify-content-center">
                 <br><br>
-                <div class="table-wrap border border-warning rounded p-3" style="border: 3px #97979A; border-radius: 10px; box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5);  padding: 20px; background-color: white;">
+                <div class="table-wrap border border-black rounded p-3" style="border: 3px #97979A; border-radius: 10px; box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5);  padding: 20px; background-color: white;">
                     <table id="consequenceListTable" class="table table-hover table-bordered small small-font overflow-auto" style="width:100%">
                         <thead>
                             <tr>
@@ -427,7 +482,7 @@
 <div class="row" style="height: 10px;">
     <div class="col-md-1" style="background-color: black"></div>
     <div class="col-md-1" style="background-color: darkgray"></div>
-    <div class="col-md-8" style="background-color: #ffc017; box-shadow: 0px 10px 10px rgba(0, 0, 0, 0.5);"></div>
+    <div class="col-md-8" style="background-color: white; box-shadow: 0px 10px 10px rgba(0, 0, 0, 0.5);"></div>
     <div class="col-md-1" style="background-color: darkgray"></div>
     <div class="col-md-1 " style="background-color: black"></div>
 </div> <!-- white stripe -->
@@ -441,9 +496,10 @@
 
     <input type="hidden" id="hdnID" name="hdnID" >
 <input type="hidden" id="hdnScenario" name="hdnScenario" value = {{ scenarioID }}>
+<input type="hidden" id="hdnCountry" name="hdnCountry">
 <script>
 
-    // document.getElementById('hdnID').value = sessionStorage.getItem('activeCyberPHA');
+    document.getElementById('hdnCountry').value = sessionStorage.getItem('sessionCountry');
 
 </script>
 
@@ -459,7 +515,8 @@
 <div class="row" >
     <div class="col-md-1" style="background-color: black"></div>
     <div class="col-md-1" style="background-color: darkgray"></div>
-    <div class="col-md-4 " style="background-color: #FFC017">
+    <div class="col-md-4 " style="background-color: white">
+    <p></p>
         <label class="form-label" for="threat-intelligence">Threat Source</label>
         <select class="form-control" name="threat-intelligence" id="threat-intelligence" style="border: 3px #97979A; border-radius: 10px; box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5);  padding: 10px; background-color: white">
             <option value="">-- Select a threat source --</option>
@@ -486,7 +543,8 @@
         });
         </script>
     </div>
-    <div class="col-md-4 " style="background-color: #FFC017">
+    <div class="col-md-4 " style="background-color: white">
+        <p></p>
         <label class="form-label" for="mitigation-measure">Current Controls</label>
         <select class="form-control" name="mitigation-measure" id="mitigation-measure" multiple="multiple" title="Select one or more existing controls implemented within the environment" style="border: 3px #97979A; border-radius: 10px; box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5);  padding: 20px; background-color: white">
         <option value="">-- Select Controls --</option>
@@ -521,7 +579,7 @@
 <div class="row" style="height: 10px">
     <div class="col-md-1" style="background-color: black"></div>
     <div class="col-md-1" style="background-color: darkgray"></div>
-    <div class="col-md-8 " style="background-color: #FFC017; height: 10px"></div>
+    <div class="col-md-8 " style="background-color: white; height: 10px"></div>
     <div class="col-md-1" style="background-color: darkgray"></div>
     <div class="col-md-1 " style="background-color: black"></div>
 </div> <!-- white stripe -->
@@ -536,77 +594,114 @@
 <div class="row">
     <div class="col-md-1" style="background-color: black"></div>
     <div class="col-md-1" style="background-color: darkgray"></div>
-    <div class="col-md-4" style="background-color: #FFC017">
-        <h4>Impact Analysis</h4>
+    <div class="col-md-4" style="background-color: white">
+        <p></p>
+        <h4 style="display: inline;">Impact Analysis</h4> <span>(click labels to add descriptions)</span>
+
          <!--slider for safety rating -->
+        <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+            <div class="card-body">
                 <div class="slider-container d-flex align-items-center">
-                    <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the overall impact on safety of the selected scenario">Safety</label></div>
+                    <div class="col-2"><label class="small-font d-flex align-items-center clickable-label" data-bs-toggle="modal" data-bs-target="#safetyModal" data-bs-placement="top" >Safety</label></div>
                     <div class="col-7">
                       <input type="range" min="1" max="10" value="1" class="form-range" id="range_safety" name="range_safety" onchange="initSlider('range_safety', 'safetyrange');">
                     </div>
                     <div class="col-3"><label id="safetyrange" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></div>
                 </div>
-                <!--slider for safety rating -->
+            </div>
+        </div>
+        <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+            <div class="card-body">
+                <!--slider for Life rating -->
                 <div class="slider-container d-flex align-items-center">
-                    <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the danger to life of the selected scenario">Life</label></div>
+                    <div class="col-2"><label class="small-font d-flex align-items-center clickable-label" data-bs-toggle="modal" data-bs-target="#lifeModal" data-bs-placement="top" >Life</label></div>
                     <div class="col-7">
                       <input type="range" min="1" max="10" value="1" class="form-range" id="range_life" name="range_life" onchange="initSlider('range_life', 'liferange');">
                     </div>
                     <div class="col-3"><h6><label id="liferange" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                 </div>
-                <!--slider for safety rating -->
+            </div>
+        </div>
+                <!--slider for Production impact rating -->
+        <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+            <div class="card-body">
                 <div class="slider-container d-flex align-items-center">
-                    <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the production and operational impacts of the selected scenario">Production</label></div>
+                    <div class="col-2"><label class="small-font d-flex align-items-center clickable-label" data-bs-toggle="modal" data-bs-target="#productionModal" data-bs-placement="top" >Production</label></div>
                     <div class="col-7">
                       <input type="range" min="1" max="10" value="1" class="form-range" id="range_production" name="range_production" onchange="initSlider('range_production', 'productionrange');">
                     </div>
                     <div class="col-3"><h6><label id="productionrange" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                 </div>
-                 <!--slider for safety rating -->
+            </div>
+        </div>
+                 <!--slider for financial rating -->
+        <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+            <div class="card-body">
                 <div class="slider-container d-flex align-items-center">
-                    <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the cost impact of the selected scenario">Financial</label></div>
+                    <div class="col-2"><label class="small-font d-flex align-items-center clickable-label" data-bs-toggle="modal" data-bs-target="#financeModal" data-bs-placement="top" >Financial</label></div>
                     <div class="col-7">
                       <input type="range" min="1" max="10" value="1" class="form-range" id="range_finance" name="range_finance" onchange="initSlider('range_finance', 'financerange');">
                     </div>
                     <div class="col-3"><h6><label id="financerange" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                 </div>
-                <!--slider for safety rating -->
+            </div>
+        </div>
+                <!--slider for reputation rating -->
+        <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+            <div class="card-body">
                 <div class="slider-container d-flex align-items-center">
-                    <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the impact on the organization's public reputation of the selected scenario">Reputation</label></div>
+                    <div class="col-2"><label class="small-font d-flex align-items-center clickable-label" data-bs-toggle="modal" data-bs-target="#reputationModal" data-bs-placement="top" >Reputation</label></div>
                     <div class="col-7">
                       <input type="range" min="1" max="10" value="1" class="form-range" id="range_reputation" name="range_reputation" onchange="initSlider('range_reputation', 'reputationrange');">
                     </div>
                     <div class="col-3"><h6><label id="reputationrange" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                 </div>
+            </div>
+        </div>
                 <!--slider for environment impact rating -->
+        <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+            <div class="card-body">
                 <div class="slider-container d-flex align-items-center">
-                    <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the environmental impact of the selected scenario">Environment</label></div>
+                    <div class="col-2"><label class="small-font d-flex align-items-center clickable-label" data-bs-toggle="modal" data-bs-target="#environmentModal" data-bs-placement="top" >Environment</label></div>
                     <div class="col-7">
                       <input type="range" min="1" max="10" value="1" class="form-range" id="range_environment" name="range_environment" onchange="initSlider('range_environment', 'environmentrange');">
                     </div>
                     <div class="col-3"><h6><label id="environmentrange" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                 </div>
+            </div>
+        </div>
                 <!--slider for regulatory impact rating -->
+        <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+            <div class="card-body">
                 <div class="slider-container d-flex align-items-center">
-                    <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the regulatory compliance impact of the selected scenario">Regulatory</label></div>
+                    <div class="col-2"><label class="small-font d-flex align-items-center clickable-label" data-bs-toggle="modal" data-bs-target="#regulatoryModal" data-bs-placement="top" >Regulatory</label></div>
                     <div class="col-7">
                       <input type="range" min="1" max="10" value="1" class="form-range" id="range_regulatory" name="range_regulatory" onchange="initSlider('range_regulatory', 'regulatoryrange');">
                     </div>
                     <div class="col-3"><h6><label id="regulatoryrange" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                 </div>
+            </div>
+        </div>
                 <!--slider for data impact rating -->
+        <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+            <div class="card-body">
                 <div class="slider-container d-flex align-items-center">
-                    <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the impact on data of the selected scenario">Data/IP</label></div>
+                    <div class="col-2"><label class="small-font d-flex align-items-center clickable-label" data-bs-toggle="modal" data-bs-target="#dataModal" data-bs-placement="top" >Data/IP</label></div>
                     <div class="col-7">
                       <input type="range" min="1" max="10" value="1" class="form-range" id="range_data" name="range_data" onchange="initSlider('range_data', 'datarange');">
                     </div>
                     <div class="col-3"><h6><label id="datarange" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                 </div>
+            </div>
+        </div>
     </div>
 
-    <div class="col-md-4" style="background-color: #FFC017">
+    <div class="col-md-4" style="background-color: white">
+    <p></p>
         <h4>Assessment - Current Controls</h4>
                 <!--slider for UEL - likelihood without controls-->
+        <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+            <div class="card-body">
                 <div class="slider-container d-flex align-items-center">
                     <div class="col-2"><label class="small-font d-flex align-items-center " >Severity Mitigated (Sm)</label></div>
                     <div class="col-7">
@@ -614,7 +709,11 @@
                     </div>
                     <div class="col-3"><h6><label id="range_SM" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                 </div>
+            </div>
+        </div>
                 <!--slider for MEL - Mitigated Exposure Level-->
+        <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+            <div class="card-body">
                 <div class="slider-container d-flex align-items-center">
                     <div class="col-2"><label class="small-font d-flex align-items-center " >Mitigated Exposure (MEL)</label></div>
                     <div class="col-7">
@@ -622,7 +721,11 @@
                     </div>
                     <div class="col-3"><h6><label id="range_MEL" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                 </div>
+            </div>
+        </div>
                 <!--slider for MEL - Mitigated Exposure Level-->
+        <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+            <div class="card-body">
                 <div class="slider-container d-flex align-items-center">
                     <div class="col-2"><label class="small-font d-flex align-items-center " >Residual Risk (RRm)</label></div>
                     <div class="col-7">
@@ -630,8 +733,12 @@
                     </div>
                     <div class="col-3"><h6><label id="range_RRM" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                 </div>
+            </div>
+        </div>
                     <row>
                         <div class=col-md-6>
+                <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                    <div class="card-body">
                             <label class="form-label" for="selStandards">Standards</label>
                             <select class="form-control" name="selStandards" id="selStandards" title="Select which standards to align with for recommendations">
                             <option value="">-- Select Standard --</option>
@@ -639,6 +746,8 @@
                                 <option value="{{ standardslist.standard }}">{{ standardslist.standard}}</option>
                             {% endfor %}
                             </select>
+                    </div>
+                </div>
 
                         </div>
                         <div class=col-md-6>
@@ -678,14 +787,14 @@
     <div class="col-md-4" style="background-color: white">
         <div class="row  rounded p-3 ">
             <label for="txtControlAnalysis" class="small-font">Control Recommendations:</label>
-            <textarea id="txtControlAnalysis" name="txtControlAnalysis" class="form-control border border-danger" rows="6"  style="resize: none"></textarea><br>
+            <textarea id="txtControlAnalysis" name="txtControlAnalysis" class="form-control border border-danger" rows="6"  style="resize: none; border: 3px #97979A; border-radius: 10px; box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5);  padding: 20px; background-color: white"></textarea><br>
         </div>
 
     </div>
     <div class="col-md-4" style="background-color: white">
         <div class="row  rounded p-3 ">
             <label for="txtScenarioAnalysis" class="small-font">Recommendations will align with selected standards:</label>
-            <textarea id="txtScenarioAnalysis" name="txtScenarioAnalysis" class="form-control border border-danger" rows="6"  style="resize: none"></textarea>
+            <textarea id="txtScenarioAnalysis" name="txtScenarioAnalysis" class="form-control border border-danger" rows="6"  style="resize: none; border: 3px #97979A; border-radius: 10px; box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5);  padding: 20px; background-color: white"></textarea>
         </div>
 
     </div>
@@ -702,6 +811,8 @@
     <div class="col-md-4" style="background-color: white">
         <h4>Adjusted Risk (After Action)</h4>
                 <!--slider for Severity level (Sa) -->
+        <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+            <div class="card-body">
                 <div class="slider-container d-flex align-items-center">
                     <div class="col-2"><label class="small-font d-flex align-items-center " >Severity Adjusted(Sa)</label></div>
                     <div class="col-7">
@@ -709,7 +820,11 @@
                     </div>
                     <div class="col-3"><h6><label id="range_SA" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                 </div>
+            </div>
+        </div>
                 <!--slider for Mitigated Exposure (MELa) -->
+        <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+            <div class="card-body">
                 <div class="slider-container d-flex align-items-center">
                     <div class="col-2"><label class="small-font d-flex align-items-center " >Mitigated Exposure (MELa)</label></div>
                     <div class="col-7">
@@ -717,7 +832,11 @@
                     </div>
                     <div class="col-3"><h6><label id="range_MELa" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                 </div>
+            </div>
+        </div>
                 <!--slider for Residual Risk (RRa) -->
+        <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+            <div class="card-body">
                 <div class="slider-container d-flex align-items-center">
                     <div class="col-2"><label class="small-font d-flex align-items-center " >Residual Risk (RRa)</label></div>
                     <div class="col-7"><input type="text" id="txtRRa" name="txtRRa" class="form-control">
@@ -725,31 +844,59 @@
                     </div>
                     <div class="col-3"><h6><label id="range_RRa" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                 </div>
+            </div>
+        </div>
 
     </div>
      <div class="col-md-4" style="background-color: white">
         <h4>Quantitative Assessment</h4>
-        <div class="form-group">
-            <label for="aro">Annualized Rate of Occurrence (ARO):</label>
-            <input type="range" class="form-control-range" id="aro" name="aro" min="0" max="12" step="1" oninput="updatearoOutput(this.value)">
-            <output for="aro" id="aroOutput">0</output>
+         <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+            <div class="card-body">
+
+                <div class="slider-container d-flex align-items-center">
+                    <div class="col-2"><label class="small-font d-flex align-items-center " >Annualized Rate of Occurrence (ARO):</label></div>
+                    <div class="col-7">
+                      <input type="range" class="form-range" id="aro" name="aro" min="0" max="12" step="1" oninput="updatearoOutput(this.value)">
+                    </div>
+                    <div class="col-3"><h6><output for="aro" id="aroOutput">0</output></h6></div>
+                </div>
+             </div>
+         </div>
+
+        <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+            <div class="card-body">
+
+                <div class="slider-container d-flex align-items-center">
+                    <div class="col-2"><label class="small-font d-flex align-items-center " >Event Costs (SLE): </label></div>
+                    <div class="col-7">
+                        <input type="text" class="form-range" id="sle" name="sle" style="border: 3px #97979A; border-radius: 10px; box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5);  padding: 20px; background-color: white">
+                    </div>
+
+                </div>
+
+            </div>
         </div>
-        <br>
-        <div class="form-group">
-            <label for="sle">Event Costs (SLE):</label>
-            <input type="range" class="form-control-range" id="sle" name="sle" min="0" max="10000000" step="1000">
-            <output for="sle" id="sleOutput">$0</output>
+
+        <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+            <div class="card-body">
+                <div class="form-group">
+                    <label for="ale">Annualized Loss Expectancy (ALE):</label>
+                    <output id="ale">$0</output>
+                </div>
+            </div>
         </div>
-        <br>
-        <div class="form-group">
-            <label for="ale">Annualized Loss Expectancy (ALE):</label>
-            <output id="ale">$0</output>
-        </div>
-        <br>
-        <div class="form-group">
-            <label for="countermeasureCosts">Cost of Countermeasures:</label>
-            <input type="range" class="form-control-range" id="countermeasureCostsRange" name="countermeasureCostsRange" min="0" max="1000000" step="1000" oninput="updateCountermeasureCostsOutput(this.value)">
-            <output for="countermeasureCostsRange" id="countermeasureCostsOutput">$0</output>
+
+        <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+            <div class="card-body">
+
+                <div class="slider-container d-flex align-items-center">
+                    <div class="col-2"><label class="small-font d-flex align-items-center " >Cost of Countermeasures:</label></div>
+                    <div class="col-7">
+                        <input type="range" class="form-range" id="countermeasureCostsRange" name="countermeasureCostsRange" min="0" max="1000000" step="1000" oninput="updateCountermeasureCostsOutput(this.value)">
+                    </div>
+                    <div class="col-3"><h6><output for="countermeasureCostsRange" id="countermeasureCostsOutput">$0</output></h6></div>
+                </div>
+            </div>
         </div>
          <script>
             function updatearoOutput(value) {
@@ -982,6 +1129,15 @@
 
           // Event listener for form submission
           function processFormData() {
+
+            // Prompt the user for confirmation
+            var isConfirmed = window.confirm("Are you sure you want to save the scenario data?");
+
+            // If the user clicked "Cancel", exit the function
+            if (!isConfirmed) {
+                return;
+            }
+
             $('#loadingSpinner').show();
             // Get the values of the form fields
             const scenario = document.getElementById('txtScenario').value;
@@ -1009,6 +1165,15 @@
             const recommendations = document.getElementById('txtScenarioAnalysis').value
             const controls = document.getElementById('txtControlAnalysis').value
             const rra =  document.getElementById('txtRRa').value
+            const justifySafety =  document.getElementById('txtsafetyJustify').value
+            const justifyLife =  document.getElementById('txtlifeJustify').value
+            const justifyProduction =  document.getElementById('txtproductionJustify').value
+            const justifyFinance =  document.getElementById('txtfinanceJustify').value
+            const justifyReputation =  document.getElementById('txtreputationJustify').value
+            const justifyEnvironment =  document.getElementById('txtenvironmentJustify').value
+            const justifyRegulation =  document.getElementById('txtregulatoryJustify').value
+            const dataRegulation =  document.getElementById('txtdataJustify').value
+            const sle =  document.getElementById('sle').value
 
             // const likelihood = document.getElementById('likelihood').value;
             //onst impact = document.getElementById('impact').value;
@@ -1038,17 +1203,451 @@
                 formData.append('recommendations',recommendations)
                 formData.append('cyberpha', cyberpha);
                 formData.append('controls', controls);
+                formData.append('justifySafety', justifySafety);
+                formData.append('justifyLife', justifyLife);
+                formData.append('justifyProduction', justifyProduction);
+                formData.append('justifyFinance', justifyFinance);
+                formData.append('justifyReputation', justifyReputation);
+                formData.append('justifyEnvironment', justifyEnvironment);
+                formData.append('justifyRegulation', justifyRegulation);
+                formData.append('dataRegulation', dataRegulation);
+                formData.append('sle', sle);
 
                 // Call the saveOrUpdateCyberPHA function
                 saveOrUpdateCyberPHA(formData);
 
                 $('#loadingSpinner').hide();
           }
+    </script>
+
+<div class="modal fade" id="safetyModal" tabindex="-1" aria-labelledby="safetyModal" aria-hidden="true">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="safetyModal_Label">Justification for Safety Impact Rating</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <textarea id="txtsafetyJustify" name="txtsafetyJustify" class="form-control" rows="3" style="resize: none"></textarea>
+        <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal fade" id="lifeModal" tabindex="-1" aria-labelledby="lifeModal" aria-hidden="true">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="lifeModal_Label">Justification for Danger-to-Life Impact Rating</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <textarea id="txtlifeJustify" name="txtlifeJustify" class="form-control" rows="3" style="resize: none"></textarea>
+        <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal fade" id="productionModal" tabindex="-1" aria-labelledby="productionModal" aria-hidden="true">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="productionModal_Label">Justification for Production Impact Rating</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <textarea id="txtproductionJustify" name="txtproductionJustify" class="form-control" rows="3" style="resize: none"></textarea>
+        <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal fade" id="financeModal" tabindex="-1" aria-labelledby="financeModal" aria-hidden="true">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="financeModal_Label">Justification for Financial Impact Rating</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <textarea id="txtfinanceJustify" name="txtfinanceJustify" class="form-control" rows="3" style="resize: none"></textarea>
+        <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal fade" id="reputationModal" tabindex="-1" aria-labelledby="reputationModal" aria-hidden="true">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="reputationModal_Label">Justification for Reputation Impact Rating</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <textarea id="txtreputationJustify" name="txtreputationJustify" class="form-control" rows="3" style="resize: none"></textarea>
+        <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal fade" id="environmentModal" tabindex="-1" aria-labelledby="environmentModal" aria-hidden="true">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="environmentModal_Label">Justification for Environment Impact Rating</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <textarea id="txtenvironmentJustify" name="txtenvironmentJustify" class="form-control" rows="3" style="resize: none"></textarea>
+        <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal fade" id="regulatoryModal" tabindex="-1" aria-labelledby="regulatoryModal" aria-hidden="true">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="regulatoryModal_Label">Justification for Regulatory Impact Rating</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <textarea id="txtregulatoryJustify" name="txtregulatoryJustify" class="form-control" rows="3" style="resize: none"></textarea>
+        <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal fade" id="dataModal" tabindex="-1" aria-labelledby="dataModal" aria-hidden="true">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="dataModal_Label">Justification for Data Impact Rating</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <textarea id="txtdataJustify" name="txtdataJustify" class="form-control" rows="3" style="resize: none"></textarea>
+        <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+</form>
+
+<!-- RAActionsModal.html -->
+<div class="modal fade" id="RAActionsModal" tabindex="-1" aria-labelledby="RAActionsModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="RAActionsModalLabel">Mitigate Risk:</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+        <div class="modal-body">
+            <form id="raActionsForm">
+                {% csrf_token %}
+                <input type="hidden" name="hdnphaID" id="hdnphaID">
+                <input type="hidden" name="hdntxtModalRAW" id="hdntxtModalRAW" value="0">
+
+                <!-- Action Title -->
+                <div class="mb-3">
+                    <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                        <div class="card-body">
+                            <label for="actionTitle" class="form-label">Headline</label>
+                            <input type="text" class="form-control" id="actionTitle" name="actionTitle" required>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-7">
+                        <!-- Action Owner -->
+                        <div class="mb-3">
+                            <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                                <div class="card-body">
+                                    <label for="actionOwner" class="form-label">Risk Owner</label>
+                                    <input type="text" class="form-control" id="actionOwner" name="actionOwner" required>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-5">
+                        <!-- Action Date -->
+                        <div class="mb-3">
+                            <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                                <div class="card-body">
+                                    <label for="actionDate" class="form-label">Action Date</label>
+                                    <input type="date" class="form-control" id="actionDate" name="actionDate" required>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <!-- Action Owner -->
+                        <div class="mb-3">
+                            <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                                <div class="card-body">
+                                    <label for="actionEffort" class="form-label">Effort Level:</label>
+                                    <Select class="form-control" id="actionEffort" name="actionEffort">
+                                            <option value="">-- Select Costs --</option>
+                                            <option value="Low">Low</option>
+                                            <option value="Medium">Medium</option>
+                                            <option value="High">High</option>
+                                            <option value="Very High">Very High</option>
+                                        </select>
+                                </div>
+                                </div>
+                            </div>
+                        </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                                <div class="card-body">
+                                    <label for="actionDifficulty" class="form-label">Difficulty Level</label>
+                                    <Select class="form-control" id="actionDifficulty" name="actionDifficulty">
+                                            <option value="">-- Select Costs --</option>
+                                            <option value="Low">Low</option>
+                                            <option value="Medium">Medium</option>
+                                            <option value="High">High</option>
+                                            <option value="Very High">Very High</option>
+                                        </select>
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    </div>
 
 
+                <div class="row">
+                    <div class="col-md-4">
+                        <!-- Action Owner -->
+                        <div class="mb-3">
+                            <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                                <div class="card-body">
+                                    <label for="actionCost" class="form-label">Estimated Cost</label>
+                                    <Select class="form-control" id="actionCost" name="actionCost">
+                                            <option value="">-- Select Costs --</option>
+                                            <option value="Low">Low</option>
+                                            <option value="Medium">Medium</option>
+                                            <option value="High">High</option>
+                                            <option value="Very High">Very High</option>
+                                        </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <!-- Action Owner -->
+                        <div class="mb-3">
+                            <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                                <div class="card-body">
+                                    <label for="actionAffinity" class="form-label">Risk Mitigation</label>
+                                    <Select class="form-control" id="actionAffinity" name="actionAffinity">
+                                            <option value="">-- Select Costs --</option>
+                                            <option value="Low">Low</option>
+                                            <option value="Medium">Medium</option>
+                                            <option value="High">High</option>
+                                            <option value="Very High">Very High</option>
+                                        </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <!-- Action Date -->
+                        <div class="mb-3">
+                            <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                                <div class="card-body">
+                                    <label for="actionStatus" class="form-label">Status</label>
+                                    <input type="text" class="form-control" id="actionStatus" name="actionStatus" readonly value="Open">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                        <div class="card-body">
+                            <label for="actionDescription" class="form-label">Description</label>
+                            <textarea id="actionDescription" name="actionDescription" class="form-control" rows="3" style="resize: none"></textarea>
+                        </div>
+                    </div>
+                </div>
 
-        </script>
-    </form>
+                <div class="row">
+                    <div class="col-md-7">
+                        <!-- Action Owner -->
+                        <div class="mb-3">
+                            <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                                <div class="card-body">
+                                    <label for="actionPriority" class="form-label">Urgency</label>
+                                        <select class="form-control" id="actionPriority" name="actionPriority">
+                                            <option value="0">-- Select Urgency --</option>
+                                            <option value="1">Low</option>
+                                            <option value="2">Medium</option>
+                                            <option value="3">High</option>
+                                            <option value="4">Critical</option>
+                                        </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-5">
+                        <!-- Action Date -->
+                        <div class="mb-3">
+                            <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                                <div class="card-body">
+                                    <label for="actionDueDate" class="form-label">Target Date</label>
+                                    <input type="date" class="form-control" id="actionDueDate" name="actionDueDate">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Action Assets -->
+                <div class="mb-3">
+                    <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                        <div class="card-body">
+                            <label for="actionAssets" class="form-label">Action Assets</label>
+                            <textarea id="actionAssets" name="actionAssets" class="form-control" rows="3" style="resize: none"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4">
+                        <!-- Action Owner -->
+                        <div class="mb-3">
+                            <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                                <div class="card-body">
+                                    <label for="outageSIS" class="form-label">Safety (SIS) Outage:</label>
+                                        <select class="form-control" id="outageSIS" name="outageSIS">
+                                            <option value="">-- Select Option --</option>
+                                            <option value="Yes">Yes</option>
+                                            <option value="No">No</option>
+                                        </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <!-- Action Date -->
+                        <div class="mb-3">
+                            <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                                <div class="card-body">
+                                    <label for="outageICS" class="form-label">Control System (SCADA/ICS) Outage:</label>
+                                        <select class="form-control" id="outageICS" name="outageICS">
+                                            <option value="">-- Select Option --</option>
+                                            <option value="Yes">Yes</option>
+                                            <option value="No">No</option>
+                                        </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <!-- Action Date -->
+                        <div class="mb-3">
+                            <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                                <div class="card-body">
+                                    <label for="outageEMS" class="form-label">Environmental (EMS) Outage:</label>
+                                        <select class="form-control" id="outageEMS" name="outageEMS">
+                                            <option value="">-- Select Option --</option>
+                                            <option value="Yes">Yes</option>
+                                            <option value="No">No</option>
+                                        </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4">
+                        <!-- Action Owner -->
+                        <div class="mb-3">
+                            <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                                <div class="card-body">
+                                    <label for="outageIT" class="form-label">IT Outage:</label>
+                                        <select class="form-control" id="outageIT" name="outageIT">
+                                            <option value="">-- Select Option --</option>
+                                            <option value="Yes">Yes</option>
+                                            <option value="No">No</option>
+                                        </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <!-- Action Date -->
+                        <div class="mb-3">
+                            <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                                <div class="card-body">
+                                    <label for="outagePS" class="form-label">Physical Security Outage:</label>
+                                        <select class="form-control" id="outagePS" name="outagePS">
+                                            <option value="">-- Select Option --</option>
+                                            <option value="Yes">Yes</option>
+                                            <option value="No">No</option>
+                                        </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <!-- Action Date -->
+                        <div class="mb-3">
+                            <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                                <div class="card-body">
+                                    <label for="outageWWW" class="form-label">Internet Outage:</label>
+                                        <select class="form-control" id="outageWWW" name="outageWWW">
+                                            <option value="0">-- Select Option --</option>
+                                            <option value="1">Yes</option>
+                                            <option value="2">No</option>
+                                        </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="button" class="btn btn-primary" onclick="submitRAActionForm();">Save</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </form>
+        </div>
+        <!-- ... (rest of the modal code) ... -->
+
+    </div>
+  </div>
+</div>
+<script>
+    function getCookie(name) {
+        let value = "; " + document.cookie;
+        let parts = value.split("; " + name + "=");
+        if (parts.length == 2) return parts.pop().split(";").shift();
+    }
+
+    $.ajaxSetup({
+        headers: { "X-CSRFToken": getCookie("csrftoken") }
+    });
+
+    function submitRAActionForm() {
+        $.ajax({
+            type: "POST",
+            url: "{% url 'OTRisk:save_ra_action' %}",
+            data: $("#raActionsForm").serialize(),
+            success: function(response) {
+                if (response.status == "success") {
+                    $("#RAActionsModal").modal('hide');
+                    // Optionally, show a success message or perform other actions.
+                } else {
+                    alert("Error saving data!");
+                }
+            }
+        });
+    }
+</script>
+
 
 
 
@@ -1056,82 +1655,86 @@
 
         // Function to add a new scenario row to the table
         function addScenarioRow() {
-            var scenarioCount = document.querySelectorAll('#scenarioTable tbody tr').length + 1;
-            var row = document.createElement('tr');
-            row.id = 'scenarioRow' + scenarioCount;
+            try {
+                var scenarioCount = document.querySelectorAll('#scenarioTable tbody tr').length + 1;
+                var row = document.createElement('tr');
+                row.id = 'scenarioRow' + scenarioCount;
 
-            // Create table cells for each field
-            var assessmentNameCell = document.createElement('td');
-            var scenarioCell = document.createElement('td');
-            var controlObjectiveCell = document.createElement('td');
-            var riskCategoryCell = document.createElement('td');
-            var mitigationMeasuresCell = document.createElement('td');
-            var likelihoodCell = document.createElement('td');
-            var impactCell = document.createElement('td');
-            var riskLevelCell = document.createElement('td');
+                // Create table cells for each field
+                var assessmentNameCell = document.createElement('td');
+                var scenarioCell = document.createElement('td');
+                var controlObjectiveCell = document.createElement('td');
+                var riskCategoryCell = document.createElement('td');
+                var mitigationMeasuresCell = document.createElement('td');
+                var likelihoodCell = document.createElement('td');
+                var impactCell = document.createElement('td');
+                var riskLevelCell = document.createElement('td');
 
-            // Create form elements for each field
-            var assessmentNameInput = document.createElement('input');
-            assessmentNameInput.type = 'text';
-            assessmentNameInput.name = 'assessment_name';
-            assessmentNameCell.appendChild(assessmentNameInput);
+                // Create form elements for each field
+                var assessmentNameInput = document.createElement('input');
+                assessmentNameInput.type = 'text';
+                assessmentNameInput.name = 'assessment_name';
+                assessmentNameCell.appendChild(assessmentNameInput);
 
-            var scenarioInput = document.createElement('input');
-            scenarioInput.type = 'text';
-            scenarioInput.name = 'scenarios[' + scenarioCount + '][scenario]';
-            scenarioCell.appendChild(scenarioInput);
+                var scenarioInput = document.createElement('input');
+                scenarioInput.type = 'text';
+                scenarioInput.name = 'scenarios[' + scenarioCount + '][scenario]';
+                scenarioCell.appendChild(scenarioInput);
 
-            var controlObjectiveSelect = document.createElement('select');
-            controlObjectiveSelect.name = 'scenarios[' + scenarioCount + '][control_objective]';
-            // Populate control objectives dynamically
+                var controlObjectiveSelect = document.createElement('select');
+                controlObjectiveSelect.name = 'scenarios[' + scenarioCount + '][control_objective]';
+                // Populate control objectives dynamically
 
-            var riskCategorySelect = document.createElement('select');
-            riskCategorySelect.name = 'scenarios[' + scenarioCount + '][CategoryName]';
-            // Populate risk categories dynamically
+                var riskCategorySelect = document.createElement('select');
+                riskCategorySelect.name = 'scenarios[' + scenarioCount + '][CategoryName]';
+                // Populate risk categories dynamically
 
 
-            var mitigationMeasuresSelect = document.createElement('select');
-            mitigationMeasuresSelect.name = 'scenarios[' + scenarioCount + '][mitigation_measures]';
-            // Populate mitigation measures dynamically
+                var mitigationMeasuresSelect = document.createElement('select');
+                mitigationMeasuresSelect.name = 'scenarios[' + scenarioCount + '][mitigation_measures]';
+                // Populate mitigation measures dynamically
 
-            var likelihoodInput = document.createElement('input');
-            likelihoodInput.type = 'number';
-            likelihoodInput.name = 'scenarios[' + scenarioCount + '][likelihood]';
-            likelihoodCell.appendChild(likelihoodInput);
+                var likelihoodInput = document.createElement('input');
+                likelihoodInput.type = 'number';
+                likelihoodInput.name = 'scenarios[' + scenarioCount + '][likelihood]';
+                likelihoodCell.appendChild(likelihoodInput);
 
-            var impactInput = document.createElement('input');
-            impactInput.type = 'number';
-            impactInput.name = 'scenarios[' + scenarioCount + '][impact]';
-            impactCell.appendChild(impactInput);
+                var impactInput = document.createElement('input');
+                impactInput.type = 'number';
+                impactInput.name = 'scenarios[' + scenarioCount + '][impact]';
+                impactCell.appendChild(impactInput);
 
-            var riskLevelInput = document.createElement('input');
-            riskLevelInput.type = 'text';
-            riskLevelInput.name = 'scenarios[' + scenarioCount + '][risk_level]';
-            riskLevelInput.disabled = true;
-            riskLevelCell.appendChild(riskLevelInput);
+                var riskLevelInput = document.createElement('input');
+                riskLevelInput.type = 'text';
+                riskLevelInput.name = 'scenarios[' + scenarioCount + '][risk_level]';
+                riskLevelInput.disabled = true;
+                riskLevelCell.appendChild(riskLevelInput);
 
-            // Append form elements to the cells
-            assessmentNameCell.appendChild(assessmentNameInput);
-            scenarioCell.appendChild(scenarioInput);
-            controlObjectiveCell.appendChild(controlObjectiveSelect);
-            riskCategoryCell.appendChild(riskCategorySelect);
-            mitigationMeasuresCell.appendChild(mitigationMeasuresSelect);
-            likelihoodCell.appendChild(likelihoodInput);
-            impactCell.appendChild(impactInput);
-            riskLevelCell.appendChild(riskLevelInput);
+                // Append form elements to the cells
+                assessmentNameCell.appendChild(assessmentNameInput);
+                scenarioCell.appendChild(scenarioInput);
+                controlObjectiveCell.appendChild(controlObjectiveSelect);
+                riskCategoryCell.appendChild(riskCategorySelect);
+                mitigationMeasuresCell.appendChild(mitigationMeasuresSelect);
+                likelihoodCell.appendChild(likelihoodInput);
+                impactCell.appendChild(impactInput);
+                riskLevelCell.appendChild(riskLevelInput);
 
-            // Append cells to the row
-            row.appendChild(assessmentNameCell);
-            row.appendChild(scenarioCell);
-            row.appendChild(controlObjectiveCell);
-            row.appendChild(riskCategoryCell);
-            row.appendChild(mitigationMeasuresCell);
-            row.appendChild(likelihoodCell);
-            row.appendChild(impactCell);
-            row.appendChild(riskLevelCell);
+                // Append cells to the row
+                row.appendChild(assessmentNameCell);
+                row.appendChild(scenarioCell);
+                row.appendChild(controlObjectiveCell);
+                row.appendChild(riskCategoryCell);
+                row.appendChild(mitigationMeasuresCell);
+                row.appendChild(likelihoodCell);
+                row.appendChild(impactCell);
+                row.appendChild(riskLevelCell);
 
-            // Append row to the table
-            document.getElementById('scenarioTable').appendChild(row);
+                // Append row to the table
+                document.getElementById('scenarioTable').appendChild(row);
+            } catch (error) {
+
+            }
         }
 
         // Event listener for adding a new scenario row
@@ -1208,6 +1811,7 @@
             let industry = sessionStorage.getItem('sessionIndustry')
             let facilityType = sessionStorage.getItem('sessionFacilityType')
             let standards = document.getElementById('selStandards').value;
+            let country = document.getElementById('hdnCountry').value
 
 
 
@@ -1245,6 +1849,8 @@
 
                    document.getElementById('txtControlAnalysis').value = response.controls;
                    document.getElementById('txtScenarioAnalysis').value = response.recommendations;
+                   document.getElementById('sle').value = response.costs;
+
                      $('#loadingSpinner').hide();
 
                 },
@@ -1256,8 +1862,9 @@
             });
         }
 
-
+document.getElementById('hdnphaID').value = sessionStorage.getItem('activeCyberPHA');
 </script>
+
 
 
 </body>

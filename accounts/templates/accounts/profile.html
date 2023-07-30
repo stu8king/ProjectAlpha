@@ -27,5 +27,26 @@
       <td>{{ user.is_superuser }}</td>
     </tr>
   </table>
+
+  <!-- Check if the user is a superuser -->
+  {% if user.is_superuser %}
+    <h3>Add New User to Organization</h3>
+    <form action="{% url 'accounts:add_user_to_organization' %}" method="post">
+      {% csrf_token %}
+      <label for="first_name">First Name:</label>
+      <input type="text" name="first_name" required><br>
+
+      <label for="last_name">Last Name:</label>
+      <input type="text" name="last_name" required><br>
+
+      <label for="email">Email:</label>
+      <input type="email" name="email" required><br>
+
+      <label for="password">Password:</label>
+      <input type="password" name="password" required><br>
+
+      <input type="submit" value="Add User">
+    </form>
+  {% endif %}
 </body>
 </html>

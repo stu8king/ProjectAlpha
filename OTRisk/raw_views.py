@@ -4,67 +4,256 @@ import os
 from OTRisk.models.raw import RAWorksheet, RAWorksheetScenario, RAActions, MitreICSMitigations, MitreICSTechniques
 from django.contrib.auth.decorators import login_required
 from OTRisk.models.questionnairemodel import FacilityType
-from OTRisk.models.Model_CyberPHA import tblIndustry, tblThreatSources, auditlog
+from OTRisk.models.Model_CyberPHA import tblIndustry, tblThreatSources, auditlog, tblScenarios
 from OTRisk.models.Model_Mitre import MitreICSTactics
 from django.shortcuts import render
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from datetime import date
 from django.views import View
-from django.http import JsonResponse
+from django.db.models import Sum, Max
+from django.http import JsonResponse, HttpResponse, FileResponse
 from django.shortcuts import get_object_or_404
+from django.core import serializers
+from django.template.loader import get_template
+from django.conf import settings
+import tempfile
+from .forms import RAActionsForm
 
-import nvdlib
+from xhtml2pdf import pisa
+import json
+import re
 import requests
+
+
+def get_rawactions(request):
+    raw_id = request.GET.get('raw_id', None)
+    rawactions = RAActions.objects.filter(RAWorksheetID=raw_id)
+
+    # Convert the QuerySet to a list of dictionaries
+    rawactions_list = [{
+        'ID': action.ID,
+        'actionTitle': action.actionTitle,
+        'actionDescription': action.actionDescription,
+        'actionStatus': action.actionStatus,
+        'actionPriority': action.actionPriority,
+        'actionOwner': action.actionOwner,
+        # Add more fields as needed
+    } for action in rawactions]
+
+    return JsonResponse(rawactions_list, safe=False)
+
+
+def save_ra_action(request):
+    print(f"{request.POST}")
+    if request.method == "POST":
+        # Extract data from POST request
+        action_title = request.POST.get('actionTitle')
+        action_owner = request.POST.get('actionOwner')
+        action_date = request.POST.get('actionDate')
+        action_effort = request.POST.get('actionEffort')
+        action_difficulty = request.POST.get('actionDifficulty')
+        action_cost = request.POST.get('actionCost')
+        action_affinity = request.POST.get('actionAffinity')
+        action_status = request.POST.get('actionStatus')
+        action_description = request.POST.get('actionDescription')
+        action_assets = request.POST.get('actionAssets')
+        action_due_date = request.POST.get('actionDueDate')
+        action_priority = request.POST.get('actionPriority')
+        outageSIS = request.POST.get('outageSIS')
+        outageICS = request.POST.get('outageICS')
+        outageEMS = request.POST.get('outageEMS')
+        outageIT = request.POST.get('outageIT')
+        outagePS = request.POST.get('outagePS')
+        outageWWW = request.POST.get('outageWWW')
+        phaID = int(request.POST.get('hdnphaID'))
+        RAWorksheetID = int(request.POST.get('hdntxtModalRAW'))
+
+        ra_worksheet_instance = RAWorksheet.objects.get(pk=RAWorksheetID)
+        # Create a new RAActions record
+        ra_action = RAActions(
+            actionTitle=action_title,
+            actionOwner=action_owner,
+            actionDate=action_date,
+            actionEffort=action_effort,
+            actionDifficulty=action_difficulty,
+            actionCost=action_cost,
+            actionStatus=action_status,
+            actionDescription=action_description,
+            actionDueDate=action_due_date,
+            actionPriority=action_priority,
+            actionAssets=action_assets,
+            actionAffinity=action_affinity,
+            outageSIS=outageSIS,
+            outageICS=outageICS,
+            outageEMS=outageEMS,
+            outageIT=outageIT,
+            outagePS=outagePS,
+            outageWWW=outageWWW,
+            RAWorksheetID=ra_worksheet_instance,
+            phaID=phaID
+        )
+        ra_action.save()
+
+        return JsonResponse({"status": "success"})
+    return JsonResponse({"status": "error"})
+
+
+@csrf_exempt
+def raw_from_walkdown(request):
+    print("test")
+    if request.method == 'POST':
+        cyberPHAID = request.POST.get('cyberPHAID')
+        questionID = request.POST.get('questionID')
+        walkdownQuestion = request.POST.get('walkdownQuestion')
+        facility = request.POST.get('facility')
+        facilityType = request.POST.get('facilityType')
+        facilityIndustry = request.POST.get('facilityIndustry')
+
+        # Create a new record
+        ra_worksheet = RAWorksheet(
+            cyberPHAID=cyberPHAID,
+            RATitle=f'WALKDOWN - Q: {questionID}: {walkdownQuestion}',
+            StatusFlag='Open',
+            RATrigger='Site Visit/Walkdown',
+            RADescription=walkdownQuestion,
+            AssessorName=request.user,
+            BusinessUnit=facility,
+            BusinessUnitType=facilityType,
+            industry=facilityIndustry
+        )
+        ra_worksheet.save()
+
+        return JsonResponse({'status': 'success', 'message': 'Record created successfully'})
+
+
+@login_required()
+def rawreport(request, raworksheet_id):
+    # Fetch the RAWorksheet and associated scenarios
+    raworksheet = get_object_or_404(RAWorksheet, pk=raworksheet_id)
+    scenarios = RAWorksheetScenario.objects.filter(RAWorksheetID=raworksheet)
+    total_scenario_cost = scenarios.aggregate(Sum('scenarioCost'))['scenarioCost__sum']
+    formatted_cost = "${:,.2f}".format(total_scenario_cost)
+    # Get the highest riskScore
+    highest_risk_score = scenarios.aggregate(Max('RiskScore'))['RiskScore__max']
+
+    risk_status = get_risk_status(highest_risk_score)
+
+    safety_status = get_risk_status(scenarios.aggregate(Max('SafetyScore'))['SafetyScore__max'])
+    life_status = get_risk_status(scenarios.aggregate(Max('lifeScore'))['lifeScore__max'])
+    environment_status = get_risk_status(scenarios.aggregate(Max('environmentScore'))['environmentScore__max'])
+    operational_status = get_risk_status(scenarios.aggregate(Max('productionScore'))['productionScore__max'])
+    regulatory_status = get_risk_status(scenarios.aggregate(Max('regulatoryScore'))['regulatoryScore__max'])
+    financial_status = get_risk_status(scenarios.aggregate(Max('FinancialScore'))['FinancialScore__max'])
+    data_status = get_risk_status(scenarios.aggregate(Max('DataScore'))['DataScore__max'])
+    reputation_status = get_risk_status(scenarios.aggregate(Max('ReputationScore'))['ReputationScore__max'])
+
+    return render(request, 'rawreport.html',
+                  {'raworksheet': raworksheet,
+                   'scenarios': scenarios,
+                   'formatted_cost': formatted_cost,
+                   'risk_status': risk_status,
+                   'safety_status': safety_status,
+                   'life_status': life_status,
+                   'environment_status': environment_status,
+                   'operational_status': operational_status,
+                   'regulatory_status': regulatory_status,
+                   'financial_status': financial_status,
+                   'data_status': data_status,
+                   'reputation_status': reputation_status})
+
+
+def get_risk_status(risk_score):
+    if risk_score in [1, 2]:
+        return "Low"
+    elif risk_score in [3, 4]:
+        return "Low/Medium"
+    elif risk_score in [5, 6]:
+        return "Medium"
+    elif risk_score in [7, 8]:
+        return "Medium/High"
+    elif risk_score == 9:
+        return "High"
+    elif risk_score == 10:
+        return "Very High"
+    else:
+        return "Unknown"
 
 
 @login_required()
 def qraw(request):
-    print(f"{request.POST}")
     if request.method == 'POST':
         edit_mode = int(request.POST.get('edit_mode', 0))
         print(f'edit_mode={edit_mode}')
         if edit_mode == 0:
             print('adding new')
-            # adding new records
-            ra_worksheet = RAWorksheet(
+
+            # Check for duplicate records
+            is_duplicate = RAWorksheet.objects.filter(
                 RATitle=request.POST.get('txtTitle'),
                 BusinessUnit=request.POST.get('txtBU'),
                 AssessorName=request.POST.get('txtLeader'),
                 industry=request.POST.get('selectIndustry'),
                 BusinessUnitType=request.POST.get('selectFacility'),
                 RATrigger=request.POST.get('selectTrigger'),
-                RADescription=request.POST.get('txtDescription'),
-                UserID=request.user.id,
-                WalkdownID=0,
-                StatusFlag="Open",
-                RADate=date.today(),
-            )
-            ra_worksheet.save()
+                RADescription=request.POST.get('txtDescription')
+            ).exists()
 
-            # add scenario records
-            for i in range(1, 5):
-                if request.POST.get(f'txtScenarioDescription_{i}') == '':
-                    break
-                else:
-                    scenario = RAWorksheetScenario(
-                        RAWorksheetID=ra_worksheet,
-                        ScenarioDescription=request.POST.get(f'txtScenarioDescription_{i}'),
-                        threatSource=request.POST.get(f'selectThreat_{i}'),
-                        threatTactic=request.POST.get(f'selectTactics_{i}'),
-                        SafetyScore=request.POST.get(f'range_safety_{i}'),
-                        lifeScore=request.POST.get(f'range_life_{i}'),
-                        productionScore=request.POST.get(f'range_production_{i}'),
-                        FinancialScore=request.POST.get(f'range_finance_{i}'),
-                        ReputationScore=request.POST.get(f'range_reputation_{i}'),
-                        environmentScore=request.POST.get(f'range_environment_{i}'),
-                        regulatoryScore=request.POST.get(f'range_regulatory_{i}'),
-                        DataScore=request.POST.get(f'range_data_{i}'),
-                        VulnScore=request.POST.get(f'range_vuln_{i}'),
-                        ThreatScore=request.POST.get(f'range_threat_{i}'),
-                        notes=request.POST.get(f'txtAssets_{i}')
-                    )
-                    scenario.save()
+            if not is_duplicate:
+                # adding new records
+                ra_worksheet = RAWorksheet(
+                    RATitle=request.POST.get('txtTitle'),
+                    BusinessUnit=request.POST.get('txtBU'),
+                    AssessorName=request.POST.get('txtLeader'),
+                    industry=request.POST.get('selectIndustry'),
+                    BusinessUnitType=request.POST.get('selectFacility'),
+                    RATrigger=request.POST.get('selectTrigger'),
+                    RADescription=request.POST.get('txtDescription'),
+                    UserID=request.user.id,
+                    WalkdownID=0,
+                    StatusFlag="Open",
+                    RADate=date.today(),
+                )
+                ra_worksheet.save()
+
+                # add scenario records
+                for i in range(1, 5):
+                    if request.POST.get(f'txtScenarioDescription_{i}') == '':
+                        break
+                    else:
+                        raw_cost = request.POST.get(f'lblriskCost_{i}')
+                        formatted_cost = int(re.sub(r'[^\d.]', '', raw_cost))
+                        scenario = RAWorksheetScenario(
+                            RAWorksheetID=ra_worksheet,
+                            ScenarioDescription=request.POST.get(f'txtScenarioDescription_{i}'),
+                            threatSource=request.POST.get(f'selectThreat_{i}'),
+                            threatTactic=request.POST.get(f'selectTactics_{i}'),
+                            SafetyScore=request.POST.get(f'range_safety_{i}'),
+                            lifeScore=request.POST.get(f'range_life_{i}'),
+                            productionScore=request.POST.get(f'range_production_{i}'),
+                            FinancialScore=request.POST.get(f'range_finance_{i}'),
+                            ReputationScore=request.POST.get(f'range_reputation_{i}'),
+                            environmentScore=request.POST.get(f'range_environment_{i}'),
+                            regulatoryScore=request.POST.get(f'range_regulatory_{i}'),
+                            DataScore=request.POST.get(f'range_data_{i}'),
+                            VulnScore=request.POST.get(f'range_vuln_{i}'),
+                            ThreatScore=request.POST.get(f'range_threat_{i}'),
+                            notes=request.POST.get(f'txtAssets_{i}'),
+                            RiskScore=int(request.POST.get(f'lblriskScore_{i}')),
+                            RiskStatus=request.POST.get(f'lblriskRating_{i}'),
+                            riskSummary=request.POST.get(f'lblriskSummary_{i}'),
+                            scenarioCost=formatted_cost,
+                            justifySafety=request.POST.get(f'txtSafetyJustify_{i}'),
+                            justifyLife=request.POST.get(f'txtlifeJustify_{i}'),
+                            justifyProduction=request.POST.get(f'txtproductionJustify_{i}'),
+                            justifyFinancial=request.POST.get(f'txtfinancialJustify_{i}'),
+                            justifyReputation=request.POST.get(f'txtreputationJustify_{i}'),
+                            justifyEnvironment=request.POST.get(f'txtenvironmentJustify_{i}'),
+                            justifyRegulation=request.POST.get(f'txtregulationustify_{i}'),
+                            justifyData=request.POST.get(f'txtdataJustify_{i}'),
+
+                        )
+                        scenario.save()
         elif edit_mode == 1:
             print('editing')
             ra_worksheet_id = int(request.POST.get('hdnRawID'))
@@ -79,9 +268,27 @@ def qraw(request):
             ra_worksheet.save()
 
             scenario_count = int(request.POST.get('scenarioCount', 0))
-            for i in range(1, scenario_count):
-                scenario_id = int(request.POST.get(f'hdnScenarioID_{i}'))
-                scenario = RAWorksheetScenario.objects.get(ID=scenario_id)
+            print(f"scount={scenario_count}")
+            for i in range(1, scenario_count + 1):
+                print(f"saving scenario {i}")
+                scenario_id_str = request.POST.get(f'hdnScenarioID_{i}')
+                ra_worksheet_id = int(
+                    request.POST.get('hdnRawID'))
+                ra_worksheet_instance = RAWorksheet.objects.get(ID=ra_worksheet_id)
+                print(f"scenario={scenario_id_str}")
+
+                if scenario_id_str and scenario_id_str != '0':
+                    scenario_id = int(scenario_id_str)
+                    try:
+                        scenario = RAWorksheetScenario.objects.get(ID=scenario_id)
+                    except RAWorksheetScenario.DoesNotExist:
+                        scenario = RAWorksheetScenario()  # Create a new instance if not found.
+                else:
+                    scenario = RAWorksheetScenario()  # Create a new instance.
+
+                raw_cost = request.POST.get(f'lblriskCost_{i}')
+                formatted_cost = int(re.sub(r'[^\d.]', '', raw_cost))
+                scenario.RAWorksheetID = ra_worksheet_instance
                 scenario.ScenarioDescription = request.POST.get(f'txtScenarioDescription_{i}')
                 scenario.threatSource = request.POST.get(f'selectThreat_{i}')
                 scenario.threatTactic = request.POST.get(f'selectTactics_{i}')
@@ -95,6 +302,18 @@ def qraw(request):
                 scenario.VulnScore = request.POST.get(f'range_vuln_{i}')
                 scenario.ThreatScore = request.POST.get(f'range_threat_{i}')
                 scenario.notes = request.POST.get(f'txtAssets_{i}')
+                scenario.RiskScore = int(request.POST.get(f'lblriskScore_{i}'))
+                scenario.RiskStatus = request.POST.get(f'lblriskRating_{i}')
+                scenario.riskSummary = request.POST.get(f'lblriskSummary_{i}')
+                scenario.scenarioCost = formatted_cost
+                scenario.justifySafety = request.POST.get(f'txtSafetyJustify_{i}')
+                scenario.justifyLife = request.POST.get(f'txtlifeJustify_{i}')
+                scenario.justifyData = request.POST.get(f'txtdataJustify_{i}')
+                scenario.justifyFinancial = request.POST.get(f'txtfinancialJustify_{i}')
+                scenario.justifyProduction = request.POST.get(f'txtproductionJustify_{i}')
+                scenario.justifyEnvironment = request.POST.get(f'txtenvironmentJustify_{i}')
+                scenario.justifyRegulation = request.POST.get(f'txtregulationJustify_{i}')
+                scenario.justifyReputation = request.POST.get(f'txtreputationJustify_{i}')
                 scenario.save()
 
     raws = RAWorksheet.objects.all()
@@ -106,6 +325,7 @@ def qraw(request):
     threatsources = tblThreatSources.objects.all().order_by('ThreatSource')
     mitreTactics = MitreICSTactics.objects.all().order_by('tactic')
     mitreMitigations = MitreICSMitigations.objects.all().order_by('id')
+    scenarios = tblScenarios.objects.all().order_by('Scenario')
 
     user_ip = request.META.get('REMOTE_ADDR', '')
     user_action = "qraw"
@@ -117,7 +337,8 @@ def qraw(request):
                    'industries': industries,
                    'threatsources': threatsources,
                    'mitreTactics': mitreTactics,
-                   'mitreMitigations': mitreMitigations})
+                   'mitreMitigations': mitreMitigations,
+                   'scenarios': scenarios})
 
 
 class GetTechniquesView(View):
@@ -170,13 +391,18 @@ def openai_assess_risk(request):
         # Prepare the request data for the OpenAI GPT-3 API in the chat format
         message = [
             {"role": "system",
-             "content": f"As a cybersecurity risk assessment professional, I need you to assess the risk of {threat_source} using the threat tactic {threat_tactic} on a scenario relating to {scenario} in a {facility_type} in the {industry} industry."},
+             "content": f"As a cybersecurity risk assessment professional, assess the risk of {threat_source} using the threat tactic {threat_tactic} in relation to {scenario} in a {facility_type} within the {industry} industry. The assets in-scope for this assessment are {asset_lc}."},
             {"role": "user",
-             "content": f"Provide, without any commentary or additional information only the three specific pieces of information that are asked for. Provide the overall risk rating as one of the following values: Low, Low/Medium, Medium, Medium/High or High, depending on your assessment of the risk based on the information gvien then offer a risk score in the range of 1  to 10 where 1 would be a very low overall risk and 10 would be a catatrophic risk,  based on the following information:\nThreat source - {threat_source}, Threat tactic - {threat_tactic}, Safety impact - {safety_impact}/10, Life impact - {life_impact}/10, Production impact - {production_impact}/10, Financial impact - {financial_impact}/10, Reputation impact - {reputation_impact}/10, Environment impact - {environment_impact}/10, Regulatory impact - {regulatory_impact}/10, Data impact - {data_impact}/10, Vulnerability exposure - {vulnerability_exposure}/10, Threat exposure - {threat_exposure}/10, Industry - {industry}, Type of facility - {facility_type}, status of assets in scope for the given scenario is {asset_lc}. “The third piece of information is <summary> which must be a one sentence summary of the key pieces of information used to make the assessment: in particular the weighting given to the industry type, the facility type and the other factors that were given the highest weighting. Provide only the three pieces of information that have been requested. No title or header. The output must be given as simply <overall_risk_rating_value>|<overall_risk_score>|<summary>."
-             }
+             "content": f"First, provide the overall risk rating. Choose from: Low, Low/Medium, Medium, Medium/High, or High. Base this on the provided information:\nThreat source - {threat_source}, Threat tactic - {threat_tactic}, Safety impact - {safety_impact}/10, Life impact - {life_impact}/10, and so on."},
+            {"role": "user",
+             "content": f"Second, provide a risk score between 1 and 10. Consider 1 as a very low risk with minimal impact and 10 as a catastrophic risk involving serious injuries or loss of life."},
+            {"role": "user",
+             "content": f"Third, estimate a value in US dollars if {scenario} were to occur for {facility_type} within the {industry} industry. Use the business impact analysis scores to understand the perspective that the business has with regards to the given scenario of {scenario}, where 1 is minimal/low impact and 10 is maximum/catastrophic impact . Those scores are for safety: {safety_impact}, danger to life: {life_impact}, production/operations: {production_impact}, financial: {financial_impact}, reputation: {reputation_impact}, environmental: {environment_impact}, regulatory: {regulatory_impact}, and data: {data_impact}. Determine how to apply any necessary weightings to impact scores based on the given industry: {industry} and facility type: {facility_type}.Use public sources or industry reports for a credible estimation. If no such data is available, provide a best estimate using Artificial Intelligence. Provide the result as a numeric value to represent a dollar amount."},
+            {"role": "user",
+             "content": f"Lastly, provide a one-sentence summary highlighting the key factors used in the assessment, especially the industry type, facility type, and other high-weight factors. The output format must be: <overall_risk_rating_value>|<overall_risk_score>|<cost>|<summary> where <overall_risk_rating_value> is the overall risk rating, <overall_risk_score> is the overall risk score, <cost> is the estimated cost, <summary> is the summary statement, and | is a field delimiter ."}
         ]
 
-        openai.api_key = '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'
+        openai.api_key = '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'
 
         # Make the API call to the OpenAI GPT-3 API using the message
         response = openai.ChatCompletion.create(
@@ -185,15 +411,16 @@ def openai_assess_risk(request):
             temperature=0,
             max_tokens=256
         )
-
+        print(f"response={response}")
         # Extract the generated response from the API
         generated_response = response['choices'][0]['message']['content']
-        risk_summary = generated_response.split('|')[2].strip()
+        risk_summary = generated_response.split('|')[3].strip()
+        risk_cost = generated_response.split('|')[2].strip()
         risk_score = generated_response.split('|')[1].strip()
         risk_rating = generated_response.split('|')[0].strip()
 
         # Create an array to return to the user interface
-        result_array = [risk_rating, risk_score, risk_summary]
+        result_array = [risk_rating, risk_score, risk_cost, risk_summary]
         print(f"response={generated_response}")
 
         # Return the generated response as JSON
@@ -279,3 +506,41 @@ def get_action(request):
     }
 
     return JsonResponse(action_data)
+
+
+def check_vulnerabilities(request):
+    if request.method == 'POST':
+        # Parse the JSON data from the request body
+        body_unicode = request.body.decode('utf-8')
+        body_data = json.loads(body_unicode)
+
+        vendor = body_data.get('vendor')
+        product = body_data.get('product')
+
+        # Construct the keyword search string
+        keyword_search = f"{vendor} {product}"
+
+        # Query the NVD API using the keywordSearch parameter
+        base_url = "https://services.nvd.nist.gov/rest/json/cves/2.0"
+        params = {
+            "keywordSearch": keyword_search,
+            "resultsPerPage": 50  # You can adjust this as needed
+        }
+        response = requests.get(base_url, params=params)
+        data = response.json()
+        print(f"data={data}")
+        # Extract vulnerabilities from the response
+        vulnerabilities = []
+        for item in data.get('result', {}).get('CVE_Items', []):
+            vulnerabilities.append({
+                'id': item.get('cve', {}).get('CVE_data_meta', {}).get('ID'),
+                'description': item.get('cve', {}).get('description', {}).get('description_data', [{}])[0].get('value',
+                                                                                                               ''),
+                'severity': item.get('impact', {}).get('baseMetricV3', {}).get('cvssV3', {}).get('baseSeverity', '')
+            })
+
+        # Return a structured JSON response
+        return JsonResponse({
+            'asset': f"{vendor} {product}",
+            'vulnerabilities': vulnerabilities
+        })

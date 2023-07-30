@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RA Worksheet Report</title>
+    <style>
+        /* Add any additional styles you want for your PDF here */
+        body {
+            font-family: Arial, sans-serif;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <h1>RA Worksheet Report</h1>
+    <h2>{{ raworksheet.RATitle }}</h2>
+    <p>{{ raworksheet.RADescription }}</p>
+    <p>Date: {{ raworksheet.RADate }}</p>
+    <p>Business Unit: {{ raworksheet.BusinessUnit }}</p>
+    <!-- ... Add other fields from the RAWorksheet model as needed ... -->
+
+    <h2>Scenarios</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Description</th>
+                <th>Threat Code</th>
+                <th>Vuln Code</th>
+                <!-- ... Add other fields from the RAWorksheetScenario model as needed ... -->
+            </tr>
+        </thead>
+        <tbody>
+            {% for scenario in scenarios %}
+            <tr>
+                <td>{{ scenario.ScenarioDescription }}</td>
+                <td>{{ scenario.ThreatCode }}</td>
+                <td>{{ scenario.VulnCode }}</td>
+                <!-- ... Add other fields from the RAWorksheetScenario model as needed ... -->
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>
+

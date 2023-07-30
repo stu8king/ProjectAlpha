@@ -5,11 +5,9 @@
     <title>Site Walkdown</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
-    <script src="{% static 'OTRisk/jquery-gauge.js' %}"></script>
-    <script src="{% static 'OTRisk/jquery-gauge.min.js' %}"></script>
-    <script src="{% static 'OTRisk/walkdown_print.js' %}"></script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.1/font/bootstrap-icons.css" rel="stylesheet">
-    <link href="{% static 'css/jquery-gauge.css' %}" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+
     {% load bootstrap5 %}
     {% bootstrap_css %}
     {% bootstrap_javascript %}
@@ -120,7 +118,7 @@
     .navbar-logo {
     position: absolute;
     top: 5px; /* Adjust this as needed */
-    left: 5; /* Adjust this as needed */
+    left: 5px; /* Adjust this as needed */
     height: 100px; /* Adjust this as needed */
     z-index: 10;
 }
@@ -133,13 +131,7 @@
         cursor: pointer;
       }
 
-.table-container {
-  max-height: 600px; /* Adjust the height as needed */
-  overflow: auto;
-}
-.word-wrap {
-  word-wrap: break-word;
-}
+
 .progress-text {
   position: relative;
   top: 50%;
@@ -156,6 +148,21 @@
 
 </head>
 <body>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        let activeCyberPHA = sessionStorage.getItem('activeCyberPHA');
+        let activeFacility = sessionStorage.getItem('sessionFacility');
+        let activeFacilityType = sessionStorage.getItem('sessionFacilityType');
+        let activeFacilityIndustry = sessionStorage.getItem('sessionIndustry');
+        if (activeCyberPHA) {
+            document.getElementById('hdnCyberPHA').value = activeCyberPHA;
+            document.getElementById('hdnFacility').value = activeFacility;
+            document.getElementById('hdnFacilityType').value = activeFacilityType;
+            document.getElementById('hdnFacilityIndustry').value = activeFacilityIndustry;
+        }
+    });
+</script>
 
 <nav class="navbar navbar-expand-lg navbar-scroll fixed-top shadow-0 border-bottom border-dark rounded">
   <div class="container-fluid d-flex justify-content-between">
@@ -204,224 +211,60 @@
 </nav>
 
 <div class="row">
-    <div style="display: flex; justify-content: center; align-items: center;">
-        <div style="text-align: center;">
-            <br><br><br>
-            <label class="form-label" style="font-size: larger; font-kerning: normal;">Site Walkdown Checklist</label>
-        </div>
-    </div>
+    <div class = "col-md-1" style="background-color: black"></div>
+    <div class = "col-md-1" ></div>
+    <div class = "col-md-8" style="height: 100px"></div>
+
+    <div class = "col-md-1"></div>
+    <div class = "col-md-1" ></div>
+</div>
+
+
+<div class="row">
+    <div class="col-md-1" style="background-color: black"></div>
     <div class="col-md-1"></div>
-    <div class="col-md-4">
-        <div class="table-container rounded-3">
-            <table id="walkdown-table" class="table table-striped table-bordered small-font" >
-                <thead>
-                    <tr>
-                        <!-- <th>ID</th> -->
-                        <th>Name</th>
-                        <th>Type</th>
-                        <th>Date</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for walkdown in walkdown_list %}
-                        <tr class="walkdown-row" data-id="{{ walkdown.ID }}">
-                            <!-- <td>{{ walkdown.ID }}</td> -->
-                            <td class="word-wrap">{{ walkdown.OrganizationName }}</td>
-                            <td>{{ walkdown.LocationType }}</td>
-                            <td>{{ walkdown.WalkdownDate|slice:"5:7" }}/{{ walkdown.WalkdownDate|slice:"8:10" }}/{{ walkdown.WalkdownDate|slice:"2:4" }}</td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+    <div class="col-md-8" style="display: flex; flex-direction: column; justify-content: center; align-items: center;">
+        <h3>Site Walkdown</h3>
+        <h4>Walkdown of <span id="facilityName"></span></h4>
     </div>
-
-<div class="col-md-6">
-    <form id="walkdown-form" action="{% url 'OTRisk:save_walkdown' %}" method="post">
-    {% csrf_token %}
-
     <script>
-      // Check if walkdown_session is a positive integer
-      var walkdownSession = {{ walkdown_session }};
-      if (Number.isInteger(walkdownSession) && walkdownSession > 0) {
-        // Set the value of the local session variable "walkdownid"
-        sessionStorage.setItem('walkdownid', walkdownSession);
-      } else {
-        // Set the value of the local session variable "walkdownid" to null
-        sessionStorage.setItem('walkdownid', null);
-      }
+    document.addEventListener("DOMContentLoaded", function() {
+        var facility = sessionStorage.getItem('sessionFacility');
+        if (facility) {
+            document.getElementById('facilityName').textContent = facility;
+        }
+    });
     </script>
-    <div class="row">
-        <div class="col-md-6">
-
-            <div class="form-group">
-              <label for="OrganizationName">Organization:</label>
-              <select class="form-control" id="OrganizationName" name="OrganizationName">
-                {% for facility_name in FacilityNames %}
-                  <option value="{{ facility_name }}" {% if walkdown_facility == facility_name %}selected{% endif %}>{{ facility_name }}</option>
-                {% endfor %}
-              <option value="other">Other</option>
-              </select>
-            </div>
-                <div class="form-group">
-                  <label for="OtherOrganization">Other Organization:</label>
-                  <input type="text" class="form-control" id="OtherFacilityType" name="OtherFacilityType" {% if walkdown_facilityType != 'Other' %}disabled{% endif %} value="{{ walkdown_facilityType }}">
-                </div>
-            <script>
-              // Retrieve the FacilityName value from sessionStorage
-              var facilityName = sessionStorage.getItem('FacilityName');
-              document.getElementById('OrganizationName').value = facilityName;
-             var organizationSelect = document.getElementById('OrganizationName');
-              // Get the other organization input element
-              var otherOrganizationInput = document.getElementById('OtherOrganization');
-
-              // Set the value of the select element
-              organizationSelect.value = facilityName;
-
-              // Add event listener to toggle the other organization input field
-              organizationSelect.addEventListener('change', function() {
-                if (organizationSelect.value === 'other') {
-                  otherOrganizationInput.disabled = false;
-                } else {
-                  otherOrganizationInput.disabled = true;
-                }
-              });
-            </script>
-
-<div class="form-group">
-                <label for="LocationAddress">Address:</label>
-                <textarea class="form-control" id="LocationAddress" name="LocationAddress" rows="4" style="resize: none"></textarea>
-              </div>
-              <div class="form-group">
-                <label for="LocationType">Facility Type:</label>
-                <select class="form-control" id="LocationType" name="LocationType" required>
-                  <option value=""></option>
-                  {% for facility_type in facility_types %}
-                  <option value="{{ facility_type.FacilityType }}">{{ facility_type.FacilityType }}</option>
-                  {% endfor %}
-                    <option value="other">Other</option>
-                </select>
-              </div>
-                <div class="form-group">
-                  <label for="OtherFacilityType">Other Facility Type:</label>
-                  <input type="text" class="form-control" id="OtherFacilityType" name="OtherFacilityType" disabled>
-                </div>
-                <script>
-                  // Retrieve the FacilityName value from sessionStorage
-                  var facilityType = sessionStorage.getItem('FacilityType');
-                  document.getElementById('LocationType').value = facilityType;
-                 // Get the select element
-                  var locationTypeSelect = document.getElementById('LocationType');
-                  // Get the other facility type input element
-                  var otherFacilityTypeInput = document.getElementById('OtherFacilityType');
-
-                  // Add event listener to toggle the other facility type input field
-                  locationTypeSelect.addEventListener('change', function() {
-                    if (locationTypeSelect.value === 'other') {
-                      otherFacilityTypeInput.disabled = false;
-                    } else {
-                      otherFacilityTypeInput.disabled = true;
-                    }
-                  });
-
-                </script>
-              <div class="form-group">
-                <label for="DisallowedZone">Zones not visited:</label>
-                <textarea class="form-control" id="DisallowedZone" name="DisallowedZone" rows="4" style="resize: none"></textarea>
-              </div>
-                <button type="button" class="btn btn-danger" id="new-walkdown-btn" onclick="resetForm()">Clear Form</button>
-            <script>// Event listener for the "New Walkdown" button
-
-                function resetForm() {
-                    // Ask for confirmation
-                    var confirmReset = confirm('Are you sure you want to reset everything?');
-
-                    if (confirmReset) {
-                        // Reset the walkdownID session variable
-                        sessionStorage.setItem('walkdownid', 0);
-
-                        // Clear all question responses
-                        var questionElements = document.querySelectorAll('input[type="radio"]');
-                        questionElements.forEach(function(element) {
-                            element.checked = false;
-                        });
-
-                        // Reset the OrganizationName select control
-                        var organizationNameSelect = document.getElementById('OrganizationName');
-                        organizationNameSelect.selectedIndex = 0;
-                    }
-                }
-             </script>
-              <button type="submit" class="btn btn-primary" id="save-walkdown-btn" onclick="confirmSave()">Create New</button>
-                <script>
-                    function confirmSave() {
-                      if (confirm("Are you sure you want to save the record?")) {
-                        // If user confirms, submit the form
-                        document.getElementById('walkdown-form').submit();
-                      }
-                    }
-                </script>
-
-              <button type="button" class="btn btn-light"  onclick="generateExcelCategories()">Print Current</button>
-        </div>
-        <div class="col-md-6">
-            <div class="form-group">
-                <label for="WalkdownLeader">Walkdown Leader:</label>
-                <input type="text" class="form-control" id="WalkdownLeader" name="WalkdownLeader" required>
-              </div>
-              <div class="form-group">
-                <label for="OrgContact">Organization Contact:</label>
-                <input type="text" class="form-control" id="OrgContact" name="OrgContact" required>
-              </div>
-              <div class="form-group">
-                <label for="WalkdownDate">Walkdown Date:</label>
-                <input type="date" class="form-control" id="WalkdownDate" name="WalkdownDate" required>
-              </div>
-              <div class="form-group">
-                <label for="WalkdownStartTime">Start Time:</label>
-                <input type="time" class="form-control" id="WalkdownStartTime" name="WalkdownStartTime" required>
-              </div>
-              <div class="form-group">
-                <label for="WalkdownEndTime">End Time:</label>
-                <input type="time" class="form-control" id="WalkdownEndTime" name="WalkdownEndTime" required>
-              </div>
-              <div class="form-group">
-                <label for="PeopleOnSite">Location Headcount:</label>
-                <input type="number" class="form-control" id="PeopleOnSite" name="PeopleOnSite" required>
-              </div>
-              <div class="form-group">
-                <label for="SafetyBriefingGiven">Safety Briefing:</label>
-                <select class="form-control" id="SafetyBriefingGiven" name="SafetyBriefingGiven" required>
-                  <option value="yes">Yes</option>
-                  <option value="no">No</option>
-                </select>
-              </div>
-
-
-        </div>
-
-    </div>
-    </form>
-
+    <div class="col-md-1"></div>
     <div class="col-md-1"></div>
 </div>
 
+
+
+
 <form id="walkdown-form" method="POST">
   {% csrf_token %}
+<input type="hidden" id="hdnCyberPHA" name="hdnCyberPHA">
+<input type="hidden" id="hdnFacility" name="hdnFacility">
+<input type="hidden" id="hdnFacilityType" name="hdnFacilityType">
+<input type="hidden" id="hdnFacilityIndustry" name="hdnFacilityIndustry">
+
   <div class="row">
-    <div class="col-md-3">
-    </div>
+    <div class = "col-md-1" style="background-color: black"></div>
+    <div class = "col-md-2" ></div>
     <div class="col-md-6 small-font">
       <h2>Walkdown Questions</h2>
       <p>Answer Yes, No, or N/A ("Not Applicable") to each of the questions. If the response is "no," you may click the "risk assessment" button to set up a pending risk assessment record.</p>
       <div class="container" style="background-color: #eee;">
-        <ul class="nav nav-tabs" id="categoryTabs">
-          {% for category in question_categories %}
-          <li class="nav-item">
-            <a class="nav-link {% if forloop.first %}active{% endif %}" id="{{ category }}" data-bs-toggle="tab" href="#tab-{{ category }}">{{ category }}</a>
-          </li>
-          {% endfor %}
+         <ul class="nav nav-tabs" id="categoryTabs">
+            {% for category in question_categories %}
+            <li class="nav-item">
+                <a class="nav-link {% if forloop.first %}active{% endif %}" id="tab-link-{{ category }}" data-bs-toggle="tab" href="#tab-{{ category }}">{{ category }}</a>
+            </li>
+            {% endfor %}
         </ul>
+
+
          <div class="row">
             <div class="progress mb-4">
               <label for="progress-bar" class="progress-label">Progress: </label>
@@ -430,6 +273,7 @@
             </div>
             <a href="#" id="goToUnansweredBtn" class="link-primary">Go to First Unanswered Question</a>
         </div>
+
         <div class="tab-content mt-4">
           {% for category in question_categories %}
           <div class="tab-pane fade {% if forloop.first %}show active{% endif %}" id="tab-{{ category }}">
@@ -438,27 +282,97 @@
             <div class="card mb-3">
               <div class="card-body" style="background-color: #97979A">
                 <h6 class="card-title">{{ question.WalkdownQuestion }}</h6>
-                <div class="form-check">
-                  <input class="form-check-input" type="radio" name="response-{{ question.ID }}" id="response-yes-{{ question.ID }}" value="Yes">
-                  <label class="form-check-label" for="response-yes-{{ question.ID }}">Yes</label>
-                </div>
-                <div class="form-check">
-                  <input class="form-check-input" type="radio" name="response-{{ question.ID }}" id="response-no-{{ question.ID }}" value="No">
-                  <label class="form-check-label" for="response-no-{{ question.ID }}">No</label>
-                </div>
-                <div class="form-check">
-                  <input class="form-check-input" type="radio" name="response-{{ question.ID }}" id="response-na-{{ question.ID }}" value="N/A">
-                  <label class="form-check-label" for="response-na-{{ question.ID }}">N/A</label>
-                </div>
-                <a href="#" class="btn btn-link">Do Risk Assessment</a>
-              </div>
-            </div>
+                    <div class="row">
+                      <div class="col-md-1"></div>
+                      <div class="col-md-2">
+                          <div class="form-check">
+                              <input class="form-check-input" type="radio" name="response-{{ question.ID }}" id="response-yes-{{ question.ID }}" value="Yes">
+                              <label class="form-check-label" for="response-yes-{{ question.ID }}">Yes</label>
+                          </div>
+                      </div>
+                      <div class="col-md-2">
+                          <div class="form-check">
+                              <input class="form-check-input" type="radio" name="response-{{ question.ID }}" id="response-no-{{ question.ID }}" value="No">
+                              <label class="form-check-label" for="response-no-{{ question.ID }}">No</label>
+                            </div>
+                      </div>
+                      <div class="col-md-2">
+                          <div class="form-check">
+                              <input class="form-check-input" type="radio" name="response-{{ question.ID }}" id="response-na-{{ question.ID }}" value="N/A">
+                              <label class="form-check-label" for="response-na-{{ question.ID }}">N/A</label>
+                            </div>
+                      </div>
+                      <div class="col-md-3">
+                          <div class="form-check">
+                             <a href="#" class="btn btn-link">Generate Risk Assessment</a>
+                          </div>
+                      </div>
+                        <!-- JavaScript/jQuery to handle the radio button changes -->
+
+                      <div class="col-md-3"></div>
+
+                  </div>
+                      <div class="row">
+                              <div class="col-md-1"></div>
+                              <div class="col-md-8">
+                                <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                                    <div class="card-body">
+
+                                        <label for="txtComment-{{ question.ID }}">Add Notes:</label><textarea class="form-control" name="txtComment-{{ question.ID }}" id="txtComment-{{ question.ID }}" rows="2" style="resize: none"></textarea>
+                                    </div>
+                                </div>
+                                </div>
+                            </div>
+                    </div>
             {% endif %}
             {% endfor %}
           </div>
           {% endfor %}
         </div>
 
+        <script>
+          $(document).ready(function() {
+              $(".btn-link").click(function (event) {
+                  event.preventDefault();
+
+                  // Prompt the user
+                  var userResponse = window.confirm("Confirm create a risk assessment record");
+
+                  // If the user clicks "Cancel", exit the function
+                  if (!userResponse) {
+                      return;
+                  }
+
+                  $(this).prop("disabled", true);
+                  var cyberPHAID = $("#hdnCyberPHA").val();
+                  var facility = $("#hdnFacility").val()
+                  var facilityType = $("#hdnFacilityType").val()
+                  var facilityIndustry = $("#hdnFacilityIndustry").val()
+                  var questionID = $(this).closest('.card-body').find('input.form-check-input').attr('name').split('-')[1];
+                  var walkdownQuestion = $(this).closest('.card-body').find('h6.card-title').text();
+
+                  $.ajax({
+                      url: '/OTRisk/raw_from_walkdown/',
+                      type: 'POST',
+                      data: {
+                          'cyberPHAID': cyberPHAID,
+                          'questionID': questionID,
+                          'walkdownQuestion': walkdownQuestion,
+                          'facility': facility,
+                          'facilityType': facilityType,
+                          'facilityIndustry': facilityIndustry,
+                          'csrfmiddlewaretoken': '{{ csrf_token }}'
+                      },
+                      success: function (response) {
+                          // Handle success - maybe show a message to the user or redirect
+                      },
+                      error: function (error) {
+                          // Handle error
+                      }
+                  });
+              });
+          });
+        </script>
 
 
         <div class="mt-4">
@@ -576,79 +490,9 @@ document.addEventListener('DOMContentLoaded', function() {
      <script>
 
 
-document.addEventListener('DOMContentLoaded', function() {
-    const saveBtn = document.getElementById('save-questionnaire-btn');
-    const walkdownID = '{{ request.session.session_walkdown }}'; // Access the session variable
-
-    saveBtn.addEventListener('click', function(event) {
-        event.preventDefault();
-        saveQuestionnaire(walkdownID);
-    });
-});
 </script>
 
 <script>
-  const tabs = document.querySelectorAll('.tab');
-  const categories = document.querySelectorAll('.category');
-
-
-
-  function openCategory(evt, categoryName) {
-    tabs.forEach((tab) => tab.classList.remove('active'));
-    categories.forEach((category) => category.style.display = 'none');
-
-    const currentTab = evt.currentTarget;
-    const currentCategory = document.getElementById(categoryName);
-
-    currentTab.classList.add('active');
-    currentCategory.style.display = 'block';
-
-  }
-
-  tabs.forEach((tab) => {
-    tab.addEventListener('click', (evt) => {
-      const categoryName = evt.currentTarget.dataset.category;
-      openCategory(evt, categoryName);
-    });
-  });
-
-        // Function to set visual cue when mouseover a row
-        $(document).on('mouseover', '.walkdown-row', function() {
-            $(this).addClass('selected-row');
-        });
-
-        // Function to remove visual cue when mouseout of a row
-        $(document).on('mouseout', '.walkdown-row', function() {
-            $(this).removeClass('selected-row');
-        });
-
-        // Function to populate form fields when row is selected
-        $(document).on('click', '.walkdown-row', function() {
-            var rowId = $(this).data('id');
-            $.ajax({
-                url: '/OTRisk/get_walkdown_data/' + rowId,
-                success: function(data) {
-                    populateFormFields(data);
-                }
-            });
-        });
-
-        // Function to populate form fields with data
-        function populateFormFields(data) {
-            $('#WalkdownDate').val(data.WalkdownDate);
-            $('#OrganizationName').val(data.OrganizationName);
-            $('#LocationAddress').val(data.LocationAddress);
-            $('#LocationCountry').val(data.LocationCountry);
-            $('#LocationType').val(data.LocationType);
-            $('#PeopleOnSite').val(data.PeopleOnSite);
-            $('#WalkdownLeader').val(data.WalkdownLeader);
-            $('#OrgContact').val(data.OrgContact);
-            $('#WalkdownStartTime').val(data.WalkdownStartTime);
-            $('#WalkdownEndTime').val(data.WalkdownEndTime);
-            $('#DisallowedZones').val(data.DisallowedZones);
-            $('#SafetyBriefingGiven').val(data.SafetyBriefingGiven);
-        }
-
 
         // Function to save or update walkdown record on Save button click
         $(document).on('click', '#save-walkdown-btn', function() {
@@ -710,26 +554,11 @@ document.addEventListener('DOMContentLoaded', function() {
             return cookieValue;
         }
 
-        // Function to switch tabs and show respective table
-        $(document).on('click', '.tab', function() {
-            var category = $(this).data('category');
-            $('.tab').removeClass('active');
-            $(this).addClass('active');
-            $('.walkdown-questions').hide();
-            $('.walkdown-questions[data-category="' + category + '"]').show();
-        });
-
         $(document).ready(function() {
             $('[data-toggle="tooltip"]').tooltip();
-            $('.tab').first().click(); // Activate the first tab by default
+            //$('.tab').first().click(); // Activate the first tab by default
         });
-
-
-
-    </script>
-   <!-- Include Bootstrap JS and jQuery -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+</script>
 
 </body>
 </html>
