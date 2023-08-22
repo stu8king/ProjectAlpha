@@ -103,9 +103,9 @@ urlpatterns = [
     path('check_vulnerabilities/', views.check_vulnerabilities, name='check_vulnerabilities'),
     path('rawreport/<int:raworksheet_id>/', views.rawreport, name='rawreport'),
     path('raw_from_walkdown/', views.raw_from_walkdown, name='raw_from_walkdown'),
-    path('survey/', views.survey_view, name='survey_view'),
     path('save_ra_action', views.save_ra_action, name='save_ra_action'),
     path('get_rawactions/', views.get_rawactions, name='get_rawactions'),
+    path('ra_actions_view', views.ra_actions_view, name='ra_actions_view'),
 ]
 
 if settings.DEBUG:

@@ -1,6 +1,7 @@
 from django.db import models
-from django.contrib.auth.models import User
+from accounts.models import Organization
 
+from django.contrib.auth.models import User
 
 
 # risk assessment worksheet
@@ -18,7 +19,8 @@ class MitreICSMitigations(models.Model):
 
 class MitreICSTechniques(models.Model):
     ID = models.IntegerField(primary_key=True)
-    SourceID = models.ForeignKey(MitreICSMitigations, on_delete=models.CASCADE, related_name='mitigations', db_column='SourceID')
+    SourceID = models.ForeignKey(MitreICSMitigations, on_delete=models.CASCADE, related_name='mitigations',
+                                 db_column='SourceID')
     SourceName = models.TextField()
     TargetID = models.TextField()
     TargetName = models.TextField()
@@ -45,6 +47,7 @@ class RAWorksheet(models.Model):
     WalkdownID = models.IntegerField()
     industry = models.CharField(max_length=30)
     cyberPHAID = models.IntegerField()
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE)
 
     class Meta:
         db_table = 'tblRAWorksheet'
@@ -88,7 +91,7 @@ class RAWorksheetScenario(models.Model):
     justifyFinancial = models.TextField()
     justifyReputation = models.TextField()
     justifyEnvironment = models.TextField()
-    justifyRegulation= models.TextField()
+    justifyRegulation = models.TextField()
     justifyData = models.TextField()
 
     class Meta:
@@ -122,6 +125,9 @@ class RAActions(models.Model):
     outageEMS = models.CharField(max_length=3)
     outageICS = models.CharField(max_length=3)
     outageSIS = models.CharField(max_length=3)
+    organizationid = models.ForeignKey(Organization, on_delete=models.CASCADE, verbose_name="Organization",
+                                       related_name="ra_actions")
+    userid = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="User", related_name="ra_actions")
 
     class Meta:
         db_table = 'tblRawActions'

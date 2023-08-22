@@ -6,12 +6,18 @@ from django.contrib.auth.decorators import login_required
 from OTRisk.models.Model_CyberPHA import tblCyberPHAHeader, tblCyberPHAScenario
 from django.db.models import Count, Sum
 from django.db.models import Avg
+from accounts.models import Organization, UserProfile
 
 import json
 
 
 @login_required()
 def dashboardhome(request):
+    user_profile = UserProfile.objects.get(user=request.user)
+    user_organization = user_profile.organization.id
+    # Set the session variable
+    request.session['user_organization'] = user_organization
+
     records_by_business_unit_type = RAWorksheet.objects.values('BusinessUnitType').annotate(count=Count('ID'))
     records_by_status_flag = RAWorksheet.objects.values('StatusFlag').annotate(count=Count('ID'))
     records_by_trigger = RAWorksheet.objects.values('RATrigger').annotate(count=Count('ID'))

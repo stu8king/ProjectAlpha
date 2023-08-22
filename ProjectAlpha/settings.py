@@ -37,9 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'OTRisk.apps.OtriskConfig',
     'accounts',
-    'bootstrap5',
-    'captcha',
-    'survey',
+    'django_bootstrap5',
 ]
 
 MIDDLEWARE = [

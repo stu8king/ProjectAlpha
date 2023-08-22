@@ -25,6 +25,22 @@ import json
 import re
 import requests
 
+login_required()
+
+
+def ra_actions_view(request):
+    if request.method == 'GET':
+        try:
+            ra_actions = RAActions.objects.all()
+            context = {
+                'ra_actions': ra_actions
+            }
+            print(f"Count={ra_actions.count()}")
+            return render(request, 'OTRisk/ra_actions_template.html', context)
+        except Exception as e:
+            # Handle the exception (e.g., log it, show an error message to the user, etc.)
+            return render(request, 'error_template.html', {'error_message': str(e)})
+
 
 def get_rawactions(request):
     raw_id = request.GET.get('raw_id', None)

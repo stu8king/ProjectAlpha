@@ -1,0 +1,15 @@
+
+
+{% block content %}
+    <h2>RA Actions</h2>
+
+    <form method="post" action="">
+        {% csrf_token %}
+        <!-- You can use a loop to generate form fields based on the model fields -->
+        {% for field in ra_actions %}
+            <label for="{{ field.name }}">{{ field.verbose_name }}</label>
+            <input type="{{ field.field_type }}" name="{{ field.name }}" value="{{ field.value }}" required>
+        {% endfor %}
+        <button type="submit">Submit</button>
+    </form>
+{% endblock %}
