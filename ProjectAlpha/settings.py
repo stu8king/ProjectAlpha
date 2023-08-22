@@ -24,7 +24,8 @@ SECRET_KEY = 'django-insecure-7wdzw^mq5o67v*fju@hs$mvd_fn0u1iqzr-_byo4y@nog%$$on
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['54.198.109.156', '127.0.0.1']
+
 
 # Application definition
 
@@ -37,7 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'OTRisk.apps.OtriskConfig',
     'accounts',
-    'django_bootstrap5',
+    'django_bootstrap5'
 ]
 
 MIDDLEWARE = [

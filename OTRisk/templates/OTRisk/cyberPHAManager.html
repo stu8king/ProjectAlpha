@@ -106,17 +106,6 @@
 
                 // Update the href attribute with the active-cyberpha value
                 link.href = link.href + "?active_cyberpha=" + activeCyberPHA;
-
-                // Populate the related records from tblCyberPHATeam
-                // You need to implement this part in your views.py
-                $.ajax({
-                    url: '/OTRisk/team-members/',
-                    type: 'GET',
-                    data: { cyberPHAID: activeCyberPHA },
-                    success: function(response) {
-                        $('#TeamMembersTable').html(response);
-                    }
-                });
             });
 
             // Function to handle add record button click event

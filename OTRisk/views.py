@@ -21,7 +21,7 @@ from django.http import JsonResponse, HttpResponse
 from django.utils import timezone
 from django.core import serializers
 from OTRisk.models.Model_Workshop import tblWorkshopNarrative, tblWorkshopInformation
-from OTRisk.models.Model_CyberPHA import tblCyberPHAEntry, tblCyberPHAHeader, tblRiskCategories, tblCyberPHATeam, \
+from OTRisk.models.Model_CyberPHA import tblCyberPHAEntry, tblCyberPHAHeader, tblRiskCategories, \
     tblControlObjectives, \
     tblThreatIntelligence, tblMitigationMeasures, tblScenarios, tblSafeguards, tblThreatSources, tblThreatActions, \
     tblNodes, tblUnits, tblZones, tblCyberPHAScenario, tblIndustry, auditlog, tblStandards
@@ -272,39 +272,6 @@ def assess_cyberpha(request):
     })
 
 
-def add_team_member(request):
-    if request.method == 'POST':
-        cyber_pha_id = request.POST.get('cyberPHAID')
-        name = request.POST.get('name')
-        company = request.POST.get('company')
-        title = request.POST.get('title')
-        expertise = request.POST.get('expertise')
-        experience = request.POST.get('experience')
-        comments = request.POST.get('comments')
-
-        # Save the new team member record to tblCyberPHATeam
-        team_member = tblCyberPHATeam(
-            CyberPHAID_id=cyber_pha_id,
-            Name=name,
-            Company=company,
-            Title=title,
-            Expertise=expertise,
-            Experience=experience,
-            Comments=comments
-        )
-        team_member.save()
-
-        # Retrieve the related team members
-        team_members = tblCyberPHATeam.objects.filter(CyberPHAID=cyber_pha_id)
-
-        # Render the team members table
-        rendered_team_members = render_to_string('team_members_table.html', {'team_members': team_members})
-
-        return JsonResponse({'team_members': rendered_team_members})
-
-    return redirect('cyber_pha_manager')
-
-
 @login_required
 def cyber_pha_manager(request):
     tblCyberPHAList = tblCyberPHAHeader.objects.filter(Deleted=0).order_by('ID')[::-1]
@@ -314,26 +281,14 @@ def cyber_pha_manager(request):
     zones = tblZones.objects.all().order_by('PlantZone')
     industry = tblIndustry.objects.all().order_by('Industry')
 
-    team_members = tblCyberPHATeam.objects.none()  # Empty queryset for initial rendering
     active_cyberpha = request.session.get('active-cyberpha', 0)  # Retrieve the active-cyberpha from session
 
-    if active_cyberpha:
-        team_members = tblCyberPHATeam.objects.filter(CyberPHAID=active_cyberpha)
-
     return render(request, 'CyberPHAManager.html', {'tblCyberPHAList': tblCyberPHAList,
-                                                    'team_members': team_members,
                                                     'facilityTypes': facilityTypes,
                                                     'nodes': nodes,
                                                     'units': units,
                                                     'zones': zones,
                                                     'industry': industry})
-
-
-def get_team_members(request):
-    if request.method == 'GET':
-        cyber_pha_id = request.GET.get('cyberPHAID')
-        team_members = tblCyberPHATeam.objects.filter(CyberPHAID=cyber_pha_id)
-        return render(request, 'team_members_table.html', {'team_members': team_members})
 
 
 def PHAeditmode(request, id):

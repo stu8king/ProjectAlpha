@@ -121,20 +121,6 @@ class tblCyberPHAHeader(models.Model):
         db_table = 'tblCyberPHAHeader'
 
 
-class tblCyberPHATeam(models.Model):
-    ID = models.AutoField(primary_key=True)
-    CyberPHAID = models.ForeignKey(tblCyberPHAHeader, on_delete=models.CASCADE, db_column='CyberPHAID')
-    Name = models.CharField(max_length=50)
-    Company = models.CharField(max_length=255)
-    Title = models.CharField(max_length=255)
-    Expertise = models.TextField(max_length=255)
-    Experience = models.CharField(max_length=255)
-    Comments = models.TextField(max_length=255)
-
-    class Meta:
-        db_table = 'tblCyberPHATeam'
-
-
 class tblCyberPHASession(models.Model):
     ID = models.AutoField(primary_key=True)
     CyberPHAID = models.ForeignKey(tblCyberPHAHeader, on_delete=models.CASCADE)
