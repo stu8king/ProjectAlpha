@@ -37,7 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'OTRisk.apps.OtriskConfig',
     'accounts',
-    'bootstrap5',
+    'django_bootstrap5',
     'captcha',
     'survey',
 ]
