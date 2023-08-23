@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.template.loader import render_to_string
 from django.utils.html import mark_safe
-from OTRisk.models.raw import RAWorksheet, RAWorksheetScenario
+from OTRisk.models.raw import RAWorksheet, RAWorksheetScenario, RAActions
 from django.contrib.auth.decorators import login_required
 from OTRisk.models.Model_CyberPHA import tblCyberPHAHeader, tblCyberPHAScenario
 from django.db.models import Count, Sum
@@ -24,7 +24,10 @@ def dashboardhome(request):
     records_by_industry = RAWorksheet.objects.values('industry').annotate(count=Count('ID'))
     records_by_risk_score = RAWorksheetScenario.objects.values('RiskScore').annotate(count=Count('ID'))
     scenario_risk_status = RAWorksheetScenario.objects.values('RiskStatus').annotate(count=Count('ID'))
-    total_scenario_cost = RAWorksheetScenario.objects.aggregate(sum_scenarioCost=Sum('scenarioCost'))['sum_scenarioCost']
+    open_raws = RAWorksheet.objects.filter(organization=user_organization).exclude(StatusFlag="Closed")
+    open_raws_count = open_raws.count()
+    total_scenario_cost = RAWorksheetScenario.objects.aggregate(sum_scenarioCost=Sum('scenarioCost'))[
+        'sum_scenarioCost']
     formatted_scenario_cost = "${:,.0f}".format(total_scenario_cost)
 
     raw_count = RAWorksheet.objects.all().count()
@@ -38,14 +41,18 @@ def dashboardhome(request):
     danger_scores = RAWorksheetScenario.objects.values('lifeScore').annotate(count=Count('ID')).order_by('lifeScore')
     life_scores_list = list(danger_scores)
 
-    pha_safety_scores = tblCyberPHAScenario.objects.values('impactSafety').annotate(count=Count('ID')).order_by('impactSafety')
+    pha_safety_scores = tblCyberPHAScenario.objects.values('impactSafety').annotate(count=Count('ID')).order_by(
+        'impactSafety')
     pha_safety_scores_list = list(pha_safety_scores)
-    pha_danger_scores = tblCyberPHAScenario.objects.values('impactDanger').annotate(count=Count('ID')).order_by('impactDanger')
+    pha_danger_scores = tblCyberPHAScenario.objects.values('impactDanger').annotate(count=Count('ID')).order_by(
+        'impactDanger')
     pha_danger_scores_list = list(pha_danger_scores)
-    pha_environment_scores = tblCyberPHAScenario.objects.values('impactEnvironment').annotate(count=Count('ID')).order_by('impactEnvironment')
+    pha_environment_scores = tblCyberPHAScenario.objects.values('impactEnvironment').annotate(
+        count=Count('ID')).order_by('impactEnvironment')
     pha_environment_scores_list = list(pha_environment_scores)
-
-    environment_scores = RAWorksheetScenario.objects.values('environmentScore').annotate(count=Count('ID')).order_by('environmentScore')
+    pha_threat_class = tblCyberPHAScenario.objects.values('ThreatClass').annotate(total=Count('ThreatClass'))
+    environment_scores = RAWorksheetScenario.objects.values('environmentScore').annotate(count=Count('ID')).order_by(
+        'environmentScore')
     environment_scores_list = list(environment_scores)
     # risk assessment facilities
     raw_facilities = RAWorksheet.objects.values_list('ID', 'BusinessUnit', 'BusinessUnitType')
@@ -55,8 +62,10 @@ def dashboardhome(request):
     total_sle = tblCyberPHAScenario.objects.aggregate(sum_sle=Sum('sle'))['sum_sle']
     formatted_sle = "${:,.0f}".format(total_sle)
 
+    ra_actions_records = RAActions.objects.filter(organizationid=user_organization).exclude(actionStatus="Closed")
+    ra_actions_records_count = ra_actions_records.count()
+
     num_records = raw_facilities.count()
-    print(num_records)
 
     context = {
         'records_by_business_unit_type': list(records_by_business_unit_type),
@@ -78,7 +87,10 @@ def dashboardhome(request):
         'pha_danger_scores_list': pha_danger_scores_list,
         'pha_environment_scores_list': pha_environment_scores_list,
         'formatted_sle': formatted_sle,
-        'formatted_scenario_cost': formatted_scenario_cost
+        'formatted_scenario_cost': formatted_scenario_cost,
+        'ra_actions_records_count': ra_actions_records_count,
+        'open_raws_count': open_raws_count,
+        'pha_threat_class': pha_threat_class
     }
 
     return render(request, 'dashboard.html', context)

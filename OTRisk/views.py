@@ -37,7 +37,7 @@ import requests
 from xml.etree import ElementTree as ET
 from bs4 import BeautifulSoup
 from .raw_views import qraw, openai_assess_risk, GetTechniquesView, raw_action, check_vulnerabilities, rawreport, \
-    raw_from_walkdown, save_ra_action, get_rawactions, ra_actions_view
+    raw_from_walkdown, save_ra_action, get_rawactions, ra_actions_view, UpdateRAAction
 from .dashboard_views import dashboardhome
 from .pha_views import iotaphamanager, facility_risk_profile, get_headerrecord, scenario_analysis, phascenarioreport, \
     getSingleScenario

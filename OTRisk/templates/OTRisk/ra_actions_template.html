@@ -1,15 +1,410 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard Home</title>
 
 
-{% block content %}
-    <h2>RA Actions</h2>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css">
 
-    <form method="post" action="">
-        {% csrf_token %}
-        <!-- You can use a loop to generate form fields based on the model fields -->
-        {% for field in ra_actions %}
-            <label for="{{ field.name }}">{{ field.verbose_name }}</label>
-            <input type="{{ field.field_type }}" name="{{ field.name }}" value="{{ field.value }}" required>
-        {% endfor %}
-        <button type="submit">Submit</button>
-    </form>
-{% endblock %}
+    <!-- Bootstrap Select CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.1/css/bootstrap-select.min.css">
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.1/font/bootstrap-icons.css" rel="stylesheet">
+
+    <!-- jQuery -->
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <!-- Bootstrap JS -->
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Bootstrap Select JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.1/js/bootstrap-select.min.js"></script>
+
+
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.3/css/jquery.dataTables.css">
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.js"></script>
+
+
+
+
+     {% load django_bootstrap5 %}
+     {% bootstrap_css %}
+     {% bootstrap_javascript %}
+    <style>
+       .navbar-scroll .nav-link,
+        .navbar-scroll .navbar-toggler-icon,
+        .navbar-scroll .navbar-brand {
+          color: #ffffff;
+        }
+
+        /* Color of the navbar BEFORE scroll */
+        .navbar-scroll {
+          background-color: #000000;
+            text-decoration-color: #FFFFFF;
+        }
+
+
+        /* Color of the links AFTER scroll */
+        .navbar-scrolled .nav-link,
+        .navbar-scrolled .navbar-toggler-icon,
+        .navbar-scroll .navbar-brand {
+          color: #262626;
+        }
+
+        .navbar-logo {
+        position: absolute;
+        top: 5px; /* Adjust this as needed */
+        left: 5px; /* Adjust this as needed */
+        height: 100px; /* Adjust this as needed */
+        z-index: 10;
+        }
+
+
+     .small-font {
+        font-size: 0.8rem; /* adjust as needed */
+   }
+    </style>
+</head>
+<body>
+<script>
+    sessionStorage.clear();
+
+</script>
+<nav class="navbar navbar-expand-lg navbar-scroll fixed-top shadow-0 border-bottom border-dark rounded">
+  <div class="container-fluid d-flex justify-content-between">
+   <a class="navbar-brand" href="{% url 'OTRisk:home' %}"><img src="/static/images/logo1-2.jpg" style="height: 140px; width: 140px" class="navbar-logo" alt="">  </a>
+      <h4 class="my-auto text-center flex-grow-1"><font color="white">Actions</font></h4>
+
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ms-auto">
+
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'OTRisk:qraw' %}"><i class="bi bi-journal-text"></i> Risk Assessment</a>
+        </li>
+        <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="bi bi-diagram-3"></i> CyberPHA
+              </a>
+              <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                <li><a class="dropdown-item" href="{% url 'OTRisk:iotaphamanager' %}"> CyberPHA Manager</a></li>
+                <li><a class="dropdown-item" href="{% url 'OTRisk:walkdown' %}"> Site Walkdown</a></li>
+                <li><a class="dropdown-item" href="#">Workshop</a></li>
+              </ul>
+        </li>
+          <li class="nav-item">
+          <a class="nav-link" href="{% url 'OTRisk:ra_actions_view' %}" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Actions</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Reports</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#" tabindex="-1" ><i class="bi bi-ui-checks-grid"></i> Admin</a>
+      </li>
+        <li class="nav-item">
+            <a class="nav-link" href="{% url 'accounts:profile' %}">
+                <i class="bi bi-person-fill"></i> {{ user.first_name }} {{ user.last_name }} | {{ user.userprofile.organization.name }}
+            </a>
+        </li>
+
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'logout' %}">
+                <i class="bi bi-box-arrow-right"></i> Logout
+            </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+</nav>
+<div class="row" style="height: 20px;">
+    <div class="col-md-1" style="background-color: black"></div>
+    <div class="col-md-1" style="background-color: white"></div>
+    <div class="col-md-8 " ></div>
+    <div class="col-md-1" style="background-color: white"></div>
+    <div class="col-md-1 " style="background-color: black"></div>
+</div> <!-- dark grey stripe -->
+
+
+<div class="row">
+    <div class="col-md-1" style="background-color: black"></div>
+    <div class="col-md-10 " >
+        {% block content %}
+            <form method="post" action="" id="actionForm">
+
+                {% csrf_token %}
+                <input type="hidden" name="action_id" id="actionId">
+                <table id="dataTable" class="display small-font">
+                <thead>
+                    <tr>
+                        <th>Source</th>
+                        <th>Title</th>
+                        <th>Owner</th>
+                        <th>Effort</th>
+                        <th>Difficulty</th>
+                        <th>Cost</th>
+                        <th>Status</th>
+                        <th>Description</th>
+                        <th>Due Date</th>
+
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for record in ra_actions %}
+                       <tr data-id="{{ record.ID }}" class="action-row">
+                            <td>
+                                {% if record.phaID == 0 %}
+                                    QRAW
+                                {% else %}
+                                    CyberPHA
+                                {% endif %}
+                            </td>
+                            <td>{{ record.actionTitle  }}</td>
+                            <td>{{ record.actionOwner  }}</td>
+                            <td>{{ record.actionEffort  }}</td>
+                            <td>{{ record.actionDifficulty  }}</td>
+                            <td>{{ record.actionCost  }}</td>
+                            <td>{{ record.actionStatus  }}</td>
+                            <td>{{ record.actionDescription  }}</td>
+                            <td>{{ record.actionDueDate  }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+        </form>
+    {% endblock %}
+        </div>
+    <div class="col-md-1 " style="background-color: black"></div>
+</div>
+
+
+<div class="row small-font">
+    <div class="col-md-1" style="background-color: black"></div>
+    <div class="col-md-10" style="background-color: white">
+    <!-- Display selected action details -->
+    {% if selected_action %}
+        <div class="row small-font">
+            <div class="col-md-12">
+                <h4>Assessment Title: {{ ra_title }}</h4>
+            </div>
+        </div>
+        <div class="row small-font">
+            <div class="col-md-4">
+                <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                    <div class="card-body">
+                        <label for="txtTitle">Title</label>
+                        <input type="text" class="form-control" name="txtTitle" id="txtTitle" required value="{{ selected_action.actionTitle }}" readonly>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                    <div class="card-body">
+                        <label for="txtOwner">Owner</label>
+                        <input type="text" class="form-control" name="txtOwner" id="txtOwner" required value="{{ selected_action.actionOwner }}" readonly>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                    <div class="card-body">
+                        <label for="selectStatus">Status (Click to change)</label>
+                        <Select class="form-control" name="selectStatus" id="selectStatus">
+                            <option value="" {% if not selected_action.actionStatus %}selected{% endif %}>-- Select Status --</option>
+                            <option value="Closed" {% if selected_action.actionStatus == "Closed" %}selected{% endif %}>Closed</option>
+                            <option value="In Progress" {% if selected_action.actionStatus == "In Progress" %}selected{% endif %}>In Progress</option>
+                            <option value="On Hold" {% if selected_action.actionStatus == "On Hold" %}selected{% endif %}>On Hold</option>
+                            <option value="Open" {% if selected_action.actionStatus == "Open" %}selected{% endif %}>Open</option>
+                        </Select>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row small-font">
+            <div class="col-md-6">
+                <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                    <div class="card-body">
+                        <label for="txtDescription">Description</label>
+                        <textarea class="form-control" name="txtDescription" id="txtDescription" rows="2"  style="resize: none" readonly>{{ selected_action.actionDescription }}</textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                    <div class="card-body">
+                        <label for="txtHistory">Action History</label>
+                        <textarea class="form-control" name="txtHistory" id="txtHistory" rows="2" readonly style="resize: none;">{{ selected_action.history }}</textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row small-font">
+            <div class="col-md-3">
+                <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                    <div class="card-body">
+                        <label for="txtEffort">Effort</label>
+                        <input type="text" class="form-control" name="txtEffort" id="txtEffort" required value="{{ selected_action.actionEffort }}" readonly>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                    <div class="card-body">
+                        <label for="txtDifficulty">Difficulty</label>
+                        <input type="text" class="form-control" name="txtDifficulty" id="txtDifficulty" required value="{{ selected_action.actionDifficulty }}" readonly>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                    <div class="card-body">
+                        <label for="txtCost">Cost</label>
+                        <input type="text" class="form-control" name="txtCost" id="txtCost" required value="{{ selected_action.actionCost }}" readonly>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                    <div class="card-body">
+                        <label for="txtDueDate">Due Date</label>
+                        <input type="date" class="form-control" name="txtDueDate" id="txtDueDate" required value="{{ selected_action.actionDueDate|date:"Y-m-d" }}" >
+                    </div>
+                </div>
+            </div>
+
+
+        </div>
+        <div class="row small-font">
+            <div class="col-md-2">
+                <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                    <div class="card-body">
+                        <label for="txt_outageSIS">Safety Outage</label>
+                        <input type="text" class="form-control" name="txt_outageSIS" id="txt_outageSIS" required value="{{ selected_action.outageSIS }}" readonly>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                    <div class="card-body">
+                        <label for="txt_outageICS">ICS Outage</label>
+                        <input type="text" class="form-control" name="txt_outageICS" id="txt_outageICS" required value="{{ selected_action.outageICS }}" readonly>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                    <div class="card-body">
+                        <label for="txt_outageEMS">EMS Outage</label>
+                        <input type="text" class="form-control" name="txt_outageEMS" id="txt_outageEMS" required value="{{ selected_action.outageEMS }}" readonly>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                    <div class="card-body">
+                        <label for="txt_outageIT">IT Outage</label>
+                        <input type="text" class="form-control" name="txt_outageIT" id="txt_outageIT" required value="{{ selected_action.outageIT }}" readonly>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                    <div class="card-body">
+                        <label for="txt_outagePS">PS Outage</label>
+                        <input type="text" class="form-control" name="txt_outagePS" id="txt_outagePS" required value="{{ selected_action.outagePS }}" readonly>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                    <div class="card-body">
+                        <label for="txt_outageWWW">PS Outage</label>
+                        <input type="text" class="form-control" name="txt_outageWWW" id="txt_outageWWW" required value="{{ selected_action.outageWWW }}" readonly>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row small-font">
+            <div class="col-md-5"></div>
+            <div class="col-md-2">
+                <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                    <div class="card-body">
+                        <button class="form-control btn-primary" type="button" id="actionBtn">Save Changes</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-5"></div>
+        </div>
+    {% endif %}
+    </div>
+
+<div class="col-md-1 " style="background-color: black"></div>
+</div>
+
+
+<script>
+    $(document).ready(function() {
+        $('#dataTable').DataTable({
+            "pageLength": 5
+        });
+
+        // Add click event to each action row
+        document.querySelectorAll('.action-row').forEach(row => {
+            row.addEventListener('click', function() {
+                const actionId = this.getAttribute('data-id');
+                sessionStorage.setItem('selectedActionId', actionId);
+                document.getElementById('actionId').value = actionId;
+                document.getElementById('actionForm').submit();
+            });
+        });
+
+        $('#actionBtn').on('click', function() {
+            // Prompt the user for confirmation
+            const isConfirmed = confirm("Do you want to save the changes?");
+            if (!isConfirmed) {
+                return;
+            }
+
+            const actionDueDate = $('#txtDueDate').val();
+            const actionStatus = $('#selectStatus').val();
+             const selectedActionId = sessionStorage.getItem('selectedActionId');
+
+            // Get CSRF token
+            const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+            $.ajax({
+                url: '/OTRisk/update_ra_action/',  // Update this URL to your backend endpoint
+                type: 'PUT',
+                headers: {
+                    "X-CSRFToken": csrftoken  // Include CSRF token in the request header
+                },
+                data: JSON.stringify({
+                    'action_id': selectedActionId,
+                    'actionDueDate': actionDueDate,
+                    'actionStatus': actionStatus,
+                }),
+                contentType: 'application/json',
+
+                success: function(response) {
+                    if (response.success) {
+                        alert('Changes saved successfully!');
+                    } else {
+                        alert('Error saving changes. Please try again.');
+                    }
+                },
+                error: function() {
+                    alert('Error saving changes. Please try again.');
+                }
+            });
+        });
+    });
+</script>
+
+
+</body>
+</html>

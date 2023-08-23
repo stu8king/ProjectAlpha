@@ -73,9 +73,7 @@ urlpatterns = [
     path('facility_types/', views.getFacilityTypes, name='facility_types'),
     path('walkdown/save_walkdown_questionnaire/', views.save_walkdown_questionnaire, name='save_walkdown_questionnaire'),
     path('cyber-pha-manager/', views.cyber_pha_manager, name='cyber_pha_manager'),
-    path('team-members/', views.get_team_members, name='get_team_members'),
     path('save-cyberpha/', views.save_cyberpha, name='save_cyberpha'),
-    path('add-team-member/', views.add_team_member, name='add_team_member'),
     path('assess_cyberpha/', views.assess_cyberpha, name='assess_cyberpha'),
     path('get_mitigation_measures/', views.get_mitigation_measures, name='get_mitigation_measures'),
     path('update_session/', views.update_session, name='update_session'),
@@ -106,6 +104,7 @@ urlpatterns = [
     path('save_ra_action', views.save_ra_action, name='save_ra_action'),
     path('get_rawactions/', views.get_rawactions, name='get_rawactions'),
     path('ra_actions_view', views.ra_actions_view, name='ra_actions_view'),
+    path('update_ra_action/', views.UpdateRAAction.as_view(), name='update_ra_action'),
 ]
 
 if settings.DEBUG:

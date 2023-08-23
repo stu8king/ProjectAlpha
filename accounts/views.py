@@ -13,6 +13,10 @@ from django.contrib.auth import login
 from django.urls import reverse
 
 
+def about_view(request):
+    return render(request, 'accounts/about.html')
+
+
 def get_client_ip(request):
     """Get client IP address from the request."""
     x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
@@ -120,14 +124,16 @@ def add_user_to_organization(request):
         user = User.objects.create_user(username=email, email=email, password=password, first_name=first_name,
                                         last_name=last_name)
 
-        # Create or get the UserProfile instance
-        user_profile, created = UserProfile.objects.get_or_create(user=user)
-
-        # Set the organization for the user profile
-        user_profile.organization = request.user.userprofile.organization
-        user_profile.save()
+        user_profile, created = UserProfile.objects.get_or_create(
+            user=user,
+            defaults={'organization': request.user.userprofile.organization}
+        )
+        if not created:
+            user_profile.organization = request.user.userprofile.organization
+            user_profile.save()
 
         messages.success(request, 'New user added successfully!')
-        return redirect(reverse('profile'))
+        return redirect(reverse('accounts/profile'))
 
-    return redirect(reverse('profile'))  # If not a POST request, redirect back to the profile page
+    return redirect(reverse('accounts/profile'))
+# If not a POST request, redirect back to the profile page

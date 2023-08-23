@@ -13,6 +13,7 @@ import openai
 import re
 from django.db.models import Avg
 import concurrent.futures
+import os
 
 
 @login_required
@@ -189,11 +190,14 @@ def facility_risk_profile(request):
             },
             {
                 "role": "user",
-                "content": f"Provide, without any commentary or additional information only the four specific pieces of information that are asked for. Give a one sentence reply to each of the four specific pieces of information being asked for. If there is no information to offer, use judgement to state either Not Known or make an AI estimate. The four pieces are information needed as follows: 1. Provide a summary of the most likely safety hazards for the {facility} {facility_type}, {address}, {country}. 2. Provide a sentence about the most likely chemicals stored or used at the {facility} {facility_type}, {address}, {country} and their associated hazards. 3. Give a summary of the most likely physical security standards and challenges for {facility} {facility_type} with the {Industry} industry at {address} in {country}. 4. Give a sentence that summarizes any other localized risks to note for this {facility_type} at {address} in {country}:\nAddress - {address}, Country - {country}, Industry - {Industry}, facility type - {facility_type} Provide only the four pieces of information that have been requested. No title or header. The output must be given in the following format where the | symbol denotes a delimited between variables. <safety summary>|<chemical summary>|<physical security summary>|<other summary>."
+                "content": f"Provide, without any commentary or additional information only the four specific pieces of information that are asked for. Give a one sentence reply to each of the four specific pieces of information being asked for. If there is no information to offer, use AI to offer the most pragmatic response taking each of the variables into account. The four pieces are information needed as follows: 1. Provide a summary of the most likely safety hazards for the {facility} {facility_type}, {address}, {country}. 2. Provide a sentence about the most likely chemicals stored or used at the {facility} {facility_type}, {address}, {country} and their associated hazards. 3. Give a summary of the most likely physical security standards and challenges for {facility} {facility_type} with the {Industry} industry at {address} in {country}. 4. Give a sentence that summarizes any other localized risks to note for this {facility_type} at {address} in {country}:\nAddress - {address}, Country - {country}, Industry - {Industry}, facility type - {facility_type} Provide only the four pieces of information that have been requested. No title or header. The output must be given in the following format where the | symbol denotes a delimited between variables. <safety summary>|<chemical summary>|<physical security summary>|<other summary>."
             }
         ]
 
-        openai.api_key = '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'
+        # openai.api_key = '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'
+
+        openai_api_key = os.environ.get('OPENAI_API_KEY')
+        openai.api_key = openai_api_key
 
         try:
             # Make the API call to the OpenAI GPT-3 API using the message
@@ -227,18 +231,21 @@ def facility_risk_profile(request):
 
         except openai.error.OpenAIError as e:
             # Handle any OpenAI API related errors
+            print(f"{str(e)}")
             return JsonResponse({
                 'error': f"OpenAI API Error: {str(e)}"
             })
 
         except ValueError as ve:
             # Handle the unexpected response format
+            print(f"{str(ve)}")
             return JsonResponse({
                 'error': str(ve)
             })
 
         except Exception as ex:
             # Handle any other unexpected errors
+            print(f"{str(ex)}")
             return JsonResponse({
                 'error': f"An unexpected error occurred: {str(ex)}"
             })

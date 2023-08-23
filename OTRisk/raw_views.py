@@ -4,10 +4,13 @@ import os
 from OTRisk.models.raw import RAWorksheet, RAWorksheetScenario, RAActions, MitreICSMitigations, MitreICSTechniques
 from django.contrib.auth.decorators import login_required
 from OTRisk.models.questionnairemodel import FacilityType
-from OTRisk.models.Model_CyberPHA import tblIndustry, tblThreatSources, auditlog, tblScenarios
+from OTRisk.models.Model_CyberPHA import tblIndustry, tblThreatSources, auditlog, tblScenarios, tblCyberPHAHeader
 from OTRisk.models.Model_Mitre import MitreICSTactics
+from accounts.models import Organization
 from django.shortcuts import render
 from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from datetime import date
 from django.views import View
@@ -19,27 +22,72 @@ from django.template.loader import get_template
 from django.conf import settings
 import tempfile
 from .forms import RAActionsForm
-
 from xhtml2pdf import pisa
 import json
 import re
 import requests
 
-login_required()
+
+class UpdateRAAction(View):
+    def put(self, request, *args, **kwargs):
+        # try:
+        print(request.body)
+        data = json.loads(request.body.decode('utf-8'))
+        action_id = data.get('action_id')
+        action_due_date = data.get('actionDueDate')
+        action_status = data.get('actionStatus')
+
+        ra_action = RAActions.objects.get(ID=action_id)
+        ra_action.actionDueDate = action_due_date
+        ra_action.actionStatus = action_status
+        current_user_name = request.user.first_name + " " + request.user.last_name
+        history_update = f"\n\n{current_user_name} updated the record to change the status to {action_status} and the due date to {action_due_date}."
+        ra_action.history += history_update
+        ra_action.save()
+
+        return JsonResponse({'success': True})
+
+    # except Exception as e:
+    #    return JsonResponse({'success': False, 'error': str(e)})
 
 
+@login_required()
 def ra_actions_view(request):
-    if request.method == 'GET':
-        try:
-            ra_actions = RAActions.objects.all()
-            context = {
-                'ra_actions': ra_actions
-            }
-            print(f"Count={ra_actions.count()}")
-            return render(request, 'OTRisk/ra_actions_template.html', context)
-        except Exception as e:
-            # Handle the exception (e.g., log it, show an error message to the user, etc.)
-            return render(request, 'error_template.html', {'error_message': str(e)})
+    selected_action = None
+    ra_title = None  # This will store the RATitle or the record from tblCyberPHAHeader
+
+    if request.method == 'POST':
+        action_id = request.POST.get('action_id')
+        if action_id:
+            try:
+                selected_action = RAActions.objects.get(ID=action_id)
+
+                # Check RAWorksheetID and retrieve RATitle
+                # Check RAWorksheetID and retrieve RATitle
+                if selected_action.RAWorksheetID_id != 0:
+                    ra_worksheet = RAWorksheet.objects.get(ID=selected_action.RAWorksheetID_id)
+                    ra_title = ra_worksheet.RATitle
+
+                # Check phaID and retrieve the record from tblCyberPHAHeader
+                elif selected_action.phaID != 0:
+                    ra_title = tblCyberPHAHeader.objects.get(ID=selected_action.phaID)
+
+            except (RAActions.DoesNotExist, RAWorksheet.DoesNotExist, tblCyberPHAHeader.DoesNotExist):
+                pass
+
+    # Get the organization_id of the current user
+    current_user_organization_id = request.user.userprofile.organization_id
+
+    # Filter RAActions by organization_id
+    ra_actions = RAActions.objects.filter(organizationid=current_user_organization_id)
+
+    context = {
+        'ra_actions': ra_actions,
+        'selected_action': selected_action,
+        'ra_title': ra_title
+        # This will be passed to the template to display the RATitle or the record from tblCyberPHAHeader
+    }
+    return render(request, 'OTRisk/ra_actions_template.html', context)
 
 
 def get_rawactions(request):
@@ -84,6 +132,12 @@ def save_ra_action(request):
         outageWWW = request.POST.get('outageWWW')
         phaID = int(request.POST.get('hdnphaID'))
         RAWorksheetID = int(request.POST.get('hdntxtModalRAW'))
+        current_user_organization_id = request.user.userprofile.organization_id
+        current_user = request.user
+        organization_instance = Organization.objects.get(pk=current_user_organization_id)
+
+        # create a history record
+        history = f"User {request.user} saved {action_title} at {timezone.now()}"
 
         ra_worksheet_instance = RAWorksheet.objects.get(pk=RAWorksheetID)
         # Create a new RAActions record
@@ -107,7 +161,10 @@ def save_ra_action(request):
             outagePS=outagePS,
             outageWWW=outageWWW,
             RAWorksheetID=ra_worksheet_instance,
-            phaID=phaID
+            phaID=phaID,
+            userid=request.user,
+            organizationid=organization_instance,
+            history=history
         )
         ra_action.save()
 

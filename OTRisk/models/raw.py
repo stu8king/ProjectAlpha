@@ -113,11 +113,6 @@ class RAActions(models.Model):
     actionDueDate = models.DateField()
     actionPriority = models.IntegerField()
     actionAssets = models.TextField()
-    ScenarioID = models.ForeignKey(RAWorksheetScenario, on_delete=models.CASCADE, db_column='ScenarioID')
-    outageRequired = models.TextField()
-    safetyPrecautions = models.TextField()
-    environmentPrecautions = models.TextField()
-    regulatoryNotifications = models.TextField()
     actionAffinity = models.TextField()
     outageWWW = models.CharField(max_length=3)
     outagePS = models.CharField(max_length=3)
@@ -128,6 +123,7 @@ class RAActions(models.Model):
     organizationid = models.ForeignKey(Organization, on_delete=models.CASCADE, verbose_name="Organization",
                                        related_name="ra_actions")
     userid = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="User", related_name="ra_actions")
+    history = models.TextField()
 
     class Meta:
         db_table = 'tblRawActions'
