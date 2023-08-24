@@ -11,59 +11,102 @@ from accounts.models import Organization, UserProfile
 import json
 
 
+def get_user_organization_id(request):
+    """Fetch organization ID for the logged-in user."""
+    user_profile = UserProfile.objects.get(user=request.user)
+    request.session['user_organization'] = user_profile.organization.id
+    return user_profile.organization.id
+
+
+def get_organization_users(organization_id):
+    """Fetch users for the given organization ID."""
+    return UserProfile.objects.filter(organization_id=organization_id).values_list('user', flat=True)
+
+
 @login_required()
 def dashboardhome(request):
-    user_profile = UserProfile.objects.get(user=request.user)
-    user_organization = user_profile.organization.id
-    # Set the session variable
-    request.session['user_organization'] = user_organization
 
-    records_by_business_unit_type = RAWorksheet.objects.values('BusinessUnitType').annotate(count=Count('ID'))
-    records_by_status_flag = RAWorksheet.objects.values('StatusFlag').annotate(count=Count('ID'))
-    records_by_trigger = RAWorksheet.objects.values('RATrigger').annotate(count=Count('ID'))
-    records_by_industry = RAWorksheet.objects.values('industry').annotate(count=Count('ID'))
-    records_by_risk_score = RAWorksheetScenario.objects.values('RiskScore').annotate(count=Count('ID'))
-    scenario_risk_status = RAWorksheetScenario.objects.values('RiskStatus').annotate(count=Count('ID'))
-    open_raws = RAWorksheet.objects.filter(organization=user_organization).exclude(StatusFlag="Closed")
-    open_raws_count = open_raws.count()
-    total_scenario_cost = RAWorksheetScenario.objects.aggregate(sum_scenarioCost=Sum('scenarioCost'))[
-        'sum_scenarioCost']
+    user_organization_id = get_user_organization_id(request)
+    
+    organization_users = get_organization_users(user_organization_id)
+    # Set the session variable
+    request.session['user_organization'] = user_organization_id
+
+    # Filters added to all model queries to respect the organization of the user
+    filters = {'organization_id': user_organization_id}
+    records_by_business_unit_type = RAWorksheet.objects.filter(**filters).values('BusinessUnitType').annotate(
+        count=Count('ID'))
+    records_by_status_flag = RAWorksheet.objects.filter(**filters).values('StatusFlag').annotate(count=Count('ID'))
+    records_by_trigger = RAWorksheet.objects.filter(**filters).values('RATrigger').annotate(count=Count('ID'))
+    records_by_industry = RAWorksheet.objects.filter(**filters).values('industry').annotate(count=Count('ID'))
+
+    scenarios = RAWorksheetScenario.objects.select_related('RAWorksheetID').filter(
+        RAWorksheetID__organization_id=user_organization_id)
+    records_by_risk_score = scenarios.values('RiskScore').annotate(count=Count('ID'))
+    scenario_risk_status = scenarios.values('RiskStatus').annotate(count=Count('ID'))
+
+    open_raws_count = RAWorksheet.objects.filter(**filters).exclude(StatusFlag="Closed").count()
+    total_scenario_cost = scenarios.aggregate(sum_scenarioCost=Sum('scenarioCost'))['sum_scenarioCost']
+
     formatted_scenario_cost = "${:,.0f}".format(total_scenario_cost)
 
-    raw_count = RAWorksheet.objects.all().count()
+    raw_count = RAWorksheet.objects.filter(**filters).count()
     # raw_scenarios = RAWorksheetScenario.objects.all()
-    scenarios_count = RAWorksheetScenario.objects.all().count()
+    scenarios_count = RAWorksheetScenario.objects.filter(RAWorksheetID__organization=user_organization_id).count()
+
     cyberpha_count = tblCyberPHAHeader.objects.all().count()
     cyberpha_scenario_count = tblCyberPHAScenario.objects.all().count()
-    safety_scores = RAWorksheetScenario.objects.values('SafetyScore').annotate(count=Count('ID')).order_by(
-        'SafetyScore')
-    safety_scores_list = list(safety_scores)
-    danger_scores = RAWorksheetScenario.objects.values('lifeScore').annotate(count=Count('ID')).order_by('lifeScore')
-    life_scores_list = list(danger_scores)
 
-    pha_safety_scores = tblCyberPHAScenario.objects.values('impactSafety').annotate(count=Count('ID')).order_by(
-        'impactSafety')
-    pha_safety_scores_list = list(pha_safety_scores)
-    pha_danger_scores = tblCyberPHAScenario.objects.values('impactDanger').annotate(count=Count('ID')).order_by(
-        'impactDanger')
-    pha_danger_scores_list = list(pha_danger_scores)
-    pha_environment_scores = tblCyberPHAScenario.objects.values('impactEnvironment').annotate(
-        count=Count('ID')).order_by('impactEnvironment')
-    pha_environment_scores_list = list(pha_environment_scores)
-    pha_threat_class = tblCyberPHAScenario.objects.values('ThreatClass').annotate(total=Count('ThreatClass'))
-    environment_scores = RAWorksheetScenario.objects.values('environmentScore').annotate(count=Count('ID')).order_by(
-        'environmentScore')
-    environment_scores_list = list(environment_scores)
+    safety_scores_list = list(
+        RAWorksheetScenario.objects.filter(RAWorksheetID__organization=user_organization_id).values(
+            'SafetyScore').annotate(count=Count('ID')).order_by('SafetyScore'))
+    life_scores_list = list(RAWorksheetScenario.objects.filter(RAWorksheetID__organization=user_organization_id).values(
+        'lifeScore').annotate(count=Count('ID')).order_by('lifeScore'))
+
+    pha_safety_scores_list = list(
+        tblCyberPHAScenario.objects.filter(userID__in=organization_users)
+        .values('impactSafety')
+        .annotate(count=Count('ID'))
+        .order_by('impactSafety')
+    )
+
+    pha_danger_scores_list = list(
+        tblCyberPHAScenario.objects.filter(userID__in=organization_users)
+        .values('impactDanger')
+        .annotate(count=Count('ID'))
+        .order_by('impactDanger')
+    )
+
+    pha_environment_scores_list = list(
+        tblCyberPHAScenario.objects.filter(userID__in=organization_users)
+        .values('impactEnvironment')
+        .annotate(count=Count('ID'))
+        .order_by('impactEnvironment')
+    )
+
+    pha_threat_class = (
+        tblCyberPHAScenario.objects.filter(userID__in=organization_users)
+        .values('ThreatClass')
+        .annotate(total=Count('ThreatClass'))
+    )
+
+    environment_scores_list = list(
+        RAWorksheetScenario.objects.filter(RAWorksheetID__organization=user_organization_id).values(
+            'environmentScore').annotate(count=Count('ID')).order_by('environmentScore'))
     # risk assessment facilities
-    raw_facilities = RAWorksheet.objects.values_list('ID', 'BusinessUnit', 'BusinessUnitType')
-    # cyberPHA facilities
-    pha_facilities = tblCyberPHAHeader.objects.values_list('ID', 'FacilityName', 'FacilityType')
+    raw_facilities = RAWorksheet.objects.filter(organization=user_organization_id).values_list('ID', 'BusinessUnit',
+                                                                                               'BusinessUnitType')
 
-    total_sle = tblCyberPHAScenario.objects.aggregate(sum_sle=Sum('sle'))['sum_sle']
+    # cyberPHA facilities
+    pha_facilities = tblCyberPHAHeader.objects.all().values_list('ID', 'FacilityName', 'FacilityType')
+
+    total_sle = tblCyberPHAScenario.objects.filter(userID__in=organization_users).aggregate(sum_sle=Sum('sle'))[
+        'sum_sle']
+
     formatted_sle = "${:,.0f}".format(total_sle)
 
-    ra_actions_records = RAActions.objects.filter(organizationid=user_organization).exclude(actionStatus="Closed")
-    ra_actions_records_count = ra_actions_records.count()
+    ra_actions_records_count = RAActions.objects.filter(organizationid=user_organization_id).exclude(
+        actionStatus="Closed").count()
 
     num_records = raw_facilities.count()
 

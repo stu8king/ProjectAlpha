@@ -29,8 +29,6 @@ from . import views
 app_name = 'OTRisk'
 
 urlpatterns = [
-    path('', views.home, name='home'),
-    path('home/', views.home, name='home'),
     path('post_list/', views.PostListView.as_view(), name='post_list'),
     path('<int:pk>/', views.PostDetailView.as_view(), name='post_detail'),
     path('<int:pk>/add_scenario/', views.add_riskscenario, name='scenario_create'),
@@ -63,8 +61,6 @@ urlpatterns = [
     path('save_raw_scenario/', save_raw_scenario, name='save_raw_scenario'),
     path('save_raw_actions/', save_raw_actions, name='save_raw_actions'),
     path('fill_raw_from_table/<int:id>/', views.fill_raw_from_table, name='fill_raw_from_table'),
-    # path('login/', login_view, name='login'),
-    # path('login/', auth_views.LoginView.as_view(), name='login'),
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
     path('walkdown/', views.walkdown, name='walkdown'),
     path('get_walkdown_data/<int:row_id>/', views.get_walkdown_data, name='get_walkdown_data'),

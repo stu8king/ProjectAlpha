@@ -26,6 +26,7 @@ from xhtml2pdf import pisa
 import json
 import re
 import requests
+from .dashboard_views import get_user_organization_id
 
 
 class UpdateRAAction(View):
@@ -41,7 +42,7 @@ class UpdateRAAction(View):
         ra_action.actionDueDate = action_due_date
         ra_action.actionStatus = action_status
         current_user_name = request.user.first_name + " " + request.user.last_name
-        history_update = f"\n\n{current_user_name} updated the record to change the status to {action_status} and the due date to {action_due_date}."
+        history_update = f"\n\n{timezone.now()}: {current_user_name} updated the record to change the status to {action_status} and the due date to {action_due_date}."
         ra_action.history += history_update
         ra_action.save()
 
@@ -255,14 +256,17 @@ def get_risk_status(risk_score):
 
 @login_required()
 def qraw(request):
+    # check the organization that the user belong to
+    org_id = get_user_organization_id(request)
+
     if request.method == 'POST':
         edit_mode = int(request.POST.get('edit_mode', 0))
-        print(f'edit_mode={edit_mode}')
+
         if edit_mode == 0:
-            print('adding new')
 
             # Check for duplicate records
             is_duplicate = RAWorksheet.objects.filter(
+                organization_id=org_id,
                 RATitle=request.POST.get('txtTitle'),
                 BusinessUnit=request.POST.get('txtBU'),
                 AssessorName=request.POST.get('txtLeader'),
@@ -328,7 +332,6 @@ def qraw(request):
                         )
                         scenario.save()
         elif edit_mode == 1:
-            print('editing')
             ra_worksheet_id = int(request.POST.get('hdnRawID'))
             ra_worksheet = RAWorksheet.objects.get(ID=ra_worksheet_id)
             ra_worksheet.RATitle = request.POST.get('txtTitle')
@@ -341,14 +344,11 @@ def qraw(request):
             ra_worksheet.save()
 
             scenario_count = int(request.POST.get('scenarioCount', 0))
-            print(f"scount={scenario_count}")
             for i in range(1, scenario_count + 1):
-                print(f"saving scenario {i}")
                 scenario_id_str = request.POST.get(f'hdnScenarioID_{i}')
                 ra_worksheet_id = int(
                     request.POST.get('hdnRawID'))
                 ra_worksheet_instance = RAWorksheet.objects.get(ID=ra_worksheet_id)
-                print(f"scenario={scenario_id_str}")
 
                 if scenario_id_str and scenario_id_str != '0':
                     scenario_id = int(scenario_id_str)
@@ -389,9 +389,7 @@ def qraw(request):
                 scenario.justifyReputation = request.POST.get(f'txtreputationJustify_{i}')
                 scenario.save()
 
-    raws = RAWorksheet.objects.all()
-    # scenarios = RAWorksheetScenario.objects.all()
-    # reply = openai_assess_risk(request, request.POST)
+    raws = RAWorksheet.objects.filter(organization_id=org_id)
 
     facilities = FacilityType.objects.all().order_by('FacilityType')
     industries = tblIndustry.objects.all().order_by('Industry')
@@ -475,8 +473,8 @@ def openai_assess_risk(request):
              "content": f"Lastly, provide a one-sentence summary highlighting the key factors used in the assessment, especially the industry type, facility type, and other high-weight factors. The output format must be: <overall_risk_rating_value>|<overall_risk_score>|<cost>|<summary> where <overall_risk_rating_value> is the overall risk rating, <overall_risk_score> is the overall risk score, <cost> is the estimated cost, <summary> is the summary statement, and | is a field delimiter ."}
         ]
 
-        openai.api_key = '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'
-
+        # openai.api_key = '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'
+        openai.api_key = os.environ.get('OPENAI_API_KEY')
         # Make the API call to the OpenAI GPT-3 API using the message
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",  # Use the GPT-3 engine

@@ -121,20 +121,6 @@ class tblCyberPHAHeader(models.Model):
         db_table = 'tblCyberPHAHeader'
 
 
-class tblCyberPHASession(models.Model):
-    ID = models.AutoField(primary_key=True)
-    CyberPHAID = models.ForeignKey(tblCyberPHAHeader, on_delete=models.CASCADE)
-    SessionDate = models.DateField
-    StartTime = models.DateTimeField
-    EndTime = models.DateTimeField
-    Facilitator = models.TextField(max_length=255)
-    Scribe = models.CharField(max_length=255)
-    Comments = models.TextField(max_length=255)
-
-    class Meta:
-        db_table = 'tblCyberPHASession'
-
-
 class tblControlObjectives(models.Model):
     ID = models.AutoField(primary_key=True)
     ControlObjective = models.CharField(max_length=255)
