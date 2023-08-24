@@ -14,6 +14,8 @@ import re
 from django.db.models import Avg
 import concurrent.futures
 import os
+from .dashboard_views import get_user_organization_id
+from django.contrib.auth.models import User
 
 
 @login_required
@@ -48,7 +50,12 @@ def iotaphamanager(request):
         pha_header.UserID = request.user.id
         pha_header.save()
 
-    pha_header_records = tblCyberPHAHeader.objects.all().order_by('ID')
+    organization_id_from_session = request.session.get('user_organization')
+
+    users_in_organization = User.objects.filter(userprofile__organization__id=organization_id_from_session)
+
+    pha_header_records = tblCyberPHAHeader.objects.filter(UserID__in=users_in_organization)
+
     industries = tblIndustry.objects.all().order_by('Industry')
     facilities = FacilityType.objects.all().order_by('FacilityType')
     zones = tblZones.objects.all().order_by('PlantZone')

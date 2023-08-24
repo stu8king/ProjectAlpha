@@ -98,9 +98,16 @@
         <li class="nav-item">
           <a class="nav-link" href="#" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Reports</a>
         </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#" tabindex="-1" ><i class="bi bi-ui-checks-grid"></i> Admin</a>
-      </li>
+        <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="bi bi-diagram-3"></i> Admin
+              </a>
+              <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                  <li><a  class="dropdown-item" href="{% url 'OTRisk:add_scenario' %}">Scenario Manager</a></li>
+                  <li><a  class="dropdown-item" href="{% url 'OTRisk:add_consequence' %}">Consequence Manager</a></li>
+              </ul>
+
+        </li>
         <li class="nav-item">
             <a class="nav-link" href="{% url 'accounts:profile' %}">
                 <i class="bi bi-person-fill"></i> {{ user.first_name }} {{ user.last_name }} | {{ user.userprofile.organization.name }}

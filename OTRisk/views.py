@@ -6,6 +6,8 @@ from django.template import RequestContext
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import DeleteView
 from django.views.generic.edit import CreateView
+
+import accounts.models
 from OTRisk.models.RiskScenario import RiskScenario, tblScenarioRecommendations
 from OTRisk.models.Model_Scenario import tblConsequence
 from OTRisk.models.sitewalkdown import SiteWalkdown
@@ -15,20 +17,16 @@ from OTRisk.models.post import Post, AssessmentTeam
 from OTRisk.models.ThreatAssessment import ThreatAssessment
 from OTRisk.models.raw import RAWorksheet, RAWorksheetScenario, RAActions
 from django.db.models import F, Count, Avg
-from django import forms
 from .forms import RiskScenarioForm, PostForm, AssessmentTeamForm
 from django.http import JsonResponse, HttpResponse
 from django.utils import timezone
 from django.core import serializers
 from OTRisk.models.Model_Workshop import tblWorkshopNarrative, tblWorkshopInformation
-from OTRisk.models.Model_CyberPHA import tblCyberPHAEntry, tblCyberPHAHeader, tblRiskCategories, \
+from OTRisk.models.Model_CyberPHA import tblCyberPHAHeader, tblRiskCategories, \
     tblControlObjectives, \
     tblThreatIntelligence, tblMitigationMeasures, tblScenarios, tblSafeguards, tblThreatSources, tblThreatActions, \
     tblNodes, tblUnits, tblZones, tblCyberPHAScenario, tblIndustry, auditlog, tblStandards
-from OTRisk.models.Model_Mitre import MitreICSTactics
 from django.shortcuts import render, redirect
-from django.template.loader import render_to_string
-from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from .forms import LoginForm
 from datetime import date, datetime
@@ -41,11 +39,112 @@ from .raw_views import qraw, openai_assess_risk, GetTechniquesView, raw_action, 
 from .dashboard_views import dashboardhome
 from .pha_views import iotaphamanager, facility_risk_profile, get_headerrecord, scenario_analysis, phascenarioreport, \
     getSingleScenario
+from .forms import CustomScenarioForm, CustomConsequenceForm
+from .models.Model_Scenario import CustomScenario, CustomConsequence
+from accounts.models import Organization
 
 import uuid
 
 app_name = 'OTRisk'
 
+
+def add_or_update_consequence(request, consequence_id=None):
+    # Start by setting scenario to None
+    consequence = None
+
+    # If there's a scenario_id from URL parameters, fetch the scenario
+    if consequence_id:
+        consequence = CustomConsequence.objects.get(pk=consequence_id)
+
+    # Fetch post_scenario_id from POST data, if present
+    post_consequence_id = request.POST.get('consequence_id')
+    if post_consequence_id:
+        consequence = CustomConsequence.objects.get(pk=post_consequence_id)
+
+    # Check the organization for security
+    if consequence and consequence.organization_id != request.session['user_organization']:
+        return redirect('some_error_page_or_home')
+
+    # Handle the form submission
+    if request.method == 'POST':
+        form = CustomConsequenceForm(request.POST, instance=consequence, user=request.user)
+        print(request.POST)
+        if form.is_valid():
+            print("form is valid")
+            consequence_instance = form.save(commit=False)
+            organization_id = request.session['user_organization']
+            consequence_instance.organization = Organization.objects.get(pk=organization_id)
+            consequence_instance.save()
+            return redirect('OTRisk:add_consequence')
+    else:
+        form = CustomConsequenceForm(instance=consequence)
+
+    # Display the template
+    organization_id = request.session['user_organization']
+    consequences = CustomConsequence.objects.filter(organization_id=organization_id)
+
+    # Ensure that scenario_id is passed to the template
+    return render(request, 'OTRisk/custom_consequence.html',
+                  {'form': form, 'consequences': consequences, 'consequence_id': consequence_id or post_consequence_id})
+
+
+def delete_consequence(request, consequence_id):
+    consequence = CustomConsequence.objects.get(pk=consequence_id)
+    if consequence.organization != request.user.userprofile.organization:
+        return redirect('OTRisk:add_consequence')
+    consequence.delete()
+    return redirect('OTRisk:add_consequence')
+
+
+### - end of customer scenario code ###
+
+def add_or_update_scenario(request, scenario_id=None):
+    # Start by setting scenario to None
+    scenario = None
+
+    # If there's a scenario_id from URL parameters, fetch the scenario
+    if scenario_id:
+        scenario = CustomScenario.objects.get(pk=scenario_id)
+
+    # Fetch post_scenario_id from POST data, if present
+    post_scenario_id = request.POST.get('scenario_id')
+    if post_scenario_id:
+        scenario = CustomScenario.objects.get(pk=post_scenario_id)
+
+    # Check the organization for security
+    if scenario and scenario.organization_id != request.session['user_organization']:
+        return redirect('some_error_page_or_home')
+
+    # Handle the form submission
+    if request.method == 'POST':
+        form = CustomScenarioForm(request.POST, instance=scenario, user=request.user)
+        if form.is_valid():
+            scenario_instance = form.save(commit=False)
+            organization_id = request.session['user_organization']
+            scenario_instance.organization = Organization.objects.get(pk=organization_id)
+            scenario_instance.save()
+            return redirect('OTRisk:add_scenario')
+    else:
+        form = CustomScenarioForm(instance=scenario)
+
+    # Display the template
+    organization_id = request.session['user_organization']
+    scenarios = CustomScenario.objects.filter(organization_id=organization_id)
+
+    # Ensure that scenario_id is passed to the template
+    return render(request, 'OTRisk/custom_scenario.html',
+                  {'form': form, 'scenarios': scenarios, 'scenario_id': scenario_id or post_scenario_id})
+
+
+def delete_scenario(request, scenario_id):
+    scenario = CustomScenario.objects.get(pk=scenario_id)
+    if scenario.organization != request.user.userprofile.organization:
+        return redirect('OTRisk:add_scenario')
+    scenario.delete()
+    return redirect('OTRisk:add_scenario')
+
+
+### - end of customer scenario code ###
 
 def get_consequences(request):
     consequences = tblConsequence.objects.all()
@@ -218,7 +317,26 @@ def assess_cyberpha(request):
     active_cyberpha = request.GET.get('active_cyberpha', None)
     if active_cyberpha is None:
         active_cyberpha = request.session.get('cyberPHAID', 0)
-    scenarios = tblScenarios.objects.all()
+
+    # scenarios = tblScenarios.objects.all()
+    tbl_scenarios = tblScenarios.objects.all()
+    tbl_consequences = tblConsequence.objects.all()
+    # Get custom scenarios for the current user's organization
+    organization_id = request.session['user_organization']
+    custom_scenarios = CustomScenario.objects.filter(organization_id=organization_id)
+    # Convert querysets to lists of dictionaries
+    tbl_scenarios_list = [{'ID': obj.ID, 'Scenario': obj.Scenario} for obj in tbl_scenarios]
+    custom_scenarios_list = [{'ID': obj.id, 'Scenario': obj.scenario} for obj in custom_scenarios]
+    # Combine these lists
+    combined_scenarios = tbl_scenarios_list + custom_scenarios_list
+
+    custom_consequences = CustomConsequence.objects.filter(organization_id=organization_id)
+
+    tbl_consequence_list = [{'ID': obj.ID, 'Consequence': obj.Consequence} for obj in tbl_consequences]
+    custom_consequence_list = [{'ID': obj.id, 'Consequence': obj.Consequence} for obj in custom_consequences]
+    # Combine these lists
+    combined_consequences = tbl_consequence_list + custom_consequence_list
+
     control_objectives = tblControlObjectives.objects.all()
     mitigation_measures = tblMitigationMeasures.objects.all()
     threat_intelligence = tblThreatIntelligence.objects.all().order_by('ThreatDescription')
@@ -256,7 +374,7 @@ def assess_cyberpha(request):
     saved_scenarios = tblCyberPHAScenario.objects.filter(CyberPHA=active_cyberpha, Deleted=0)
 
     return render(request, 'assess_cyberpha.html', {
-        'scenarios': scenarios,
+        'scenarios': combined_scenarios,
         'control_objectives': control_objectives,
         'mitigation_measures': mitigation_measures,
         'threat_intelligence': threat_intelligence,
@@ -267,7 +385,7 @@ def assess_cyberpha(request):
         'threatactions': threatactions,
         'clicked_row_facility_name': clicked_row_facility_name,
         'saved_scenarios': saved_scenarios,
-        'consequenceList': consequenceList,
+        'consequenceList': combined_consequences,
         'standardslist': standardslist
     })
 

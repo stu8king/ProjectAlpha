@@ -101,6 +101,21 @@ urlpatterns = [
     path('get_rawactions/', views.get_rawactions, name='get_rawactions'),
     path('ra_actions_view', views.ra_actions_view, name='ra_actions_view'),
     path('update_ra_action/', views.UpdateRAAction.as_view(), name='update_ra_action'),
+    # For adding and editing scenarios
+    path('scenario/add/', views.add_or_update_scenario, name='add_scenario'),
+    path('scenario/edit/<int:scenario_id>/', views.add_or_update_scenario, name='edit_scenario'),
+
+    # For deleting scenarios
+    path('scenario/delete/<int:scenario_id>/', views.delete_scenario, name='delete_scenario'),
+    path('OTRisk/scenario/add/<int:scenario_id>/', views.add_or_update_scenario, name='edit_scenario'),
+
+    # For adding and editing consequences
+    path('consequence/add/', views.add_or_update_consequence, name='add_consequence'),
+    path('consequence/edit/<int:consequence_id>/', views.add_or_update_consequence, name='edit_consequence'),
+
+    # For deleting consequences
+    path('consequence/delete/<int:consequence_id>/', views.delete_consequence, name='delete_consequence'),
+    path('OTRisk/consequence/add/<int:consequence_id>/', views.add_or_update_consequence, name='edit_consequence'),
 ]
 
 if settings.DEBUG:

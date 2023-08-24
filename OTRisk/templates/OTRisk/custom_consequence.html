@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="row" style="height: 80px;">
+    <div class="col-md-1 bg-black"></div>
+    <div class="col-md-10 bg-white"></div>
+    <div class="col-md-1 bg-black"></div>
+</div>
+<div class="row">
+    <div class="col-md-1 bg-black"></div>
+    <div class="col-md-10 bg-white" style="text-align: center"><h5>Manage Custom Consequences</h5></div>
+    <div class="col-md-1 bg-black"></div>
+</div>
+<div class="row">
+    <div class="col-md-1 bg-black"></div>
+    <div class="col-md-10 bg-white" style="text-align: center">
+        <h3>List of {{ user.userprofile.organization.name }} Consequences</h3>
+        <table id="consequencesTable">
+            <thead>
+                <tr>
+                    <th>Consequence</th>
+                    <th>Edit</th>
+                    <th>Delete</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for consequence in consequences %}
+                <tr>
+                    <td>{{ consequence.consequence }}</td>
+                    <td><a href="{% url 'OTRisk:edit_consequence' consequence_id=consequence.id %}">Edit</a>
+
+                    <td>
+                        <a href="{% url 'OTRisk:delete_consequence' consequence_id=consequence.id %}" onclick="return confirm('Are you sure?');">Delete</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+    </div>
+    <div class="col-md-1 bg-black"></div>
+</div>
+<div class="row" style="height: 20px;">
+    <div class="col-md-1 bg-black"></div>
+    <div class="col-md-10 bg-white"></div>
+    <div class="col-md-1 bg-black"></div>
+</div>
+
+<div class="row" >
+    <div class="col-md-1 bg-black"></div>
+    <div class="col-md-10 bg-white">
+
+{% if consequence_id %}
+<h3>Edit Consequence</h3>
+{% else %}
+<h3>Add New Consequence</h3>
+{% endif %}
+
+<form method="post" action="{% url 'OTRisk:add_consequence' %}">
+    {% csrf_token %}
+    {{ form.as_p }}
+    {% if consequence_id %}
+    <!-- Add a hidden input field to store scenario_id when editing -->
+    <input type="hidden" name="consequence_id" value="{{ consequence_id }}">
+    {% endif %}
+    <button type="submit">Save Consequence</button>
+</form>
+
+
+{% if consequence_id %}
+<h3>Delete Consequence</h3>
+<p>If you want to delete this consequence, click the button below:</p>
+<form method="post" action="{% url 'OTRisk:delete_consequence' consequenceo_id=consequence_id %}">
+    {% csrf_token %}
+    <button type="submit" onclick="return confirm('Are you sure you want to delete this scenario?');">Delete Consequence</button>
+</form>
+{% endif %}
+</div>
+    <div class="col-md-1 bg-black"></div>
+</div>
+<div class="row" style="height: 50px;">
+    <div class="col-md-1 bg-black"></div>
+    <div class="col-md-10 bg-white"></div>
+    <div class="col-md-1 bg-black"></div>
+</div>
+<div class="row" style="height: 500px;">
+    <div class="col-md-1 bg-black"></div>
+    <div class="col-md-10 bg-black"></div>
+    <div class="col-md-1 bg-black"></div>
+</div>
+
+<script>
+    $(document).ready( function () {
+        $('#consequencesTable').DataTable();
+    } );
+</script>
+
+
+{% endblock %}

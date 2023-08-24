@@ -27,7 +27,7 @@ def get_organization_users(organization_id):
 def dashboardhome(request):
 
     user_organization_id = get_user_organization_id(request)
-    
+
     organization_users = get_organization_users(user_organization_id)
     # Set the session variable
     request.session['user_organization'] = user_organization_id
@@ -46,9 +46,13 @@ def dashboardhome(request):
     scenario_risk_status = scenarios.values('RiskStatus').annotate(count=Count('ID'))
 
     open_raws_count = RAWorksheet.objects.filter(**filters).exclude(StatusFlag="Closed").count()
+
     total_scenario_cost = scenarios.aggregate(sum_scenarioCost=Sum('scenarioCost'))['sum_scenarioCost']
 
-    formatted_scenario_cost = "${:,.0f}".format(total_scenario_cost)
+    try:
+        formatted_scenario_cost = "${:,.0f}".format(total_scenario_cost)
+    except Exception:
+        formatted_scenario_cost = "$--"
 
     raw_count = RAWorksheet.objects.filter(**filters).count()
     # raw_scenarios = RAWorksheetScenario.objects.all()
@@ -103,7 +107,10 @@ def dashboardhome(request):
     total_sle = tblCyberPHAScenario.objects.filter(userID__in=organization_users).aggregate(sum_sle=Sum('sle'))[
         'sum_sle']
 
-    formatted_sle = "${:,.0f}".format(total_sle)
+    try:
+        formatted_sle = "${:,.0f}".format(total_sle)
+    except Exception:
+        formatted_sle= "$--"
 
     ra_actions_records_count = RAActions.objects.filter(organizationid=user_organization_id).exclude(
         actionStatus="Closed").count()
