@@ -71,6 +71,19 @@
      .small-font {
         font-size: 0.8rem; /* adjust as needed */
    }
+
+         .stat-card {
+        background-color: lightgrey;
+    }
+    .inner-card {
+        background-color: white;
+        border-radius: 10px;
+        margin: 10px 10px 20px 10px;
+        height: 70%;
+    }
+    .card-title-light {
+        font-weight: lighter;
+    }
     </style>
 </head>
 <body style="background-color: black">
@@ -85,15 +98,8 @@
         <li class="nav-item">
           <a class="nav-link" href="{% url 'OTRisk:qraw' %}"><i class="bi bi-journal-text"></i> Risk Assessment</a>
         </li>
-        <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                <i class="bi bi-diagram-3"></i> CyberPHA
-              </a>
-              <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                <li><a class="dropdown-item" href="{% url 'OTRisk:iotaphamanager' %}"> CyberPHA Manager</a></li>
-                <li><a class="dropdown-item" href="{% url 'OTRisk:walkdown' %}"> Site Walkdown</a></li>
-                <li><a class="dropdown-item" href="#">Workshop</a></li>
-              </ul>
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'OTRisk:iotaphamanager' %}"><i class="bi bi-journal-text"></i> CyberPHA</a>
         </li>
           <li class="nav-item">
           <a class="nav-link" href="{% url 'OTRisk:ra_actions_view' %}" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Actions</a>
@@ -108,6 +114,8 @@
               <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
                   <li><a  class="dropdown-item" href="{% url 'OTRisk:add_scenario' %}">Scenario Manager</a></li>
                   <li><a  class="dropdown-item" href="{% url 'OTRisk:add_consequence' %}">Consequence Manager</a></li>
+                  <li><a  class="dropdown-item" href="{% url 'OTRisk:admin_users' %}">Admin Users</a></li>
+
               </ul>
 
         </li>
@@ -137,77 +145,67 @@
     </div> <!-- dark grey stripe -->
 
 <div class="row" style="height: 150px">
-    <div class="col-md-1"></div>
-    <div class="col-md-1" style="background-color: white"></div>
-    <div class="col-md-2" id="statDisplay" style="background-color: lightgrey">
-        <div class="card shadow-lg" style="background-color: white; border-radius: 10px; margin: 10px 10px 20px 10px; height: 70%;">
+    <div class="col-md-1 col-sm-1"></div>
+    <div class="col-md-1 col-sm-1" style="background-color: white"></div>
+
+    <div class="col-md-2 col-sm-6 stat-card">
+        <div class="card shadow-lg inner-card">
             <div class="card-body">
                 <div class="row">
-                    <h5 class="card-title text-center text-black" style="font-weight: lighter;">Open Risk Exposure (CyberPHA):</h5>
+                    <h5 class="card-title text-center text-black card-title-light">Open Risk Exposure (CyberPHA):</h5>
                 </div>
                 <div class="row">
                     <h1 class="card-text text-center text-black">{{ formatted_sle }}</h1>
                 </div>
-                <div class="row">
-                    <h5 class="text-center"></h5>
-                </div>
             </div>
         </div>
-
     </div>
 
-
-    <div class="col-md-2" id="statDisplay" style="background-color: lightgrey">
-        <div class="card shadow-lg" style="background-color: white; border-radius: 10px; margin: 10px 10px 20px 10px; height: 70%;">
+    <div class="col-md-2 col-sm-6 stat-card">
+        <div class="card shadow-lg inner-card">
             <div class="card-body">
                 <div class="row">
-                    <h5 class="card-title text-center text-black" style="font-weight: lighter;">Open Risk Exposure (QRAW):</h5>
+                    <h5 class="card-title text-center text-black card-title-light">Open Risk Exposure (QRAW):</h5>
                 </div>
                 <div class="row">
                     <h1 class="card-text text-center text-black">{{ formatted_scenario_cost }}</h1>
                 </div>
-                <div class="row">
-                    <h5 class="text-center"></h5>
-                </div>
             </div>
         </div>
     </div>
 
-    <div class="col-md-2" id="statDisplay" style="background-color: lightgrey">
-        <div class="card shadow-lg" style="background-color: white; border-radius: 10px; margin: 10px 10px 20px 10px; height: 70%;">
+    <div class="col-md-2 col-sm-6 stat-card">
+        <div class="card shadow-lg inner-card">
             <div class="card-body">
                 <div class="row">
-                    <h5 class="card-title text-center text-black" style="font-weight: lighter;">Open Action Items:</h5>
+                    <h5 class="card-title text-center text-black card-title-light">Open Action Items:</h5>
                 </div>
                 <div class="row">
                     <h1 class="card-text text-center text-black">{{ ra_actions_records_count }}</h1>
                 </div>
-                <div class="row">
-                    <h5 class="text-center"></h5>
-                </div>
             </div>
         </div>
     </div>
 
-    <div class="col-md-2" id="statDisplay" style="background-color: lightgrey">
-        <div class="card shadow-lg" style="background-color: white; border-radius: 10px; margin: 10px 10px 20px 10px; height: 70%;">
+    <div class="col-md-2 col-sm-6 stat-card">
+        <div class="card shadow-lg inner-card">
             <div class="card-body">
                 <div class="row">
-                    <h5 class="card-title text-center text-black" style="font-weight: lighter;">Open Risk Assessments:</h5>
+                    <h5 class="card-title text-center text-black card-title-light">Open Risk Assessments:</h5>
                 </div>
                 <div class="row">
                     <h1 class="card-text text-center text-black">{{ open_raws_count }}</h1>
                 </div>
-                <div class="row">
-                    <h5 class="text-center"></h5>
-                </div>
             </div>
         </div>
     </div>
 
-    <div class="col-md-1" style="background-color: white"></div>
-    <div class="col-md-1"></div>
+    <div class="col-md-1 col-sm-1" style="background-color: white"></div>
+    <div class="col-md-1 col-sm-1"></div>
 </div>
+
+
+
 
 <div class="row" style="height: 150px">
     <div class="col-md-1"></div>

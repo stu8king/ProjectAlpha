@@ -2,6 +2,8 @@ from django.db import models
 from django.contrib.auth.models import User
 
 
+
+
 class tblStandards(models.Model):
     id = models.AutoField(primary_key=True)
     standard = models.TextField()

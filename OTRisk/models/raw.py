@@ -42,11 +42,11 @@ class RAWorksheet(models.Model):
     AssessorName = models.CharField(max_length=50)
     BusinessUnit = models.CharField(max_length=50)
     BusinessUnitType = models.CharField(max_length=50)
-    EmployeeCount = models.IntegerField()
+    EmployeeCount = models.IntegerField(null=True, default=0)
     RegulatoryOversight = models.CharField(max_length=5)
     WalkdownID = models.IntegerField()
     industry = models.CharField(max_length=30)
-    cyberPHAID = models.IntegerField()
+    cyberPHAID = models.IntegerField(default=0)
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE)
 
     class Meta:

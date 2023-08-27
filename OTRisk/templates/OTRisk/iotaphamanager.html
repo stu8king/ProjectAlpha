@@ -90,6 +90,11 @@
         100% { transform: rotate(360deg); }
     }
 
+    .selectable-row:hover {
+    cursor: pointer;
+    background-color: #f5f5f5;  /* Optional: to give a slight background change on hover */
+}
+
     </style>
 </head>
 <body style="background-color: black">
@@ -124,15 +129,8 @@ fetch('https://restcountries.com/v3.1/all')
         <li class="nav-item">
           <a class="nav-link" href="{% url 'OTRisk:qraw' %}"><i class="bi bi-journal-text"></i> Risk Assessment</a>
         </li>
-        <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                <i class="bi bi-diagram-3"></i> CyberPHA
-              </a>
-              <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                <li><a class="dropdown-item" href="{% url 'OTRisk:iotaphamanager' %}"> CyberPHA Manager</a></li>
-                <li><a class="dropdown-item" href="{% url 'OTRisk:walkdown' %}"> Site Walkdown</a></li>
-                <li><a class="dropdown-item" href="#">Workshop</a></li>
-              </ul>
+       <li class="nav-item">
+          <a class="nav-link" href="{% url 'OTRisk:iotaphamanager' %}"><i class="bi bi-journal-text"></i> CyberPHA</a>
         </li>
            <li class="nav-item">
           <a class="nav-link" href="{% url 'OTRisk:ra_actions_view' %}" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Actions</a>
@@ -170,6 +168,8 @@ fetch('https://restcountries.com/v3.1/all')
 <form name="frmHeader" id="frmRAW" method="POST" action="{% url 'OTRisk:iotaphamanager' %}">
 {% csrf_token %}
 <br><br>
+
+
 <div class="row" style="height: 10px; padding-top: 20px; background-color: black">
     <div class="col-md-1" style="background-color: black"></div>
     <div class="col-md-10" style="background-color: darkgray"></div>
@@ -206,7 +206,7 @@ fetch('https://restcountries.com/v3.1/all')
         </thead>
         <tbody>
             {% for pha_header_records in pha_header_records %}
-                <tr data-id="{{ pha_header_records.ID }}">
+                <tr data-id="{{ pha_header_records.ID }}" class="selectable-row">
                     <td>{{ pha_header_records.ID }}</td>
                     <td>{{ pha_header_records.title }}</td>
                     <td>{{ pha_header_records.FacilityName }}</td>
@@ -290,6 +290,16 @@ fetch('https://restcountries.com/v3.1/all')
     <div class="col-md-1 " style="background-color: darkgray;"></div>
 </div> <!-- dark grey stripe -->
     <input type="hidden" name="txtHdnCyberPHAID" id="txtHdnCyberPHAID" value="0">
+{% if new_record_id %}
+    <script>
+        // Set the value of the hidden textbox field
+        document.querySelector('input[name="txtHdnCyberPHAID"]').value = "{{ new_record_id }}";
+
+        // Store the value in the local session storage
+        sessionStorage.setItem('activeCyberPHA', "{{ new_record_id }}");
+    </script>
+
+{% endif %}
 <div class="row small-font">
     <div class="col-md-1 bg-black"></div>
     <div class="col-md-1" style="background-color: darkgray"></div>

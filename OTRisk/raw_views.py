@@ -287,6 +287,7 @@ def qraw(request):
                     RATrigger=request.POST.get('selectTrigger'),
                     RADescription=request.POST.get('txtDescription'),
                     UserID=request.user.id,
+                    organization_id=org_id,
                     WalkdownID=0,
                     StatusFlag="Open",
                     RADate=date.today(),

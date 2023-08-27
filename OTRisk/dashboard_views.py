@@ -58,8 +58,8 @@ def dashboardhome(request):
     # raw_scenarios = RAWorksheetScenario.objects.all()
     scenarios_count = RAWorksheetScenario.objects.filter(RAWorksheetID__organization=user_organization_id).count()
 
-    cyberpha_count = tblCyberPHAHeader.objects.all().count()
-    cyberpha_scenario_count = tblCyberPHAScenario.objects.all().count()
+    cyberpha_count = tblCyberPHAHeader.objects.filter(UserID__in=organization_users).count()
+    cyberpha_scenario_count = tblCyberPHAScenario.objects.filter(userID__in=organization_users).count()
 
     safety_scores_list = list(
         RAWorksheetScenario.objects.filter(RAWorksheetID__organization=user_organization_id).values(
@@ -102,7 +102,7 @@ def dashboardhome(request):
                                                                                                'BusinessUnitType')
 
     # cyberPHA facilities
-    pha_facilities = tblCyberPHAHeader.objects.all().values_list('ID', 'FacilityName', 'FacilityType')
+    pha_facilities = tblCyberPHAHeader.objects.filter(UserID__in=organization_users).values_list('ID', 'FacilityName', 'FacilityType')
 
     total_sle = tblCyberPHAScenario.objects.filter(userID__in=organization_users).aggregate(sum_sle=Sum('sle'))[
         'sum_sle']

@@ -47,23 +47,12 @@ class Organization(models.Model):
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    organization = models.ForeignKey(Organization, on_delete=models.SET_NULL, null=True, blank=True)
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE)
+    must_change_password = models.BooleanField(default=True)
 
     class Meta:
         db_table = 'userprofile'
         managed = False
-
-
-@receiver(post_save, sender=User)
-def create_user_profile(sender, instance, created, **kwargs):
-    if created:
-        UserProfile.objects.create(user=instance)
-
-
-@receiver(post_save, sender=User)
-def save_user_profile(sender, instance, **kwargs):
-    if hasattr(instance, 'customer'):
-        instance.customer.save()
 
 
 class FailedLoginAttempt(models.Model):

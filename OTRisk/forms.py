@@ -4,7 +4,26 @@ from OTRisk.models.post import Post, AssessmentTeam
 from .models.raw import RAWorksheet, RAActions
 from .models.Model_Scenario import CustomScenario, CustomConsequence
 import accounts
+from django.contrib.auth.models import User
 from accounts.models import UserProfile
+from django.contrib.auth.password_validation import validate_password
+
+
+class UserForm(forms.ModelForm):
+    username = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}))
+    first_name = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}))
+    last_name = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control'}))
+    email = forms.EmailField(widget=forms.EmailInput(attrs={'class': 'form-control'}))
+
+    class Meta:
+        model = User
+        fields = ['username', 'first_name', 'last_name', 'email']
+
+
+class UserProfileForm(forms.ModelForm):
+    class Meta:
+        model = UserProfile
+        fields = []
 
 
 class CustomScenarioForm(forms.ModelForm):

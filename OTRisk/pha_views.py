@@ -2,7 +2,7 @@ from OTRisk.models.Model_CyberPHA import tblIndustry, tblThreatSources, tblCyber
     tblCyberPHAScenario
 from OTRisk.models.questionnairemodel import FacilityType
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from datetime import date
@@ -20,9 +20,17 @@ from django.contrib.auth.models import User
 
 @login_required
 def iotaphamanager(request):
-    print(f"{request.POST}")
+
     pha_header = None
+    new_record_id = None  # Initialize new_record_id to None
     if request.method == 'POST':
+        title = request.POST.get('txtTitle')
+        facility_name = request.POST.get('txtFacility')
+        # Check for duplicate record
+        duplicate_record = tblCyberPHAHeader.objects.filter(title=title, FacilityName=facility_name).exists()
+        if duplicate_record:
+            return redirect('OTRisk:iotaphamanager')
+
         pha_id = request.POST.get('txtHdnCyberPHAID')
         if pha_id and int(pha_id) > 0:
             # Update existing record
@@ -50,6 +58,8 @@ def iotaphamanager(request):
         pha_header.UserID = request.user.id
         pha_header.save()
 
+        new_record_id = pha_header.ID
+
     organization_id_from_session = request.session.get('user_organization')
 
     users_in_organization = User.objects.filter(userprofile__organization__id=organization_id_from_session)
@@ -67,7 +77,8 @@ def iotaphamanager(request):
         'facilities': facilities,
         'zones': zones,
         'standardslist': standardslist,
-        'current_pha_header': pha_header
+        'current_pha_header': pha_header,
+        'new_record_id': new_record_id
     })
 
 
@@ -112,8 +123,8 @@ def get_response(user_message):
     response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
         messages=message,
-        temperature=0,
-        max_tokens=500
+        temperature=0.2,
+        max_tokens=800
     )
     return response['choices'][0]['message']['content']
 
@@ -157,8 +168,12 @@ def scenario_analysis(request):
              "content": common_content + " In the context of a cyber Process Hazard Analysis (cyberPHA), the Adjusted Residual Risk (RRa) is a measure of the remaining risk after all mitigation measures or controls have been implemented.Without any additional text or commentary, giving only the single word response, provide the residual risk rating (Low, Medium, or High) after applying new controls for {scenario}."},
             {"role": "user",
              "content": common_content + f"In the context of a cybersecurity assessment and associated Process Hazard Analysis (cyberPHA),  analyse the following scenario then estimate a likely cost impact (as the total expences related to regulatory penalties, reparations, compensation, event recovery, investigations, repairing and replacing equipment, and other extra costs that might be relevant) of a single occurance of the scenario in the currency of {country} at the specified facility . Your response must be a single number to represent the estimated cost of the event. Do not offer or provide any additional text or commentary or explanation. Only respond with a value. Include the correct currency symbol for the given country. The scenario is: {scenario}. The scenario occurs at a {facility_type} in {country} within the {industry} industry. Experts in the business have conducted a business impact analysis (BIA) of this scenario.  The BIA scores are: impacts on personnel and public safety {safetyimpact}/10; danger to life {lifeimpact}/10; impact on production and operations {productionimpact}/10; impact on company reputation {reputationimpact}/10; impact on the local environment {environmentimpact}/10;  impacts relating to regulatory requirements:{regulatoryimpact}/10, and impacts relating to company data and intellectual: {dataimpact}/10. (where 1/10 is minimal/low impact and 10/10 is maximum/catastrophic impact).  Determine how to apply any necessary weightings to the BIA scores based on the given country, industry and facility type. Use any available public sources or industry reports for a credible estimation. If no such data is available, provide a best estimate using Artificial Intelligence. Provide the result as a numeric value to represent a currency amount using the correct currency symbol for {country}. Do not include any additional dialogue or explanation - only the integer value representing the result so that it can be stored in the integer field of a database table"},
-            {"role": "user",
-             "content": common_content + f" Using {standards} as a reference, provide a list, without any additional commentary, text, or headings other than the specific requested information, a maximum of 5 key recommendations  that are most relevant to the CyberPHA and an assessment of operational technology - OT - with a particular focus on safety and environmental controls (make it the top 5 that give the most value and risk mitigation and do not include any currently implemented controls listed in the following: {currentControls}), to address the scenario aligned with the specifically named {standards} standards. Each recommendation should be in the format '[recommendation text] ([reference])', where '[reference]' is the relevant section from {standards}. References should be given in a manner that enables the user to quickly identify where to locate the related information within {standards}"},
+            # {"role": "user",
+            #  "content": common_content + f" Using {standards} as a reference, provide a list, without any additional commentary, text, or headings other than the specific requested information, a maximum of 5 key recommendations  that are most relevant to the CyberPHA and an assessment of operational technology - OT - with a particular focus on safety and environmental controls (make it the top 5 that give the most value and risk mitigation and do not include any currently implemented controls listed in the following: {currentControls}), to address the scenario aligned with the specifically named {standards} standards. Each recommendation should be in the format '[recommendation text] ([reference])', where '[reference]' is the relevant section from {standards}. References should be given in a manner that enables the user to quickly identify where to locate the related information within {standards}"},
+            {
+                "role": "user",
+                "content": common_content + f"Using the {standards} standard as a reference, provide a list of up to 5 key recommendations most relevant to the CyberPHA and the scenario of {scenario}: and an assessment of operational technology (OT) with a focus on safety and environmental controls. Prioritize recommendations that offer the most value and risk mitigation. Exclude any controls already implemented as listed in {currentControls}. Each recommendation should be presented in the format '[recommendation text] ([reference to specific section in {standards}])’. Your audience is cybersecurity leaders, engineering operators, and risk management professionals. Ensure the references are clear and enable quick identification within the {standards} standard."
+            }
         ]
 
         # Initialize an empty list to store the responses
@@ -194,11 +209,11 @@ def facility_risk_profile(request):
         message = [
             {
                 "role": "system",
-                "content": "As a physical security and cybersecurity risk assessment professional, you must assess and determine the risk profile of a given location based on it’s address, country, and the type of facility that it represents."
+                "content": "You are a model trained to provide concise responses in a specific format. When given a set of statements, respond with concise answers separated by the '|' delimiter without any additional commentary."
             },
             {
                 "role": "user",
-                "content": f"Provide, without any commentary or additional information only the four specific pieces of information that are asked for. Give a one sentence reply to each of the four specific pieces of information being asked for. If there is no information to offer, use AI to offer the most pragmatic response taking each of the variables into account. The four pieces are information needed as follows: 1. Provide a summary of the most likely safety hazards for the {facility} {facility_type}, {address}, {country}. 2. Provide a sentence about the most likely chemicals stored or used at the {facility} {facility_type}, {address}, {country} and their associated hazards. 3. Give a summary of the most likely physical security standards and challenges for {facility} {facility_type} with the {Industry} industry at {address} in {country}. 4. Give a sentence that summarizes any other localized risks to note for this {facility_type} at {address} in {country}:\nAddress - {address}, Country - {country}, Industry - {Industry}, facility type - {facility_type} Provide only the four pieces of information that have been requested. No title or header. The output must be given in the following format where the | symbol denotes a delimited between variables. <safety summary>|<chemical summary>|<physical security summary>|<other summary>."
+                "content": f"For the {facility} {facility_type} at {address}, {country} in the {Industry} industry, provide the following: Statement 1. Most likely safety hazards and most likely hazards to human life. Statement 2. Most likely chemicals stored or used and their hazards. Statement 3. Physical security standards and challenges or the most likely ophysical security challenges given the location. Statement 4. Other localized risks that are likely to be identified. Respond in the format: statement1|statement2|statement3|statement4."
             }
         ]
 
@@ -217,25 +232,24 @@ def facility_risk_profile(request):
             )
 
             # Extract the generated response from the API
+            # Extract the generated response from the API
             generated_response = response['choices'][0]['message']['content']
 
-            # Split the generated response into individual parts
-            split_response = generated_response.split("|")
-
-            # Check if the split response has the expected number of values
-            if len(split_response) != 4:
+            # Check if the response is in the expected format
+            if "|" in generated_response:
+                safety_summary, chemical_summary, physical_security_summary, other_summary = generated_response.split(
+                    "|")
+            else:
                 raise ValueError("The model's response did not match the expected format.")
-
-            # Split the generated response into individual parts
-            safety_summary, chemical_summary, physical_security_summary, other_summary = generated_response.split("|")
 
             # Return the individual parts as variables
             return JsonResponse({
-                'safety_summary': safety_summary,
-                'chemical_summary': chemical_summary,
-                'physical_security_summary': physical_security_summary,
-                'other_summary': other_summary
+                'safety_summary': safety_summary.strip(),
+                'chemical_summary': chemical_summary.strip(),
+                'physical_security_summary': physical_security_summary.strip(),
+                'other_summary': other_summary.strip()
             })
+
 
         except openai.error.OpenAIError as e:
             # Handle any OpenAI API related errors

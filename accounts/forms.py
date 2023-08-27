@@ -4,6 +4,8 @@ from .models import Organization
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from .models import UserProfile
+from django.contrib.auth.forms import PasswordChangeForm
+
 
 
 class CustomUserCreationForm(UserCreationForm):
@@ -41,3 +43,8 @@ class UserAdminForm(forms.ModelForm):
             profile.organization = self.cleaned_data['organization']
             profile.save()
         return user
+
+    class PasswordChangeCustomForm(PasswordChangeForm):
+        old_password = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-control'}))
+        new_password1 = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-control'}))
+        new_password2 = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-control'}))

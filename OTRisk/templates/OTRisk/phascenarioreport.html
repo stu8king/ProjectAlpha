@@ -136,7 +136,7 @@
 <nav class="navbar navbar-expand-lg navbar-scroll fixed-top shadow-0 border-bottom border-dark rounded">
   <div class="container-fluid d-flex justify-content-between">
    <a class="navbar-brand" href="{% url 'OTRisk:dashboardhome' %}"><img src="/static/images/logo1-2.jpg" style="height: 140px; width: 140px" class="navbar-logo" alt="">  </a>
-      <h4 class="my-auto text-center flex-grow-1"><font color="white">CyberPHA Report</font></h4>
+      <h4 class="my-auto text-center flex-grow-1"><font color="white">CyberPHA Scenario Report</font></h4>
 
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
       <ul class="navbar-nav ms-auto">
@@ -144,21 +144,11 @@
         <li class="nav-item">
           <a class="nav-link" href="{% url 'OTRisk:qraw' %}"><i class="bi bi-journal-text"></i> Risk Assessment</a>
         </li>
-        <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                <i class="bi bi-diagram-3"></i> CyberPHA
-              </a>
-              <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                <li><a class="dropdown-item" href="{% url 'OTRisk:iotaphamanager' %}"> CyberPHA Manager</a></li>
-                <li><a class="dropdown-item" href="{% url 'OTRisk:walkdown' %}"> Site Walkdown</a></li>
-                <li><a class="dropdown-item" href="#">Workshop</a></li>
-              </ul>
+          <li class="nav-item">
+          <a class="nav-link" href="{% url 'OTRisk:iotaphamanager' %}"><i class="bi bi-journal-text"></i> CyberPHA</a>
         </li>
-        <li class="nav-item">
-          <a class="nav-link" href="{% url 'OTRisk:site_walkdown' %}"><i class="bi bi-building"></i> Site Walkdown</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="{% url 'OTRisk:walkdown' %}" tabindex="-1" ><i class="bi bi-kanban"></i> New Walkdown</a>
+          <li class="nav-item">
+          <a class="nav-link" href="{% url 'OTRisk:ra_actions_view' %}" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Actions</a>
         </li>
         <li class="nav-item">
           <a class="nav-link" href="#" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Reports</a>
@@ -171,17 +161,22 @@
                   <li><a  class="dropdown-item" href="{% url 'OTRisk:add_scenario' %}">Scenario Manager</a></li>
                   <li><a  class="dropdown-item" href="{% url 'OTRisk:add_consequence' %}">Consequence Manager</a></li>
               </ul>
-
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="{% url 'accounts:profile' %}">
-          <i class="bi bi-person-fill"></i> User: {{ user.first_name }} {{ user.last_name }}
-        </a>
+            <a class="nav-link" href="{% url 'accounts:profile' %}">
+                <i class="bi bi-person-fill"></i> {{ user.first_name }} {{ user.last_name }} | {{ user.userprofile.organization.name }}
+            </a>
+        </li>
 
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'logout' %}">
+                <i class="bi bi-box-arrow-right"></i> Logout
+            </a>
         </li>
       </ul>
     </div>
   </div>
+
 </nav>
 <br>
 <div class="row" style="height: 50px">
@@ -404,16 +399,16 @@
                 </div>
 
                 <div class="row justify-content-center" style="background-color: white;">
-                    <div class="col-md-5 m-3 p-3 border border-warning shadow-lg">
+                    <div class="col-md-4 m-3 p-3 border border-warning shadow-lg">
                         <ul>
-                            <li><b>Threats:</b>T {{ scenario.ThreatClass }}</li>
-                            <li><b>Threat Actions: </b>T{{ scenario.ThreatAction}}</li>
-                            <li><b>Risk Category:</b>T {{ scenario.RiskCategory }}</li>
+                            <li><b>Threats:</b> {{ scenario.ThreatClass }}</li>
+                            <li><b>Threat Actions: </b>{{ scenario.ThreatAction}}</li>
+                            <li><b>Risk Category:</b> {{ scenario.RiskCategory }}</li>
                             <li><b>Existing Controls: </b>T{{ scenario.Countermeasures }}</li>
                         </ul>
                     </div>
-                    <div class="col-md-5 m-3 p-3 border border-warning shadow-lg">
-                        {{ scenario.recommendations }}
+                    <div class="col-md-7 m-3 p-3 border border-warning shadow-lg">
+                        {{ scenario.recommendations|linebreaks }}
                     </div>
                 </div>
             </div>
