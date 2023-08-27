@@ -173,10 +173,10 @@ canvas {
     </style>
 </head>
 <body>
-<nav class="navbar navbar-expand-lg navbar-scroll fixed-top shadow-0 border-bottom border-dark">
+<nav class="navbar navbar-expand-lg navbar-scroll fixed-top shadow-0 border-bottom border-dark rounded">
   <div class="container-fluid d-flex justify-content-between">
    <a class="navbar-brand" href="{% url 'OTRisk:dashboardhome' %}"><img src="/static/images/logo1-2.jpg" style="height: 140px; width: 140px" class="navbar-logo" alt="">  </a>
-      <h4 class="my-auto text-center flex-grow-1"><font color="white">QRAW Report</font></h4>
+      <h4 class="my-auto text-center flex-grow-1"><font color="white">iOTa</font></h4>
 
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
       <ul class="navbar-nav ms-auto">
@@ -194,27 +194,31 @@ canvas {
                 <li><a class="dropdown-item" href="#">Workshop</a></li>
               </ul>
         </li>
-        <li class="nav-item">
-          <a class="nav-link" href="{% url 'OTRisk:site_walkdown' %}"><i class="bi bi-building"></i> Site Walkdown</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="{% url 'OTRisk:walkdown' %}" tabindex="-1" ><i class="bi bi-kanban"></i> New Walkdown</a>
+          <li class="nav-item">
+          <a class="nav-link" href="{% url 'OTRisk:ra_actions_view' %}" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Actions</a>
         </li>
         <li class="nav-item">
           <a class="nav-link" href="#" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Reports</a>
         </li>
+        <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="bi bi-diagram-3"></i> Admin
+              </a>
+              <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                  <li><a  class="dropdown-item" href="{% url 'OTRisk:add_scenario' %}">Scenario Manager</a></li>
+                  <li><a  class="dropdown-item" href="{% url 'OTRisk:add_consequence' %}">Consequence Manager</a></li>
+              </ul>
+        </li>
         <li class="nav-item">
-          <a class="nav-link" href="#" tabindex="-1" ><i class="bi bi-ui-checks-grid"></i> Admin</a>
-      </li>
-             <li class="nav-item">
-          <a href="#" onclick="window.open('{% static 'OTRisk/help_raw.html' %}', 'newwindow', 'width=600,height=400'); return false;"><i class="bi bi-question-circle"></i> Help</a>
+            <a class="nav-link" href="{% url 'accounts:profile' %}">
+                <i class="bi bi-person-fill"></i> {{ user.first_name }} {{ user.last_name }} | {{ user.userprofile.organization.name }}
+            </a>
+        </li>
 
-      </li>
-        <li class="nav-item">
-          <a class="nav-link" href="{% url 'accounts:profile' %}">
-          <i class="bi bi-person-fill"></i> User: {{ user.first_name }} {{ user.last_name }}
-        </a>
-
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'logout' %}">
+                <i class="bi bi-box-arrow-right"></i> Logout
+            </a>
         </li>
       </ul>
     </div>

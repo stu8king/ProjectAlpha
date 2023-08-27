@@ -1,3 +1,6 @@
+import logging
+
+from django.contrib.auth.models import User
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse_lazy, reverse
 from django.db import connection
@@ -42,10 +45,106 @@ from .pha_views import iotaphamanager, facility_risk_profile, get_headerrecord, 
 from .forms import CustomScenarioForm, CustomConsequenceForm
 from .models.Model_Scenario import CustomScenario, CustomConsequence
 from accounts.models import Organization
+from accounts.models import UserProfile
+from .forms import UserForm, UserProfileForm
+import secrets
+import string
+from django.core.mail import send_mail
 
 import uuid
 
 app_name = 'OTRisk'
+
+
+def generate_password(length=12):
+    alphabet = string.ascii_letters + string.digits + string.punctuation
+    password = ''.join(secrets.choice(alphabet) for i in range(length))
+    return password
+
+
+def send_password_email(user_email, password):
+    subject = 'Your New Password'
+    message = f'Hello, here is your new password: {password}. Please change it upon first login.'
+    from_email = 'your_email@example.com'  # Replace with your email
+    recipient_list = [user_email]
+    send_mail(subject, message, from_email, recipient_list)
+
+
+@login_required
+def disable_user(request, user_id):
+    try:
+        user_to_disable = User.objects.get(pk=user_id)
+        if user_to_disable != request.user:
+            user_to_disable.is_active = False
+            user_to_disable.save()
+            return JsonResponse({'success': True})
+        else:
+            return JsonResponse({'success': False, 'error': 'Cannot disable yourself.'})
+    except User.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'User not found.'})
+
+
+@login_required
+def delete_user(request, user_id):
+    try:
+        user_to_delete = User.objects.get(pk=user_id)
+        if user_to_delete != request.user:
+            user_to_delete.delete()
+            return JsonResponse({'success': True})
+        else:
+            return JsonResponse({'success': False, 'error': 'Cannot delete yourself.'})
+    except User.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'User not found.'})
+
+
+@login_required
+def admin_users(request):
+    current_user_profile = UserProfile.objects.get(user=request.user)
+    organization = current_user_profile.organization
+    user_profiles = UserProfile.objects.filter(organization=organization)
+    print("message 1")
+
+    if request.method == 'POST':
+        print("message 2")
+        user_form = UserForm(request.POST)
+        profile_form = UserProfileForm(request.POST)
+
+        print("User form errors:", user_form.errors)
+        print("Profile form errors:", profile_form.errors)
+
+        if user_form.is_valid() and profile_form.is_valid():
+            print("message 3")
+            password = generate_password()
+
+            # First, save the User model
+            user = user_form.save(commit=False)
+            user.set_password(password)  # Set the password correctly
+            user.last_login = None  # Set last_login to Non
+            user.save()
+
+            # Now, save the UserProfile model
+            # Get the organization of the currently logged-in user
+            current_user_profile = UserProfile.objects.get(user=request.user)
+            organization = current_user_profile.organization
+
+            # Create a UserProfile for the new user with the organization
+            UserProfile.objects.create(user=user, organization=organization)
+
+            send_password_email(user.email, password)
+            print("message 4")
+            # Redirect to a success page or wherever you want
+            return redirect('/OTRisk/admin_users')
+
+    else:
+        print("message 5")
+        user_form = UserForm()
+        profile_form = UserProfileForm()
+        current_user_profile = UserProfile.objects.get(user=request.user)
+        organization = current_user_profile.organization
+        user_profiles = UserProfile.objects.filter(organization=organization)
+
+    return render(request, 'admin_users.html',
+                  {'user_form': user_form, 'profile_form': profile_form, 'user_profiles': user_profiles})
 
 
 def add_or_update_consequence(request, consequence_id=None):
@@ -315,8 +414,13 @@ def edit_cyberpha(request, cyberpha_id):
 
 def assess_cyberpha(request):
     active_cyberpha = request.GET.get('active_cyberpha', None)
+    print(f"activecyberpha={active_cyberpha}")
     if active_cyberpha is None:
         active_cyberpha = request.session.get('cyberPHAID', 0)
+
+    # Check if active_cyberpha is None, an empty string, or 0
+    if not active_cyberpha or active_cyberpha in ["0", "null"]:
+        return redirect('OTRisk:iotaphamanager')
 
     # scenarios = tblScenarios.objects.all()
     tbl_scenarios = tblScenarios.objects.all()
@@ -373,7 +477,7 @@ def assess_cyberpha(request):
     clicked_row_facility_name = request.session.get('clickedRowFacilityName', None)
     saved_scenarios = tblCyberPHAScenario.objects.filter(CyberPHA=active_cyberpha, Deleted=0)
 
-    return render(request, 'assess_cyberpha.html', {
+    return render(request, 'OTRisk/phascenariomgr.html', {
         'scenarios': combined_scenarios,
         'control_objectives': control_objectives,
         'mitigation_measures': mitigation_measures,
@@ -450,7 +554,7 @@ def deletescenario(request, scenarioid, cyberPHAID):
     scenario_to_del.save()
     saved_scenarios = tblCyberPHAScenario.objects.filter(CyberPHA=cyberPHAID, Deleted=0)
 
-    return render(request, 'assess_cyberPHA.html', {
+    return render(request, 'OTRisk/phascenariomgr.html', {
         'scenarios': tblScenarios.objects.all(),
         'control_objectives': tblControlObjectives.objects.all(),
         'mitigation_measures': tblMitigationMeasures.objects.all().order_by('ControlObjective'),

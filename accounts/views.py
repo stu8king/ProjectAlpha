@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm
-from .forms import CustomUserCreationForm
+from .forms import CustomUserCreationForm, PasswordChangeForm
 from django.contrib.auth.models import User
 from .models import customer, UserProfile, FailedLoginAttempt
 from django.contrib import messages
@@ -13,17 +13,6 @@ from django.contrib.auth import login
 from django.urls import reverse
 from django.dispatch import receiver
 from django.db.models.signals import post_save
-
-
-@receiver(post_save, sender=User)
-def create_user_profile(sender, instance, created, **kwargs):
-    if created:
-        UserProfile.objects.create(user=instance)
-
-
-@receiver(post_save, sender=User)
-def save_user_profile(sender, instance, **kwargs):
-    instance.userprofile.save()
 
 
 def about_view(request):
@@ -99,6 +88,8 @@ def login_view(request):
                 organization_name = user_profile.organization.name
                 request.session['organization_id'] = user_profile.organization.id
                 request.session['organization_name'] = organization_name
+                if user_profile.must_change_password:
+                    return redirect('accounts:password_change')
 
                 return redirect('OTRisk:dashboardhome')
             except UserProfile.DoesNotExist:
@@ -149,4 +140,21 @@ def add_user_to_organization(request):
         return redirect(reverse('accounts/profile'))
 
     return redirect(reverse('accounts/profile'))
+
+
 # If not a POST request, redirect back to the profile page
+
+def password_change_view(request):
+    if request.method == 'POST':
+        form = PasswordChangeForm(user=request.user, data=request.POST)
+        if form.is_valid():
+            form.save()
+            # Update the must_change_password field
+            user_profile = UserProfile.objects.get(user=request.user)
+            user_profile.must_change_password = False
+            user_profile.save()
+            messages.success(request, 'Password changed successfully.')
+            return redirect('OTRisk:dashboardhome')
+    else:
+        form = PasswordChangeForm(user=request.user)
+    return render(request, 'accounts/password_change.html', {'form': form})

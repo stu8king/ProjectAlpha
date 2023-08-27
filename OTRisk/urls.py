@@ -116,6 +116,9 @@ urlpatterns = [
     # For deleting consequences
     path('consequence/delete/<int:consequence_id>/', views.delete_consequence, name='delete_consequence'),
     path('OTRisk/consequence/add/<int:consequence_id>/', views.add_or_update_consequence, name='edit_consequence'),
+    path('admin_users/', views.admin_users, name='admin_users'),
+    path('disable_user/<int:user_id>/', views.disable_user, name='disable_user'),
+    path('delete_user/<int:user_id>/', views.delete_user, name='delete_user'),
 ]
 
 if settings.DEBUG:

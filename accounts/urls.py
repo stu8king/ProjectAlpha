@@ -13,5 +13,7 @@ urlpatterns = [
     path('profile/', views.profile_view, name='profile'),
     path('add_user_to_organization/', views.add_user_to_organization, name='add_user_to_organization'),
     path('accounts/about/', views.about_view, name='about'),
+    path('password_change/', views.password_change_view, name='password_change'),
+
 ]
 
