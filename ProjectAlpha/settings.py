@@ -22,9 +22,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-7wdzw^mq5o67v*fju@hs$mvd_fn0u1iqzr-_byo4y@nog%$$on'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
-ALLOWED_HOSTS = ['3.223.201.144', '127.0.0.1', 'iotarisk.com', 'www.iotarisk.com']
+ALLOWED_HOSTS = ['3.223.201.144', '127.0.0.1', 'iotarisk.com', 'www.iotarisk.com', 'localhost']
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
@@ -61,7 +61,8 @@ CORS_ORIGIN_WHITELIST = [
 
 ROOT_URLCONF = 'ProjectAlpha.urls'
 CORS_ORIGIN_ALLOW_ALL = True
-SESSION_COOKIE_SECURE = False
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
 
 TEMPLATES = [
     {
@@ -152,3 +153,6 @@ MEDIA_URL = '/OTRisk/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media/')
 
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+
+
