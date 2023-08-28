@@ -228,8 +228,8 @@
 
 <nav class="navbar navbar-expand-lg navbar-scroll fixed-top shadow-0 border-bottom border-dark rounded">
   <div class="container-fluid d-flex justify-content-between">
-   <a class="navbar-brand" href="{% url 'OTRisk:dashboardhome' %}"><img src="/static/images/logo1-2.jpg" style="height: 140px; width: 140px" class="navbar-logo" alt="">  </a>
-      <h4 class="my-auto text-center flex-grow-1"><font color="white">Risk Assessment Worksheet</font></h4>
+   <a class="navbar-brand" href="{% url 'OTRisk:home' %}"><img src="/static/images/logo1-2.jpg" style="height: 140px; width: 140px" class="navbar-logo" alt="">  </a>
+      <h4 class="my-auto text-center flex-grow-1"><font color="white">Dashboard</font></h4>
 
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
       <ul class="navbar-nav ms-auto">
@@ -237,25 +237,22 @@
         <li class="nav-item">
           <a class="nav-link" href="{% url 'OTRisk:qraw' %}"><i class="bi bi-journal-text"></i> Risk Assessment</a>
         </li>
-        <li class="nav-item">
-          <a class="nav-link" href="{% url 'OTRisk:iotaphamanager' %}"><i class="bi bi-journal-text"></i> CyberPHA</a>
-        </li>
-           <li class="nav-item">
-          <a class="nav-link" href="{% url 'OTRisk:ra_actions_view' %}" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Actions</a>
+        <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="bi bi-diagram-3"></i> CyberPHA
+              </a>
+              <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                <li><a class="dropdown-item" href="{% url 'OTRisk:iotaphamanager' %}"> CyberPHA Manager</a></li>
+                <li><a class="dropdown-item" href="{% url 'OTRisk:walkdown' %}"> Site Walkdown</a></li>
+                <li><a class="dropdown-item" href="#">Workshop</a></li>
+              </ul>
         </li>
         <li class="nav-item">
           <a class="nav-link" href="#" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Reports</a>
         </li>
-        <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                <i class="bi bi-diagram-3"></i> Admin
-              </a>
-              <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                  <li><a  class="dropdown-item" href="{% url 'OTRisk:add_scenario' %}">Scenario Manager</a></li>
-                  <li><a  class="dropdown-item" href="{% url 'OTRisk:add_consequence' %}">Consequence Manager</a></li>
-              </ul>
-
-        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#" tabindex="-1" ><i class="bi bi-ui-checks-grid"></i> Admin</a>
+      </li>
         <li class="nav-item">
             <a class="nav-link" href="{% url 'accounts:profile' %}">
                 <i class="bi bi-person-fill"></i> {{ user.first_name }} {{ user.last_name }} | {{ user.userprofile.organization.name }}
@@ -345,7 +342,8 @@
     <div class="col-md-2" style="background-color: darkgray">
     <button class="form-control" type="button" id="actionBtn" onclick="showRAActionsModal()">Add Remediation Action</button>
     </div>
- <!-- clear and reset scenario tabs -->
+
+        <!-- clear and reset scenario tabs -->
         <script>
             function showRAActionsModal() {
                 var rawid = sessionStorage.getItem('rawid');  // Get the value from session storage
@@ -572,7 +570,7 @@
                 </div>
                 <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                     <div class="card-body">
-                        <a id="generateReportLink" href="#" class="btn btn-primary">Generate Report</a>
+                        <a id="generateReportLink" href="#">Generate Report</a>
                     </div>
                 </div>
 

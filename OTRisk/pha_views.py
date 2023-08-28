@@ -213,7 +213,7 @@ def facility_risk_profile(request):
             },
             {
                 "role": "user",
-                "content": f"For the {facility} {facility_type} at {address}, {country} in the {Industry} industry, provide the following: Statement 1. Most likely safety hazards and most likely hazards to human life. Statement 2. Most likely chemicals stored or used and their hazards. Statement 3. Physical security standards and challenges or the most likely ophysical security challenges given the location. Statement 4. Other localized risks that are likely to be identified. Respond in the format: statement1|statement2|statement3|statement4."
+                "content": f"For the {facility} {facility_type} at {address}, {country} in the {Industry} industry, provide the following: Statement 1. Summarize in one sentence the likely safety hazards and hazards to human life present at {address}. Statement 2. The likely chemicals stored or used and their hazards given the {facility_type}. Statement 3. Physical security standards and challenges or the most likely physical security challenges given the location of {address}, {country}. Statement 4. Other localized risks that are likely to be identified for a {facility_type} at {address}. Respond in the format: statement1|statement2|statement3|statement4."
             }
         ]
 
@@ -332,6 +332,14 @@ def getSingleScenario(request):
         'impactEnvironment': scenario.impactEnvironment,
         'impactRegulation': scenario.impactRegulation,
         'impactData': scenario.impactData,
+        'justifySafety': scenario.justifySafety,
+        'justifyLife': scenario.justifyLife,
+        'justifyProduction': scenario.justifyProduction,
+        'justifyFinancial': scenario.justifyFinancial,
+        'justifyReputation': scenario.justifyReputation,
+        'justifyEnvironment': scenario.justifyEnvironment,
+        'justifyRegulation': scenario.justifyRegulation,
+        'justifyData': scenario.justifyData,
         'UEL': scenario.UEL,
         'RRU': scenario.RRU,
         'SM': scenario.SM,
@@ -347,7 +355,8 @@ def getSingleScenario(request):
         'sle': scenario.sle,
         'ale': scenario.ale,
         'countermeasureCosts': scenario.countermeasureCosts,
-        'control_recommendations': scenario.control_recommendations
+        'control_recommendations': scenario.control_recommendations,
+        'standards': scenario.standards
     }
 
     # Return the scenario as a JSON response

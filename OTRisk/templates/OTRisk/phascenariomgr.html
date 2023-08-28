@@ -319,6 +319,7 @@
                         $('#txtScenario').val(data.Scenario);
                         $('#txtConsequence').val(data.Consequence);
                         $('#threat-intelligence').val(data.ThreatClass);
+                        $('#selStandards').val(data.standards);
                         // Split the Countermeasures string into an array and set the selected values of the dropdown
 
                         var countermeasuresArray = data.Countermeasures.split(',');
@@ -346,8 +347,24 @@
                         $('#RRMrange').val(data.RRM);
                         $('#SArange').val(data.SA);
                         $('#MELarange').val(data.MELA);
+                        $('#sle').val(data.sle);
+
+                        let costs = parseFloat(data.sle); // Assuming response.costs is a string representation of a number
+                        let formattedCosts = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(costs);
+                        document.getElementById('sle').value = formattedCosts;
+
+
+
                          $('#txtRRa').val(data.RRa);
                         $('#txtControlAnalysis').val(data.control_recommendations);
+                        $('#txtdataJustify').val(data.justifyData);
+                        $('#txtregulatoryJustify').val(data.justifyRegulation);
+                        $('#txtenvironmentJustify').val(data.justifyEnvironment);
+                        $('#txtreputationJustify').val(data.justifyReputation);
+                        $('#txtfinanceJustify').val(data.justifyFinancial);
+                        $('#txtproductionJustify').val(data.justifyProduction);
+                        $('#txtlifeJustify').val(data.justifyLife);
+                        $('#txtsafetyJustify').val(data.justifySafety)
                         });
                     }
             </script>
@@ -605,7 +622,8 @@
         <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
             <div class="card-body">
                 <div class="slider-container d-flex align-items-center">
-                    <div class="col-2"><label class="small-font d-flex align-items-center clickable-label" data-bs-toggle="modal" data-bs-target="#safetyModal" data-bs-placement="top" >Safety</label></div>
+                    <div class="col-2"> <label class="small-font d-flex align-items-center clickable-label" data-bs-toggle="modal" data-bs-target="#safetyModal" data-modal-id="safetyModal" data-textarea-id="txtsafetyJustify">Safety</label><span id="textIndicator" style="display: none;"><i class="bi bi-journal-text"></i></span></div>
+
                     <div class="col-7">
                       <input type="range" min="1" max="10" value="1" class="form-range" id="range_safety" name="range_safety" onchange="initSlider('range_safety', 'safetyrange');">
                     </div>
@@ -617,7 +635,7 @@
             <div class="card-body">
                 <!--slider for Life rating -->
                 <div class="slider-container d-flex align-items-center">
-                    <div class="col-2"><label class="small-font d-flex align-items-center clickable-label" data-bs-toggle="modal" data-bs-target="#lifeModal" data-bs-placement="top" >Life</label></div>
+                    <div class="col-2"><label class="small-font d-flex align-items-center clickable-label" data-bs-toggle="modal" data-bs-target="#lifeModal" data-bs-placement="top" data-modal-id="lifeModal" data-textarea-id="txtlifeJustify">Life</label><span id="textIndicator" style="display: none;"><i class="bi bi-journal-text"></i></span></div>
                     <div class="col-7">
                       <input type="range" min="1" max="10" value="1" class="form-range" id="range_life" name="range_life" onchange="initSlider('range_life', 'liferange');">
                     </div>
@@ -629,7 +647,7 @@
         <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
             <div class="card-body">
                 <div class="slider-container d-flex align-items-center">
-                    <div class="col-2"><label class="small-font d-flex align-items-center clickable-label" data-bs-toggle="modal" data-bs-target="#productionModal" data-bs-placement="top" >Production</label></div>
+                    <div class="col-2"><label class="small-font d-flex align-items-center clickable-label" data-bs-toggle="modal" data-bs-target="#productionModal" data-bs-placement="top" data-modal-id="productionModal" data-textarea-id="txtproductionJustify">Production</label><span id="textIndicator" style="display: none;"><i class="bi bi-journal-text"></i></div>
                     <div class="col-7">
                       <input type="range" min="1" max="10" value="1" class="form-range" id="range_production" name="range_production" onchange="initSlider('range_production', 'productionrange');">
                     </div>
@@ -641,7 +659,7 @@
         <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
             <div class="card-body">
                 <div class="slider-container d-flex align-items-center">
-                    <div class="col-2"><label class="small-font d-flex align-items-center clickable-label" data-bs-toggle="modal" data-bs-target="#financeModal" data-bs-placement="top" >Financial</label></div>
+                    <div class="col-2"><label class="small-font d-flex align-items-center clickable-label" data-bs-toggle="modal" data-bs-target="#financeModal" data-bs-placement="top" data-modal-id="financeModal" data-textarea-id="txtfinanceJustify">Financial</label><span id="textIndicator" style="display: none;"><i class="bi bi-journal-text"></i></div>
                     <div class="col-7">
                       <input type="range" min="1" max="10" value="1" class="form-range" id="range_finance" name="range_finance" onchange="initSlider('range_finance', 'financerange');">
                     </div>
@@ -653,7 +671,7 @@
         <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
             <div class="card-body">
                 <div class="slider-container d-flex align-items-center">
-                    <div class="col-2"><label class="small-font d-flex align-items-center clickable-label" data-bs-toggle="modal" data-bs-target="#reputationModal" data-bs-placement="top" >Reputation</label></div>
+                    <div class="col-2"><label class="small-font d-flex align-items-center clickable-label" data-bs-toggle="modal" data-bs-target="#reputationModal" data-bs-placement="top" data-modal-id="reputationModal" data-textarea-id="txtreputationJustify">Reputation</label><span id="textIndicator" style="display: none;"><i class="bi bi-journal-text"></i></div>
                     <div class="col-7">
                       <input type="range" min="1" max="10" value="1" class="form-range" id="range_reputation" name="range_reputation" onchange="initSlider('range_reputation', 'reputationrange');">
                     </div>
@@ -665,7 +683,7 @@
         <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
             <div class="card-body">
                 <div class="slider-container d-flex align-items-center">
-                    <div class="col-2"><label class="small-font d-flex align-items-center clickable-label" data-bs-toggle="modal" data-bs-target="#environmentModal" data-bs-placement="top" >Environment</label></div>
+                    <div class="col-2"><label class="small-font d-flex align-items-center clickable-label" data-bs-toggle="modal" data-bs-target="#environmentModal" data-bs-placement="top" data-modal-id="environmentModal" data-textarea-id="txtenvironmentJustify">Environment</label><span id="textIndicator" style="display: none;"><i class="bi bi-journal-text"></i></div>
                     <div class="col-7">
                       <input type="range" min="1" max="10" value="1" class="form-range" id="range_environment" name="range_environment" onchange="initSlider('range_environment', 'environmentrange');">
                     </div>
@@ -677,7 +695,7 @@
         <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
             <div class="card-body">
                 <div class="slider-container d-flex align-items-center">
-                    <div class="col-2"><label class="small-font d-flex align-items-center clickable-label" data-bs-toggle="modal" data-bs-target="#regulatoryModal" data-bs-placement="top" >Regulatory</label></div>
+                    <div class="col-2"><label class="small-font d-flex align-items-center clickable-label" data-bs-toggle="modal" data-bs-target="#regulatoryModal" data-bs-placement="top" data-modal-id="regulatoryModal" data-textarea-id="txtregulatoryJustify">Regulatory</label><span id="textIndicator" style="display: none;"><i class="bi bi-journal-text"></i></div>
                     <div class="col-7">
                       <input type="range" min="1" max="10" value="1" class="form-range" id="range_regulatory" name="range_regulatory" onchange="initSlider('range_regulatory', 'regulatoryrange');">
                     </div>
@@ -689,7 +707,7 @@
         <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
             <div class="card-body">
                 <div class="slider-container d-flex align-items-center">
-                    <div class="col-2"><label class="small-font d-flex align-items-center clickable-label" data-bs-toggle="modal" data-bs-target="#dataModal" data-bs-placement="top" >Data/IP</label></div>
+                    <div class="col-2"><label class="small-font d-flex align-items-center clickable-label" data-bs-toggle="modal" data-bs-target="#dataModal" data-bs-placement="top" data-modal-id="dataModal" data-textarea-id="txtdataJustify">Data/IP</label><span id="textIndicator" style="display: none;"><i class="bi bi-journal-text"></i></div>
                     <div class="col-7">
                       <input type="range" min="1" max="10" value="1" class="form-range" id="range_data" name="range_data" onchange="initSlider('range_data', 'datarange');">
                     </div>
@@ -790,14 +808,14 @@
     <div class="col-md-4" style="background-color: white">
         <div class="row  rounded p-3 ">
             <label for="txtControlAnalysis" class="small-font">Control Recommendations:</label>
-            <textarea id="txtControlAnalysis" name="txtControlAnalysis" class="form-control border border-danger" rows="6"  style="resize: none; border: 3px #97979A; border-radius: 10px; box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5);  padding: 20px; background-color: white"></textarea><br>
+            <textarea id="txtControlAnalysis" name="txtControlAnalysis" class="form-control border border-danger small-font" rows="10"  style="resize: none; border: 3px #97979A; border-radius: 10px; box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5);  padding: 20px; background-color: white"></textarea><br>
         </div>
 
     </div>
     <div class="col-md-4" style="background-color: white">
         <div class="row  rounded p-3 ">
             <label for="txtScenarioAnalysis" class="small-font">Recommendations will align with selected standards:</label>
-            <textarea id="txtScenarioAnalysis" name="txtScenarioAnalysis" class="form-control border border-danger" rows="6"  style="resize: none; border: 3px #97979A; border-radius: 10px; box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5);  padding: 20px; background-color: white"></textarea>
+            <textarea id="txtScenarioAnalysis" name="txtScenarioAnalysis" class="form-control border border-danger small-font" rows="10"  style="resize: none; border: 3px #97979A; border-radius: 10px; box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5);  padding: 20px; background-color: white"></textarea>
         </div>
 
     </div>
@@ -911,7 +929,7 @@
             }
 
             $(document).ready(function() {
-              $('#eventCosts').on('input', function() {
+              $('#sle').on('input', function() {
                 var cost = parseInt($(this).val()).toLocaleString();
                 $('#eventCostsOutput').text('$' + cost);
                 //calculateALE();
@@ -919,7 +937,7 @@
 
               function calculateALE() {
                 var aro = parseInt($('#aro').val());
-                var eventCosts = parseInt($('#eventCosts').val());
+                var eventCosts = parseInt($('#sle').val());
                 var sle = eventCosts;
                 var aro = aro;
                 var ale = sle * aro;
@@ -1852,7 +1870,10 @@
 
                    document.getElementById('txtControlAnalysis').value = response.controls;
                    document.getElementById('txtScenarioAnalysis').value = response.recommendations;
-                   document.getElementById('sle').value = response.costs;
+                   let costs = parseFloat(response.costs); // Assuming response.costs is a string representation of a number
+                    let formattedCosts = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(costs);
+                    document.getElementById('sle').value = formattedCosts;
+
 
                      $('#loadingSpinner').hide();
 
@@ -1866,6 +1887,40 @@
         }
 
 document.getElementById('hdnphaID').value = sessionStorage.getItem('activeCyberPHA');
+
+document.addEventListener("DOMContentLoaded", function() {
+    // Function to update the indicator
+    function updateIndicator(textarea, indicator) {
+        if (textarea.value.trim() !== "") {
+            indicator.style.display = "inline";
+        } else {
+            indicator.style.display = "none";
+        }
+    }
+
+    // Get all labels with the data-modal-id attribute
+    const labels = document.querySelectorAll('[data-modal-id]');
+
+    labels.forEach(label => {
+        const modalId = label.getAttribute('data-modal-id');
+        const textareaId = label.getAttribute('data-textarea-id');
+        const textarea = document.getElementById(textareaId);
+        const indicator = label.nextElementSibling; // Assuming the indicator is the next sibling of the label
+
+        // Check on modal close
+        $('#' + modalId).on('hidden.bs.modal', function (e) {
+            updateIndicator(textarea, indicator);
+        });
+
+        // Check on textarea change
+        textarea.addEventListener('input', function() {
+            updateIndicator(textarea, indicator);
+        });
+    });
+});
+
+
+
 </script>
 
 

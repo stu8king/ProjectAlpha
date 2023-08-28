@@ -234,6 +234,7 @@ class tblCyberPHAScenario(models.Model):
     justifyRegulation = models.TextField()
     justifyData = models.TextField()
     userID = models.ForeignKey(User, on_delete=models.CASCADE, db_column='userID')
+    standards = models.TextField()
 
     class Meta:
         db_table = 'tblCyberPHAScenario'
