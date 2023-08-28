@@ -20,24 +20,26 @@ from django.contrib.auth.models import User
 
 @login_required
 def iotaphamanager(request):
-
+    print(request.POST)
     pha_header = None
     new_record_id = None  # Initialize new_record_id to None
     if request.method == 'POST':
         title = request.POST.get('txtTitle')
         facility_name = request.POST.get('txtFacility')
         # Check for duplicate record
-        duplicate_record = tblCyberPHAHeader.objects.filter(title=title, FacilityName=facility_name).exists()
-        if duplicate_record:
-            return redirect('OTRisk:iotaphamanager')
 
         pha_id = request.POST.get('txtHdnCyberPHAID')
         if pha_id and int(pha_id) > 0:
             # Update existing record
             pha_header, created = tblCyberPHAHeader.objects.get_or_create(ID=pha_id)
+            print("Updating")
         else:
+            duplicate_record = tblCyberPHAHeader.objects.filter(title=title, FacilityName=facility_name).exists()
+            if duplicate_record:
+                return redirect('OTRisk:iotaphamanager')
             # Create a new record
             pha_header = tblCyberPHAHeader()
+            print("adding")
 
         pha_header.title = request.POST.get('txtTitle')
         pha_header.PHALeader = request.POST.get('txtLeader')
@@ -205,72 +207,45 @@ def facility_risk_profile(request):
         country = request.GET.get('country')
         facility = request.GET.get('txtFacility')
 
-        # Prepare the request data for the OpenAI GPT-3 API in the chat format
-        message = [
-            {
-                "role": "system",
-                "content": "You are a model trained to provide concise responses in a specific format. When given a set of statements, respond with concise answers separated by the '|' delimiter without any additional commentary."
-            },
-            {
-                "role": "user",
-                "content": f"For the {facility} {facility_type} at {address}, {country} in the {Industry} industry, provide the following: Statement 1. Summarize in one sentence the likely safety hazards and hazards to human life present at {address}. Statement 2. The likely chemicals stored or used and their hazards given the {facility_type}. Statement 3. Physical security standards and challenges or the most likely physical security challenges given the location of {address}, {country}. Statement 4. Other localized risks that are likely to be identified for a {facility_type} at {address}. Respond in the format: statement1|statement2|statement3|statement4."
-            }
-        ]
-
         # openai.api_key = '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'
 
         openai_api_key = os.environ.get('OPENAI_API_KEY')
         openai.api_key = openai_api_key
 
-        try:
-            # Make the API call to the OpenAI GPT-3 API using the message
+        prompts = [
+            f"For the {facility} {facility_type} at {address}, {country} in the {Industry} industry, provide a bullet-point list of the likely safety hazards and hazards to human life present at {address}.",
+            f"For the {facility} {facility_type} at {address}, {country} in the {Industry} industry, provide a bullet point list of the likely chemicals stored or used and their hazards given the {facility_type}.",
+            f"For the {facility} {facility_type} at {address}, {country} in the {Industry} industry, provide a bullet-point list of the Physical security standards and challenges or the most likely physical security challenges given the location of {address}, {country}.",
+            f"For the {facility} {facility_type} at {address}, {country} in the {Industry} industry, provide a bullet point list of other localized risks that are likely to be identified for a {facility_type} at {address}."
+        ]
+
+        responses = []
+
+        # Loop through the prompts and make an API call for each one
+        for prompt in prompts:
             response = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo",  # Use the GPT-3 engine
-                messages=message,
+                model="gpt-3.5-turbo",
+                messages=[
+                    {"role": "system",
+                     "content": "You are a model trained to provide concise responses. Please provide a numbered bullet-point list based on the given statement."},
+                    {"role": "user", "content": prompt}
+                ],
                 temperature=0.3,
                 max_tokens=256
             )
+            # Append the response to the responses list
+            responses.append(response['choices'][0]['message']['content'])
 
-            # Extract the generated response from the API
-            # Extract the generated response from the API
-            generated_response = response['choices'][0]['message']['content']
+            # Extract the individual responses
+        safety_summary, chemical_summary, physical_security_summary, other_summary = responses
 
-            # Check if the response is in the expected format
-            if "|" in generated_response:
-                safety_summary, chemical_summary, physical_security_summary, other_summary = generated_response.split(
-                    "|")
-            else:
-                raise ValueError("The model's response did not match the expected format.")
-
-            # Return the individual parts as variables
-            return JsonResponse({
-                'safety_summary': safety_summary.strip(),
-                'chemical_summary': chemical_summary.strip(),
-                'physical_security_summary': physical_security_summary.strip(),
-                'other_summary': other_summary.strip()
-            })
-
-
-        except openai.error.OpenAIError as e:
-            # Handle any OpenAI API related errors
-            print(f"{str(e)}")
-            return JsonResponse({
-                'error': f"OpenAI API Error: {str(e)}"
-            })
-
-        except ValueError as ve:
-            # Handle the unexpected response format
-            print(f"{str(ve)}")
-            return JsonResponse({
-                'error': str(ve)
-            })
-
-        except Exception as ex:
-            # Handle any other unexpected errors
-            print(f"{str(ex)}")
-            return JsonResponse({
-                'error': f"An unexpected error occurred: {str(ex)}"
-            })
+        # Return the individual parts as variables
+        return JsonResponse({
+            'safety_summary': safety_summary.strip(),
+            'chemical_summary': chemical_summary.strip(),
+            'physical_security_summary': physical_security_summary.strip(),
+            'other_summary': other_summary.strip()
+        })
 
 
 def phascenarioreport(request):
