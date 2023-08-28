@@ -1,5 +1,5 @@
 function saveScenario() {
-  print("Calling save scenario");
+
   var postId = document.querySelector('button[data-post-id]').getAttribute('data-post-id');
   // Retrieve the user-entered data from the form
   var scenarioDescription = document.getElementById('txtInitiatingEvents').value;

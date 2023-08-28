@@ -5,7 +5,7 @@ from accounts import views
 from .views import login_view
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    # path('admin/', admin.site.urls),
     path('OTRisk/', include('OTRisk.urls', namespace='OTRisk')),
     path('accounts/login/', views.login_view, name='login'),
     path('logout/', auth_views.LogoutView.as_view(next_page='login'), name='logout'),

@@ -102,18 +102,12 @@ def admin_users(request):
     current_user_profile = UserProfile.objects.get(user=request.user)
     organization = current_user_profile.organization
     user_profiles = UserProfile.objects.filter(organization=organization)
-    print("message 1")
 
     if request.method == 'POST':
-        print("message 2")
         user_form = UserForm(request.POST)
         profile_form = UserProfileForm(request.POST)
 
-        print("User form errors:", user_form.errors)
-        print("Profile form errors:", profile_form.errors)
-
         if user_form.is_valid() and profile_form.is_valid():
-            print("message 3")
             password = generate_password()
 
             # First, save the User model
@@ -131,12 +125,10 @@ def admin_users(request):
             UserProfile.objects.create(user=user, organization=organization)
 
             send_password_email(user.email, password)
-            print("message 4")
             # Redirect to a success page or wherever you want
             return redirect('/OTRisk/admin_users')
 
     else:
-        print("message 5")
         user_form = UserForm()
         profile_form = UserProfileForm()
         current_user_profile = UserProfile.objects.get(user=request.user)
@@ -167,9 +159,7 @@ def add_or_update_consequence(request, consequence_id=None):
     # Handle the form submission
     if request.method == 'POST':
         form = CustomConsequenceForm(request.POST, instance=consequence, user=request.user)
-        print(request.POST)
         if form.is_valid():
-            print("form is valid")
             consequence_instance = form.save(commit=False)
             organization_id = request.session['user_organization']
             consequence_instance.organization = Organization.objects.get(pk=organization_id)
@@ -296,7 +286,6 @@ def scenarioreport(request):
 
 
 def save_or_update_cyberpha(request):
-    print(f"{request.POST}")
     if request.method == 'POST':
         # Get the form data
         cyberphaid = request.POST.get('cyberpha')
@@ -414,7 +403,7 @@ def edit_cyberpha(request, cyberpha_id):
 
 def assess_cyberpha(request):
     active_cyberpha = request.GET.get('active_cyberpha', None)
-    print(f"activecyberpha={active_cyberpha}")
+
     if active_cyberpha is None:
         active_cyberpha = request.session.get('cyberPHAID', 0)
 
@@ -454,7 +443,6 @@ def assess_cyberpha(request):
     control_objectives = [json.loads(obj.ControlObjective) for obj in control_objectives]
     active_cyberpha_id = request.GET.get('active_cyberpha')
     description = ''
-    print(f"{active_cyberpha_id}")
     if active_cyberpha_id is not None:
         try:
             # Retrieve the Description value from the database based on the active-cyberpha_id
@@ -514,12 +502,9 @@ def cyber_pha_manager(request):
 
 
 def PHAeditmode(request, id):
-    print("editmode")
     record = tblCyberPHAHeader.objects.get(ID=id)
     formattedStartDate = record.AssessmentStartDate.strftime('%Y-%m-%d')
-    print(f"{formattedStartDate}")
     formattedEndDate = record.AssessmentEndDate.strftime('%Y-%m-%d')
-    print(f"{formattedEndDate}")
     data = {
         'PHALeader': record.PHALeader,
         'PHALeaderEmail': record.PHALeaderEmail,
@@ -536,7 +521,6 @@ def PHAeditmode(request, id):
         'AssessmentEndDate': formattedEndDate,
         'facilityAddress': record.facilityAddress,
     }
-    print(f"{record.FacilityType}")
     return JsonResponse(data)
 
 
@@ -645,7 +629,6 @@ from django.shortcuts import get_object_or_404
 
 
 def save_walkdown_questionnaire(request):
-    print(f"{request.POST}")
     if request.method == 'POST':
         walkdown_id = request.POST.get('walkdownid')
         active_cyberPHA = request.POST.get('activecyberpha')
@@ -829,7 +812,7 @@ def get_walkdown_data(request, row_id):
 
 
 def save_walkdown(request):
-    print(f"{request.POST}")
+
     if request.method == 'POST':
         data = request.POST
 
@@ -992,7 +975,7 @@ def save_raw_scenario(request):
         )
         new_scenario.save()
         request.session['CurrentScenario'] = new_scenario.ID
-        print(f"new scenarioid={new_scenario.ID}")
+
         return JsonResponse({"scenario_id": new_scenario.ID}, status=201)
     else:
         return JsonResponse({"error": "Invalid method"}, status=400)
@@ -1047,7 +1030,7 @@ def save_or_update_tblRAWorksheet(request):
         raworksheet = RAWorksheet.objects.get(ID=raworksheetid)
     else:
         raworksheet = None
-    print(f"{raworksheetid}")
+
     context = {'raworksheet': raworksheet, }
     return render(request, 'OTRisk/riskassess.html', context)
 
@@ -1137,7 +1120,7 @@ def risk_assessment(request):
                 scenario_description = request.POST.get('scenario1', '')
 
                 threat_code = request.POST.get('threat1', '')
-                print(f"{threat_code}")
+
                 vuln_code = request.POST.get('vulnerability1', '')
                 reputation_code = request.POST.get('reputation1', '')
                 financial_code = request.POST.get('financial1', '')
@@ -1166,7 +1149,7 @@ def risk_assessment(request):
                 row_count = int(request.POST.get('hdnRowCount'))
 
                 for i in range(2, row_count + 2):
-                    print(f"saving scenario {i}")
+
                     scenario_description = request.POST.get('scenario{}'.format(i), '')
                     threat_code = request.POST.get('threat{}'.format(i), '')
                     vuln_code = request.POST.get('vulnerability{}'.format(i), '')
@@ -1326,7 +1309,6 @@ def save_scenario(request):
 
         # Retrieve the post_id from the session variable
         post_id = request.session.get('post_id')
-        print(post_id)
 
         if post_id is not None:
             try:
@@ -1543,7 +1525,7 @@ def add_walkthrough(request):
 
 
 def walkthrough_questionnaire(request, facility_type_id):
-    print("called 1")
+
     query_results = Questionnaire.objects \
         .values('id', 'title', 'description', 'questionthemes__QuestionTheme',
                 'questionthemes__questions__questionnumber', 'questionthemes__questions__questiontext') \
@@ -1552,7 +1534,7 @@ def walkthrough_questionnaire(request, facility_type_id):
                 fkFacilityType_id=facility_type_id) \
         .distinct()
     row_count = len(query_results)
-    print("Row count:", row_count)
+
     facility_type = get_object_or_404(FacilityType, id=facility_type_id)
 
     return render(request, 'OTRisk/walkthroughQuestionnaire.html',
@@ -1677,7 +1659,7 @@ def add_post(request):
             editflag = request.POST.get('editflag')
 
             post_risk = post_form.save(commit=False)
-            print(f"postform= {post_form}")
+
             if editflag == '0':
 
                 post_risk.process_description = post_form.cleaned_data.get('process_description')
@@ -1753,7 +1735,7 @@ def add_post(request):
 def post_create(request):
     # get the threat list
     threats = ThreatAssessment.objects.all()
-    print(f' {threats} ')
+
     context = {
         'threats': threats
     }
