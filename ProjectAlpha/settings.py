@@ -26,6 +26,8 @@ DEBUG = False
 
 ALLOWED_HOSTS = ['3.223.201.144', '127.0.0.1', 'iotarisk.com', 'www.iotarisk.com']
 
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
 
 # Application definition
 
