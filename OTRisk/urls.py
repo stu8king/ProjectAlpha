@@ -1,7 +1,9 @@
 from django.conf import settings
-from django.urls import path, include
+from django.urls import path, include, re_path
+from django.views.generic.base import RedirectView
 from django.conf.urls.static import static
 from django.contrib.auth import views as auth_views
+
 from OTRisk.views import (
     ScenarioDetailView,
     ScenarioDeleteView,
@@ -29,6 +31,7 @@ from . import views
 app_name = 'OTRisk'
 
 urlpatterns = [
+    path('', RedirectView.as_view(url='/accounts/login/'), name='root_redirect'),
     path('post_list/', views.PostListView.as_view(), name='post_list'),
     path('<int:pk>/', views.PostDetailView.as_view(), name='post_detail'),
     path('<int:pk>/add_scenario/', views.add_riskscenario, name='scenario_create'),
