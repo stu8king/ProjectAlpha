@@ -176,7 +176,7 @@ canvas {
 <nav class="navbar navbar-expand-lg navbar-scroll fixed-top shadow-0 border-bottom border-dark rounded">
   <div class="container-fluid d-flex justify-content-between">
    <a class="navbar-brand" href="{% url 'OTRisk:dashboardhome' %}"><img src="/static/images/logo1-2.jpg" style="height: 140px; width: 140px" class="navbar-logo" alt="">  </a>
-      <h4 class="my-auto text-center flex-grow-1"><font color="white">iOTa</font></h4>
+      <h4 class="my-auto text-center flex-grow-1"><font color="white">Assessment Report</font></h4>
 
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
       <ul class="navbar-nav ms-auto">
@@ -374,14 +374,35 @@ canvas {
 <div class="row">
     <div class="col-md-1" style="background-color: black"></div>
     <div class="col-md-1" style="background-color: white"></div>
-    <div class="col-md-2" style="background-color: white"></div>
     <div class="col-md-2" style="background-color: white">
         <div class="card">
                 <div class="card-header">
-                    Estimated Cost of Risk
+                    Estimated Cost of Risk (Worst Case))
                 </div>
                 <div class="card-body">
-                    <h5 class="card-title">{{ formatted_cost }}</h5>
+                    <h5 class="card-title">{{ formatted_total_event_cost_high }}</h5>
+                    <p class="card-text">This is the total cost calculated from all scenarios.</p>
+                </div>
+            </div>
+    </div>
+    <div class="col-md-2" style="background-color: white">
+        <div class="card">
+                <div class="card-header">
+                    Estimated Cost of Risk (Best Case)
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">{{ formatted_total_event_cost_low }}</h5>
+                    <p class="card-text">This is the total cost calculated from all scenarios.</p>
+                </div>
+            </div>
+    </div>
+    <div class="col-md-2" style="background-color: white">
+        <div class="card">
+                <div class="card-header">
+                    Estimated Cost of Risk (Expected Case)
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">{{ formatted_total_event_cost_median }}</h5>
                     <p class="card-text">This is the total cost calculated from all scenarios.</p>
                 </div>
             </div>
@@ -397,7 +418,6 @@ canvas {
                 </div>
             </div>
     </div>
-    <div class="col-md-2" style="background-color: white"></div>
     <div class="col-md-2" style="background-color: white"></div>
 
 </div>
@@ -439,7 +459,7 @@ canvas {
     <div class="col-md-1" style="background-color: white"></div>
     <div class="col-md-8" style="background-color: white; border: 1px solid #000B1D; padding: 20px;">
         <div class="row">
-            <div class="col-md-6">
+            <div class="col-md-7">
                 <div class="card">
                     <div class="card-header">
                         Scenario:
@@ -476,13 +496,13 @@ canvas {
                         Scenario Risk Summary:
                     </div>
                     <div class="card-body">
-                        <p class="card-text">{{ scenario.riskSummary }}</p>
+                        <p class="card-text">{{ scenario.riskSummary|linebreaksbr }}</p>
                     </div>
                 </div>
 
 
             </div>
-            <div class="col-md-6">
+            <div class="col-md-5">
                 <div class="row">
                     <div class="col-1"></div>
                     <div class="col-md-11">
@@ -494,7 +514,7 @@ canvas {
                     var myRadarChart = new Chart(ctx, {
                         type: 'radar',
                         data: {
-                            labels: ['Safety', 'Life', 'Environment', 'Reputation', 'Regulatory','Production','Financial','Data'],
+                            labels: ['Safety', 'Life', 'Environment', 'Reputation', 'Regulatory','Production','Financial','Data', 'Supply Chain'],
                             datasets: [{
                                 data: [
                                     {{ scenario.SafetyScore }},
@@ -505,6 +525,7 @@ canvas {
                                     {{ scenario.productionScore }},
                                     {{ scenario.FinancialScore }},
                                     {{ scenario.DataScore }},
+                                    {{ scenario.SupplyChainScore }},
                                 ],
                                 backgroundColor: 'rgba(123, 104, 238, 0.2)',  // choose a color or make it dynamic
                                 borderColor: 'rgba(123, 104, 238, 1)',  // choose a color or make it dynamic

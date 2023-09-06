@@ -67,6 +67,10 @@
      .small-font {
         font-size: 0.8rem; /* adjust as needed */
    }
+
+     .action-row {
+         cursor: pointer;
+     }
     </style>
 </head>
 <body>
@@ -82,15 +86,8 @@
         <li class="nav-item">
           <a class="nav-link" href="{% url 'OTRisk:qraw' %}"><i class="bi bi-journal-text"></i> Risk Assessment</a>
         </li>
-        <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                <i class="bi bi-diagram-3"></i> CyberPHA
-              </a>
-              <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                <li><a class="dropdown-item" href="{% url 'OTRisk:iotaphamanager' %}"> CyberPHA Manager</a></li>
-                <li><a class="dropdown-item" href="{% url 'OTRisk:walkdown' %}"> Site Walkdown</a></li>
-                <li><a class="dropdown-item" href="#">Workshop</a></li>
-              </ul>
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'OTRisk:iotaphamanager' %}"><i class="bi bi-journal-text"></i> CyberPHA</a>
         </li>
           <li class="nav-item">
           <a class="nav-link" href="{% url 'OTRisk:ra_actions_view' %}" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Actions</a>
@@ -98,13 +95,15 @@
         <li class="nav-item">
           <a class="nav-link" href="#" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Reports</a>
         </li>
-        <li class="nav-item dropdown">
+                <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                 <i class="bi bi-diagram-3"></i> Admin
               </a>
               <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
                   <li><a  class="dropdown-item" href="{% url 'OTRisk:add_scenario' %}">Scenario Manager</a></li>
                   <li><a  class="dropdown-item" href="{% url 'OTRisk:add_consequence' %}">Consequence Manager</a></li>
+                  <li><a  class="dropdown-item" href="{% url 'OTRisk:admin_users' %}">Admin Users</a></li>
+
               </ul>
 
         </li>
@@ -201,7 +200,7 @@
                 <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                     <div class="card-body">
                         <label for="txtTitle">Title</label>
-                        <input type="text" class="form-control" name="txtTitle" id="txtTitle" required value="{{ selected_action.actionTitle }}" readonly>
+                        <input type="text" class="form-control" name="txtTitle" id="txtTitle" required value="{{ selected_action.actionTitle }}">
                     </div>
                 </div>
             </div>
@@ -260,7 +259,7 @@
                 <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                     <div class="card-body">
                         <label for="txtDifficulty">Difficulty</label>
-                        <input type="text" class="form-control" name="txtDifficulty" id="txtDifficulty" required value="{{ selected_action.actionDifficulty }}" readonly>
+                        <input type="text" class="form-control" name="txtDifficulty" id="txtDifficulty" required value="{{ selected_action.actionDifficulty }}">
                     </div>
                 </div>
             </div>
@@ -327,22 +326,23 @@
             <div class="col-md-2">
                 <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                     <div class="card-body">
-                        <label for="txt_outageWWW">PS Outage</label>
+                        <label for="txt_outageWWW">Internet Outage</label>
                         <input type="text" class="form-control" name="txt_outageWWW" id="txt_outageWWW" required value="{{ selected_action.outageWWW }}" readonly>
                     </div>
                 </div>
             </div>
         </div>
         <div class="row small-font">
-            <div class="col-md-5"></div>
+            <div class="col-md-4"></div>
             <div class="col-md-2">
                 <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                     <div class="card-body">
                         <button class="form-control btn-primary" type="button" id="actionBtn">Save Changes</button>
+                        <button class="form-control btn-primary" type="button" id="exportCsvBtn">Export as .csv</button>
                     </div>
                 </div>
             </div>
-            <div class="col-md-5"></div>
+            <div class="col-md-4"></div>
         </div>
     {% endif %}
     </div>
@@ -376,6 +376,8 @@
 
             const actionDueDate = $('#txtDueDate').val();
             const actionStatus = $('#selectStatus').val();
+            const actionTitle = $('#txtTitle').val();
+            const actionDescription = $('#txtDescription').val();
              const selectedActionId = sessionStorage.getItem('selectedActionId');
 
             // Get CSRF token
@@ -391,13 +393,15 @@
                     'action_id': selectedActionId,
                     'actionDueDate': actionDueDate,
                     'actionStatus': actionStatus,
+                    'actionTitle': actionTitle,
+                    'actionDescription': actionDescription
                 }),
                 contentType: 'application/json',
 
                 success: function(response) {
                     if (response.success) {
                         alert('Changes saved successfully!');
-                    } else {
+                } else {
                         alert('Error saving changes. Please try again.');
                     }
                 },
@@ -407,6 +411,44 @@
             });
         });
     });
+
+    document.getElementById("exportCsvBtn").addEventListener("click", function() {
+        exportToCsv();
+    });
+
+    function exportToCsv() {
+        // Get the record details
+        const record = {
+            title: document.getElementById("txtTitle").value,
+            description: document.getElementById("txtDescription").value,
+            effort: document.getElementById("txtEffort").value,
+            difficulty: document.getElementById("txtDifficulty").value,
+            cost: document.getElementById("txtCost").value,
+            outage_sis: document.getElementById("txt_outageSIS").value,
+            outage_ics: document.getElementById("txt_outageICS").value,
+            outage_ems: document.getElementById("txt_outageEMS").value,
+            outage_ps: document.getElementById("txt_outagePS").value,
+            outage_www: document.getElementById("txt_outageWWW").value,
+            outage_it: document.getElementById("txt_outageIT").value,
+            owner: document.getElementById("txtOwner").value,
+            // Add more fields as needed
+        };
+
+        const csvData = Object.keys(record).map(key => [key, record[key]]);
+        // Convert the CSV data to CSV format
+        const csv = csvData.map(row => row.map(cell => `"${cell}"`).join(",")).join("\n");
+        // Create a Blob with the CSV data
+        const blob = new Blob([csv], { type: "text/csv" });
+
+        // Create a download link and trigger the download
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "record_details.csv";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    }
+
 </script>
 
 

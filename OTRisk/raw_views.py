@@ -27,22 +27,26 @@ import json
 import re
 import requests
 from .dashboard_views import get_user_organization_id
+from django.http import HttpResponseForbidden
 
 
 class UpdateRAAction(View):
     def put(self, request, *args, **kwargs):
         # try:
-        print(request.body)
+
         data = json.loads(request.body.decode('utf-8'))
         action_id = data.get('action_id')
         action_due_date = data.get('actionDueDate')
         action_status = data.get('actionStatus')
-
+        action_title = data.get('actionTitle')
+        action_description = data.get('actionDescription')
         ra_action = RAActions.objects.get(ID=action_id)
         ra_action.actionDueDate = action_due_date
         ra_action.actionStatus = action_status
+        ra_action.actionDescription = action_description
+        ra_action.actionTitle = action_title
         current_user_name = request.user.first_name + " " + request.user.last_name
-        history_update = f"\n\n{timezone.now()}: {current_user_name} updated the record to change the status to {action_status} and the due date to {action_due_date}."
+        history_update = f"\n\n{timezone.now()}: {current_user_name} updated the record to change the status to {action_status} and the due date to {action_due_date}. The title is {action_title} and description is: {action_description}"
         ra_action.history += history_update
         ra_action.save()
 
@@ -110,7 +114,6 @@ def get_rawactions(request):
 
 
 def save_ra_action(request):
-    print(f"{request.POST}")
     if request.method == "POST":
         # Extract data from POST request
         action_title = request.POST.get('actionTitle')
@@ -175,7 +178,7 @@ def save_ra_action(request):
 
 @csrf_exempt
 def raw_from_walkdown(request):
-    print("test")
+
     if request.method == 'POST':
         cyberPHAID = request.POST.get('cyberPHAID')
         questionID = request.POST.get('questionID')
@@ -204,10 +207,23 @@ def raw_from_walkdown(request):
 @login_required()
 def rawreport(request, raworksheet_id):
     # Fetch the RAWorksheet and associated scenarios
+    org_id = get_user_organization_id(request)
+
     raworksheet = get_object_or_404(RAWorksheet, pk=raworksheet_id)
+
+    # if the user is attempting to access a report that belongs to a different organization by changing the url value then exit with a generic warning
+    if org_id != raworksheet.organization_id:
+        return HttpResponseForbidden("Unauthorized Action.")
+
     scenarios = RAWorksheetScenario.objects.filter(RAWorksheetID=raworksheet)
     total_scenario_cost = scenarios.aggregate(Sum('scenarioCost'))['scenarioCost__sum']
     formatted_cost = "${:,.2f}".format(total_scenario_cost)
+    total_event_cost_high = scenarios.aggregate(Sum('event_cost_high'))['event_cost_high__sum']
+    formatted_total_event_cost_high = "${:,.2f}".format(total_event_cost_high)
+    total_event_cost_low = scenarios.aggregate(Sum('event_cost_low'))['event_cost_low__sum']
+    formatted_total_event_cost_low = "${:,.2f}".format(total_event_cost_low)
+    total_event_cost_median = scenarios.aggregate(Sum('event_cost_median'))['event_cost_median__sum']
+    formatted_total_event_cost_median = "${:,.2f}".format(total_event_cost_median)
     # Get the highest riskScore
     highest_risk_score = scenarios.aggregate(Max('RiskScore'))['RiskScore__max']
 
@@ -221,6 +237,7 @@ def rawreport(request, raworksheet_id):
     financial_status = get_risk_status(scenarios.aggregate(Max('FinancialScore'))['FinancialScore__max'])
     data_status = get_risk_status(scenarios.aggregate(Max('DataScore'))['DataScore__max'])
     reputation_status = get_risk_status(scenarios.aggregate(Max('ReputationScore'))['ReputationScore__max'])
+    supplychain_status = get_risk_status(scenarios.aggregate(Max('SupplyChainScore'))['SupplyChainScore__max'])
 
     return render(request, 'rawreport.html',
                   {'raworksheet': raworksheet,
@@ -234,7 +251,11 @@ def rawreport(request, raworksheet_id):
                    'regulatory_status': regulatory_status,
                    'financial_status': financial_status,
                    'data_status': data_status,
-                   'reputation_status': reputation_status})
+                   'reputation_status': reputation_status,
+                   'supplychain_status': supplychain_status,
+                   'formatted_total_event_cost_high': formatted_total_event_cost_high,
+                   'formatted_total_event_cost_low': formatted_total_event_cost_low,
+                   'formatted_total_event_cost_median': formatted_total_event_cost_median})
 
 
 def get_risk_status(risk_score):
@@ -254,28 +275,52 @@ def get_risk_status(risk_score):
         return "Unknown"
 
 
+def parse_currency(currency_string):
+    """Parse a currency string and return its integer value."""
+    print(currency_string)
+    # Remove any non-digit characters
+    sanitized_string = re.sub(r'[^\d]', '', currency_string)
+
+    # Check if the sanitized string is empty
+    if not sanitized_string:
+        return 0
+
+    # Convert the sanitized string to an integer
+    return int(sanitized_string)
+
+
+def ensure_non_empty(value):
+    """Return the value if non-empty, otherwise return 0."""
+    return value if value != '' else 0
+
+
+def ensure_non_null(value):
+    """Return the value if non-empty, otherwise return 0."""
+    return value if value != '' else '.'
+
+
 @login_required()
 def qraw(request):
     # check the organization that the user belong to
     org_id = get_user_organization_id(request)
 
     if request.method == 'POST':
-        edit_mode = int(request.POST.get('edit_mode', 0))
+
+        # Check for duplicate records
+        is_duplicate = RAWorksheet.objects.filter(
+            organization_id=org_id,
+            RATitle=request.POST.get('txtTitle'),
+            BusinessUnit=request.POST.get('txtBU'),
+            AssessorName=request.POST.get('txtLeader'),
+            industry=request.POST.get('selectIndustry'),
+            BusinessUnitType=request.POST.get('selectFacility'),
+            RATrigger=request.POST.get('selectTrigger'),
+        ).exists()
+
+        edit_mode_value = request.POST.get('edit_mode', 0)
+        edit_mode = 1 if edit_mode_value == '' else int(edit_mode_value)
 
         if edit_mode == 0:
-
-            # Check for duplicate records
-            is_duplicate = RAWorksheet.objects.filter(
-                organization_id=org_id,
-                RATitle=request.POST.get('txtTitle'),
-                BusinessUnit=request.POST.get('txtBU'),
-                AssessorName=request.POST.get('txtLeader'),
-                industry=request.POST.get('selectIndustry'),
-                BusinessUnitType=request.POST.get('selectFacility'),
-                RATrigger=request.POST.get('selectTrigger'),
-                RADescription=request.POST.get('txtDescription')
-            ).exists()
-
             if not is_duplicate:
                 # adding new records
                 ra_worksheet = RAWorksheet(
@@ -285,7 +330,9 @@ def qraw(request):
                     industry=request.POST.get('selectIndustry'),
                     BusinessUnitType=request.POST.get('selectFacility'),
                     RATrigger=request.POST.get('selectTrigger'),
-                    RADescription=request.POST.get('txtDescription'),
+                    revenue=ensure_non_empty(request.POST.get('txtRevenue')),
+                    insurance=ensure_non_empty(request.POST.get('txtInsurance')),
+                    deductable=ensure_non_empty(request.POST.get('txtDeductable')),
                     UserID=request.user.id,
                     organization_id=org_id,
                     WalkdownID=0,
@@ -316,6 +363,7 @@ def qraw(request):
                             DataScore=request.POST.get(f'range_data_{i}'),
                             VulnScore=request.POST.get(f'range_vuln_{i}'),
                             ThreatScore=request.POST.get(f'range_threat_{i}'),
+                            SupplyChainScore=request.POST.get(f'range_supply_{i}'),
                             notes=request.POST.get(f'txtAssets_{i}'),
                             RiskScore=int(request.POST.get(f'lblriskScore_{i}')),
                             RiskStatus=request.POST.get(f'lblriskRating_{i}'),
@@ -329,7 +377,9 @@ def qraw(request):
                             justifyEnvironment=request.POST.get(f'txtenvironmentJustify_{i}'),
                             justifyRegulation=request.POST.get(f'txtregulationustify_{i}'),
                             justifyData=request.POST.get(f'txtdataJustify_{i}'),
-
+                            justifySupply=request.POST.get(f'txtsupplyJustify_{i}'),
+                            outage=request.POST.get(f'selectOutage_{i}'),
+                            outageLength=request.POST.get(f'outage_{i}'),
                         )
                         scenario.save()
         elif edit_mode == 1:
@@ -338,10 +388,12 @@ def qraw(request):
             ra_worksheet.RATitle = request.POST.get('txtTitle')
             ra_worksheet.BusinessUnit = request.POST.get('txtBU')
             ra_worksheet.AssessorName = request.POST.get('txtLeader')
-            ra_worksheet.RADescription = request.POST.get('txtDescription')
             ra_worksheet.industry = request.POST.get('selectIndustry')
             ra_worksheet.BusinessUnitType = request.POST.get('selectFacility')
             ra_worksheet.RATrigger = request.POST.get('selectTrigger')
+            ra_worksheet.insurance = parse_currency(request.POST.get('txtInsurance'))
+            ra_worksheet.revenue = parse_currency(request.POST.get('txtRevenue'))
+            ra_worksheet.deductable = parse_currency(request.POST.get('txtDeductable'))
             ra_worksheet.save()
 
             scenario_count = int(request.POST.get('scenarioCount', 0))
@@ -361,33 +413,42 @@ def qraw(request):
                     scenario = RAWorksheetScenario()  # Create a new instance.
 
                 raw_cost = request.POST.get(f'lblriskCost_{i}')
-                formatted_cost = int(re.sub(r'[^\d.]', '', raw_cost))
+                formatted_cost = parse_currency(re.sub(r'[^\d.]', '', raw_cost))
                 scenario.RAWorksheetID = ra_worksheet_instance
                 scenario.ScenarioDescription = request.POST.get(f'txtScenarioDescription_{i}')
                 scenario.threatSource = request.POST.get(f'selectThreat_{i}')
                 scenario.threatTactic = request.POST.get(f'selectTactics_{i}')
                 scenario.SafetyScore = request.POST.get(f'range_safety_{i}')
                 scenario.lifeScore = request.POST.get(f'range_life_{i}')
-                scenario.productionScore = request.POST.get(f'range_production_{i}')
-                scenario.FinancialScore = request.POST.get(f'range_finance_{i}')
-                scenario.ReputationScore = request.POST.get(f'range_reputation_{i}')
-                scenario.environmentScore = request.POST.get(f'range_environment_{i}')
-                scenario.regulatoryScore = request.POST.get(f'range_regulatory_{i}')
-                scenario.VulnScore = request.POST.get(f'range_vuln_{i}')
-                scenario.ThreatScore = request.POST.get(f'range_threat_{i}')
+                scenario.productionScore = ensure_non_empty(request.POST.get(f'range_production_{i}'))
+                scenario.SupplyChainScore = ensure_non_empty(request.POST.get(f'range_supply_{i}'))
+                scenario.DataScore = ensure_non_empty(request.POST.get(f'range_data_{i}'))
+                scenario.FinancialScore = ensure_non_empty(request.POST.get(f'range_finance_{i}'))
+                scenario.ReputationScore = ensure_non_empty(request.POST.get(f'range_reputation_{i}'))
+                scenario.environmentScore = ensure_non_empty(request.POST.get(f'range_environment_{i}'))
+                scenario.regulatoryScore = ensure_non_empty(request.POST.get(f'range_regulatory_{i}'))
+                scenario.OperationScore = ensure_non_empty(request.POST.get(f'range_production_{i}'))
+                scenario.VulnScore = ensure_non_empty(request.POST.get(f'range_vuln_{i}'))
+                scenario.ThreatScore = ensure_non_empty(request.POST.get(f'range_threat_{i}'))
                 scenario.notes = request.POST.get(f'txtAssets_{i}')
-                scenario.RiskScore = int(request.POST.get(f'lblriskScore_{i}'))
+                scenario.RiskScore = parse_currency(request.POST.get(f'lblriskScore_{i}'))
                 scenario.RiskStatus = request.POST.get(f'lblriskRating_{i}')
                 scenario.riskSummary = request.POST.get(f'lblriskSummary_{i}')
                 scenario.scenarioCost = formatted_cost
-                scenario.justifySafety = request.POST.get(f'txtSafetyJustify_{i}')
-                scenario.justifyLife = request.POST.get(f'txtlifeJustify_{i}')
-                scenario.justifyData = request.POST.get(f'txtdataJustify_{i}')
-                scenario.justifyFinancial = request.POST.get(f'txtfinancialJustify_{i}')
-                scenario.justifyProduction = request.POST.get(f'txtproductionJustify_{i}')
-                scenario.justifyEnvironment = request.POST.get(f'txtenvironmentJustify_{i}')
-                scenario.justifyRegulation = request.POST.get(f'txtregulationJustify_{i}')
-                scenario.justifyReputation = request.POST.get(f'txtreputationJustify_{i}')
+                scenario.justifySafety = ensure_non_null(request.POST.get(f'txtSafetyJustify_{i}'))
+                scenario.justifyLife = ensure_non_null(request.POST.get(f'txtlifeJustify_{i}'))
+                scenario.justifyData = ensure_non_null(request.POST.get(f'txtdataJustify_{i}'))
+                scenario.justifyFinancial = ensure_non_null(request.POST.get(f'txtfinanceJustify_{i}'))
+                scenario.justifyProduction = ensure_non_null(request.POST.get(f'txtproductionJustify_{i}'))
+                scenario.justifyEnvironment = ensure_non_null(request.POST.get(f'txtenvironmentJustify_{i}'))
+                scenario.justifyRegulation = ensure_non_null(request.POST.get(f'txtregulationJustify_{i}'))
+                scenario.justifyReputation = ensure_non_null(request.POST.get(f'txtreputationJustify_{i}'))
+                scenario.justifySupply = ensure_non_null(request.POST.get(f'txtsupplyJustify_{i}'))
+                scenario.event_cost_low = parse_currency(request.POST.get(f'lblriskCost_{i}'))
+                scenario.event_cost_high = parse_currency(request.POST.get(f'lblriskCostHigh_{i}'))
+                scenario.event_cost_median = parse_currency(request.POST.get(f'lblriskCostMedian_{i}'))
+                scenario.outage = request.POST.get(f'selectOutage_{i}')
+                scenario.outageLength = request.POST.get(f'outage_{i}')
                 scenario.save()
 
     raws = RAWorksheet.objects.filter(organization_id=org_id)
@@ -428,8 +489,9 @@ class GetTechniquesView(View):
 # Function to assess the risk using the OpenAI GPT-3 API
 def openai_assess_risk(request):
     if request.method == 'GET':
-        print(f"{request.GET}")
-        # Gather the necessary data for the risk assessment (impact scores and scenario information)
+        openai.api_key = os.environ.get('OPENAI_API_KEY')
+
+        # Extracting the input variables from the request
         safety_impact = int(request.GET.get('safety_impact'))
         life_impact = int(request.GET.get('life_impact'))
         production_impact = int(request.GET.get('production_impact'))
@@ -438,74 +500,208 @@ def openai_assess_risk(request):
         environment_impact = int(request.GET.get('environment_impact'))
         regulatory_impact = int(request.GET.get('regulatory_impact'))
         data_impact = int(request.GET.get('data_impact'))
+        supply_impact = int(request.GET.get('supply_impact'))
         threat_source = request.GET.get('threat_source')
         threat_tactic = request.GET.get('threat_tactic')
-        vulnerability_exposure = int(request.GET.get('vulnerability_exposure'))
-        threat_exposure = int(request.GET.get('threat_exposure'))
         industry = request.GET.get('industry')
         facility_type = request.GET.get('facility_type')
         scenario = request.GET.get('scenario')
         asset_status = int(request.GET.get('assetStatus'))
+        vulnerability = int(request.GET.get('vulnerability_exposure'))
+        revenue = parse_currency(request.GET.get('revenue'))
+        insurance = parse_currency(request.GET.get('insurance'))
+        deductable = parse_currency(request.GET.get('deductable'))
+        outage = request.GET.get('outage')
+        outageLength = int(request.GET.get('outageLength'))
 
-        if asset_status in [1, 2]:
-            asset_lc = "New / Hardened"
-        elif asset_status in [3, 4]:
-            asset_lc = "Current / Managed"
-        elif asset_status in [5, 6]:
-            asset_lc = "Aging / Supported"
-        elif asset_status in [7, 8]:
-            asset_lc = "Legacy / Unmanaged"
-        elif asset_status in [9, 10]:
-            asset_lc = "Obselete"
-        else:
-            asset_lc = "Unknown status"  # default case
+        # check that the user hasn't entered anything that does not comply with openai moderation policy
+        moderation_result = moderate_content(scenario)
 
-        # Prepare the request data for the OpenAI GPT-3 API in the chat format
-        message = [
-            {"role": "system",
-             "content": f"As a cybersecurity risk assessment professional, assess the risk of {threat_source} using the threat tactic {threat_tactic} in relation to {scenario} in a {facility_type} within the {industry} industry. The assets in-scope for this assessment are {asset_lc}."},
-            {"role": "user",
-             "content": f"First, provide the overall risk rating. Choose from: Low, Low/Medium, Medium, Medium/High, or High. Base this on the provided information:\nThreat source - {threat_source}, Threat tactic - {threat_tactic}, Safety impact - {safety_impact}/10, Life impact - {life_impact}/10, and so on."},
-            {"role": "user",
-             "content": f"Second, provide a risk score between 1 and 10. Consider 1 as a very low risk with minimal impact and 10 as a catastrophic risk involving serious injuries or loss of life."},
-            {"role": "user",
-             "content": f"Third, estimate a value in US dollars if {scenario} were to occur for {facility_type} within the {industry} industry. Use the business impact analysis scores to understand the perspective that the business has with regards to the given scenario of {scenario}, where 1 is minimal/low impact and 10 is maximum/catastrophic impact . Those scores are for safety: {safety_impact}, danger to life: {life_impact}, production/operations: {production_impact}, financial: {financial_impact}, reputation: {reputation_impact}, environmental: {environment_impact}, regulatory: {regulatory_impact}, and data: {data_impact}. Determine how to apply any necessary weightings to impact scores based on the given industry: {industry} and facility type: {facility_type}.Use public sources or industry reports for a credible estimation. If no such data is available, provide a best estimate using Artificial Intelligence. Provide the result as a numeric value to represent a dollar amount."},
-            {"role": "user",
-             "content": f"Lastly, provide a one-sentence summary highlighting the key factors used in the assessment, especially the industry type, facility type, and other high-weight factors. The output format must be: <overall_risk_rating_value>|<overall_risk_score>|<cost>|<summary> where <overall_risk_rating_value> is the overall risk rating, <overall_risk_score> is the overall risk score, <cost> is the estimated cost, <summary> is the summary statement, and | is a field delimiter ."}
-        ]
+        if moderation_result != "pass":
+            risk_rating = "Non-compliant"
+            risk_score = "Non-compliant"
+            low_estimate = "Non-compliant"
+            high_estimate = "Non-compliant"
+            risk_summary = "Non-compliant"
+            median_estimate = "Non-compliant"
+            result_array = [risk_rating, risk_score, low_estimate, high_estimate, risk_summary, median_estimate]
+            return JsonResponse(result_array, safe=False)
 
-        # openai.api_key = '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'
-        openai.api_key = os.environ.get('OPENAI_API_KEY')
-        # Make the API call to the OpenAI GPT-3 API using the message
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",  # Use the GPT-3 engine
-            messages=message,
-            temperature=0,
-            max_tokens=256
-        )
-        print(f"response={response}")
-        # Extract the generated response from the API
-        generated_response = response['choices'][0]['message']['content']
-        risk_summary = generated_response.split('|')[3].strip()
-        risk_cost = generated_response.split('|')[2].strip()
-        risk_score = generated_response.split('|')[1].strip()
-        risk_rating = generated_response.split('|')[0].strip()
+        # get the definitions for each of the numeric values
+        safetydef = safety_definition(safety_impact)
+        lifedef = life_definition(life_impact)
+        productiondef = production_definition(production_impact)
+        financedef = finance_definition(financial_impact)
+        reputationdef = reputation_definition(reputation_impact)
+        environmentdef = environment_definition(environment_impact)
+        regulatorydef = regulation_definition(regulatory_impact)
+        datadef = data_definition(data_impact)
+        supplydef = supply_definition(supply_impact)
 
-        # Create an array to return to the user interface
-        result_array = [risk_rating, risk_score, risk_cost, risk_summary]
-        print(f"response={generated_response}")
+        ASSET_STATUS_MAPPING = {
+            1: "New / Hardened",
+            2: "New / Hardened",
+            3: "Current / Managed",
+            4: "Current / Managed",
+            5: "Aging / Supported",
+            6: "Aging / Supported",
+            7: "Legacy / Unmanaged",
+            8: "Legacy / Unmanaged",
+            9: "Obsolete",
+            10: "Obsolete"
+        }
 
-        # Return the generated response as JSON
+        asset_lc = ASSET_STATUS_MAPPING.get(asset_status, "Unknown status")
+
+        # Assuming all the variables (threat_source, threat_tactic, scenario, etc.) are already defined
+
+        if outage == "Yes":
+            content = f"The scenario is expected to result in a production outage of {outageLength}."
+        elif outage == "No":
+            content = "The scenario is not expected to result in a production outage."
+
+        system_message = {
+            "role": "system",
+            "content": f"As a cybersecurity risk assessment professional, assess the risk of {threat_source} using the threat tactic {threat_tactic} in relation to {scenario} in a {facility_type} within the {industry} industry. The level of vulnerability has been rated as {vulnerability}. The assets in-scope for this assessment are {asset_lc}. The annual revenue for the business is {revenue}. They have cyber insurance cover to the value of {insurance} and the cyber insurance deductible is {deductable}. {content}"
+        }
+
+        def query_openai(user_message_content):
+            # Convert dictionary content to string format if necessary
+            if isinstance(user_message_content, dict):
+                prompt_parts = []
+                for key, value in user_message_content.items():
+                    if isinstance(value, dict):
+                        sub_parts = [f"{sub_key}: {sub_value}" for sub_key, sub_value in value.items()]
+                        prompt_parts.append(f"{key} - {'; '.join(sub_parts)}")
+                    else:
+                        prompt_parts.append(f"{key}: {value}")
+                formatted_content = ". ".join(prompt_parts)
+            else:
+                formatted_content = user_message_content
+
+            user_message = {
+                "role": "user",
+                "content": formatted_content
+            }
+            messages = [system_message, user_message]
+            response = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",
+                messages=messages,
+                temperature=0.2,
+                max_tokens=500
+            )
+            return response['choices'][0]['message']['content'].strip()
+
+        # 1. Query for risk rating
+
+        # Message to query the overall risk rating
+        risk_rating_message = {
+            "role": "user",
+            "content": (
+                f"Given the information about a cybersecurity incident scenario: Threat source - {threat_source}, Threat tactic - {threat_tactic}, vulnerability exposure rating -{vulnerability}/10"
+                f"Safety impact - {safety_impact}/10, Life impact - {life_impact}/10, Production impact - {production_impact}/10, "
+                f"Financial impact - {financial_impact}/10, Environmental impact - {environment_impact}/10, Regulatory impact - {regulatory_impact}/10, "
+                f"Reputation impact - {reputation_impact}/10, Data impact - {data_impact}/10, Supply Chain - {supply_impact}, Scenario - {scenario}, Facility type - {facility_type}, Industry - {industry}, "
+                f"Provide a rating for the risk from one of the following possible responses: Low, Low/Medium, Medium, Medium/High, or High. The response must be only the single response with no additional text or explanation. The user must only see the final response without any other detail  ")
+        }
+
+        # 2. Query for risk score
+        risk_score_message = {
+            "role": "user",
+            "content": (
+                f"Considering the detailed factors about a cybersecurity incident scenario: Threat source - {threat_source}, Threat tactic - {threat_tactic}, vulnerability exposure rated as {vulnerability}/10 "
+                f"Safety impact - {safety_impact}/10 {safetydef}, Life impact - {life_impact}/10, Production impact - {production_impact}/10, "
+                f"Financial impact - {financial_impact}/10, Reputation impact - {reputation_impact}/10, Environmental impact - {environment_impact}/10, "
+                f"Regulatory impact - {regulatory_impact}/10, Data impact - {data_impact}/10, , Supply Chain - {supply_impact}/10 and the scenario of {scenario} "
+                f"in a {facility_type} within the {industry} industry, provide a risk score between 1 and 10 where 1 indicates a very low overall risk with a very low likelihood of occurrence and 10 means catastrophic consequences and almost certain to occur. The response must be only the single number with no additional text or explanation. The user must only see the final risk score number without any other detail")
+        }
+
+        # 3. Query for low estimate
+        # Base content for both low and high estimates
+
+        event_cost_estimate_message = {
+            "role": "user",
+            "content": (
+                f"THE OUTPUT FROM THIS QUERY MUST BE A US DOLLAR AMOUNT VALUE WITH NO EXPLANATORY TEXT OR OTHER NON-NUMERIC CHARACTERS. "
+                f"Based on the provided information:"
+                f"- Nature of incident: {scenario}"
+                f"- Revenue of the organization: {revenue}"
+                f"- Industry or sector: {industry} "
+                f"- type of business premises: {facility_type}"
+                f"- Impact on operations rated as : {production_impact} out of 10 which means: {productiondef}"
+                f"- impact on safety rated as: {safety_impact} out of 10 which means: {safetydef}"
+                f"- impact on the organization's reputation rated as {reputation_impact} out of 10 which means: {reputationdef}"
+                f"Can you provide a pragmatic estimate of the single event cost to the organization for this cybersecurity incident scenario, considering historical data, industry benchmarks, and common repercussions."
+                f"Take into account that the organization has insurance against cybersecurity incidents to the value of ${insurance}"
+                f"Provide three event costs as spread of values : the lowest amount the organization might expect the event to cost, the highest amount or worst-case-scenario, and the most likely value. This information may be then used by risk planners in the organization."
+                f"Give the answer in the format lowest|highest|median using | as the character to indicate the delimiter between the values."
+                f"Provide only the dollar amount values in your response without any narrative or explanation because the response from this query will be used in a calculation."
+            )
+        }
+
+        # 5. Query for risk summary
+        # Structured Input for the Model
+        risk_factors = {
+            "vulnerability_score": {
+                "value": vulnerability,
+                "max_value": 10,
+                "context": "A score indicating the level of system vulnerability, where 10 is the most vulnerable."
+            },
+            "industry_type": {
+                "value": industry,
+                "context": "The specific industry the system operates in, which can influence risk due to industry-specific threats."
+            },
+            "facility_type": facility_type,
+            "threat_source": threat_source,
+            "threat_tactic": threat_tactic,
+            "Scenario to be evaluated": scenario,
+            "impact_scores (1 is low and 10 is high)": {
+                "safety": safety_impact,
+                "life": life_impact,
+                "production": production_impact,
+                "financial": financial_impact,
+                "reputation": reputation_impact,
+                "environment": environment_impact,
+                "regulatory": regulatory_impact,
+                "data": data_impact,
+                "supply_chain": supply_impact
+            }
+        }
+
+        # Query for the Model
+        risk_summary_message = {
+            "role": "user",
+            "content": {
+                "prompt": "Based on the provided risk factors, make a succinct assessment of the overall likelihood and consequences of the given scenario.",
+                "factors": risk_factors,
+                "response_options": [
+                    "Unrealistic scenario",
+                    "Very Low Risk",
+                    "Low Risk",
+                    "Moderate Risk",
+                    "High Risk",
+                    "Very High Risk"
+                ],
+                "additional_request": {
+                    "confidence_score": "Provide a confidence score (0-100) on your prediction.",
+                    "brief_explanation": "Provide a brief rationale for the chosen risk level.",
+                    "recommendations": "Suggest initial steps or measures to mitigate the identified risk.",
+                    "formatting": "Place line breaks between paragraphs. Start each section as a new paragraph"
+                }
+            }
+        }
+
+        risk_rating = query_openai(risk_rating_message['content'])
+        risk_score = query_openai(risk_score_message['content'])
+        event_cost_estimate = query_openai(event_cost_estimate_message['content'])
+        risk_summary = query_openai(risk_summary_message['content'])
+
+        values = event_cost_estimate.split('|')
+        low_estimate, high_estimate, median_estimate = values
+
+        # Return the results
+        result_array = [risk_rating, risk_score, low_estimate, high_estimate, risk_summary, median_estimate]
         return JsonResponse(result_array, safe=False)
-
-
-def parse_risk_score(response_text):
-    lines = response_text.split('\n')
-    for line in lines:
-        if line.startswith('Risk score:'):
-            risk_score = line.split(':')[1].strip().split('/')[0]
-            return float(risk_score)
-    return None
 
 
 def write_to_audit(user_id, user_action, user_ip):
@@ -616,3 +812,231 @@ def check_vulnerabilities(request):
             'asset': f"{vendor} {product}",
             'vulnerabilities': vulnerabilities
         })
+
+
+def safety_definition(input_number):
+    safety_definitions = {
+        1: "Minimal safety impact. Cybersecurity has a minor effect on safety, with small risks to people, well-being, or the environment. Little danger of significant harm",
+        2: "Slight to manageable safety impact. Cybersecurity brings small safety concerns, handled by standard procedures. Risks not likely to become severe incidents.",
+        3: "Moderate safety impact. Cybersecurity noticeably affects safety, risking harm to people or the environment. Mitigation needed, organized response for safety.",
+        4: "Significant safety impact. Cybersecurity notably affects safety, risking personnel, operations, or the environment. Swift response to prevent escalation, comprehensive mitigation.",
+        5: "High safety impact. Cybersecurity could seriously harm people, assets, or the environment. Urgent, thorough action needed to prevent/mirror harm.",
+        6: "Very high safety impact. Cybersecurity greatly risks severe harm, life loss, damage, or contamination. Urgent, strong measures needed for safety.",
+        7: "Severe safety impact. Cybersecurity may lead to severe harm, casualties, damage, or environmental harm. Immediate, extraordinary actions needed to prevent disaster.",
+        8: "Extremely high safety impact. Cybersecurity very likely to cause extreme harm, mass casualties, irreversible damage. Unprecedented action required to avert catastrophe.",
+        9: "Critical safety impact. Cybersecurity on edge of causing catastrophe. High risk to life, assets, environment. Immediate, unprecedented action required.",
+        10: "Imminent catastrophic safety impact. Cybersecurity on brink of unparalleled disaster. Catastrophic harm, mass casualties, irreversible damage imminent. Swift, decisive action only hope."
+    }
+
+    input_number = int(input_number)
+    definition = safety_definitions.get(input_number, "Invalid input number")
+
+    return definition
+
+
+def life_definition(input_number):
+    life_definitions = {
+        1: "Negligible Danger to Life - The situation poses minimal danger to human life. Any potential threats are easily manageable, with little to no risk of causing harm.",
+        2: "Low, Manageable Danger to Life - There are slight risks to human life, but they can be effectively managed through standard procedures. The risks are not likely to escalate to critical levels.",
+        3: "Moderate Danger to Life - The scenario presents noticeable risks to human life. Proper mitigation measures are required to minimize these risks and ensure the safety of individuals.",
+        4: "Significant Danger to Life - The situation significantly endangers human life, potentially leading to injuries or fatalities. Immediate actions are necessary to prevent these dangers from worsening.",
+        5: "High Danger to Life - The scenario carries a high potential for causing danger to human life. Urgent and comprehensive measures are needed to avert harm and ensure the safety of individuals..",
+        6: "Very High Danger to Life - The danger to human life is very high, with a substantial risk of severe injuries or loss of life. Swift and robust actions are imperative to prevent or mitigate such dangers.",
+        7: "Severe Danger to Life - The situation has the potential to cause severe danger to human life, including multiple casualties. Immediate and extraordinary measures are essential to prevent a catastrophic outcome.",
+        8: "Extremely High Danger to Life - The danger to human life is at an extremely high level, nearing critical stages. Catastrophic consequences, such as mass casualties, are possible. Unprecedented actions are vital to prevent disaster.",
+        9: "Critical Danger to Life - The scenario is at the brink of causing a catastrophic loss of life. The risk to human life is critical, requiring immediate, comprehensive, and extraordinary actions to prevent imminent disaster.",
+        10: "Imminent Catastrophic Danger to Life - The situation is at the highest level of danger to human life. Catastrophic loss of life is imminent, with potential for widespread devastation. Only swift and decisive actions can avert this unparalleled disaster."
+    }
+
+    input_number = int(input_number)
+    definition = life_definitions.get(input_number, "Invalid input number")
+
+    return definition
+
+
+def environment_definition(input_number):
+    environment_definitions = {
+        1: "Minimal Environmental Impact - The scenario has negligible effects on the local environment. Any potential impacts are minor and easily manageable, with no significant harm expected.",
+        2: "Low to Manageable Environmental Impact - There are slight environmental concerns, but they can be addressed using standard procedures. The impacts are not likely to escalate to a level that would cause substantial harm.",
+        3: "Moderate Environmental Impact - The scenario noticeably affects the local environment, potentially causing minor harm. Mitigation measures are required to minimize these impacts and prevent further deterioration.",
+        4: "Significant Environmental Impact - The situation significantly impacts the local environment, posing notable risks to its well-being. Swift actions are necessary to prevent further harm and ensure effective mitigation.",
+        5: "High Environmental Impact - The scenario presents a high potential for causing substantial harm to the local environment. Urgent and comprehensive measures are essential to mitigate impacts and prevent lasting damage.",
+        6: "Very High Environmental Impact - The impact on the local environment is very high, risking severe harm and degradation. Swift and robust actions are imperative to prevent or mitigate these impacts.",
+        7: "Severe Environmental Impact - The scenario has the potential to cause severe environmental consequences, with lasting damage and potential harm to ecosystems. Immediate and extraordinary measures are necessary to avert disaster.",
+        8: "Extremely High Environmental Impact - The situation poses an extremely high risk to the local environment, approaching critical levels. Catastrophic environmental consequences, such as irreversible damage, are possible. Unprecedented actions are crucial to prevent a catastrophe.",
+        9: "Critical Environmental Impact - The scenario is on the edge of causing a catastrophic environmental event. The risk to the local environment is critical, demanding immediate, comprehensive, and unprecedented actions to prevent imminent disaster.",
+        10: "Imminent Catastrophic Environmental Impact - The scenario is at the highest level of environmental impact. Catastrophic environmental consequences are imminent, with the potential for widespread devastation. Swift and decisive actions are the only hope to prevent this unparalleled disaster."
+    }
+
+    input_number = int(input_number)
+    definition = environment_definitions.get(input_number, "Invalid input number")
+
+    return definition
+
+
+def supply_definition(input_number):
+    supply_definitions = {
+        1: "Minimal Impact on Supply Chain - The scenario has negligible effects on the supply chain. Any potential impacts are minor and easily manageable, with no significant disruptions expected.",
+        2: "Low to Manageable Impact on Supply Chain - There are slight concerns in the supply chain, but they can be resolved using standard procedures. Impacts are not likely to escalate to a level causing significant disruption.",
+        3: "Moderate Impact on Supply Chain - The scenario noticeably affects the supply chain, possibly causing moderate disruptions. Mitigation measures are necessary to minimize these impacts and ensure operational continuity.",
+        4: "Moderate to High Impact on Supply Chain - Significant impact on the supply chain is observed, risking notable disruptions. Swift actions are necessary to prevent escalation and ensure efficient mitigation.",
+        5: "High Impact on Supply Chain - The scenario presents a high potential for causing substantial disruption to the supply chain. Urgent and comprehensive measures are essential to mitigate impacts and prevent extensive disruptions.",
+        6: "High to Severe Impact on Supply Chain - The impact on the supply chain is very high, risking severe disruptions and potential breakdowns. Swift and robust actions are imperative to prevent or mitigate these impacts.",
+        7: "Severe Impact on Supply Chain - The scenario has the potential to cause severe disruptions in the supply chain, potentially leading to widespread breakdowns. Immediate and extraordinary measures are required to prevent a catastrophe.",
+        8: "Severe to Critical Impact on Supply Chain - An extremely high risk of supply chain disruption is present, nearing critical levels. Catastrophic consequences, such as widespread shortages, are possible. Unprecedented actions are crucial to prevent disaster.",
+        9: "Critical Impact on Supply Chain - The scenario is on the verge of causing a catastrophic supply chain disruption. The risk is critical, demanding immediate, comprehensive, and unprecedented actions to prevent imminent disaster.",
+        10: "Extremely Critical Impact on Supply Chain - The scenario is at the highest level of impact on the supply chain. Catastrophic supply chain disruptions are imminent, with potential for widespread shortages. Swift and decisive actions are the only hope to prevent this unparalleled disaster."
+    }
+
+    input_number = int(input_number)
+    definition = supply_definitions.get(input_number, "Invalid input number")
+
+    return definition
+
+
+def production_definition(input_number):
+    production_definitions = {
+        1: "Minimal Impact on Production - The scenario has negligible effects on production. Any potential impacts are minor and easily manageable, with no significant disruption expected.",
+        2: "Low to Manageable Impact on Production - There are slight concerns in production, but they can be resolved using standard procedures. Impacts are not likely to escalate to a level causing substantial disruption.",
+        3: "Moderate Impact on Production - The scenario noticeably affects production, possibly causing moderate disruptions. Mitigation measures are necessary to minimize these impacts and ensure operational continuity.",
+        4: "Moderate to High Impact on Production - Significant impact on production is observed, risking notable disruptions. Swift actions are necessary to prevent escalation and ensure efficient mitigation.",
+        5: "High Impact on Production - The scenario presents a high potential for causing substantial disruption to production. Urgent and comprehensive measures are essential to mitigate impacts and prevent extensive disruptions.",
+        6: "High to Severe Impact on Production - The impact on production is very high, risking severe disruptions and potential shutdowns. Swift and robust actions are imperative to prevent or mitigate these impacts.",
+        7: "Severe Impact on Production - The scenario has the potential to cause severe disruptions in production, potentially leading to widespread shutdowns. Immediate and extraordinary measures are required to prevent a catastrophe.",
+        8: "Severe to Critical Impact on Production - An extremely high risk of production disruption is present, nearing critical levels. Catastrophic consequences, such as widespread shutdowns, are possible. Unprecedented actions are crucial to prevent disaster.",
+        9: "Critical Impact on Production - The scenario is on the verge of causing a catastrophic production disruption. The risk is critical, demanding immediate, comprehensive, and unprecedented actions to prevent imminent disaster.",
+        10: "Extremely Critical Impact on Production - The scenario is at the highest level of impact on production. Catastrophic production disruptions are imminent, with potential for widespread shutdowns. Swift and decisive actions are the only hope to prevent this unparalleled disaster."
+    }
+
+    input_number = int(input_number)
+    definition = production_definitions.get(input_number, "Invalid input number")
+
+    return definition
+
+
+def data_definition(input_number):
+    data_definitions = {
+        1: "Minimal Impact on Data and Intellectual Property - The scenario has negligible effects on data and intellectual property. Any potential impacts are minor and easily manageable, with no significant harm to assets or proprietary information.",
+        2: "Low to Manageable Impact on Data and Intellectual Property - There are slight concerns regarding data and intellectual property, but they can be resolved using standard procedures. Impacts are not likely to escalate to a level causing substantial harm.",
+        3: "Moderate Impact on Data and Intellectual Property - The scenario noticeably affects data and intellectual property, possibly causing moderate loss or compromise. Mitigation measures are necessary to minimize these impacts and ensure data security.",
+        4: "Moderate to High Impact on Data and Intellectual Property - Significant impact on data and intellectual property is observed, risking notable loss or compromise. Swift actions are necessary to prevent escalation and ensure efficient mitigation.",
+        5: "High Impact on Data and Intellectual Property - The scenario presents a high potential for causing substantial loss or compromise of data and intellectual property. Urgent and comprehensive measures are essential to mitigate impacts and prevent extensive data breaches.",
+        6: "High to Severe Impact on Data and Intellectual Property - The impact on data and intellectual property is very high, risking severe loss or compromise. Swift and robust actions are imperative to prevent or mitigate these impacts.",
+        7: "Severe Impact on Data and Intellectual Property - The scenario has the potential to cause severe loss or compromise of data and intellectual property, potentially leading to significant breaches. Immediate and extraordinary measures are required to prevent a catastrophe.",
+        8: "Severe to Critical Impact on Data and Intellectual Property - An extremely high risk of data and intellectual property compromise is present, nearing critical levels. Catastrophic consequences, such as widespread breaches, are possible. Unprecedented actions are crucial to prevent disaster.",
+        9: "Critical Impact on Data and Intellectual Property - The scenario is on the verge of causing catastrophic loss or compromise of data and intellectual property. The risk is critical, demanding immediate, comprehensive, and unprecedented actions to prevent imminent disaster.",
+        10: "Extremely Critical Impact on Data and Intellectual Property - The scenario is at the highest level of impact on data and intellectual property. Catastrophic loss or compromise of data and intellectual property is imminent, with potential for widespread breaches. Swift and decisive actions are the only hope to prevent this unparalleled disaster."
+    }
+
+    input_number = int(input_number)
+    definition = data_definitions.get(input_number, "Invalid input number")
+
+    return definition
+
+
+def finance_definition(input_number):
+    finance_definitions = {
+        1: "Minimal Financial Impact - The scenario has negligible effects on finances. Any potential financial impacts are minor and easily manageable, with no significant loss expected.",
+        2: "Low to Manageable Financial Impact - There are slight financial concerns, but they can be resolved using standard procedures. Impacts are not likely to escalate to a level causing substantial financial loss.",
+        3: "Moderate Financial Impact - The scenario noticeably affects finances, possibly causing moderate losses. Mitigation measures are necessary to minimize these impacts and ensure financial stability.",
+        4: "Moderate to High Financial Impact - Significant financial impact is observed, risking notable losses. Swift actions are necessary to prevent escalation and ensure efficient mitigation.",
+        5: "High Financial Impact - The scenario presents a high potential for causing substantial financial losses. Urgent and comprehensive measures are essential to mitigate impacts and prevent extensive financial setbacks.",
+        6: "High to Severe Financial Impact - The financial impact is very high, risking severe losses. Swift and robust actions are imperative to prevent or mitigate these impacts.",
+        7: "Severe Financial Impact - The scenario has the potential to cause severe financial consequences, potentially leading to significant setbacks. Immediate and extraordinary measures are required to prevent a catastrophe.",
+        8: "Severe to Critical Financial Impact - An extremely high risk of financial losses is present, nearing critical levels. Catastrophic consequences, such as widespread financial turmoil, are possible. Unprecedented actions are crucial to prevent disaster.",
+        9: "Critical Financial Impact - The scenario is on the verge of causing catastrophic financial consequences. The risk is critical, demanding immediate, comprehensive, and unprecedented actions to prevent imminent financial disaster.",
+        10: "Extremely Critical Financial Impact - The scenario is at the highest level of financial impact. Catastrophic financial consequences are imminent, with potential for widespread financial collapse. Swift and decisive actions are the only hope to prevent this unparalleled disaster."
+    }
+
+    input_number = int(input_number)
+    definition = finance_definitions.get(input_number, "Invalid input number")
+
+    return definition
+
+
+def reputation_definition(input_number):
+    reputation_definitions = {
+        1: "Minimal Reputation Impact - The scenario has negligible effects on reputation. Any potential reputation impacts are minor and easily manageable, with no significant harm expected to the organization's image.",
+        2: "Low to Manageable Reputation Impact - There are slight reputation concerns, but they can be resolved using standard procedures. Impacts are not likely to escalate to a level causing substantial damage to the organization's reputation.",
+        3: "Moderate Reputation Impact - The scenario noticeably affects reputation, possibly causing moderate damage. Mitigation measures are necessary to minimize these impacts and ensure the organization's positive image.",
+        4: "Moderate to High Reputation Impact - Significant reputation impact is observed, risking notable damage to the organization's image. Swift actions are necessary to prevent escalation and ensure efficient mitigation.",
+        5: "High Reputation Impact - The scenario presents a high potential for causing substantial damage to the organization's reputation. Urgent and comprehensive measures are essential to mitigate impacts and prevent extensive reputation damage.",
+        6: "High to Severe Reputation Impact - The reputation impact is very high, risking severe damage. Swift and robust actions are imperative to prevent or mitigate these impacts.",
+        7: "Severe Reputation Impact - The scenario has the potential to cause severe reputation damage, potentially leading to significant harm to the organization's image. Immediate and extraordinary measures are required to prevent a catastrophe.",
+        8: "Severe to Critical Reputation Impact - An extremely high risk of reputation damage is present, nearing critical levels. Catastrophic consequences, such as widespread negative perception, are possible. Unprecedented actions are crucial to prevent disaster.",
+        9: "Critical Reputation Impact - The scenario is on the verge of causing catastrophic reputation damage. The risk is critical, demanding immediate, comprehensive, and unprecedented actions to prevent imminent reputation disaster.",
+        10: "Extremely Critical Reputation Impact - The scenario is at the highest level of reputation impact. Catastrophic reputation damage is imminent, with potential for widespread negative perception. Swift and decisive actions are the only hope to prevent this unparalleled disaster."
+    }
+
+    input_number = int(input_number)
+    definition = reputation_definitions.get(input_number, "Invalid input number")
+
+    return definition
+
+
+def regulation_definition(input_number):
+    regulatory_definitions = {
+        1: "Minimal Regulatory Impact - The scenario has negligible effects on regulatory compliance. Any potential regulatory impacts are minor and easily manageable, with no significant violations expected.",
+        2: "Low to Manageable Regulatory Impact - There are slight regulatory concerns, but they can be resolved using standard procedures. Impacts are not likely to escalate to a level causing substantial compliance violations.",
+        3: "Moderate Regulatory Impact - The scenario noticeably affects regulatory compliance, possibly causing moderate violations. Mitigation measures are necessary to minimize these impacts and ensure adherence to regulations.",
+        4: "Moderate to High Regulatory Impact - Significant regulatory impact is observed, risking notable compliance violations. Swift actions are necessary to prevent escalation and ensure efficient mitigation.",
+        5: "High Regulatory Impact - The scenario presents a high potential for causing substantial compliance violations. Urgent and comprehensive measures are essential to mitigate impacts and prevent extensive regulatory breaches.",
+        6: "High to Severe Regulatory Impact - The regulatory impact is very high, risking severe compliance violations. Swift and robust actions are imperative to prevent or mitigate these impacts.",
+        7: "Severe Regulatory Impact - The scenario has the potential to cause severe regulatory consequences, potentially leading to significant non-compliance issues. Immediate and extraordinary measures are required to prevent a catastrophe.",
+        8: "Severe to Critical Regulatory Impact - An extremely high risk of regulatory violations is present, nearing critical levels. Catastrophic consequences, such as widespread non-compliance, are possible. Unprecedented actions are crucial to prevent disaster.",
+        9: "Critical Regulatory Impact - The scenario is on the verge of causing catastrophic regulatory violations. The risk is critical, demanding immediate, comprehensive, and unprecedented actions to prevent imminent regulatory disaster.",
+        10: "Extremely Critical Regulatory Impact - The scenario is at the highest level of regulatory impact. Catastrophic regulatory violations are imminent, with potential for widespread non-compliance. Swift and decisive actions are the only hope to prevent this unparalleled disaster."
+    }
+
+    input_number = int(input_number)
+    definition = regulatory_definitions.get(input_number, "Invalid input number")
+
+    return definition
+
+
+def moderate_content(content):
+    """
+    Utilizes the OpenAI moderation API to review a block of user content.
+
+    Parameters:
+    - content (str): The user content to be moderated.
+
+    Returns:
+    - str: 'pass' if the content is acceptable, 'fail' otherwise.
+    """
+
+    # OpenAI API endpoint for content moderation
+    OPENAI_MODERATION_ENDPOINT = "https://api.openai.com/v1/moderations"
+
+    # Your OpenAI API key
+    OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')
+
+    content_context = "In the context of a cybersecurity risk assessment: " + content
+
+    print(content_context)
+
+    headers = {
+        "Authorization": f"Bearer {OPENAI_API_KEY}",
+        "Content-Type": "application/json"
+    }
+
+    data = {
+        "input": content_context
+    }
+
+    response = requests.post(OPENAI_MODERATION_ENDPOINT, headers=headers, json=data)
+    result = response.json()
+
+    print(response)
+    print(result)
+
+    # Check the moderation result and return 'pass' or 'fail'
+    if "results" in result and len(result["results"]) > 0:
+        flagged = result["results"][0]["flagged"]
+        if flagged:
+            return "fail"
+        else:
+            return "pass"
+    else:
+        # In case of an unexpected response, consider it a fail for safety
+        return "fail"

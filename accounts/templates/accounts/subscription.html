@@ -1,0 +1,299 @@
+{% load static %}
+<!DOCTYPE html>
+	<html lang="zxx" class="no-js">
+	<head>
+		<!-- Mobile Specific Meta -->
+		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+		<!-- Favicon-->
+		<link rel="shortcut icon" href="img/fav.png">
+		<!-- Author Meta -->
+		<meta name="author" content="codepixer">
+		<!-- Meta Description -->
+		<meta name="description" content="">
+		<!-- Meta Keyword -->
+		<meta name="keywords" content="">
+		<!-- meta character set -->
+		<meta charset="UTF-8">
+		<!-- Site Title -->
+		<title>Industry</title>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-/bQdsTh/da6pkI1MST/rWKFNjaCP5gBSY4sEBT38Q/9RBh9AH40zEOg7Hlq2THRZ" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <link href="https://fonts.googleapis.com/css?family=Poppins:100,200,400,300,500,600,700" rel="stylesheet">
+        <!--
+        CSS
+        ============================================= -->
+        <link rel="stylesheet" href="{% static 'css/linearicons.css' %}">
+
+        <link rel="stylesheet" href="{% static 'css/font-awesome.min.css' %}">
+        <link rel="stylesheet" href="{% static 'css/bootstrap.css' %}">
+        <link rel="stylesheet" href="{% static 'css/magnific-popup.css' %}">
+        <link rel="stylesheet" href="{% static 'css/nice-select.css' %}">
+        <link rel="stylesheet" href="{% static 'css/hexagons.min.css' %}">
+        <link rel="stylesheet" href="{% static 'css/animate.min.css' %}">
+        <link rel="stylesheet" href="{% static 'css/owl.carousel.css' %}">
+        <link rel="stylesheet" href="{% static 'css/main.css' %}">
+    <title>Subscription</title>
+    <script>
+        function updateSubscriptionDetails(subscriptionId) {
+            // Fetch subscription details using AJAX and update the displayed details
+            fetch(`/accounts/get_subscription_details/${subscriptionId}/`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('max_users').innerText = data.max_users || 'Unlimited';
+                    document.getElementById('duration').innerText = data.duration;
+                    document.getElementById('description').innerText = data.description;
+                    document.getElementById('price').innerText = `$${data.price.toFixed(2)}`;
+                });
+        }
+    </script>
+
+        <style>
+
+        #email-status {
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        </style>
+</head>
+<body>
+<header id="header">
+<div class="header-top">
+
+		  			<div class="container">
+				  		<div class="row">
+				  			<div class="col-lg-6 col-sm-6 col-4 header-top-left no-padding">
+				  				<ul>
+									<li><a href="#"><i class="fa fa-facebook"></i></a></li>
+									<li><a href="#"><i class="fa fa-twitter"></i></a></li>
+									<li><a href="#"><i class="fa fa-dribbble"></i></a></li>
+									<li><a href="#"><i class="fa fa-behance"></i></a></li>
+				  				</ul>
+				  			</div>
+				  			<div class="col-lg-6 col-sm-6 col-8 header-top-right no-padding">
+				  				<a href="mailto:support@iotarisk.com">support@iotarisk.com</a>
+				  			</div>
+				  		</div>
+		  			</div>
+				</div>
+    <div class="container main-menu">
+        <div class="row align-items-center justify-content-between d-flex">
+          <div id="logo">
+            <a href="login.html"><img src="{% static 'images/iota_small_whitebg.png' %} " style="width: 70px" alt=""></a>
+          </div>
+          <nav id="nav-menu-container">
+              <ul class="nav-menu">
+                  <li class="menu-active"><a href="#">Home</a></li>
+                  <li><a href="{% url 'accounts:about' %}">About</a></li>
+                  <li><a href="faq.html">Product</a></li>
+                  <li><a href="{% url 'accounts:contact' %}">Contact</a></li>
+                  <li><a href="#" data-toggle="modal" data-target="#loginModal">Customer Login</a></li>
+
+
+                </ul>
+          </nav><!-- #nav-menu-container -->
+        </div>
+    </div>
+  </header><!-- #header -->
+		<!-- start banner Area -->
+    <section class="banner-area relative" id="home">
+        <div class="overlay overlay-bg"></div>
+        <div class="container">
+            <div class="row d-flex align-items-center justify-content-center">
+                <div class="about-content col-lg-12">
+                    <h1 class="text-white">
+                        Purchase iOTa
+                    </h1>
+                    <p class="text-white link-nav"><a href="login.html">Home </a>  <span class="lnr lnr-arrow-right"></span>Subscribe to iOTa</p>
+                    <p class="text-white">Select an Individual or Organization subscription from one of the available options below</p>
+                    <p class="text-white">Pay online for immediate access</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- End banner Area -->
+
+<form method="post" action="{% url 'accounts:subscription_view' %}">
+    {% csrf_token %}
+    <div class = row>
+        <div class="col-md-3"></div>
+        <div class="col-md-4">
+
+                    <div class="mb-3"><h3>Select Subscription and Enter Details</h3></div>
+                    <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                        <div class="card-body">
+                            <label for="{{ form.email.id_for_label }}" class="form-label">Email Address (will be your username)</label>
+                            <input type="email" class="form-control" id="{{ form.email.id_for_label }}" name="{{ form.email.name }}" value="{{ form.email.value|default:'' }}">
+                            <span id="email-status"></span> <!-- Placeholder for the checkmark -->
+                        </div>
+                    </div>
+                    <script>
+                        function checkAllConditions() {
+                            var emailValidated = $("#email-status").html() === "✓";
+                            var organizationValidated = !$("#org-status").html().includes("✗");
+                            var termsChecked = document.getElementById('acknowledgeTerms').checked;
+                            var firstName = $("#{{ form.first_name.id_for_label }}").val();
+                            var lastName = $("#{{ form.last_name.id_for_label }}").val();
+                            var organizationName = $("#{{ form.organization_name.id_for_label }}").val();
+                            var subscriptionType = $("#{{ form.subscription_type.id_for_label }}").val();
+
+                            if (emailValidated && termsChecked && firstName && lastName && organizationValidated && subscriptionType) {
+                                document.getElementById('paymentButton').disabled = false;
+                            } else {
+                                document.getElementById('paymentButton').disabled = true;
+                            }
+                        }
+
+                        $(document).ready(function() {
+                            $("#{{ form.email.id_for_label }}").blur(function() {
+                            var email = $(this).val();
+                            // Validate the email format
+                                if (!validateEmail(email)) {
+                                    $("#email-status").html("Invalid email format").css("color", "red");
+                                    checkAllConditions();
+                                    return;  // Exit early if the email format is not valid
+                                }
+                            $.ajax({
+                                url: '/accounts/check_email/',
+                                data: {
+                                    'email': email
+                                },
+                                dataType: 'json',
+                                success: function(data) {
+                                    if (data.is_taken) {
+                                        $("#email-status").html(""); // Clear any previous checkmarks or messages
+                                        alert("A user with this email address already exists.");
+                                    } else {
+                                        $("#email-status").html("✓").css("color", "green"); // Display a green checkmark
+                                    }
+                                     checkAllConditions();
+                                }
+                            });
+                        });
+
+                        });
+
+                        function validateEmail(email) {
+                            var re = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+                            return re.test(email);
+                        }
+                        </script>
+
+                    <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                        <div class="card-body">
+                        <label for="{{ form.first_name.id_for_label }}" class="form-label">First Name</label>
+                        <input type="text" class="form-control" id="{{ form.first_name.id_for_label }}" name="{{ form.first_name.name }}" value="{{ form.first_name.value|default:'' }}">
+                    </div>
+                    </div>
+
+                    <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                        <div class="card-body">
+                        <label for="{{ form.last_name.id_for_label }}" class="form-label">Last Name</label>
+                        <input type="text" class="form-control" id="{{ form.last_name.id_for_label }}" name="{{ form.last_name.name }}" value="{{ form.last_name.value|default:'' }}">
+                    </div>
+                    </div>
+
+                    <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                        <div class="card-body">
+                        <label for="{{ form.organization_name.id_for_label }}" class="form-label">Organization Name</label>
+                        <input type="text" class="form-control" id="{{ form.organization_name.id_for_label }}" name="{{ form.organization_name.name }}" value="{{ form.organization_name.value|default:'' }}">
+                        <span id="org-status"></span> <!-- Placeholder for the checkmark -->
+                        </div>
+                    </div>
+                    <script>
+                        $(document).ready(function() {
+                            $("#{{ form.organization_name.id_for_label }}").blur(function() {
+                                var organizationName = $(this).val();
+                                $.ajax({
+                                    url: '/accounts/check_organization/',
+                                    data: {
+                                        'organization_name': organizationName
+                                    },
+                                    dataType: 'json',
+                                    success: function(data) {
+                                        if (data.is_taken) {
+                                            alert("An organization with this name already exists.");
+                                        } else {
+                                            $("#org-status").html("✓").css("color", "green");
+                                        }
+                                        checkAllConditions();
+                                    }
+                                });
+                            });
+                        });
+
+                    </script>
+
+                    <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                        <div class="card-body">
+                            <label for="{{ form.organization_address_for_label }}" class="form-label">Address</label>
+                            <textarea class="form-control" id="{{ form.organization_address_for_label }}" name="{{ form.organization_address.name }}" value="{{ form.organization_address.value|default:'' }}" rows="3" style="resize: none"></textarea>
+                        </div>
+                    </div>
+                    <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                        <div class="card-body">
+                        <label for="{{ form.subscription_type.id_for_label }}" class="form-label">Select Subscription Type</label>
+                        <select class="form-select" id="{{ form.subscription_type.id_for_label }}" name="{{ form.subscription_type.name }}" onchange="updateSubscriptionDetails(this.value);">
+                            {% for choice in form.subscription_type.field.choices %}
+                                <option value="{{ choice.0 }}" {% if form.subscription_type.value == choice.0 %}selected{% endif %}>{{ choice.1 }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    </div>
+
+        </div>
+        <div class="col-md-2">
+            <br><br>
+            <div id="subscription_details">
+                    <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                        <div class="card-body">
+                    <p><strong>Max Users:</strong> <span id="max_users"></span></p>
+                    <p><strong>Duration (days):</strong> <span id="duration"></span></p>
+                    <p><strong>Description:</strong> <span id="description"></span></p>
+                    <p><strong>Price:</strong> <span id="price"></span></p>
+                        </div>
+                    </div>
+                </div>
+            <button type="button" class="btn btn-link" data-bs-toggle="modal" data-bs-target="#termsModal">
+                View Terms and Conditions
+            </button>
+            <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" value="" id="acknowledgeTerms" required>
+                <label class="form-check-label" for="acknowledgeTerms">
+                    I have read and agree to the Terms and Conditions.
+                </label>
+            </div>
+            <script>
+                document.getElementById('acknowledgeTerms').addEventListener('change', checkAllConditions);
+                 $("#{{ form.first_name.id_for_label }}, #{{ form.last_name.id_for_label }}, #{{ form.organization_name.id_for_label }}, #{{ form.subscription_type.id_for_label }}").on('input', checkAllConditions);
+
+
+            </script>
+            <button type="submit" class="btn btn-primary" id="paymentButton" disabled>Proceed to Payment</button>
+
+
+
+        </div>
+        <div class="col-md-3"></div>
+    </div>
+</form>
+
+<div class="modal fade" id="termsModal" tabindex="-1" aria-labelledby="termsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="termsModalLabel">Terms and Conditions</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                {% include "accounts/Terms.html" %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

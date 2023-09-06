@@ -118,6 +118,31 @@ fetch('https://restcountries.com/v3.1/all')
         console.error("There was an error fetching the country list:", error);
     });
 </script>
+<script>
+    //disable all controls and reset local session variable when form loads
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById("txtTitle").setAttribute('disabled', true);
+        document.getElementById("txtLeader").setAttribute('disabled', true);
+        document.getElementById("selIndustry").setAttribute('disabled', true);
+        document.getElementById("txtUnit").setAttribute('disabled', true);
+        document.getElementById("txtStartDate").setAttribute('disabled', true);
+        document.getElementById("txtAddress").setAttribute('disabled', true);
+        document.getElementById("txtFacility").setAttribute('disabled', true);
+        document.getElementById("txtLeaderEmail").setAttribute('disabled', true);
+        document.getElementById("selFacilityType").setAttribute('disabled', true);
+        document.getElementById("selZone").setAttribute('disabled', true);
+        document.getElementById("txtEndDate").setAttribute('disabled', true);
+        document.getElementById("countrySelector").setAttribute('disabled', true);
+        document.getElementById("txtSafetySummary").setAttribute('disabled', true);
+        document.getElementById("txtChemical").setAttribute('disabled', true);
+        document.getElementById("txtPhysical").setAttribute('disabled', true);
+        document.getElementById("txtOther").setAttribute('disabled', true);
+         $('#risk-assessment-btn').prop('disabled', true);
+         $('#btnformSubmit').prop('disabled', true);
+         $('#scenarioButton').prop('disabled', true);
+});
+</script>
+
 <nav class="navbar navbar-expand-lg navbar-scroll fixed-top shadow-0 border-bottom border-dark rounded">
   <div class="container-fluid d-flex justify-content-between">
    <a class="navbar-brand" href="{% url 'OTRisk:dashboardhome' %}"><img src="/static/images/logo1-2.jpg" style="height: 140px; width: 140px" class="navbar-logo" alt="">  </a>
@@ -138,13 +163,15 @@ fetch('https://restcountries.com/v3.1/all')
         <li class="nav-item">
           <a class="nav-link" href="#" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Reports</a>
         </li>
-        <li class="nav-item dropdown">
+                <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                 <i class="bi bi-diagram-3"></i> Admin
               </a>
               <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
                   <li><a  class="dropdown-item" href="{% url 'OTRisk:add_scenario' %}">Scenario Manager</a></li>
                   <li><a  class="dropdown-item" href="{% url 'OTRisk:add_consequence' %}">Consequence Manager</a></li>
+                  <li><a  class="dropdown-item" href="{% url 'OTRisk:admin_users' %}">Admin Users</a></li>
+
               </ul>
 
         </li>
@@ -253,6 +280,10 @@ fetch('https://restcountries.com/v3.1/all')
                         sessionStorage.setItem('sessionFacility', data.facility);
                         sessionStorage.setItem('sessionCountry', data.country);
 
+                        // Enable the controls
+                        $('#txtTitle, #txtLeader, #txtUnit, #txtStartDate, #txtAddress, #txtFacility, #txtLeaderEmail, #txtEndDate, #txtSafetySummary, #txtChemical, #txtPhysical, #txtOther, #selFacilityType, #selIndustry, #selZone, #countrySelector, #btnformSubmit, #risk-assessment-btn, #scenarioButton').prop('disabled', false);
+                        $('#btnformSubmit').prop('disabled', false);
+
 
                     }
                 });
@@ -303,7 +334,7 @@ fetch('https://restcountries.com/v3.1/all')
         </div>
         <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
             <div class="card-body">
-                <label for="txtLeader">Leader</label><input type="text" class="form-control" name="txtLeader" id="txtLeader" value="{{ current_pha_header.PHALeader }} "required>
+                <label for="txtLeader">Leader</label><input type="text" class="form-control" name="txtLeader" id="txtLeader" value="{{ current_pha_header.PHALeader }}" required>
             </div>
         </div>
         <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
@@ -506,6 +537,9 @@ fetch('https://restcountries.com/v3.1/all')
 
                         // Reset select dropdowns
                         $('#selIndustry, #selFacilityType, #selZone').prop('selectedIndex', 0);
+
+                        // Enable the controls
+                        $('#txtTitle, #txtLeader, #txtUnit, #txtStartDate, #txtAddress, #txtFacility, #txtLeaderEmail, #txtEndDate, #txtSafetySummary, #txtChemical, #txtPhysical, #txtOther, #selFacilityType, #selIndustry, #selZone, #countrySelector, #btnformSubmit, #risk-assessment-btn').prop('disabled', false);
                         $('#btnformSubmit').prop('disabled', false);
 
                         //reset session variables

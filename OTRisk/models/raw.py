@@ -37,7 +37,11 @@ class RAWorksheet(models.Model):
     RADate = models.CharField(max_length=255)
     RASynopsis = models.CharField(max_length=255)
     UserID = models.IntegerField()
-    StatusFlag = models.CharField(max_length=25)
+    STATUS_CHOICES = [
+        ("Open","Open"),
+        ("Closed", "Closed"),
+    ]
+    StatusFlag = models.CharField(max_length=5, choices=STATUS_CHOICES, default='Open')
     RATrigger = models.CharField(max_length=25)
     AssessorName = models.CharField(max_length=50)
     BusinessUnit = models.CharField(max_length=50)
@@ -48,6 +52,9 @@ class RAWorksheet(models.Model):
     industry = models.CharField(max_length=30)
     cyberPHAID = models.IntegerField(default=0)
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE)
+    revenue = models.IntegerField()
+    insurance = models.IntegerField()
+    deductable = models.IntegerField()
 
     class Meta:
         db_table = 'tblRAWorksheet'
@@ -93,6 +100,17 @@ class RAWorksheetScenario(models.Model):
     justifyEnvironment = models.TextField()
     justifyRegulation = models.TextField()
     justifyData = models.TextField()
+    justifySupply = models.TextField()
+    event_cost_low = models.IntegerField()
+    event_cost_high = models.IntegerField()
+    event_cost_median = models.IntegerField()
+    OUTAGE_CHOICES = [
+        ("Yes", "Yes"),
+        ("No", "No"),
+        ("N/A", "N/A"),
+    ]
+    outage = models.CharField(max_length=3, choices=OUTAGE_CHOICES, default='N/A')
+    outageLength = models.IntegerField(default=0)
 
     class Meta:
         db_table = 'tblRAWorksheetScenario'

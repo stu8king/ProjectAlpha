@@ -48,6 +48,8 @@
         <script src="{% static 'js/waypoints.min.js' %}"></script>
         <script src="{% static 'js/mail-script.js' %}"></script>
         <script src="{% static 'js/main.js' %}"></script>
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
 
          {% load django_bootstrap5 %}
         {% bootstrap_css %}
@@ -61,14 +63,12 @@
             <div class="row">
                 <div class="col-lg-6 col-sm-6 col-4 header-top-left no-padding">
                     <ul>
-                        <li><a href="#"><i class="fa fa-facebook"></i></a></li>
                         <li><a href="#"><i class="fa fa-twitter"></i></a></li>
                         <li><a href="#"><i class="fa fa-dribbble"></i></a></li>
                         <li><a href="#"><i class="fa fa-behance"></i></a></li>
                     </ul>
                 </div>
                 <div class="col-lg-6 col-sm-6 col-8 header-top-right no-padding">
-                    <a href="tel:+880 012 3654 896">+880 012 3654 896</a>
                     <a href="mailto:support@iotarisk.com">support@iotarisk.com</a>
                 </div>
             </div>
@@ -83,8 +83,9 @@
             <ul class="nav-menu">
               <li class="menu-active"><a href="#">Home</a></li>
               <li><a href="{% url 'accounts:about' %}">About</a></li>
-              <li><a href="services.html">Product</a></li>
-              <li><a href="contact.html">Contact</a></li>
+              <li><a href="faq.html">Product</a></li>
+              <li><a href="{% url 'accounts:contact' %}">Contact</a></li>
+                <li><a href="{% url 'accounts:subscription_view' %}">Register</a></li>
               <li><a href="#" data-toggle="modal" data-target="#loginModal">Customer Login</a></li>
 
 
@@ -106,7 +107,7 @@
                 <p class="text-white">
                     Dedicated risk assessment tools aligned with industry best practices and standards from around the world. Includes multi-scenario Cybersecurity Process and Hazards Assessment (PHA) and a multi-scenario risk assessment worksheet. Complete focus on environmental health and safety, with quantifiable event costs and risk ratings produced from real-world machine learning algorithms.
                 </p>
-                <a href="#" class="primary-btn header-btn text-uppercase">Get Started</a>
+                <a href="#" class="primary-btn header-btn text-uppercase" data-toggle="modal" data-target="#loginModal">Get Started</a>
             </div>
         </div>
     </div>

@@ -6,6 +6,14 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 
+class ActiveUserSession(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    session_key = models.CharField(max_length=40)
+
+    class Meta:
+        db_table = 'accounts_activeusersession'
+
+
 class customer(models.Model):
     user = models.OneToOneField(User, null=True, on_delete=models.CASCADE, related_name='customer')
     customer_name = models.CharField(max_length=255)
@@ -19,12 +27,29 @@ class customer(models.Model):
 
 
 class SubscriptionType(models.Model):
+    USER_TYPE_CHOICES = [
+        ('Individual', 'Individual'),
+        ('Organization', 'Organization')
+    ]
+
     name = models.CharField(max_length=255)
     description = models.TextField(null=True, blank=True)
-    # other fields as necessary, such as price, duration, etc.
+    user_type = models.CharField(max_length=50, choices=USER_TYPE_CHOICES)
+    max_assessments = models.PositiveIntegerField(null=True, blank=True)  # Null means unlimited
+    max_users = models.PositiveIntegerField(null=True, blank=True)  # Null means unlimited
+    duration = models.PositiveIntegerField(
+        help_text="Duration in days")  # For monthly, it can be 30, for annual, it can be 365
+    price = models.DecimalField(max_digits=10, decimal_places=2)  # Assuming you want to store the price as well
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        db_table = 'accounts_subscriptiontype'
 
 
 class Organization(models.Model):
+    id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=255)
     address = models.TextField(null=True, blank=True)
     subscription_type = models.ForeignKey(SubscriptionType, on_delete=models.SET_NULL, null=True, blank=True)
@@ -34,7 +59,7 @@ class Organization(models.Model):
 
     class Meta:
         db_table = 'organization'
-        managed = False
+        managed = True
 
     def __str__(self):
         return self.name
@@ -52,7 +77,7 @@ class UserProfile(models.Model):
 
     class Meta:
         db_table = 'userprofile'
-        managed = False
+        managed = True
 
 
 class FailedLoginAttempt(models.Model):

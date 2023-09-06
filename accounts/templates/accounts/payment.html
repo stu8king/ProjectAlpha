@@ -1,0 +1,278 @@
+{% load static %}
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <!-- Mobile Specific Meta -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment</title>
+    <script src="https://js.stripe.com/v3/"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-/bQdsTh/da6pkI1MST/rWKFNjaCP5gBSY4sEBT38Q/9RBh9AH40zEOg7Hlq2THRZ" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="{% static 'css/linearicons.css' %}">
+
+    <link rel="stylesheet" href="{% static 'css/font-awesome.min.css' %}">
+
+    <link rel="stylesheet" href="{% static 'css/magnific-popup.css' %}">
+    <link rel="stylesheet" href="{% static 'css/nice-select.css' %}">
+    <link rel="stylesheet" href="{% static 'css/hexagons.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/animate.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/owl.carousel.css' %}">
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
+
+    <link href="https://fonts.googleapis.com/css?family=Poppins:100,200,400,300,500,600,700" rel="stylesheet">
+<style>
+.flex-container {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start; /* Aligns items to the top */
+    height: 100%; /* Takes up full height of its parent */
+}
+
+.empty-column {
+    flex: 1; /* Takes up 25% of the container's width */
+}
+
+.centered-content {
+    flex: 2; /* Takes up 50% of the container's width */
+    max-width: 50%; /* Ensures it doesn't grow beyond 50% */
+}
+/* Add styles for input fields */
+input[type="text"], #card-number, #card-exp, #card-cvc {
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 10px;
+    width: 50%;
+    margin-bottom: 10px;
+}
+
+/* Style for the email input field */
+.email-input {
+    margin-top: 10px;
+    margin-bottom: 20px;
+}
+</style>
+</head>
+<body>
+<header id="header">
+<div class="header-top">
+
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-6 col-sm-6 col-4 header-top-left no-padding">
+                <ul>
+                    <li><a href="#"><i class="fa fa-facebook"></i></a></li>
+                    <li><a href="#"><i class="fa fa-twitter"></i></a></li>
+                    <li><a href="#"><i class="fa fa-dribbble"></i></a></li>
+                    <li><a href="#"><i class="fa fa-behance"></i></a></li>
+                </ul>
+            </div>
+            <div class="col-lg-6 col-sm-6 col-8 header-top-right no-padding">
+                <a href="mailto:support@iotarisk.com">support@iotarisk.com</a>
+            </div>
+        </div>
+    </div>
+</div>
+    <div class="container main-menu">
+        <div class="row align-items-center justify-content-between d-flex">
+          <div id="logo">
+            <a href="login.html"><img src="{% static 'images/iota_small_whitebg.png' %} " style="width: 70px" alt=""></a>
+          </div>
+          <nav id="nav-menu-container">
+              <ul class="nav-menu">
+                  <li class="menu-active"><a href="#">Home</a></li>
+                  <li><a href="{% url 'accounts:about' %}">About</a></li>
+                  <li><a href="faq.html">Product</a></li>
+                  <li><a href="{% url 'accounts:contact' %}">Contact</a></li>
+                  <li><a href="#" data-toggle="modal" data-target="#loginModal">Customer Login</a></li>
+
+
+                </ul>
+          </nav><!-- #nav-menu-container -->
+        </div>
+    </div>
+  </header><!-- #header -->
+		<!-- start banner Area -->
+    <section class="banner-area relative" id="home">
+        <div class="overlay overlay-bg"></div>
+        <div class="container">
+            <div class="row d-flex align-items-center justify-content-center">
+                <div class="about-content col-lg-12">
+                    <h1 class="text-white">
+                        Purchase iOTa
+                    </h1>
+                    <p class="text-white link-nav"><a href="login.html">Home </a>  <span class="lnr lnr-arrow-right"></span>Subscribe to iOTa</p>
+                    <p class="text-white">Enter credit card details below</p>
+                    <p class="text-white"></p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- End banner Area -->
+<div class="flex-container">
+    <div class="empty-column"></div>
+    <div class="centered-content">
+
+    {% if messages %}
+    <ul class="messages">
+        {% for message in messages %}
+            <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+    <h2>Payment for {{ subscription.name }} Subscription</h2>
+    <p>Price: ${{ subscription.price }}</p>
+    <p> {{ subscription.description }}</p>
+    <form action="{% url 'accounts:payment_view' %}" method="post" id="payment-form">
+    {% csrf_token %}
+
+    <div class="form-row email-input">
+        <label for="email">
+            Email Address (For Receipt)
+        </label>
+        <input type="email" id="email" name="email" required>
+    </div>
+    <div class="form-row">
+        <label for="card-name">
+            Name on Card
+        </label>
+        <br>
+        <input type="text" id="card-name" required>
+    </div>
+
+    <div class="form-row">
+        <label for="card-number">
+            Card Number
+        </label>
+        <div id="card-number">
+            <!-- Stripe Element for Card Number will be inserted here. -->
+        </div>
+    </div>
+
+            <div class="form-row">
+                <label for="card-exp">
+                    Expiration Date
+                </label>
+                <div id="card-exp">
+                    <!-- Stripe Element for Expiration Date will be inserted here. -->
+                </div>
+            </div>
+
+            <div class="form-row">
+                <label for="card-cvc">
+                    CVV
+                </label>
+                <div id="card-cvc">
+                    <!-- Stripe Element for CVV will be inserted here. -->
+                </div>
+            </div>
+    <script>
+
+</script>
+    <!-- Used to display form errors. -->
+    <div id="card-errors" role="alert"></div>
+
+    <button type="submit">Submit Payment</button>
+    </form>
+        </div>
+ <div class="empty-column"></div>
+</div>
+<script>
+
+    var stripe = Stripe('{{ stripe_public_key }}');
+    var elements = stripe.elements();
+
+   var cardstyle = {
+      base: {
+        fontSize: '16px',
+        color: '#32325d',
+        padding: '10px 12px',
+        '::placeholder': {
+          color: '#aab7c4'
+        }
+      },
+      invalid: {
+        color: '#fa755a',
+        iconColor: '#fa755a'
+      }
+    };
+
+    var cardNumberElement = elements.create('cardNumber', {style: cardstyle});
+    var cardExpiryElement = elements.create('cardExpiry', {style: cardstyle});
+    var cardCvcElement = elements.create('cardCvc', {style: cardstyle});
+
+
+    // Create individual elements for card number, expiration, and CVV
+    // Mount the elements to the respective divs
+    cardNumberElement.mount('#card-number');
+    cardExpiryElement.mount('#card-exp');
+    cardCvcElement.mount('#card-cvc');
+
+    // Handle real-time validation errors from each Element.
+    cardNumberElement.on('change', displayError);
+    cardExpiryElement.on('change', displayError);
+    cardCvcElement.on('change', displayError);
+
+    function displayError(event) {
+        var displayError = document.getElementById('card-errors');
+        if (event.error) {
+            displayError.textContent = event.error.message;
+        } else {
+            displayError.textContent = '';
+        }
+    }
+
+    var form = document.getElementById('payment-form');
+    form.addEventListener('submit', function(event) {
+        event.preventDefault();
+
+        // Create a token using the cardNumberElement, as it will automatically pull data from the other two elements
+        stripe.createToken(cardNumberElement).then(function(result) {
+            if (result.error) {
+                var errorElement = document.getElementById('card-errors');
+                errorElement.textContent = result.error.message;
+            } else {
+                stripeTokenHandler(result.token);
+            }
+        });
+    });
+
+    function stripeTokenHandler(token) {
+        var form = document.getElementById('payment-form');
+        var hiddenInput = document.createElement('input');
+        hiddenInput.setAttribute('type', 'hidden');
+        hiddenInput.setAttribute('name', 'stripeToken');
+        hiddenInput.setAttribute('value', token.id);
+        form.appendChild(hiddenInput);
+        form.submit();
+    }
+
+        // Add the card brand to the card number field.
+    cardNumberElement.on('change', function(event) {
+        // Switch brand logo according to the card type.
+        if (event.brand) {
+            setBrandIcon(event.brand);
+        }
+    });
+
+    function setBrandIcon(brand) {
+        var brandIcon = document.getElementById('brand-icon');
+        var brands = {
+            visa: '/path_to_visa_icon.png',
+            mastercard: '/path_to_mastercard_icon.png',
+            // ... add other brands here
+        };
+        if (brands[brand]) {
+            brandIcon.src = brands[brand];
+        } else {
+            brandIcon.src = '/path_to_default_icon.png';  // default icon
+        }
+    }
+</script>
+
+</body>
+</html>
