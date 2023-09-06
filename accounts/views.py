@@ -62,8 +62,7 @@ def get_client_ip(request):
 def profile_view(request):
     user = request.user
     profile = UserProfile.objects.get(user=user)
-    print(f"Profile: {profile}")
-    print(f"Organization: {profile.organization.name}")
+
     context = {
         'user': user,
         'profile': profile,
@@ -321,11 +320,9 @@ def payment_view(request):
             if charge.paid:
                 return redirect('accounts:set_password_view')
             else:
-                print("Not paid")
                 # Handle payment errors
                 messages.error(request, 'Payment was unsuccessful. Please try again.')
         except stripe.error.StripeError as e:
-            print("Exception")
             # Handle Stripe errors
             messages.error(request, f"An error occurred: {e}")
 
