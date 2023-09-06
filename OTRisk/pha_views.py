@@ -20,7 +20,6 @@ from django.contrib.auth.models import User
 
 @login_required
 def iotaphamanager(request):
-    print(request.POST)
     pha_header = None
     new_record_id = None  # Initialize new_record_id to None
     if request.method == 'POST':
@@ -32,14 +31,12 @@ def iotaphamanager(request):
         if pha_id and int(pha_id) > 0:
             # Update existing record
             pha_header, created = tblCyberPHAHeader.objects.get_or_create(ID=pha_id)
-            print("Updating")
         else:
             duplicate_record = tblCyberPHAHeader.objects.filter(title=title, FacilityName=facility_name).exists()
             if duplicate_record:
                 return redirect('OTRisk:iotaphamanager')
             # Create a new record
             pha_header = tblCyberPHAHeader()
-            print("adding")
 
         pha_header.title = request.POST.get('txtTitle')
         pha_header.PHALeader = request.POST.get('txtLeader')
@@ -85,9 +82,7 @@ def iotaphamanager(request):
 
 
 def get_headerrecord(request):
-    print("test1")
     record_id = request.GET.get('record_id')
-    print(f"{record_id}")
     headerrecord = get_object_or_404(tblCyberPHAHeader, ID=record_id)
 
     # create a dictionary with the record data
@@ -185,7 +180,6 @@ def scenario_analysis(request):
         with concurrent.futures.ThreadPoolExecutor() as executor:
             responses = list(executor.map(get_response, user_messages))
 
-        print(f"cost={responses[4]}")
         # Return the responses as variables
         return JsonResponse({
             'controls': responses[0],
@@ -199,7 +193,6 @@ def scenario_analysis(request):
 
 def facility_risk_profile(request):
     if request.method == 'GET':
-        print(f"{request.GET}")
         # Gather the necessary data for the risk assessment (impact scores and scenario information)
         Industry = request.GET.get('industry')
         facility_type = request.GET.get('facility_type')
@@ -261,8 +254,6 @@ def phascenarioreport(request):
     average_impact_data = cyberScenarios.aggregate(Avg('impactData'))['impactData__avg']
     average_impact_reputation = cyberScenarios.aggregate(Avg('impactReputation'))['impactReputation__avg']
     average_impact_regulation = cyberScenarios.aggregate(Avg('impactRegulation'))['impactRegulation__avg']
-
-    print(f"{average_impact_safety}")
 
     return render(request, 'phascenarioreport.html', {
         'cyberPHAHeader': cyberPHAHeader,
