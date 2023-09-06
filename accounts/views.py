@@ -209,9 +209,7 @@ def subscription_view(request):
     if request.method == "POST":
         form = SubscriptionForm(request.POST)
 
-        print(request.POST)
         if form.is_valid():
-            print("valid")
             # Store the data in session
             request.session['email'] = form.cleaned_data['email']
             request.session['first_name'] = form.cleaned_data['first_name']
@@ -225,10 +223,8 @@ def subscription_view(request):
             # Redirect to Stripe payment
             return redirect('accounts:payment_view')
     else:
-        print("invalid")
         form = SubscriptionForm()
 
-    print(form.errors)
     return render(request, 'accounts/subscription.html', {'form': form})
 
 
