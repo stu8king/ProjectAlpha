@@ -1,3 +1,5 @@
+from django.forms import model_to_dict
+
 from OTRisk.models.Model_CyberPHA import tblIndustry, tblThreatSources, tblCyberPHAHeader, tblZones, tblStandards, \
     tblCyberPHAScenario
 from OTRisk.models.questionnairemodel import FacilityType
@@ -206,10 +208,10 @@ def facility_risk_profile(request):
         openai.api_key = openai_api_key
 
         prompts = [
-            f"For the {facility} {facility_type} at {address}, {country} in the {Industry} industry, provide a bullet-point list of the likely safety hazards and hazards to human life present at {address}.",
-            f"For the {facility} {facility_type} at {address}, {country} in the {Industry} industry, provide a bullet point list of the likely chemicals stored or used and their hazards given the {facility_type}.",
-            f"For the {facility} {facility_type} at {address}, {country} in the {Industry} industry, provide a bullet-point list of the Physical security standards and challenges or the most likely physical security challenges given the location of {address}, {country}.",
-            f"For the {facility} {facility_type} at {address}, {country} in the {Industry} industry, provide a bullet point list of other localized risks that are likely to be identified for a {facility_type} at {address}."
+            f"For the {facility} {facility_type} at {address}, {country} in the {Industry} industry, provide a user friendly formatted bullet-point list of the likely safety hazards and hazards to human life present at {address}. Limited the response to a maximum of 150 words",
+            f"For the {facility} {facility_type} at {address}, {country} in the {Industry} industry, provide a user friendly formatted bullet point list of the likely chemicals stored or used and their hazards given the {facility_type}. Limited the response to a maximum of 150 words",
+            f"For the {facility} {facility_type} at {address}, {country} in the {Industry} industry, provide a user friendly formatted bullet-point list of the Physical security standards and challenges or the most likely physical security challenges given the location of {address}, {country}. Limited the response to a maximum of 150 words",
+            f"For the {facility} {facility_type} at {address}, {country} in the {Industry} industry, provide a user friendly formatted bullet point list of other localized risks that are likely to be identified for a {facility_type} at {address}. Limited the response to a maximum of 150 words"
         ]
 
         responses = []
@@ -239,6 +241,35 @@ def facility_risk_profile(request):
             'physical_security_summary': physical_security_summary.strip(),
             'other_summary': other_summary.strip()
         })
+
+
+@login_required()
+def pha_report(request, cyberpha_id):
+    organization_id_from_session = request.session.get('user_organization')
+
+    users_in_organization = User.objects.filter(userprofile__organization__id=organization_id_from_session)
+
+    cyberPHAHeader = tblCyberPHAHeader.objects.get(ID=cyberpha_id)
+    cyberScenarios = tblCyberPHAScenario.objects.filter(CyberPHA=cyberpha_id, Deleted=0)
+    average_impact_safety = cyberScenarios.aggregate(Avg('impactSafety'))['impactSafety__avg']
+    average_impact_danger = cyberScenarios.aggregate(Avg('impactDanger'))['impactDanger__avg']
+    average_impact_environment = cyberScenarios.aggregate(Avg('impactEnvironment'))['impactEnvironment__avg']
+    average_impact_production = cyberScenarios.aggregate(Avg('impactProduction'))['impactProduction__avg']
+    average_impact_finance = cyberScenarios.aggregate(Avg('impactFinance'))['impactFinance__avg']
+    average_impact_data = cyberScenarios.aggregate(Avg('impactData'))['impactData__avg']
+    average_impact_reputation = cyberScenarios.aggregate(Avg('impactReputation'))['impactReputation__avg']
+    average_impact_regulation = cyberScenarios.aggregate(Avg('impactRegulation'))['impactRegulation__avg']
+    return JsonResponse({'cyberPHAHeader': model_to_dict(cyberPHAHeader),
+                         'scenarios': list(cyberScenarios.values()),
+                         'average_impact_safety': average_impact_safety,
+                         'average_impact_danger': average_impact_danger,
+                         'average_impact_environment': average_impact_environment,
+                         'average_impact_production': average_impact_production,
+                         'average_impact_finance': average_impact_finance,
+                         'average_impact_data': average_impact_data,
+                         'average_impact_reputation': average_impact_reputation,
+                         'average_impact_regulation': average_impact_regulation
+                         })
 
 
 def phascenarioreport(request):

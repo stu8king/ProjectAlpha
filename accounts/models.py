@@ -1,9 +1,24 @@
+import json
+
 from django.db import models
 from django.contrib.auth.models import User
 from django.contrib.auth.models import AbstractUser
 from django.utils import timezone
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+
+
+class PasswordResetCode(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    code = models.CharField(max_length=32)  # Assuming a 6-digit code, adjust as needed
+    timestamp = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return f"Reset code for {self.user.username}"
+
+    class Meta:
+        verbose_name = "Password Reset Code"
+        verbose_name_plural = "Password Reset Codes"
 
 
 class ActiveUserSession(models.Model):
@@ -40,9 +55,22 @@ class SubscriptionType(models.Model):
     duration = models.PositiveIntegerField(
         help_text="Duration in days")  # For monthly, it can be 30, for annual, it can be 365
     price = models.DecimalField(max_digits=10, decimal_places=2)  # Assuming you want to store the price as well
+    duration_description = models.CharField(max_length=50)
+    post_readonly_duration = models.CharField(max_length=50)
+    max_pha = models.CharField(max_length=10)
+    max_raw = models.CharField(max_length=10)
+    add_feature_support = models.CharField(max_length=3)
+    data_download_support = models.CharField(max_length=3)
 
     def __str__(self):
-        return self.name
+        return json.dumps({
+            'id': self.id,
+            'name': self.name,
+            'max_users': self.max_users,
+            'duration': self.duration,
+            'description': self.description,
+            'price': self.price
+        })
 
     class Meta:
         db_table = 'accounts_subscriptiontype'

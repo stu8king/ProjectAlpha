@@ -1,7 +1,11 @@
 from django import template
+import json
 
 register = template.Library()
 
+@register.filter
+def jsonify(value):
+    return json.loads(value)
 
 @register.filter(name='split')
 def split(value, arg):

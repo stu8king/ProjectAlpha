@@ -119,6 +119,9 @@ urlpatterns = [
     path('admin_users/', views.admin_users, name='admin_users'),
     path('disable_user/<int:user_id>/', views.disable_user, name='disable_user'),
     path('delete_user/<int:user_id>/', views.delete_user, name='delete_user'),
+    path('reports', views.reports, name='reports'),
+    path('reports_pha', views.reports_pha, name='reports_pha'),
+    path('pha_report/<int:cyberpha_id>/', views.pha_report, name='pha_report'),
 ]
 
 if settings.DEBUG:

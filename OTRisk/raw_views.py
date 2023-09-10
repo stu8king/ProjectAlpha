@@ -1,6 +1,8 @@
 import openai
 import os
 
+from django.forms import model_to_dict
+
 from OTRisk.models.raw import RAWorksheet, RAWorksheetScenario, RAActions, MitreICSMitigations, MitreICSTechniques
 from django.contrib.auth.decorators import login_required
 from OTRisk.models.questionnairemodel import FacilityType
@@ -28,6 +30,7 @@ import re
 import requests
 from .dashboard_views import get_user_organization_id
 from django.http import HttpResponseForbidden
+from django.contrib.auth.models import User
 
 
 class UpdateRAAction(View):
@@ -178,7 +181,6 @@ def save_ra_action(request):
 
 @csrf_exempt
 def raw_from_walkdown(request):
-
     if request.method == 'POST':
         cyberPHAID = request.POST.get('cyberPHAID')
         questionID = request.POST.get('questionID')
@@ -210,7 +212,6 @@ def rawreport(request, raworksheet_id):
     org_id = get_user_organization_id(request)
 
     raworksheet = get_object_or_404(RAWorksheet, pk=raworksheet_id)
-
     # if the user is attempting to access a report that belongs to a different organization by changing the url value then exit with a generic warning
     if org_id != raworksheet.organization_id:
         return HttpResponseForbidden("Unauthorized Action.")
@@ -239,23 +240,46 @@ def rawreport(request, raworksheet_id):
     reputation_status = get_risk_status(scenarios.aggregate(Max('ReputationScore'))['ReputationScore__max'])
     supplychain_status = get_risk_status(scenarios.aggregate(Max('SupplyChainScore'))['SupplyChainScore__max'])
 
-    return render(request, 'rawreport.html',
-                  {'raworksheet': raworksheet,
-                   'scenarios': scenarios,
-                   'formatted_cost': formatted_cost,
-                   'risk_status': risk_status,
-                   'safety_status': safety_status,
-                   'life_status': life_status,
-                   'environment_status': environment_status,
-                   'operational_status': operational_status,
-                   'regulatory_status': regulatory_status,
-                   'financial_status': financial_status,
-                   'data_status': data_status,
-                   'reputation_status': reputation_status,
-                   'supplychain_status': supplychain_status,
-                   'formatted_total_event_cost_high': formatted_total_event_cost_high,
-                   'formatted_total_event_cost_low': formatted_total_event_cost_low,
-                   'formatted_total_event_cost_median': formatted_total_event_cost_median})
+    referer = request.META.get('HTTP_REFERER', '')
+
+    if 'reports' in referer:
+        # If the calling template is report.html, return a JsonResponse
+        return JsonResponse({
+            'raworksheet': model_to_dict(raworksheet),
+            'scenarios': list(scenarios.values()),
+            'formatted_cost': formatted_cost,
+            'risk_status': risk_status,
+            'safety_status': safety_status,
+            'life_status': life_status,
+            'environment_status': environment_status,
+            'operational_status': operational_status,
+            'regulatory_status': regulatory_status,
+            'financial_status': financial_status,
+            'data_status': data_status,
+            'reputation_status': reputation_status,
+            'supplychain_status': supplychain_status,
+            'formatted_total_event_cost_high': formatted_total_event_cost_high,
+            'formatted_total_event_cost_low': formatted_total_event_cost_low,
+            'formatted_total_event_cost_median': formatted_total_event_cost_median
+        })
+    else:
+        return render(request, 'rawreport.html',
+                      {'raworksheet': raworksheet,
+                       'scenarios': scenarios,
+                       'formatted_cost': formatted_cost,
+                       'risk_status': risk_status,
+                       'safety_status': safety_status,
+                       'life_status': life_status,
+                       'environment_status': environment_status,
+                       'operational_status': operational_status,
+                       'regulatory_status': regulatory_status,
+                       'financial_status': financial_status,
+                       'data_status': data_status,
+                       'reputation_status': reputation_status,
+                       'supplychain_status': supplychain_status,
+                       'formatted_total_event_cost_high': formatted_total_event_cost_high,
+                       'formatted_total_event_cost_low': formatted_total_event_cost_low,
+                       'formatted_total_event_cost_median': formatted_total_event_cost_median})
 
 
 def get_risk_status(risk_score):
@@ -297,6 +321,30 @@ def ensure_non_empty(value):
 def ensure_non_null(value):
     """Return the value if non-empty, otherwise return 0."""
     return value if value != '' else '.'
+
+
+@login_required()
+def reports(request):
+    org_id = get_user_organization_id(request)
+    qraw_reports = RAWorksheet.objects.filter(organization_id=org_id)
+    organization_id_from_session = request.session.get('user_organization')
+    users_in_organization = User.objects.filter(userprofile__organization__id=organization_id_from_session)
+    pha_reports = tblCyberPHAHeader.objects.filter(UserID__in=users_in_organization)
+
+    return render(request, 'report.html',
+                  {'qraw_reports': qraw_reports,
+                   'pha_reports': pha_reports})
+
+
+@login_required()
+def reports_pha(request):
+    org_id = get_user_organization_id(request)
+    organization_id_from_session = request.session.get('user_organization')
+    users_in_organization = User.objects.filter(userprofile__organization__id=organization_id_from_session)
+    pha_reports = tblCyberPHAHeader.objects.filter(UserID__in=users_in_organization)
+
+    return render(request, 'report_pha.html',
+                  {'pha_reports': pha_reports})
 
 
 @login_required()

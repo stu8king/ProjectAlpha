@@ -1,4 +1,5 @@
 {% load static %}
+{% load custom_filters %}
 <!DOCTYPE html>
 	<html lang="zxx" class="no-js">
 	<head>
@@ -54,46 +55,77 @@
             font-weight: bold;
             margin-left: 10px;
         }
+        .flex-equal-height {
+            display: flex;
+            flex-wrap: wrap;
+        }
+
+        .flex-equal-height > .col-md-2 {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .subscription-card {
+            cursor: pointer;
+            border: 2px solid #333;  /* Darker border */
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);  /* Shadow effect */
+                transition: transform 0.2s, box-shadow 0.2s;  /* Smooth transition for hover effect */
+            flex: 1;
+            }
+
+
+        .subscription-card:hover {
+            transform: translateY(-5px);  /* Slight lift effect on hover */
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);  /* Increased shadow on hover */
+        }
+
+        .border-shadow-container {
+            border: 1px solid #ccc;  /* Adjust the border color as needed */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);  /* Adjust the shadow as needed */
+            padding: 20px;  /* Adjust the padding as needed */
+        }
+
         </style>
 </head>
 <body>
 <header id="header">
 <div class="header-top">
-
-		  			<div class="container">
-				  		<div class="row">
-				  			<div class="col-lg-6 col-sm-6 col-4 header-top-left no-padding">
-				  				<ul>
-									<li><a href="#"><i class="fa fa-facebook"></i></a></li>
-									<li><a href="#"><i class="fa fa-twitter"></i></a></li>
-									<li><a href="#"><i class="fa fa-dribbble"></i></a></li>
-									<li><a href="#"><i class="fa fa-behance"></i></a></li>
-				  				</ul>
-				  			</div>
-				  			<div class="col-lg-6 col-sm-6 col-8 header-top-right no-padding">
-				  				<a href="mailto:support@iotarisk.com">support@iotarisk.com</a>
-				  			</div>
-				  		</div>
-		  			</div>
-				</div>
-    <div class="container main-menu">
-        <div class="row align-items-center justify-content-between d-flex">
-          <div id="logo">
-            <a href="login.html"><img src="{% static 'images/iota_small_whitebg.png' %} " style="width: 70px" alt=""></a>
-          </div>
-          <nav id="nav-menu-container">
-              <ul class="nav-menu">
-                  <li class="menu-active"><a href="#">Home</a></li>
-                  <li><a href="{% url 'accounts:about' %}">About</a></li>
-                  <li><a href="faq.html">Product</a></li>
-                  <li><a href="{% url 'accounts:contact' %}">Contact</a></li>
-                  <li><a href="#" data-toggle="modal" data-target="#loginModal">Customer Login</a></li>
-
-
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-6 col-sm-6 col-4 header-top-left no-padding">
+                <ul>
+                    <li><a href="#"><i class="fa fa-facebook"></i></a></li>
+                    <li><a href="#"><i class="fa fa-twitter"></i></a></li>
+                    <li><a href="#"><i class="fa fa-dribbble"></i></a></li>
+                    <li><a href="#"><i class="fa fa-behance"></i></a></li>
                 </ul>
-          </nav><!-- #nav-menu-container -->
+            </div>
+            <div class="col-lg-6 col-sm-6 col-8 header-top-right no-padding">
+                <a href="mailto:support@iotarisk.com">support@iotarisk.com</a>
+            </div>
         </div>
     </div>
+</div>
+
+<div class="container main-menu">
+    <div class="row align-items-center justify-content-between d-flex">
+      <div id="logo">
+        <a href="login.html"><img src="{% static 'images/iota_small_whitebg.png' %} " style="width: 70px" alt=""></a>
+      </div>
+      <nav id="nav-menu-container">
+          <ul class="nav-menu">
+              <li class="menu-active"><a href="#">Home</a></li>
+              <li><a href="{% url 'accounts:about' %}">About</a></li>
+              <li><a href="faq.html">Product</a></li>
+              <li><a href="{% url 'accounts:contact' %}">Contact</a></li>
+              <li><a href="#" data-toggle="modal" data-target="#loginModal">Customer Login</a></li>
+
+
+            </ul>
+      </nav><!-- #nav-menu-container -->
+    </div>
+</div>
+
   </header><!-- #header -->
 		<!-- start banner Area -->
     <section class="banner-area relative" id="home">
@@ -115,169 +147,201 @@
 
 <form method="post" action="{% url 'accounts:subscription_view' %}">
     {% csrf_token %}
-    <div class = row>
-        <div class="col-md-3"></div>
-        <div class="col-md-4">
-
-                    <div class="mb-3"><h3>Select Subscription and Enter Details</h3></div>
+    <div class = "row">
+        <div class="col-md-2"></div>
+        <div class="col-md-8">
+            <div class="row flex-equal-height">
+                <div class="col-md-1"></div>
+                    {% for subscription in subscription_types %}
+                        <div class="col-md-2">
+                        <div class="card mb-2 subscription-card" onclick="selectSubscription({{ subscription.id }});" data-id="{{ subscription.id }}">
+                            <div class="card-body">
+                                <h6 class="card-title text-center">{{ subscription.name }}</h6>
+                                <h4 class="card-title text-center">
+                                    ${{ subscription.price }}
+                                    {% if subscription.duration == 365 %}
+                                        /year
+                                    {% else %}
+                                        /month
+                                    {% endif %}
+                                </h4>
+                                <p><span style="color:green;">✔</span> <strong>Max Users:</strong>
+                                    {% if subscription.max_users == 0 %}
+                                        Unlimited
+                                    {% else %}
+                                        {{ subscription.max_users }}
+                                    {% endif %}
+                                </p>
+                                <p><span style="color:green;">✔</span> <strong>CyberPHAs:</strong> {{ subscription.max_pha }}</p>
+                                <p><span style="color:green;">✔</span> <strong>RAWs:</strong> {{ subscription.max_raw }}</p>
+                                <p>
+                                    {% if subscription.post_readonly_duration == "None" %}
+                                        <span style="color:red;">✖</span>
+                                    {% else %}
+                                        <span style="color:green;">✔</span>
+                                    {% endif %}
+                                    <strong>Read-only after subscription:</strong> {{ subscription.post_readonly_duration }}
+                                </p>
+                                <p>
+                                    {% if subscription.data_download_support == "None" %}
+                                        <span style="color:red;">✖</span>
+                                    {% else %}
+                                        <span style="color:green;">✔</span>
+                                    {% endif %}
+                                    <strong>Data Download:</strong> {{ subscription.data_download_support }}
+                                </p>
+                                <p><strong>Description:</strong> {{ subscription.description }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    <div class="col-md-1"></div>
+                    <input type="hidden" id="{{ form.subscription_type.id_for_label }}" name="{{ form.subscription_type.name }}">
+                </div>
+            <div class="border-shadow-container">
+            <div class="row">
+                <div class="col-md-1"></div>
+                <div class="col-md-3">
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                         <div class="card-body">
-                            <label for="{{ form.email.id_for_label }}" class="form-label">Email Address (will be your username)</label>
+                            <label for="{{ form.email.id_for_label }}" class="form-label">Email Address (This will be your username)</label>
                             <input type="email" class="form-control" id="{{ form.email.id_for_label }}" name="{{ form.email.name }}" value="{{ form.email.value|default:'' }}">
-                            <span id="email-status"></span> <!-- Placeholder for the checkmark -->
+                            <span id="email-status"></span>
                         </div>
                     </div>
-                    <script>
-                        function checkAllConditions() {
-                            var emailValidated = $("#email-status").html() === "✓";
-                            var organizationValidated = !$("#org-status").html().includes("✗");
-                            var termsChecked = document.getElementById('acknowledgeTerms').checked;
-                            var firstName = $("#{{ form.first_name.id_for_label }}").val();
-                            var lastName = $("#{{ form.last_name.id_for_label }}").val();
-                            var organizationName = $("#{{ form.organization_name.id_for_label }}").val();
-                            var subscriptionType = $("#{{ form.subscription_type.id_for_label }}").val();
 
-                            if (emailValidated && termsChecked && firstName && lastName && organizationValidated && subscriptionType) {
-                                document.getElementById('paymentButton').disabled = false;
-                            } else {
-                                document.getElementById('paymentButton').disabled = true;
-                            }
-                        }
-
-                        $(document).ready(function() {
-                            $("#{{ form.email.id_for_label }}").blur(function() {
-                            var email = $(this).val();
-                            // Validate the email format
-                                if (!validateEmail(email)) {
-                                    $("#email-status").html("Invalid email format").css("color", "red");
-                                    checkAllConditions();
-                                    return;  // Exit early if the email format is not valid
-                                }
-                            $.ajax({
-                                url: '/accounts/check_email/',
-                                data: {
-                                    'email': email
-                                },
-                                dataType: 'json',
-                                success: function(data) {
-                                    if (data.is_taken) {
-                                        $("#email-status").html(""); // Clear any previous checkmarks or messages
-                                        alert("A user with this email address already exists.");
-                                    } else {
-                                        $("#email-status").html("✓").css("color", "green"); // Display a green checkmark
-                                    }
-                                     checkAllConditions();
-                                }
-                            });
-                        });
-
-                        });
-
-                        function validateEmail(email) {
-                            var re = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
-                            return re.test(email);
-                        }
-                        </script>
-
+                </div>
+                <div class="col-md-3">
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                         <div class="card-body">
-                        <label for="{{ form.first_name.id_for_label }}" class="form-label">First Name</label>
-                        <input type="text" class="form-control" id="{{ form.first_name.id_for_label }}" name="{{ form.first_name.name }}" value="{{ form.first_name.value|default:'' }}">
-                    </div>
-                    </div>
-
-                    <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                        <div class="card-body">
-                        <label for="{{ form.last_name.id_for_label }}" class="form-label">Last Name</label>
-                        <input type="text" class="form-control" id="{{ form.last_name.id_for_label }}" name="{{ form.last_name.name }}" value="{{ form.last_name.value|default:'' }}">
-                    </div>
-                    </div>
-
-                    <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                        <div class="card-body">
-                        <label for="{{ form.organization_name.id_for_label }}" class="form-label">Organization Name</label>
-                        <input type="text" class="form-control" id="{{ form.organization_name.id_for_label }}" name="{{ form.organization_name.name }}" value="{{ form.organization_name.value|default:'' }}">
-                        <span id="org-status"></span> <!-- Placeholder for the checkmark -->
-                        </div>
-                    </div>
-                    <script>
-                        $(document).ready(function() {
-                            $("#{{ form.organization_name.id_for_label }}").blur(function() {
-                                var organizationName = $(this).val();
-                                $.ajax({
-                                    url: '/accounts/check_organization/',
-                                    data: {
-                                        'organization_name': organizationName
-                                    },
-                                    dataType: 'json',
-                                    success: function(data) {
-                                        if (data.is_taken) {
-                                            alert("An organization with this name already exists.");
-                                        } else {
-                                            $("#org-status").html("✓").css("color", "green");
-                                        }
-                                        checkAllConditions();
-                                    }
-                                });
-                            });
-                        });
-
-                    </script>
-
-                    <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                        <div class="card-body">
-                            <label for="{{ form.organization_address_for_label }}" class="form-label">Address</label>
-                            <textarea class="form-control" id="{{ form.organization_address_for_label }}" name="{{ form.organization_address.name }}" value="{{ form.organization_address.value|default:'' }}" rows="3" style="resize: none"></textarea>
-                        </div>
-                    </div>
-                    <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                        <div class="card-body">
-                        <label for="{{ form.subscription_type.id_for_label }}" class="form-label">Select Subscription Type</label>
-                        <select class="form-select" id="{{ form.subscription_type.id_for_label }}" name="{{ form.subscription_type.name }}" onchange="updateSubscriptionDetails(this.value);">
-                            {% for choice in form.subscription_type.field.choices %}
-                                <option value="{{ choice.0 }}" {% if form.subscription_type.value == choice.0 %}selected{% endif %}>{{ choice.1 }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    </div>
-
-        </div>
-        <div class="col-md-2">
-            <br><br>
-            <div id="subscription_details">
-                    <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                        <div class="card-body">
-                    <p><strong>Max Users:</strong> <span id="max_users"></span></p>
-                    <p><strong>Duration (days):</strong> <span id="duration"></span></p>
-                    <p><strong>Description:</strong> <span id="description"></span></p>
-                    <p><strong>Price:</strong> <span id="price"></span></p>
+                            <label for="{{ form.first_name.id_for_label }}" class="form-label">First Name</label>
+                            <input type="text" class="form-control" id="{{ form.first_name.id_for_label }}" name="{{ form.first_name.name }}" value="{{ form.first_name.value|default:'' }}">
                         </div>
                     </div>
                 </div>
-            <button type="button" class="btn btn-link" data-bs-toggle="modal" data-bs-target="#termsModal">
-                View Terms and Conditions
-            </button>
-            <div class="form-check mb-3">
-                <input class="form-check-input" type="checkbox" value="" id="acknowledgeTerms" required>
-                <label class="form-check-label" for="acknowledgeTerms">
-                    I have read and agree to the Terms and Conditions.
-                </label>
+                <div class="col-md-3">
+                    <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                        <div class="card-body">
+                            <label for="{{ form.last_name.id_for_label }}" class="form-label">Last Name</label>
+                            <input type="text" class="form-control" id="{{ form.last_name.id_for_label }}" name="{{ form.last_name.name }}" value="{{ form.last_name.value|default:'' }}">
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2"></div>
             </div>
-            <script>
-                document.getElementById('acknowledgeTerms').addEventListener('change', checkAllConditions);
-                 $("#{{ form.first_name.id_for_label }}, #{{ form.last_name.id_for_label }}, #{{ form.organization_name.id_for_label }}, #{{ form.subscription_type.id_for_label }}").on('input', checkAllConditions);
-
-
-            </script>
-            <button type="submit" class="btn btn-primary" id="paymentButton" disabled>Proceed to Payment</button>
-
-
-
+            <div class="row">
+                <div class="col-md-1"></div>
+                <div class="col-md-3">
+                    <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                        <div class="card-body">
+                            <label for="{{ form.organization_name.id_for_label }}" class="form-label">Organization Name</label>
+                            <input type="text" class="form-control" id="{{ form.organization_name.id_for_label }}" name="{{ form.organization_name.name }}" value="{{ form.organization_name.value|default:'' }}">
+                            <span id="org-status"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                        <div class="card-body">
+                            <label for="{{ form.organization_address.id_for_label }}" class="form-label">Address</label>
+                            <textarea class="form-control" id="{{ form.organization_address_for_label }}" name="{{ form.organization_address.name }}" value="{{ form.organization_address.value|default:'' }}" rows="3" style="resize: none"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <button type="button" class="btn btn-link" data-bs-toggle="modal" data-bs-target="#termsModal">
+                        View Terms and Conditions
+                    </button>
+                    <br>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" value="" id="acknowledgeTerms" required>
+                        <label class="form-check-label" for="acknowledgeTerms">
+                            I have read and agree to the Terms and Conditions.
+                        </label>
+                    </div>
+                    <button type="submit" class="btn btn-primary" id="paymentButton" disabled>Proceed to Payment</button>
+                </div>
+            <div class="col-md-1"></div>
         </div>
-        <div class="col-md-3"></div>
-    </div>
+        </div>
 </form>
+<script>
 
+    document.getElementById('acknowledgeTerms').addEventListener('change', checkAllConditions);
+     $("#{{ form.first_name.id_for_label }}, #{{ form.last_name.id_for_label }}, #{{ form.organization_name.id_for_label }}, #{{ form.subscription_type.id_for_label }}").on('input', checkAllConditions);
+
+    function checkAllConditions() {
+        var emailValidated = $("#email-status").html() === "✓";
+        var organizationValidated = !$("#org-status").html().includes("✗");
+        var termsChecked = document.getElementById('acknowledgeTerms').checked;
+        var firstName = $("#{{ form.first_name.id_for_label }}").val();
+        var lastName = $("#{{ form.last_name.id_for_label }}").val();
+        var organizationName = $("#{{ form.organization_name.id_for_label }}").val();
+        var subscriptionType = $("#{{ form.subscription_type.id_for_label }}").val();
+
+        document.getElementById('paymentButton').disabled = !(emailValidated && termsChecked && firstName && lastName && organizationValidated && subscriptionType);
+        }
+
+    $(document).ready(function() {
+    $("#{{ form.email.id_for_label }}").blur(function() {
+        var email = $(this).val();
+        var emailInput = $(this);
+        var emailStatus = $("#email-status");
+
+        // Validate the email format
+        if (!validateEmail(email)) {
+            emailInput.addClass('error'); // Add error class to highlight the input
+            emailStatus.html("Invalid email format").css("color", "red");
+            checkAllConditions();
+            return;
+        }
+
+        $.ajax({
+            url: '/accounts/check_email/',
+            data: {
+                'email': email
+            },
+            dataType: 'json',
+            success: function(data) {
+                if (data.is_taken) {
+                    emailInput.addClass('error'); // Add error class to highlight the input
+                    emailStatus.html("A user with this email address already exists.").css("color", "red");
+                } else {
+                    emailInput.removeClass('error'); // Remove error class
+                    emailStatus.html("✓").css("color", "green");
+                }
+                checkAllConditions();
+            }
+        });
+    });
+});
+
+    function validateEmail(email) {
+        var re = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+        return re.test(email);
+    }
+
+   $(document).ready(function() {
+    $("#{{ form.organization_name.id_for_label }}").blur(function() {
+        var organizationName = $(this).val();
+        $.ajax({
+            url: '/accounts/check_organization/',
+            data: {
+                'organization_name': organizationName
+            },
+            dataType: 'json',
+            success: function(data) {
+                if (data.is_taken) {
+                    alert("An organization with this name already exists.");
+                } else {
+                    $("#org-status").html("✓").css("color", "green");
+                }
+                checkAllConditions();
+            }
+        });
+    });
+});
+    </script>
 <div class="modal fade" id="termsModal" tabindex="-1" aria-labelledby="termsModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -295,5 +359,35 @@
     </div>
 </div>
 
+<script>
+    function selectSubscription(subscriptionId) {
+    // Highlight the selected card
+    document.querySelectorAll('.subscription-card').forEach(card => {
+        card.classList.remove('bg-primary', 'text-white');
+        if (card.getAttribute('data-id') == subscriptionId) {
+            card.classList.add('bg-primary', 'text-white');
+        }
+    });
+
+    // Set the hidden input value
+    document.getElementById('{{ form.subscription_type.id_for_label }}').value = subscriptionId;
+
+    // Update the subscription details
+    updateSubscriptionDetails(subscriptionId);
+}
+
+</script>
+
+      <br><br>
+            <div id="subscription_details">
+                    <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                        <div class="card-body">
+                    <p><strong>Max Users:</strong> <span id="max_users"></span></p>
+                    <p><strong>Duration (days):</strong> <span id="duration"></span></p>
+                    <p><strong>Description:</strong> <span id="description"></span></p>
+                    <p><strong>Price:</strong> <span id="price"></span></p>
+                        </div>
+                    </div>
+                </div>
 </body>
 </html>

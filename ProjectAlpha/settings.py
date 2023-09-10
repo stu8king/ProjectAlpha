@@ -123,7 +123,14 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'email-smtp.us-east-1.amazonaws.com'  # This might vary based on your SES region
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'AKIATJJNL3QCVSKXHHNH'  # The SMTP username from SES
+EMAIL_HOST_PASSWORD = 'BNN/75V4U7hPwAFFP6vl/NGWQXVrqyWrK7GEd46SURhN'  # The SMTP password from SES
+DEFAULT_FROM_EMAIL = 'support@iotarisk.com'  # Change this to your domain's email
 
 
 # Internationalization
@@ -156,4 +163,5 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 STRIPE_PUBLIC_KEY = os.environ.get('STRIPE_PUBLIC_KEY')
 STRIPE_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY')
+
 

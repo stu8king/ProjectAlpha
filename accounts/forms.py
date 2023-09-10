@@ -10,17 +10,36 @@ from django import forms
 from .models import SubscriptionType
 
 
+class PasswordResetRequestForm(forms.Form):
+    email = forms.EmailField()
+
+
+class PasswordResetForm(forms.Form):
+    token = forms.CharField()
+    new_password = forms.CharField(widget=forms.PasswordInput())
+    confirm_password = forms.CharField(widget=forms.PasswordInput())
+
+    def clean(self):
+        cleaned_data = super().clean()
+        password = cleaned_data.get('new_password')
+        confirm_password = cleaned_data.get('confirm_password')
+        if password != confirm_password:
+            self.add_error('confirm_password', 'Passwords do not match')
+
+
 class SubscriptionForm(forms.ModelForm):
     email = forms.EmailField(label="Email Address (will be your username)")
     first_name = forms.CharField(label="First Name", max_length=30)
     last_name = forms.CharField(label="Last Name", max_length=30)
     organization_name = forms.CharField(label="Organization Name", max_length=255)
     organization_address = forms.CharField(label="Organization Address", max_length=255)
-    subscription_type = forms.ModelChoiceField(queryset=SubscriptionType.objects.all(), label="Select Subscription Type", widget=forms.Select(attrs={'onchange': 'updateSubscriptionDetails(this.value);'}))
+    subscription_type = forms.ModelChoiceField(queryset=SubscriptionType.objects.all(),
+                                               label="Select Subscription Type", widget=forms.Select(
+            attrs={'onchange': 'updateSubscriptionDetails(this.value);'}))
 
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'email', 'organization_name', 'organization_address',  'subscription_type']
+        fields = ['first_name', 'last_name', 'email', 'organization_name', 'organization_address', 'subscription_type']
 
 
 class SetPasswordForm(forms.Form):

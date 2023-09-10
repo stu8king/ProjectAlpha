@@ -16,12 +16,102 @@ from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.utils import timezone
-
+from django.core.mail import send_mail
+import string
+import random
 from accounts.models import UserProfile, SubscriptionType, Organization, LoginAttempt, ActiveUserSession
 from .forms import CustomUserCreationForm, PasswordChangeForm, SetPasswordForm, \
     SubscriptionForm
+from django.contrib.auth.tokens import default_token_generator
+from django.core.mail import send_mail
+from django.contrib.auth import get_user_model
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
+from .forms import PasswordResetRequestForm, PasswordResetForm
+from .models import PasswordResetCode
+from django.utils.crypto import get_random_string
+from django.utils import timezone
+from datetime import timedelta
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
+
+
+def password_reset_request(request):
+    if request.method == "POST":
+        form = PasswordResetRequestForm(request.POST)
+        if form.is_valid():
+            email = form.cleaned_data.get('email')
+            try:
+                user = User.objects.get(email=email)
+                code = get_random_string(length=6, allowed_chars='0123456789')
+                PasswordResetCode.objects.create(user=user, code=code)
+                subject = 'Password Reset Code'
+                message = 'Your one-time code is: {code}. Please verify you\'re really you by entering this 6-digit code when you sign in. Just a heads up, this code will expire in 30 minutes for security reasons.'
+                html_message = """
+                    <strong>Your one-time code is: {code}</strong>.<br><br>
+                    Please verify you're really you by entering this 6-digit code when you sign in. Just a heads up, this code will expire in 30 minutes for security reasons.
+                """.format(code=code)
+                send_mail(
+                    subject,
+                    message,
+                    'support@iotarisk.com',
+                    [email],
+                    fail_silently=False,
+                    html_message=html_message
+                )
+                messages.success(request, 'A reset code has been sent to your email.')
+                return redirect(f'/accounts/password_reset/{user.id}/')
+            except User.DoesNotExist:
+                messages.error(request, 'Email not found.')
+    else:
+        form = PasswordResetRequestForm()
+
+    return render(request, 'accounts/password_reset_request.html', {'form': form})
+
+
+def password_reset(request, uid):
+    if request.method == "POST":
+        form = PasswordResetForm(request.POST)
+        if form.is_valid():
+            token = form.cleaned_data.get('token')
+            new_password = form.cleaned_data.get('new_password')
+
+            # Verify the token
+            try:
+                reset_code = PasswordResetCode.objects.get(user__id=uid, code=token)
+                # Check if the code has expired
+                time_difference = timezone.now() - reset_code.timestamp
+                if time_difference.total_seconds() > 1800:  # 1800 seconds = 30 minutes
+                    messages.error(request, 'The reset code has expired. Please request a new one.')
+                    return redirect('accounts;password_reset_request')
+
+                # If the code is valid and not expired, reset the password
+                user = reset_code.user
+                user.set_password(new_password)
+                user.save()
+
+                # Delete the used reset code
+                reset_code.delete()
+
+                messages.success(request, 'Password reset successful. You can now login with your new password.')
+                return redirect('login')
+            except PasswordResetCode.DoesNotExist:
+                messages.error(request, 'Invalid reset code. Please check and try again.')
+    else:
+        form = PasswordResetForm()
+
+    return render(request, 'accounts/password_reset.html', {'form': form})
+
+
+def verify_reset_code(user, submitted_code):
+    try:
+        reset_code = PasswordResetCode.objects.get(user=user, code=submitted_code)
+        time_difference = timezone.now() - reset_code.timestamp
+        if time_difference.total_seconds() > 1800:  # 1800 seconds = 30 minutes
+            return False
+        return True
+    except PasswordResetCode.DoesNotExist:
+        return False
 
 
 def check_organization_name(request):
@@ -42,6 +132,10 @@ def check_email(request):
 
 def about_view(request):
     return render(request, 'accounts/about.html')
+
+
+def faq_view(request):
+    return render(request, 'accounts/faq.html')
 
 
 def contact_view(request):
@@ -204,7 +298,7 @@ def password_change_view(request):
 
 
 def subscription_view(request):
-
+    subscription_types = SubscriptionType.objects.all()
     if request.method == "POST":
         form = SubscriptionForm(request.POST)
 
@@ -224,53 +318,40 @@ def subscription_view(request):
     else:
         form = SubscriptionForm()
 
-    return render(request, 'accounts/subscription.html', {'form': form})
+    return render(request, 'accounts/subscription.html', {'form': form, 'subscription_types': subscription_types})
 
 
 def set_password_view(request):
-    if request.method == "POST":
-        form = SetPasswordForm(request.POST)
-        if form.is_valid():
-            # Create user and organization
-            user = User.objects.create_user(username=request.session['email'], first_name=request.session['first_name'],
-                                            last_name=request.session['last_name'],
-                                            password=form.cleaned_data['password'])
+    # Generate a strong random password
+    password = ''.join(random.choices(string.ascii_letters + string.digits, k=12))
+    user = User.objects.create_user(username=request.session['email'], first_name=request.session['first_name'],
+                                    last_name=request.session['last_name'],
+                                    password=password, email=request.session['email'])
 
-            # Calculate subscription start and end dates
-            subscription_start = timezone.now().date()
-            duration = request.session.get('duration', 30)  # Default to 30 days if duration not found in session
-            subscription_end = subscription_start + timedelta(days=duration)
+    # Calculate subscription start and end dates
+    subscription_start = timezone.now().date()
+    duration = request.session.get('duration', 30)  # Default to 30 days if duration not found in session
+    subscription_end = subscription_start + timedelta(days=duration)
 
-            subscription_type = SubscriptionType.objects.get(id=request.session['subscription_type'])
-            organization = Organization.objects.create(
-                name=request.session['organization_name'],
-                subscription_type=subscription_type,
-                subscription_start=subscription_start,
-                subscription_end=subscription_end,
-                subscription_status=1
-            )
-            organization.save()
+    subscription_type = SubscriptionType.objects.get(id=request.session['subscription_type'])
+    organization = Organization.objects.create(
+        name=request.session['organization_name'],
+        subscription_type=subscription_type,
+        subscription_start=subscription_start,
+        subscription_end=subscription_end,
+        subscription_status=1
+    )
+    organization.save()
 
-            # Ensure organization is saved and has an id
-            if organization.id:
-                # Create UserProfile
-                UserProfile.objects.create(user_id=user.id, organization_id=organization.pk, must_change_password=0)
-            else:
-                # Handle error: organization not saved correctly
-                return HttpResponse("Error: Organization not saved correctly.")
-
-            # Clear the session
-            del request.session['email']
-            del request.session['organization_name']
-            del request.session['subscription_type']
-            del request.session['duration']  # Clear the duration from the session
-
-            # Redirect to success page or login page
-            return redirect('accounts:success_view')
+    # Ensure organization is saved and has an id
+    if organization.id:
+        # Create UserProfile
+        UserProfile.objects.create(user_id=user.id, organization_id=organization.pk, must_change_password=1)
     else:
-        form = SetPasswordForm()
+        # Handle error: organization not saved correctly
+        return HttpResponse("Error: Organization not saved correctly.")
 
-    return render(request, 'accounts/set_password.html', {'form': form})
+    return password
 
 
 def success_view(request):
@@ -292,7 +373,6 @@ def get_subscription_details(request, subscription_id):
 
 
 def payment_view(request):
-
     if 'subscription_type' not in request.session:
         # Redirect to subscription selection if not chosen
         return redirect('accounts:subscription_view')
@@ -318,7 +398,23 @@ def payment_view(request):
             )
 
             if charge.paid:
-                return redirect('accounts:set_password_view')
+                password = set_password_view(request)
+                first_name = request.session['first_name']
+                # Email the password to the user
+                send_mail(
+                    'Welcome to iOTa',
+                    f'Dear {first_name} ',
+                    f'Thank you for purchasing iOTa. Your temporary password is: {password}. You will be prompted to change this password the first time you access iOTa.',
+                    'support@iotarisk.com',  # Replace with your email
+                    [request.session['email']],
+                    fail_silently=False,
+                )
+                # Clear the session
+                del request.session['email']
+                del request.session['organization_name']
+                del request.session['subscription_type']
+                del request.session['duration']  # Clear the duration from the session
+                return redirect('accounts:success_view')
             else:
                 # Handle payment errors
                 messages.error(request, 'Payment was unsuccessful. Please try again.')
