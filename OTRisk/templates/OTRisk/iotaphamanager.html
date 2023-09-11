@@ -298,6 +298,49 @@ fetch('https://restcountries.com/v3.1/all')
     <div class="col-md-1" style="background-color: white;"></div>
 </div>
 
+<div class="row">
+    <div class="col-md-1" style="background-color: black"></div>
+    <div class="col-md-3" style="background-color: white"></div>
+    <div class="col-md-4" style="background-color: white">
+        <button type="submit" id="btnformSubmit" class="btn btn-primary custom-btn">Save Header </button>
+        <button type="button" class="btn btn-primary  custom-btn" id="resetButton"> New CyberPHA</button>
+        <script>
+        $(document).ready(function() {
+            $('#resetButton').on('click', function() {
+                // Reset textboxes and textareas
+                $('#txtTitle, #txtLeader, #txtUnit, #txtStartDate, #txtAddress, #txtFacility, #txtLeaderEmail, #txtEndDate, #txtSafetySummary, #txtChemical, #txtPhysical, #txtOther').val('');
+
+                // Reset select dropdowns
+                $('#selIndustry, #selFacilityType, #selZone').prop('selectedIndex', 0);
+
+                // Enable the controls
+                $('#txtTitle, #txtLeader, #txtUnit, #txtStartDate, #txtAddress, #txtFacility, #txtLeaderEmail, #txtEndDate, #txtSafetySummary, #txtChemical, #txtPhysical, #txtOther, #selFacilityType, #selIndustry, #selZone, #countrySelector, #btnformSubmit, #risk-assessment-btn').prop('disabled', false);
+                $('#btnformSubmit').prop('disabled', false);
+
+                //reset session variables
+                sessionStorage.setItem('activeCyberPHA', '0');
+                // Set the value of the hidden text field
+                document.getElementById('txtHdnCyberPHAID').value = '0';
+
+            });
+        });
+
+        </script>
+        <button type="button" class="btn btn-primary custom-btn" id="scenarioButton">Add Scenarios</button>
+        <script>
+             $(document).ready(function() {
+                $('#scenarioButton').on('click', function() {
+                    window.location.href = "{% url 'OTRisk:assess_cyberpha' %}?active_cyberpha=" + sessionStorage.getItem('activeCyberPHA');
+                });
+             });
+        </script>
+
+    </div>
+    <div class="col-md-3" style="background-color: white"></div>
+    <div class="col-md-1" style="background-color: white"></div>
+</div>
+
+
 <div class="row" style="height: 10px">
     <div class="col-md-1 "></div>
     <div class="col-md-10 ">
@@ -527,39 +570,7 @@ fetch('https://restcountries.com/v3.1/all')
              </div>
              <div class="col-md-3 text-left"></div>
             <div class="col-md-6 text-right">
-                <button type="submit" id="btnformSubmit" class="btn btn-primary custom-btn">Save Header </button>
-                <button type="button" class="btn btn-primary  custom-btn" id="resetButton"> New CyberPHA</button>
-                <script>
-                $(document).ready(function() {
-                    $('#resetButton').on('click', function() {
-                        // Reset textboxes and textareas
-                        $('#txtTitle, #txtLeader, #txtUnit, #txtStartDate, #txtAddress, #txtFacility, #txtLeaderEmail, #txtEndDate, #txtSafetySummary, #txtChemical, #txtPhysical, #txtOther').val('');
 
-                        // Reset select dropdowns
-                        $('#selIndustry, #selFacilityType, #selZone').prop('selectedIndex', 0);
-
-                        // Enable the controls
-                        $('#txtTitle, #txtLeader, #txtUnit, #txtStartDate, #txtAddress, #txtFacility, #txtLeaderEmail, #txtEndDate, #txtSafetySummary, #txtChemical, #txtPhysical, #txtOther, #selFacilityType, #selIndustry, #selZone, #countrySelector, #btnformSubmit, #risk-assessment-btn').prop('disabled', false);
-                        $('#btnformSubmit').prop('disabled', false);
-
-                        //reset session variables
-                        sessionStorage.setItem('activeCyberPHA', '0');
-                        // Set the value of the hidden text field
-                        document.getElementById('txtHdnCyberPHAID').value = '0';
-
-                    });
-                });
-
-            </script>
-                <button type="button" class="btn btn-primary custom-btn" id="scenarioButton">Add Scenarios</button>
-
-                <script>
-                     $(document).ready(function() {
-                        $('#scenarioButton').on('click', function() {
-                            window.location.href = "{% url 'OTRisk:assess_cyberpha' %}?active_cyberpha=" + sessionStorage.getItem('activeCyberPHA');
-                        });
-                     });
-                </script>
 
              </div>
         </div>
