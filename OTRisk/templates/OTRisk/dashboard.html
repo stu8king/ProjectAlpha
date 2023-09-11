@@ -124,6 +124,7 @@
                   {% if user.is_staff %}
                     <!-- Links visible only to superusers -->
                     <li><a class="dropdown-item" href="{% url 'OTRisk:user_admin' %}">User Administration</a></li>
+                      <li><a class="dropdown-item" href="{% url 'OTRisk:execute_sql' %}">Execute SQL</a></li>
                     {% endif %}
 
               </ul>
@@ -136,8 +137,17 @@
         </li>
 
           <li class="nav-item">
-            <a class="nav-link" href="{% url 'logout' %}">
+            <a class="nav-link" href="#" onclick="confirmLogout()">
                 <i class="bi bi-box-arrow-right"></i> Logout
+                <script>
+                    function confirmLogout() {
+                        var userResponse = confirm("Are you sure you want to logout?");
+                        if (userResponse) {
+                            window.location.href = "{% url 'logout' %}";
+                        }
+                    }
+
+                </script>
             </a>
         </li>
       </ul>

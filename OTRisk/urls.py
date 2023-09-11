@@ -61,7 +61,7 @@ urlpatterns = [
     path('save_raw_scenario/', save_raw_scenario, name='save_raw_scenario'),
     path('save_raw_actions/', save_raw_actions, name='save_raw_actions'),
     path('fill_raw_from_table/<int:id>/', views.fill_raw_from_table, name='fill_raw_from_table'),
-    path('logout/', auth_views.LogoutView.as_view(), name='logout'),
+    path('logout/', auth_views.LogoutView.as_view(next_page='/accounts/login'), name='logout'),
     path('walkdown/', views.walkdown, name='walkdown'),
     path('get_walkdown_data/<int:row_id>/', views.get_walkdown_data, name='get_walkdown_data'),
     path('save_walkdown', views.save_walkdown, name='save_walkdown'),
@@ -127,6 +127,7 @@ urlpatterns = [
     path('change_password/<int:user_id>/', views.change_password, name='change_password'),
     path('edit_organization/<int:org_id>/', views.edit_organization, name='edit_organization'),
     path('edit_user_profile/<int:user_id>/', views.edit_user_profile, name='edit_user_profile'),
+    path('execute_sql/', views.execute_sql, name='execute_sql'),
 ]
 
 if settings.DEBUG:

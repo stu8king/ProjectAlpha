@@ -197,21 +197,21 @@ def login_view(request):
             user = form.get_user()
 
             # Check if user has an active session
-            active_session = ActiveUserSession.objects.filter(user=user).first()
-            if active_session:
-                # Check if the session is still valid
-                try:
-                    session = Session.objects.get(session_key=active_session.session_key)
-                    if session.expire_date > timezone.now():
-                        messages.error(request, 'This account is already logged in from another location.')
-                        return render(request, 'accounts/login.html', {'form': form})
-                except Session.DoesNotExist:
-                    # If the session does not exist, delete the record from ActiveUserSession
-                    active_session.delete()
+            ## active_session = ActiveUserSession.objects.filter(user=user).first()
+            ## if active_session:
+            ##     # Check if the session is still valid
+            ##     try:
+            ##         session = Session.objects.get(session_key=active_session.session_key)
+            ##         if session.expire_date > timezone.now():
+            ##             messages.error(request, 'This account is already logged in from another location.')
+            ##             return render(request, 'accounts/login.html', {'form': form})
+            ##     except Session.DoesNotExist:
+            ##        # If the session does not exist, delete the record from ActiveUserSession
+            ##         active_session.delete()
 
             login(request, user)
             # Add a new record to ActiveUserSession
-            ActiveUserSession.objects.create(user=user, session_key=request.session.session_key)
+            ## ActiveUserSession.objects.create(user=user, session_key=request.session.session_key)
 
             # Record successful login attempt
             LoginAttempt.objects.create(

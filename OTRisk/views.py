@@ -21,7 +21,7 @@ from OTRisk.models.ThreatAssessment import ThreatAssessment
 from OTRisk.models.raw import RAWorksheet, RAWorksheetScenario, RAActions
 from django.db.models import F, Count, Avg
 from .forms import RiskScenarioForm, PostForm, AssessmentTeamForm
-from django.http import JsonResponse, HttpResponse
+from django.http import JsonResponse, HttpResponse, HttpResponseForbidden
 from django.utils import timezone
 from django.core import serializers
 from OTRisk.models.Model_Workshop import tblWorkshopNarrative, tblWorkshopInformation
@@ -46,15 +46,36 @@ from .forms import CustomScenarioForm, CustomConsequenceForm
 from .models.Model_Scenario import CustomScenario, CustomConsequence
 from accounts.models import Organization
 from accounts.models import UserProfile
-from .forms import UserForm, UserProfileForm, OrganizationForm
+from .forms import UserForm, UserProfileForm, OrganizationForm, ChangePasswordForm
 import secrets
 import string
 from django.core.mail import send_mail
 from django.contrib.auth.decorators import user_passes_test
-
+from django.db import connection
+from OTRisk.forms import SQLQueryForm
 import uuid
 
 app_name = 'OTRisk'
+
+
+@login_required()
+def execute_sql(request):
+    if not request.user.is_superuser:
+        return HttpResponseForbidden("You don't have permission to access this page.")
+
+    results = None
+    if request.method == 'POST':
+        form = SQLQueryForm(request.POST)
+        if form.is_valid():
+            query = form.cleaned_data.get('query')
+            with connection.cursor() as cursor:
+                cursor.execute(query)
+                results = cursor.fetchall()
+    else:
+        form = SQLQueryForm()
+
+    return render(request, 'OTRisk/execute_sql.html', {'form': form, 'results': results})
+
 
 def edit_user_profile(request, user_id):
     profile = get_object_or_404(UserProfile, user_id=user_id)
@@ -66,6 +87,7 @@ def edit_user_profile(request, user_id):
     else:
         form = UserProfileForm(instance=profile)
     return render(request, 'OTRisk/edit_user_profile.html', {'form': form})
+
 
 def edit_organization(request, org_id):
     organization = get_object_or_404(Organization, id=org_id)
@@ -109,7 +131,7 @@ def change_password(request, user_id):
         if form.is_valid():
             user.set_password(form.cleaned_data['password1'])
             user.save()
-            return redirect('user_admin')
+            return redirect('OTRisk:user_admin')
     else:
         form = ChangePasswordForm()
     return render(request, 'OTRisk/change_password.html', {'form': form})

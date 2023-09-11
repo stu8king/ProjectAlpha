@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block content %}
+     <div class="row" style="height: 80px;">
+    <div class="col-md-1 bg-black"></div>
+    <div class="col-md-10 bg-white"></div>
+    <div class="col-md-1 bg-black"></div>
+</div>
+<div class="row">
+    <div class="col-md-1 bg-black"></div>
+    <div class="col-md-10 bg-white" style="text-align: center"><h5></h5></div>
+    <div class="col-md-1 bg-black"></div>
+</div>
+
+<div class="row">
+<div class="col-md-1 bg-black"></div>
+<div class = "col-md-10">
+    <div class="row">
+        <div class="col-md-6 bg-white" style="text-align: center">
+            <h2>Execute SQL Query</h2>
+            <form method="post">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button type="submit" class="btn btn-primary">Execute</button>
+            </form>
+
+            {% if results %}
+            <h3>Results:</h3>
+            <table class="table">
+                <tbody>
+                    {% for row in results %}
+                    <tr>
+                        {% for item in row %}
+                        <td>{{ item }}</td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% endif %}
+            {% endblock %}
+</div>
+<div class="col-md-1 bg-black"></div>
+</div>

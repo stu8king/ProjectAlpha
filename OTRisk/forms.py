@@ -9,6 +9,10 @@ from accounts.models import UserProfile, Organization
 from django.contrib.auth.password_validation import validate_password
 
 
+class SQLQueryForm(forms.Form):
+    query = forms.CharField(widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 5}), label="SQL Query")
+
+
 class ChangePasswordForm(forms.Form):
     password1 = forms.CharField(label="New Password", widget=forms.PasswordInput)
     password2 = forms.CharField(label="Confirm Password", widget=forms.PasswordInput)

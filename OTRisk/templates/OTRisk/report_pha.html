@@ -131,7 +131,7 @@
 <nav class="navbar navbar-expand-lg navbar-scroll fixed-top shadow-0 border-bottom border-dark rounded">
   <div class="container-fluid d-flex justify-content-between">
    <a class="navbar-brand" href="{% url 'OTRisk:dashboardhome' %}"><img src="/static/images/logo1-2.jpg" style="height: 140px; width: 140px" class="navbar-logo" alt="">  </a>
-      <h4 class="my-auto text-center flex-grow-1"><font color="white">Reports</font></h4>
+      <h4 class="my-auto text-center flex-grow-1"><font color="white">CyberPHA Reports</font></h4>
 
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
       <ul class="navbar-nav ms-auto">
@@ -139,16 +139,22 @@
         <li class="nav-item">
           <a class="nav-link" href="{% url 'OTRisk:qraw' %}"><i class="bi bi-journal-text"></i> Risk Assessment</a>
         </li>
-       <li class="nav-item">
+        <li class="nav-item">
           <a class="nav-link" href="{% url 'OTRisk:iotaphamanager' %}"><i class="bi bi-journal-text"></i> CyberPHA</a>
         </li>
-           <li class="nav-item">
+          <li class="nav-item">
           <a class="nav-link" href="{% url 'OTRisk:ra_actions_view' %}" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Actions</a>
         </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Reports</a>
+        <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="bi-file-earmark-easel"></i> Reports
+              </a>
+              <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                  <li><a class="dropdown-item" href="{% url 'OTRisk:reports' %}" >QRAW Reports</a></li>
+                  <li><a class="dropdown-item" href="{% url 'OTRisk:reports_pha' %}">CyberPHA Reports</a></li>
+              </ul>
         </li>
-                <li class="nav-item dropdown">
+        <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                 <i class="bi bi-diagram-3"></i> Admin
               </a>
@@ -156,6 +162,11 @@
                   <li><a  class="dropdown-item" href="{% url 'OTRisk:add_scenario' %}">Scenario Manager</a></li>
                   <li><a  class="dropdown-item" href="{% url 'OTRisk:add_consequence' %}">Consequence Manager</a></li>
                   <li><a  class="dropdown-item" href="{% url 'OTRisk:admin_users' %}">Admin Users</a></li>
+                  {% if user.is_staff %}
+                    <!-- Links visible only to superusers -->
+                    <li><a class="dropdown-item" href="{% url 'OTRisk:user_admin' %}">User Administration</a></li>
+                      <li><a class="dropdown-item" href="{% url 'OTRisk:execute_sql' %}">Execute SQL</a></li>
+                    {% endif %}
 
               </ul>
 
@@ -219,7 +230,7 @@
     <div class="col-md-1 bg-black"></div>
             <div id="reportSection" class="col-md-10 table-wrapper small-font" >
                 <div id="reportDetails">
-                    <h2>Report Details</h2>
+                    <h2>Report: <span id="reportTitle"></span></h2>
                     <div class="row">
                     <div class="col-md-3">
                         <strong>Title:</strong> <span id="reportTitle"></span>
@@ -340,89 +351,141 @@
                                 Scenario:
                             </div>
                             <div class="card-body">
-                                <p class="card-text">${ scenario.ScenarioDescription }</p>
+                                <p class="card-text">${ scenario.Scenario }</p>
                             </div>
                         </div>
                         <br>
                         <div class="row">
                             <div class="col-md-12">
+                                <div class="col-md-1"></div>
                                 <div class="card">
                                     <div class="card-header">
                                         Overall Risk Status:
                                     </div>
                                     <div class="card-body">
-                                        <p class="card-text">${ scenario.riskSummary }</p>
+                                        <p class="card-text">${ scenario.RRa }</p>
                                     </div>
                                 </div>
                             </div> <!-- This closing tag was moved up -->
                         </div>
                         <div class="row">
-                            <div class="col-md-2">
+                            <div class="col-md-1">
                                 <div class="card">
                                     <div class="card-header">
-                                        Scenario Risk Score:
+                                        UEL:
                                     </div>
                                     <div class="card-body">
-                                        <p class="card-text">${ scenario.RiskScore }</p>
+                                        <p class="card-text">${ scenario.UEL }</p>
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-2">
+                            <div class="col-md-1">
                                 <div class="card">
                                     <div class="card-header">
-                                        Scenario Risk Rating:
+                                        RRU:
                                     </div>
                                     <div class="card-body">
-                                        <p class="card-text">${ scenario.RiskStatus }</p>
+                                        <p class="card-text">${ scenario.RRU }</p>
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-2">
+                             <div class="col-md-1"></div>
+                            <div class="col-md-1">
                                 <div class="card">
                                     <div class="card-header">
-                                        Costs (Best Case):
+                                        Sm:
                                     </div>
                                     <div class="card-body">
-                                        <p class="card-text">${ scenario.event_cost_low }</p>
+                                        <p class="card-text">${ scenario.SM }</p>
+                                    </div>
+                                </div>
+
+                            </div>
+                            <div class="col-md-1">
+                                <div class="card">
+                                    <div class="card-header">
+                                        MEL:
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="card-text">${ scenario.MEL }</p>
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-2">
+                            <div class="col-md-1">
                                 <div class="card">
                                     <div class="card-header">
-                                        Costs (Worst Case):
+                                        RRm:
                                     </div>
                                     <div class="card-body">
-                                        <p class="card-text">${ scenario.event_cost_high }</p>
+                                        <p class="card-text">${ scenario.RRM }</p>
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-2">
+                            <div class="col-md-1"></div>
+                            <div class="col-md-1">
                                 <div class="card">
                                     <div class="card-header">
-                                        Costs (Median):
+                                        SA:
                                     </div>
                                     <div class="card-body">
-                                        <p class="card-text">${ scenario.event_cost_median }</p>
+                                        <p class="card-text">${ scenario.SA }</p>
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-2">
+                            <div class="col-md-1">
                                 <div class="card">
                                     <div class="card-header">
-                                        Outage Length:
+                                        MELA:
                                     </div>
                                     <div class="card-body">
-                                        <p class="card-text">${ scenario.outageLength }</p>
+                                        <p class="card-text">${ scenario.MELA }</p>
                                     </div>
                                 </div>
                             </div>
+
+                            <div class="col-md-1"></div>
                         </div>
                         <div class="row">
+                            <div class="col-md-2">
+                                <div class="card">
+                                    <div class="card-header">
+                                        ARO:
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="card-text">${ scenario.aro }</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="card">
+                                    <div class="card-header">
+                                        SLE:
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="card-text">${ Number(scenario.sle).toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 }) }</p>
+
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="card">
+                                    <div class="card-header">
+                                        ALE:
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="card-text">${ Number(scenario.ale).toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 }) }</p>
+
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6"></div>
+                        </div>
+                        <div class="row">
+
                             <div class="col-md-4">
                                 <div class="card">
                                     <div class="card-header">
-                                        Safety:
+                                        Safety Impact: ${ scenario.impactSafety }/10
                                     </div>
                                     <div class="card-body">
                                         <p class="card-text">${ scenario.justifySafety }</p>
@@ -432,7 +495,7 @@
                             <div class="col-md-4">
                                 <div class="card">
                                     <div class="card-header">
-                                        Danger-to-life:
+                                        Danger-to-life Impact: ${ scenario.impactLife }/10
                                     </div>
                                     <div class="card-body">
                                         <p class="card-text">${ scenario.justifyLife }</p>
@@ -442,7 +505,7 @@
                              <div class="col-md-4">
                                 <div class="card">
                                     <div class="card-header">
-                                        Environment:
+                                        Environment Impact: ${ scenario.impactEnvironment }/10
                                     </div>
                                     <div class="card-body">
                                         <p class="card-text">${ scenario.justifyEnvironment }</p>
@@ -454,7 +517,7 @@
                             <div class="col-md-4">
                                 <div class="card">
                                     <div class="card-header">
-                                        Production:
+                                        Production Impact: ${ scenario.impactProduction }/10
                                     </div>
                                     <div class="card-body">
                                         <p class="card-text">${ scenario.justifyProduction }</p>
@@ -464,7 +527,7 @@
                             <div class="col-md-4">
                                 <div class="card">
                                     <div class="card-header">
-                                        Financial:
+                                        Financial Impact: ${ scenario.impactFinance }/10
                                     </div>
                                     <div class="card-body">
                                         <p class="card-text">${ scenario.justifyFinancial }</p>
@@ -474,7 +537,7 @@
                              <div class="col-md-4">
                                 <div class="card">
                                     <div class="card-header">
-                                        Reputation:
+                                        Reputation Impact: ${ scenario.impactReputation }/10
                                     </div>
                                     <div class="card-body">
                                         <p class="card-text">${ scenario.justifyReputation }</p>
@@ -487,7 +550,7 @@
                             <div class="col-md-4">
                                 <div class="card">
                                     <div class="card-header">
-                                        Reputation:
+                                        Supply Chain Impact:
                                     </div>
                                     <div class="card-body">
                                         <p class="card-text">${ scenario.justifyReputation }</p>
@@ -497,7 +560,7 @@
                             <div class="col-md-4">
                                 <div class="card">
                                     <div class="card-header">
-                                        Data:
+                                        Data Impact: ${ scenario.impactData }/10
                                     </div>
                                     <div class="card-body">
                                         <p class="card-text">${ scenario.justifyData }</p>
@@ -505,16 +568,39 @@
                                 </div>
                             </div>
                              <div class="col-md-4">
-                                <div class="card">
-                                    <div class="card-header">
-                                        Supply Chain:
-                                    </div>
-                                    <div class="card-body">
-                                        <p class="card-text">${ scenario.justifySupply }</p>
-                                    </div>
-                                </div>
+
                             </div>
                         </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        Alignment with Standards
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="card-text">${
+                                            scenario.recommendations && typeof scenario.recommendations === 'string'
+                                                ? scenario.recommendations.replace(/\n/g, '<br>')
+                                                : ''
+                                        }</p>
+                                    </div>
+                                </div> <!-- Missing closing div tag for the card -->
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        Recommended Controls
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="card-text">${
+                                            scenario.control_recommendations && typeof scenario.control_recommendations === 'string'
+                                                ? scenario.control_recommendations.replace(/\n/g, '<br>')
+                                                : ''
+                                        }</p>
+                                    </div>
+                                </div> <!-- Missing closing div tag for the card -->
+                            </div>
+                        </div> <!-- Closing div tag for the row -->
                     </div>
 
                     <div class="col-md-5">
@@ -562,7 +648,7 @@
                     scale: {
                         ticks: {
                             beginAtZero: true,
-                            max: 100 // Assuming scores are out of 100, adjust if needed
+                            max: 10 // Assuming scores are out of 100, adjust if needed
                         }
                     }
                 }
@@ -644,7 +730,14 @@ function displayBarChart(data) {
         options: {
             scales: {
                 y: {
-                    beginAtZero: true
+                    beginAtZero: true,
+                    min: 0,  // Set minimum value for y-axis
+                    max: 10  // Set maximum value for y-axis
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
                 }
             }
         }

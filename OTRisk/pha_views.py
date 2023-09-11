@@ -150,7 +150,6 @@ def scenario_analysis(request):
         standards = request.GET.get('standard')
         country = request.GET.get('country')
 
-        # openai.api_key = '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'
         openai.api_key = os.environ.get('OPENAI_API_KEY')
         # Define the common part of the user message
         common_content = f"Given the scenario {scenario} with consequences {consequences} affecting a {facility_type} in the {industry} industry, the threat source {threatSource} performing actions {threatActions}, and current controls {currentControls}. The business impact assessment, giving scores out of 10 where 10 represents maximum impact,  rates safety as {safetyimpact}, danger to life as {lifeimpact}, production and operations as {productionimpact}, company reputation as {reputationimpact}, environmental consequences as {environmentimpact}, regulatory consequences as {regulatoryimpact}, and data and intellectual property as {dataimpact}. The effectiveness of current controls is analyzed as severity of the threat mitigated {severitymitigated}, risk exposure mitigated {mitigatedexposure}, and residual risk {residualrisk}."
@@ -201,8 +200,6 @@ def facility_risk_profile(request):
         address = request.GET.get('address')
         country = request.GET.get('country')
         facility = request.GET.get('txtFacility')
-
-        # openai.api_key = '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'
 
         openai_api_key = os.environ.get('OPENAI_API_KEY')
         openai.api_key = openai_api_key
