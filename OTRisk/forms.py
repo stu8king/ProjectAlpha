@@ -5,8 +5,30 @@ from .models.raw import RAWorksheet, RAActions
 from .models.Model_Scenario import CustomScenario, CustomConsequence
 import accounts
 from django.contrib.auth.models import User
-from accounts.models import UserProfile
+from accounts.models import UserProfile, Organization
 from django.contrib.auth.password_validation import validate_password
+
+
+class ChangePasswordForm(forms.Form):
+    password1 = forms.CharField(label="New Password", widget=forms.PasswordInput)
+    password2 = forms.CharField(label="Confirm Password", widget=forms.PasswordInput)
+
+    def clean(self):
+        cleaned_data = super().clean()
+        if cleaned_data.get('password1') != cleaned_data.get('password2'):
+            raise forms.ValidationError("Passwords do not match!")
+
+
+class OrganizationForm(forms.ModelForm):
+    class Meta:
+        model = Organization
+        fields = '__all__'
+
+
+class UserProfileForm(forms.ModelForm):
+    class Meta:
+        model = UserProfile
+        fields = '__all__'
 
 
 class UserForm(forms.ModelForm):

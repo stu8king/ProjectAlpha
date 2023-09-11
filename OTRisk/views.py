@@ -46,14 +46,73 @@ from .forms import CustomScenarioForm, CustomConsequenceForm
 from .models.Model_Scenario import CustomScenario, CustomConsequence
 from accounts.models import Organization
 from accounts.models import UserProfile
-from .forms import UserForm, UserProfileForm
+from .forms import UserForm, UserProfileForm, OrganizationForm
 import secrets
 import string
 from django.core.mail import send_mail
+from django.contrib.auth.decorators import user_passes_test
 
 import uuid
 
 app_name = 'OTRisk'
+
+def edit_user_profile(request, user_id):
+    profile = get_object_or_404(UserProfile, user_id=user_id)
+    if request.method == "POST":
+        form = UserProfileForm(request.POST, instance=profile)
+        if form.is_valid():
+            form.save()
+            return redirect('OTRisk:user_admin')
+    else:
+        form = UserProfileForm(instance=profile)
+    return render(request, 'OTRisk/edit_user_profile.html', {'form': form})
+
+def edit_organization(request, org_id):
+    organization = get_object_or_404(Organization, id=org_id)
+    if request.method == "POST":
+        form = OrganizationForm(request.POST, instance=organization)
+        if form.is_valid():
+            form.save()
+            return redirect('OTRisk:user_admin')
+    else:
+        form = OrganizationForm(instance=organization)
+    return render(request, 'OTRisk/edit_organization.html', {'form': form})
+
+
+@user_passes_test(lambda u: u.is_staff)
+def user_admin(request):
+    users = User.objects.all()
+    organizations = Organization.objects.all()
+    user_profiles = UserProfile.objects.all()
+    return render(request, 'OTRisk/user_admin.html',
+                  {'users': users, 'organizations': organizations, 'user_profiles': user_profiles})
+
+
+@user_passes_test(lambda u: u.is_staff)
+def edit_user(request, user_id):
+    user = User.objects.get(id=user_id)
+    if request.method == 'POST':
+        form = UserForm(request.POST, instance=user)
+        if form.is_valid():
+            form.save()
+            return redirect('user_admin')
+    else:
+        form = UserForm(instance=user)
+    return render(request, 'OTRisk/edit_user.html', {'form': form})
+
+
+@user_passes_test(lambda u: u.is_staff)
+def change_password(request, user_id):
+    user = User.objects.get(id=user_id)
+    if request.method == 'POST':
+        form = ChangePasswordForm(request.POST)
+        if form.is_valid():
+            user.set_password(form.cleaned_data['password1'])
+            user.save()
+            return redirect('user_admin')
+    else:
+        form = ChangePasswordForm()
+    return render(request, 'OTRisk/change_password.html', {'form': form})
 
 
 def generate_password(length=12):
@@ -380,7 +439,7 @@ def save_or_update_cyberpha(request):
                 'RRU': RRU,
                 'aro': aro,
                 'ale': ale,
-                'countermeasureCosts':countermeasureCosts,
+                'countermeasureCosts': countermeasureCosts,
                 'timestamp': timezone.now()
             }
         )
@@ -835,7 +894,6 @@ def get_walkdown_data(request, row_id):
 
 
 def save_walkdown(request):
-
     if request.method == 'POST':
         data = request.POST
 
@@ -1172,7 +1230,6 @@ def risk_assessment(request):
                 row_count = int(request.POST.get('hdnRowCount'))
 
                 for i in range(2, row_count + 2):
-
                     scenario_description = request.POST.get('scenario{}'.format(i), '')
                     threat_code = request.POST.get('threat{}'.format(i), '')
                     vuln_code = request.POST.get('vulnerability{}'.format(i), '')
@@ -1548,7 +1605,6 @@ def add_walkthrough(request):
 
 
 def walkthrough_questionnaire(request, facility_type_id):
-
     query_results = Questionnaire.objects \
         .values('id', 'title', 'description', 'questionthemes__QuestionTheme',
                 'questionthemes__questions__questionnumber', 'questionthemes__questions__questiontext') \

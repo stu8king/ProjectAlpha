@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h1>User Administration</h1>
+
+    <!-- Users Section -->
+    <h2>Users</h2>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for user in users %}
+            <tr>
+                <td>{{ user.username }}</td>
+                <td>{{ user.email }}</td>
+                <td>
+                    <a href="{% url 'OTRisk:edit_user' user.id %}" class="btn btn-primary btn-sm">Edit</a>
+                    <a href="{% url 'OTRisk:change_password' user.id %}" class="btn btn-warning btn-sm">Change Password</a>
+                    <!-- You can also add a delete button here -->
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Organizations Section -->
+    <h2>Organizations</h2>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Address</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for org in organizations %}
+            <tr>
+                <td>{{ org.name }}</td>
+                <td>{{ org.address }}</td>
+                <td>
+                    <a href="{% url 'OTRisk:edit_organization' org.id %}" class="btn btn-primary btn-sm">Edit</a>
+                    <!-- Add delete and other action buttons as needed -->
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- User Profiles Section -->
+    <h2>User Profiles</h2>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>User</th>
+                <th>Organization</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for profile in user_profiles %}
+            <tr>
+                <td>{{ profile.user.username }}</td>
+                <td>{{ profile.organization.name }}</td>
+                <td>
+                    <a href="{% url 'OTRisk:edit_user_profile' profile.id %}" class="btn btn-primary btn-sm">Edit</a>
+                    <!-- Add delete and other action buttons as needed -->
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

@@ -122,6 +122,11 @@ urlpatterns = [
     path('reports', views.reports, name='reports'),
     path('reports_pha', views.reports_pha, name='reports_pha'),
     path('pha_report/<int:cyberpha_id>/', views.pha_report, name='pha_report'),
+    path('user_admin/', views.user_admin, name='user_admin'),
+    path('edit_user/<int:user_id>/', views.edit_user, name='edit_user'),
+    path('change_password/<int:user_id>/', views.change_password, name='change_password'),
+    path('edit_organization/<int:org_id>/', views.edit_organization, name='edit_organization'),
+    path('edit_user_profile/<int:user_id>/', views.edit_user_profile, name='edit_user_profile'),
 ]
 
 if settings.DEBUG:
