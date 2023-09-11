@@ -320,7 +320,24 @@ def save_or_update_cyberpha(request):
         justifyRegulation = request.POST.get('justifyRegulation')
         justifyData = request.POST.get('dataRegulation')
         sle_string = request.POST.get('sle')
-        sle = int(sle_string.replace('$', '').replace(',', ''))
+        UEL = 0
+        RRU = 0
+        aro = request.POST.get('aro')
+        ale = request.POST.get('ale')
+        countermeasureCosts = 0
+
+        # Initialize sle to a default value
+        sle = 0
+
+        # Check if sle_string is not None and not 'NaN'
+        if sle_string and sle_string != 'NaN':
+            try:
+                # Remove dollar signs, commas, and decimal portion, then convert to integer
+                sle = int(float(sle_string.replace('$', '').replace(',', '')))
+            except ValueError:
+                # Handle the error appropriately, e.g., set a default value or log the error
+                sle = 0
+
         deleted = 0
 
         cyberpha_entry, created = tblCyberPHAScenario.objects.update_or_create(
@@ -358,7 +375,13 @@ def save_or_update_cyberpha(request):
                 'justifyRegulation': justifyRegulation,
                 'justifyData': justifyData,
                 'userID': request.user,
-                'sle': sle
+                'sle': sle,
+                'UEL': UEL,
+                'RRU': RRU,
+                'aro': aro,
+                'ale': ale,
+                'countermeasureCosts':countermeasureCosts,
+                'timestamp': timezone.now()
             }
         )
 
