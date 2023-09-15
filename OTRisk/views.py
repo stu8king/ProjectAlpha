@@ -13,8 +13,6 @@ from django.views.generic.edit import CreateView
 import accounts.models
 from OTRisk.models.RiskScenario import RiskScenario, tblScenarioRecommendations
 from OTRisk.models.Model_Scenario import tblConsequence
-from OTRisk.models.sitewalkdown import SiteWalkdown
-from OTRisk.models.sitewalkdown import SiteWalkdownQuestionnaire, WalkdownAnswers
 from OTRisk.models.questionnairemodel import Questionnaire, tblFacility, FacilityType
 from OTRisk.models.post import Post, AssessmentTeam
 from OTRisk.models.ThreatAssessment import ThreatAssessment
@@ -886,142 +884,8 @@ def getFacilityTypes(request):
     return render(request, 'walkdown.html', {'facility_types': facility_types})
 
 
-def walkdown(request):
-    FacilityNames = tblCyberPHAHeader.objects.values_list('FacilityName', flat=True).distinct().order_by('FacilityName')
-    walkdown_list = SiteWalkdown.objects.all()
-    question_categories = set(question.Category for question in SiteWalkdownQuestionnaire.objects.all())
-    walkdown_questions = SiteWalkdownQuestionnaire.objects.all()
-    facility_types = FacilityType.objects.order_by('FacilityType')
-
-    walkdown_session = request.session.get('session_walkdown')
-    walkdown_facility = request.session.get('walkdown_facility')
-    walkdown_facilityType = request.session.get('walkdown_facilityType')
-    walkdown_people = request.session.get('walkdown_people')
-    walkdown_leader = request.session.get('walkdown_leader')
-    walkdown_contact = request.session.get('walkdown_contact')
-    walkdown_start = request.session.get('walkdown_start')
-    walkdown_end = request.session.get('walkdown_end')
-    walkdown_zones = request.session.get('walkdown_zones')
-    walkdown_safetybrief = request.session.get('walkdown_safetybrief')
-
-    return render(request, 'walkdown.html', {
-        'walkdown_list': walkdown_list,
-        'question_categories': question_categories,
-        'walkdown_questions': walkdown_questions,
-        'facility_types': facility_types,
-        'FacilityNames': FacilityNames,
-        'walkdown_facility': walkdown_facility,
-        'walkdown_facilityType': walkdown_facilityType,
-        'walkdown_people': walkdown_people,
-        'walkdown_leader': walkdown_leader,
-        'walkdown_contact': walkdown_contact,
-        'walkdown_start': walkdown_start,
-        'walkdown_end': walkdown_end,
-        'walkdown_zones': walkdown_zones,
-        'walkdown_safetybrief': walkdown_safetybrief,
-        'walkdown_session': walkdown_session
-    })
 
 
-def get_walkdown_data(request, row_id):
-    walkdown = SiteWalkdown.objects.get(ID=row_id)
-    data = {
-        'WalkdownDate': walkdown.WalkdownDate,
-        'OrganizationName': walkdown.OrganizationName,
-        'LocationAddress': walkdown.LocationAddress,
-        'LocationCountry': walkdown.LocationCountry,
-        'LocationType': walkdown.LocationType,
-        'PeopleOnSite': walkdown.PeopleOnSite,
-        'WalkdownLeader': walkdown.WalkdownLeader,
-        'OrgContact': walkdown.OrgContact,
-        'WalkdownStartTime': walkdown.WalkdownStartTime,
-        'WalkdownEndTime': walkdown.WalkdownEndTime,
-        'DisallowedZones': walkdown.DisallowedZones,
-        'SafetyBriefingGiven': walkdown.SafetyBriefingGiven,
-    }
-    request.session['session_walkdown'] = row_id  # Update session variable
-    return JsonResponse(data)
-
-
-def save_walkdown(request):
-    if request.method == 'POST':
-        data = request.POST
-
-        walkdown = SiteWalkdown()
-        walkdown.WalkdownDate = data['WalkdownDate']
-        # Check if the value of data('OrganizationName') is "Other"
-        if data.get('OrganizationName') == 'Other':
-            # Save the value of data('OtherOrganization') to walkdown.OrganizationName
-            walkdown.OrganizationName = data.get('OtherOrganization', '')
-        else:
-            # Save the value of data('OrganizationName') to walkdown.OrganizationName
-            walkdown.OrganizationName = data.get('OrganizationName')
-
-        walkdown.LocationAddress = data['LocationAddress']
-        request.session['walkdown_address'] = walkdown.LocationAddress
-        # walkdown.LocationCountry = data['LocationCountry']
-        if data.get('LocationType') == 'Other':
-            walkdown.LocationType = data['LocationType']
-        else:
-            walkdown.LocationType = data.get('OtherFacilityType', [''])[0]
-
-        walkdown.PeopleOnSite = data['PeopleOnSite']
-
-        walkdown.WalkdownLeader = data['WalkdownLeader']
-
-        walkdown.OrgContact = data['OrgContact']
-
-        walkdown.WalkdownStartTime = data['WalkdownStartTime']
-
-        walkdown.WalkdownEndTime = data['WalkdownEndTime']
-
-        walkdown.DisallowedZone = data['DisallowedZone']
-
-        walkdown.SafetyBriefingGiven = data['SafetyBriefingGiven']
-
-        walkdown.save()
-
-        request.session['session_walkdown'] = walkdown.pk  # Set session variable
-        request.session['walkdown_facility'] = walkdown.OrganizationName
-        request.session['walkdown_facilityType'] = walkdown.LocationType
-        request.session['walkdown_people'] = walkdown.PeopleOnSite
-        request.session['walkdown_leader'] = walkdown.WalkdownLeader
-        request.session['walkdown_contact'] = walkdown.OrgContact
-        request.session['walkdown_start'] = walkdown.WalkdownStartTime
-        request.session['walkdown_end'] = walkdown.WalkdownEndTime
-        request.session['walkdown_zones'] = walkdown.DisallowedZone
-        request.session['walkdown_safetybrief'] = walkdown.SafetyBriefingGiven
-
-    return redirect('OTRisk:walkdown')
-
-
-def create_walkdown_risk_assessment(request):
-    if request.method == 'POST':
-        walkdown_id = request.POST.get('walkdownId')
-        question_id = request.POST.get('questionId')
-        yes_no_option = request.POST.get('yesNoOption')
-        details_input = request.POST.get('detailsInput')
-        orgName = request.POST.get('organizationName')
-
-        walkdown_answers = WalkdownAnswers()
-        walkdown_answers.WalkdownID = walkdown_id
-        walkdown_answers.WalkdownQuestionID = question_id
-        walkdown_answers.YesNo = yes_no_option
-        walkdown_answers.Details = details_input
-        walkdown_answers.RANeeded = 1  # Set as needed
-        walkdown_answers.save()
-
-        # Create a new record in tblRAWorksheet
-        walkdown_question = SiteWalkdownQuestionnaire.objects.get(ID=question_id)
-        ra_worksheet = RAWorksheet()
-        ra_worksheet.RATitle = 'Walkdown of ' + orgName
-        ra_worksheet.RADescription = 'Risk assessment for question ' + walkdown_question.WalkdownQuestion
-        ra_worksheet.RADate = str(date.today())
-        ra_worksheet.StatusFlag = 'Pending'
-        ra_worksheet.RATrigger = 'Site Visit/Walkdown'
-        ra_worksheet.save()
-
-    return JsonResponse({'success': True})
 
 
 def fill_raw_from_table(request, id):
@@ -1368,15 +1232,6 @@ def risk_assessment(request):
 
     return render(request, 'riskassess.html', data)
 
-
-def site_walkdown(request):
-    # questionnaires = SiteWalkdownQuestionnaire.objects.all()
-    # context = {'questionnaires': questionnaires}
-    # return render(request, 'site_walkdown.html', context)
-    questionnaires = SiteWalkdownQuestionnaire.objects.all()
-    categories = SiteWalkdownQuestionnaire.objects.values_list('Category', flat=True).distinct()
-    context = {'questionnaires': questionnaires, 'categories': categories}
-    return render(request, 'site_walkdown.html', context)
 
 
 def save_threat(request):
