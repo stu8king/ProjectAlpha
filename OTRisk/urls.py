@@ -3,23 +3,17 @@ from django.urls import path, include
 from django.conf.urls.static import static
 from django.contrib.auth import views as auth_views
 from OTRisk.views import (
-    save_scenario,
-    save_recommendation,
-    save_threat,
     risk_assessment,
     risk_register_data,
     save_or_update_tblRAWorksheet,
     save_raw_scenario,
     save_raw_actions
 )
-from .team_views import add_team_members
 from . import views
 
 app_name = 'OTRisk'
 
 urlpatterns = [
-    path('scenario/<int:pk>/', views.ScenarioDetailView.as_view(), name='scenario_detail'),
-    path('scenario/<int:pk>/update/', views.ScenarioUpdateView.as_view(), name='scenario_update'),
     path('add_walkthrough/', views.add_walkthrough, name='add_walkthrough'),
     path('get_scenarios/', views.get_scenarios, name='get_scenarios'),
     path('get_actions/', views.get_actions, name='get_actions'),

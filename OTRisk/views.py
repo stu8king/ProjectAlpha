@@ -11,7 +11,6 @@ from OTRisk.models.raw import RAWorksheet, RAWorksheetScenario, RAActions
 from django.db.models import F, Count, Avg
 
 from accounts.views import get_client_ip
-from .forms import RiskScenarioForm
 from django.http import JsonResponse, HttpResponse, HttpResponseForbidden
 from django.utils import timezone
 from django.core import serializers
@@ -1326,25 +1325,6 @@ def walkthrough_questionnaire_details(request, questionnaire_id):
     # Add your logic here to retrieve the questionnaire details and render the template
     return render(request, 'OTRisk/walkthroughQuestionnaire.html', {'questionnaire_id': questionnaire_id})
 
-
-class ScenarioDetailView(View):
-    template_name = 'OTRisk/post/scenario_detail.html'
-
-    def get(self, request, *args, **kwargs):
-        scenario = get_object_or_404(RiskScenario, pk=self.kwargs['pk'])
-        form = RiskScenarioForm(instance=scenario)
-        return render(request, self.template_name, {'scenario': scenario, 'form': form})
-
-
-class ScenarioUpdateView(View):
-    def post(self, request, *args, **kwargs):
-        scenario = get_object_or_404(RiskScenario, pk=self.kwargs['pk'])
-        form = RiskScenarioForm(request.POST, instance=scenario)
-        if form.is_valid():
-            form.save()
-            return redirect('OTRisk:scenario_detail', pk=self.kwargs['pk'])
-        else:
-            return render(request, 'OTRisk/post/scenario_edit.html', {'form': form})
 
 
 def write_to_audit(user_id, user_action, user_ip):
