@@ -1,26 +1,17 @@
-import logging
 
 from django.contrib.auth.models import User
-from django.shortcuts import render, get_object_or_404, redirect
-from django.urls import reverse_lazy, reverse
-from django.db import connection
-from django.views import View, generic
-from django.template import RequestContext
+from django.shortcuts import  get_object_or_404
+from django.views import View
 from django.views.decorators.csrf import csrf_exempt
-from django.views.generic import DeleteView
-from django.views.generic.edit import CreateView
-
-import accounts.models
 from OTRisk.models.RiskScenario import RiskScenario, tblScenarioRecommendations
 from OTRisk.models.Model_Scenario import tblConsequence
-from OTRisk.models.questionnairemodel import Questionnaire, tblFacility, FacilityType
-from OTRisk.models.post import Post, AssessmentTeam
+from OTRisk.models.questionnairemodel import Questionnaire, FacilityType
 from OTRisk.models.ThreatAssessment import ThreatAssessment
 from OTRisk.models.raw import RAWorksheet, RAWorksheetScenario, RAActions
 from django.db.models import F, Count, Avg
 
 from accounts.views import get_client_ip
-from .forms import RiskScenarioForm, PostForm, AssessmentTeamForm
+from .forms import RiskScenarioForm
 from django.http import JsonResponse, HttpResponse, HttpResponseForbidden
 from django.utils import timezone
 from django.core import serializers
@@ -36,7 +27,6 @@ from datetime import date, datetime
 import json
 import requests
 from xml.etree import ElementTree as ET
-from bs4 import BeautifulSoup
 from .raw_views import qraw, openai_assess_risk, GetTechniquesView, raw_action, check_vulnerabilities, rawreport, \
     raw_from_walkdown, save_ra_action, get_rawactions, ra_actions_view, UpdateRAAction, reports, reports_pha
 from .dashboard_views import dashboardhome
@@ -53,8 +43,6 @@ from django.core.mail import send_mail
 from django.contrib.auth.decorators import user_passes_test
 from django.db import connection
 from OTRisk.forms import SQLQueryForm
-import uuid
-
 app_name = 'OTRisk'
 
 
@@ -755,137 +743,9 @@ def save_cyberpha(request):
     return render(request, 'CyberPHAManager.html', {'tblCyberPHAList': tblCyberPHAList})
 
 
-from django.shortcuts import get_object_or_404
-
-
-def save_walkdown_questionnaire(request):
-    if request.method == 'POST':
-        walkdown_id = request.POST.get('walkdownid')
-        active_cyberPHA = request.POST.get('activecyberpha')
-
-        question_ids = request.POST.get('question_ids[]', '').split(',')
-        user_responses = request.POST.get('user_responses[]', '').split(',')
-        questions = request.POST.get('question_texts[]', '').split(',')
-
-        for question_id, user_response, question in zip(question_ids, user_responses, questions):
-            walkdown_answers = WalkdownAnswers.objects.filter(
-                WalkdownID=walkdown_id,
-                WalkdownQuestionID=int(question_id)
-
-            )
-
-            if walkdown_answers.exists():
-                # Update existing record
-                walkdown_answer = walkdown_answers.first()
-                walkdown_answer.walkdown_id = walkdown_id
-                walkdown_answer.CyberPHA_ID = active_cyberPHA
-                walkdown_answer.UserResponse = user_response
-                walkdown_answer.questiontext = question
-                walkdown_answer.Details = ''
-                walkdown_answer.RANeeded = 0
-                walkdown_answer.save()
-            else:
-                # Create new record
-                walkdown_answer = WalkdownAnswers.objects.create(
-                    WalkdownID=walkdown_id,
-                    WalkdownQuestionID=int(question_id),
-                    CyberPHA_ID=active_cyberPHA,
-                    UserResponse=user_response,
-                    questiontext=question,
-                    Details='',
-                    RANeeded=0
-                )
-
-        return JsonResponse({'success': True, 'walkdownID': walkdown_id})
-    else:
-        return JsonResponse({'success': False, 'message': 'Invalid request method'})
-
-
-def update_existing_records(request):
-    if request.method == 'POST':
-        # Update existing records logic goes here
-        walkdown_id = request.POST.get('walkdownID')
-        cyberPHA_id = request.POST.get('CyberPHA_ID')
-
-        # Get the updated data from the request and update the records accordingly
-        question_ids = request.POST.getlist('question_ids[]')
-        user_responses = request.POST.getlist('user_responses[]')
-
-        for question_id, user_response in zip(question_ids, user_responses):
-            walkdown_answer = WalkdownAnswers.objects.get(WalkdownID=walkdown_id, WalkdownQuestionID=question_id)
-            walkdown_answer.UserResponse = user_response
-            walkdown_answer.save()
-
-        return JsonResponse({'success': True})
-    else:
-        return JsonResponse({'success': False, 'message': 'Invalid request method'})
-
-
-def create_new_records(request):
-    if request.method == 'POST':
-        # Create new records logic goes here
-        walkdown_id = request.POST.get('walkdownID')
-        cyberPHA_id = request.POST.get('CyberPHA_ID')
-
-        # Get the new data from the request and create new records
-        question_ids = request.POST.getlist('question_ids[]')
-        user_responses = request.POST.getlist('user_responses[]')
-
-        for question_id, user_response in zip(question_ids, user_responses):
-            walkdown_answer = WalkdownAnswers(
-                WalkdownID=walkdown_id,
-                WalkdownQuestionID=question_id,
-                CyberPHA_ID=cyberPHA_id,
-                UserResponse=user_response,
-                Details='',
-                RANeeded=0
-            )
-            walkdown_answer.save()
-
-        return JsonResponse({'success': True})
-    else:
-        return JsonResponse({'success': False, 'message': 'Invalid request method'})
-
-
-def update_or_create_records(request):
-    if request.method == 'POST':
-        # Update or create records logic goes here
-        walkdown_id = request.POST.get('walkdownID')
-        cyberPHA_id = request.POST.get('CyberPHA_ID')
-
-        # Get the data from the request and update or create records accordingly
-        question_ids = request.POST.getlist('question_ids[]')
-        user_responses = request.POST.getlist('user_responses[]')
-
-        for question_id, user_response in zip(question_ids, user_responses):
-            existing_records = WalkdownAnswers.objects.filter(WalkdownID=walkdown_id, WalkdownQuestionID=question_id)
-            if existing_records.exists():
-                walkdown_answer = existing_records.first()
-                walkdown_answer.UserResponse = user_response
-                walkdown_answer.save()
-            else:
-                walkdown_answer = WalkdownAnswers(
-                    WalkdownID=walkdown_id,
-                    WalkdownQuestionID=question_id,
-                    CyberPHA_ID=cyberPHA_id,
-                    UserResponse=user_response,
-                    Details='',
-                    RANeeded=0
-                )
-                walkdown_answer.save()
-
-        return JsonResponse({'success': True})
-    else:
-        return JsonResponse({'success': False, 'message': 'Invalid request method'})
-
-
 def getFacilityTypes(request):
     facility_types = FacilityType.objects.order_by('FacilityTypes')
     return render(request, 'walkdown.html', {'facility_types': facility_types})
-
-
-
-
 
 
 def fill_raw_from_table(request, id):
@@ -1233,7 +1093,6 @@ def risk_assessment(request):
     return render(request, 'riskassess.html', data)
 
 
-
 def save_threat(request):
     if request.method == 'POST':
         threat_update_flag = int(request.POST.get('ThreatUpdateFlag', '0'))
@@ -1394,32 +1253,6 @@ def save_recommendation(request):
         return JsonResponse({'success': False, 'message': 'Invalid request method.'})
 
 
-def add_team_members(request):
-    post_id = request.session.get('post_id')
-    post = get_object_or_404(Post, id=post_id)
-
-    if request.method == 'POST':
-        form = AssessmentTeamForm(request.POST)
-
-        if form.is_valid():
-            team_member = form.save(commit=False)
-            team_member.RiskID = post
-            team_member.save()
-
-            return redirect('OTRisk:add_team_members')
-    else:
-        form = AssessmentTeamForm()
-
-    team_members = AssessmentTeam.objects.filter(RiskID=post)
-
-    return render(request, 'OTRisk/team_member.html', {
-        'post_form': PostForm(instance=post),
-        'team_member_form': form,
-        'team_members': team_members,
-        'saved': True
-    })
-
-
 def workshop_setup(request):
     if request.method == 'POST':
         workshop_type = request.POST.get('workshoptype')
@@ -1468,42 +1301,6 @@ def workshop(request, workshop_id=None):
     # return render(request, 'OTRisk/workshop.html', {'workshop': workshop, 'sections': sections})
 
 
-def raworksheets(request):
-    scenarios = tblScenario.objects.order_by('InitiatingEvent')
-    consequences = tblConsequence.objects.order_by('Consequence')
-
-    post_id = request.session.get('post_id')
-
-    if post_id is not None:
-        post = get_object_or_404(Post, id=post_id)
-    else:
-        post = None
-
-    if post_id is not None:
-        current_scenario = post_id
-        request.session['Current_Scenario'] = current_scenario
-
-    context = {
-        'scenarios': scenarios,
-        'consequences': consequences,
-        'post': post,
-    }
-
-    return render(request, 'raworksheets.html', context)
-    # return render(request, 'raworksheets.html', {'scenarios': scenarios, 'Consequences': Consequences})
-
-
-def walkthrough(request):
-    query_results = Questionnaire.objects \
-        .values('id', 'title', 'description', 'questiontheme__QuestionTheme',
-                'questions__questionnumber', 'questions__questiontext') \
-        .filter(fkFacilityType_id=9)
-
-    facility_type = get_object_or_404(FacilityType, id=facility_type_id)
-
-    return render(request, 'OTRisk/walkthrough.html', {'query_results': query_results})
-
-
 def add_walkthrough(request):
     facility_types = FacilityType.objects.all()
     return render(request, 'OTRisk/walkthrough.html', {'facility_types': facility_types})
@@ -1530,20 +1327,6 @@ def walkthrough_questionnaire_details(request, questionnaire_id):
     return render(request, 'OTRisk/walkthroughQuestionnaire.html', {'questionnaire_id': questionnaire_id})
 
 
-class PostCreateView(CreateView):
-    model = Post
-    form_class = PostForm
-    template_name = 'OTRisk/post_create.html'
-    success_url = reverse_lazy('OTRisk:post_list')
-
-
-# Scenario Detail View
-
-def scenario_detail(request, pk):
-    scenario = get_object_or_404(RiskScenario, pk=pk)
-    return render(request, 'OTRisk/post/scenario_detail.html', {'scenario': scenario})
-
-
 class ScenarioDetailView(View):
     template_name = 'OTRisk/post/scenario_detail.html'
 
@@ -1562,233 +1345,6 @@ class ScenarioUpdateView(View):
             return redirect('OTRisk:scenario_detail', pk=self.kwargs['pk'])
         else:
             return render(request, 'OTRisk/post/scenario_edit.html', {'form': form})
-
-
-# Scenario Delete View
-class ScenarioDeleteView(DeleteView):
-    model = RiskScenario
-    template_name = 'scenario_delete.html'
-    success_url = reverse_lazy('OTRisk:post_list')  # Update this with the appropriate URL
-
-
-class PostListView(generic.ListView):
-    model = Post
-    context_object_name = 'posts'
-    template_name = 'OTRisk/post/list.html'
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        submit_status_counts = (
-            Post.objects
-            .values('submit_status')
-            .annotate(count=Count('submit_status'))
-            .order_by()
-        )
-        # Prepare the data for the pie chart
-        submit_status_data = {
-            'labels': [status['submit_status'] for status in submit_status_counts],
-            'counts': [status['count'] for status in submit_status_counts],
-        }
-
-        # unique_business_units = Post.objects.order_by('business_unit').values_list('business_unit', flat=True).distinct()
-        unique_business_units = (
-            Post.objects
-            .values('business_unit')
-            .annotate(count=Count('business_unit'))
-            .order_by()
-        )
-        business_unit_data = [unit['business_unit'] for unit in unique_business_units]
-        business_unit_counts = [unit['count'] for unit in unique_business_units]
-
-        unique_submit_statuses = Post.objects.order_by('submit_status').values_list('submit_status',
-                                                                                    flat=True).distinct()
-        context['unique_business_units'] = unique_business_units
-        context['unique_submit_statuses'] = unique_submit_statuses
-        context['submit_status_data'] = submit_status_data
-        context['business_unit_data'] = business_unit_data
-        context['business_unit_counts'] = business_unit_counts
-        return context
-
-
-# class PostDetailView(generic.DetailView):
-#    model = Post
-#    template_name = 'OTRisk/post/detail.html'
-
-
-# def post_detail(request, pk):
-#    post = get_object_or_404(Post, pk=pk)
-#    return render(request, 'OTRisk/post/detail.html', {'post': post})
-
-class PostDetailView(generic.DetailView):
-    model = Post
-    template_name = 'raworksheets.html'
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['scenarios'] = tblScenario.objects.order_by('InitiatingEvent')
-        return context
-
-
-def post_detail(request, pk):
-    post = get_object_or_404(Post, pk=pk)
-    scenarios = tblScenario.objects.order_by('InitiatingEvent')
-    return render(request, 'raworksheets.html', {'post': post, 'scenarios': scenarios})
-
-
-# Add or edit a record to the OTRisk_post table as the header for a new CyberPHA
-def add_post(request):
-    if request.method == 'POST':
-        post_form = PostForm(request.POST)
-        if post_form.is_valid():
-            editflag = request.POST.get('editflag')
-
-            post_risk = post_form.save(commit=False)
-
-            if editflag == '0':
-
-                post_risk.process_description = post_form.cleaned_data.get('process_description')
-                post_risk.hazardous_events = post_form.cleaned_data.get('hazardous_events')
-                post_risk.facility = post_form.cleaned_data.get('facility')
-                post_risk.project_name = post_form.cleaned_data.get('project_name')
-                post_risk.scope = post_form.cleaned_data.get('scope')
-                post_risk.objective = post_form.cleaned_data.get('objective')
-                post_risk.assumptions = post_form.cleaned_data.get('assumptions')
-                post_risk.trigger_event = post_form.cleaned_data.get('trigger_event')
-                post_risk.SystemName = post_form.cleaned_data.get('SystemName')
-                post_risk.SystemDescription = post_form.cleaned_data.get('SystemDescription')
-                post_risk.SystemOwner = post_form.cleaned_data.get('SystemOwner')
-                post_risk.SystemScope = post_form.cleaned_data.get('SystemScope')
-                post_risk.riskauthor_id = 1  # post_form.cleaned_data.get('riskauthor')
-                post_risk.save()
-                post_id = post_risk.id
-                # set session IDs
-                request.session['post_id'] = post_id
-                request.session['CyberPHATitle'] = post_risk.process_description
-                request.session['Location'] = post_risk.facility
-                request.session['PHAScope'] = post_risk.scope
-                request.session['SystemName'] = post_risk.SystemName
-                request.session['WorkflowStep'] = 2
-
-            elif editflag == '1':
-
-                post_id = request.session.get('post_id')
-                if post_id:
-                    try:
-
-                        existing_post = Post.objects.get(id=post_id)
-                        existing_post.process_description = post_form.cleaned_data.get('process_description')
-                        existing_post.hazardous_events = post_form.cleaned_data.get('hazardous_events')
-                        existing_post.facility = post_form.cleaned_data.get('facility')
-                        existing_post.project_name = post_form.cleaned_data.get('project_name')
-                        existing_post.scope = post_form.cleaned_data.get('scope')
-                        existing_post.objective = post_form.cleaned_data.get('objective')
-                        existing_post.assumptions = post_form.cleaned_data.get('assumptions')
-                        existing_post.trigger_event = post_form.cleaned_data.get('trigger_event')
-                        existing_post.SystemName = post_form.cleaned_data.get('SystemName')
-                        existing_post.SystemDescription = post_form.cleaned_data.get('SystemDescription')
-                        existing_post.SystemOwner = post_form.cleaned_data.get('SystemOwner')
-                        existing_post.SystemScope = post_form.cleaned_data.get('SystemScope')
-                        existing_post.save()
-                        request.session['post_id'] = post_id
-                        request.session['CyberPHATitle'] = existing_post.process_description
-                        request.session['Location'] = existing_post.facility
-                        request.session['PHAScope'] = existing_post.scope
-                        request.session['SystemName'] = existing_post.SystemName
-                    except Post.DoesNotExist:
-                        pass
-
-            context = {
-                'post_form': post_form,
-                'saved': True,
-            }
-
-            return render(request, 'OTRisk/post_create.html', context)
-    else:
-        post_form = PostForm()
-
-    context = {
-        'post_form': post_form,
-        'saved': False,
-    }
-
-    return render(request, 'OTRisk/post_create.html', context)
-
-
-# ------End of adding or editing a new cyberPHA header record
-
-def post_create(request):
-    # get the threat list
-    threats = ThreatAssessment.objects.all()
-
-    context = {
-        'threats': threats
-    }
-    return render(request, 'OTRisk/post_create.html', context)
-
-
-def add_riskscenario(request, pk):
-    post = get_object_or_404(Post, pk=pk)
-
-    if request.method == 'POST':
-        post_form = PostForm(request.POST)
-        risk_scenario_form = RiskScenarioForm(request.POST)
-        if post_form.is_valid() and risk_scenario_form.is_valid():
-            post = post_form.save(commit=False)
-            post.riskauthor = request.user  # Set the riskauthor to the current user
-            post.save()
-
-            risk_scenario = risk_scenario_form.save(commit=False)
-            risk_scenario.post = post
-            risk_scenario.save()
-
-            return redirect('OTRisk:post_detail', pk=pk)
-
-        else:
-            post_form = PostForm()
-            risk_scenario_form = RiskScenarioForm()
-
-        scenario_name = request.POST.get('scenario_name')
-        probability = request.POST.get('probability')
-        scenario_description = request.POST.get('scenario_description')
-        consequence_analysis = request.POST.get('consequence_analysis')
-        initiating_event = request.POST.get('initiating_event')
-        risk_evaluation = request.POST.get('risk_evaluation')
-        risk_ranking = request.POST.get('risk_ranking')
-        RiskScore = request.POST.get('RiskScore')
-        weight = request.POST.get('weight')
-        OverallRiskScore = request.POST.get('OverallRiskScore')
-        ThreatScore = request.POST.get('ThreatScore')
-        VulnScore = request.POST.get('VulnScore')
-        FinancialImpact = request.POST.get('FinancialImpact')
-        OperationalImpact = request.POST.get('OperationalImpact')
-        ReputationImpact = request.POST.get('RepuationImpact')
-
-        # Create a new RiskScenario object and associate it with the post
-        risk_scenario = RiskScenario(
-            post=post,
-            ScenarioName=scenario_name,
-            ScenarioDescription=scenario_description,
-            ConsequenceAnalysis=consequence_analysis,
-            InitiatingEvent=initiating_event,
-            risk_evaluation=risk_evaluation,
-            risk_ranking=risk_ranking,
-            probability=probability,
-            RiskScore=RiskScore,
-            Weight=weight,
-            OverallRiskScore=OverallRiskScore,
-            ThreatScore=ThreatScore,
-            VulnScore=VulnScore,
-            FinancialImpact=FinancialImpact,
-            OperationalImpact=OperationalImpact,
-            ReputationImpact=ReputationImpact,
-        )
-        risk_scenario.save()
-
-        # Redirect to the post detail page
-        return redirect('OTRisk:post_detail', pk=pk)
-
-    # If the request method is not POST, render a default form
-    return render(request, 'OTRisk/post/add_riskscenario.html', {'post': post})
 
 
 def write_to_audit(user_id, user_action, user_ip):
