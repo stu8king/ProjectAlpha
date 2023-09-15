@@ -76,6 +76,7 @@
         initSlider("range_environment", "environmentrange");
         initSlider("range_regulatory", "regulatoryrange");
         initSlider("range_data", "datarange");
+        initSlider("range_supply", "supplyrange");
         // init other sliders...
       };
 
@@ -211,6 +212,7 @@
                     document.getElementById('range_environment').value = 0;
                     document.getElementById('range_regulatory').value = 0;
                     document.getElementById('range_data').value = 0;
+                    document.getElementById('range_supply').value = 0;
                     document.getElementById('SMrange').value = 0;
                     document.getElementById('MELrange').value = 0;
                     document.getElementById('RRMrange').value = 0;
@@ -232,6 +234,7 @@
                     document.getElementById('txtScenarioAnalysis').value = 0;
                     document.getElementById('txtControlAnalysis').value = 0;
                     const rra = document.getElementById('txtRRa').value = 0;
+                    clearVulnerabilityTable()
                 }
             }
         </script>
@@ -354,10 +357,13 @@
                         $('#sle').val(data.sle);
 
                         let costs = parseFloat(data.sle); // Assuming response.costs is a string representation of a number
-                        let formattedCosts = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(costs);
+                        let formattedCosts = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(costs);
+
                         document.getElementById('sle').value = formattedCosts;
-
-
+                        document.getElementById('txtEventCosts').value= formattedCosts;
+                        document.getElementById('txtResidualRisk').value= data.RRa;
+                        document.getElementById('txtProbability').value= data.probability;
+                        document.getElementById('hdnScenario').value = scenarioId;
 
                          $('#txtRRa').val(data.RRa);
                         $('#txtControlAnalysis').val(data.control_recommendations);
@@ -369,6 +375,33 @@
                         $('#txtproductionJustify').val(data.justifyProduction);
                         $('#txtlifeJustify').val(data.justifyLife);
                         $('#txtsafetyJustify').val(data.justifySafety)
+
+                        loadVulnerabilityTable(scenarioId);
+
+                         });
+
+                    }
+
+                    // Function to load the vulnerability table component
+                    function loadVulnerabilityTable(scenarioId) {
+                        // Load the vulnerability table into the specified div container
+                        $('#vulnerabilityTableContainer').load('/OTRisk/scenario_vulnerability/' + scenarioId + '/', function () {
+                            // Initialize select2 for the asset_type field
+                            $('.select2').select2();
+
+                            // Handle form submission asynchronously (if needed)
+                            $('#vulnerability-form').on('submit', function (e) {
+                                e.preventDefault();
+                                $.ajax({
+                                    type: 'POST',
+                                    url: $(this).attr('action'),
+                                    data: $(this).serialize(),
+                                    success: function () {
+                                        // Refresh the table
+                                        loadVulnerabilityTable(scenarioId);
+                                    },
+                                });
+                            });
                         });
                     }
             </script>
@@ -516,13 +549,32 @@
     <div class="col-md-1 " style="background-color: black"></div>
 </div> <!-- dark grey stripe -->
 
+<div class="row" style="height: 10px">
+    <div class="col-md-1" style="background-color: black"></div>
+    <div class="col-md-10 " style="background-color: white; height: 10px"></div>
+    <div class="col-md-1 " style="background-color: black"></div>
+</div> <!-- dark grey stripe -->
 
+<!-- vulnerability assessment table -->
+<div class="row" >
+    <div class="col-md-1" style="background-color: black"></div>
+    <div class="col-md-10">
+        <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+            <div class="card-body">
+                <div id="vulnerabilityTableContainer" ></div>
+            </div>
+        </div>
+    </div>
+    <!-- Your container content here -->
+
+    <div class="col-md-1" style="background-color: black"></div>
+</div>
 <div class="row" >
     <div class="col-md-1" style="background-color: black"></div>
     <div class="col-md-5 " style="background-color: white">
     <p></p>
         <label class="form-label" for="threat-intelligence">Threat Source</label>
-        <select class="form-control" name="threat-intelligence" id="threat-intelligence" style="border: 3px #97979A; border-radius: 10px; box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5);  padding: 10px; background-color: white">
+        <select class="form-control" name="threat-intelligence" id="threat-intelligence" style="border: 3px solid #97979A; border-radius: 10px; box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5);  padding: 10px; background-color: white">
             <option value="">-- Select a threat source --</option>
             {% for threat_intelligence in threat_intelligence %}
                 <option value="{{ threat_intelligence.ThreatDescription }}">{{ threat_intelligence.ThreatDescription }}</option>
@@ -531,7 +583,7 @@
         <br>
 
         <label class="form-label" for="threatactions">Threat Action</label>
-        <select class="form-control" name="threatactions" id="threatactions" multiple="multiple" style="border: 3px solid #97979A; border-radius: 10px; box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5);  padding: 20px; background-color: white">
+        <select class="form-control" name="threatactions" id="threatactions" multiple="multiple" style="border: 3px solid #97979A; border-radius: 10px; box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5);  padding:10px; background-color: white">
         <option value="">Select a threat action</option>
         {% for threatactions in threatactions  %}
             <option value="{{ threatactions.ThreatAction }}">{{ threatactions.ThreatAction }}</option>
@@ -568,7 +620,7 @@
 
         <br><br>
         <label class="form-label" for="risk-category">Risk Category</label>
-            <select class="form-control" name="risk-category" id="risk-category" style="border: 3px #97979A; border-radius: 10px; box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5);  padding: 10px; background-color: white">
+            <select class="form-control" name="risk-category" id="risk-category" style="border: 3px solid #97979A; border-radius: 10px; box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5);  padding:10px; background-color: white">
               <option value="">Select a risk category</option>
               {% for risk_category in risk_categories %}
                 <option value="{{ risk_category.CategoryName }}">{{ risk_category.CategoryName }}</option>
@@ -627,7 +679,7 @@
         <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
             <div class="card-body">
                 <div class="slider-container d-flex align-items-center">
-                    <div class="col-2"><label class="small-font d-flex align-items-center clickable-label" data-bs-toggle="modal" data-bs-target="#productionModal" data-bs-placement="top" data-modal-id="productionModal" data-textarea-id="txtproductionJustify">Production</label><span id="textIndicator" style="display: none;"><i class="bi bi-journal-text"></i></div>
+                    <div class="col-2"><label class="small-font d-flex align-items-center clickable-label" data-bs-toggle="modal" data-bs-target="#productionModal" data-bs-placement="top" data-modal-id="productionModal" data-textarea-id="txtproductionJustify">Production</label><span id="textIndicator" style="display: none;"><i class="bi bi-journal-text"></i></span></div>
                     <div class="col-7">
                       <input type="range" min="1" max="10" value="1" class="form-range" id="range_production" name="range_production" onchange="initSlider('range_production', 'productionrange');">
                     </div>
@@ -639,7 +691,7 @@
         <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
             <div class="card-body">
                 <div class="slider-container d-flex align-items-center">
-                    <div class="col-2"><label class="small-font d-flex align-items-center clickable-label" data-bs-toggle="modal" data-bs-target="#financeModal" data-bs-placement="top" data-modal-id="financeModal" data-textarea-id="txtfinanceJustify">Financial</label><span id="textIndicator" style="display: none;"><i class="bi bi-journal-text"></i></div>
+                    <div class="col-2"><label class="small-font d-flex align-items-center clickable-label" data-bs-toggle="modal" data-bs-target="#financeModal" data-bs-placement="top" data-modal-id="financeModal" data-textarea-id="txtfinanceJustify">Financial</label><span id="textIndicator" style="display: none;"><i class="bi bi-journal-text"></i></span></div>
                     <div class="col-7">
                       <input type="range" min="1" max="10" value="1" class="form-range" id="range_finance" name="range_finance" onchange="initSlider('range_finance', 'financerange');">
                     </div>
@@ -651,7 +703,7 @@
         <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
             <div class="card-body">
                 <div class="slider-container d-flex align-items-center">
-                    <div class="col-2"><label class="small-font d-flex align-items-center clickable-label" data-bs-toggle="modal" data-bs-target="#reputationModal" data-bs-placement="top" data-modal-id="reputationModal" data-textarea-id="txtreputationJustify">Reputation</label><span id="textIndicator" style="display: none;"><i class="bi bi-journal-text"></i></div>
+                    <div class="col-2"><label class="small-font d-flex align-items-center clickable-label" data-bs-toggle="modal" data-bs-target="#reputationModal" data-bs-placement="top" data-modal-id="reputationModal" data-textarea-id="txtreputationJustify">Reputation</label><span id="textIndicator" style="display: none;"><i class="bi bi-journal-text"></i></span></div>
                     <div class="col-7">
                       <input type="range" min="1" max="10" value="1" class="form-range" id="range_reputation" name="range_reputation" onchange="initSlider('range_reputation', 'reputationrange');">
                     </div>
@@ -663,7 +715,7 @@
         <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
             <div class="card-body">
                 <div class="slider-container d-flex align-items-center">
-                    <div class="col-2"><label class="small-font d-flex align-items-center clickable-label" data-bs-toggle="modal" data-bs-target="#environmentModal" data-bs-placement="top" data-modal-id="environmentModal" data-textarea-id="txtenvironmentJustify">Environment</label><span id="textIndicator" style="display: none;"><i class="bi bi-journal-text"></i></div>
+                    <div class="col-2"><label class="small-font d-flex align-items-center clickable-label" data-bs-toggle="modal" data-bs-target="#environmentModal" data-bs-placement="top" data-modal-id="environmentModal" data-textarea-id="txtenvironmentJustify">Environment</label><span id="textIndicator" style="display: none;"><i class="bi bi-journal-text"></i></span></div>
                     <div class="col-7">
                       <input type="range" min="1" max="10" value="1" class="form-range" id="range_environment" name="range_environment" onchange="initSlider('range_environment', 'environmentrange');">
                     </div>
@@ -675,7 +727,7 @@
         <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
             <div class="card-body">
                 <div class="slider-container d-flex align-items-center">
-                    <div class="col-2"><label class="small-font d-flex align-items-center clickable-label" data-bs-toggle="modal" data-bs-target="#regulatoryModal" data-bs-placement="top" data-modal-id="regulatoryModal" data-textarea-id="txtregulatoryJustify">Regulatory</label><span id="textIndicator" style="display: none;"><i class="bi bi-journal-text"></i></div>
+                    <div class="col-2"><label class="small-font d-flex align-items-center clickable-label" data-bs-toggle="modal" data-bs-target="#regulatoryModal" data-bs-placement="top" data-modal-id="regulatoryModal" data-textarea-id="txtregulatoryJustify">Regulatory</label><span id="textIndicator" style="display: none;"><i class="bi bi-journal-text"></i></span></div>
                     <div class="col-7">
                       <input type="range" min="1" max="10" value="1" class="form-range" id="range_regulatory" name="range_regulatory" onchange="initSlider('range_regulatory', 'regulatoryrange');">
                     </div>
@@ -687,7 +739,7 @@
         <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
             <div class="card-body">
                 <div class="slider-container d-flex align-items-center">
-                    <div class="col-2"><label class="small-font d-flex align-items-center clickable-label" data-bs-toggle="modal" data-bs-target="#dataModal" data-bs-placement="top" data-modal-id="dataModal" data-textarea-id="txtdataJustify">Data/IP</label><span id="textIndicator" style="display: none;"><i class="bi bi-journal-text"></i></div>
+                    <div class="col-2"><label for="range_data" class="small-font d-flex align-items-center clickable-label" data-bs-toggle="modal" data-bs-target="#dataModal" data-bs-placement="top" data-modal-id="dataModal" data-textarea-id="txtdataJustify">Data/IP</label><span id="textIndicator" style="display: none;"><i class="bi bi-journal-text"></i></span></div>
                     <div class="col-7">
                       <input type="range" min="1" max="10" value="1" class="form-range" id="range_data" name="range_data" onchange="initSlider('range_data', 'datarange');">
                     </div>
@@ -695,11 +747,61 @@
                 </div>
             </div>
         </div>
+
+        <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+            <div class="card-body">
+                <div class="slider-container d-flex align-items-center">
+                    <div class="col-2"><label for="range_supply" class="small-font d-flex align-items-center clickable-label" data-bs-toggle="modal" data-bs-target="#supplyModal" data-bs-placement="top" data-modal-id="supplyModal" data-textarea-id="txtsupplyJustify">Supply Chain</label><span id="textIndicator" style="display: none;"><i class="bi bi-journal-text"></i></span></div>
+                    <div class="col-7">
+                      <input type="range" min="1" max="10" value="1" class="form-range" id="range_supply" name="range_supply" onchange="initSlider('range_supply', 'supplyrange');">
+                    </div>
+                    <div class="col-3"><h6><label id="supplyrange" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div class="col-md-5" style="background-color: white">
     <p></p>
-        <h4>Assessment - Current Controls</h4>
+        <h4>Assessment - Unmitigated Risk</h4>
+        <h6>(Risk exposure without current controls)</h6>
+                <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+            <div class="card-body">
+                <div class="slider-container d-flex align-items-center">
+                    <div class="col-2"><label class="small-font d-flex align-items-center " >Unmitigated Event Likelihood (UEL)</label></div>
+                    <div class="col-7">
+                      <input type="range" min="1" max="10" value="1" class="form-range" id="uel_range" name="uel_range" onchange="initSlider('uel_range','range_uel');">
+                    </div>
+                    <div class="col-3"><h6><label id="range_uel" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                </div>
+            </div>
+        </div>
+                <!--slider for MEL - Mitigated Exposure Level-->
+        <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+            <div class="card-body">
+                <div class="slider-container d-flex align-items-center">
+                    <div class="col-2"><label class="small-font d-flex align-items-center " >Residual Risk Unmitigated (RRu)</label></div>
+                    <div class="col-7">
+                      <input type="range" min="1" max="10" value="1" class="form-range" id="rru_range" name="rru_range" onchange="initSlider('rru_range','range_rru');">
+                    </div>
+                    <div class="col-3"><h6><label id="range_rru" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                </div>
+            </div>
+        </div>
+                <!--slider for MEL - Mitigated Exposure Level-->
+        <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+            <div class="card-body">
+                <div class="slider-container d-flex align-items-center">
+                    <div class="col-2"><label class="small-font d-flex align-items-center " >Security Level (SL)</label></div>
+                    <div class="col-7">
+                      <input type="range" min="1" max="10" value="1" class="form-range" id="sl_range" name="sl_range" onchange="initSlider('sl_range','range_sl');">
+                    </div>
+                    <div class="col-3"><h6><label id="range_sl" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                </div>
+            </div>
+        </div>
+        <h4>Assessment - Mitigated Risk</h4>
+        <h6>(Risk exposure with current controls)</h6>
                 <!--slider for UEL - likelihood without controls-->
         <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
             <div class="card-body">
@@ -736,39 +838,38 @@
                 </div>
             </div>
         </div>
-                    <row>
-                        <div class=col-md-6>
-                <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                    <div class="card-body">
-                            <label class="form-label" for="selStandards">Standards</label>
-                            <select class="form-control" name="selStandards" id="selStandards" title="Select which standards to align with for recommendations">
-                            <option value="">-- Select Standard --</option>
-                            {% for standardslist in standardslist %}
-                                <option value="{{ standardslist.standard }}">{{ standardslist.standard}}</option>
-                            {% endfor %}
-                            </select>
-                    </div>
+
+    <div class="row">
+        <div class=col-md-6>
+            <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                <div class="card-body">
+                        <label class="form-label" for="selStandards">Standards</label>
+                        <select class="form-control" name="selStandards" id="selStandards" title="Select which standards to align with for recommendations">
+                        <option value="">-- Select Standard --</option>
+                        {% for standardslist in standardslist %}
+                            <option value="{{ standardslist.standard }}">{{ standardslist.standard}}</option>
+                        {% endfor %}
+                        </select>
                 </div>
-
-                        </div>
-                        <div class=col-md-6>
-                            <button id="risk-assessment-btn" type="button" class="btn-primary">Assess Scenario</button><br>
-                            <div id="loadingSpinner" class="spinner-border" role="status" style="display: none;">
-                              <span class="visually-hidden">Loading...</span>
-                            </div>
-
-                                <script>
-                                 // AJAX function call on button click
-                                $(document).ready(function () {
-                                    $("#risk-assessment-btn").click(function () {
-                                        // Call the function to assess the risk
-                                        assessScenario();
-                                    });
-                                });
-                                </script>
-                        </div>
-
-                    </row>
+            </div>
+        </div>
+        <div class=col-md-6>
+            <br><br>
+            <button id="risk-assessment-btn" type="button" class="form-control btn-dark" style="background-color: dodgerblue; color: white">Assess Scenario</button><br>
+            <div id="loadingSpinner" class="spinner-border" role="status" style="display: none;">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <script>
+             // AJAX function call on button click
+            $(document).ready(function () {
+                $("#risk-assessment-btn").click(function () {
+                    // Call the function to assess the risk
+                    assessScenario();
+                });
+            });
+            </script>
+        </div>
+    </div>
 
     </div>
      <div class="col-md-1" style="background-color: black"></div>
@@ -779,6 +880,30 @@
     <div class="col-md-10 " style="background-color: darkgray; height: 10px"></div>
     <div class="col-md-1 " style="background-color: black"></div>
 </div> <!-- dark grey stripe -->
+
+<div class="row">
+    <div class="col-md-1" style="background-color: black"></div>
+    <div class="col-md-2" style="background-color: white"></div>
+    <div class="col-md-2" style="background-color: white">
+        <div class="row rounded p-3 d-flex align-items-center justify-content-center" style="height: 80%;">
+            <label for="txtProbability">Probability of Attack Success</label><textarea id="txtProbability" name="txtProbability" class="form-control border border-danger small-font text-center"  style="font-size: 1.75rem; resize: none; border: 3px solid #97979A; border-radius: 10px; box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5); padding: 20px; background-color: white; display: block; margin: auto;"></textarea>
+        </div>
+
+    </div>
+    <div class="col-md-2" style="background-color: white">
+        <div class="row rounded p-3 d-flex align-items-center justify-content-center" style="height: 80%;">
+            <label for="txtEventCosts">Estimated Incident Costs</label><textarea id="txtEventCosts" name="txtEventCosts" class="form-control border border-danger small-font text-center" style="font-size: 1.75rem; resize: none; border: 3px solid #97979A; border-radius: 10px; box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5); padding: 20px; background-color: white; display: block; margin: auto;"></textarea>
+        </div>
+    </div>
+    <div class="col-md-2" style="background-color: white">
+        <div class="row rounded p-3 d-flex align-items-center justify-content-center" style="height: 80%;">
+            <label for="txtResidualRisk">Residual Risk Rating</label><textarea id="txtResidualRisk" name="txtResidualRisk" class="form-control border border-danger small-font text-center"  style="font-size: 1.75rem; resize: none; border: 3px solid #97979A; border-radius: 10px; box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5); padding: 20px; background-color: white; display: block; margin: auto;"></textarea>
+        </div>
+    </div>
+
+    <div class="col-md-2" style="background-color: white"></div>
+    <div class="col-md-1" style="background-color: black"></div>
+</div>
 
 <div class="row">
     <div class="col-md-1" style="background-color: black"></div>
@@ -1169,16 +1294,20 @@
             const reputation = document.getElementById('range_reputation').value;
             const environment = document.getElementById('range_environment').value;
             const regulatory = document.getElementById('range_regulatory').value;
+            const supply = document.getElementById('range_supply').value;
             const data = document.getElementById('range_data').value;
             const sm = document.getElementById('SMrange').value;
             const mel = document.getElementById('MELrange').value;
             const rrm = document.getElementById('RRMrange').value;
             const sa = document.getElementById('SArange').value;
             const mela = document.getElementById('MELarange').value;
+            const uel = document.getElementById('uel_range').value;
+            const rru = document.getElementById('rru_range').value;
+            const sl = document.getElementById('sl_range').value;
             const cyberpha = sessionStorage.getItem('activeCyberPHA')
             const recommendations = document.getElementById('txtScenarioAnalysis').value
             const controls = document.getElementById('txtControlAnalysis').value
-            const rra =  document.getElementById('txtRRa').value
+            const rra =  document.getElementById('txtResidualRisk').value
             const justifySafety =  document.getElementById('txtsafetyJustify').value
             const justifyLife =  document.getElementById('txtlifeJustify').value
             const justifyProduction =  document.getElementById('txtproductionJustify').value
@@ -1186,14 +1315,24 @@
             const justifyReputation =  document.getElementById('txtreputationJustify').value
             const justifyEnvironment =  document.getElementById('txtenvironmentJustify').value
             const justifyRegulation =  document.getElementById('txtregulatoryJustify').value
+            const justifySupply =  document.getElementById('txtsupplyJustify').value
             const dataRegulation =  document.getElementById('txtdataJustify').value
             const sle =  document.getElementById('hdn_sle').value
-            const ale =  document.getElementById('hdn_sle').value
+            const aleValue = document.getElementById('ale').value;
+            let ale = parseInt(aleValue.replace(/[^0-9]/g, ''), 10);
+            const probability = document.getElementById('txtProbability').value;
+
             const aro = document.getElementById('aro').value
-
-            // const likelihood = document.getElementById('likelihood').value;
-            //const impact = document.getElementById('impact').value;
-
+              // Check if the "yes" option was selected for outage
+            const outageSelector = document.getElementById('outageYes'); // Replace 'outageSelectorId' with the actual ID of your Yes/No selector
+            const outage = outageSelector.value === "yes" ? "yes" : "no";
+            // If outage is "yes", get the values for outageDuration and outageCost
+            let outageDuration = 0;
+            let outageCost = 0;
+            if (outage === "yes") {
+                outageDuration = parseInt(document.getElementById('outageDuration').value, 10); // Replace 'outageDurationId' with the actual ID of your outage duration input
+                outageCost = parseInt(document.getElementById('outageCost').value, 10); // Replace 'outageCostId' with the actual ID of your outage cost input
+            }
             // Create a FormData object
                 const formData = new FormData();
                 formData.append('scenario', scenario);
@@ -1210,6 +1349,7 @@
                 formData.append('environment', environment);
                 formData.append('regulatory', regulatory);
                 formData.append('data', data);
+                formData.append('supply', supply);
                 formData.append('sm', sm);
                 formData.append('mel', mel);
                 formData.append('rrm', rrm);
@@ -1217,6 +1357,9 @@
                 formData.append('mela', mela);
                 formData.append('rra', rra);
                 formData.append('aro', aro);
+                formData.append('uel', uel);
+                formData.append('rru', rru);
+                formData.append('sl', sl);
                 formData.append('recommendations',recommendations)
                 formData.append('cyberpha', cyberpha);
                 formData.append('controls', controls);
@@ -1228,8 +1371,13 @@
                 formData.append('justifyEnvironment', justifyEnvironment);
                 formData.append('justifyRegulation', justifyRegulation);
                 formData.append('dataRegulation', dataRegulation);
+                formData.append('justifySupply', justifySupply);
                 formData.append('sle', sle);
                 formData.append('ale', ale);
+                formData.append('outage', outage);
+                formData.append('outageDuration', outageDuration);
+                formData.append('outageCost', outageCost);
+                formData.append('probability', probability);
 
                 // Call the saveOrUpdateCyberPHA function
                 saveOrUpdateCyberPHA(formData);
@@ -1275,11 +1423,48 @@
       </div>
       <div class="modal-body">
         <textarea id="txtproductionJustify" name="txtproductionJustify" class="form-control" rows="3" style="resize: none"></textarea>
+
+        <!-- 1. Yes/No selector -->
+        <div class="mt-3">
+          <label>Is there going to be an outage expected?</label><br>
+          <input type="radio" id="outageYes" name="outage" value="yes" onclick="toggleOutageControls(true)">
+          <label for="outageYes">Yes</label><br>
+          <input type="radio" id="outageNo" name="outage" value="no" onclick="toggleOutageControls(false)">
+          <label for="outageNo">No</label>
+        </div>
+
+        <!-- 2. Number input for length of time -->
+        <div class="mt-3" id="outageDurationDiv" style="display: none;">
+          <label for="outageDuration">Estimate length of time of the outage (hours):</label>
+          <input type="number" id="outageDuration" name="outageDuration" class="form-control" min="1">
+        </div>
+
+        <!-- 3. Text input for cost per hour -->
+        <div class="mt-3" id="outageCostDiv" style="display: none;">
+          <label for="outageCost">Cost per hour of outage (if known): </label>
+          <input type="text" id="outageCost" name="outageCost" class="form-control">
+        </div>
+
         <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
 </div>
+
+<script>
+  function toggleOutageControls(isVisible) {
+    const durationDiv = document.getElementById('outageDurationDiv');
+    const costDiv = document.getElementById('outageCostDiv');
+    if (isVisible) {
+      durationDiv.style.display = 'block';
+      costDiv.style.display = 'block';
+    } else {
+      durationDiv.style.display = 'none';
+      costDiv.style.display = 'none';
+    }
+  }
+</script>
+
 <div class="modal fade" id="financeModal" tabindex="-1" aria-labelledby="financeModal" aria-hidden="true">
   <div class="modal-dialog modal-xl">
     <div class="modal-content">
@@ -1345,6 +1530,21 @@
       </div>
       <div class="modal-body">
         <textarea id="txtdataJustify" name="txtdataJustify" class="form-control" rows="3" style="resize: none"></textarea>
+        <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="supplyModal" tabindex="-1" aria-labelledby="supplyModal" aria-hidden="true">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="supplyModal_Label">Justification for Supply Chain Impact Rating</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <textarea id="txtsupplyJustify" name="txtsupplyJustify" class="form-control" rows="3" style="resize: none"></textarea>
         <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
@@ -1821,6 +2021,7 @@
             let environment = document.getElementById('range_environment').value;
             let regulatory = document.getElementById('range_regulatory').value;
             let data = document.getElementById('range_data').value;
+            let supply = document.getElementById('range_supply').value;
             let sm = document.getElementById('SMrange').value;
             let mel = document.getElementById('MELrange').value;
             let rrm = document.getElementById('RRMrange').value;
@@ -1829,9 +2030,8 @@
             let industry = sessionStorage.getItem('sessionIndustry')
             let facilityType = sessionStorage.getItem('sessionFacilityType')
             let standards = document.getElementById('selStandards').value;
-            let country = document.getElementById('hdnCountry').value
-
-
+            let country = document.getElementById('hdnCountry').value;
+            let uel = document.getElementById('uel_range').value
 
             // Make the AJAX call to the Django view using a separate endpoint for risk assessment
             $.ajax({
@@ -1856,8 +2056,10 @@
                     sm: sm,
                     mel: mel,
                     rrm: sa,
-                    standards: standards
-
+                    standards: standards,
+                    supply: supply,
+                    country: country,
+                    uel: uel
                 },
                 success: function (response) {
 
@@ -1880,7 +2082,9 @@
 
                     // Set the float value to the hidden 'hdn_sle' field
                     document.getElementById('hdn_sle').value = costsFloat;
-
+                    document.getElementById('txtProbability').value = response.probability;
+                    document.getElementById('txtEventCosts').value = formattedCosts;
+                    document.getElementById('txtResidualRisk').value = response.adjustedRR
 
                      $('#loadingSpinner').hide();
 

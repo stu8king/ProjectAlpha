@@ -1,7 +1,7 @@
 from django.forms import model_to_dict
 
 from OTRisk.models.Model_CyberPHA import tblIndustry, tblThreatSources, tblCyberPHAHeader, tblZones, tblStandards, \
-    tblCyberPHAScenario
+    tblCyberPHAScenario, vulnerability_analysis, tblAssetType
 from OTRisk.models.questionnairemodel import FacilityType
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, get_object_or_404, redirect
@@ -18,6 +18,8 @@ import concurrent.futures
 import os
 from .dashboard_views import get_user_organization_id
 from django.contrib.auth.models import User
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from .forms import VulnerabilityAnalysisForm
 
 
 @login_required
@@ -128,70 +130,7 @@ def get_response(user_message):
     return response['choices'][0]['message']['content']
 
 
-def scenario_analysis(request):
-    if request.method == 'GET':
-        industry = request.GET.get('industry')
-        facility_type = request.GET.get('facility_type')
-        scenario = request.GET.get('scenario')
-        consequences = request.GET.get('consequence')
-        threatSource = request.GET.get('threatsource')
-        currentControls = request.GET.get('selectedMitigationOptions')
-        threatActions = request.GET.get('selectedThreatOptions')
-        safetyimpact = request.GET.get('safety')
-        lifeimpact = request.GET.get('life')
-        productionimpact = request.GET.get('production')
-        reputationimpact = request.GET.get('reputation')
-        environmentimpact = request.GET.get('environment')
-        regulatoryimpact = request.GET.get('regulatory')
-        dataimpact = request.GET.get('data')
-        severitymitigated = request.GET.get('sm')
-        mitigatedexposure = request.GET.get('mel')
-        residualrisk = request.GET.get('rrm')
-        standards = request.GET.get('standard')
-        country = request.GET.get('country')
-
-        openai.api_key = os.environ.get('OPENAI_API_KEY')
-        # Define the common part of the user message
-        common_content = f"Given the scenario {scenario} with consequences {consequences} affecting a {facility_type} in the {industry} industry, the threat source {threatSource} performing actions {threatActions}, and current controls {currentControls}. The business impact assessment, giving scores out of 10 where 10 represents maximum impact,  rates safety as {safetyimpact}, danger to life as {lifeimpact}, production and operations as {productionimpact}, company reputation as {reputationimpact}, environmental consequences as {environmentimpact}, regulatory consequences as {regulatoryimpact}, and data and intellectual property as {dataimpact}. The effectiveness of current controls is analyzed as severity of the threat mitigated {severitymitigated}, risk exposure mitigated {mitigatedexposure}, and residual risk {residualrisk}."
-
-        # Define the five user messages
-        user_messages = [
-            {"role": "user",
-             "content": common_content + f" As a bullet point list, list the recommended controls, in the context of a cyberPHA, in order of effectiveness, to address the scenario and consequences. Do not list controls that are in {currentControls}."},
-            {"role": "user",
-             "content": common_content + f"The Adjusted Severity Score (Sa) in the context of a CyberPHA (Cyber Process Hazard Analysis) is a measure of the potential severity of a cyber threat, taking into account the effectiveness of existing countermeasures or mitigation measures. Without any additional text or commentary, giving only the number, provide the cyberPHA adjusted severity score (Sa) (out of 10) after applying recommended controls where 10 is indicated that controls are almost completed effective and a score of 0 would indicate that controls have zero effect.."},
-            {"role": "user",
-             "content": common_content + f" In the context of a cyber process hazard analysis - CyberPHA - the Adjusted Exposure Level (MELa) is a measure of the potential exposure to a threat after mitigation measures have been applied. MELa is a measure of the remaining risk after you've done everything you can to protect against a threat. Without any additional text or commentary, giving only the number, provide the amount of mitigated exposure (out of 10) after applying new controls on top of {currentControls} for {scenario}."},
-            {"role": "user",
-             "content": common_content + f" In the context of a cyber Process Hazard Analysis (cyberPHA), the Adjusted Residual Risk (RRa) is a measure of the remaining risk after all mitigation measures or controls have been implemented.Without any additional text or commentary, giving only the single word response, provide the residual risk rating (Low, Medium, or High) after applying new controls for {scenario}."},
-            {"role": "user",
-             "content": common_content + f" In the context of a cyberPHA, estimate the cost impact of the following scenario in US dollars. CRITICAL INSTRUCTION: You must provide a single number with no commentary or explanation. Consider the scenario at a {facility_type} in the {industry} industry. Use the BIA scores: safety {safetyimpact}/10, life {lifeimpact}/10, production {productionimpact}/10, reputation {reputationimpact}/10, environment {environmentimpact}/10, regulatory {regulatoryimpact}/10, and data {dataimpact}/10. Provide only a numeric value with the correct currency symbol for {country}. Scenario: {scenario}."},
-            # {"role": "user",
-            #  "content": common_content + f" Using {standards} as a reference, provide a list, without any additional commentary, text, or headings other than the specific requested information, a maximum of 5 key recommendations  that are most relevant to the CyberPHA and an assessment of operational technology - OT - with a particular focus on safety and environmental controls (make it the top 5 that give the most value and risk mitigation and do not include any currently implemented controls listed in the following: {currentControls}), to address the scenario aligned with the specifically named {standards} standards. Each recommendation should be in the format '[recommendation text] ([reference])', where '[reference]' is the relevant section from {standards}. References should be given in a manner that enables the user to quickly identify where to locate the related information within {standards}"},
-            {
-                "role": "user",
-                "content": common_content + f"Using the {standards} standard as a reference, provide a list of up to 5 key recommendations most relevant to the CyberPHA and the scenario of {scenario}: and an assessment of operational technology (OT) with a focus on safety and environmental controls. Prioritize recommendations that offer the most value and risk mitigation. Exclude any controls already implemented as listed in {currentControls}. Each recommendation should be presented in the format '[recommendation text] ([reference to specific section in {standards}])’. Your audience is cybersecurity leaders, engineering operators, and risk management professionals. Ensure the references are clear and enable quick identification within the {standards} standard."
-            }
-        ]
-
-        # Initialize an empty list to store the responses
-        responses = []
-
-        # Use ThreadPoolExecutor to parallelize the API calls
-        with concurrent.futures.ThreadPoolExecutor() as executor:
-            responses = list(executor.map(get_response, user_messages))
-
-        # Return the responses as variables
-        return JsonResponse({
-            'controls': responses[0],
-            'adjustedSeverity': responses[1],
-            'adjustedExposure': responses[2],
-            'adjustedRR': responses[3],
-            'costs': responses[4],
-            'recommendations': responses[5]
-        })
-
-
+@login_required()
 def facility_risk_profile(request):
     if request.method == 'GET':
         # Gather the necessary data for the risk assessment (impact scores and scenario information)
@@ -269,6 +208,7 @@ def pha_report(request, cyberpha_id):
                          })
 
 
+@login_required()
 def phascenarioreport(request):
     cyberPHAID = request.POST.get('cyberPHAID')
     cyberPHAHeader = tblCyberPHAHeader.objects.get(ID=cyberPHAID)
@@ -350,8 +290,180 @@ def getSingleScenario(request):
         'ale': scenario.ale,
         'countermeasureCosts': scenario.countermeasureCosts,
         'control_recommendations': scenario.control_recommendations,
-        'standards': scenario.standards
+        'standards': scenario.standards,
+        'probability': scenario.probability
     }
 
     # Return the scenario as a JSON response
     return JsonResponse(scenario_dict)
+
+
+@login_required()
+def scenario_analysis(request):
+    if request.method == 'GET':
+        industry = request.GET.get('industry')
+        facility_type = request.GET.get('facility_type')
+        scenario = request.GET.get('scenario')
+        consequences = request.GET.get('consequence')
+        threatSource = request.GET.get('threatsource')
+        currentControls = request.GET.get('selectedMitigationOptions')
+        threatActions = request.GET.get('selectedThreatOptions')
+        safetyimpact = request.GET.get('safety')
+        lifeimpact = request.GET.get('life')
+        productionimpact = request.GET.get('production')
+        reputationimpact = request.GET.get('reputation')
+        environmentimpact = request.GET.get('environment')
+        regulatoryimpact = request.GET.get('regulatory')
+        dataimpact = request.GET.get('data')
+        supplyimpact = request.GET.get('supply')
+        severitymitigated = request.GET.get('sm')
+        mitigatedexposure = request.GET.get('mel')
+        residualrisk = request.GET.get('rrm')
+        standards = request.GET.get('standard')
+        country = request.GET.get('country')
+        uel = request.GET.get('uel')
+
+        def common_content_prefix():
+            return f"In the {industry} industry, at a {facility_type} in {country}, given the scenario {scenario} with consequences {consequences}, the threat source is {threatSource} performing actions {threatActions}. Current controls are {currentControls}. Business impact scores (out of 10) are: safety: {safetyimpact}, life: {lifeimpact}, production: {productionimpact}, reputation: {reputationimpact}, environment: {environmentimpact}, regulatory: {regulatoryimpact}, data: {dataimpact}, and supply: {supplyimpact}. The unmitigated risk without controls is rated as {uel}/10."
+
+        openai.api_key = os.environ.get('OPENAI_API_KEY')
+        # Define the common part of the user message
+        common_content = f"Given the scenario {scenario} with consequences {consequences} affecting a {facility_type} in the {industry} industry in {country}, the threat source {threatSource} performing actions {threatActions}, and current controls {currentControls}. The business impact assessment is as follows,  scores are of 10 where 10 represents maximum impact, impact on safety: {safetyimpact}, danger to life: {lifeimpact}, production and operations: {productionimpact}, company reputation: {reputationimpact}, environmental impact: {environmentimpact}, impact of regulatory consequences: {regulatoryimpact}, supply chain impact: {supplyimpact}  data and intellectual property: {dataimpact}. The effectiveness of current controls has been assessed as: Severity of incident mitigated: {severitymitigated}, risk exposure to the scenario mitigated {mitigatedexposure}, and overall residual risk {residualrisk}. The amount of unmitigated rate without control is assumed to be {uel}"
+
+        # Define the refined user messages
+        user_messages = [
+            {
+                "role": "user",
+                "content": f"Based on the following context, list the recommended controls in order of effectiveness, excluding {currentControls}. Limit to 150 words. Context: {common_content_prefix()}. Give the response only. No preamble or commentary"
+            },
+            {
+                "role": "user",
+                "content": f"Based on the following context, provide the cyberPHA adjusted severity score (Sa) out of 10. Context: {common_content_prefix()}. Answer with a number . Do NOT include any other words, sentences, or explanations."
+            },
+            {
+                "role": "user",
+                "content": f"Based on the following context, provide the adjusted exposure level (MELa) out of 10. Context: {common_content_prefix()}. Answer with a number . Do NOT include any other words, sentences, or explanations."
+            },
+            {
+                "role": "user",
+                "content": f"Given the detailed context that follows, I need an assessment of the residual risk after all new controls have been implemented. The context suggests significant risk mitigation due to these controls. Based on this, provide a residual risk rating from the following options: Very Low, Low, Low/Medium, Medium, Medium/High, High, Very High. Context: {common_content_prefix()}, where it's emphasized that new controls have significantly reduced vulnerabilities and threats. The expected outcome is a much lower risk than before. Provide ONLY one of the given risk ratings without any additional text or explanations."
+            },
+
+            {
+                "role": "user",
+                "content": f"Given the context: {common_content_prefix()}, ESTIMATE the cost of a single loss event (SLE) amount in US dollars to the organization that owns the {facility_type} because of the cybersecurity incident that causes the given scenario of: {scenario}. Your estimate must be REALISTIC and relevant to the given scenario as described in the context. Expected that the result will be in a range between $10000 and $1000000 depending on the scenario but may be more or less based on your expert estimate. Do not over estimate. IMPORTANT. Provide one response which must be the estimated SLE as a positive integer without any text, preamble, or commentary. If you have a range then just supply the median value as the response"
+            },
+
+            {
+                "role": "user",
+                "content": f"Using the {standards} standard and the following context, provide up to 5 key recommendations for a CyberPHA. Context: {common_content_prefix()}. Give the response only. No preamble or commentary"
+            },
+            {
+                "role": "user",
+                "content": f"Given the context: {common_content_prefix()} and analysis of publicly reported cybersecurity incidents, provide ONLY the estimated probability (as a percentage) of a successful targeted attack given the current controls given in the context. Answer with a number followed by a percentage sign (e.g., 'nn%'). Do NOT include any other words, sentences, or explanations."
+            }
+
+        ]
+
+        def get_response_safe(user_message):
+            try:
+                return get_response(user_message)
+            except Exception as e:
+                return f"Error: {str(e)}"
+
+        # Initialize an empty list to store the responses
+        responses = []
+
+        # Use ThreadPoolExecutor to parallelize the API calls
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            # Submit all the tasks and get a list of futures
+            futures = [executor.submit(get_response, msg) for msg in user_messages]
+            # Collect the results in the order the futures were submitted
+            responses = [future.result() for future in futures]
+
+        # Return the responses as variables
+        return JsonResponse({
+            'controls': responses[0],
+            'adjustedSeverity': responses[1],
+            'adjustedExposure': responses[2],
+            'adjustedRR': responses[3],
+            'costs': responses[4],
+            'recommendations': responses[5],
+            'probability': responses[6]
+        })
+
+
+def scenario_vulnerability(request, scenario_id):
+    print("heading back")
+    try:
+        scenario = tblCyberPHAScenario.objects.get(pk=scenario_id)
+        vulnerabilities = vulnerability_analysis.objects.filter(scenario=scenario)
+        asset_types = tblAssetType.objects.all()  # Fetch asset types
+
+        if request.method == 'POST':
+            form = VulnerabilityAnalysisForm(request.POST)
+            if form.is_valid():
+                form.save()
+                # Redirect to the 'scenario_vulnerability' view with the scenario_id
+                return redirect('OTRisk:scenario_vulnerability', scenario_id=scenario_id)
+        else:
+            form = VulnerabilityAnalysisForm()
+
+        return render(request, 'OTRisk/vulnerability_table.html', {
+            'scenario': scenario,
+            'vulnerabilities': vulnerabilities,
+            'form': form,
+            'scenario_id_value': scenario_id,
+            'asset_types': asset_types
+        })
+    except tblCyberPHAScenario.DoesNotExist:
+        # Handle the scenario not found error, e.g., return a 404 page
+        return render(request, 'no_vulnerabilities.html')
+
+
+def add_vulnerability(request, scenario_id):
+    print(request.POST)
+    scenario = get_object_or_404(tblCyberPHAScenario, pk=scenario_id)
+    action = request.POST.get('action')
+    if request.method == 'POST':
+        if action == 'save':  # Check if Save button was clicked
+            description = request.POST.get('description')
+            asset_type_id = request.POST.get('asset_type')
+            asset_name = request.POST.get('asset_name')
+            cve = request.POST.get('cve')
+
+            # Create a new vulnerability instance and save it
+            vulnerability = vulnerability_analysis(
+                description=description,
+                asset_name=asset_name,
+                asset_type_id=asset_type_id,
+                cve=cve,
+                scenario=scenario,
+            )
+            vulnerability.save()
+
+        elif action == 'edit':  # Check if Update button was clicked
+            print("edit")
+            vulnerability_id = request.POST.get('vulnerability_id')
+            description = request.POST.get('description')
+            asset_type_id = request.POST.get('asset_type')
+            asset_name = request.POST.get('asset_name')
+            cve = request.POST.get('cve')
+
+            # Get the existing vulnerability instance
+            vulnerability = get_object_or_404(vulnerability_analysis, pk=vulnerability_id)
+
+            # Update the fields and save
+            vulnerability.description = description
+            vulnerability.asset_type_id = asset_type_id
+            vulnerability.asset_name = asset_name
+            vulnerability.cve = cve
+            vulnerability.save()
+
+    return redirect('OTRisk:scenario_vulnerability', scenario_id=scenario_id)
+
+
+def get_asset_types(request):
+    asset_types = tblAssetType.objects.all()
+    asset_type_list = [{'id': asset_type.id, 'AssetType': asset_type.AssetType} for asset_type in asset_types]
+    return JsonResponse({'asset_types': asset_type_list})

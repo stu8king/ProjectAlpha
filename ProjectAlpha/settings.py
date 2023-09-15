@@ -28,7 +28,6 @@ ALLOWED_HOSTS = ['3.223.201.144', '127.0.0.1', 'iotarisk.com', 'www.iotarisk.com
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -40,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'OTRisk.apps.OtriskConfig',
     'accounts',
+    'dbbackup',
     'django_bootstrap5'
 ]
 
@@ -52,6 +52,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'OTRisk.middleware.SessionIdleTimeout',
 
 ]
 
@@ -93,13 +94,14 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     },
 
-    'ProjectAlpha_MySQL': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'ProjectAlpha',
-        'USER': 'root',
-        'HOST': 'localhost',
-        'PORT': '3306',
-    }
+    # 'default': {
+    #    'ENGINE': 'django.db.backends.postgresql',
+    #    'NAME': 'iOTa_db',
+    #    'USER': 'ProjectAlphaAdmin',
+    #    'PASSWORD': 'Cardiacs2023$$',
+    #     'HOST': 'localhost',
+    #     'PORT': '5432',
+    # }
 }
 
 # Password validation
@@ -132,7 +134,6 @@ EMAIL_HOST_USER = 'AKIATJJNL3QCVSKXHHNH'  # The SMTP username from SES
 EMAIL_HOST_PASSWORD = 'BNN/75V4U7hPwAFFP6vl/NGWQXVrqyWrK7GEd46SURhN'  # The SMTP password from SES
 DEFAULT_FROM_EMAIL = 'support@iotarisk.com'  # Change this to your domain's email
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
 
@@ -164,4 +165,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STRIPE_PUBLIC_KEY = os.environ.get('STRIPE_PUBLIC_KEY')
 STRIPE_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY')
 
+# settings.py
+SESSION_COOKIE_AGE = 3600  # 1 hour in seconds
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 

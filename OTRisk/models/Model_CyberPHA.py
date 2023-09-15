@@ -2,8 +2,6 @@ from django.db import models
 from django.contrib.auth.models import User
 
 
-
-
 class tblStandards(models.Model):
     id = models.AutoField(primary_key=True)
     standard = models.TextField()
@@ -88,6 +86,14 @@ class tblIndustry(models.Model):
         db_table = 'tblIndustry'
 
 
+class tblAssetType(models.Model):
+    AssetType = models.TextField()
+    Description = models.TextField()
+
+    def __str__(self):
+        return self.AssetType
+
+
 class tblCyberPHAHeader(models.Model):
     ID = models.AutoField(primary_key=True)
     PHALeader = models.CharField(max_length=30)
@@ -122,6 +128,8 @@ class tblCyberPHAHeader(models.Model):
     class Meta:
         db_table = 'tblCyberPHAHeader'
 
+    def __str__(self):
+        return self.FacilityName
 
 class tblControlObjectives(models.Model):
     ID = models.AutoField(primary_key=True)
@@ -209,6 +217,7 @@ class tblCyberPHAScenario(models.Model):
     impactEnvironment = models.IntegerField()
     impactRegulation = models.IntegerField()
     impactData = models.IntegerField()
+    impactSupply = models.IntegerField()
     UEL = models.IntegerField()
     RRU = models.IntegerField()
     SM = models.IntegerField()
@@ -217,6 +226,7 @@ class tblCyberPHAScenario(models.Model):
     SA = models.IntegerField()
     MELA = models.IntegerField()
     RRa = models.TextField()
+    sl = models.IntegerField()
     recommendations = models.CharField(max_length=1000)
     Deleted = models.IntegerField()
     timestamp = models.DateTimeField()
@@ -233,8 +243,13 @@ class tblCyberPHAScenario(models.Model):
     justifyEnvironment = models.TextField()
     justifyRegulation = models.TextField()
     justifyData = models.TextField()
+    justifySupply = models.TextField()
     userID = models.ForeignKey(User, on_delete=models.CASCADE, db_column='userID')
     standards = models.TextField()
+    outage = models.TextField()
+    outageDuration = models.IntegerField()
+    outageCost = models.IntegerField()
+    probability = models.TextField()
 
     class Meta:
         db_table = 'tblCyberPHAScenario'
@@ -249,6 +264,17 @@ class tblCyberPHAScenario(models.Model):
     @classmethod
     def set_current_user(cls, user):
         cls._current_user = user
+
+
+class vulnerability_analysis(models.Model):
+    description = models.TextField()
+    asset_name = models.TextField()
+    asset_type = models.ForeignKey(tblAssetType, on_delete=models.CASCADE)  # Foreign key to tblAssetType
+    cve = models.TextField()
+    scenario = models.ForeignKey(tblCyberPHAScenario, on_delete=models.CASCADE)  # Foreign key to tblCyberPHAScenario
+
+    def __str__(self):
+        return self.description
 
 
 class tblCyberPHAControlObjective(models.Model):

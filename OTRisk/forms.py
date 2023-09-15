@@ -1,12 +1,25 @@
 from django import forms
 from OTRisk.models.RiskScenario import RiskScenario
 from OTRisk.models.post import Post, AssessmentTeam
+from OTRisk.models.Model_CyberPHA import vulnerability_analysis, tblAssetType
 from .models.raw import RAWorksheet, RAActions
 from .models.Model_Scenario import CustomScenario, CustomConsequence
 import accounts
 from django.contrib.auth.models import User
 from accounts.models import UserProfile, Organization
 from django.contrib.auth.password_validation import validate_password
+
+
+class VulnerabilityAnalysisForm(forms.ModelForm):
+    description = forms.CharField(widget=forms.Textarea(attrs={'rows': 3}))
+    asset_type = forms.ModelChoiceField(
+        queryset=tblAssetType.objects.all(),
+        widget=forms.Select(attrs={'class': 'select2'})
+    )
+
+    class Meta:
+        model = vulnerability_analysis
+        fields = '__all__'
 
 
 class SQLQueryForm(forms.Form):

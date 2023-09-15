@@ -128,6 +128,9 @@ urlpatterns = [
     path('edit_organization/<int:org_id>/', views.edit_organization, name='edit_organization'),
     path('edit_user_profile/<int:user_id>/', views.edit_user_profile, name='edit_user_profile'),
     path('execute_sql/', views.execute_sql, name='execute_sql'),
+    path('scenario_vulnerability/<int:scenario_id>/', views.scenario_vulnerability, name='scenario_vulnerability'),
+    path('add_vulnerability/<int:scenario_id>/', views.add_vulnerability, name='add_vulnerability'),
+    path('get_asset_types/', views.get_asset_types, name='get_asset_types'),
 ]
 
 if settings.DEBUG:

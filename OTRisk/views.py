@@ -20,6 +20,8 @@ from OTRisk.models.post import Post, AssessmentTeam
 from OTRisk.models.ThreatAssessment import ThreatAssessment
 from OTRisk.models.raw import RAWorksheet, RAWorksheetScenario, RAActions
 from django.db.models import F, Count, Avg
+
+from accounts.views import get_client_ip
 from .forms import RiskScenarioForm, PostForm, AssessmentTeamForm
 from django.http import JsonResponse, HttpResponse, HttpResponseForbidden
 from django.utils import timezone
@@ -41,7 +43,7 @@ from .raw_views import qraw, openai_assess_risk, GetTechniquesView, raw_action, 
     raw_from_walkdown, save_ra_action, get_rawactions, ra_actions_view, UpdateRAAction, reports, reports_pha
 from .dashboard_views import dashboardhome
 from .pha_views import iotaphamanager, facility_risk_profile, get_headerrecord, scenario_analysis, phascenarioreport, \
-    getSingleScenario, pha_report
+    getSingleScenario, pha_report, scenario_vulnerability, add_vulnerability, get_asset_types
 from .forms import CustomScenarioForm, CustomConsequenceForm
 from .models.Model_Scenario import CustomScenario, CustomConsequence
 from accounts.models import Organization
@@ -322,6 +324,7 @@ def get_consequences(request):
     return JsonResponse({'consequences': data})
 
 
+@login_required()
 def scenarioreport(request):
     cyberphaid = request.GET.get('hdnID', 0)
 
@@ -366,6 +369,7 @@ def scenarioreport(request):
     })
 
 
+@login_required()
 def save_or_update_cyberpha(request):
     if request.method == 'POST':
         # Get the form data
@@ -384,12 +388,16 @@ def save_or_update_cyberpha(request):
         impactenvironment = request.POST.get('environment')
         impactregulation = request.POST.get('regulatory')
         impactdata = request.POST.get('data')
+        impactsupply = request.POST.get('supply')
         sm = request.POST.get('sm')
         mel = request.POST.get('mel')
         rrm = request.POST.get('rrm')
         sa = request.POST.get('sa')
         mela = request.POST.get('mela')
         rra = request.POST.get('rra')
+        uel = request.POST.get('uel')
+        rru = request.POST.get('rru')
+        sl = request.POST.get('sl')
         recommendations = request.POST.get('recommendations')
         controlrecs = request.POST.get('controls')
         justifySafety = request.POST.get('justifySafety')
@@ -400,11 +408,24 @@ def save_or_update_cyberpha(request):
         justifyEnvironment = request.POST.get('justifyEnvironment')
         justifyRegulation = request.POST.get('justifyRegulation')
         justifyData = request.POST.get('dataRegulation')
+        justifySupply = request.POST.get('justifySupply')
         sle_string = request.POST.get('sle')
-        UEL = 0
-        RRU = 0
         aro = request.POST.get('aro')
         ale = request.POST.get('ale')
+        outage = request.POST.get('outage')
+        outageDuration = request.POST.get('outageDuration')
+        outageCost = request.POST.get('outageCost')
+        probability = request.POST.get('probability')
+        if outageDuration in ('NaN', ''):
+            outageDuration = 0
+        else:
+            outageDuration = int(outageDuration)
+
+        if outageCost in ('NaN', ''):
+            outageCost = 0
+        else:
+            outageCost = int(outageCost)
+
         countermeasureCosts = 0
 
         # Initialize sle to a default value
@@ -438,6 +459,7 @@ def save_or_update_cyberpha(request):
                 'impactEnvironment': impactenvironment,
                 'impactRegulation': impactregulation,
                 'impactData': impactdata,
+                'impactSupply': impactsupply,
                 'recommendations': recommendations,
                 'SM': sm,
                 'MEL': mel,
@@ -445,6 +467,9 @@ def save_or_update_cyberpha(request):
                 'SA': sa,
                 'MELA': mela,
                 'RRa': rra,
+                'UEL': uel,
+                'RRU': rru,
+                'sl': sl,
                 'Deleted': deleted,
                 'control_recommendations': controlrecs,
                 'justifySafety': justifySafety,
@@ -455,16 +480,32 @@ def save_or_update_cyberpha(request):
                 'justifyEnvironment': justifyEnvironment,
                 'justifyRegulation': justifyRegulation,
                 'justifyData': justifyData,
+                'justifySupply': justifySupply,
                 'userID': request.user,
                 'sle': sle,
-                'UEL': UEL,
-                'RRU': RRU,
                 'aro': aro,
                 'ale': ale,
                 'countermeasureCosts': countermeasureCosts,
+                'outage': outage,
+                'outageDuration': outageDuration,
+                'outageCost': outageCost,
+                'probability': probability,
                 'timestamp': timezone.now()
             }
         )
+        # write to the audit log
+        action = "created" if created else "updated"
+
+        # Create a new auditlog instance
+        audit_entry = auditlog(
+            userID=request.user.id,
+            timestamp=timezone.now(),
+            user_action=f"{action} CyberPHA: {cyberphaid}",
+            user_ipaddress=get_client_ip(request)  # Assuming you have a function to get the client's IP
+        )
+
+        # Save the auditlog entry
+        audit_entry.save()
 
         scenarioID = cyberpha_entry.pk
         request.session['cyberPHAID'] = cyberphaid  # Set the session variable
@@ -491,20 +532,7 @@ def get_mitigation_measures(request):
     return JsonResponse(list(mitigation_measures), safe=False)
 
 
-def edit_cyberpha(request, cyberpha_id):
-    # Retrieve the existing CyberPHA assessment from the database based on the provided ID
-    cyberpha = tblCyberPHA.objects.get(id=cyberpha_id)
-
-    if request.method == 'POST':
-        # Update the CyberPHA assessment based on the form submission
-        # Retrieve the form data and save it to the database
-        # Perform necessary validations and error handling
-
-        return redirect('assessment_success')
-
-    return render(request, 'edit_cyberpha.html', {'cyberpha': cyberpha})
-
-
+@login_required()
 def assess_cyberpha(request):
     active_cyberpha = request.GET.get('active_cyberpha', None)
 
