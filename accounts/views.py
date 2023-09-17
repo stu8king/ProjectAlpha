@@ -298,6 +298,7 @@ def password_change_view(request):
 
 
 def subscription_view(request):
+    print(request.POST)
     subscription_types = SubscriptionType.objects.all()
     if request.method == "POST":
         form = SubscriptionForm(request.POST)
@@ -308,6 +309,12 @@ def subscription_view(request):
             request.session['first_name'] = form.cleaned_data['first_name']
             request.session['last_name'] = form.cleaned_data['last_name']
             request.session['organization_name'] = form.cleaned_data['organization_name']
+            request.session['organization_address1'] = form.cleaned_data['organization_address']
+            request.session['organization_address2'] = form.cleaned_data['organization_address2']
+            request.session['organization_city'] = form.cleaned_data['organization_city']
+            request.session['organization_state'] = form.cleaned_data['organization_state']
+            request.session['organization_zip'] = form.cleaned_data['organization_zip']
+            request.session['organization_country'] = form.cleaned_data['organization_country']
             request.session['subscription_type'] = form.cleaned_data['subscription_type'].id
             # Store the duration in session
             selected_subscription = form.cleaned_data['subscription_type']
@@ -339,7 +346,13 @@ def set_password_view(request):
         subscription_type=subscription_type,
         subscription_start=subscription_start,
         subscription_end=subscription_end,
-        subscription_status=1
+        subscription_status=1,
+        address=request.session['organization_address1'],
+        address2=request.session['organization_address2'],
+        city=request.session['organization_city'],
+        country=request.session['organization_country'],
+        state=request.session['organization_state'],
+        zip=request.session['organization_zip']
     )
     organization.save()
 

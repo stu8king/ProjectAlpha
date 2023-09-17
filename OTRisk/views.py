@@ -104,7 +104,7 @@ def edit_user(request, user_id):
         form = UserForm(request.POST, instance=user)
         if form.is_valid():
             form.save()
-            return redirect('user_admin')
+            return redirect('OTRisk:user_admin')
     else:
         form = UserForm(instance=user)
     return render(request, 'OTRisk/edit_user.html', {'form': form})

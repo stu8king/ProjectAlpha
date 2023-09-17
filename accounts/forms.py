@@ -33,6 +33,11 @@ class SubscriptionForm(forms.ModelForm):
     last_name = forms.CharField(label="Last Name", max_length=30)
     organization_name = forms.CharField(label="Organization Name", max_length=255)
     organization_address = forms.CharField(label="Organization Address", max_length=255)
+    organization_address2 = forms.CharField(label="Organization Address2", max_length=255)
+    organization_city = forms.CharField(label="Organization City", max_length=255)
+    organization_state = forms.CharField(label="Organization State", max_length=255)
+    organization_zip = forms.CharField(label="Organization Zip/Post Code", max_length=255)
+    organization_country = forms.CharField(label="Organization Country", max_length=255)
     subscription_type = forms.ModelChoiceField(queryset=SubscriptionType.objects.all(),
                                                label="Select Subscription Type", widget=forms.Select(
             attrs={'onchange': 'updateSubscriptionDetails(this.value);'}))

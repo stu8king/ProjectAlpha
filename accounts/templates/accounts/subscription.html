@@ -5,8 +5,7 @@
 	<head>
 		<!-- Mobile Specific Meta -->
 		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-		<!-- Favicon-->
-		<link rel="shortcut icon" href="img/fav.png">
+
 		<!-- Author Meta -->
 		<meta name="author" content="codepixer">
 		<!-- Meta Description -->
@@ -16,7 +15,7 @@
 		<!-- meta character set -->
 		<meta charset="UTF-8">
 		<!-- Site Title -->
-		<title>Industry</title>
+		<title>Purchase iOTa</title>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-/bQdsTh/da6pkI1MST/rWKFNjaCP5gBSY4sEBT38Q/9RBh9AH40zEOg7Hlq2THRZ" crossorigin="anonymous"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
@@ -34,7 +33,6 @@
         <link rel="stylesheet" href="{% static 'css/animate.min.css' %}">
         <link rel="stylesheet" href="{% static 'css/owl.carousel.css' %}">
         <link rel="stylesheet" href="{% static 'css/main.css' %}">
-    <title>Subscription</title>
     <script>
         function updateSubscriptionDetails(subscriptionId) {
             // Fetch subscription details using AJAX and update the displayed details
@@ -127,8 +125,9 @@
 </div>
 
   </header><!-- #header -->
-		<!-- start banner Area -->
-    <section class="banner-area relative" id="home">
+
+<!-- start banner Area -->
+<section class="banner-area relative" id="home">
         <div class="overlay overlay-bg"></div>
         <div class="container">
             <div class="row d-flex align-items-center justify-content-center">
@@ -154,7 +153,7 @@
                 <div class="col-md-1"></div>
                     {% for subscription in subscription_types %}
                         <div class="col-md-2">
-                        <div class="card mb-2 subscription-card" onclick="selectSubscription({{ subscription.id }});" data-id="{{ subscription.id }}">
+                            <div class="card mb-2 subscription-card" onclick="selectSubscription({{ subscription.id }});" data-id="{{ subscription.id }}">
                             <div class="card-body">
                                 <h6 class="card-title text-center">{{ subscription.name }}</h6>
                                 <h4 class="card-title text-center">
@@ -193,13 +192,13 @@
                                 <p><strong>Description:</strong> {{ subscription.description }}</p>
                             </div>
                         </div>
-                    </div>
+                        </div>
                     {% endfor %}
-                    <div class="col-md-1"></div>
+                <div class="col-md-1"></div>
                     <input type="hidden" id="{{ form.subscription_type.id_for_label }}" name="{{ form.subscription_type.name }}">
-                </div>
+            </div>
             <div class="border-shadow-container">
-            <div class="row">
+                <div class="row">
                 <div class="col-md-1"></div>
                 <div class="col-md-3">
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
@@ -207,48 +206,47 @@
                             <label for="{{ form.email.id_for_label }}" class="form-label">Email Address (This will be your username)</label>
                             <input type="email" class="form-control" id="{{ form.email.id_for_label }}" name="{{ form.email.name }}" value="{{ form.email.value|default:'' }}">
                             <span id="email-status"></span>
-                        </div>
-                    </div>
 
-                </div>
-                <div class="col-md-3">
-                    <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                        <div class="card-body">
                             <label for="{{ form.first_name.id_for_label }}" class="form-label">First Name</label>
                             <input type="text" class="form-control" id="{{ form.first_name.id_for_label }}" name="{{ form.first_name.name }}" value="{{ form.first_name.value|default:'' }}">
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                        <div class="card-body">
+
                             <label for="{{ form.last_name.id_for_label }}" class="form-label">Last Name</label>
                             <input type="text" class="form-control" id="{{ form.last_name.id_for_label }}" name="{{ form.last_name.name }}" value="{{ form.last_name.value|default:'' }}">
                         </div>
                     </div>
                 </div>
-                <div class="col-md-2"></div>
-            </div>
-            <div class="row">
-                <div class="col-md-1"></div>
                 <div class="col-md-3">
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                         <div class="card-body">
                             <label for="{{ form.organization_name.id_for_label }}" class="form-label">Organization Name</label>
                             <input type="text" class="form-control" id="{{ form.organization_name.id_for_label }}" name="{{ form.organization_name.name }}" value="{{ form.organization_name.value|default:'' }}">
                             <span id="org-status"></span>
+
+                            <label for="{{ form.organization_address.id_for_label }}">Organization Address 1</label>
+                            <input type="text" class="form-control" id="{{ form.organization_address.id_for_label }}" name="{{ form.organization_address.name }}" value="{{ form.organization_address.value|default:'' }}" >
+
+                            <label for="{{ form.organization_address2.id_for_label }}">Organization Address 2</label>
+                            <input type="text" class="form-control" id="{{ form.organization_address2.id_for_label }}" name="{{ form.organization_address2.name }}" value="{{ form.organization_address2.value|default:'' }}" >
+
+                            <label for="{{ form.organization_city.id_for_label }}">Organization City</label>
+                            <input type="text" class="form-control" id="{{ form.organization_city.id_for_label }}" name="{{ form.organization_city.name }}" value="{{ form.organization_city.value|default:'' }}" >
                         </div>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                         <div class="card-body">
-                            <label for="{{ form.organization_address.id_for_label }}" class="form-label">Address</label>
-                            <textarea class="form-control" id="{{ form.organization_address_for_label }}" name="{{ form.organization_address.name }}" value="{{ form.organization_address.value|default:'' }}" rows="3" style="resize: none"></textarea>
+                            <label for="{{ form.organization_state.id_for_label }}">Organization State</label>
+                            <input type="text" class="form-control" id="{{ form.organization_state.id_for_label }}" name="{{ form.organization_state.name }}" value="{{ form.organization_state.value|default:'' }}" >
+
+                            <label for="{{ form.organization_zip.id_for_label }}">Organization Zip/Post Code</label>
+                            <input type="text" class="form-control" id="{{ form.organization_zip.id_for_label }}" name="{{ form.organization_zip.name }}" value="{{ form.organization_zip.value|default:'' }}" >
+
+                            <label for="{{ form.organization_country.id_for_label }}">Organization Country</label>
+                            <input type="text" class="form-control" id="{{ form.organization_country.id_for_label }}" name="{{ form.organization_country.name }}" value="{{ form.organization_country.value|default:'' }}" >
+
                         </div>
                     </div>
-                </div>
-                <div class="col-md-3">
                     <button type="button" class="btn btn-link" data-bs-toggle="modal" data-bs-target="#termsModal">
                         View Terms and Conditions
                     </button>
@@ -261,9 +259,25 @@
                     </div>
                     <button type="submit" class="btn btn-primary" id="paymentButton" disabled>Proceed to Payment</button>
                 </div>
-            <div class="col-md-1"></div>
+                <div class="col-md-2"></div>
+                </div>
+                    <div class="row">
+                        <div class="col-md-1"></div>
+                        <div class="col-md-3">
+
+                        </div>
+                        <div class="col-md-3">
+
+                        </div>
+                        <div class="col-md-3">
+
+                        </div>
+                        <div class="col-md-1"></div>
+                    </div>
+            </div>
         </div>
-        </div>
+    </div>
+
 </form>
 <script>
 
@@ -271,6 +285,7 @@
      $("#{{ form.first_name.id_for_label }}, #{{ form.last_name.id_for_label }}, #{{ form.organization_name.id_for_label }}, #{{ form.subscription_type.id_for_label }}").on('input', checkAllConditions);
 
     function checkAllConditions() {
+
         var emailValidated = $("#email-status").html() === "✓";
         var organizationValidated = !$("#org-status").html().includes("✗");
         var termsChecked = document.getElementById('acknowledgeTerms').checked;
@@ -278,6 +293,14 @@
         var lastName = $("#{{ form.last_name.id_for_label }}").val();
         var organizationName = $("#{{ form.organization_name.id_for_label }}").val();
         var subscriptionType = $("#{{ form.subscription_type.id_for_label }}").val();
+        console.log("emailValidated:", emailValidated);
+        console.log("organizationValidated:", organizationValidated);
+        console.log("termsChecked:", termsChecked);
+        console.log("firstName:", firstName);
+        console.log("lastName:", lastName);
+        console.log("organizationName:", organizationName);
+        console.log("subscriptionType:", subscriptionType);
+
 
         document.getElementById('paymentButton').disabled = !(emailValidated && termsChecked && firstName && lastName && organizationValidated && subscriptionType);
         }
@@ -379,7 +402,7 @@
 </script>
 
       <br><br>
-            <div id="subscription_details">
+            <div id="subscription_details" style="visibility: hidden">
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                         <div class="card-body">
                     <p><strong>Max Users:</strong> <span id="max_users"></span></p>
