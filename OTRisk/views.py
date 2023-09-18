@@ -1,6 +1,5 @@
-
 from django.contrib.auth.models import User
-from django.shortcuts import  get_object_or_404
+from django.shortcuts import get_object_or_404
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 from OTRisk.models.RiskScenario import RiskScenario, tblScenarioRecommendations
@@ -42,6 +41,7 @@ from django.core.mail import send_mail
 from django.contrib.auth.decorators import user_passes_test
 from django.db import connection
 from OTRisk.forms import SQLQueryForm
+
 app_name = 'OTRisk'
 
 
@@ -650,10 +650,21 @@ def deletecyberpha(request, cyberpha_id):
 
 
 def deletescenario(request, scenarioid, cyberPHAID):
+    organization_id = request.session['user_organization']
     scenario_to_del = tblCyberPHAScenario.objects.get(ID=scenarioid)
     scenario_to_del.Deleted = 1
     scenario_to_del.save()
     saved_scenarios = tblCyberPHAScenario.objects.filter(CyberPHA=cyberPHAID, Deleted=0)
+
+    tbl_consequences = tblConsequence.objects.all()
+    # Get custom scenarios for the current user's organization
+    custom_consequences = CustomConsequence.objects.filter(organization_id=organization_id)
+
+    tbl_consequence_list = [{'ID': obj.ID, 'Consequence': obj.Consequence} for obj in tbl_consequences]
+    custom_consequence_list = [{'ID': obj.id, 'Consequence': obj.Consequence} for obj in custom_consequences]
+    # Combine these lists
+    combined_consequences = tbl_consequence_list + custom_consequence_list
+    standardslist = tblStandards.objects.all().order_by('standard')
 
     return render(request, 'OTRisk/phascenariomgr.html', {
         'scenarios': tblScenarios.objects.all(),
@@ -663,7 +674,9 @@ def deletescenario(request, scenarioid, cyberPHAID):
         'threatsources': tblThreatSources.objects.all().order_by('ThreatSource'),
         'threataction': tblThreatActions.objects.all().order_by('ThreatAction'),
         'risk_categories': tblRiskCategories.objects.all(),
-        'saved_scenarios': saved_scenarios
+        'saved_scenarios': saved_scenarios,
+        'consequenceList': combined_consequences,
+        'standardslist': standardslist
     })
     # return redirect('OTRisk:assess_cyberpha')
 
@@ -1324,7 +1337,6 @@ def walkthrough_questionnaire(request, facility_type_id):
 def walkthrough_questionnaire_details(request, questionnaire_id):
     # Add your logic here to retrieve the questionnaire details and render the template
     return render(request, 'OTRisk/walkthroughQuestionnaire.html', {'questionnaire_id': questionnaire_id})
-
 
 
 def write_to_audit(user_id, user_action, user_ip):

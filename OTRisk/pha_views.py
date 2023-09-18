@@ -1,7 +1,7 @@
 from django.forms import model_to_dict
 
-from OTRisk.models.Model_CyberPHA import tblIndustry, tblThreatSources, tblCyberPHAHeader, tblZones, tblStandards, \
-    tblCyberPHAScenario, vulnerability_analysis, tblAssetType
+from OTRisk.models.Model_CyberPHA import tblIndustry, tblCyberPHAHeader, tblZones, tblStandards, \
+    tblCyberPHAScenario, vulnerability_analysis, tblAssetType, tblMitigationMeasures
 from OTRisk.models.questionnairemodel import FacilityType
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, get_object_or_404, redirect
@@ -20,6 +20,8 @@ from .dashboard_views import get_user_organization_id
 from django.contrib.auth.models import User
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from .forms import VulnerabilityAnalysisForm
+import aiohttp
+import asyncio
 
 
 @login_required
@@ -140,6 +142,16 @@ def facility_risk_profile(request):
         country = request.GET.get('country')
         facility = request.GET.get('txtFacility')
 
+        # Check if Industry or facility_type are empty or None
+        if not Industry or not facility_type:
+            error_msg = "Missing industry or facility type. Complete all fields to get an accurate assessment"
+            return JsonResponse({
+                'safety_summary': error_msg,
+                'chemical_summary': error_msg,
+                'physical_security_summary': error_msg,
+                'other_summary': error_msg
+            })
+
         openai_api_key = os.environ.get('OPENAI_API_KEY')
         openai.api_key = openai_api_key
 
@@ -153,22 +165,28 @@ def facility_risk_profile(request):
         responses = []
 
         # Loop through the prompts and make an API call for each one
-        for prompt in prompts:
-            response = openai.ChatCompletion.create(
+        def fetch_response(prompt):
+            return openai.ChatCompletion.create(
                 model="gpt-3.5-turbo",
                 messages=[
                     {"role": "system",
-                     "content": "You are a model trained to provide concise responses. Please provide a numbered bullet-point list based on the given statement."},
+                     "content": "You are a model trained to provide concise responses. Please provide a concise and precise numbered bullet-point list based on the given statement."},
                     {"role": "user", "content": prompt}
                 ],
                 temperature=0.3,
                 max_tokens=256
             )
-            # Append the response to the responses list
-            responses.append(response['choices'][0]['message']['content'])
+
+            # Use ThreadPoolExecutor to parallelize the API calls
+
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            responses = list(executor.map(fetch_response, prompts))
 
             # Extract the individual responses
-        safety_summary, chemical_summary, physical_security_summary, other_summary = responses
+        safety_summary = responses[0]['choices'][0]['message']['content'].strip()
+        chemical_summary = responses[1]['choices'][0]['message']['content'].strip()
+        physical_security_summary = responses[2]['choices'][0]['message']['content'].strip()
+        other_summary = responses[3]['choices'][0]['message']['content'].strip()
 
         # Return the individual parts as variables
         return JsonResponse({
@@ -292,8 +310,11 @@ def getSingleScenario(request):
         'control_recommendations': scenario.control_recommendations,
         'standards': scenario.standards,
         'probability': scenario.probability
-    }
 
+    }
+    # Get all mitigation measures
+    all_mitigation_measures = list(tblMitigationMeasures.objects.values_list('ControlObjective', flat=True))
+    scenario_dict['all_mitigation_measures'] = all_mitigation_measures
     # Return the scenario as a JSON response
     return JsonResponse(scenario_dict)
 
@@ -422,7 +443,6 @@ def scenario_vulnerability(request, scenario_id):
 
 
 def add_vulnerability(request, scenario_id):
-    print(request.POST)
     scenario = get_object_or_404(tblCyberPHAScenario, pk=scenario_id)
     action = request.POST.get('action')
     if request.method == 'POST':
@@ -443,7 +463,6 @@ def add_vulnerability(request, scenario_id):
             vulnerability.save()
 
         elif action == 'edit':  # Check if Update button was clicked
-            print("edit")
             vulnerability_id = request.POST.get('vulnerability_id')
             description = request.POST.get('description')
             asset_type_id = request.POST.get('asset_type')

@@ -1,6 +1,6 @@
 from django import forms
 from OTRisk.models.RiskScenario import RiskScenario
-from OTRisk.models.Model_CyberPHA import vulnerability_analysis, tblAssetType
+from OTRisk.models.Model_CyberPHA import vulnerability_analysis, tblAssetType, tblMitigationMeasures
 from .models.raw import RAWorksheet, RAActions
 from .models.Model_Scenario import CustomScenario, CustomConsequence
 import accounts
@@ -121,6 +121,7 @@ class RAWorksheetForm(forms.ModelForm):
 class LoginForm(forms.Form):
     username = forms.CharField()
     password = forms.CharField(widget=forms.PasswordInput)
+
 
 class TeamMemberForm(forms.Form):
     first_name = forms.CharField(max_length=100)

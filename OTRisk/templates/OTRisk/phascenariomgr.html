@@ -9,8 +9,9 @@
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.3/css/jquery.dataTables.css">
     <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.js"></script>
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-beta.1/dist/css/select2.min.css" rel="stylesheet" />
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-beta.1/dist/js/select2.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
 
 
     <script src="{% static 'OTRisk/assesscyberpha.js' %}"></script>
@@ -192,52 +193,7 @@
 <div class="row" style="height: 300px">
     <div class="col-md-1" style="background-color: black">
         <button type="button" id="addScenarioBtn" class="form-control  btn-link" onclick="resetformcontrols()" style="background-color: black; color: white;">New Scenario</button>
-        <script>
-            function resetformcontrols() {
-                var isConfirmed = window.confirm("Are you sure you want to begin a new scenario and reset the form? All unsaved changes will be lost.");
-                if (isConfirmed) {
-                    document.getElementById('txtScenario').value = '';
-                    document.getElementById('txtConsequence').value = '';
-                    document.getElementById('threat-intelligence').value = "";
-                    $("#mitigation-measure").val([]).trigger("change.select2");
-                    document.getElementById('mitigation-measure').value = "Select Current Controls";
-                    $("#threatactions").val([]).trigger("change.select2");
-                    document.getElementById('threatactions').value = "Select Threat Actons";
-                    document.getElementById('risk-category').value = "";
-                    document.getElementById('range_safety').value = 0;
-                    document.getElementById('range_life').value = 0;
-                    document.getElementById('range_production').value = 0;
-                    document.getElementById('range_finance').value = 0;
-                    document.getElementById('range_reputation').value = 0;
-                    document.getElementById('range_environment').value = 0;
-                    document.getElementById('range_regulatory').value = 0;
-                    document.getElementById('range_data').value = 0;
-                    document.getElementById('range_supply').value = 0;
-                    document.getElementById('SMrange').value = 0;
-                    document.getElementById('MELrange').value = 0;
-                    document.getElementById('RRMrange').value = 0;
-                    document.getElementById('SArange').value = 0;
-                    document.getElementById('MELarange').value = 0;
-                    document.getElementById('txtsafetyJustify').value = "";
-                    document.getElementById('txtlifeJustify').value = "";
-                    document.getElementById('txtproductionJustify').value = "";
-                    document.getElementById('txtfinanceJustify').value = "";
-                    document.getElementById('txtreputationJustify').value = "";
-                    document.getElementById('txtenvironmentJustify').value = "";
-                    document.getElementById('txtregulatoryJustify').value = "";
-                    document.getElementById('txtdataJustify').value = "";
-                    document.getElementById('SMrange').value = 0;
-                    document.getElementById('MELrange').value = 0;
-                    document.getElementById('RRMrange').value = 0;
-                    document.getElementById('SArange').value = 0;
-                    document.getElementById('MELarange').value = 0;
-                    document.getElementById('txtScenarioAnalysis').value = 0;
-                    document.getElementById('txtControlAnalysis').value = 0;
-                    const rra = document.getElementById('txtRRa').value = 0;
-                    clearVulnerabilityTable()
-                }
-            }
-        </script>
+
         <br>
 
             <!-- Modify the submit button to open the confirmation modal -->
@@ -315,72 +271,7 @@
                 </tbody>
               </table>
                 <script>
-                function fillScenario(scenarioId) {
-                    $('#mitigation-measure').val([]);
-                    $('#mitigation-measure').trigger('change');
-                    $('#threatactions').val([]);
-                    $('#threatactions').trigger('change');
-                    // Send a GET request to the getSingleScenario view
-                    $.get("{% url 'OTRisk:getSingleScenario' %}", { id: scenarioId }, function(data) {
-                        // Fill the form fields with the returned data
-                        $('#txtScenario').val(data.Scenario);
-                        $('#txtConsequence').val(data.Consequence);
-                        $('#threat-intelligence').val(data.ThreatClass);
-                        $('#selStandards').val(data.standards);
-                        // Split the Countermeasures string into an array and set the selected values of the dropdown
 
-                        var countermeasuresArray = data.Countermeasures.split(',');
-                        $('#mitigation-measure').val(countermeasuresArray);
-                        $('#mitigation-measure').trigger('change');
-
-                        var threatactionsArray = data.ThreatAction.split(',');
-                        $('#threatactions').val(threatactionsArray);
-                        $('#threatactions').trigger('change');
-
-                         $('#risk-category').val(data.RiskCategory);
-                         $('#range_safety').val(data.impactSafety);
-                         $('#range_life').val(data.impactDanger);
-                         $('#range_production').val(data.impactProduction);
-                         $('#range_finance').val(data.impactFinance);
-                         $('#range_reputation').val(data.impactReputation);
-                         $('#range_environment').val(data.impactEnvironment);
-                         $('#range_regulation').val(data.impactRegulation);
-                         $('#range_data').val(data.impactData);
-                         // $('#selStandards').val(data.RiskCategory);
-
-                        $('#txtScenarioAnalysis').val(data.recommendations);
-                        $('#SMrange').val(data.SM);
-                        $('#MELrange').val(data.MEL);
-                        $('#RRMrange').val(data.RRM);
-                        $('#SArange').val(data.SA);
-                        $('#MELarange').val(data.MELA);
-                        $('#sle').val(data.sle);
-
-                        let costs = parseFloat(data.sle); // Assuming response.costs is a string representation of a number
-                        let formattedCosts = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(costs);
-
-                        document.getElementById('sle').value = formattedCosts;
-                        document.getElementById('txtEventCosts').value= formattedCosts;
-                        document.getElementById('txtResidualRisk').value= data.RRa;
-                        document.getElementById('txtProbability').value= data.probability;
-                        document.getElementById('hdnScenario').value = scenarioId;
-
-                         $('#txtRRa').val(data.RRa);
-                        $('#txtControlAnalysis').val(data.control_recommendations);
-                        $('#txtdataJustify').val(data.justifyData);
-                        $('#txtregulatoryJustify').val(data.justifyRegulation);
-                        $('#txtenvironmentJustify').val(data.justifyEnvironment);
-                        $('#txtreputationJustify').val(data.justifyReputation);
-                        $('#txtfinanceJustify').val(data.justifyFinancial);
-                        $('#txtproductionJustify').val(data.justifyProduction);
-                        $('#txtlifeJustify').val(data.justifyLife);
-                        $('#txtsafetyJustify').val(data.justifySafety)
-
-                        loadVulnerabilityTable(scenarioId);
-
-                         });
-
-                    }
 
                     // Function to load the vulnerability table component
                     function loadVulnerabilityTable(scenarioId) {
@@ -608,8 +499,8 @@
             <option value="{{ mitigation_measure.ControlObjective }}">{{ mitigation_measure.ControlObjective }}</option>
         {% endfor %}
         </select>
+ <script>
 
-        <script>
         $(document).ready(function() {
             $('#mitigation-measure').select2({
                 placeholder: "Select Current Controls",
@@ -679,7 +570,7 @@
         <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
             <div class="card-body">
                 <div class="slider-container d-flex align-items-center">
-                    <div class="col-2"><label class="small-font d-flex align-items-center clickable-label" data-bs-toggle="modal" data-bs-target="#productionModal" data-bs-placement="top" data-modal-id="productionModal" data-textarea-id="txtproductionJustify">Production</label><span id="textIndicator" style="display: none;"><i class="bi bi-journal-text"></i></span></div>
+                    <div class="col-2"><label for="range_production" class="small-font d-flex align-items-center clickable-label" data-bs-toggle="modal" data-bs-target="#productionModal" data-bs-placement="top" data-modal-id="productionModal" data-textarea-id="txtproductionJustify">Production</label><span id="textIndicator" style="display: none;"><i class="bi bi-journal-text"></i></span></div>
                     <div class="col-7">
                       <input type="range" min="1" max="10" value="1" class="form-range" id="range_production" name="range_production" onchange="initSlider('range_production', 'productionrange');">
                     </div>
@@ -2131,8 +2022,134 @@ document.addEventListener("DOMContentLoaded", function() {
 });
 
 
+function resetformcontrols() {
+    var isConfirmed = window.confirm("Are you sure you want to begin a new scenario and reset the form? All unsaved changes will be lost.");
+    if (isConfirmed) {
+        document.getElementById('txtScenario').value = '';
+        document.getElementById('txtConsequence').value = '';
+        document.getElementById('threat-intelligence').value = "";
+        $("#mitigation-measure").val([]).trigger("change.select2");
+        document.getElementById('mitigation-measure').value = "Select Current Controls";
+        $("#threatactions").val([]).trigger("change.select2");
+        document.getElementById('threatactions').value = "Select Threat Actons";
+        document.getElementById('risk-category').value = "";
+        document.getElementById('range_safety').value = 0;
+        document.getElementById('range_life').value = 0;
+        document.getElementById('range_production').value = 0;
+        document.getElementById('range_finance').value = 0;
+        document.getElementById('range_reputation').value = 0;
+        document.getElementById('range_environment').value = 0;
+        document.getElementById('range_regulatory').value = 0;
+        document.getElementById('range_data').value = 0;
+        document.getElementById('range_supply').value = 0;
+        document.getElementById('SMrange').value = 0;
+        document.getElementById('MELrange').value = 0;
+        document.getElementById('RRMrange').value = 0;
+        document.getElementById('SArange').value = 0;
+        document.getElementById('MELarange').value = 0;
+        document.getElementById('txtsafetyJustify').value = "";
+        document.getElementById('txtlifeJustify').value = "";
+        document.getElementById('txtproductionJustify').value = "";
+        document.getElementById('txtfinanceJustify').value = "";
+        document.getElementById('txtreputationJustify').value = "";
+        document.getElementById('txtenvironmentJustify').value = "";
+        document.getElementById('txtregulatoryJustify').value = "";
+        document.getElementById('txtdataJustify').value = "";
+        document.getElementById('SMrange').value = 0;
+        document.getElementById('MELrange').value = 0;
+        document.getElementById('RRMrange').value = 0;
+        document.getElementById('SArange').value = 0;
+        document.getElementById('MELarange').value = 0;
+        document.getElementById('txtScenarioAnalysis').value = 0;
+        document.getElementById('txtControlAnalysis').value = 0;
+        const rra = document.getElementById('txtRRa').value = 0;
+        clearVulnerabilityTable()
+    }
+}
 
+ function fillScenario(scenarioId) {
+
+    $('#threatactions').val([]);
+    $('#threatactions').trigger('change');
+    // Send a GET request to the getSingleScenario view
+    $.get("{% url 'OTRisk:getSingleScenario' %}", { id: scenarioId }, function(data) {
+
+        // Fill the form fields with the returned data
+        $('#txtScenario').val(data.Scenario);
+        $('#txtConsequence').val(data.Consequence);
+        $('#threat-intelligence').val(data.ThreatClass);
+        $('#selStandards').val(data.standards);
+        // Split the Countermeasures string into an array and set the selected values of the dropdown
+
+        $('#mitigation-measure').select2('destroy'); // Destroy the existing select2 instance
+        $('#mitigation-measure').empty(); // Clear existing options
+        $('#mitigation-measure').append($('<option>', { // Add the default option
+            value: "",
+            text: "-- Select Controls --"
+        }));
+        $.each(data.all_mitigation_measures, function(index, value) {
+            $('#mitigation-measure').append($('<option>', {
+                value: value,
+                text: value
+            }));
+        });
+        $('#mitigation-measure').select2({ // Re-initialize the select2 control
+            placeholder: "Select Current Controls",
+            allowClear: true
+        });
+
+
+        var threatactionsArray = data.ThreatAction.split(',');
+        $('#threatactions').val(threatactionsArray);
+        $('#threatactions').trigger('change');
+
+         $('#risk-category').val(data.RiskCategory);
+         $('#range_safety').val(data.impactSafety);
+         $('#range_life').val(data.impactDanger);
+         $('#range_production').val(data.impactProduction);
+         $('#range_finance').val(data.impactFinance);
+         $('#range_reputation').val(data.impactReputation);
+         $('#range_environment').val(data.impactEnvironment);
+         $('#range_regulation').val(data.impactRegulation);
+         $('#range_data').val(data.impactData);
+         // $('#selStandards').val(data.RiskCategory);
+
+        $('#txtScenarioAnalysis').val(data.recommendations);
+        $('#SMrange').val(data.SM);
+        $('#MELrange').val(data.MEL);
+        $('#RRMrange').val(data.RRM);
+        $('#SArange').val(data.SA);
+        $('#MELarange').val(data.MELA);
+        $('#sle').val(data.sle);
+
+        let costs = parseFloat(data.sle); // Assuming response.costs is a string representation of a number
+        let formattedCosts = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(costs);
+
+        document.getElementById('sle').value = formattedCosts;
+        document.getElementById('txtEventCosts').value= formattedCosts;
+        document.getElementById('txtResidualRisk').value= data.RRa;
+        document.getElementById('txtProbability').value= data.probability;
+        document.getElementById('hdnScenario').value = scenarioId;
+
+         $('#txtRRa').val(data.RRa);
+        $('#txtControlAnalysis').val(data.control_recommendations);
+        $('#txtdataJustify').val(data.justifyData);
+        $('#txtregulatoryJustify').val(data.justifyRegulation);
+        $('#txtenvironmentJustify').val(data.justifyEnvironment);
+        $('#txtreputationJustify').val(data.justifyReputation);
+        $('#txtfinanceJustify').val(data.justifyFinancial);
+        $('#txtproductionJustify').val(data.justifyProduction);
+        $('#txtlifeJustify').val(data.justifyLife);
+        $('#txtsafetyJustify').val(data.justifySafety)
+
+        loadVulnerabilityTable(scenarioId);
+
+         });
+
+    }
 </script>
+
+
 
 
 
