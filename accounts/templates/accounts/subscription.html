@@ -108,19 +108,20 @@
 <div class="container main-menu">
     <div class="row align-items-center justify-content-between d-flex">
       <div id="logo">
-        <a href="login.html"><img src="{% static 'images/iota_small_whitebg.png' %} " style="width: 70px" alt=""></a>
+        <a href="{% url 'accounts:login' %}">Home<img src="{% static 'images/iota_small_whitebg.png' %} " style="width: 70px" alt=""></a>
       </div>
-      <nav id="nav-menu-container">
-          <ul class="nav-menu">
-              <li class="menu-active"><a href="#">Home</a></li>
+          <nav id="nav-menu-container">
+            <ul class="nav-menu">
+              <li><a href="{% url 'accounts:login' %}">Home</a></li>
               <li><a href="{% url 'accounts:about' %}">About</a></li>
-              <li><a href="faq.html">Product</a></li>
+              <li><a href="{% url 'accounts:faq' %}">iOTa FAQ</a></li>
               <li><a href="{% url 'accounts:contact' %}">Contact</a></li>
+                <li><a href="{% url 'accounts:subscription_view' %}">Register</a></li>
               <li><a href="#" data-toggle="modal" data-target="#loginModal">Customer Login</a></li>
 
 
             </ul>
-      </nav><!-- #nav-menu-container -->
+          </nav><!-- #nav-menu-container -->
     </div>
 </div>
 

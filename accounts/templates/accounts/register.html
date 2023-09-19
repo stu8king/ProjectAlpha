@@ -30,45 +30,18 @@
 </head>
 <body>
 
-<nav class="navbar navbar-expand-lg navbar-scroll fixed-top shadow-0 border-bottom border-dark">
-  <div class="container-fluid">
-   <a class="navbar-brand" href="#"><img src="{% static 'images/iOTa_small.png' %}"></a>
-    <button class="navbar-toggler" type="button" data-mdb-toggle="collapse"
-      data-mdb-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
-      aria-label="Toggle navigation">
-      <i class="fas fa-bars"></i>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarSupportedContent">
-      <ul class="navbar-nav ms-auto">
-        <li class="nav-item">
-          <a class="nav-link" href="{% url 'OTRisk:risk_assessment' %}"><i class="bi bi-journal-text"></i> Risk Assessment</a>
-        </li>
-        <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                <i class="bi bi-diagram-3"></i> CyberPHA
-              </a>
-              <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                <li><a class="dropdown-item" href="{% url 'OTRisk:cyber_pha_manager' %}"> CyberPHA Manager</a></li>
-                <li><a class="dropdown-item" href="{% url 'OTRisk:walkdown' %}"> Site Walkdown</a></li>
-                <li><a class="dropdown-item" href="#">Workshop</a></li>
-              </ul>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="{% url 'OTRisk:site_walkdown' %}"><i class="bi bi-building"></i> Site Walkdown</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="{% url 'OTRisk:walkdown' %}" tabindex="-1" ><i class="bi bi-kanban"></i> New Walkdown</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Reports</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#" tabindex="-1" ><i class="bi bi-ui-checks-grid"></i> Admin</a>
-      </li>
-      </ul>
-    </div>
-  </div>
-</nav>
+          <nav id="nav-menu-container">
+            <ul class="nav-menu">
+              <li><a href="{% url 'accounts:login' %}">Home</a></li>
+              <li><a href="{% url 'accounts:about' %}">About</a></li>
+              <li><a href="{% url 'accounts:faq' %}">iOTa FAQ</a></li>
+              <li><a href="{% url 'accounts:contact' %}">Contact</a></li>
+                <li><a href="{% url 'accounts:subscription_view' %}">Register</a></li>
+              <li><a href="#" data-toggle="modal" data-target="#loginModal">Customer Login</a></li>
+
+
+            </ul>
+          </nav><!-- #nav-menu-container -->
 
 <div class="row">
     <div class="col-md-3"></div>
