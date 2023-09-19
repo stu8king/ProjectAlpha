@@ -298,7 +298,6 @@ def password_change_view(request):
 
 
 def subscription_view(request):
-    print(request.POST)
     subscription_types = SubscriptionType.objects.all()
     if request.method == "POST":
         form = SubscriptionForm(request.POST)
