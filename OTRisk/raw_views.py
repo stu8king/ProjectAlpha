@@ -720,7 +720,7 @@ def openai_assess_risk(request):
         risk_summary_message = {
             "role": "user",
             "content": {
-                "prompt": "Based on the provided risk factors, make a succinct assessment of the overall likelihood and consequences of the given scenario.",
+                "prompt": "Based on the provided risk factors, make a brief and concise bullet point assessment of the overall likelihood and consequences of the given scenario in a maximum of 150 words.",
                 "factors": risk_factors,
                 "response_options": [
                     "Unrealistic scenario",

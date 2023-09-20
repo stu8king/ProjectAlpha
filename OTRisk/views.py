@@ -1352,7 +1352,6 @@ def get_mitigations(request):
 
 
 def save_control_assessment(request):
-    print(request.POST)
     if request.method == "POST":
         # Get the cyberPHA_id from the POST data
         cyberPHA_id = request.POST.get('cyberPHA')
@@ -1370,6 +1369,8 @@ def save_control_assessment(request):
                 control_id = field_name  # Use the id value directly from the field name
                 weighting_field_name = f'weighting_{control_id}'
                 weighting_value = request.POST.get(weighting_field_name)
+                if weighting_value == '':
+                    weighting_value = 5  # hard coding a median value if no value for the weighting has been set
                 # Save or update the response in the MitreControlAssessment model
                 MitreControlAssessment.objects.update_or_create(
                     control_id=control_id,
