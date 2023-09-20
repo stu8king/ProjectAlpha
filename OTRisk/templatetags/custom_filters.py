@@ -3,9 +3,11 @@ import json
 
 register = template.Library()
 
+
 @register.filter
 def jsonify(value):
     return json.loads(value)
+
 
 @register.filter(name='split')
 def split(value, arg):
@@ -54,3 +56,18 @@ def impact_level(value):
 @register.filter
 def mul(value, arg):
     return value * arg
+
+
+@register.filter(name='multiply')
+def multiply(value, arg):
+    return value * arg
+
+
+@register.filter
+def start_index(value, arg):
+    return value * arg
+
+
+@register.filter
+def end_index(value, arg):
+    return (value + 1) * arg

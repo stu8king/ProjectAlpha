@@ -1,7 +1,7 @@
 from django import forms
 from OTRisk.models.RiskScenario import RiskScenario
 from OTRisk.models.Model_CyberPHA import vulnerability_analysis, tblAssetType, tblMitigationMeasures
-from .models.raw import RAWorksheet, RAActions
+from .models.raw import RAWorksheet, RAActions, MitreICSMitigations
 from .models.Model_Scenario import CustomScenario, CustomConsequence
 import accounts
 from django.contrib.auth.models import User
@@ -137,3 +137,17 @@ class RiskScenarioForm(forms.ModelForm):
         model = RiskScenario
         fields = '__all__'
 
+
+class ControlAssessmentForm(forms.Form):
+    def __init__(self, *args, **kwargs):
+        super(ControlAssessmentForm, self).__init__(*args, **kwargs)
+        for mitigation in MitreICSMitigations.objects.all():
+            self.fields[f'mitigation_{mitigation.id}'] = forms.IntegerField(
+                label=mitigation.name,
+                widget=forms.NumberInput(attrs={
+                    'type': 'range',
+                    'min': 0,
+                    'max': 100,
+                    'class': 'custom-range'
+                })
+            )

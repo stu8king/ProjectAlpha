@@ -1,7 +1,8 @@
 from django.forms import model_to_dict
 
 from OTRisk.models.Model_CyberPHA import tblIndustry, tblCyberPHAHeader, tblZones, tblStandards, \
-    tblCyberPHAScenario, vulnerability_analysis, tblAssetType, tblMitigationMeasures
+    tblCyberPHAScenario, vulnerability_analysis, tblAssetType, tblMitigationMeasures, MitreControlAssessment
+from OTRisk.models.raw import MitreICSMitigations
 from OTRisk.models.questionnairemodel import FacilityType
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, get_object_or_404, redirect
@@ -22,6 +23,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from .forms import VulnerabilityAnalysisForm
 import aiohttp
 import asyncio
+from django.core import serializers
 
 
 @login_required
@@ -75,6 +77,7 @@ def iotaphamanager(request):
     facilities = FacilityType.objects.all().order_by('FacilityType')
     zones = tblZones.objects.all().order_by('PlantZone')
     standardslist = tblStandards.objects.all().order_by('standard')
+    mitigations = MitreICSMitigations.objects.all()
 
     return render(request, 'iotaphamanager.html', {
         'pha_header_records': pha_header_records,
@@ -83,7 +86,8 @@ def iotaphamanager(request):
         'zones': zones,
         'standardslist': standardslist,
         'current_pha_header': pha_header,
-        'new_record_id': new_record_id
+        'new_record_id': new_record_id,
+        'mitigations': mitigations
     })
 
 
@@ -111,7 +115,25 @@ def get_headerrecord(request):
         'country': headerrecord.country
     }
 
-    return JsonResponse(headerrecord_data)
+    control_assessments = MitreControlAssessment.objects.filter(cyberPHA=headerrecord)
+
+    # Create a list of dictionaries for control assessments
+    control_assessments_data = []
+    for assessment in control_assessments:
+        assessment_data = {
+            'mitigation_id': assessment.control.id,  # Assuming control has an ID field
+            'effectiveness_percentage': assessment.effectiveness_percentage,
+            'weighting': assessment.weighting,
+            # Add other fields if needed
+        }
+        control_assessments_data.append(assessment_data)
+
+    response_data = {
+        'headerrecord': headerrecord_data,
+        'control_assessments': control_assessments_data,
+    }
+
+    return JsonResponse(response_data)
 
 
 def get_response(user_message):
@@ -312,9 +334,7 @@ def getSingleScenario(request):
         'probability': scenario.probability
 
     }
-    # Get all mitigation measures
-    all_mitigation_measures = list(tblMitigationMeasures.objects.values_list('ControlObjective', flat=True))
-    scenario_dict['all_mitigation_measures'] = all_mitigation_measures
+
     # Return the scenario as a JSON response
     return JsonResponse(scenario_dict)
 
@@ -327,8 +347,6 @@ def scenario_analysis(request):
         scenario = request.GET.get('scenario')
         consequences = request.GET.get('consequence')
         threatSource = request.GET.get('threatsource')
-        currentControls = request.GET.get('selectedMitigationOptions')
-        threatActions = request.GET.get('selectedThreatOptions')
         safetyimpact = request.GET.get('safety')
         lifeimpact = request.GET.get('life')
         productionimpact = request.GET.get('production')
@@ -345,17 +363,17 @@ def scenario_analysis(request):
         uel = request.GET.get('uel')
 
         def common_content_prefix():
-            return f"In the {industry} industry, at a {facility_type} in {country}, given the scenario {scenario} with consequences {consequences}, the threat source is {threatSource} performing actions {threatActions}. Current controls are {currentControls}. Business impact scores (out of 10) are: safety: {safetyimpact}, life: {lifeimpact}, production: {productionimpact}, reputation: {reputationimpact}, environment: {environmentimpact}, regulatory: {regulatoryimpact}, data: {dataimpact}, and supply: {supplyimpact}. The unmitigated risk without controls is rated as {uel}/10."
+            return f"In the {industry} industry, at a {facility_type} in {country}, given the scenario {scenario} with consequences {consequences}, the threat source is {threatSource} performing actions.  Business impact scores (out of 10) are: safety: {safetyimpact}, life: {lifeimpact}, production: {productionimpact}, reputation: {reputationimpact}, environment: {environmentimpact}, regulatory: {regulatoryimpact}, data: {dataimpact}, and supply: {supplyimpact}. The unmitigated risk without controls is rated as {uel}/10."
 
         openai.api_key = os.environ.get('OPENAI_API_KEY')
         # Define the common part of the user message
-        common_content = f"Given the scenario {scenario} with consequences {consequences} affecting a {facility_type} in the {industry} industry in {country}, the threat source {threatSource} performing actions {threatActions}, and current controls {currentControls}. The business impact assessment is as follows,  scores are of 10 where 10 represents maximum impact, impact on safety: {safetyimpact}, danger to life: {lifeimpact}, production and operations: {productionimpact}, company reputation: {reputationimpact}, environmental impact: {environmentimpact}, impact of regulatory consequences: {regulatoryimpact}, supply chain impact: {supplyimpact}  data and intellectual property: {dataimpact}. The effectiveness of current controls has been assessed as: Severity of incident mitigated: {severitymitigated}, risk exposure to the scenario mitigated {mitigatedexposure}, and overall residual risk {residualrisk}. The amount of unmitigated rate without control is assumed to be {uel}"
+        common_content = f"Given the scenario {scenario} with consequences {consequences} affecting a {facility_type} in the {industry} industry in {country}, the threat source {threatSource} performing actions. The business impact assessment is as follows,  scores are of 10 where 10 represents maximum impact, impact on safety: {safetyimpact}, danger to life: {lifeimpact}, production and operations: {productionimpact}, company reputation: {reputationimpact}, environmental impact: {environmentimpact}, impact of regulatory consequences: {regulatoryimpact}, supply chain impact: {supplyimpact}  data and intellectual property: {dataimpact}. The effectiveness of current controls has been assessed as: Severity of incident mitigated: {severitymitigated}, risk exposure to the scenario mitigated {mitigatedexposure}, and overall residual risk {residualrisk}. The amount of unmitigated rate without control is assumed to be {uel}"
 
         # Define the refined user messages
         user_messages = [
             {
                 "role": "user",
-                "content": f"Based on the following context, list the recommended controls in order of effectiveness, excluding {currentControls}. Limit to 150 words. Context: {common_content_prefix()}. Give the response only. No preamble or commentary"
+                "content": f"Based on the following context, list the recommended controls in order of effectiveness. Limit to 150 words. Context: {common_content_prefix()}. Give the response only. No preamble or commentary"
             },
             {
                 "role": "user",

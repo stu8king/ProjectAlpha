@@ -97,6 +97,8 @@ urlpatterns = [
     path('scenario_vulnerability/<int:scenario_id>/', views.scenario_vulnerability, name='scenario_vulnerability'),
     path('add_vulnerability/<int:scenario_id>/', views.add_vulnerability, name='add_vulnerability'),
     path('get_asset_types/', views.get_asset_types, name='get_asset_types'),
+    path('get_mitigations/', views.get_mitigations, name='get_mitigations'),
+    path('save_control_assessment/', views.save_control_assessment, name='save_control_assessment'),
 ]
 
 if settings.DEBUG:

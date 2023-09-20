@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from OTRisk.models.raw import MitreICSMitigations
 
 
 class tblStandards(models.Model):
@@ -329,3 +330,32 @@ class tblRiskCategories(models.Model):
 
     class Meta:
         db_table = 'tblRiskCategories'
+
+
+from django.core.validators import MinValueValidator, MaxValueValidator
+
+
+class MitreControlAssessment(models.Model):
+    # Foreign key to the MitreICSMitigations model
+    control = models.ForeignKey(MitreICSMitigations, on_delete=models.CASCADE)
+
+    # Foreign key to the tblCyberPHAHeader model
+    cyberPHA = models.ForeignKey(tblCyberPHAHeader, on_delete=models.CASCADE)
+
+    # Field to store user input regarding the effectiveness of the control as a percentage
+    effectiveness_percentage = models.DecimalField(
+        max_digits=3, decimal_places=0,
+        validators=[MinValueValidator(0), MaxValueValidator(100)]
+    )
+    weighting = models.IntegerField()
+    # Optional: Additional notes or comments about the assessment
+    notes = models.TextField(blank=True, null=True)
+
+    # Timestamps for creation and modification
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        # Ensure that a control can only be assessed once for a given facility
+        unique_together = ['control', 'cyberPHA']
+

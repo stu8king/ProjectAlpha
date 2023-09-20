@@ -473,8 +473,8 @@
         </select>
         <br>
 
-        <label class="form-label" for="threatactions">Threat Action</label>
-        <select class="form-control" name="threatactions" id="threatactions" multiple="multiple" style="border: 3px solid #97979A; border-radius: 10px; box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5);  padding:10px; background-color: white">
+        <label class="form-label" for="threatactions" style="visibility: hidden">Threat Action</label>
+        <select class="form-control" name="threatactions" id="threatactions" style="border: 3px solid #97979A; border-radius: 10px; box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5);  padding:10px; background-color: white; visibility: hidden">
         <option value="">Select a threat action</option>
         {% for threatactions in threatactions  %}
             <option value="{{ threatactions.ThreatAction }}">{{ threatactions.ThreatAction }}</option>
@@ -490,10 +490,18 @@
         });
         </script>
     </div>
-    <div class="col-md-5 " style="background-color: white">
-        <p></p>
-        <label class="form-label" for="mitigation-measure">Current Controls</label>
-        <select class="form-control" name="mitigation-measure" id="mitigation-measure" multiple="multiple" title="Select one or more existing controls implemented within the environment" style="border: 3px #97979A; border-radius: 10px; box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5);  padding: 20px; background-color: white">
+    <div class="col-md-5 " style="background-color: white" >
+    <p></p>
+        <label class="form-label" for="risk-category">Risk Category</label>
+            <select class="form-control" name="risk-category" id="risk-category" style="border: 3px solid #97979A; border-radius: 10px; box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5);  padding:10px; background-color: white">
+              <option value="">Select a risk category</option>
+              {% for risk_category in risk_categories %}
+                <option value="{{ risk_category.CategoryName }}">{{ risk_category.CategoryName }}</option>
+              {% endfor %}
+            </select>
+        <br>
+        <label class="form-label" for="mitigation-measure" style="visibility: hidden">Current Controls</label>
+        <select class="form-control"  name="mitigation-measure" id="mitigation-measure"  style="border: 3px #97979A; border-radius: 10px; box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5);  padding: 10px; background-color: white; visibility: hidden">
         <option value="">-- Select Controls --</option>
         {% for mitigation_measure in mitigation_measures %}
             <option value="{{ mitigation_measure.ControlObjective }}">{{ mitigation_measure.ControlObjective }}</option>
@@ -509,14 +517,8 @@
         });
         </script>
 
-        <br><br>
-        <label class="form-label" for="risk-category">Risk Category</label>
-            <select class="form-control" name="risk-category" id="risk-category" style="border: 3px solid #97979A; border-radius: 10px; box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5);  padding:10px; background-color: white">
-              <option value="">Select a risk category</option>
-              {% for risk_category in risk_categories %}
-                <option value="{{ risk_category.CategoryName }}">{{ risk_category.CategoryName }}</option>
-              {% endfor %}
-            </select>
+
+
 
 
     </div>

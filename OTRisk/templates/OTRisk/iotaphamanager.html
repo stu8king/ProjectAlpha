@@ -1,4 +1,6 @@
 {% load static %}
+{% load custom_filters %}
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -12,7 +14,8 @@
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <!-- Bootstrap JS -->
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.bundle.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.bundle.min.js">
+
      <!-- Bootstrap Select JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.1/js/bootstrap-select.min.js"></script>
     <script src="https://d3js.org/d3.v7.min.js"></script>
@@ -99,6 +102,12 @@
 </head>
 <body style="background-color: black">
 <script>
+sessionStorage.setItem('activeCyberPHA','');
+sessionStorage.setItem('sessionCountry','');
+sessionStorage.setItem('sessionFacility','');
+sessionStorage.setItem('sessionFacilityType','');
+sessionStorage.setItem('sessionIndustry','');
+
 fetch('https://restcountries.com/v3.1/all')
     .then(response => response.json())
     .then(data => {
@@ -272,36 +281,48 @@ fetch('https://restcountries.com/v3.1/all')
                     dataType: 'json',
                     success: function (data) {
 
-                        $('#txtTitle').val(data.title);
-                        $('#txtLeader').val(data.leader);
-                        $('#selIndustry').val(data.industry);
-                        $('#txtUnit').val(data.unit);
-                        $('#txtFacility').val(data.facility);
-                        $('#txtLeaderEmail').val(data.leaderemail);
-                        $('#selFacilityType').val(data.facilitytype);
-                        $('#selZone').val(data.zone);
-                        $('#txtStartDate').val(data.startdate);
-                        $('#txtEndDate').val(data.enddate);
-                        $('#txtSafetySummary').val(data.safetysummary);
-                        $('#txtChemical').val(data.chemicalsummary);
-                        $('#txtPhysical').val(data.physicalsummary);
-                        $('#txtOther').val(data.othersummary);
-                        $('#txtAddress').val(data.address);
-                        $('#countrySelector').val(data.country).trigger('change');
-                        console.log("Country from data:", data.country);
+                        $('#txtTitle').val(data.headerrecord.title);
+                        $('#txtLeader').val(data.headerrecord.leader);
+                        $('#selIndustry').val(data.headerrecord.industry);
+                        $('#txtUnit').val(data.headerrecord.unit);
+                        $('#txtFacility').val(data.headerrecord.facility);
+                        $('#txtLeaderEmail').val(data.headerrecord.leaderemail);
+                        $('#selFacilityType').val(data.headerrecord.facilitytype);
+                        $('#selZone').val(data.headerrecord.zone);
+                        $('#txtStartDate').val(data.headerrecord.startdate);
+                        $('#txtEndDate').val(data.headerrecord.enddate);
+                        $('#txtSafetySummary').val(data.headerrecord.safetysummary);
+                        $('#txtChemical').val(data.headerrecord.chemicalsummary);
+                        $('#txtPhysical').val(data.headerrecord.physicalsummary);
+                        $('#txtOther').val(data.headerrecord.othersummary);
+                        $('#txtAddress').val(data.headerrecord.address);
+                        $('#countrySelector').val(data.headerrecord.country).trigger('change');
+                        console.log("Country from data:", data.headerrecord.country);
 
                         // $('#btnformSubmit').prop('disabled', true);
 
-                        sessionStorage.setItem('sessionIndustry', data.industry);
-                        sessionStorage.setItem('sessionFacilityType', data.facilitytype);
-                        sessionStorage.setItem('sessionFacility', data.facility);
-                        sessionStorage.setItem('sessionCountry', data.country);
+                        sessionStorage.setItem('sessionIndustry', data.headerrecord.industry);
+                        sessionStorage.setItem('sessionFacilityType', data.headerrecord.facilitytype);
+                        sessionStorage.setItem('sessionFacility', data.headerrecord.facility);
+                        sessionStorage.setItem('sessionCountry', data.headerrecord.country);
 
                         // Enable the controls
                         $('#txtTitle, #txtLeader, #txtUnit, #txtStartDate, #txtAddress, #txtFacility, #txtLeaderEmail, #txtEndDate, #txtSafetySummary, #txtChemical, #txtPhysical, #txtOther, #selFacilityType, #selIndustry, #selZone, #countrySelector, #btnformSubmit, #risk-assessment-btn, #scenarioButton').prop('disabled', false);
                         $('#btnformSubmit').prop('disabled', false);
 
+                         $.each(data.control_assessments, function(index, assessment) {
+                            var controlId = assessment.mitigation_id;
+                            var effectivenessPercentage = assessment.effectiveness_percentage;
+                            var weighting = assessment.weighting;
 
+                            // Set slider value based on controlId
+                            $('#mitigation_' + controlId).val(effectivenessPercentage);
+                            // Update displayed value
+                            $('#mitigationValue_' + controlId).text(effectivenessPercentage);
+
+                            $('#weighting_' + controlId).val(weighting);
+
+                         });
                     }
                 });
             });
@@ -484,7 +505,15 @@ fetch('https://restcountries.com/v3.1/all')
 
             </div>
         </div>
-
+        <div class="card mb-3 shadow-sm">
+                <div class="card-body">
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#assessmentModal">
+                        Add Control Assessment
+                    </button>
+                    <br>
+                    <p>Submit an assessment of the effectiveness of this facilities current ICS controls (aligned with the Mitre ATT&CK framework for ICS Mitigations)</p>
+                </div>
+        </div>
     </div>
 
     <div class="col-md-4 row" style="background-color: white">
@@ -573,6 +602,8 @@ fetch('https://restcountries.com/v3.1/all')
         }
 
     </script>
+    <br>
+
 
 
 
@@ -630,6 +661,182 @@ fetch('https://restcountries.com/v3.1/all')
     </div>
   </div>
 </div>
+
+<!-- assessment_modal.html -->
+
+<!-- Bootstrap Modal -->
+<div class="modal fade" id="assessmentModal" tabindex="-1" role="dialog" aria-labelledby="assessmentModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document"> <!-- Increased modal size -->
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="assessmentModalLabel">Facility Control Assessment (Mitre ICS Mitigations)</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button><br>
+      </div>
+
+      <div class="modal-body">
+        <form id="controlAssessmentForm">
+<!-- Tabs Navigation -->
+<ul class="nav nav-tabs" id="myTabs" role="tablist">
+    {% for i in "123456"|make_list %}
+        <li class="nav-item">
+            <a class="nav-link {% if forloop.first %}active{% endif %}" id="tab-{{ forloop.counter }}" data-toggle="tab" href="#page-{{ forloop.counter }}" role="tab">{{ forloop.counter }}</a>
+        </li>
+    {% endfor %}
+</ul>
+<div class="tab-content small-font">
+    {% for i in "123456"|make_list %}
+        <div class="tab-pane fade {% if forloop.first %}show active{% endif %}" id="page-{{ forloop.counter }}" role="tabpanel">
+            <div class="container mt-4">
+                <div class="row">
+                    {% if forloop.counter < 6 %}
+                        {% if forloop.counter == 6 %}
+                            {% with start_index=forloop.counter0|add:0 %}
+                                {% with end_index=mitigations|length %}
+                                    {% for mitigation in mitigations %}
+                                        {% if forloop.counter0 >= start_index and forloop.counter0 < end_index %}
+                                            <div class="col-md-6">
+                                                <div class="form-group d-flex justify-content-between align-items-center">
+                                                    <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                                                        <div class="card-body">
+                                                            <label for="mitigation_{{ mitigation.id }}" class="mb-0">{{ mitigation.name }}</label>
+                                                            <div>
+                                                                <input type="range" class="custom-range d-inline-block" style="width: 70%;" id="mitigation_{{ mitigation.id }}" name="mitigation_{{ mitigation.id }}" data-mitigation-id="{{ mitigation.id }}" min="0" max="100">
+                                                                <span id="mitigationValue_{{ mitigation.id }}" class="ml-2">50</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        {% endif %}
+                                    {% endfor %}
+                                {% endwith %}
+                            {% endwith %}
+                        {% else %}
+                            {% with start_index=forloop.counter0|add:0|multiply:10 %}
+                                {% with end_index=start_index|add:10 %}
+                                    {% for mitigation in mitigations %}
+                                        {% if forloop.counter0 >= start_index and forloop.counter0 < end_index %}
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                                                        <div class="card-body d-flex justify-content-between align-items-center">
+                                                            <label for="mitigation_{{ mitigation.id }}" class="mb-0" data-toggle="tooltip" data-placement="top" title="{{ mitigation.description }}">
+                                                                <b>{{ mitigation.name }}</b>
+                                                            </label>
+                                                            <div>
+                                                                <input type="range" class="custom-range d-inline-block" style="width: 70%;" id="mitigation_{{ mitigation.id }}" name="mitigation_{{ mitigation.id }}" data-mitigation-id="{{ mitigation.id }}" min="0" max="100">
+                                                                <span id="mitigationValue_{{ mitigation.id }}" class="ml-2">50</span>
+                                                                <br><br>
+                                                                <label for="weighting_{{ mitigation.id }}" class="mb-0">Control Weighting:</label>
+                                                                <input type="number" id="weighting_{{ mitigation.id }}" name="weighting_{{ mitigation.id }}" min="0" max="10" class="form-control" style="width: 70%;" value="5"/>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        {% endif %}
+                                    {% endfor %}
+                                {% endwith %}
+                            {% endwith %}
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+<button type="button" id="submitAssessment" class="btn btn-primary mt-3">Submit Assessment</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script>
+// Define the csrfSafeMethod function to check if a HTTP method is safe from CSRF protection
+function csrfSafeMethod(method) {
+    // These HTTP methods do not require CSRF protection
+    return /^(GET|HEAD|OPTIONS|TRACE)$/.test(method);
+}
+
+// Define the getCookie function to retrieve the CSRF token from cookies
+function getCookie(name) {
+    var cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = jQuery.trim(cookies[i]);
+            // Check if this cookie name starts with the specified name
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Using jQuery
+$(document).ready(function() {
+    // Update the displayed value when the slider changes
+    $("input[type='range']").on('input', function() {
+        var id = $(this).attr('id').replace("mitigation_", "");
+        $("#mitigationValue_" + id).text($(this).val());
+    });
+
+    // AJAX call to submit the assessment data
+    $("#submitAssessment").click(function() {
+
+        var cyberPHA = sessionStorage.getItem('activeCyberPHA');
+        var formData = {};
+
+        // Iterate through the sliders and add their values to formData
+        $("input[type='range']").each(function() {
+            var id = $(this).attr('id');
+            var control_id = id.split('_')[1]; // Extract the control_id
+            formData[control_id] = $(this).val(); // Remove "mitigation_" prefix
+        });
+
+        // Iterate through the weighting fields and add their values to formData
+        $("input[id^='weighting_']").each(function() {
+            var id = $(this).attr('id').replace("weighting_", "");
+            formData["weighting_" + id] = $(this).val();
+        });
+
+        // Add cyberPHA to formData
+        formData['cyberPHA'] = cyberPHA;
+        var csrfToken = getCookie("csrftoken");
+
+        // Include the CSRF token in the request headers
+        $.ajaxSetup({
+            beforeSend: function(xhr, settings) {
+                if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                    xhr.setRequestHeader("X-CSRFToken", csrfToken);
+                }
+            }
+        });
+        $.ajax({
+            type: 'POST',
+            url: '/OTRisk/save_control_assessment/',
+            data: formData,
+            success: function(response) {
+                if (response.status === "success") {
+                    alert(response.message);
+                    $("#assessmentModal").modal('hide');
+                } else {
+                    alert("Error: " + response.message);
+                }
+            },
+            error: function(error) {
+                alert("An error occurred: " + error.statusText);
+            }
+        });
+    });
+});
+
+
+</script>
 
 </body>
 </html>

@@ -6,7 +6,7 @@ from OTRisk.models.RiskScenario import RiskScenario, tblScenarioRecommendations
 from OTRisk.models.Model_Scenario import tblConsequence
 from OTRisk.models.questionnairemodel import Questionnaire, FacilityType
 from OTRisk.models.ThreatAssessment import ThreatAssessment
-from OTRisk.models.raw import RAWorksheet, RAWorksheetScenario, RAActions
+from OTRisk.models.raw import RAWorksheet, RAWorksheetScenario, RAActions, MitreICSMitigations
 from django.db.models import F, Count, Avg
 
 from accounts.views import get_client_ip
@@ -17,7 +17,7 @@ from OTRisk.models.Model_Workshop import tblWorkshopNarrative, tblWorkshopInform
 from OTRisk.models.Model_CyberPHA import tblCyberPHAHeader, tblRiskCategories, \
     tblControlObjectives, \
     tblThreatIntelligence, tblMitigationMeasures, tblScenarios, tblSafeguards, tblThreatSources, tblThreatActions, \
-    tblNodes, tblUnits, tblZones, tblCyberPHAScenario, tblIndustry, auditlog, tblStandards
+    tblNodes, tblUnits, tblZones, tblCyberPHAScenario, tblIndustry, auditlog, tblStandards, MitreControlAssessment
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from .forms import LoginForm
@@ -40,7 +40,7 @@ import string
 from django.core.mail import send_mail
 from django.contrib.auth.decorators import user_passes_test
 from django.db import connection
-from OTRisk.forms import SQLQueryForm
+from OTRisk.forms import SQLQueryForm, ControlAssessmentForm
 
 app_name = 'OTRisk'
 
@@ -581,7 +581,8 @@ def assess_cyberpha(request):
 
     clicked_row_facility_name = request.session.get('clickedRowFacilityName', None)
     saved_scenarios = tblCyberPHAScenario.objects.filter(CyberPHA=active_cyberpha, Deleted=0)
-
+    MitreControlAssessment_results = MitreControlAssessment.objects.filter(cyberPHA_id=active_cyberpha)
+    control_assessments_data = serializers.serialize('json', MitreControlAssessment_results)
     return render(request, 'OTRisk/phascenariomgr.html', {
         'scenarios': combined_scenarios,
         'control_objectives': control_objectives,
@@ -595,7 +596,8 @@ def assess_cyberpha(request):
         'clicked_row_facility_name': clicked_row_facility_name,
         'saved_scenarios': saved_scenarios,
         'consequenceList': combined_consequences,
-        'standardslist': standardslist
+        'standardslist': standardslist,
+        'MitreControlAssessment_results': control_assessments_data
     })
 
 
@@ -1342,3 +1344,46 @@ def walkthrough_questionnaire_details(request, questionnaire_id):
 def write_to_audit(user_id, user_action, user_ip):
     auditlog_entry = auditlog(userID=user_id, timestamp=timezone.now(), user_action=user_action, user_ipaddress=user_ip)
     auditlog_entry.save()
+
+
+def get_mitigations(request):
+    mitigations = MitreICSMitigations.objects.all()
+    return render(request, 'OTRisk/iotaphamanager.html', {'mitigations': mitigations})
+
+
+def save_control_assessment(request):
+    print(request.POST)
+    if request.method == "POST":
+        # Get the cyberPHA_id from the POST data
+        cyberPHA_id = request.POST.get('cyberPHA')
+
+        try:
+            # Try to retrieve the corresponding tblCyberPHAHeader instance
+            record = tblCyberPHAHeader.objects.get(ID=cyberPHA_id)
+        except tblCyberPHAHeader.DoesNotExist:
+            # If the record does not exist, return an error message
+            return JsonResponse({"status": "error", "message": "Invalid cyberPHA ID!"})
+
+        for field_name, response_value in request.POST.items():
+            # Check if the field name starts with 'M' and has digits, indicating it's a control field
+            if field_name.startswith('M') and field_name[1:].isdigit():
+                control_id = field_name  # Use the id value directly from the field name
+                weighting_field_name = f'weighting_{control_id}'
+                weighting_value = request.POST.get(weighting_field_name)
+                # Save or update the response in the MitreControlAssessment model
+                MitreControlAssessment.objects.update_or_create(
+                    control_id=control_id,
+                    cyberPHA=record,
+                    defaults={'effectiveness_percentage': response_value,
+                              'weighting': weighting_value}
+                )
+
+        # Save the record to the database
+        record.save()
+
+        # Return a success message as a JSON response
+        return JsonResponse({"status": "success", "message": "Record saved/updated successfully!"})
+
+    # Handle the case when the request method is not POST
+    form = ControlAssessmentForm()
+    return render(request, 'iotaphamanager.html', {'form': form})
