@@ -324,6 +324,9 @@ def login_view(request):
         if form.is_valid():
             user = form.get_user()
             login(request, user)
+            user_profile = UserProfile.objects.get(user=user)
+            if user_profile.must_change_password:
+                return redirect('accounts:password_change')
 
             # Check if the user has 2FA set up and confirmed
             if TOTPDevice.objects.filter(user=user, confirmed=True).exists():
@@ -550,6 +553,10 @@ def payment_view(request):
                 email=request.session['email'],
                 source=token
             )
+
+            if subscription.price == 0:
+                subscription.price = 1
+
             # Create the charge using the customer ID
             charge = stripe.Charge.create(
                 amount=int(subscription.price * 100),  # Convert to cents

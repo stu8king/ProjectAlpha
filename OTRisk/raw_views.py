@@ -400,6 +400,10 @@ def qraw(request):
                         break
                     else:
                         raw_cost = request.POST.get(f'lblriskCost_{i}')
+                        try:
+                            float(raw_cost)
+                        except ValueError:
+                            raw_cost = '0'
                         formatted_cost = int(re.sub(r'[^\d.]', '', raw_cost))
                         scenario = RAWorksheetScenario(
                             RAWorksheetID=ra_worksheet,
@@ -615,7 +619,7 @@ def openai_assess_risk(request):
 
         system_message = {
             "role": "system",
-            "content": f"As a cybersecurity risk assessment professional, assess the risk of {threat_source} using the threat tactic {threat_tactic} in relation to {scenario} in a {facility_type} within the {industry} industry. The level of vulnerability has been rated as {vulnerability}. The assets in-scope for this assessment are {asset_lc}. The annual revenue for the business is {revenue}. They have cyber insurance cover to the value of {insurance} and the cyber insurance deductible is {deductable}. {content}"
+            "content": f"As a cybersecurity risk assessment professional, make a risk assessment in relation to {scenario} in a {facility_type} within the {industry} industry. The level of vulnerability has been rated as {vulnerability}. The annual revenue for the business is {revenue}. They have cyber insurance cover to the value of {insurance} and the cyber insurance deductible is {deductable}. {content}"
         }
 
         def query_openai(user_message_content):
@@ -638,7 +642,7 @@ def openai_assess_risk(request):
             }
             messages = [system_message, user_message]
             response = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo",
+                model="gpt-4",
                 messages=messages,
                 temperature=0.1,
                 max_tokens=500
@@ -675,17 +679,21 @@ def openai_assess_risk(request):
         event_cost_estimate_message = {
             "role": "user",
             "content": (
-                f"THE OUTPUT FROM THIS QUERY MUST BE A US DOLLAR AMOUNT VALUE WITH NO EXPLANATORY TEXT OR OTHER NON-NUMERIC CHARACTERS. "
-                f"Provide a US dollar amount estimate for the following scenario:"
-                f"- Nature of incident: {scenario}"
-                f"- Revenue of the organization: {revenue}"
-                f"- Industry or sector: {industry} "
-                f"- type of business premises: {facility_type}"
-                f"- Impact on operations rated as : {production_impact} out of 10 which means: {productiondef}"
-                f"- impact on safety rated as: {safety_impact} out of 10 which means: {safetydef}"
-                f"- impact on the organization's reputation rated as {reputation_impact} out of 10 which means: {reputationdef}"
-                f"Insurance coverage: ${insurance}. Deduct the insurance coverage amount from the estimates "
-                f"Provide three event costs as spread of values : the lowest amount the organization might expect the event to cost, the highest amount or worst-case-scenario, and the most likely value. This information may be then used by risk planners in the organization."
+                f"Provide a US dollar estimate for the following scenario in the format: lowest|highest|median."
+                f"- Nature of incident: {scenario}."
+                f"- Revenue of the organization: {revenue}."
+                f"- Industry or sector: {industry}. "
+                f"- type of business premises: {facility_type}."
+                f"- Impact on operations rated as : {production_impact} out of 10 which means: {productiondef}."
+                f" - Production outage: {outage}."
+                f" - Length of production outage: {outageLength} hours. If there is an outage then calculate an hourly rate based on the annual revenue of {revenue}."
+                f"- impact on safety rated as: {safety_impact} out of 10 which means: {safetydef}."
+                f"- impact on supply chain rated as: {supply_impact} out of 10 which means: {supplydef}."
+                f"- impact on costs rated as: {financial_impact} out of 10 which means: {financedef}."
+                f"- impact on data and intellectual property rated as: {data_impact} out of 10 which means: {datadef}."
+                f"- impact on the organization's reputation rated as {reputation_impact} out of 10 which means: {reputationdef}."
+                f"Insurance coverage: ${insurance}. If the estimates exceed the insurance deductable amount then the insurance coverage amount from the estimates otherwise ignore the insurance amounts. "
+                f"Provide three event costs as a spread of values : an estimate of the lowest cost, the highest amount or worst-case-scenario, and the most likely cost. Be This information may be then used by risk planners in the organization. Do not over-estimate the costs - most cybersecurity incidents do not cost millions of dollars - those that do are the exception."
                 f"Give the answer in the format lowest|highest|median using | as the character to indicate the delimiter between the values."
                 f"Provide only the dollar amount values in your response without any narrative or explanation because the response from this query will be used in a calculation."
             )
