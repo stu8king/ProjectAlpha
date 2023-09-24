@@ -10,6 +10,19 @@ from django import forms
 from .models import SubscriptionType
 
 
+class Verify2FAForm(forms.Form):
+    code = forms.CharField(label="Enter 2FA Code", max_length=6,
+                           widget=forms.TextInput(attrs={'placeholder': '6-digit code'}))
+
+
+class TwoFactorSetupForm(forms.Form):
+    phone_number = forms.CharField(required=True, label="Phone Number")
+
+
+class TwoFactorVerifyForm(forms.Form):
+    token = forms.CharField(required=True, label="Token")
+
+
 class PasswordResetRequestForm(forms.Form):
     email = forms.EmailField()
 

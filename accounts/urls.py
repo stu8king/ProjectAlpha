@@ -3,6 +3,7 @@ from django.urls import path, include
 from django.contrib.auth import views as auth_views
 from accounts import views
 from .views import login_view
+from two_factor.urls import urlpatterns as tf_urls
 
 urlpatterns = [
     # path('admin/', admin.site.urls),
@@ -26,6 +27,10 @@ urlpatterns = [
     path('check_organization/', views.check_organization_name, name='check_organization_name'),
     path('password_reset_request/', views.password_reset_request, name='password_reset_request'),
     path('password_reset/<uid>/', views.password_reset, name='password_reset_form'),
-
+    path('two_factor_setup/', views.two_factor_setup, name='two_factor_setup'),
+    path('two_factor_verify/', views.two_factor_verify, name='two_factor_verify'),
+    path('setup_2fa/', views.setup_2fa, name='setup_2fa'),
+    path('verify_2fa/', views.verify_2fa, name='verify_2fa'),
 ]
+
 

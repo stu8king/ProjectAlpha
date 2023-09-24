@@ -192,36 +192,6 @@
 
 <div class="row" style="height: 300px">
     <div class="col-md-1" style="background-color: black">
-        <button type="button" id="addScenarioBtn" class="form-control  btn-link" onclick="resetformcontrols()" style="background-color: black; color: white;">New Scenario</button>
-
-        <br>
-
-            <!-- Modify the submit button to open the confirmation modal -->
-            <button type="button" class="form-control btn-link" data-bs-toggle="modal" style="background-color: black; color: white;" onclick="processFormData()">Save Scenario</button>
-
-        <br>
-            <button type="button" class="form-control btn-link" onclick="getCyberPHAReport()" style="background-color: black; color: white;" >Scenario Report</button>
-            <script>
-                function goToScenarioReport() {
-                    // var hdnID = document.getElementById('hdnID').value;  // assuming 'hdnID' is the id of your input field
-                    // window.location.href = "{% url 'OTRisk:scenarioreport' %}?hdnID=" + hdnID;
-                }
-            </script>
-        <br>
-
-    <button class="form-control" type="button" id="actionBtn" onclick="showRAActionsModal()" style="background-color: black; color: white;">Add Remediation Action</button>
-
-        <script>
-            function showRAActionsModal() {
-                var phaid = sessionStorage.getItem('activeCyberPHA');  // Get the value from session storage
-
-                if (phaid === null || phaid === "") {
-                    alert("Please select a CyberPHA assessment from the table first before creating an action item.");
-                } else {
-                    $('#RAActionsModal').modal('show');  // Show the modal if rawid has a value
-                }
-            }
-        </script>
 
     </div>
     <div class="col-md-10 " style="background-color: white; padding: 20px">
@@ -311,9 +281,45 @@
     <div class="col-md-1 " style="background-color: black"></div>
 </div> <!-- grey stripe -->
 
+<!-- put the buttons in here -->
+<div class="row small-font" >
+    <div class="col-md-1" style="background-color: black"></div>
+    <div class="col-md-1" style="background-color: darkgray"></div>
+    <div class="col-md-2" style="background-color: darkgray"> <button type="button" id="addScenarioBtn" class="form-control  btn-link" onclick="resetformcontrols()" style="background-color: #0C6EFC; color: white;">New Scenario</button></div>
+    <div class="col-md-2" style="background-color: darkgray"><button type="button" class="form-control btn-link" data-bs-toggle="modal" style="background-color: #0C6EFC; color: white;" onclick="processFormData()">Save Scenario</button></div>
+    <div class="col-md-2" style="background-color: darkgray">
+        <button class="form-control" type="button" id="actionBtn" onclick="showRAActionsModal()" style="background-color: #0C6EFC; color: white;">Add Remediation Action</button>
 
+        <script>
+            function showRAActionsModal() {
+                var phaid = sessionStorage.getItem('activeCyberPHA');  // Get the value from session storage
 
+                if (phaid === null || phaid === "") {
+                    alert("Please select a CyberPHA assessment from the table first before creating an action item.");
+                } else {
+                    $('#RAActionsModal').modal('show');  // Show the modal if rawid has a value
+                }
+            }
+        </script>
+    </div>
+    <div class="col-md-2" style="background-color: darkgray">
+        <button type="button" class="form-control btn-link" onclick="getCyberPHAReport()" style="background-color: #0C6EFC; color: white;" >Scenario Report</button>
+            <script>
+                function goToScenarioReport() {
+                    // var hdnID = document.getElementById('hdnID').value;  // assuming 'hdnID' is the id of your input field
+                    // window.location.href = "{% url 'OTRisk:scenarioreport' %}?hdnID=" + hdnID;
+                }
+            </script>
+    </div>
+    <div class="col-md-1" style="background-color: darkgray"></div>
+    <div class="col-md-1" style="background-color: black"></div>
+</div>
 
+<div class="row" style="height: 10px;">
+    <div class="col-md-1" style="background-color: black"></div>
+    <div class="col-md-10" style="background-color: darkgray"></div>
+    <div class="col-md-1 " style="background-color: black"></div>
+</div> <!-- grey stripe -->
 <div class="row small-font" >
     <div class="col-md-1" style="background-color: black"></div>
     <div class="col-md-10">
@@ -473,22 +479,13 @@
         </select>
         <br>
 
-        <label class="form-label" for="threatactions" style="visibility: hidden">Threat Action</label>
-        <select class="form-control" name="threatactions" id="threatactions" style="border: 3px solid #97979A; border-radius: 10px; box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5);  padding:10px; background-color: white; visibility: hidden">
+        <label  style="display: none">Threat Action</label>
+        <select  name="threatactions" id="threatactions" style="display: none;">
         <option value="">Select a threat action</option>
-        {% for threatactions in threatactions  %}
-            <option value="{{ threatactions.ThreatAction }}">{{ threatactions.ThreatAction }}</option>
-        {% endfor %}
+
     </select>
 
-        <script>
-        $(document).ready(function() {
-            $('#threatactions').select2({
-                placeholder: "Select Threat Actions",
-                allowClear: true
-            });
-        });
-        </script>
+
     </div>
     <div class="col-md-5 " style="background-color: white" >
     <p></p>
@@ -500,27 +497,11 @@
               {% endfor %}
             </select>
         <br>
-        <label class="form-label" for="mitigation-measure" style="visibility: hidden">Current Controls</label>
-        <select class="form-control"  name="mitigation-measure" id="mitigation-measure"  style="border: 3px #97979A; border-radius: 10px; box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5);  padding: 10px; background-color: white; visibility: hidden">
-        <option value="">-- Select Controls --</option>
-        {% for mitigation_measure in mitigation_measures %}
-            <option value="{{ mitigation_measure.ControlObjective }}">{{ mitigation_measure.ControlObjective }}</option>
-        {% endfor %}
+        <label  for="mitigation-measure" style="display: none;">Current Controls</label>
+        <select   name="mitigation-measure" id="mitigation-measure"  style="display: none;">
+            <option value="">-- Select Controls --</option>
+
         </select>
- <script>
-
-        $(document).ready(function() {
-            $('#mitigation-measure').select2({
-                placeholder: "Select Current Controls",
-                allowClear: true
-            });
-        });
-        </script>
-
-
-
-
-
     </div>
     <div class="col-md-1 " style="background-color: black"></div>
 </div>
@@ -2030,10 +2011,6 @@ function resetformcontrols() {
         document.getElementById('txtScenario').value = '';
         document.getElementById('txtConsequence').value = '';
         document.getElementById('threat-intelligence').value = "";
-        $("#mitigation-measure").val([]).trigger("change.select2");
-        document.getElementById('mitigation-measure').value = "Select Current Controls";
-        $("#threatactions").val([]).trigger("change.select2");
-        document.getElementById('threatactions').value = "Select Threat Actons";
         document.getElementById('risk-category').value = "";
         document.getElementById('range_safety').value = 0;
         document.getElementById('range_life').value = 0;
@@ -2083,7 +2060,6 @@ function resetformcontrols() {
         $('#selStandards').val(data.standards);
         // Split the Countermeasures string into an array and set the selected values of the dropdown
 
-        $('#mitigation-measure').select2('destroy'); // Destroy the existing select2 instance
         $('#mitigation-measure').empty(); // Clear existing options
         $('#mitigation-measure').append($('<option>', { // Add the default option
             value: "",
@@ -2094,10 +2070,6 @@ function resetformcontrols() {
                 value: value,
                 text: value
             }));
-        });
-        $('#mitigation-measure').select2({ // Re-initialize the select2 control
-            placeholder: "Select Current Controls",
-            allowClear: true
         });
 
 

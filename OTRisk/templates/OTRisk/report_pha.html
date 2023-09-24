@@ -124,6 +124,68 @@
 .scenario canvas {
     margin: 20px 0;
 }
+.row {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+/* Ensure all cards have the same height */
+.equal-height-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+/* Make the card body grow to take available space */
+ .equal-height-card .card-body{
+    flex: 1;
+}
+
+ . equal-height-scenario {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+     flex: 1;
+}
+
+/* Make the card body grow to take available space */
+ . equal-height-scenario .card-body{
+    flex: 1;
+}
+
+ .double-border-shadow {
+    border: 5px double #000; /* Adjust the pixel value and color as needed */
+    padding: 10px; /* Provide some space between the content and the border */
+    position: relative; /* Needed for the shadow effect to work properly */
+}
+
+.double-border-shadow::before {
+    content: "";
+    position: absolute;
+    top: -5px; /* Adjust based on your preference */
+    right: -5px;
+    bottom: -5px;
+    left: -5px;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5); /* Adjust the shadow effect as needed */
+    border: 1px solid rgba(0, 0, 0, 0.2); /* Optional: Adds a subtle border inside the shadow */
+}
+
+.dark-grey-border-shadow {
+    border: 5px solid #b4b4b4; /* Dark grey color */
+    padding: 5px;
+    position: relative;
+}
+
+.dark-grey-border-shadow::before {
+    content: "";
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    bottom: -5px;
+    left: -5px;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
 
     </style>
 </head>
@@ -228,38 +290,94 @@
 </div>
 <div class="row">
     <div class="col-md-1 bg-black"></div>
-            <div id="reportSection" class="col-md-10 table-wrapper small-font" >
+            <div id="reportSection" class="col-md-10 table-wrapper small-font double-border-shadow" >
                 <div id="reportDetails">
                     <h2>Report: <span id="reportTitle"></span></h2>
                     <div class="row">
-                    <div class="col-md-3">
-                        <strong>Title:</strong> <span id="reportTitle"></span>
+                        <div class="col-md-3">
+                            <strong>Title:</strong> <span id="reportTitle"></span>
+                        </div>
+                        <div class="col-md-3">
+                            <strong>Facility:</strong> <span id="FacilityName"></span>
+                        </div>
+                        <div class="col-md-3">
+                            <strong>Facility Type:</strong> <span id="FacilityType"></span>
+                        </div>
+                        <div class="col-md-3">
+                            <strong>Unit:</strong> <span id="AssessmentUnit"></span>
+                        </div>
                     </div>
-                    <div class="col-md-3">
-                        <strong>Facility:</strong> <span id="FacilityName"></span>
-                    </div>
-                    <div class="col-md-3">
-                        <strong>Facility Type:</strong> <span id="FacilityType"></span>
-                    </div>
-                    <div class="col-md-3">
-                        <strong>Unit:</strong> <span id="AssessmentUnit"></span>
-                    </div>
-                </div>
+                    <div class="row">
+                         <div class="col-md-1"> </div>
+                        <div class="col-md-2">
+                             <div class="card">
+                                <div class="card-header">
+                                        Assessed Effectiveness of ICS Controls
+                                    </div>
+                                    <div class="card-body">
+                                        <h3><span id="control_effectiveness"></span>%</h3>
+                                        <p class="card-text">Controls from the Mitre ICS framework</p>
+                                    </div>
+                                </div><br>
+                                <div class="card">
+                                    <div class="card-header">
+                                        Overall Probability of Compromise
+                                    </div>
+                                    <div class="card-body">
+                                        <h3><span id="overall_probability"></span>%</h3>
+                                        <p class="card-text">Probability that at least one of the given scenarios is successful</p>
+                                    </div>
+                                </div><br>
+                                <div class="card">
+                                <div class="card-header">
+                                        Total SLE from Scenarios
+                                    </div>
+                                    <div class="card-body">
+                                        <h3><span id="cost_impact"></span></h3>
+                                        <p class="card-text"></p>
+                                    </div>
+                                </div>
+                        </div>
+                        <div class="col-md-5">
+                             <div class="card">
+                                    <div class="card-header">
+                                            Business Impact Analysis
+                                        </div>
+                                        <div class="card-body">
+                                            <canvas id="impactChart"></canvas>
 
+                                        </div>
+                                    </div>
+                            </div>
+                        <div class="col-md-3">
+                             <div class="card">
+                                <div class="card-header">
+                                        Top 5 Controls
+                                    </div>
+                                    <div class="card-body">
+                                        <ul id="top5ControlsList"></ul>
+                                        <p class="card-text"></p>
+                                    </div>
+                                </div>
+                        </div>
+
+                        <div class="col-md-1"> </div>
+
+                    </div>
                     <div class="row">
                         <div class="col-md-3">
-                            <div class="card">
+                            <div class="card equal-height-card">
                                 <div class="card-header">
                                         Facility Safety Summary
                                     </div>
-                                    <div class="card-body">
+                                    <div class="card-body ">
                                         <span id="safetySummary"></span>
                                         <p class="card-text">Overall impact on safety from all scenarios.</p>
                                     </div>
                                 </div>
                             </div>
                         <div class="col-md-3">
-                            <div class="card">
+                            <div class="card equal-height-card">
                                 <div class="card-header">
                                         Facility Chemicals Summary
                                     </div>
@@ -270,7 +388,7 @@
                                 </div>
                         </div>
                         <div class="col-md-3">
-                            <div class="card">
+                            <div class="card equal-height-card">
                                 <div class="card-header">
                                         Facility Physical Security Summary
                                     </div>
@@ -281,7 +399,7 @@
                                 </div>
                         </div>
                         <div class="col-md-3">
-                            <div class="card">
+                            <div class="card equal-height-card">
                                 <div class="card-header">
                                         Facility Other Information
                                     </div>
@@ -292,22 +410,10 @@
                                 </div>
                         </div>
                     </div>
-                    <div class="row">
-                        <div class="col-md-4">
-                            <div class="card">
-                                <div class="card-header">
-                                        Business Impact Analysis
-                                    </div>
-                                    <div class="card-body">
-                                        <canvas id="impactChart"></canvas>
 
-                                    </div>
-                                </div>
-                        </div>
-
-                    </div>
 
                     <div id="scenarioCount">Number of Scenarios: <span></span></div>
+
                     <div id="scenariosContainer"></div>
 
                 </div>
@@ -323,6 +429,29 @@
         $('#FacilityName').text(data.cyberPHAHeader.FacilityName);
         $('#FacilityType').text(data.cyberPHAHeader.FacilityType);
         $('#AssessmentUnit').text(data.cyberPHAHeader.AssessmentUnit);
+        $('#control_effectiveness').text(data.control_effectiveness);
+        $('#overall_probability').text(data.overall_probability);
+        let formattedValue = parseFloat(data.total_cost_impact).toLocaleString('en-US', {
+            style: 'currency',
+            currency: 'USD',
+            minimumFractionDigits: 0,  // No cents
+            maximumFractionDigits: 0   // No cents
+        });
+
+        $('#cost_impact').text(formattedValue);
+         const top5ControlsList = $('#top5ControlsList');
+            top5ControlsList.empty();  // Clear any previous data
+
+            data.top_5_controls.forEach(control => {
+                const controlDetails = `
+                    <li>
+                        Control Name: ${control.control__name}<br>
+                        Effectiveness Percentage: ${control.effectiveness_percentage}%<br>
+                        Weighting: ${control.weighting}
+                    </li>
+                `;
+                top5ControlsList.append(controlDetails);
+            });
 
         let formattedText = data.cyberPHAHeader.safetySummary.replace(/\n/g, '<br>');
         $('#safetySummary').html(formattedText);
@@ -346,100 +475,126 @@
                 <h3>Scenario ${index + 1}</h3>
                 <div class="row">
                     <div class="col-md-7">
-                        <div class="card">
-                            <div class="card-header">
-                                Scenario:
-                            </div>
-                            <div class="card-body">
-                                <p class="card-text">${ scenario.Scenario }</p>
-                            </div>
-                        </div>
-                        <br>
                         <div class="row">
-                            <div class="col-md-12">
-                                <div class="col-md-1"></div>
-                                <div class="card">
+                            <div class="col-md-5" style="display: flex; flex: 1;">
+                                <div class="card equal-height-scenario" style="width: 100%">
+                                    <div class="card-header ">
+                                        Scenario:
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="card-text"><b>${ scenario.Scenario }</b></p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-5" style="display: flex; flex: 1;">
+                                <div class="card equal-height-scenario">
+                                    <div class="card-header">
+                                        Consequences:
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="card-text">${ scenario.Consequence }</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-2" style="display: flex">
+                                <div class="card equal-height-scenario">
                                     <div class="card-header">
                                         Overall Risk Status:
                                     </div>
                                     <div class="card-body">
-                                        <p class="card-text">${ scenario.RRa }</p>
-                                    </div>
-                                </div>
-                            </div> <!-- This closing tag was moved up -->
-                        </div>
-                        <div class="row">
-                            <div class="col-md-1">
-                                <div class="card">
-                                    <div class="card-header">
-                                        UEL:
-                                    </div>
-                                    <div class="card-body">
-                                        <p class="card-text">${ scenario.UEL }</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-1">
-                                <div class="card">
-                                    <div class="card-header">
-                                        RRU:
-                                    </div>
-                                    <div class="card-body">
-                                        <p class="card-text">${ scenario.RRU }</p>
-                                    </div>
-                                </div>
-                            </div>
-                             <div class="col-md-1"></div>
-                            <div class="col-md-1">
-                                <div class="card">
-                                    <div class="card-header">
-                                        Sm:
-                                    </div>
-                                    <div class="card-body">
-                                        <p class="card-text">${ scenario.SM }</p>
+                                        <p class="card-text"><h3>${ scenario.RRa }</h3></p>
                                     </div>
                                 </div>
 
                             </div>
-                            <div class="col-md-1">
-                                <div class="card">
-                                    <div class="card-header">
-                                        MEL:
-                                    </div>
-                                    <div class="card-body">
-                                        <p class="card-text">${ scenario.MEL }</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-1">
-                                <div class="card">
-                                    <div class="card-header">
-                                        RRm:
-                                    </div>
-                                    <div class="card-body">
-                                        <p class="card-text">${ scenario.RRM }</p>
-                                    </div>
-                                </div>
-                            </div>
+                        </div>
+
+                        <div class="row">
                             <div class="col-md-1"></div>
-                            <div class="col-md-1">
-                                <div class="card">
-                                    <div class="card-header">
-                                        SA:
+                            <div class="col-md-3">
+                                 <div class="row dark-grey-border-shadow">
+                                        <div class="col-md-6 ">
+
+                                            <div class="card" title="Unmitigated Event Likelihood: the likelihood of the scenario and resulting consequences without any mitigating controls in place">
+                                                <div class="card-header">
+                                                    UEL
+                                                </div>
+                                                <div class="card-body">
+                                                    <p class="card-text">${ getStatusCode(scenario.UEL) }</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                       <div class="col-md-6">
+
+                                            <div class="card" title="Residual Risk Unmitigated: the amount of risk that would exist without any controls or mitigation measures in place">
+                                                <div class="card-header">
+                                                    RRU:
+                                                </div>
+                                                <div class="card-body">
+                                                    <p class="card-text">${ getStatusCode(scenario.RRU) }</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="row dark-grey-border-shadow">
+                                    <div class="col-md-4">
+                                        <div class="card" title="Severity Mitigated: the amount of risk mitigated because of existing controls">
+                                            <div class="card-header">
+                                                Sm:
+                                            </div>
+                                            <div class="card-body">
+                                                <p class="card-text">${ getStatusCode(scenario.SM) }</p>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div class="card-body">
-                                        <p class="card-text">${ scenario.SA }</p>
+                                    <div class="col-md-4">
+                                        <div class="card" title="Mitigated Event Losses: the extent to which existing control mitigate scenario event losses">
+                                            <div class="card-header">
+                                                MEL:
+                                            </div>
+                                            <div class="card-body">
+                                                <p class="card-text">${ getStatusCode(scenario.MEL) }</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="card">
+                                            <div class="card-header">
+                                                RRm:
+                                            </div>
+                                            <div class="card-body">
+                                                <p class="card-text">${ getStatusCode(scenario.RRM) }</p>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-1">
-                                <div class="card">
-                                    <div class="card-header">
-                                        MELA:
-                                    </div>
-                                    <div class="card-body">
-                                        <p class="card-text">${ scenario.MELA }</p>
-                                    </div>
+                            <div class="col-md-3">
+                                 <div class="row dark-grey-border-shadow">
+                                        <div class="col-md-6 ">
+
+                                            <div class="card" title="Severity -Adjusted: event severity after implementation of recommended controls">
+                                                <div class="card-header">
+                                                    SA
+                                                </div>
+                                                <div class="card-body">
+                                                    <p class="card-text">${ getStatusCode(scenario.SA) }</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                       <div class="col-md-6">
+
+                                            <div class="card" title="Mitigated Event Loss - Adjusted: Re-assessed event loss after implementation of recommendations">
+                                                <div class="card-header">
+                                                    MELA:
+                                                </div>
+                                                <div class="card-body">
+                                                    <p class="card-text">${ getStatusCode(scenario.MELA) }</p>
+                                                </div>
+                                            </div>
+                                        </div>
                                 </div>
                             </div>
 
@@ -550,10 +705,10 @@
                             <div class="col-md-4">
                                 <div class="card">
                                     <div class="card-header">
-                                        Supply Chain Impact:
+                                        Supply Chain Impact: ${ scenario.impactSupply }/10
                                     </div>
                                     <div class="card-body">
-                                        <p class="card-text">${ scenario.justifyReputation }</p>
+                                        <p class="card-text">${ scenario.justifySupply }</p>
                                     </div>
                                 </div>
                             </div>
@@ -572,8 +727,8 @@
                             </div>
                         </div>
                         <div class="row">
-                            <div class="col-md-6">
-                                <div class="card">
+                            <div class="col-md-6" style="display: flex; flex: 1;">
+                                <div class="card equal-height-scenario">
                                     <div class="card-header">
                                         Alignment with Standards
                                     </div>
@@ -586,8 +741,8 @@
                                     </div>
                                 </div> <!-- Missing closing div tag for the card -->
                             </div>
-                            <div class="col-md-6">
-                                <div class="card">
+                            <div class="col-md-6" style="display: flex; flex: 1;">
+                                <div class="card equal-height-scenario">
                                     <div class="card-header">
                                         Recommended Controls
                                     </div>
@@ -626,12 +781,13 @@
             var chart = new Chart(ctx, {
                 type: 'radar',
                 data: {
-                    labels: ['Safety', 'Danger', 'Operations', 'Finance', 'Reputation', 'Environment', 'Regulation', 'Data'],
+                    labels: ['Safety', 'Danger', 'Supply Chain', 'Operations', 'Finance', 'Reputation', 'Environment', 'Regulation', 'Data'],
                     datasets: [{
                         label: 'Scenario Scores',
                         data: [
                             scenario.impactSafety,
                             scenario.impactDanger,
+                            scenario.impactSupply,
                             scenario.impactProduction,
                             scenario.impactFinance,
                             scenario.impactReputation,
@@ -691,12 +847,13 @@ function displayBarChart(data) {
     new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: ['Safety', 'Danger', 'Environment', 'Production', 'Finance', 'Data', 'Reputation', 'Regulation'],
+            labels: ['Safety', 'Danger', 'Supply Chain', 'Environment', 'Production', 'Finance', 'Data', 'Reputation', 'Regulation'],
             datasets: [{
                 label: 'Impact Average',
                 data: [
                     data.average_impact_safety,
                     data.average_impact_danger,
+                    data.average_impact_supply,
                     data.average_impact_environment,
                     data.average_impact_production,
                     data.average_impact_finance,
@@ -743,6 +900,29 @@ function displayBarChart(data) {
         }
     });
 }
+
+function getStatusCode(uelValue) {
+    if (uelValue < 2) {
+        return "Very Low";
+    } else if (uelValue === 2 || uelValue === 3) {
+        return "Low";
+    } else if (uelValue === 4) {
+        return "Low/Medium";
+    } else if (uelValue === 5 || uelValue === 6) {
+        return "Medium";
+    } else if (uelValue === 7) {
+        return "Medium/High";
+    } else if (uelValue === 8 || uelValue === 9) {
+        return "High";
+    } else if (uelValue === 10) {
+        return "Very High";
+    } else {
+        return "Unknown"; // Handle any unexpected values
+    }
+}
+
 </script>
+    <div class="col-md-1 bg-black"></div>
+</div>
 </body>
 </html>

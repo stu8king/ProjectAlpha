@@ -14,9 +14,10 @@ from django.http import JsonResponse
 from django.core.exceptions import ObjectDoesNotExist
 import openai
 import re
-from django.db.models import Avg
+from django.db.models import Avg, Sum, F
 import concurrent.futures
 import os
+import math
 from .dashboard_views import get_user_organization_id
 from django.contrib.auth.models import User
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -178,10 +179,10 @@ def facility_risk_profile(request):
         openai.api_key = openai_api_key
 
         prompts = [
-            f"For the {facility} {facility_type} at {address}, {country} in the {Industry} industry, provide a user friendly formatted bullet-point list of the likely safety hazards and hazards to human life present at {address}. Limited the response to a maximum of 150 words",
-            f"For the {facility} {facility_type} at {address}, {country} in the {Industry} industry, provide a user friendly formatted bullet point list of the likely chemicals stored or used and their hazards given the {facility_type}. Limited the response to a maximum of 150 words",
-            f"For the {facility} {facility_type} at {address}, {country} in the {Industry} industry, provide a user friendly formatted bullet-point list of the Physical security standards and challenges or the most likely physical security challenges given the location of {address}, {country}. Limited the response to a maximum of 150 words",
-            f"For the {facility} {facility_type} at {address}, {country} in the {Industry} industry, provide a user friendly formatted bullet point list of other localized risks that are likely to be identified for a {facility_type} at {address}. Limited the response to a maximum of 150 words"
+            f"For the {facility} {facility_type} at {address}, {country} in the {Industry} industry, provide a concise bullet-point list of the likely safety hazards and hazards to human life present at {address}. Limit the response to a maximum of 100 words, or less. Add a line space between each bullet point",
+            f"For the {facility} {facility_type} at {address}, {country} in the {Industry} industry, provide a concise bullet point list of the likely chemicals stored or used and their hazards given the {facility_type}. Limit the response to a maximum of 100 words, or less. Add a line space between each bullet point",
+            f"For the {facility} {facility_type} at {address}, {country} in the {Industry} industry, provide a concise bullet-point list of the Physical security standards and challenges or the most likely physical security challenges given the location of {address}, {country}. Limit the response to a maximum of 100 words, or less. Add a line space between each bullet point",
+            f"For the {facility} {facility_type} at {address}, {country} in the {Industry} industry, provide a concise bullet point list of other localized risks that are likely to be identified for a {facility_type} at {address}. Limit the response to a maximum of 100 words, or less. Add a line space between each bullet point"
         ]
 
         responses = []
@@ -195,8 +196,8 @@ def facility_risk_profile(request):
                      "content": "You are a model trained to provide concise responses. Please provide a concise and precise numbered bullet-point list based on the given statement."},
                     {"role": "user", "content": prompt}
                 ],
-                temperature=0.3,
-                max_tokens=256
+                temperature=0.1,
+                max_tokens=500
             )
 
             # Use ThreadPoolExecutor to parallelize the API calls
@@ -235,6 +236,20 @@ def pha_report(request, cyberpha_id):
     average_impact_data = cyberScenarios.aggregate(Avg('impactData'))['impactData__avg']
     average_impact_reputation = cyberScenarios.aggregate(Avg('impactReputation'))['impactReputation__avg']
     average_impact_regulation = cyberScenarios.aggregate(Avg('impactRegulation'))['impactRegulation__avg']
+    average_impact_supply = cyberScenarios.aggregate(Avg('impactSupply'))['impactSupply__avg']
+    total_cost_impact = cyberScenarios.aggregate(Sum('sle'))['sle__sum']
+
+    control_effectiveness = math.ceil(get_overall_control_effectiveness_score(cyberpha_id))
+    # Retrieve the top 5 most effective controls
+    top_5_controls = MitreControlAssessment.objects.filter(cyberPHA=cyberpha_id).order_by('-effectiveness_percentage')[
+                     :5]
+
+    # Retrieve the bottom 5 least effective controls
+    bottom_5_controls = MitreControlAssessment.objects.filter(cyberPHA=cyberpha_id).order_by(
+        'effectiveness_percentage')[:5]
+
+    overall_probability = math.ceil(calculate_overall_probability(cyberpha_id))
+
     return JsonResponse({'cyberPHAHeader': model_to_dict(cyberPHAHeader),
                          'scenarios': list(cyberScenarios.values()),
                          'average_impact_safety': average_impact_safety,
@@ -244,8 +259,62 @@ def pha_report(request, cyberpha_id):
                          'average_impact_finance': average_impact_finance,
                          'average_impact_data': average_impact_data,
                          'average_impact_reputation': average_impact_reputation,
-                         'average_impact_regulation': average_impact_regulation
+                         'average_impact_regulation': average_impact_regulation,
+                         'average_impact_supply': average_impact_supply,
+                         'control_effectiveness': control_effectiveness,
+                         'top_5_controls': list(
+                             top_5_controls.values('control__name', 'effectiveness_percentage', 'weighting')),
+                         'bottom_5_controls': list(
+                             bottom_5_controls.values('control__name', 'effectiveness_percentage', 'weighting')),
+                         'overall_probability': overall_probability,
+                         'total_cost_impact': total_cost_impact
                          })
+
+
+def get_overall_control_effectiveness_score(cyberPHA_ID):
+    """
+    Calculate the Overall Control Effectiveness Score for a given cyberPHA_ID.
+
+    Args:
+        cyberPHA_ID (int): The ID of the cyberPHA security assessment.
+
+    Returns:
+        float: The Overall Control Effectiveness Score.
+    """
+
+    # Filter the assessments based on the given cyberPHA_ID
+    assessments = MitreControlAssessment.objects.filter(cyberPHA=cyberPHA_ID)
+
+    # Calculate the weighted sum of effectiveness percentages
+    weighted_sum = assessments.aggregate(
+        total=Sum(F('effectiveness_percentage') * F('weighting'))
+    )['total'] or 0
+
+    # Calculate the total weight
+    total_weight = assessments.aggregate(total=Sum('weighting'))['total'] or 1
+
+    # Calculate the Overall Control Effectiveness Score
+    overall_score = weighted_sum / total_weight
+
+    return overall_score
+
+
+def calculate_overall_probability(cyberpha_id):
+    # Retrieve all scenarios related to the given assessment
+    cyberScenarios = tblCyberPHAScenario.objects.filter(CyberPHA=cyberpha_id, Deleted=0)
+
+    # Start with the probability that none of the scenarios occur
+    probability_none_occur = 1.0
+
+    # Iterate over each scenario and update the probability
+    for scenario in cyberScenarios:
+        probability_value = int(scenario.probability.strip('%'))
+        probability_none_occur *= (1 - probability_value / 100.0)
+
+    # Calculate the overall probability that at least one scenario occurs
+    overall_probability = 1 - probability_none_occur
+
+    return overall_probability * 100  # Return as a percentage
 
 
 @login_required()
@@ -373,7 +442,7 @@ def scenario_analysis(request):
         user_messages = [
             {
                 "role": "user",
-                "content": f"Based on the following context, list the recommended controls in order of effectiveness. Limit to 150 words. Context: {common_content_prefix()}. Give the response only. No preamble or commentary"
+                "content": f"Based on the following context, concisely list the recommended controls in order of effectiveness. Limit to 100 words. Context: {common_content_prefix()}. Give the response only. No preamble or commentary"
             },
             {
                 "role": "user",
@@ -390,12 +459,12 @@ def scenario_analysis(request):
 
             {
                 "role": "user",
-                "content": f"Given the context: {common_content_prefix()}, ESTIMATE the cost of a single loss event (SLE) amount in US dollars to the organization that owns the {facility_type} because of the cybersecurity incident that causes the given scenario of: {scenario}. Your estimate must be REALISTIC and relevant to the given scenario as described in the context. Expected that the result will be in a range between $10000 and $1000000 depending on the scenario but may be more or less based on your expert estimate. Do not over estimate. IMPORTANT. Provide one response which must be the estimated SLE as a positive integer without any text, preamble, or commentary. If you have a range then just supply the median value as the response"
+                "content": f"Given the context: {common_content_prefix()}, determine the cost of a single loss event (SLE) in US dollars for the {facility_type} due to a cybersecurity incident described as: {scenario}. Guidelines: Your estimate should be realistic and specific to the scenario. The typical range is between $10,000 and $1,000,000, but use your expertise to decide. Do not overestimate. Provide only the median value if you have a range. Your response should be a single positive integer without any additional text or commentary."
             },
 
             {
                 "role": "user",
-                "content": f"Using the {standards} standard and the following context, provide up to 5 key recommendations for a CyberPHA. Context: {common_content_prefix()}. Give the response only. No preamble or commentary"
+                "content": f"Using the {standards} standard and the following context, concisely provide up to 5 key recommendations in 100 words or less for a CyberPHA. Context: {common_content_prefix()}. Give the response only. No preamble or commentary"
             },
             {
                 "role": "user",

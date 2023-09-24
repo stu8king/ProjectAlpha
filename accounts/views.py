@@ -27,13 +27,69 @@ from django.core.mail import send_mail
 from django.contrib.auth import get_user_model
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
-from .forms import PasswordResetRequestForm, PasswordResetForm
+from .forms import PasswordResetRequestForm, PasswordResetForm, Verify2FAForm
 from .models import PasswordResetCode
 from django.utils.crypto import get_random_string
 from django.utils import timezone
 from datetime import timedelta
+from django_otp.plugins.otp_totp.models import TOTPDevice
+from .forms import TwoFactorSetupForm, TwoFactorVerifyForm
+import io
+import base64
+import pyotp
+import qrcode
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
+
+
+def two_factor_setup(request):
+    if request.method == 'POST':
+        form = TwoFactorSetupForm(request.POST)
+        if form.is_valid():
+            phone_number = form.cleaned_data['phone_number']
+            # Generate a TOTP key and send it to the user's phone
+            # This is just a basic example, you might want to use services like Twilio to send SMS
+            key = TOTPDevice.objects.create(user=request.user, name='default', confirmed=False)
+            # Send key to user's phone
+            # ...
+            return redirect('two_factor_verify')
+    else:
+        form = TwoFactorSetupForm()
+    return render(request, 'accounts/two_factor_setup.html', {'form': form})
+
+
+def two_factor_verify(request):
+    if request.method == 'POST':
+        form = TwoFactorVerifyForm(request.POST)
+        if form.is_valid():
+            token = form.cleaned_data['token']
+            try:
+                print("Trying to fetch user by email:", request.user)
+                user = User.objects.get(email=request.user)
+                print("User found:", user)
+
+                print("Trying to fetch TOTPDevice for user:", user.id)
+                device = TOTPDevice.objects.get(user=user.id)
+                print("Device found:", device)
+
+                if device.verify_token(token):
+                    device.confirmed = True
+                    device.save()
+                    return redirect('OTRisk:dashboardhome')
+                else:
+                    messages.error(request, 'Invalid token.')
+            except TOTPDevice.DoesNotExist:
+                print("TOTPDevice.DoesNotExist exception triggered")
+                messages.error(request, 'No 2FA device found for your account.')
+            except User.DoesNotExist:
+                print("User.DoesNotExist exception triggered")
+                messages.error(request, 'User not found.')
+        else:
+            print("Form is not valid")
+    else:
+        form = TwoFactorVerifyForm()
+
+    return render(request, 'accounts/two_factor_verify.html', {'form': form})
 
 
 def password_reset_request(request):
@@ -188,6 +244,78 @@ def register(request):
     return render(request, 'accounts/register.html', {'form': form})
 
 
+def setup_2fa(request):
+    if not request.user.is_authenticated:
+        return redirect('accounts:login')
+
+    # Check if the user already has a TOTPDevice set up and confirmed
+    if TOTPDevice.objects.filter(user=request.user, confirmed=True).exists():
+        messages.info(request, "2FA is already set up for your account.")
+        return redirect('accounts:dashboard')  # or wherever you want to redirect
+
+    totp = pyotp.TOTP(pyotp.random_base32())
+    uri = totp.provisioning_uri(name=request.user.email,
+                                issuer_name="iOTa")  # Replace "YourAppName" with your app's name
+
+    # Generate QR code from the URI
+    img = qrcode.make(uri)
+    img_buffer = io.BytesIO()
+    img.save(img_buffer, format="PNG")
+    qr_code_b64 = base64.b64encode(img_buffer.getvalue()).decode()
+
+    # Convert the base32 secret key to hexadecimal
+    hex_key = base64.b32decode(totp.secret).hex()
+
+    # Check for an existing unconfirmed TOTPDevice record
+    device, created = TOTPDevice.objects.get_or_create(user=request.user, confirmed=False,
+                                                       defaults={'key': hex_key})
+
+    if not created:
+        # If an unconfirmed record already exists, update its secret key
+        device.key = hex_key
+        device.save()
+
+    context = {
+        'qr_code_url': f"data:image/png;base64,{qr_code_b64}",
+        'verify_2fa': reverse('accounts:verify_2fa')
+    }
+    return render(request, 'accounts/setup_2fa.html', context)
+
+
+def verify_2fa(request):
+    if not request.user.is_authenticated:
+        return redirect('accounts:login')
+
+    # Check if the user already has a TOTPDevice set up and confirmed
+    if TOTPDevice.objects.filter(user=request.user, confirmed=True).exists():
+        messages.info(request, "2FA is already set up and verified for your account.")
+        return redirect('OTRisk:dashboardhome')
+
+    form = Verify2FAForm(request.POST or None)
+    if request.method == "POST" and form.is_valid():
+        token = form.cleaned_data['code']
+        try:
+            device = TOTPDevice.objects.get(user=request.user, confirmed=False)
+            # Convert the hexadecimal key back to base32
+            base32_key = base64.b32encode(bytes.fromhex(device.key)).decode()
+
+            totp = pyotp.TOTP(base32_key)
+            if totp.verify(token):
+                device.confirmed = True
+                device.save()
+                messages.success(request, "2FA setup and verification successful!")
+                return redirect('OTRisk:dashboardhome')
+            else:
+                messages.error(request, "Invalid token. Please try again.")
+        except TOTPDevice.DoesNotExist:
+            messages.error(request, "No unconfirmed 2FA setup found for your account. Please set up 2FA first.")
+        except Exception as e:
+            messages.error(request, f"An error occurred: {str(e)}")
+
+    context = {'form': form}
+    return render(request, 'accounts/verify_2fa.html', context)
+
+
 def login_view(request):
     if request.method == 'POST':
         form = AuthenticationForm(request, data=request.POST)
@@ -195,19 +323,39 @@ def login_view(request):
 
         if form.is_valid():
             user = form.get_user()
+            login(request, user)
 
-            # Check if user has an active session
-            ## active_session = ActiveUserSession.objects.filter(user=user).first()
-            ## if active_session:
-            ##     # Check if the session is still valid
-            ##     try:
-            ##         session = Session.objects.get(session_key=active_session.session_key)
-            ##         if session.expire_date > timezone.now():
-            ##             messages.error(request, 'This account is already logged in from another location.')
-            ##             return render(request, 'accounts/login.html', {'form': form})
-            ##     except Session.DoesNotExist:
-            ##        # If the session does not exist, delete the record from ActiveUserSession
-            ##         active_session.delete()
+            # Check if the user has 2FA set up and confirmed
+            if TOTPDevice.objects.filter(user=user, confirmed=True).exists():
+                # Store the user's ID in the session for 2FA verification
+                request.session['pre_2fa_user_id'] = user.id
+                # Redirect to 2FA verification
+                return redirect('accounts:two_factor_verify')
+            else:
+                # If the user hasn't set up 2FA, redirect them to the setup page
+                return redirect('accounts:setup_2fa')
+
+        else:
+            messages.error(request, 'Invalid login credentials.')
+            # Record failed login attempt
+            LoginAttempt.objects.create(
+                ip_address=ip,
+                was_successful=False,
+                reason="Invalid credentials"
+            )
+
+    else:
+        form = AuthenticationForm()
+    return render(request, 'accounts/login.html', {'form': form})
+
+
+def login_view_bak(request):
+    if request.method == 'POST':
+        form = AuthenticationForm(request, data=request.POST)
+        ip = get_client_ip(request)
+
+        if form.is_valid():
+            user = form.get_user()
 
             login(request, user)
             # Add a new record to ActiveUserSession
@@ -367,7 +515,8 @@ def set_password_view(request):
 
 
 def success_view(request):
-    messages.success(request, 'Thank you for purchasing iOTa. Check your email for your temporary password and then click on Customer Login to get started. To get the best out of iOTa, we recommend that you read the user guide. Click on help after logging in for the latest information.')
+    messages.success(request,
+                     'Thank you for purchasing iOTa. Check your email for your temporary password and then click on Customer Login to get started. To get the best out of iOTa, we recommend that you read the user guide. Click on help after logging in for the latest information.')
     return render(request, 'accounts/login.html')
 
 

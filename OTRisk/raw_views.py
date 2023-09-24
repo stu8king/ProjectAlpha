@@ -301,7 +301,6 @@ def get_risk_status(risk_score):
 
 def parse_currency(currency_string):
     """Parse a currency string and return its integer value."""
-    print(currency_string)
     # Remove any non-digit characters
     sanitized_string = re.sub(r'[^\d]', '', currency_string)
 
@@ -371,6 +370,12 @@ def qraw(request):
         if edit_mode == 0:
             if not is_duplicate:
                 # adding new records
+                revenue_str = ensure_non_empty(request.POST.get('txtRevenue'))
+                revenue_int = int(revenue_str.replace(',', ''))
+                insurance_str = ensure_non_empty(request.POST.get('txtInsurance'))
+                insurance_int = int(insurance_str.replace(',', ''))
+                deductable_str = ensure_non_empty(request.POST.get('txtDeductable'))
+                deductable_int = int(deductable_str.replace(',', ''))
                 ra_worksheet = RAWorksheet(
                     RATitle=request.POST.get('txtTitle'),
                     BusinessUnit=request.POST.get('txtBU'),
@@ -378,9 +383,9 @@ def qraw(request):
                     industry=request.POST.get('selectIndustry'),
                     BusinessUnitType=request.POST.get('selectFacility'),
                     RATrigger=request.POST.get('selectTrigger'),
-                    revenue=ensure_non_empty(request.POST.get('txtRevenue')),
-                    insurance=ensure_non_empty(request.POST.get('txtInsurance')),
-                    deductable=ensure_non_empty(request.POST.get('txtDeductable')),
+                    revenue=revenue_int,
+                    insurance=insurance_int,
+                    deductable=deductable_int,
                     UserID=request.user.id,
                     organization_id=org_id,
                     WalkdownID=0,
@@ -525,7 +530,7 @@ def qraw(request):
 class GetTechniquesView(View):
     def get(self, request, *args, **kwargs):
         mitigation_ids = request.GET.getlist('mitigation_id[]', None)
-        print(f"{mitigation_ids}")
+
         if mitigation_ids:
             techniques = MitreICSTechniques.objects.filter(SourceID__in=mitigation_ids).values('ID', 'TargetName')
             techniques_list = list(techniques)
@@ -635,7 +640,7 @@ def openai_assess_risk(request):
             response = openai.ChatCompletion.create(
                 model="gpt-3.5-turbo",
                 messages=messages,
-                temperature=0.2,
+                temperature=0.1,
                 max_tokens=500
             )
             return response['choices'][0]['message']['content'].strip()
@@ -671,7 +676,7 @@ def openai_assess_risk(request):
             "role": "user",
             "content": (
                 f"THE OUTPUT FROM THIS QUERY MUST BE A US DOLLAR AMOUNT VALUE WITH NO EXPLANATORY TEXT OR OTHER NON-NUMERIC CHARACTERS. "
-                f"Based on the provided information:"
+                f"Provide a US dollar amount estimate for the following scenario:"
                 f"- Nature of incident: {scenario}"
                 f"- Revenue of the organization: {revenue}"
                 f"- Industry or sector: {industry} "
@@ -679,8 +684,7 @@ def openai_assess_risk(request):
                 f"- Impact on operations rated as : {production_impact} out of 10 which means: {productiondef}"
                 f"- impact on safety rated as: {safety_impact} out of 10 which means: {safetydef}"
                 f"- impact on the organization's reputation rated as {reputation_impact} out of 10 which means: {reputationdef}"
-                f"Can you provide a pragmatic estimate of the single event cost to the organization for this cybersecurity incident scenario, considering historical data, industry benchmarks, and common repercussions."
-                f"Take into account that the organization has insurance against cybersecurity incidents to the value of ${insurance}"
+                f"Insurance coverage: ${insurance}. Deduct the insurance coverage amount from the estimates "
                 f"Provide three event costs as spread of values : the lowest amount the organization might expect the event to cost, the highest amount or worst-case-scenario, and the most likely value. This information may be then used by risk planners in the organization."
                 f"Give the answer in the format lowest|highest|median using | as the character to indicate the delimiter between the values."
                 f"Provide only the dollar amount values in your response without any narrative or explanation because the response from this query will be used in a calculation."
@@ -720,7 +724,7 @@ def openai_assess_risk(request):
         risk_summary_message = {
             "role": "user",
             "content": {
-                "prompt": "Based on the provided risk factors, make a brief and concise bullet point assessment of the overall likelihood and consequences of the given scenario in a maximum of 150 words.",
+                "prompt": "Based on the provided risk factors, make a brief and concise bullet point assessment of the overall likelihood and consequences of the given scenario in a maximum of 100 words.",
                 "factors": risk_factors,
                 "response_options": [
                     "Unrealistic scenario",
@@ -758,7 +762,7 @@ def write_to_audit(user_id, user_action, user_ip):
 
 
 def raw_action(request):
-    print(f"{request.POST}")
+
     if request.method == "POST":
         RAWorksheetID = request.POST.get('hdnRAWorksheetID')
         actionTitle = request.POST.get('actionTitle')
@@ -844,7 +848,7 @@ def check_vulnerabilities(request):
         }
         response = requests.get(base_url, params=params)
         data = response.json()
-        print(f"data={data}")
+
         # Extract vulnerabilities from the response
         vulnerabilities = []
         for item in data.get('result', {}).get('CVE_Items', []):
@@ -1061,8 +1065,6 @@ def moderate_content(content):
 
     content_context = "In the context of a cybersecurity risk assessment: " + content
 
-    print(content_context)
-
     headers = {
         "Authorization": f"Bearer {OPENAI_API_KEY}",
         "Content-Type": "application/json"
@@ -1074,9 +1076,6 @@ def moderate_content(content):
 
     response = requests.post(OPENAI_MODERATION_ENDPOINT, headers=headers, json=data)
     result = response.json()
-
-    print(response)
-    print(result)
 
     # Check the moderation result and return 'pass' or 'fail'
     if "results" in result and len(result["results"]) > 0:
