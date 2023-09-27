@@ -394,13 +394,16 @@ def save_or_update_cyberpha(request):
         justifyRegulation = request.POST.get('justifyRegulation')
         justifyData = request.POST.get('dataRegulation')
         justifySupply = request.POST.get('justifySupply')
-        sle_string = request.POST.get('sle')
+        sle_median_string = request.POST.get('sle_median')
+        sle_low_string = request.POST.get('sle_low')
+        sle_high_string = request.POST.get('sle_high')
         aro = request.POST.get('aro')
         ale = request.POST.get('ale')
         outage = request.POST.get('outage')
         outageDuration = request.POST.get('outageDuration')
         outageCost = request.POST.get('outageCost')
         probability = request.POST.get('probability')
+        standards = request.POST.get('standards')
         if outageDuration in ('NaN', ''):
             outageDuration = 0
         else:
@@ -417,13 +420,29 @@ def save_or_update_cyberpha(request):
         sle = 0
 
         # Check if sle_string is not None and not 'NaN'
-        if sle_string and sle_string != 'NaN':
+        if sle_low_string and sle_low_string != 'NaN':
             try:
                 # Remove dollar signs, commas, and decimal portion, then convert to integer
-                sle = int(float(sle_string.replace('$', '').replace(',', '')))
+                sle_low = int(float(sle_low_string.replace('$', '').replace(',', '')))
             except ValueError:
                 # Handle the error appropriately, e.g., set a default value or log the error
-                sle = 0
+                sle_low = 0
+
+        if sle_median_string and sle_median_string != 'NaN':
+            try:
+                # Remove dollar signs, commas, and decimal portion, then convert to integer
+                sle_medium = int(float(sle_median_string.replace('$', '').replace(',', '')))
+            except ValueError:
+                # Handle the error appropriately, e.g., set a default value or log the error
+                sle_medium = 0
+
+        if sle_high_string and sle_high_string != 'NaN':
+            try:
+                # Remove dollar signs, commas, and decimal portion, then convert to integer
+                sle_high = int(float(sle_high_string.replace('$', '').replace(',', '')))
+            except ValueError:
+                # Handle the error appropriately, e.g., set a default value or log the error
+                sle_high = 0
 
         deleted = 0
 
@@ -467,7 +486,9 @@ def save_or_update_cyberpha(request):
                 'justifyData': justifyData,
                 'justifySupply': justifySupply,
                 'userID': request.user,
-                'sle': sle,
+                'sle': sle_medium,
+                'sle_low': sle_low,
+                'sle_high': sle_high,
                 'aro': aro,
                 'ale': ale,
                 'countermeasureCosts': countermeasureCosts,
@@ -475,6 +496,7 @@ def save_or_update_cyberpha(request):
                 'outageDuration': outageDuration,
                 'outageCost': outageCost,
                 'probability': probability,
+                'standards': standards,
                 'timestamp': timezone.now()
             }
         )

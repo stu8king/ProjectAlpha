@@ -145,11 +145,10 @@ def get_response(user_message):
         },
         user_message
     ]
-
     response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
+        model="gpt-4",
         messages=message,
-        temperature=0.2,
+        temperature=0.1,
         max_tokens=800
     )
     return response['choices'][0]['message']['content']
@@ -179,9 +178,9 @@ def facility_risk_profile(request):
         openai.api_key = openai_api_key
 
         prompts = [
-            f"For the {facility} {facility_type} at {address}, {country} in the {Industry} industry, provide a concise bullet-point list of the likely safety hazards and hazards to human life present at {address}. Limit the response to a maximum of 100 words, or less. Add a line space between each bullet point",
+            f"For the {facility} {facility_type} at {address}, {country} in the {Industry} industry, provide a concise bullet-point list of the likely personnel safety hazards present at {address}. Limit the response to a maximum of 100 words, or less. Add a line space between each bullet point",
             f"For the {facility} {facility_type} at {address}, {country} in the {Industry} industry, provide a concise bullet point list of the likely chemicals stored or used and their hazards given the {facility_type}. Limit the response to a maximum of 100 words, or less. Add a line space between each bullet point",
-            f"For the {facility} {facility_type} at {address}, {country} in the {Industry} industry, provide a concise bullet-point list of the Physical security standards and challenges or the most likely physical security challenges given the location of {address}, {country}. Limit the response to a maximum of 100 words, or less. Add a line space between each bullet point",
+            f"For the {facility} {facility_type} at {address}, {country} in the {Industry} industry, provide a concise bullet-point list of the Physical security challenges given the location of {address}, {country}. Limit the response to a maximum of 100 words, or less. Add a line space between each bullet point",
             f"For the {facility} {facility_type} at {address}, {country} in the {Industry} industry, provide a concise bullet point list of other localized risks that are likely to be identified for a {facility_type} at {address}. Limit the response to a maximum of 100 words, or less. Add a line space between each bullet point"
         ]
 
@@ -190,10 +189,10 @@ def facility_risk_profile(request):
         # Loop through the prompts and make an API call for each one
         def fetch_response(prompt):
             return openai.ChatCompletion.create(
-                model="gpt-3.5-turbo",
+                model="gpt-4",
                 messages=[
                     {"role": "system",
-                     "content": "You are a model trained to provide concise responses. Please provide a concise and precise numbered bullet-point list based on the given statement."},
+                     "content": "You are a model trained to provide concise responses. Please provide a concise numbered bullet-point list based on the given statement."},
                     {"role": "user", "content": prompt}
                 ],
                 temperature=0.1,
@@ -238,12 +237,14 @@ def pha_report(request, cyberpha_id):
     average_impact_regulation = cyberScenarios.aggregate(Avg('impactRegulation'))['impactRegulation__avg']
     average_impact_supply = cyberScenarios.aggregate(Avg('impactSupply'))['impactSupply__avg']
     total_cost_impact = cyberScenarios.aggregate(Sum('sle'))['sle__sum']
+    total_cost_impact_low = cyberScenarios.aggregate(Sum('sle_low'))['sle_low__sum']
+    total_cost_impact_high = cyberScenarios.aggregate(Sum('sle_high'))['sle_high__sum']
 
     control_effectiveness = math.ceil(get_overall_control_effectiveness_score(cyberpha_id))
     # Retrieve the top 5 most effective controls
-    top_5_controls = MitreControlAssessment.objects.filter(cyberPHA=cyberpha_id).order_by('-effectiveness_percentage')[
-                     :5]
+    top_5_controls = MitreControlAssessment.objects.filter(cyberPHA=cyberpha_id).order_by('-effectiveness_percentage')[:5]
 
+    print(top_5_controls)
     # Retrieve the bottom 5 least effective controls
     bottom_5_controls = MitreControlAssessment.objects.filter(cyberPHA=cyberpha_id).order_by(
         'effectiveness_percentage')[:5]
@@ -267,7 +268,9 @@ def pha_report(request, cyberpha_id):
                          'bottom_5_controls': list(
                              bottom_5_controls.values('control__name', 'effectiveness_percentage', 'weighting')),
                          'overall_probability': overall_probability,
-                         'total_cost_impact': total_cost_impact
+                         'total_cost_impact': total_cost_impact,
+                         'total_cost_impact_low': total_cost_impact_low,
+                         'total_cost_impact_high': total_cost_impact_high
                          })
 
 
@@ -396,6 +399,8 @@ def getSingleScenario(request):
         'timestamp': scenario.timestamp,
         'aro': scenario.aro,
         'sle': scenario.sle,
+        'sle_low': scenario.sle_low,
+        'sle_high': scenario.sle_high,
         'ale': scenario.ale,
         'countermeasureCosts': scenario.countermeasureCosts,
         'control_recommendations': scenario.control_recommendations,
@@ -427,9 +432,10 @@ def scenario_analysis(request):
         severitymitigated = request.GET.get('sm')
         mitigatedexposure = request.GET.get('mel')
         residualrisk = request.GET.get('rrm')
-        standards = request.GET.get('standard')
+        standards = request.GET.get('standards')
         country = request.GET.get('country')
         uel = request.GET.get('uel')
+        financial = request.GET.get('financial')
 
         def common_content_prefix():
             return f"In the {industry} industry, at a {facility_type} in {country}, given the scenario {scenario} with consequences {consequences}, the threat source is {threatSource} performing actions.  Business impact scores (out of 10) are: safety: {safetyimpact}, life: {lifeimpact}, production: {productionimpact}, reputation: {reputationimpact}, environment: {environmentimpact}, regulatory: {regulatoryimpact}, data: {dataimpact}, and supply: {supplyimpact}. The unmitigated risk without controls is rated as {uel}/10."
@@ -442,29 +448,29 @@ def scenario_analysis(request):
         user_messages = [
             {
                 "role": "user",
-                "content": f"Based on the following context, concisely list the recommended controls in order of effectiveness. Limit to 100 words. Context: {common_content_prefix()}. Give the response only. No preamble or commentary"
+                "content": f"Based on the following context, concisely list the necessary OT and ICS cybersecurity controls in order of effectiveness. Limit to 100 words. Context: {common_content_prefix()}. Give the response only. No preamble or commentary"
             },
+            ##{
+            ##    "role": "user",
+            ##    "content": f"Based on the following context, provide the cyberPHA adjusted severity score (Sa) out of 10. Context: {common_content_prefix()}. Answer with a number . Do NOT include any other words, sentences, or explanations."
+            ##},
+            ##{
+            ##    "role": "user",
+            ##    "content": f"Based on the following context, provide the adjusted exposure level (MELa) out of 10. Context: {common_content_prefix()}. Answer with a number . Do NOT include any other words, sentences, or explanations."
+            ##},
             {
                 "role": "user",
-                "content": f"Based on the following context, provide the cyberPHA adjusted severity score (Sa) out of 10. Context: {common_content_prefix()}. Answer with a number . Do NOT include any other words, sentences, or explanations."
-            },
-            {
-                "role": "user",
-                "content": f"Based on the following context, provide the adjusted exposure level (MELa) out of 10. Context: {common_content_prefix()}. Answer with a number . Do NOT include any other words, sentences, or explanations."
-            },
-            {
-                "role": "user",
-                "content": f"Given the detailed context that follows, I need an assessment of the residual risk after all new controls have been implemented. The context suggests significant risk mitigation due to these controls. Based on this, provide a residual risk rating from the following options: Very Low, Low, Low/Medium, Medium, Medium/High, High, Very High. Context: {common_content_prefix()}, where it's emphasized that new controls have significantly reduced vulnerabilities and threats. The expected outcome is a much lower risk than before. Provide ONLY one of the given risk ratings without any additional text or explanations."
-            },
-
-            {
-                "role": "user",
-                "content": f"Given the context: {common_content_prefix()}, determine the cost of a single loss event (SLE) in US dollars for the {facility_type} due to a cybersecurity incident described as: {scenario}. Guidelines: Your estimate should be realistic and specific to the scenario. The typical range is between $10,000 and $1,000,000, but use your expertise to decide. Do not overestimate. Provide only the median value if you have a range. Your response should be a single positive integer without any additional text or commentary."
+                "content": f"Given the detailed context that follows, give an assessment of the residual cybersecurity risk risk after all new recommended controls have been implemented. Based on this, provide a residual risk rating from the following options: Very Low, Low, Low/Medium, Medium, Medium/High, High, Very High. Context: {common_content_prefix()}, where it's emphasized that new controls have significantly reduced vulnerabilities and threats. The expected outcome is a much lower risk than before. Provide ONLY one of the given risk ratings without any additional text or explanations."
             },
 
             {
                 "role": "user",
-                "content": f"Using the {standards} standard and the following context, concisely provide up to 5 key recommendations in 100 words or less for a CyberPHA. Context: {common_content_prefix()}. Give the response only. No preamble or commentary"
+                "content": f"Given the context: {common_content_prefix()}, estimate the DIRECT COSTS of a single loss event (SLE) in US dollars for the {facility_type} for the scenario: {scenario}. Guidelines: Give three estimates best case, worst case, and most likely case. Output as integers in the format low|medium|high where | is the delimiter between the three integer values. Your estimates should be realistic and specific to the scenario. Consider only the relevant Direct costs which can include all or some of the following depending on the incident: incident response, remediation, legal fees, notification costs, regulatory fines, compensations, and increased insurance premiums. In the business impact analysis the evaluation of financial impact for the given scenario is rated as {financial}/10 by the business. Your response should be a single positive integer for each of the three values in the order low|medium|high without any additional text or commentary."
+            },
+
+            {
+                "role": "user",
+                "content": f"Using the {standards} standard and the following context, concisely provide up to 10 key recommendations and their reference section in {standards} in 200 words or less for a CyberPHA. Context: {common_content_prefix()}. Give the response only. No preamble or commentary"
             },
             {
                 "role": "user",
@@ -492,17 +498,14 @@ def scenario_analysis(request):
         # Return the responses as variables
         return JsonResponse({
             'controls': responses[0],
-            'adjustedSeverity': responses[1],
-            'adjustedExposure': responses[2],
-            'adjustedRR': responses[3],
-            'costs': responses[4],
-            'recommendations': responses[5],
-            'probability': responses[6]
+            'adjustedRR': responses[1],
+            'costs': responses[2],
+            'recommendations': responses[3],
+            'probability': responses[4]
         })
 
 
 def scenario_vulnerability(request, scenario_id):
-    print("heading back")
     try:
         scenario = tblCyberPHAScenario.objects.get(pk=scenario_id)
         vulnerabilities = vulnerability_analysis.objects.filter(scenario=scenario)

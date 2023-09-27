@@ -284,7 +284,7 @@
 <!-- put the buttons in here -->
 <div class="row small-font" >
     <div class="col-md-1" style="background-color: black"></div>
-    <div class="col-md-1" style="background-color: darkgray"></div>
+    <div class="col-md-2" style="background-color: darkgray"></div>
     <div class="col-md-2" style="background-color: darkgray"> <button type="button" id="addScenarioBtn" class="form-control  btn-link" onclick="resetformcontrols()" style="background-color: #0C6EFC; color: white;">New Scenario</button></div>
     <div class="col-md-2" style="background-color: darkgray"><button type="button" class="form-control btn-link" data-bs-toggle="modal" style="background-color: #0C6EFC; color: white;" onclick="processFormData()">Save Scenario</button></div>
     <div class="col-md-2" style="background-color: darkgray">
@@ -302,16 +302,8 @@
             }
         </script>
     </div>
-    <div class="col-md-2" style="background-color: darkgray">
-        <button type="button" class="form-control btn-link" onclick="getCyberPHAReport()" style="background-color: #0C6EFC; color: white;" >Scenario Report</button>
-            <script>
-                function goToScenarioReport() {
-                    // var hdnID = document.getElementById('hdnID').value;  // assuming 'hdnID' is the id of your input field
-                    // window.location.href = "{% url 'OTRisk:scenarioreport' %}?hdnID=" + hdnID;
-                }
-            </script>
-    </div>
-    <div class="col-md-1" style="background-color: darkgray"></div>
+
+    <div class="col-md-2" style="background-color: darkgray"></div>
     <div class="col-md-1" style="background-color: black"></div>
 </div>
 
@@ -758,23 +750,43 @@
 <div class="row">
     <div class="col-md-1" style="background-color: black"></div>
     <div class="col-md-2" style="background-color: white"></div>
-    <div class="col-md-2" style="background-color: white">
-        <div class="row rounded p-3 d-flex align-items-center justify-content-center" style="height: 80%;">
-            <label for="txtProbability">Probability of Attack Success</label><textarea id="txtProbability" name="txtProbability" class="form-control border border-danger small-font text-center"  style="font-size: 1.75rem; resize: none; border: 3px solid #97979A; border-radius: 10px; box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5); padding: 20px; background-color: white; display: block; margin: auto;"></textarea>
-        </div>
+    <div class="col-md-6">
+        <div class="row">
 
-    </div>
-    <div class="col-md-2" style="background-color: white">
-        <div class="row rounded p-3 d-flex align-items-center justify-content-center" style="height: 80%;">
-            <label for="txtEventCosts">Estimated Incident Costs</label><textarea id="txtEventCosts" name="txtEventCosts" class="form-control border border-danger small-font text-center" style="font-size: 1.75rem; resize: none; border: 3px solid #97979A; border-radius: 10px; box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5); padding: 20px; background-color: white; display: block; margin: auto;"></textarea>
-        </div>
-    </div>
-    <div class="col-md-2" style="background-color: white">
-        <div class="row rounded p-3 d-flex align-items-center justify-content-center" style="height: 80%;">
-            <label for="txtResidualRisk">Residual Risk Rating</label><textarea id="txtResidualRisk" name="txtResidualRisk" class="form-control border border-danger small-font text-center"  style="font-size: 1.75rem; resize: none; border: 3px solid #97979A; border-radius: 10px; box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5); padding: 20px; background-color: white; display: block; margin: auto;"></textarea>
-        </div>
-    </div>
+            <div class="col-md-2" style="background-color: white">
 
+                <div class="row rounded p-3 d-flex align-items-center justify-content-center" style="height: 80%;">
+                    <label for="txtProbability">Attack Success Rate</label><textarea id="txtProbability" name="txtProbability" class="form-control border border-danger small-font text-center"  style="font-size: 1.5rem; resize: none; border: 3px solid #97979A; border-radius: 10px; box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5); padding: 20px; background-color: white; display: block; margin: auto;"></textarea>
+                </div>
+
+            </div>
+            <div class="col-md-8" style="text-align: center">Estimated Incident Costs
+                <div class="row">
+                <div class="col-md-4" style="background-color: white">
+                    <div class="row rounded p-3 d-flex align-items-center justify-content-center" style="height: 80%;">
+                        <label for="txtEventCosts">Low</label><textarea id="txtEventCosts_low" name="txtEventCosts_low" class="form-control border border-danger small-font text-center" style="font-size: 1.75rem; resize: none; border: 3px solid #97979A; border-radius: 10px; box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5); padding: 20px; background-color: white; display: block; margin: auto;"></textarea>
+                    </div>
+                </div>
+                    <div class="col-md-4" style="background-color: white">
+                    <div class="row rounded p-3 d-flex align-items-center justify-content-center" style="height: 80%;">
+                        <label for="txtEventCosts">Medium</label><textarea id="txtEventCosts" name="txtEventCosts" class="form-control border border-danger small-font text-center" style="font-size: 1.75rem; resize: none; border: 3px solid #97979A; border-radius: 10px; box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5); padding: 20px; background-color: white; display: block; margin: auto;"></textarea>
+                    </div>
+                </div>
+                    <div class="col-md-4" style="background-color: white">
+                    <div class="row rounded p-3 d-flex align-items-center justify-content-center" style="height: 80%;">
+                        <label for="txtEventCosts">High</label><textarea id="txtEventCosts_high" name="txtEventCosts_high" class="form-control border border-danger small-font text-center" style="font-size: 1.75rem; resize: none; border: 3px solid #97979A; border-radius: 10px; box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5); padding: 20px; background-color: white; display: block; margin: auto;"></textarea>
+                    </div>
+                </div>
+                </div>
+            </div>
+
+            <div class="col-md-2" style="background-color: white">
+                <div class="row rounded p-3 d-flex align-items-center justify-content-center" style="height: 80%;">
+                    <label for="txtResidualRisk">Residual Risk Rating</label><textarea id="txtResidualRisk" name="txtResidualRisk" class="form-control border border-danger small-font text-center"  style="font-size: 1.5rem; resize: none; border: 3px solid #97979A; border-radius: 10px; box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5); padding: 20px; background-color: white; display: block; margin: auto;"></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
     <div class="col-md-2" style="background-color: white"></div>
     <div class="col-md-1" style="background-color: black"></div>
 </div>
@@ -797,11 +809,18 @@
     </div>
      <div class="col-md-1" style="background-color: black"></div>
 </div>
+<div class="row" style="height: 10px">
+    <div class="col-md-1" style="background-color: black"></div>
+    <div class="col-md-10 " style="background-color: white; height: 10px"></div>
+    <div class="col-md-1 " style="background-color: black"></div>
+</div> <!-- white stripe -->
+<div class="row" style="height: 10px">
+    <div class="col-md-1" style="background-color: black"></div>
+    <div class="col-md-10 " style="background-color: darkgray; height: 10px"></div>
+    <div class="col-md-1 " style="background-color: black"></div>
+</div> <!-- dark grey stripe -->
 
-
-
-
-<div class="row">
+<div class="row" hidden="hidden">
     <div class="col-md-1" style="background-color: black"></div>
     <div class="col-md-5" style="background-color: white">
         <h4>Adjusted Risk (After Action)</h4>
@@ -943,18 +962,6 @@
     </div>
      <div class="col-md-1" style="background-color: black"></div>
 </div>
-<div class="row" style="height: 10px">
-    <div class="col-md-1" style="background-color: black"></div>
-    <div class="col-md-10 " style="background-color: white; height: 10px"></div>
-    <div class="col-md-1 " style="background-color: black"></div>
-</div> <!-- white stripe -->
-<div class="row" style="height: 10px">
-    <div class="col-md-1" style="background-color: black"></div>
-    <div class="col-md-10 " style="background-color: darkgray; height: 10px"></div>
-    <div class="col-md-1 " style="background-color: black"></div>
-</div> <!-- dark grey stripe -->
-
-
 
 <script>
 
@@ -1124,6 +1131,7 @@
           // Send the request with the form data
           xhr.send(formData);
           $('#confirmationModal').modal('hide');
+
         }
 
 
@@ -1191,11 +1199,14 @@
             const justifyRegulation =  document.getElementById('txtregulatoryJustify').value
             const justifySupply =  document.getElementById('txtsupplyJustify').value
             const dataRegulation =  document.getElementById('txtdataJustify').value
-            const sle =  document.getElementById('hdn_sle').value
+            //const sle =  document.getElementById('hdn_sle').value
             const aleValue = document.getElementById('ale').value;
             let ale = parseInt(aleValue.replace(/[^0-9]/g, ''), 10);
             const probability = document.getElementById('txtProbability').value;
-
+            const sle_low =  document.getElementById('txtEventCosts_low').value;
+            const sle_high =  document.getElementById('txtEventCosts_high').value;
+            const sle_median =  document.getElementById('txtEventCosts').value;
+            const standards =  document.getElementById('selStandards').value;
             const aro = document.getElementById('aro').value
               // Check if the "yes" option was selected for outage
             const outageSelector = document.getElementById('outageYes'); // Replace 'outageSelectorId' with the actual ID of your Yes/No selector
@@ -1246,12 +1257,15 @@
                 formData.append('justifyRegulation', justifyRegulation);
                 formData.append('dataRegulation', dataRegulation);
                 formData.append('justifySupply', justifySupply);
-                formData.append('sle', sle);
+                formData.append('sle_low', sle_low);
+                formData.append('sle_median', sle_median);
+                formData.append('sle_high', sle_high);
                 formData.append('ale', ale);
                 formData.append('outage', outage);
                 formData.append('outageDuration', outageDuration);
                 formData.append('outageCost', outageCost);
                 formData.append('probability', probability);
+                formData.append('standards', standards);
 
                 // Call the saveOrUpdateCyberPHA function
                 saveOrUpdateCyberPHA(formData);
@@ -1268,12 +1282,52 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <textarea id="txtsafetyJustify" name="txtsafetyJustify" class="form-control" rows="3" style="resize: none"></textarea>
+
+        <!-- Drop-down select control for the nature of the safety hazard -->
+        <label for="hazardNature">Nature of Safety Hazard:</label>
+        <select id="hazardNature" name="hazardNature" class="form-control mb-3">
+          <option value="chemical">Chemical</option>
+          <option value="electrical">Electrical</option>
+          <option value="mechanical">Mechanical</option>
+          <option value="radiation">Radiation</option>
+        </select>
+
+        <!-- Yes/no option for SIS Outage -->
+        <div class="mb-3">
+          <label>SIS Outage:</label>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="sisOutage" id="sisOutageYes" value="yes">
+            <label class="form-check-label" for="sisOutageYes">Yes</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="sisOutage" id="sisOutageNo" value="no">
+            <label class="form-check-label" for="sisOutageNo">No</label>
+          </div>
+        </div>
+
+        <!-- Yes/no option for SIS Integrity Compromise -->
+        <div class="mb-3">
+          <label>SIS Integrity Compromise:</label>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="sisIntegrity" id="sisIntegrityYes" value="yes">
+            <label class="form-check-label" for="sisIntegrityYes">Yes</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="sisIntegrity" id="sisIntegrityNo" value="no">
+            <label class="form-check-label" for="sisIntegrityNo">No</label>
+          </div>
+        </div>
+
+        <!-- Textarea for justification -->
+        <label for="txtsafetyJustify">Justification:</label>
+        <textarea id="txtsafetyJustify" name="txtsafetyJustify" class="form-control mb-3" rows="3" style="resize: none"></textarea>
+
         <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
 </div>
+
 <div class="modal fade" id="lifeModal" tabindex="-1" aria-labelledby="lifeModal" aria-hidden="true">
   <div class="modal-dialog modal-xl">
     <div class="modal-content">
@@ -1933,31 +1987,39 @@
                     standards: standards,
                     supply: supply,
                     country: country,
-                    uel: uel
+                    uel: uel,
+                    financial: financial
                 },
                 success: function (response) {
 
-                   document.getElementById('SArange').value = response.adjustedSeverity;
-                   document.getElementById('MELarange').value = response.adjustedExposure;
+                   //document.getElementById('SArange').value = response.adjustedSeverity;
+                   //document.getElementById('MELarange').value = response.adjustedExposure;
                    document.getElementById('txtRRa').value = response.adjustedRR
 
                    document.getElementById('txtControlAnalysis').value = response.controls;
                    document.getElementById('txtScenarioAnalysis').value = response.recommendations;
-                   let costsString = response.costs; // Assuming response.costs is a string like "$1,000,000"
+                   let costsString = response.costs;
+                   let costsArray = costsString.split('|');
+                   let sle_low = costsArray.length > 0 && costsArray[0] ? `$${parseInt(costsArray[0]).toLocaleString()}` : "$0";
+                   let sle_medium = costsArray.length > 1 && costsArray[1] ? `$${parseInt(costsArray[1]).toLocaleString()}` : "$0";
+                   let sle_high = costsArray.length > 2 && costsArray[2] ? `$${parseInt(costsArray[2]).toLocaleString()}` : "$0";
+                    document.getElementById('txtEventCosts').value = sle_medium;
+                    document.getElementById('txtEventCosts_low').value = sle_low;
+                    document.getElementById('txtEventCosts_high').value = sle_high;
 
                     // Remove any non-numeric characters (like commas and dollar signs) and parse the value as a float
-                    let costsFloat = parseFloat(costsString.replace(/[^0-9.-]+/g, ""));
+                    //let costsFloat = parseFloat(costsString.replace(/[^0-9.-]+/g, ""));
 
                     // Format the float value as a currency string
-                    let formattedCosts = new Intl.NumberFormat('en-US', {style: 'currency', currency: 'USD'}).format(costsFloat);
+                    //let formattedCosts = new Intl.NumberFormat('en-US', {style: 'currency', currency: 'USD'}).format(costsFloat);
 
                     // Set the formatted string value to the 'sle' field
-                    document.getElementById('sle').value = formattedCosts;
+                    //document.getElementById('sle').value = formattedCosts;
 
                     // Set the float value to the hidden 'hdn_sle' field
-                    document.getElementById('hdn_sle').value = costsFloat;
+                    //document.getElementById('hdn_sle').value = costsFloat;
                     document.getElementById('txtProbability').value = response.probability;
-                    document.getElementById('txtEventCosts').value = formattedCosts;
+                    //document.getElementById('txtEventCosts').value = formattedCosts;
                     document.getElementById('txtResidualRisk').value = response.adjustedRR
 
                      $('#loadingSpinner').hide();
@@ -2042,7 +2104,10 @@ function resetformcontrols() {
         document.getElementById('txtScenarioAnalysis').value = 0;
         document.getElementById('txtControlAnalysis').value = 0;
         const rra = document.getElementById('txtRRa').value = 0;
-        clearVulnerabilityTable()
+        try {
+            clearVulnerabilityTable();
+        } catch (error) {}
+
     }
 }
 
@@ -2101,6 +2166,13 @@ function resetformcontrols() {
 
         document.getElementById('sle').value = formattedCosts;
         document.getElementById('txtEventCosts').value= formattedCosts;
+        let costs_low = parseFloat(data.sle_low); // Assuming response.costs is a string representation of a number
+        let formattedCosts_low = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(costs_low);
+        document.getElementById('txtEventCosts_low').value= formattedCosts_low;
+        let costs_high = parseFloat(data.sle_high); // Assuming response.costs is a string representation of a number
+        let formattedCosts_high = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(costs_high);
+        document.getElementById('txtEventCosts_high').value= formattedCosts_high;
+
         document.getElementById('txtResidualRisk').value= data.RRa;
         document.getElementById('txtProbability').value= data.probability;
         document.getElementById('hdnScenario').value = scenarioId;

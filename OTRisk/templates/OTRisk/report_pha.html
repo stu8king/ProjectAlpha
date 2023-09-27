@@ -294,9 +294,7 @@
                 <div id="reportDetails">
                     <h2>Report: <span id="reportTitle"></span></h2>
                     <div class="row">
-                        <div class="col-md-3">
-                            <strong>Title:</strong> <span id="reportTitle"></span>
-                        </div>
+
                         <div class="col-md-3">
                             <strong>Facility:</strong> <span id="FacilityName"></span>
                         </div>
@@ -306,10 +304,26 @@
                         <div class="col-md-3">
                             <strong>Unit:</strong> <span id="AssessmentUnit"></span>
                         </div>
+                        <div class="col-md-3">
+
+                        </div>
                     </div>
+
                     <div class="row">
                          <div class="col-md-1"> </div>
-                        <div class="col-md-2">
+
+                        <div class="col-md-5">
+                             <div class="card">
+                                    <div class="card-header">
+                                        </div>
+                                        <div class="card-body">
+                                            <canvas id="impactChart"></canvas>
+
+                                        </div>
+
+                                    </div>
+                            </div>
+                                                <div class="col-md-2">
                              <div class="card">
                                 <div class="card-header">
                                         Assessed Effectiveness of ICS Controls
@@ -327,30 +341,9 @@
                                         <h3><span id="overall_probability"></span>%</h3>
                                         <p class="card-text">Probability that at least one of the given scenarios is successful</p>
                                     </div>
-                                </div><br>
-                                <div class="card">
-                                <div class="card-header">
-                                        Total SLE from Scenarios
-                                    </div>
-                                    <div class="card-body">
-                                        <h3><span id="cost_impact"></span></h3>
-                                        <p class="card-text"></p>
-                                    </div>
                                 </div>
-                        </div>
-                        <div class="col-md-5">
-                             <div class="card">
-                                    <div class="card-header">
-                                            Business Impact Analysis
-                                        </div>
-                                        <div class="card-body">
-                                            <canvas id="impactChart"></canvas>
-
-                                        </div>
-                                    </div>
-                            </div>
-                        <div class="col-md-3">
-                             <div class="card">
+                                <br>
+                                <div class="card">
                                 <div class="card-header">
                                         Top 5 Controls
                                     </div>
@@ -359,6 +352,13 @@
                                         <p class="card-text"></p>
                                     </div>
                                 </div>
+
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card-body">
+                                <canvas id="costImpactChart"></canvas>
+                            </div>
+
                         </div>
 
                         <div class="col-md-1"> </div>
@@ -445,9 +445,7 @@
             data.top_5_controls.forEach(control => {
                 const controlDetails = `
                     <li>
-                        Control Name: ${control.control__name}<br>
-                        Effectiveness Percentage: ${control.effectiveness_percentage}%<br>
-                        Weighting: ${control.weighting}
+                        ${control.control__name}: ${control.effectiveness_percentage}%<br>
                     </li>
                 `;
                 top5ControlsList.append(controlDetails);
@@ -575,7 +573,7 @@
                                  <div class="row dark-grey-border-shadow">
                                         <div class="col-md-6 ">
 
-                                            <div class="card" title="Severity -Adjusted: event severity after implementation of recommended controls">
+                                            <div class="card" title="Severity -Adjusted: the likelihood of the scenario and resulting consequences without any mitigating controls in place">
                                                 <div class="card-header">
                                                     SA
                                                 </div>
@@ -825,6 +823,7 @@ $('#headertable tbody tr').on('click', function() {
             // Handle the returned data and display it underneath the rawtable
             displayReportData(data);
             displayBarChart(data);
+            displayCostImpactChart(data)
         },
         error: function(error) {
             console.error("Error fetching report data:", error);
@@ -841,10 +840,17 @@ $(document).ready(function(){
     });
 
 });
+var myChart;
 
 function displayBarChart(data) {
+
     var ctx = document.getElementById('impactChart').getContext('2d');
-    new Chart(ctx, {
+
+    if (myChart) {
+        myChart.destroy();
+    }
+
+    myChart = new Chart(ctx, {
         type: 'bar',
         data: {
             labels: ['Safety', 'Danger', 'Supply Chain', 'Environment', 'Production', 'Finance', 'Data', 'Reputation', 'Regulation'],
@@ -895,11 +901,75 @@ function displayBarChart(data) {
             plugins: {
                 legend: {
                     display: false
+                },
+                title: {
+                    display: true,
+                    text: 'Business Impact Analysis (n/10)'
                 }
             }
         }
     });
 }
+
+var costImpactChart;
+
+function displayCostImpactChart(data) {
+    var ctx = document.getElementById('costImpactChart').getContext('2d');
+
+    if (costImpactChart) {
+        costImpactChart.destroy();
+    }
+
+    costImpactChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Total Cost Impact (Low)', 'Total Cost Impact (Median)', 'Total Cost Impact (High)'],
+            datasets: [{
+                label: 'Cost Impact',
+                data: [
+                    data.total_cost_impact_low,
+                    data.total_cost_impact,
+                    data.total_cost_impact_high
+                ],
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.2)',
+                    'rgba(54, 162, 235, 0.2)',
+                    'rgba(255, 206, 86, 0.2)'
+                ],
+                borderColor: [
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 206, 86, 1)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            elements: {
+              bar: {
+                  borderWidth: 2,
+              }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                },
+                title: {
+                    display: true,
+                    text: '$ Total Impact Costs (Low, Medium, High)'
+                }
+            }
+        }
+    });
+}
+
+
 
 function getStatusCode(uelValue) {
     if (uelValue < 2) {

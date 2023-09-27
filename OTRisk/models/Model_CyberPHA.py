@@ -251,6 +251,8 @@ class tblCyberPHAScenario(models.Model):
     outageDuration = models.IntegerField()
     outageCost = models.IntegerField()
     probability = models.TextField()
+    sle_low = models.IntegerField()
+    sle_high = models.IntegerField()
 
     class Meta:
         db_table = 'tblCyberPHAScenario'
