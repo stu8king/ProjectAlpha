@@ -38,6 +38,8 @@ import io
 import base64
 import pyotp
 import qrcode
+from django.core.mail import send_mail
+from django import forms
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
@@ -64,13 +66,10 @@ def two_factor_verify(request):
         if form.is_valid():
             token = form.cleaned_data['token']
             try:
-                print("Trying to fetch user by email:", request.user)
-                user = User.objects.get(email=request.user)
-                print("User found:", user)
 
-                print("Trying to fetch TOTPDevice for user:", user.id)
+                user = User.objects.get(email=request.user)
+
                 device = TOTPDevice.objects.get(user=user.id)
-                print("Device found:", device)
 
                 if device.verify_token(token):
                     device.confirmed = True
@@ -79,13 +78,12 @@ def two_factor_verify(request):
                 else:
                     messages.error(request, 'Invalid token.')
             except TOTPDevice.DoesNotExist:
-                print("TOTPDevice.DoesNotExist exception triggered")
+
                 messages.error(request, 'No 2FA device found for your account.')
             except User.DoesNotExist:
-                print("User.DoesNotExist exception triggered")
                 messages.error(request, 'User not found.')
         else:
-            print("Form is not valid")
+            messages.error(request, 'Invalid form')
     else:
         form = TwoFactorVerifyForm()
 
@@ -595,3 +593,50 @@ def payment_view(request):
         'subscription': subscription
     }
     return render(request, 'accounts/payment.html', context)
+
+
+class ContactForm(forms.Form):
+    first_name = forms.CharField(max_length=100, widget=forms.TextInput(
+        attrs={'class': 'styled-input form-control', 'placeholder': 'First name'}))
+    last_name = forms.CharField(max_length=100, widget=forms.TextInput(
+        attrs={'class': 'styled-input form-control', 'placeholder': 'Last name'}))
+    business_email = forms.EmailField(
+        widget=forms.EmailInput(attrs={'class': 'styled-input form-control', 'placeholder': 'Business Email'}))
+    company = forms.CharField(max_length=100, widget=forms.TextInput(
+        attrs={'class': 'styled-input form-control', 'placeholder': 'Company'}))
+    job_title = forms.CharField(max_length=100, widget=forms.TextInput(
+        attrs={'class': 'styled-input form-control', 'placeholder': 'Job Title'}))
+    country = forms.CharField(max_length=100, widget=forms.TextInput(
+        attrs={'class': 'styled-input form-control', 'placeholder': 'Country'}))
+    phone = forms.CharField(max_length=15, widget=forms.TextInput(
+        attrs={'class': 'styled-input form-control', 'placeholder': 'Phone'}))
+    comments = forms.CharField(
+        widget=forms.Textarea(attrs={'class': 'styled-input form-control', 'placeholder': 'Comments'}))
+
+
+def contact_form(request):
+    if request.method == 'POST':
+        form = ContactForm(request.POST)
+
+        if form.is_valid():
+            # Send email
+            subject = f"Contact Form Submission from {form.cleaned_data['first_name']} {form.cleaned_data['last_name']}"
+            message = f"""
+            First Name: {form.cleaned_data['first_name']}
+            Last Name: {form.cleaned_data['last_name']}
+            Email: {form.cleaned_data['business_email']}
+            Company: {form.cleaned_data['company']}
+            Job Title: {form.cleaned_data['job_title']}
+            Country: {form.cleaned_data['country']}
+            Phone: {form.cleaned_data['phone']}
+            Comments: {form.cleaned_data['comments']}
+            """
+            send_mail(subject, message, 'support@iotarisk.com', ['support@iotarisk.com'])
+
+            messages.success(request, "Thank you for your message. We'll be in contact shortly.")
+            return redirect('accounts:contact_form')
+
+    else:
+        form = ContactForm()
+
+    return render(request, 'accounts/contact.html', {'form': form})

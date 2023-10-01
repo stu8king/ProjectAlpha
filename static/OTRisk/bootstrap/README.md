@@ -128,7 +128,6 @@ Within the download you'll find the following directories and files, logically g
       ├── bootstrap.js
       ├── bootstrap.js.map
       ├── bootstrap.min.js
-      └── bootstrap.min.js.map
   ```
 </details>
 

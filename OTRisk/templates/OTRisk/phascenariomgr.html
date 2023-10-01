@@ -11,6 +11,7 @@
     <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
 
 
 
@@ -65,6 +66,19 @@
         cursor: pointer;
     }
 
+    /* Add a box shadow to the slider thumb */
+    input[type="range"]::-webkit-slider-thumb {
+        box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+thead {
+  background: linear-gradient(#606062, #28262b);
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+    color: white;
+}
     </style>
     <script>
       // Initialize sliders when the page loads
@@ -78,6 +92,8 @@
         initSlider("range_regulatory", "regulatoryrange");
         initSlider("range_data", "datarange");
         initSlider("range_supply", "supplyrange");
+        sessionStorage.setItem("ls", "0");
+
         // init other sliders...
       };
 
@@ -106,6 +122,9 @@
         </li>
           <li class="nav-item">
           <a class="nav-link" href="{% url 'OTRisk:ra_actions_view' %}" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Actions</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'OTRisk:risk_register' %}" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Risk Register</a>
         </li>
         <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -234,7 +253,20 @@
                     <td>{{ saved_scenarios.ThreatClass }}</td>
                     <td>{{ saved_scenarios.RiskCategory }}</td>
                     <td>
-                        <a href="{% url 'OTRisk:deletescenario' saved_scenarios.ID saved_scenarios.CyberPHA %}" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this record? (Note that if you proceed, the record will be virtually deleted and can be recovered if necessary)')">Del</a>
+                        <a href="{% url 'OTRisk:deletescenario' saved_scenarios.ID saved_scenarios.CyberPHA.ID %}"
+                           class="btn btn-danger"
+                           onclick="return checkDeleteCondition();">Del</a>
+
+                        <script>
+                            function checkDeleteCondition() {
+                                var lsValue = sessionStorage.getItem("ls");
+                                if (lsValue === "1") {
+                                    swal("iOTa Scenario Manager", "Changes cannot be made to this scenario because it has been added to the risk register");
+                                    return false; // Prevent the default action (i.e., following the link)
+                                }
+                                return confirm('Are you sure you want to delete this record? (Note that if you proceed, the record will be virtually deleted and can be recovered if necessary)');
+                            }
+                        </script>
                     </td>
                   </tr>
                   {% endfor %}
@@ -329,7 +361,7 @@
                                 <th>Scenario</th>
                             </tr>
                         </thead>
-                        <tbody id="scenarioListBody">
+                        <tbody id="scenarioListBody" >
                             {% for scenario in scenarios %}
                             <tr onclick="selectScenario(this)">
                                 <td>{{ scenario.Scenario }}</td>
@@ -720,6 +752,8 @@
             </div>
         </div>
         <div class=col-md-6>
+            <input type="checkbox" id="risk_register" name="risk_register">
+            <label for="risk_register">Lock Scenario and Add to Risk Register</label>
             <br><br>
             <button id="risk-assessment-btn" type="button" class="form-control btn-dark" style="background-color: dodgerblue; color: white">Assess Scenario</button><br>
             <div id="loadingSpinner" class="spinner-border" role="status" style="display: none;">
@@ -1150,7 +1184,12 @@
 
           // Event listener for form submission
           function processFormData() {
-
+            // Check the value of the local session variable named "ls"
+            var lsValue = sessionStorage.getItem("ls");
+            if (lsValue === "1") {
+                swal("iOTa Scenario Manager", "Changes cannot be made to this scenario because it has been added to the risk register");
+                return; // Exit the function
+            }
             // Prompt the user for confirmation
             var isConfirmed = window.confirm("Are you sure you want to save the scenario data?");
 
@@ -1207,7 +1246,11 @@
             const sle_high =  document.getElementById('txtEventCosts_high').value;
             const sle_median =  document.getElementById('txtEventCosts').value;
             const standards =  document.getElementById('selStandards').value;
-            const aro = document.getElementById('aro').value
+            const aro = document.getElementById('aro').value;
+            const risk_register = document.getElementById('risk_register').checked;
+            const sis_outage = document.getElementById('sisOutageYes').checked;
+            const sis_compromise = document.getElementById('sisIntegrityYes').checked;
+            const safety_hazard = document.getElementById('hazardNature').value;
               // Check if the "yes" option was selected for outage
             const outageSelector = document.getElementById('outageYes'); // Replace 'outageSelectorId' with the actual ID of your Yes/No selector
             const outage = outageSelector.value === "yes" ? "yes" : "no";
@@ -1220,6 +1263,9 @@
             }
             // Create a FormData object
                 const formData = new FormData();
+                formData.append('sis_outage', sis_outage);
+                formData.append('sis_compromise', sis_compromise);
+                formData.append('safety_hazard', safety_hazard);
                 formData.append('scenario', scenario);
                 formData.append('consequence', consequence);
                 formData.append('threatSource', threatSource);
@@ -1266,6 +1312,7 @@
                 formData.append('outageCost', outageCost);
                 formData.append('probability', probability);
                 formData.append('standards', standards);
+                formData.append('risk_register', risk_register);
 
                 // Call the saveOrUpdateCyberPHA function
                 saveOrUpdateCyberPHA(formData);
@@ -1286,10 +1333,11 @@
         <!-- Drop-down select control for the nature of the safety hazard -->
         <label for="hazardNature">Nature of Safety Hazard:</label>
         <select id="hazardNature" name="hazardNature" class="form-control mb-3">
-          <option value="chemical">Chemical</option>
-          <option value="electrical">Electrical</option>
-          <option value="mechanical">Mechanical</option>
-          <option value="radiation">Radiation</option>
+            <option value="">-- Select Hazard --</option>
+          <option value="Chemical">Chemical</option>
+          <option value="Electrical">Electrical</option>
+          <option value="Mechanical">Mechanical</option>
+          <option value="Radiation">Radiation</option>
         </select>
 
         <!-- Yes/no option for SIS Outage -->
@@ -1309,11 +1357,11 @@
         <div class="mb-3">
           <label>SIS Integrity Compromise:</label>
           <div class="form-check">
-            <input class="form-check-input" type="radio" name="sisIntegrity" id="sisIntegrityYes" value="yes">
+            <input class="form-check-input" type="radio" name="sisIntegrityYes" id="sisIntegrityYes" value="yes">
             <label class="form-check-label" for="sisIntegrityYes">Yes</label>
           </div>
           <div class="form-check">
-            <input class="form-check-input" type="radio" name="sisIntegrity" id="sisIntegrityNo" value="no">
+            <input class="form-check-input" type="radio" name="sisIntegrityNo" id="sisIntegrityNo" value="no">
             <label class="form-check-label" for="sisIntegrityNo">No</label>
           </div>
         </div>
@@ -2068,48 +2116,70 @@ document.addEventListener("DOMContentLoaded", function() {
 
 
 function resetformcontrols() {
-    var isConfirmed = window.confirm("Are you sure you want to begin a new scenario and reset the form? All unsaved changes will be lost.");
+  swal({
+    title: "New Scenario",
+    text: "Are you sure you want to begin a new scenario and reset the form? All unsaved changes will be lost.",
+    icon: "warning",
+    buttons: ["No", "Yes"],
+    dangerMode: true,
+  }).then((isConfirmed) => {
     if (isConfirmed) {
-        document.getElementById('txtScenario').value = '';
-        document.getElementById('txtConsequence').value = '';
-        document.getElementById('threat-intelligence').value = "";
-        document.getElementById('risk-category').value = "";
-        document.getElementById('range_safety').value = 0;
-        document.getElementById('range_life').value = 0;
-        document.getElementById('range_production').value = 0;
-        document.getElementById('range_finance').value = 0;
-        document.getElementById('range_reputation').value = 0;
-        document.getElementById('range_environment').value = 0;
-        document.getElementById('range_regulatory').value = 0;
-        document.getElementById('range_data').value = 0;
-        document.getElementById('range_supply').value = 0;
-        document.getElementById('SMrange').value = 0;
-        document.getElementById('MELrange').value = 0;
-        document.getElementById('RRMrange').value = 0;
-        document.getElementById('SArange').value = 0;
-        document.getElementById('MELarange').value = 0;
-        document.getElementById('txtsafetyJustify').value = "";
-        document.getElementById('txtlifeJustify').value = "";
-        document.getElementById('txtproductionJustify').value = "";
-        document.getElementById('txtfinanceJustify').value = "";
-        document.getElementById('txtreputationJustify').value = "";
-        document.getElementById('txtenvironmentJustify').value = "";
-        document.getElementById('txtregulatoryJustify').value = "";
-        document.getElementById('txtdataJustify').value = "";
-        document.getElementById('SMrange').value = 0;
-        document.getElementById('MELrange').value = 0;
-        document.getElementById('RRMrange').value = 0;
-        document.getElementById('SArange').value = 0;
-        document.getElementById('MELarange').value = 0;
-        document.getElementById('txtScenarioAnalysis').value = 0;
-        document.getElementById('txtControlAnalysis').value = 0;
-        const rra = document.getElementById('txtRRa').value = 0;
-        try {
-            clearVulnerabilityTable();
-        } catch (error) {}
+      // Reset form fields here
+      document.getElementById('txtScenario').value = '';
+      document.getElementById('txtConsequence').value = '';
+      document.getElementById('threat-intelligence').value = '';
+      document.getElementById('risk-category').value = '';
+      document.getElementById('range_safety').value = 0;
+      document.getElementById('range_life').value = 0;
+      document.getElementById('range_production').value = 0;
+      document.getElementById('range_finance').value = 0;
+      document.getElementById('range_reputation').value = 0;
+      document.getElementById('range_environment').value = 0;
+      document.getElementById('range_regulatory').value = 0;
+      document.getElementById('range_data').value = 0;
+      document.getElementById('range_supply').value = 0;
+      document.getElementById('SMrange').value = 0;
+      document.getElementById('MELrange').value = 0;
+      document.getElementById('RRMrange').value = 0;
+      document.getElementById('SArange').value = 0;
+      document.getElementById('MELarange').value = 0;
+      document.getElementById('txtsafetyJustify').value = '';
+      document.getElementById('hazardNature').value = '';
+      document.getElementById('sisOutageYes').checked = false;
+      document.getElementById('sisOutageNo').checked = true;
+      document.getElementById('sisIntegrityYes').checked = false;
+      document.getElementById('sisIntegrityNo').checked = true;
+      document.getElementById('txtlifeJustify').value = '';
+      document.getElementById('txtproductionJustify').value = '';
+      document.getElementById('txtfinanceJustify').value = '';
+      document.getElementById('txtreputationJustify').value = '';
+      document.getElementById('txtenvironmentJustify').value = '';
+      document.getElementById('txtregulatoryJustify').value = '';
+      document.getElementById('txtdataJustify').value = '';
+      document.getElementById('SMrange').value = 0;
+      document.getElementById('MELrange').value = 0;
+      document.getElementById('RRMrange').value = 0;
+      document.getElementById('SArange').value = 0;
+      document.getElementById('MELarange').value = 0;
+      document.getElementById('txtScenarioAnalysis').value = 0;
+      document.getElementById('txtControlAnalysis').value = 0;
+      document.getElementById('txtRRa').value = 0;
+      document.getElementById('txtProbability').value = '';
+      document.getElementById('txtEventCosts_low').value = '';
+      document.getElementById('txtEventCosts').value = '';
+      document.getElementById('txtEventCosts_high').value = '';
+      document.getElementById('txtResidualRisk').value = '';
+      sessionStorage.setItem('ls', '0');
 
+      try {
+        clearVulnerabilityTable();
+      } catch (error) {
+        console.error('Error clearing vulnerability table:', error);
+      }
     }
+  });
 }
+
 
  function fillScenario(scenarioId) {
 
@@ -2117,7 +2187,13 @@ function resetformcontrols() {
     $('#threatactions').trigger('change');
     // Send a GET request to the getSingleScenario view
     $.get("{% url 'OTRisk:getSingleScenario' %}", { id: scenarioId }, function(data) {
-
+         if (data.risk_register === true) {
+            sessionStorage.setItem("ls", "1");
+            $('#risk_register').prop('checked', true);
+        } else {
+            sessionStorage.setItem("ls", "0");
+            $('#risk_register').prop('checked', false);
+        }
         // Fill the form fields with the returned data
         $('#txtScenario').val(data.Scenario);
         $('#txtConsequence').val(data.Consequence);
@@ -2187,6 +2263,17 @@ function resetformcontrols() {
         $('#txtproductionJustify').val(data.justifyProduction);
         $('#txtlifeJustify').val(data.justifyLife);
         $('#txtsafetyJustify').val(data.justifySafety)
+        $('#hazardNature').val(data.safety_hazard)
+        if (data.sis_compromise) {
+          $('#sisIntegrityYes').prop('checked', true);
+        } else {
+          $('#sisIntegrityNo').prop('checked', true);
+        }
+        if (data.sis_outage) {
+          $('#sisOutageYes').prop('checked', true);
+        } else {
+          $('#sisOutageNo').prop('checked', true);
+        }
 
         loadVulnerabilityTable(scenarioId);
 

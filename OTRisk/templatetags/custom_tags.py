@@ -11,3 +11,8 @@ def score_color(score):
         return "yellow-bg"
     else:
         return "red-bg"
+
+
+@register.filter(name='get_item')
+def get_item(dictionary, key):
+    return dictionary.get(key)

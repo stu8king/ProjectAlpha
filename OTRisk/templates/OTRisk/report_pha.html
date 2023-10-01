@@ -207,6 +207,9 @@
           <li class="nav-item">
           <a class="nav-link" href="{% url 'OTRisk:ra_actions_view' %}" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Actions</a>
         </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'OTRisk:risk_register' %}" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Risk Register</a>
+        </li>
         <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                 <i class="bi-file-earmark-easel"></i> Reports
@@ -288,7 +291,7 @@
     </div> <!-- table view of existing risk assessments -->
     <div class="col-md-1 bg-black"></div>
 </div>
-<div class="row">
+<div class="row" id="phareports" hidden="hidden">
     <div class="col-md-1 bg-black"></div>
             <div id="reportSection" class="col-md-10 table-wrapper small-font double-border-shadow" >
                 <div id="reportDetails">
@@ -308,7 +311,6 @@
 
                         </div>
                     </div>
-
                     <div class="row">
                          <div class="col-md-1"> </div>
 
@@ -372,7 +374,7 @@
                                     </div>
                                     <div class="card-body ">
                                         <span id="safetySummary"></span>
-                                        <p class="card-text">Overall impact on safety from all scenarios.</p>
+                                        <p class="card-text"></p>
                                     </div>
                                 </div>
                             </div>
@@ -383,7 +385,7 @@
                                     </div>
                                     <div class="card-body">
                                         <span id="chemicalSummary"></span>
-                                        <p class="card-text">Overall impact on danger-to-life from all scenarios.</p>
+                                        <p class="card-text"></p>
                                     </div>
                                 </div>
                         </div>
@@ -394,25 +396,22 @@
                                     </div>
                                     <div class="card-body">
                                        <span id="physicalSummary"></span>
-                                        <p class="card-text">Overall impact on the environment from all scenarios.</p>
+                                        <p class="card-text"></p>
                                     </div>
                                 </div>
                         </div>
                         <div class="col-md-3">
                             <div class="card equal-height-card">
                                 <div class="card-header">
-                                        Facility Other Information
+                                        Facility OT Systems
                                     </div>
                                     <div class="card-body">
                                         <span id="otherSummary"></span>
-                                        <p class="card-text">Overall impact on the environment from all scenarios.</p>
+                                        <p class="card-text"></p>
                                     </div>
                                 </div>
                         </div>
                     </div>
-
-
-                    <div id="scenarioCount">Number of Scenarios: <span></span></div>
 
                     <div id="scenariosContainer"></div>
 
@@ -420,9 +419,11 @@
             </div>
     <div class="col-md-1 bg-black"></div>
 </div>
+
 <script>
 
     function displayReportData(data) {
+        document.getElementById('phareports').removeAttribute('hidden');
         // Populate the report details
         $('#reportTitle').text(data.cyberPHAHeader.title);
         $('#reportDate').text(data.cyberPHAHeader.AssessmentStartDate);
@@ -508,131 +509,63 @@
                         </div>
 
                         <div class="row">
-                            <div class="col-md-1"></div>
-                            <div class="col-md-3">
-                                 <div class="row dark-grey-border-shadow">
-                                        <div class="col-md-6 ">
-
-                                            <div class="card" title="Unmitigated Event Likelihood: the likelihood of the scenario and resulting consequences without any mitigating controls in place">
-                                                <div class="card-header">
-                                                    UEL
-                                                </div>
-                                                <div class="card-body">
-                                                    <p class="card-text">${ getStatusCode(scenario.UEL) }</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                       <div class="col-md-6">
-
-                                            <div class="card" title="Residual Risk Unmitigated: the amount of risk that would exist without any controls or mitigation measures in place">
-                                                <div class="card-header">
-                                                    RRU:
-                                                </div>
-                                                <div class="card-body">
-                                                    <p class="card-text">${ getStatusCode(scenario.RRU) }</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="row dark-grey-border-shadow">
-                                    <div class="col-md-4">
-                                        <div class="card" title="Severity Mitigated: the amount of risk mitigated because of existing controls">
-                                            <div class="card-header">
-                                                Sm:
-                                            </div>
-                                            <div class="card-body">
-                                                <p class="card-text">${ getStatusCode(scenario.SM) }</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <div class="card" title="Mitigated Event Losses: the extent to which existing control mitigate scenario event losses">
-                                            <div class="card-header">
-                                                MEL:
-                                            </div>
-                                            <div class="card-body">
-                                                <p class="card-text">${ getStatusCode(scenario.MEL) }</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <div class="card">
-                                            <div class="card-header">
-                                                RRm:
-                                            </div>
-                                            <div class="card-body">
-                                                <p class="card-text">${ getStatusCode(scenario.RRM) }</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                            <div class="col-md-6">
+                                <canvas id="lineChart${index}" ></canvas>
                             </div>
                             <div class="col-md-3">
-                                 <div class="row dark-grey-border-shadow">
-                                        <div class="col-md-6 ">
-
-                                            <div class="card" title="Severity -Adjusted: the likelihood of the scenario and resulting consequences without any mitigating controls in place">
-                                                <div class="card-header">
-                                                    SA
-                                                </div>
-                                                <div class="card-body">
-                                                    <p class="card-text">${ getStatusCode(scenario.SA) }</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                       <div class="col-md-6">
-
-                                            <div class="card" title="Mitigated Event Loss - Adjusted: Re-assessed event loss after implementation of recommendations">
-                                                <div class="card-header">
-                                                    MELA:
-                                                </div>
-                                                <div class="card-body">
-                                                    <p class="card-text">${ getStatusCode(scenario.MELA) }</p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                </div>
-                            </div>
-
-                            <div class="col-md-1"></div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-2">
+                                <br><br>
                                 <div class="card">
                                     <div class="card-header">
-                                        ARO:
-                                    </div>
-                                    <div class="card-body">
-                                        <p class="card-text">${ scenario.aro }</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-2">
-                                <div class="card">
-                                    <div class="card-header">
-                                        SLE:
+                                        Single Loss Event (SLE) - Likely Case:
                                     </div>
                                     <div class="card-body">
                                         <p class="card-text">${ Number(scenario.sle).toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 }) }</p>
 
                                     </div>
                                 </div>
-                            </div>
-                            <div class="col-md-2">
-                                <div class="card">
+                                 <div class="card">
                                     <div class="card-header">
-                                        ALE:
+                                        Single Loss Event (SLE) - Best case:
                                     </div>
                                     <div class="card-body">
-                                        <p class="card-text">${ Number(scenario.ale).toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 }) }</p>
+                                        <p class="card-text">${ Number(scenario.sle_low).toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 }) }</p>
+
+                                    </div>
+                                </div>
+                                <div class="card">
+                                    <div class="card-header">
+                                        Single Loss Event (SLE) - Worst case:
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="card-text">${ Number(scenario.sle_high).toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 }) }</p>
 
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-md-6"></div>
+                            <div class="col-md-3">
+                                <br><br>
+                                <div class="card">
+                                    <div class="card-header">
+                                        Production Outage:
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="card-text">${ scenario.outage }</p>
+
+                                    </div>
+                                </div>
+                                <div class="card">
+                                    <div class="card-header">
+                                        SIS Outage:
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="card-text">${ scenario.sis_outage ? 'Yes' : 'No' }</p>
+
+                                    </div>
+                                </div>
+                            </div>
+
                         </div>
+
                         <div class="row">
 
                             <div class="col-md-4">
@@ -641,7 +574,7 @@
                                         Safety Impact: ${ scenario.impactSafety }/10
                                     </div>
                                     <div class="card-body">
-                                        <p class="card-text">${ scenario.justifySafety }</p>
+                                        <p class="card-text">${ scenario.justifySafety || 'No information entered' }</p>
                                     </div>
                                 </div>
                             </div>
@@ -651,7 +584,7 @@
                                         Danger-to-life Impact: ${ scenario.impactLife }/10
                                     </div>
                                     <div class="card-body">
-                                        <p class="card-text">${ scenario.justifyLife }</p>
+                                        <p class="card-text">${ scenario.justifyLife || 'No information entered' }</p>
                                     </div>
                                 </div>
                             </div>
@@ -661,7 +594,7 @@
                                         Environment Impact: ${ scenario.impactEnvironment }/10
                                     </div>
                                     <div class="card-body">
-                                        <p class="card-text">${ scenario.justifyEnvironment }</p>
+                                        <p class="card-text">${ scenario.justifyEnvironment || 'No information entered' }</p>
                                     </div>
                                 </div>
                             </div>
@@ -673,7 +606,7 @@
                                         Production Impact: ${ scenario.impactProduction }/10
                                     </div>
                                     <div class="card-body">
-                                        <p class="card-text">${ scenario.justifyProduction }</p>
+                                        <p class="card-text">${ scenario.justifyProduction || 'No information entered' }</p>
                                     </div>
                                 </div>
                             </div>
@@ -683,7 +616,7 @@
                                         Financial Impact: ${ scenario.impactFinance }/10
                                     </div>
                                     <div class="card-body">
-                                        <p class="card-text">${ scenario.justifyFinancial }</p>
+                                        <p class="card-text">${ scenario.justifyFinancial || 'No information entered' }</p>
                                     </div>
                                 </div>
                             </div>
@@ -693,7 +626,7 @@
                                         Reputation Impact: ${ scenario.impactReputation }/10
                                     </div>
                                     <div class="card-body">
-                                        <p class="card-text">${ scenario.justifyReputation }</p>
+                                        <p class="card-text">${ scenario.justifyReputation || 'No information entered' }</p>
                                     </div>
                                 </div>
                             </div>
@@ -706,7 +639,7 @@
                                         Supply Chain Impact: ${ scenario.impactSupply }/10
                                     </div>
                                     <div class="card-body">
-                                        <p class="card-text">${ scenario.justifySupply }</p>
+                                        <p class="card-text">${ scenario.justifySupply || 'No information entered' }</p>
                                     </div>
                                 </div>
                             </div>
@@ -716,19 +649,26 @@
                                         Data Impact: ${ scenario.impactData }/10
                                     </div>
                                     <div class="card-body">
-                                        <p class="card-text">${ scenario.justifyData }</p>
+                                        <p class="card-text">${ scenario.justifyData || 'No information entered' }</p>
                                     </div>
                                 </div>
                             </div>
                              <div class="col-md-4">
-
+                                    <div class="card">
+                                    <div class="card-header">
+                                        Regulatory Impact: ${ scenario.impactRegulation }/10
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="card-text">${ scenario.justifyRegulation || 'No information entered' }</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <div class="row">
                             <div class="col-md-6" style="display: flex; flex: 1;">
                                 <div class="card equal-height-scenario">
                                     <div class="card-header">
-                                        Alignment with Standards
+                                        Alignment with ${ scenario.standards }
                                     </div>
                                     <div class="card-body">
                                         <p class="card-text">${
@@ -807,6 +747,52 @@
                     }
                 }
             });
+
+            //start of code for UEL, RRu, Sm, MEL, RRm, SA, MELA
+            // Generate line chart for the scenario
+            const lineChartData = {
+                labels: ['UEL', 'RRu', 'Sm', 'MEL', 'RRm', 'SA', 'MELA'],
+                datasets: [{
+                    label: '',  // Comment out or remove this line
+                    data: [
+                        scenario.UEL,
+                        scenario.RRU,
+                        scenario.SM,
+                        scenario.MEL,
+                        scenario.RRM,
+                        scenario.SA,
+                        scenario.MELA
+                    ],
+                    borderColor: 'rgba(75, 192, 192, 1)', // Line color
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)', // Fill color
+                    borderWidth: 2, // Line width
+                }],
+            };
+
+            // Chart configuration
+            const lineChartConfig = {
+                type: 'line',
+                data: lineChartData,
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                        },
+                    },
+                    plugins: {
+                        legend: {
+                            display: false,
+                        }
+                    }
+
+                }
+            };
+
+            // Create the line chart for the scenario
+            const lineChartCanvas = document.getElementById(`lineChart${index}`);
+            new Chart(lineChartCanvas, lineChartConfig);
+                        //end of new code
+
         });
     }
 
@@ -968,8 +954,6 @@ function displayCostImpactChart(data) {
         }
     });
 }
-
-
 
 function getStatusCode(uelValue) {
     if (uelValue < 2) {

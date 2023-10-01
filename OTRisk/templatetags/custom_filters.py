@@ -4,6 +4,14 @@ import json
 register = template.Library()
 
 
+@register.filter(name='to_int')
+def to_int(value):
+    try:
+        return int(value.strip('%'))
+    except ValueError:
+        return 0
+
+
 @register.filter
 def jsonify(value):
     return json.loads(value)

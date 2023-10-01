@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'two_factor',
     'two_factor.plugins.phonenumber',  # <- if you want phone number capability.
     'two_factor.plugins.email',  # <- if you want email capability.
+    'django.contrib.humanize',
 ]
 
 MIDDLEWARE = [
@@ -176,4 +177,6 @@ STRIPE_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY')
 # settings.py
 SESSION_COOKIE_AGE = 3600  # 1 hour in seconds
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+RECAPTCHA_PUBLIC_KEY = '6LcktGooAAAAAJVgzqc3HVpK1kY6UXsyfUYmfiJJ'
+RECAPTCHA_PRIVATE_KEY = '6LcktGooAAAAABqHVJDBKHPu_9iyeDJLCaeow258'
 

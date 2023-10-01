@@ -7,8 +7,8 @@ from OTRisk.models.Model_Scenario import tblConsequence
 from OTRisk.models.questionnairemodel import Questionnaire, FacilityType
 from OTRisk.models.ThreatAssessment import ThreatAssessment
 from OTRisk.models.raw import RAWorksheet, RAWorksheetScenario, RAActions, MitreICSMitigations
-from django.db.models import F, Count, Avg
-
+from django.db.models import F, Count, Avg, Case, When, Value, CharField, Sum
+from django.db.models.functions import Ceil
 from accounts.views import get_client_ip
 from django.http import JsonResponse, HttpResponse, HttpResponseForbidden
 from django.utils import timezone
@@ -356,9 +356,11 @@ def scenarioreport(request):
 
 @login_required()
 def save_or_update_cyberpha(request):
+
     if request.method == 'POST':
         # Get the form data
         cyberphaid = request.POST.get('cyberpha')
+        cyberpha_header = tblCyberPHAHeader.objects.get(pk=cyberphaid)
         scenario = request.POST.get('scenario')
         threatclass = request.POST.get('threatSource')
         threataction = request.POST.get('threatAction')
@@ -400,10 +402,20 @@ def save_or_update_cyberpha(request):
         aro = request.POST.get('aro')
         ale = request.POST.get('ale')
         outage = request.POST.get('outage')
+        if outage:  # Check if outage is not None or an empty string
+            outage = outage[0].upper() + outage[1:]
         outageDuration = request.POST.get('outageDuration')
         outageCost = request.POST.get('outageCost')
         probability = request.POST.get('probability')
         standards = request.POST.get('standards')
+        risk_register_str = request.POST.get('risk_register')
+        risk_register_bool = risk_register_str.lower() == "true"
+        sis_outage_str = request.POST.get('sis_outage')
+        sis_compromise_str = request.POST.get('sis_compromise')
+        sis_outage = sis_outage_str.lower() == 'true'
+        sis_compromise = sis_compromise_str.lower() == 'true'
+        safety_hazard = request.POST.get('safety_hazard')
+
         if outageDuration in ('NaN', ''):
             outageDuration = 0
         else:
@@ -418,7 +430,9 @@ def save_or_update_cyberpha(request):
 
         # Initialize sle to a default value
         sle = 0
-
+        sle_medium = 0
+        sle_low = 0
+        sle_high = 0
         # Check if sle_string is not None and not 'NaN'
         if sle_low_string and sle_low_string != 'NaN':
             try:
@@ -447,7 +461,7 @@ def save_or_update_cyberpha(request):
         deleted = 0
 
         cyberpha_entry, created = tblCyberPHAScenario.objects.update_or_create(
-            CyberPHA=cyberphaid,
+            CyberPHA=cyberpha_header,
             Scenario=scenario,
             ThreatClass=threatclass,
             defaults={
@@ -497,6 +511,10 @@ def save_or_update_cyberpha(request):
                 'outageCost': outageCost,
                 'probability': probability,
                 'standards': standards,
+                'risk_register': risk_register_bool,
+                'sis_outage': sis_outage,
+                'sis_compromise': sis_compromise,
+                'safety_hazard': safety_hazard,
                 'timestamp': timezone.now()
             }
         )
@@ -1410,3 +1428,97 @@ def save_control_assessment(request):
     # Handle the case when the request method is not POST
     form = ControlAssessmentForm()
     return render(request, 'iotaphamanager.html', {'form': form})
+
+
+def risk_register(request):
+    weights = {
+        'impactSafety': 0.2,
+        'impactDanger': 0.15,
+        'impactProduction': 0.15,
+        'impactFinance': 0.1,
+        'impactReputation': 0.1,
+        'impactEnvironment': 0.1,
+        'impactRegulation': 0.05,
+        'impactData': 0.1,
+        'impactSupply': 0.05
+    }
+    weighted_sum = sum(F(impact) * weight for impact, weight in weights.items())
+
+    # Fetch the data and the computed score
+    data = tblCyberPHAScenario.objects.filter(risk_register=True).select_related('CyberPHA').annotate(
+        business_impact_analysis_score=Ceil(weighted_sum * 10),  # Multiply by 10 to scale the score to 100
+        business_impact_analysis_code=Case(
+            When(business_impact_analysis_score__lt=20, then=Value('Low')),
+            When(business_impact_analysis_score__lt=40, then=Value('Low/Medium')),
+            When(business_impact_analysis_score__lt=60, then=Value('Medium')),
+            When(business_impact_analysis_score__lt=80, then=Value('Medium/High')),
+            default=Value('High'),
+            output_field=CharField()
+        )
+    ).values(
+        'CyberPHA__FacilityName',
+        'CyberPHA__AssessmentUnit',
+        'Scenario',
+        'RRa',
+        'CyberPHA__AssessmentStartDate',
+        'CyberPHA__AssessmentEndDate',
+        'probability',
+        'sle',
+        'sle_low',
+        'sle_high',
+        'business_impact_analysis_score',  # Include the computed score in the returned data
+        'business_impact_analysis_code'  # Include the computed code in the returned data
+    )
+    sle_sum = tblCyberPHAScenario.objects.filter(risk_register=True).aggregate(Sum('sle'))
+    sle_low_sum = tblCyberPHAScenario.objects.filter(risk_register=True).aggregate(Sum('sle_low'))
+    sle_high_sum = tblCyberPHAScenario.objects.filter(risk_register=True).aggregate(Sum('sle_high'))
+
+    # Convert the probability field to an integer for each item in data
+    for item in data:
+        try:
+            item['probability'] = int(item['probability'].strip('%'))
+        except ValueError:
+            item['probability'] = 0
+
+        # Define likelihoods and probabilities
+    likelihoods = ['Low', 'Low/Medium', 'Medium', 'Medium/High', 'High']
+    probabilities = ['Low', 'Low/Medium', 'Medium', 'Medium/High', 'High']
+
+    # Create a dictionary to store the counts
+    heatmap_counts = {
+        'Low': {'Low': 0, 'Low/Medium': 0, 'Medium': 0, 'Medium/High': 0, 'High': 0},
+        'Low/Medium': {'Low': 0, 'Low/Medium': 0, 'Medium': 0, 'Medium/High': 0, 'High': 0},
+        'Medium': {'Low': 0, 'Low/Medium': 0, 'Medium': 0, 'Medium/High': 0, 'High': 0},
+        'Medium/High': {'Low': 0, 'Low/Medium': 0, 'Medium': 0, 'Medium/High': 0, 'High': 0},
+        'High': {'Low': 0, 'Low/Medium': 0, 'Medium': 0, 'Medium/High': 0, 'High': 0}
+    }
+
+    # Update the counts based on the data
+    for item in data:
+        prob_category = ''
+        if item['probability'] < 25:
+            prob_category = 'Low'
+        elif item['probability'] < 50:
+            prob_category = 'Low/Medium'
+        elif item['probability'] < 75:
+            prob_category = 'Medium'
+        else:
+            prob_category = 'High'
+
+        heatmap_counts[item['business_impact_analysis_code']][prob_category] += 1
+
+    heatmap_data = []
+    for likelihood in likelihoods:
+        for probability in probabilities:
+            heatmap_data.append({
+                'likelihood': likelihood,
+                'probability': probability,
+                'count': heatmap_counts[likelihood][probability]
+            })
+
+    return render(request, 'risk_register.html', {
+        'data': data,
+        'heatmap_data': heatmap_data,
+        'sle_sum': sle_sum['sle__sum'],
+        'sle_low_sum': sle_low_sum['sle_low__sum'],
+        'sle_high_sum': sle_high_sum['sle_high__sum'],})

@@ -104,6 +104,9 @@
           <li class="nav-item">
           <a class="nav-link" href="{% url 'OTRisk:ra_actions_view' %}" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Actions</a>
         </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'OTRisk:risk_register' %}" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Risk Register</a>
+        </li>
         <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                 <i class="bi-file-earmark-easel"></i> Reports
@@ -309,171 +312,374 @@
         <div class="col-md-1 "></div>
     </div> <!-- dark grey stripe -->
 <div class="row">
-    <div class="col-md-1" style="background-color: black"></div>
-    <div class="col-md-1" style="background-color: white"></div>
-    <div class="col-md-6" style="background-color: lightgrey"><h4 style="text-align: center">Risk Assessment Scenario Summary</h4></div>
-    <div class="col-md-2" style="background-color: white"></div>
-    <div class="col-md-1" style="background-color: white"></div>
-    <div class="col-md-1"></div>
+    <div class="col-md-1 "></div>
+    <div class="col-md-1 " style="background-color: white"></div>
+    <div class="col-md-8" style="background-color: darkgray">
+        <ul class="nav nav-tabs" id="myTabs" role="tablist">
+            <li class="nav-item">
+                <a class="nav-link active" id="pha-tab" data-toggle="tab" href="#tab_pha" role="tab" aria-controls="tab_pha" aria-selected="true">Cyber-PHA</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="qraw-tab" data-toggle="tab" href="#tab_qraw" role="tab" aria-controls="tab_qraw" aria-selected="false">QRAW</a>
+            </li>
+        </ul>
+    </div>
+    <div class="col-md-1 " style="background-color: white"></div>
+    <div class="col-md-1 "></div>
 </div>
-<div class="row" style="height: 400px">
-    <div class="col-md-1"></div>
-    <div class="col-md-1" style="background-color: white"></div>
-        <!-- Doughnut Safety Chart -->
-     <div class="col-md-2" style="background-color: lightgrey">
+<div class="tab-content" id="myTabContent">
+    <!-- PHA Tab Content -->
+    <div class="tab-pane fade show active" id="tab_pha" role="tabpanel" aria-labelledby="pha-tab">
+    <div id="tab_pha">
+        <div class="row">
+        <div class="col-md-1" style="background-color: black"></div>
+        <div class="col-md-1" style="background-color: white"></div>
+        <div class="col-md-6" style="background-color: lightgrey"><h4 style="text-align: center">CyberPHA Scenario Summary</h4></div>
+        <div class="col-md-2" style="background-color: white"><div class="row">
+                <h5 style="text-align: center; font-weight: lighter; color: darkslategrey; " > CyberPHA Threat Classes: </h5>
+            </div></div>
+        <div class="col-md-1" style="background-color: white"></div>
+        <div class="col-md-1"></div>
+    </div>
+
+        <div class="row" style="height: 400px">
+            <div class="col-md-1"></div>
+            <div class="col-md-1" style="background-color: white"></div>
+
+            <div class="col-md-2" style="background-color: lightgrey">
+                <div class="row" style="height: 1px">
+                    <h5 style="text-align: center; font-weight: lighter; color: darkslategrey; " > Safety: </h5>
+                </div>
+                <div class="row">
+                    <div class="d-flex justify-content-center">
+                        <div id="phasafetyChart"><br></div>
+                    </div>
+                </div>
+            </div>
+            <!-- Doughnut Danger Chart -->
+            <div class="col-md-2" style="background-color: lightgrey">
+                <div class="row" style="height: 1px">
+                    <h5 style="text-align: center; font-weight: lighter; color: darkslategrey; " > Danger to Life: </h5>
+                </div>
+                <div class="row">
+                    <div class="d-flex justify-content-center">
+                        <div id="phadangerChart"><br></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Environment Chart -->
+            <div class="col-md-2" style="background-color: lightgrey">
+                <div class="row" style="height: 1px">
+                    <h5 style="text-align: center; font-weight: lighter; color: darkslategrey; " > Environment: </h5>
+                </div>
+                <div class="row">
+                    <div class="d-flex justify-content-center">
+                        <div id="phaenvironmentChart"><br></div>
+                    </div>
+                </div>
+            </div>
+            <!-- end of div for doughnut safety chart -->
+            <div class="col-md-2" style="background-color: white">
+
+               <div class="row justify-content-center">
+                <div class="col-md-12">
+                <div class="card shadow-lg">
+                    <div class="card-body">
+                        <table id="dataTable" class="table table-bordered table-hover small-font">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th>Threat</th>
+                                    <th>Scenarios</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for pha_threat_class in pha_threat_class %}
+                                    <tr>
+                                        <td>{{ pha_threat_class.ThreatClass }}</td>
+                                        <td>{{ pha_threat_class.total }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+            </div>
+            <div class="col-md-1" style="background-color: white"></div>
+            <div class="col-md-1"></div>
+        </div>
+        <div class="row" style="height: 400px">
+            <div class="col-md-1"></div>
+            <div class="col-md-1" style="background-color: white"></div>
+
+            <div class="col-md-2" style="background-color: lightgrey">
+                <div class="row" style="height: 1px">
+                    <h5 style="text-align: center; font-weight: lighter; color: darkslategrey; " > Finance: </h5>
+                </div>
+                <div class="row">
+                    <div class="d-flex justify-content-center">
+                        <div id="phafinanceChart"><br></div>
+                    </div>
+                </div>
+            </div>
+            <!-- Doughnut Danger Chart -->
+            <div class="col-md-2" style="background-color: lightgrey">
+                <div class="row" style="height: 1px">
+                    <h5 style="text-align: center; font-weight: lighter; color: darkslategrey; " > Operations: </h5>
+                </div>
+                <div class="row">
+                    <div class="d-flex justify-content-center">
+                        <div id="phaproductionChart"><br></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Environment Chart -->
+            <div class="col-md-2" style="background-color: lightgrey">
+                <div class="row" style="height: 1px">
+                    <h5 style="text-align: center; font-weight: lighter; color: darkslategrey; " > Reputation: </h5>
+                </div>
+                <div class="row">
+                    <div class="d-flex justify-content-center">
+                        <div id="phareputationChart"><br></div>
+                    </div>
+                </div>
+            </div>
+            <!-- end of div for doughnut safety chart -->
+            <div class="col-md-2"></div>
+            <div class="col-md-1" style="background-color: white"></div>
+            <div class="col-md-1"></div>
+        </div>
+        <div class="row" style="height: 400px">
+            <div class="col-md-1"></div>
+            <div class="col-md-1" style="background-color: white"></div>
+
+            <div class="col-md-2" style="background-color: lightgrey">
+                <div class="row" style="height: 1px">
+                    <h5 style="text-align: center; font-weight: lighter; color: darkslategrey; " > Regulation: </h5>
+                </div>
+                <div class="row">
+                    <div class="d-flex justify-content-center">
+                        <div id="pharegulationChart"><br></div>
+                    </div>
+                </div>
+            </div>
+            <!-- Doughnut Danger Chart -->
+            <div class="col-md-2" style="background-color: lightgrey">
+                <div class="row" style="height: 1px">
+                    <h5 style="text-align: center; font-weight: lighter; color: darkslategrey; " > Data and IP: </h5>
+                </div>
+                <div class="row">
+                    <div class="d-flex justify-content-center">
+                        <div id="phadataChart"><br></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Environment Chart -->
+            <div class="col-md-2" style="background-color: lightgrey">
+                <div class="row" style="height: 1px">
+                    <h5 style="text-align: center; font-weight: lighter; color: darkslategrey; " > Supply Chain: </h5>
+                </div>
+                <div class="row">
+                    <div class="d-flex justify-content-center">
+                        <div id="phasupplyChart"><br></div>
+                    </div>
+                </div>
+            </div>
+            <!-- end of div for doughnut safety chart -->
+            <div class="col-md-2"></div>
+            <div class="col-md-1" style="background-color: white"></div>
+            <div class="col-md-1"></div>
+        </div>
+
+
+
+
+</div>
+    </div>
+    <div class="tab-pane fade" id="tab_qraw" role="tabpanel" aria-labelledby="qraw-tab">
+
+    <div id="tab_qraw">
+    <div class="row">
+        <div class="col-md-1" style="background-color: black"></div>
+        <div class="col-md-1" style="background-color: white"></div>
+        <div class="col-md-6" style="background-color: lightgrey"><h4 style="text-align: center">Risk Assessment Scenario Summary</h4></div>
+        <div class="col-md-2" style="background-color: white"></div>
+        <div class="col-md-1" style="background-color: white"></div>
+        <div class="col-md-1"></div>
+    </div>
+    <div class="row" style="height: 400px">
+        <div class="col-md-1"></div>
+        <div class="col-md-1" style="background-color: white"></div>
+            <!-- Doughnut Safety Chart -->
+         <div class="col-md-2" style="background-color: lightgrey">
+                <div class="row" style="height: 1px">
+                    <h5 style="text-align: center; font-weight: lighter; color: darkslategrey; " > Safety: </h5>
+                </div>
+                <div class="row">
+                        <div class="d-flex justify-content-center">
+
+                            <div id="safetyChart"><br></div>
+                        </div>
+                </div>
+
+        </div>
+        <!-- end of div for doughnut safety chart -->
+        <!-- Doughnut Danger Chart -->
+        <div class="col-md-2" style="background-color: lightgrey">
             <div class="row" style="height: 1px">
-                <h5 style="text-align: center; font-weight: lighter; color: darkslategrey; " > Safety: </h5>
+                <h5 style="text-align: center; font-weight: lighter; color: darkslategrey; " > Danger to Life: </h5>
             </div>
             <div class="row">
-                    <div class="d-flex justify-content-center">
-
-                        <div id="safetyChart"><br></div>
-                    </div>
-            </div>
-
-    </div>
-    <!-- end of div for doughnut safety chart -->
-    <!-- Doughnut Danger Chart -->
-    <div class="col-md-2" style="background-color: lightgrey">
-        <div class="row" style="height: 1px">
-            <h5 style="text-align: center; font-weight: lighter; color: darkslategrey; " > Danger to Life: </h5>
-        </div>
-        <div class="row">
-            <div class="d-flex justify-content-center">
-                <div id="dangerChart"><br></div>
+                <div class="d-flex justify-content-center">
+                    <div id="dangerChart"><br></div>
+                </div>
             </div>
         </div>
-    </div>
 
-                <!-- Environment Chart -->
-     <div class="col-md-2" style="background-color: lightgrey">
+                    <!-- Environment Chart -->
+         <div class="col-md-2" style="background-color: lightgrey">
 
-     <div class="row" style="height: 1px">
-        <h5 style="text-align: center; font-weight: lighter; color: darkslategrey; " > Environment: </h5>
-     </div>
-     <div class="row">
-        <div class="d-flex justify-content-center">
-
-            <div id="environmentChart"><br></div>
-        </div>
-    </div>
-
-    </div>
-    <!-- end of div for doughnut safety chart -->
-
-    <div class="col-md-2" style="background-color: white">
-        <div class="row">
-                <h5 style="text-align: center; font-weight: lighter; color: darkslategrey; " > Scenario Risk Rating: </h5>
-        </div>
-        <br>
-        <div class="row">
-        <!-- Canvas for StatusFlag Chart -->
-        <div>
-            <div id="riskStatus"></div>
-         </div>
-        </div>
-    </div>
-
-    <div class="col-md-1" style="background-color: white"></div>
-    <div class="col-md-1"></div>
-
-</div>
-
-<div class="row">
-    <div class="col-md-1 "></div>
-    <div class="col-md-10 ">
-    <div class="row" style="background-color: white; height: 10px"></div>
-    </div>
-    <div class="col-md-1 "></div>
-</div>  <!-- dark grey stripe -->
-
-<div class="row">
-    <div class="col-md-1" style="background-color: black"></div>
-    <div class="col-md-1" style="background-color: white"></div>
-    <div class="col-md-6" style="background-color: lightgrey"><h4 style="text-align: center">CyberPHA Scenario Summary</h4></div>
-    <div class="col-md-2" style="background-color: white"><div class="row">
-            <h5 style="text-align: center; font-weight: lighter; color: darkslategrey; " > CyberPHA Threat Classes: </h5>
-        </div></div>
-    <div class="col-md-1" style="background-color: white"></div>
-    <div class="col-md-1"></div>
-</div>
-
-<div class="row" style="height: 400px">
-    <div class="col-md-1"></div>
-    <div class="col-md-1" style="background-color: white"></div>
-
-    <div class="col-md-2" style="background-color: lightgrey">
-        <div class="row" style="height: 1px">
-            <h5 style="text-align: center; font-weight: lighter; color: darkslategrey; " > Safety: </h5>
-        </div>
-        <div class="row">
-            <div class="d-flex justify-content-center">
-                <div id="phasafetyChart"><br></div>
-            </div>
-        </div>
-    </div>
-    <!-- Doughnut Danger Chart -->
-    <div class="col-md-2" style="background-color: lightgrey">
-        <div class="row" style="height: 1px">
-            <h5 style="text-align: center; font-weight: lighter; color: darkslategrey; " > Danger to Life: </h5>
-        </div>
-        <div class="row">
-            <div class="d-flex justify-content-center">
-                <div id="phadangerChart"><br></div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Environment Chart -->
-    <div class="col-md-2" style="background-color: lightgrey">
-        <div class="row" style="height: 1px">
+         <div class="row" style="height: 1px">
             <h5 style="text-align: center; font-weight: lighter; color: darkslategrey; " > Environment: </h5>
-        </div>
-        <div class="row">
+         </div>
+         <div class="row">
             <div class="d-flex justify-content-center">
-                <div id="phaenvironmentChart"><br></div>
+
+                <div id="environmentChart"><br></div>
             </div>
         </div>
+
+        </div>
+        <!-- end of div for doughnut safety chart -->
+
+        <div class="col-md-2" style="background-color: white">
+            <div class="row">
+                    <h5 style="text-align: center; font-weight: lighter; color: darkslategrey; " > Scenario Risk Rating: </h5>
+            </div>
+            <br>
+            <div class="row">
+            <!-- Canvas for StatusFlag Chart -->
+            <div>
+                <div id="riskStatus"></div>
+             </div>
+            </div>
+        </div>
+
+        <div class="col-md-1" style="background-color: white"></div>
+        <div class="col-md-1"></div>
+
     </div>
-    <!-- end of div for doughnut safety chart -->
 
+    <div class="row" style="height: 400px">
+        <div class="col-md-1"></div>
+        <div class="col-md-1" style="background-color: white"></div>
+            <!-- Doughnut Safety Chart -->
+         <div class="col-md-2" style="background-color: lightgrey">
+                <div class="row" style="height: 1px">
+                    <h5 style="text-align: center; font-weight: lighter; color: darkslategrey; " > Finance: </h5>
+                </div>
+                <div class="row">
+                        <div class="d-flex justify-content-center">
 
+                            <div id="financeChart"><br></div>
+                        </div>
+                </div>
 
-    <div class="col-md-2" style="background-color: white">
-
-       <div class="row justify-content-center">
-    <div class="col-md-12">
-        <div class="card shadow-lg">
-            <div class="card-body">
-                <table id="dataTable" class="table table-bordered table-hover small-font">
-                    <thead class="thead-light">
-                        <tr>
-                            <th>Threat</th>
-                            <th>Scenarios</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for pha_threat_class in pha_threat_class %}
-                            <tr>
-                                <td>{{ pha_threat_class.ThreatClass }}</td>
-                                <td>{{ pha_threat_class.total }}</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+        </div>
+        <!-- end of div for doughnut safety chart -->
+        <!-- Doughnut Danger Chart -->
+        <div class="col-md-2" style="background-color: lightgrey">
+            <div class="row" style="height: 1px">
+                <h5 style="text-align: center; font-weight: lighter; color: darkslategrey; " > Operations: </h5>
+            </div>
+            <div class="row">
+                <div class="d-flex justify-content-center">
+                    <div id="productionChart"><br></div>
+                </div>
             </div>
         </div>
+         <div class="col-md-2" style="background-color: lightgrey">
+
+         <div class="row" style="height: 1px">
+            <h5 style="text-align: center; font-weight: lighter; color: darkslategrey; " > Reputation: </h5>
+         </div>
+         <div class="row">
+            <div class="d-flex justify-content-center">
+
+                <div id="reputationChart"><br></div>
+            </div>
+        </div>
+
+        </div>
+        <div class="col-md-2" style="background-color: white">
+
+        </div>
+
+        <div class="col-md-1" style="background-color: white"></div>
+        <div class="col-md-1"></div>
+
+    </div>
+
+    <div class="row" style="height: 400px">
+        <div class="col-md-1"></div>
+        <div class="col-md-1" style="background-color: white"></div>
+            <!-- Doughnut Safety Chart -->
+         <div class="col-md-2" style="background-color: lightgrey">
+                <div class="row" style="height: 1px">
+                    <h5 style="text-align: center; font-weight: lighter; color: darkslategrey; " > Regulation: </h5>
+                </div>
+                <div class="row">
+                        <div class="d-flex justify-content-center">
+
+                            <div id="regulationChart"><br></div>
+                        </div>
+                </div>
+
+        </div>
+        <!-- end of div for doughnut safety chart -->
+        <!-- Doughnut Danger Chart -->
+        <div class="col-md-2" style="background-color: lightgrey">
+            <div class="row" style="height: 1px">
+                <h5 style="text-align: center; font-weight: lighter; color: darkslategrey; " > Data and IP: </h5>
+            </div>
+            <div class="row">
+                <div class="d-flex justify-content-center">
+                    <div id="dataChart"><br></div>
+                </div>
+            </div>
+        </div>
+         <div class="col-md-2" style="background-color: lightgrey">
+
+         <div class="row" style="height: 1px">
+            <h5 style="text-align: center; font-weight: lighter; color: darkslategrey; " > Supply Chain: </h5>
+         </div>
+         <div class="row">
+            <div class="d-flex justify-content-center">
+
+                <div id="supplyChart"><br></div>
+            </div>
+        </div>
+
+        </div>
+        <div class="col-md-2" style="background-color: white">
+
+        </div>
+
+        <div class="col-md-1" style="background-color: white"></div>
+        <div class="col-md-1"></div>
+
+    </div>
+
+</div>
     </div>
 </div>
 
-
-    </div>
-
-
-
-    <div class="col-md-1" style="background-color: white"></div>
-    <div class="col-md-1"></div>
-</div>
 
 <div class="row">
         <div class="col-md-1 "></div>
@@ -695,17 +901,43 @@ function createDoughnutChart(containerId, data, colorAttribute) {
 let doughnutData = {{ doughnut_data|safe }};
 let dangerData = {{ life_scores_list|safe }};
 let environmentData = {{ environment_scores_list|safe }};
+let financeData = {{ financial_scores_list|safe }};
+let productionData = {{ production_scores_list|safe }};
+let reputationData = {{ reputation_scores_list|safe }};
+let regulationData = {{ regulatory_scores_list|safe }};
+let dataData = {{ data_scores_list|safe }};
+let supplyData = {{ supply_scores_list|safe }};
 let phaSafetyData = {{ pha_safety_scores_list|safe }};
 let phaDangerData = {{ pha_danger_scores_list|safe  }};
 let phaEnvironmentData = {{ pha_environment_scores_list|safe  }};
+let phaFinanceData = {{ pha_finance_scores_list|safe }};
+let phaProductionData = {{ pha_production_scores_list|safe }};
+let phaReputationData = {{ pha_reputation_scores_list|safe }};
+let phaRegulationData = {{ pha_regulation_scores_list|safe }};
+let phaDataData = {{ pha_data_scores_list|safe }};
+let phaSupplyData = {{ pha_supply_scores_list|safe }};
 
 createDoughnutChart("#safetyChart", doughnutData, 'SafetyScore');
 createDoughnutChart("#dangerChart", dangerData, 'lifeScore');
 createDoughnutChart("#environmentChart", environmentData, 'environmentScore');
+createDoughnutChart("#financeChart", financeData, 'FinancialScore');
+createDoughnutChart("#productionChart", productionData, 'productionScore');
+createDoughnutChart("#reputationChart", reputationData, 'ReputationScore');
+createDoughnutChart("#regulationChart", regulationData, 'regulatoryScore');
+createDoughnutChart("#dataChart", dataData, 'DataScore');
+createDoughnutChart("#supplyChart", supplyData, 'SupplyChainScore');
+
+
+
 createDoughnutChart("#phasafetyChart", phaSafetyData, 'impactSafety');
 createDoughnutChart("#phadangerChart", phaDangerData, 'impactDanger');
 createDoughnutChart("#phaenvironmentChart", phaEnvironmentData, 'impactEnvironment');
-
+createDoughnutChart("#phafinanceChart", phaFinanceData, 'impactFinance');
+createDoughnutChart("#phaproductionChart", phaProductionData, 'impactProduction');
+createDoughnutChart("#phareputationChart", phaReputationData, 'impactReputation');
+createDoughnutChart("#pharegulationChart", phaRegulationData, 'impactRegulation');
+createDoughnutChart("#phadataChart", phaDataData, 'impactData');
+createDoughnutChart("#phasupplyChart", phaSupplyData, 'impactSupply');
 
     $(document).ready(function() {
         $('#dataTable').DataTable({

@@ -88,6 +88,48 @@ def dashboardhome(request):
         .order_by('impactEnvironment')
     )
 
+    pha_finance_scores_list = list(
+        tblCyberPHAScenario.objects.filter(userID__in=organization_users)
+        .values('impactFinance')
+        .annotate(count=Count('ID'))
+        .order_by('impactFinance')
+    )
+
+    pha_production_scores_list = list(
+        tblCyberPHAScenario.objects.filter(userID__in=organization_users)
+        .values('impactProduction')
+        .annotate(count=Count('ID'))
+        .order_by('impactProduction')
+    )
+
+    pha_reputation_scores_list = list(
+        tblCyberPHAScenario.objects.filter(userID__in=organization_users)
+        .values('impactReputation')
+        .annotate(count=Count('ID'))
+        .order_by('impactReputation')
+    )
+
+    pha_regulation_scores_list = list(
+        tblCyberPHAScenario.objects.filter(userID__in=organization_users)
+        .values('impactRegulation')
+        .annotate(count=Count('ID'))
+        .order_by('impactRegulation')
+    )
+
+    pha_data_scores_list = list(
+        tblCyberPHAScenario.objects.filter(userID__in=organization_users)
+        .values('impactData')
+        .annotate(count=Count('ID'))
+        .order_by('impactData')
+    )
+
+    pha_supply_scores_list = list(
+        tblCyberPHAScenario.objects.filter(userID__in=organization_users)
+        .values('impactSupply')
+        .annotate(count=Count('ID'))
+        .order_by('impactSupply')
+    )
+
     pha_threat_class = (
         tblCyberPHAScenario.objects.filter(userID__in=organization_users)
         .values('ThreatClass')
@@ -97,6 +139,31 @@ def dashboardhome(request):
     environment_scores_list = list(
         RAWorksheetScenario.objects.filter(RAWorksheetID__organization=user_organization_id).values(
             'environmentScore').annotate(count=Count('ID')).order_by('environmentScore'))
+
+    production_scores_list = list(
+        RAWorksheetScenario.objects.filter(RAWorksheetID__organization=user_organization_id).values(
+            'productionScore').annotate(count=Count('ID')).order_by('productionScore'))
+
+    regulatory_scores_list = list(
+        RAWorksheetScenario.objects.filter(RAWorksheetID__organization=user_organization_id).values(
+            'regulatoryScore').annotate(count=Count('ID')).order_by('regulatoryScore'))
+
+    data_scores_list = list(
+        RAWorksheetScenario.objects.filter(RAWorksheetID__organization=user_organization_id).values(
+            'DataScore').annotate(count=Count('ID')).order_by('DataScore'))
+
+    financial_scores_list = list(
+        RAWorksheetScenario.objects.filter(RAWorksheetID__organization=user_organization_id).values(
+            'FinancialScore').annotate(count=Count('ID')).order_by('FinancialScore'))
+
+    reputation_scores_list = list(
+        RAWorksheetScenario.objects.filter(RAWorksheetID__organization=user_organization_id).values(
+            'ReputationScore').annotate(count=Count('ID')).order_by('ReputationScore'))
+
+    supply_scores_list = list(
+        RAWorksheetScenario.objects.filter(RAWorksheetID__organization=user_organization_id).values(
+            'SupplyChainScore').annotate(count=Count('ID')).order_by('SupplyChainScore'))
+
     # risk assessment facilities
     raw_facilities = RAWorksheet.objects.filter(organization=user_organization_id).values_list('ID', 'BusinessUnit',
                                                                                                'BusinessUnitType')
@@ -136,11 +203,23 @@ def dashboardhome(request):
         'pha_safety_scores_list': pha_safety_scores_list,
         'pha_danger_scores_list': pha_danger_scores_list,
         'pha_environment_scores_list': pha_environment_scores_list,
+        'pha_finance_scores_list': pha_finance_scores_list,
+        'pha_production_scores_list': pha_production_scores_list,
+        'pha_reputation_scores_list': pha_reputation_scores_list,
+        'pha_regulation_scores_list': pha_regulation_scores_list,
+        'pha_data_scores_list': pha_data_scores_list,
+        'pha_supply_scores_list': pha_supply_scores_list,
         'formatted_sle': formatted_sle,
         'formatted_scenario_cost': formatted_scenario_cost,
         'ra_actions_records_count': ra_actions_records_count,
         'open_raws_count': open_raws_count,
-        'pha_threat_class': pha_threat_class
+        'pha_threat_class': pha_threat_class,
+        'production_scores_list': production_scores_list,
+        'regulatory_scores_list': regulatory_scores_list,
+        'data_scores_list': data_scores_list,
+        'financial_scores_list': financial_scores_list,
+        'reputation_scores_list': reputation_scores_list,
+        'supply_scores_list': supply_scores_list
     }
 
     return render(request, 'dashboard.html', context)

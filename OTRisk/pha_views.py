@@ -63,6 +63,13 @@ def iotaphamanager(request):
         pha_header.physicalSummary = request.POST.get('txtPhysical')
         pha_header.otherSummary = request.POST.get('txtOther')
         pha_header.country = request.POST.get('countrySelector')
+        pha_header.Date = request.POST.get('txtStartDate')
+        pha_header.EmployeesOnSite = request.POST.get('txtEmployees')
+        pha_header.shift_model = request.POST.get('shift_model')
+        pha_header.annual_revenue = request.POST.get('annual_revenue')
+        cyber_insurance_value = request.POST.get('cyber_insurance')
+        pha_header.cyber_insurance = False if cyber_insurance_value is None else bool(cyber_insurance_value)
+
         pha_header.UserID = request.user.id
         pha_header.save()
 
@@ -72,14 +79,13 @@ def iotaphamanager(request):
 
     users_in_organization = User.objects.filter(userprofile__organization__id=organization_id_from_session)
 
-    pha_header_records = tblCyberPHAHeader.objects.filter(UserID__in=users_in_organization)
+    pha_header_records = tblCyberPHAHeader.objects.filter(UserID__in=users_in_organization, Deleted=0)
 
     industries = tblIndustry.objects.all().order_by('Industry')
     facilities = FacilityType.objects.all().order_by('FacilityType')
     zones = tblZones.objects.all().order_by('PlantZone')
     standardslist = tblStandards.objects.all().order_by('standard')
     mitigations = MitreICSMitigations.objects.all()
-
     return render(request, 'iotaphamanager.html', {
         'pha_header_records': pha_header_records,
         'industries': industries,
@@ -88,7 +94,8 @@ def iotaphamanager(request):
         'standardslist': standardslist,
         'current_pha_header': pha_header,
         'new_record_id': new_record_id,
-        'mitigations': mitigations
+        'mitigations': mitigations,
+        'SHIFT_MODELS': tblCyberPHAHeader.SHIFT_MODELS
     })
 
 
@@ -113,7 +120,11 @@ def get_headerrecord(request):
         'chemicalsummary': headerrecord.chemicalSummary,
         'physicalsummary': headerrecord.physicalSummary,
         'othersummary': headerrecord.otherSummary,
-        'country': headerrecord.country
+        'country': headerrecord.country,
+        'shift_model': headerrecord.shift_model,
+        'EmployeesOnSite': headerrecord.EmployeesOnSite,
+        'cyber_insurance': headerrecord.cyber_insurance,
+        'annual_revenue': headerrecord.annual_revenue
     }
 
     control_assessments = MitreControlAssessment.objects.filter(cyberPHA=headerrecord)
@@ -145,6 +156,7 @@ def get_response(user_message):
         },
         user_message
     ]
+
     response = openai.ChatCompletion.create(
         model="gpt-4",
         messages=message,
@@ -162,7 +174,9 @@ def facility_risk_profile(request):
         facility_type = request.GET.get('facility_type')
         address = request.GET.get('address')
         country = request.GET.get('country')
-        facility = request.GET.get('txtFacility')
+        facility = request.GET.get('facility')
+        employees = request.GET.get('employees')
+        shift_model = request.GET.get('shift_model')
 
         # Check if Industry or facility_type are empty or None
         if not Industry or not facility_type:
@@ -178,10 +192,11 @@ def facility_risk_profile(request):
         openai.api_key = openai_api_key
 
         prompts = [
-            f"For the {facility} {facility_type} at {address}, {country} in the {Industry} industry, provide a concise bullet-point list of the likely personnel safety hazards present at {address}. Limit the response to a maximum of 100 words, or less. Add a line space between each bullet point",
-            f"For the {facility} {facility_type} at {address}, {country} in the {Industry} industry, provide a concise bullet point list of the likely chemicals stored or used and their hazards given the {facility_type}. Limit the response to a maximum of 100 words, or less. Add a line space between each bullet point",
-            f"For the {facility} {facility_type} at {address}, {country} in the {Industry} industry, provide a concise bullet-point list of the Physical security challenges given the location of {address}, {country}. Limit the response to a maximum of 100 words, or less. Add a line space between each bullet point",
-            f"For the {facility} {facility_type} at {address}, {country} in the {Industry} industry, provide a concise bullet point list of other localized risks that are likely to be identified for a {facility_type} at {address}. Limit the response to a maximum of 100 words, or less. Add a line space between each bullet point"
+            f"For the {facility} {facility_type} at {address}, {country} in the {Industry} industry, with {employees} employees working a {shift_model} shift model, provide a concise bullet-point list of the likely personnel safety hazards present at {address}. Limit the response to a maximum of 100 words, or less. EXTRA INSTRUCTION: Add a line space between each bullet point",
+            f"For the {facility} {facility_type} at {address}, {country} in the {Industry} industry, with {employees} employees working a {shift_model} shift model, provide a concise bullet point list of the likely chemicals stored or used and their hazards given the {facility_type}. Limit the response to a maximum of 100 words, or less. EXTRA INSTRUCTION: Add a line space between each bullet point",
+            f"For the {facility} {facility_type} at {address}, {country} in the {Industry} industry, with {employees} employees working a {shift_model} shift model, provide a concise bullet-point list of the Physical security challenges given the location of {address}, {country}. Limit the response to a maximum of 100 words, or less. EXTRA INSTRUCTION: Add a line space between each bullet point",
+            # f"For the {facility} {facility_type} at {address}, {country} in the {Industry} industry, provide a concise bullet point list of other localized risks that are likely to be identified for a {facility_type} at {address}. Limit the response to a maximum of 100 words, or less. Add a line space between each bullet point"
+            f"For the {facility} {facility_type} at {address}, {country} in the {Industry} industry, with {employees} employees working a {shift_model} shift model, provide a concise bullet point list of the likely OT devices and equipment that may be connected to IT networks for monitoring and control at  {facility_type} at {address}. Limit the response to a maximum of 100 words, or less. EXTRA INSTRUCTION: Add a line space between each bullet point"
         ]
 
         responses = []
@@ -244,7 +259,6 @@ def pha_report(request, cyberpha_id):
     # Retrieve the top 5 most effective controls
     top_5_controls = MitreControlAssessment.objects.filter(cyberPHA=cyberpha_id).order_by('-effectiveness_percentage')[:5]
 
-    print(top_5_controls)
     # Retrieve the bottom 5 least effective controls
     bottom_5_controls = MitreControlAssessment.objects.filter(cyberPHA=cyberpha_id).order_by(
         'effectiveness_percentage')[:5]
@@ -362,7 +376,7 @@ def getSingleScenario(request):
     # Convert the scenario to a dictionary
     scenario_dict = {
         'ID': scenario.ID,
-        'CyberPHA': scenario.CyberPHA,
+        'CyberPHA': scenario.CyberPHA.ID,
         'Scenario': scenario.Scenario,
         'ThreatClass': scenario.ThreatClass,
         'ThreatAgent': scenario.ThreatAgent,
@@ -405,9 +419,12 @@ def getSingleScenario(request):
         'countermeasureCosts': scenario.countermeasureCosts,
         'control_recommendations': scenario.control_recommendations,
         'standards': scenario.standards,
-        'probability': scenario.probability
-
-    }
+        'probability': scenario.probability,
+        'risk_register': scenario.risk_register,
+        'safety_hazard': scenario.safety_hazard,
+        'sis_compromise': scenario.sis_compromise,
+        'sis_outage': scenario.sis_outage
+  }
 
     # Return the scenario as a JSON response
     return JsonResponse(scenario_dict)
@@ -460,7 +477,7 @@ def scenario_analysis(request):
             ##},
             {
                 "role": "user",
-                "content": f"Given the detailed context that follows, give an assessment of the residual cybersecurity risk risk after all new recommended controls have been implemented. Based on this, provide a residual risk rating from the following options: Very Low, Low, Low/Medium, Medium, Medium/High, High, Very High. Context: {common_content_prefix()}, where it's emphasized that new controls have significantly reduced vulnerabilities and threats. The expected outcome is a much lower risk than before. Provide ONLY one of the given risk ratings without any additional text or explanations."
+                "content": f"Given the detailed context that follows, give an assessment of the residual cybersecurity risk risk after all new recommended controls have been implemented. Based on this, provide a residual risk rating from the following options: Very Low, Low, Low/Medium, Medium, Medium/High, High, Very High. Context: {common_content_prefix()}, where it is emphasized that new controls have significantly reduced vulnerabilities and threats. The expected outcome is a much lower risk than before. Provide ONLY one of the given risk ratings without any additional text or explanations."
             },
 
             {
@@ -474,7 +491,7 @@ def scenario_analysis(request):
             },
             {
                 "role": "user",
-                "content": f"Given the context: {common_content_prefix()} and analysis of publicly reported cybersecurity incidents, provide ONLY the estimated probability (as a percentage) of a successful targeted attack given the current controls given in the context. Answer with a number followed by a percentage sign (e.g., 'nn%'). Do NOT include any other words, sentences, or explanations."
+                "content": f"Given the context: {common_content_prefix()} and analysis of publicly reported cybersecurity incidents, provide ONLY the estimated probability (as a percentage) of a successful targeted attack given the current controls given in the context. Answer with a number followed by a percentage sign (e.g., nn%). Do NOT include any other words, sentences, or explanations."
             }
 
         ]

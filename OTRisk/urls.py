@@ -99,6 +99,7 @@ urlpatterns = [
     path('get_asset_types/', views.get_asset_types, name='get_asset_types'),
     path('get_mitigations/', views.get_mitigations, name='get_mitigations'),
     path('save_control_assessment/', views.save_control_assessment, name='save_control_assessment'),
+    path('risk_register/', views.risk_register, name='risk_register'),
 ]
 
 if settings.DEBUG:

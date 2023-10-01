@@ -31,6 +31,7 @@ urlpatterns = [
     path('two_factor_verify/', views.two_factor_verify, name='two_factor_verify'),
     path('setup_2fa/', views.setup_2fa, name='setup_2fa'),
     path('verify_2fa/', views.verify_2fa, name='verify_2fa'),
+    path('contact_form/', views.contact_form, name='contact_form'),
 ]
 
 

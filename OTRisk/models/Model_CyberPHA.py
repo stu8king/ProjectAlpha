@@ -125,6 +125,24 @@ class tblCyberPHAHeader(models.Model):
     physicalSummary = models.TextField()
     otherSummary = models.TextField()
     country = models.TextField()
+    SHIFT_MODELS = [
+        ('Single Shift Model', 'Single Shift Model'),
+        ('Double Shift Model', 'Double Shift Model'),
+        ('Three-Shift (24/7) Model', 'Three-Shift (24/7) Model'),
+        ('Rotating Shift Model', 'Rotating Shift Model'),
+        ('Fixed Shift Model', 'Fixed Shift Model'),
+        ('Split Shift Model', 'Split Shift Model'),
+        ('On-Call or Flex Shift Model', 'On-Call or Flex Shift Model'),
+        ('Compressed Workweek Model', 'Compressed Workweek Model'),
+        ('Part-Time or Seasonal Model', 'Part-Time or Seasonal Model'),
+        ('Hybrid Shift Models', 'Hybrid Shift Models'),
+    ]
+
+    shift_model = models.CharField(max_length=50, choices=SHIFT_MODELS)
+    annual_revenue = models.DecimalField(max_digits=10, decimal_places=0)
+    cyber_insurance = models.BooleanField(default=False)
+
+
 
     class Meta:
         db_table = 'tblCyberPHAHeader'
@@ -202,7 +220,7 @@ class tblCyberPHAEntry(models.Model):
 
 class tblCyberPHAScenario(models.Model):
     ID = models.AutoField(primary_key=True)
-    CyberPHA = models.IntegerField()
+    CyberPHA = models.ForeignKey(tblCyberPHAHeader, on_delete=models.CASCADE, db_column='CyberPHA')
     Scenario = models.CharField(max_length=255)
     ThreatClass = models.CharField(max_length=100)
     ThreatAgent = models.CharField(max_length=100)
@@ -253,6 +271,11 @@ class tblCyberPHAScenario(models.Model):
     probability = models.TextField()
     sle_low = models.IntegerField()
     sle_high = models.IntegerField()
+    risk_register = models.BooleanField(default=False)
+    safety_hazard = models.TextField()
+    sis_outage = models.BooleanField(default=False)
+    sis_compromise = models.BooleanField(default=False)
+
 
     class Meta:
         db_table = 'tblCyberPHAScenario'

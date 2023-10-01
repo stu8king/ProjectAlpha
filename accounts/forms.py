@@ -20,7 +20,11 @@ class TwoFactorSetupForm(forms.Form):
 
 
 class TwoFactorVerifyForm(forms.Form):
-    token = forms.CharField(required=True, label="Token")
+    token = forms.CharField(
+        required=True,
+        label="Token",
+        widget=forms.PasswordInput()
+    )
 
 
 class PasswordResetRequestForm(forms.Form):

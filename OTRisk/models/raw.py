@@ -111,6 +111,7 @@ class RAWorksheetScenario(models.Model):
     ]
     outage = models.CharField(max_length=3, choices=OUTAGE_CHOICES, default='N/A')
     outageLength = models.IntegerField(default=0)
+    risk_register = models.BooleanField(default=False)
 
     class Meta:
         db_table = 'tblRAWorksheetScenario'

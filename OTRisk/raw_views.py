@@ -340,7 +340,7 @@ def reports_pha(request):
     org_id = get_user_organization_id(request)
     organization_id_from_session = request.session.get('user_organization')
     users_in_organization = User.objects.filter(userprofile__organization__id=organization_id_from_session)
-    pha_reports = tblCyberPHAHeader.objects.filter(UserID__in=users_in_organization)
+    pha_reports = tblCyberPHAHeader.objects.filter(UserID__in=users_in_organization, Deleted=0)
 
     return render(request, 'report_pha.html',
                   {'pha_reports': pha_reports})
