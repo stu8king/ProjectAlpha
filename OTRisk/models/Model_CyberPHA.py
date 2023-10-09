@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from accounts.models import Organization
 from OTRisk.models.raw import MitreICSMitigations
 
 
@@ -142,13 +143,12 @@ class tblCyberPHAHeader(models.Model):
     annual_revenue = models.DecimalField(max_digits=10, decimal_places=0)
     cyber_insurance = models.BooleanField(default=False)
 
-
-
     class Meta:
         db_table = 'tblCyberPHAHeader'
 
     def __str__(self):
         return self.FacilityName
+
 
 class tblControlObjectives(models.Model):
     ID = models.AutoField(primary_key=True)
@@ -238,6 +238,9 @@ class tblCyberPHAScenario(models.Model):
     impactData = models.IntegerField()
     impactSupply = models.IntegerField()
     UEL = models.IntegerField()
+    uel_threat = models.IntegerField()
+    uel_vuln = models.IntegerField()
+    uel_exposure = models.IntegerField()
     RRU = models.IntegerField()
     SM = models.IntegerField()
     MEL = models.IntegerField()
@@ -275,7 +278,29 @@ class tblCyberPHAScenario(models.Model):
     safety_hazard = models.TextField()
     sis_outage = models.BooleanField(default=False)
     sis_compromise = models.BooleanField(default=False)
-
+    risk_owner = models.TextField()
+    RISK_PRIORITIES = [
+        ('Low', 'Low'),
+        ('Medium', 'Medium'),
+        ('High', 'High'),
+        ('Critical', 'Critical'),
+    ]
+    risk_priority = models.CharField(max_length=50, choices=RISK_PRIORITIES)
+    RISK_RESPONSES = [
+        ('Manage', 'Manage'),
+        ('Mitigate', 'Mitigate'),
+        ('Transfer', 'Transfer'),
+        ('Accept', 'Accept')
+    ]
+    risk_response = models.CharField(max_length=50, choices=RISK_RESPONSES)
+    RISK_STATUSES = [
+        ('Open', 'Open'),
+        ('Closed', 'Closed')
+    ]
+    risk_status = models.CharField(max_length=50, choices=RISK_STATUSES)
+    risk_open_date = models.DateField()
+    risk_close_date = models.DateField()
+    control_effectiveness = models.IntegerField()
 
     class Meta:
         db_table = 'tblCyberPHAScenario'
@@ -384,3 +409,90 @@ class MitreControlAssessment(models.Model):
         # Ensure that a control can only be assessed once for a given facility
         unique_together = ['control', 'cyberPHA']
 
+
+class CyberPHAScenario_snapshot(models.Model):
+    ID = models.AutoField(primary_key=True)
+    CyberPHA = models.IntegerField()
+    ScenarioID = models.IntegerField()
+    Scenario = models.CharField(max_length=255)
+    ThreatClass = models.CharField(max_length=100)
+    ThreatAgent = models.CharField(max_length=100)
+    ThreatAction = models.CharField(max_length=100)
+    Countermeasures = models.CharField(max_length=500)
+    RiskCategory = models.CharField(max_length=100)
+    Consequence = models.CharField(max_length=1000)
+    impactSafety = models.IntegerField()
+    impactDanger = models.IntegerField()
+    impactProduction = models.IntegerField()
+    impactFinance = models.IntegerField()
+    impactReputation = models.IntegerField()
+    impactEnvironment = models.IntegerField()
+    impactRegulation = models.IntegerField()
+    impactData = models.IntegerField()
+    impactSupply = models.IntegerField()
+    UEL = models.IntegerField()
+    uel_threat = models.IntegerField()
+    uel_vuln = models.IntegerField()
+    uel_exposure = models.IntegerField()
+    RRU = models.IntegerField()
+    SM = models.IntegerField()
+    MEL = models.IntegerField()
+    RRM = models.IntegerField()
+    SA = models.IntegerField()
+    MELA = models.IntegerField()
+    RRa = models.TextField()
+    sl = models.IntegerField()
+    recommendations = models.CharField(max_length=1000)
+    Deleted = models.IntegerField()
+    timestamp = models.DateTimeField()
+    aro = models.IntegerField()
+    sle = models.IntegerField()
+    ale = models.IntegerField()
+    countermeasureCosts = models.IntegerField()
+    control_recommendations = models.TextField()
+    justifySafety = models.TextField()
+    justifyLife = models.TextField()
+    justifyProduction = models.TextField()
+    justifyFinancial = models.TextField()
+    justifyReputation = models.TextField()
+    justifyEnvironment = models.TextField()
+    justifyRegulation = models.TextField()
+    justifyData = models.TextField()
+    justifySupply = models.TextField()
+    userID = models.IntegerField()
+    organizationID = models.IntegerField()
+    standards = models.TextField()
+    outage = models.TextField()
+    outageDuration = models.IntegerField()
+    outageCost = models.IntegerField()
+    probability = models.TextField()
+    sle_low = models.IntegerField()
+    sle_high = models.IntegerField()
+    risk_register = models.BooleanField(default=False)
+    safety_hazard = models.TextField()
+    sis_outage = models.BooleanField(default=False)
+    sis_compromise = models.BooleanField(default=False)
+    risk_owner = models.TextField()
+    RISK_PRIORITIES = [
+        ('Low', 'Low'),
+        ('Medium', 'Medium'),
+        ('High', 'High'),
+        ('Critical', 'Critical'),
+    ]
+    risk_priority = models.CharField(max_length=50, choices=RISK_PRIORITIES)
+    RISK_RESPONSES = [
+        ('Manage', 'Manage'),
+        ('Mitigate', 'Mitigate'),
+        ('Transfer', 'Transfer'),
+        ('Accept', 'Accept')
+    ]
+    risk_response = models.CharField(max_length=50, choices=RISK_RESPONSES)
+    RISK_STATUSES = [
+        ('Open', 'Open'),
+        ('Closed', 'Closed')
+    ]
+    risk_status = models.CharField(max_length=50, choices=RISK_STATUSES)
+    risk_open_date = models.DateField()
+    risk_close_date = models.DateField()
+    snapshot_date = models.DateField()
+    control_effectiveness = models.IntegerField()

@@ -1,7 +1,10 @@
+import os
+
 from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
+from django.db.models import Subquery, OuterRef, Count, IntegerField, Case, When, Value
 from OTRisk.models.RiskScenario import RiskScenario, tblScenarioRecommendations
 from OTRisk.models.Model_Scenario import tblConsequence
 from OTRisk.models.questionnairemodel import Questionnaire, FacilityType
@@ -17,12 +20,15 @@ from OTRisk.models.Model_Workshop import tblWorkshopNarrative, tblWorkshopInform
 from OTRisk.models.Model_CyberPHA import tblCyberPHAHeader, tblRiskCategories, \
     tblControlObjectives, \
     tblThreatIntelligence, tblMitigationMeasures, tblScenarios, tblSafeguards, tblThreatSources, tblThreatActions, \
-    tblNodes, tblUnits, tblZones, tblCyberPHAScenario, tblIndustry, auditlog, tblStandards, MitreControlAssessment
+    tblNodes, tblUnits, tblZones, tblCyberPHAScenario, tblIndustry, auditlog, tblStandards, MitreControlAssessment, \
+    CyberPHAScenario_snapshot
 from django.shortcuts import render, redirect
+from .dashboard_views import get_user_organization_id
 from django.contrib.auth.decorators import login_required
 from .forms import LoginForm
 from datetime import date, datetime
 import json
+import openai
 import requests
 from xml.etree import ElementTree as ET
 from .raw_views import qraw, openai_assess_risk, GetTechniquesView, raw_action, check_vulnerabilities, rawreport, \
@@ -356,7 +362,6 @@ def scenarioreport(request):
 
 @login_required()
 def save_or_update_cyberpha(request):
-
     if request.method == 'POST':
         # Get the form data
         cyberphaid = request.POST.get('cyberpha')
@@ -382,6 +387,9 @@ def save_or_update_cyberpha(request):
         sa = request.POST.get('sa')
         mela = request.POST.get('mela')
         rra = request.POST.get('rra')
+        uel_threat = request.POST.get('uel_threat')
+        uel_exposure = request.POST.get('uel_exposure')
+        uel_vuln = request.POST.get('uel_vuln')
         uel = request.POST.get('uel')
         rru = request.POST.get('rru')
         sl = request.POST.get('sl')
@@ -415,6 +423,8 @@ def save_or_update_cyberpha(request):
         sis_outage = sis_outage_str.lower() == 'true'
         sis_compromise = sis_compromise_str.lower() == 'true'
         safety_hazard = request.POST.get('safety_hazard')
+        snapshot = request.POST.get('snapshot')
+        control_effectiveness = int(float(request.POST.get('control_effectiveness')))
 
         if outageDuration in ('NaN', ''):
             outageDuration = 0
@@ -459,81 +469,160 @@ def save_or_update_cyberpha(request):
                 sle_high = 0
 
         deleted = 0
+        org_id = get_user_organization_id(request)
+        if snapshot == '1':
+            scenario_id_value = int(request.POST.get('scenarioID'))
+            scenario_instance = tblCyberPHAScenario.objects.get(pk=scenario_id_value)
 
-        cyberpha_entry, created = tblCyberPHAScenario.objects.update_or_create(
-            CyberPHA=cyberpha_header,
-            Scenario=scenario,
-            ThreatClass=threatclass,
-            defaults={
-                'ThreatAction': threataction,
-                'Countermeasures': countermeasures,
-                'RiskCategory': riskcategory,
-                'Consequence': consequence,
-                'impactSafety': impactsafety,
-                'impactDanger': impactdanger,
-                'impactProduction': impactproduction,
-                'impactFinance': impactfinance,
-                'impactReputation': impactreputation,
-                'impactEnvironment': impactenvironment,
-                'impactRegulation': impactregulation,
-                'impactData': impactdata,
-                'impactSupply': impactsupply,
-                'recommendations': recommendations,
-                'SM': sm,
-                'MEL': mel,
-                'RRM': rrm,
-                'SA': sa,
-                'MELA': mela,
-                'RRa': rra,
-                'UEL': uel,
-                'RRU': rru,
-                'sl': sl,
-                'Deleted': deleted,
-                'control_recommendations': controlrecs,
-                'justifySafety': justifySafety,
-                'justifyLife': justifyLife,
-                'justifyProduction': justifyProduction,
-                'justifyFinancial': justifyFinance,
-                'justifyReputation': justifyReputation,
-                'justifyEnvironment': justifyEnvironment,
-                'justifyRegulation': justifyRegulation,
-                'justifyData': justifyData,
-                'justifySupply': justifySupply,
-                'userID': request.user,
-                'sle': sle_medium,
-                'sle_low': sle_low,
-                'sle_high': sle_high,
-                'aro': aro,
-                'ale': ale,
-                'countermeasureCosts': countermeasureCosts,
-                'outage': outage,
-                'outageDuration': outageDuration,
-                'outageCost': outageCost,
-                'probability': probability,
-                'standards': standards,
-                'risk_register': risk_register_bool,
-                'sis_outage': sis_outage,
-                'sis_compromise': sis_compromise,
-                'safety_hazard': safety_hazard,
-                'timestamp': timezone.now()
-            }
-        )
-        # write to the audit log
-        action = "created" if created else "updated"
+            snapshot_record = CyberPHAScenario_snapshot(
+                CyberPHA=cyberphaid,
+                ScenarioID=scenario_id_value,
+                Scenario=scenario,
+                ThreatClass=threatclass,
+                ThreatAction=' ',
+                Countermeasures=' ',
+                RiskCategory=riskcategory,
+                Consequence=consequence,
+                impactSafety=impactsafety,
+                impactDanger=impactdanger,
+                impactProduction=impactproduction,
+                impactFinance=impactfinance,
+                impactReputation=impactreputation,
+                impactEnvironment=impactenvironment,
+                impactRegulation=impactregulation,
+                impactData=impactdata,
+                impactSupply=impactsupply,
+                recommendations=recommendations,
+                SM=sm,
+                MEL=mel,
+                RRM=rrm,
+                SA=sa,
+                MELA=mela,
+                RRa=rra,
+                UEL=uel,
+                uel_threat=uel_threat,
+                uel_exposure=uel_exposure,
+                uel_vuln=uel_vuln,
+                RRU=rru,
+                sl=sl,
+                Deleted=deleted,
+                control_recommendations=controlrecs,
+                justifySafety='',
+                justifyLife='',
+                justifyProduction='',
+                justifyFinancial='',
+                justifyReputation='',
+                justifyEnvironment='',
+                justifyRegulation='',
+                justifyData='',
+                justifySupply='',
+                userID=request.user.id,
+                sle=sle_medium,
+                sle_low=sle_low,
+                sle_high=sle_high,
+                aro=aro,
+                ale=ale,
+                countermeasureCosts=countermeasureCosts,
+                outage=outage,
+                outageDuration=0,
+                outageCost=0,
+                probability=probability,
+                standards=standards,
+                risk_register=risk_register_bool,
+                sis_outage=sis_outage,
+                sis_compromise=sis_compromise,
+                safety_hazard=safety_hazard,
+                snapshot_date=timezone.now(),
+                timestamp=timezone.now(),
+                risk_open_date=timezone.now(),
+                risk_close_date=timezone.now(),
+                risk_owner='',
+                risk_response='',
+                organizationID=org_id,
+                control_effectiveness=control_effectiveness
+            )
+            snapshot_record.save()
+        else:
+            cyberpha_entry, created = tblCyberPHAScenario.objects.update_or_create(
+                CyberPHA=cyberpha_header,
+                Scenario=scenario,
+                ThreatClass=threatclass,
+                defaults={
+                    'ThreatAction': threataction,
+                    'Countermeasures': countermeasures,
+                    'RiskCategory': riskcategory,
+                    'Consequence': consequence,
+                    'impactSafety': impactsafety,
+                    'impactDanger': impactdanger,
+                    'impactProduction': impactproduction,
+                    'impactFinance': impactfinance,
+                    'impactReputation': impactreputation,
+                    'impactEnvironment': impactenvironment,
+                    'impactRegulation': impactregulation,
+                    'impactData': impactdata,
+                    'impactSupply': impactsupply,
+                    'recommendations': recommendations,
+                    'SM': sm,
+                    'MEL': mel,
+                    'RRM': rrm,
+                    'SA': sa,
+                    'MELA': mela,
+                    'RRa': rra,
+                    'UEL': uel,
+                    'uel_threat': uel_threat,
+                    'uel_exposure': uel_exposure,
+                    'uel_vuln': uel_vuln,
+                    'RRU': rru,
+                    'sl': sl,
+                    'Deleted': deleted,
+                    'control_recommendations': controlrecs,
+                    'justifySafety': justifySafety,
+                    'justifyLife': justifyLife,
+                    'justifyProduction': justifyProduction,
+                    'justifyFinancial': justifyFinance,
+                    'justifyReputation': justifyReputation,
+                    'justifyEnvironment': justifyEnvironment,
+                    'justifyRegulation': justifyRegulation,
+                    'justifyData': justifyData,
+                    'justifySupply': justifySupply,
+                    'userID': request.user,
+                    'sle': sle_medium,
+                    'sle_low': sle_low,
+                    'sle_high': sle_high,
+                    'aro': aro,
+                    'ale': ale,
+                    'countermeasureCosts': countermeasureCosts,
+                    'outage': outage,
+                    'outageDuration': outageDuration,
+                    'outageCost': outageCost,
+                    'probability': probability,
+                    'standards': standards,
+                    'risk_register': risk_register_bool,
+                    'sis_outage': sis_outage,
+                    'sis_compromise': sis_compromise,
+                    'safety_hazard': safety_hazard,
+                    'timestamp': timezone.now(),
+                    'risk_open_date': timezone.now(),
+                    'risk_close_date': '2099-01-01',
+                    'control_effectiveness': control_effectiveness
+                }
+            )
+            # write to the audit log
+            action = "created" if created else "updated"
 
-        # Create a new auditlog instance
-        audit_entry = auditlog(
-            userID=request.user.id,
-            timestamp=timezone.now(),
-            user_action=f"{action} CyberPHA: {cyberphaid}",
-            user_ipaddress=get_client_ip(request)  # Assuming you have a function to get the client's IP
-        )
+            # Create a new auditlog instance
+            audit_entry = auditlog(
+                userID=request.user.id,
+                timestamp=timezone.now(),
+                user_action=f"{action} CyberPHA: {cyberphaid}",
+                user_ipaddress=get_client_ip(request)  # Assuming you have a function to get the client's IP
+            )
 
-        # Save the auditlog entry
-        audit_entry.save()
+            # Save the auditlog entry
+            audit_entry.save()
 
-        scenarioID = cyberpha_entry.pk
-        request.session['cyberPHAID'] = cyberphaid  # Set the session variable
+            scenarioID = cyberpha_entry.pk
+            request.session['cyberPHAID'] = cyberphaid  # Set the session variable
 
         # Call the assess_cyberpha function
         return assess_cyberpha(request)
@@ -1430,6 +1519,7 @@ def save_control_assessment(request):
     return render(request, 'iotaphamanager.html', {'form': form})
 
 
+@login_required()
 def risk_register(request):
     weights = {
         'impactSafety': 0.2,
@@ -1444,8 +1534,15 @@ def risk_register(request):
     }
     weighted_sum = sum(F(impact) * weight for impact, weight in weights.items())
 
+    current_user_profile = UserProfile.objects.get(user=request.user)
+
+    org_id = get_user_organization_id(request)
+
     # Fetch the data and the computed score
-    data = tblCyberPHAScenario.objects.filter(risk_register=True).select_related('CyberPHA').annotate(
+    data = tblCyberPHAScenario.objects.filter(
+        risk_register=True,
+        CyberPHA__UserID__in=User.objects.filter(userprofile__organization_id=org_id).values_list('id', flat=True)
+    ).select_related('CyberPHA').annotate(
         business_impact_analysis_score=Ceil(weighted_sum * 10),  # Multiply by 10 to scale the score to 100
         business_impact_analysis_code=Case(
             When(business_impact_analysis_score__lt=20, then=Value('Low')),
@@ -1454,10 +1551,26 @@ def risk_register(request):
             When(business_impact_analysis_score__lt=80, then=Value('Medium/High')),
             default=Value('High'),
             output_field=CharField()
+        ),
+        snapshots=Case(
+            When(
+                pk__in=Subquery(
+                    CyberPHAScenario_snapshot.objects.filter(
+                        ScenarioID=OuterRef('ID')
+                    ).values('ScenarioID')
+                ),
+                then=Value(1)
+            ),
+            default=Value(0),
+            output_field=IntegerField()
         )
+
     ).values(
+        'ID',
         'CyberPHA__FacilityName',
         'CyberPHA__AssessmentUnit',
+        'CyberPHA__FacilityType',
+        'CyberPHA__Industry',
         'Scenario',
         'RRa',
         'CyberPHA__AssessmentStartDate',
@@ -1467,12 +1580,26 @@ def risk_register(request):
         'sle_low',
         'sle_high',
         'business_impact_analysis_score',  # Include the computed score in the returned data
-        'business_impact_analysis_code'  # Include the computed code in the returned data
+        'business_impact_analysis_code',  # Include the computed code in the returned data
+        'snapshots'
     )
-    sle_sum = tblCyberPHAScenario.objects.filter(risk_register=True).aggregate(Sum('sle'))
-    sle_low_sum = tblCyberPHAScenario.objects.filter(risk_register=True).aggregate(Sum('sle_low'))
-    sle_high_sum = tblCyberPHAScenario.objects.filter(risk_register=True).aggregate(Sum('sle_high'))
+    sle_sum = tblCyberPHAScenario.objects.filter(
+        risk_register=True,
+        CyberPHA__UserID__in=User.objects.filter(userprofile__organization_id=org_id).values_list('id', flat=True)
+    ).aggregate(Sum('sle'))
 
+    sle_low_sum = tblCyberPHAScenario.objects.filter(
+        risk_register=True,
+        CyberPHA__UserID__in=User.objects.filter(userprofile__organization_id=org_id).values_list('id', flat=True)
+    ).aggregate(Sum('sle_low'))
+
+    sle_high_sum = tblCyberPHAScenario.objects.filter(
+        risk_register=True,
+        CyberPHA__UserID__in=User.objects.filter(userprofile__organization_id=org_id).values_list('id', flat=True)
+    ).aggregate(Sum('sle_high'))
+
+    for item in data:
+        item['snapshots'] = item.get('snapshots', 0)
     # Convert the probability field to an integer for each item in data
     for item in data:
         try:
@@ -1521,4 +1648,98 @@ def risk_register(request):
         'heatmap_data': heatmap_data,
         'sle_sum': sle_sum['sle__sum'],
         'sle_low_sum': sle_low_sum['sle_low__sum'],
-        'sle_high_sum': sle_high_sum['sle_high__sum'],})
+        'sle_high_sum': sle_high_sum['sle_high__sum'], })
+
+
+@login_required()
+def save_risk_data(request):
+    print(request.POST)
+    if request.method == 'POST':
+        # Get the existing record
+        scenario_id = request.POST.get('scenario_id')
+        scenario = tblCyberPHAScenario.objects.get(ID=scenario_id)
+
+        risk_owner = request.POST.get('risk_owner')
+        risk_priority = request.POST.get('risk_priority')
+        risk_response = request.POST.get('risk_response')
+        risk_status = request.POST.get('risk_status')
+
+        # Check for risk_open_date
+        risk_open_date = request.POST.get('risk_open_date')
+        if not risk_open_date:
+            risk_open_date = scenario.risk_open_date  # Use the existing value if not provided
+
+        # Logic for risk_status and risk_close_date
+        if risk_status == "Closed":
+            if scenario.risk_status != "Closed":
+                scenario.risk_status = "Closed"
+                risk_close_date = request.POST.get('risk_close_date')
+                if not risk_close_date:
+                    risk_close_date = date.today()  # Set to current date if not provided
+                scenario.risk_close_date = risk_close_date
+        else:
+            scenario.risk_status = risk_status
+
+        # Update the record
+        scenario.risk_owner = risk_owner
+        scenario.risk_priority = risk_priority
+        scenario.risk_response = risk_response
+        scenario.risk_open_date = risk_open_date
+
+        scenario.save()
+
+        return JsonResponse({'status': 'success'})
+    return JsonResponse({'status': 'error'})
+
+
+def get_weightings_from_openai(facility_type, industry):
+    """
+    Query the OpenAI API to get recommended weightings based on facility type and industry.
+
+    Args:
+    - facility_type (str): The type of the facility.
+    - industry (str): The industry in which the facility operates.
+
+    Returns:
+    - dict: A dictionary of recommended weightings.
+    """
+    prompt = f"Given a facility type of '{facility_type}' in the '{industry}' industry, how should the following impact factors be weighted: impactSafety, impactDanger, impactProduction, impactFinance, impactReputation, impactEnvironment, impactRegulation, impactData, impactSupply?"
+
+    response = openai.Completion.create(engine="davinci", prompt=prompt, max_tokens=150)
+
+    # TODO: Parse the response to extract the recommended weightings
+    # This will depend on the format of the response from OpenAI.
+    # For simplicity, let's assume the response is a comma-separated list of weightings.
+    weightings_list = response.choices[0].text.strip().split(',')
+    weightings = {
+        'impactSafety': float(weightings_list[0]),
+        'impactDanger': float(weightings_list[1]),
+        'impactProduction': float(weightings_list[2]),
+        'impactFinance': float(weightings_list[3]),
+        'impactReputation': float(weightings_list[4]),
+        'impactEnvironment': float(weightings_list[5]),
+        'impactRegulation': float(weightings_list[6]),
+        'impactData': float(weightings_list[7]),
+        'impactSupply': float(weightings_list[8])
+    }
+
+    return weightings
+
+
+def view_snapshots(request, scenario):
+    # Retrieve the single record from tblCyberPHAScenario where ID = scenario
+    scenario_record = tblCyberPHAScenario.objects.get(ID=scenario)
+
+    # Using the ForeignKey relationship to retrieve the associated tblCyberPHAHeader record
+    header_record = scenario_record.CyberPHA
+
+    # Retrieve all the records from CyberPHAScenario_snapshot where ScenarioID = scenario
+    snapshots = CyberPHAScenario_snapshot.objects.filter(ScenarioID=scenario)
+
+    # Pass the datasets to the risk_snapshots template
+    context = {
+        'scenario_record': scenario_record,
+        'snapshots': snapshots,
+        'header_record': header_record
+    }
+    return render(request, 'risk_snapshots.html', context)

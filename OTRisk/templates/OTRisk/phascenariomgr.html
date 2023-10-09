@@ -22,6 +22,27 @@
 
     <title>Assess CyberPHA</title>
     <style>
+
+    input[type="range"][orient="vertical"] {
+    writing-mode: bt-lr; /* IE */
+    -webkit-appearance: slider-vertical;
+    width: 8px;
+    height: 150px;
+    margin: 10px auto; /* Center the range input */
+}
+
+.control-group {
+    margin: 20px 0;
+    text-align: center; /* Center the label */
+}
+
+.range-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Center the range input and span vertically */
+}
+
+
     .small-font {
         font-size: 0.8rem; /* adjust as needed */
    }
@@ -79,8 +100,17 @@ thead {
   cursor: pointer;
     color: white;
 }
+
+    .disabled-label {
+        color: #aaa; /* This is a light gray color to represent a disabled label */
+        cursor: not-allowed;
+    }
+
+
     </style>
     <script>
+
+
       // Initialize sliders when the page loads
       window.onload = function() {
         initSlider("range_safety", "safetyrange");
@@ -666,7 +696,7 @@ thead {
                 <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
             <div class="card-body">
                 <div class="slider-container d-flex align-items-center">
-                    <div class="col-2"><label class="small-font d-flex align-items-center " >Unmitigated Event Likelihood (UEL)</label></div>
+                    <div class="col-2"><label class="small-font d-flex align-items-center clickable-label" data-bs-toggle="modal" data-bs-target="#uelModal" data-bs-placement="top" >Unmitigated Event Likelihood (UEL)</label></div>
                     <div class="col-7">
                       <input type="range" min="1" max="10" value="1" class="form-range" id="uel_range" name="uel_range" onchange="initSlider('uel_range','range_uel');">
                     </div>
@@ -686,18 +716,8 @@ thead {
                 </div>
             </div>
         </div>
-                <!--slider for MEL - Mitigated Exposure Level-->
-        <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-            <div class="card-body">
-                <div class="slider-container d-flex align-items-center">
-                    <div class="col-2"><label class="small-font d-flex align-items-center " >Security Level (SL)</label></div>
-                    <div class="col-7">
-                      <input type="range" min="1" max="10" value="1" class="form-range" id="sl_range" name="sl_range" onchange="initSlider('sl_range','range_sl');">
-                    </div>
-                    <div class="col-3"><h6><label id="range_sl" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
-                </div>
-            </div>
-        </div>
+
+
         <h4>Assessment - Mitigated Risk</h4>
         <h6>(Risk exposure with current controls)</h6>
                 <!--slider for UEL - likelihood without controls-->
@@ -736,6 +756,12 @@ thead {
                 </div>
             </div>
         </div>
+        <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+            <div class="card-body">
+                <input type="checkbox" id="risk_register" name="risk_register">
+                <label for="risk_register">Lock Scenario and Add to Risk Register</label>
+            </div>
+        </div>
 
     <div class="row">
         <div class=col-md-6>
@@ -752,9 +778,13 @@ thead {
             </div>
         </div>
         <div class=col-md-6>
-            <input type="checkbox" id="risk_register" name="risk_register">
-            <label for="risk_register">Lock Scenario and Add to Risk Register</label>
-            <br><br>
+            <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                <div class="card-body">
+                    <input type="checkbox" id="risk_snapshot" name="risk_snapshot">
+                    <label for="risk_snapshot">Create Snapshot</label>
+
+                </div>
+            </div>
             <button id="risk-assessment-btn" type="button" class="form-control btn-dark" style="background-color: dodgerblue; color: white">Assess Scenario</button><br>
             <div id="loadingSpinner" class="spinner-border" role="status" style="display: none;">
                 <span class="visually-hidden">Loading...</span>
@@ -783,47 +813,66 @@ thead {
 
 <div class="row">
     <div class="col-md-1" style="background-color: black"></div>
-    <div class="col-md-2" style="background-color: white"></div>
-    <div class="col-md-6">
-        <div class="row">
-
-            <div class="col-md-2" style="background-color: white">
-
-                <div class="row rounded p-3 d-flex align-items-center justify-content-center" style="height: 80%;">
-                    <label for="txtProbability">Attack Success Rate</label><textarea id="txtProbability" name="txtProbability" class="form-control border border-danger small-font text-center"  style="font-size: 1.5rem; resize: none; border: 3px solid #97979A; border-radius: 10px; box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5); padding: 20px; background-color: white; display: block; margin: auto;"></textarea>
-                </div>
-
-            </div>
-            <div class="col-md-8" style="text-align: center">Estimated Incident Costs
-                <div class="row">
-                <div class="col-md-4" style="background-color: white">
-                    <div class="row rounded p-3 d-flex align-items-center justify-content-center" style="height: 80%;">
-                        <label for="txtEventCosts">Low</label><textarea id="txtEventCosts_low" name="txtEventCosts_low" class="form-control border border-danger small-font text-center" style="font-size: 1.75rem; resize: none; border: 3px solid #97979A; border-radius: 10px; box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5); padding: 20px; background-color: white; display: block; margin: auto;"></textarea>
-                    </div>
-                </div>
-                    <div class="col-md-4" style="background-color: white">
-                    <div class="row rounded p-3 d-flex align-items-center justify-content-center" style="height: 80%;">
-                        <label for="txtEventCosts">Medium</label><textarea id="txtEventCosts" name="txtEventCosts" class="form-control border border-danger small-font text-center" style="font-size: 1.75rem; resize: none; border: 3px solid #97979A; border-radius: 10px; box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5); padding: 20px; background-color: white; display: block; margin: auto;"></textarea>
-                    </div>
-                </div>
-                    <div class="col-md-4" style="background-color: white">
-                    <div class="row rounded p-3 d-flex align-items-center justify-content-center" style="height: 80%;">
-                        <label for="txtEventCosts">High</label><textarea id="txtEventCosts_high" name="txtEventCosts_high" class="form-control border border-danger small-font text-center" style="font-size: 1.75rem; resize: none; border: 3px solid #97979A; border-radius: 10px; box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5); padding: 20px; background-color: white; display: block; margin: auto;"></textarea>
-                    </div>
-                </div>
+    <div class="col-md-10" style="background-color: white">
+        <div class="row h-100">
+            <div class="col-md-1"></div>
+            <!-- Control Effectiveness -->
+            <div class="col-md-1 d-flex align-items-center">
+                <div class="w-100 rounded p-3">
+                    <label for="control_effectiveness">Controls</label>
+                    <textarea id="control_effectiveness" name="control_effectiveness" class="form-control text-center" style="resize: none;"></textarea>
                 </div>
             </div>
 
-            <div class="col-md-2" style="background-color: white">
-                <div class="row rounded p-3 d-flex align-items-center justify-content-center" style="height: 80%;">
-                    <label for="txtResidualRisk">Residual Risk Rating</label><textarea id="txtResidualRisk" name="txtResidualRisk" class="form-control border border-danger small-font text-center"  style="font-size: 1.5rem; resize: none; border: 3px solid #97979A; border-radius: 10px; box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5); padding: 20px; background-color: white; display: block; margin: auto;"></textarea>
+            <!-- Attack Success Rate -->
+            <div class="col-md-1 d-flex align-items-center">
+                <div class="w-100 rounded p-3">
+                    <label for="txtProbability">Attack Success Rate</label>
+                    <textarea id="txtProbability" name="txtProbability" class="form-control text-center" style="resize: none;"></textarea>
                 </div>
             </div>
+
+            <!-- Estimated Incident Costs -->
+            <div class="col-md-6">
+                <div class="row h-100">
+                    <!-- Low -->
+                    <div class="col-md-4 d-flex align-items-center">
+                        <div class="w-100 rounded p-3">
+                            <label for="txtEventCosts_low">Low</label>
+                            <textarea id="txtEventCosts_low" name="txtEventCosts_low" class="form-control text-center" style="resize: none;"></textarea>
+                        </div>
+                    </div>
+                    <!-- Medium -->
+                    <div class="col-md-4 d-flex align-items-center">
+                        <div class="w-100 rounded p-3">
+                            <label for="txtEventCosts">Medium</label>
+                            <textarea id="txtEventCosts" name="txtEventCosts" class="form-control text-center" style="resize: none;"></textarea>
+                        </div>
+                    </div>
+                    <!-- High -->
+                    <div class="col-md-4 d-flex align-items-center">
+                        <div class="w-100 rounded p-3">
+                            <label for="txtEventCosts_high">High</label>
+                            <textarea id="txtEventCosts_high" name="txtEventCosts_high" class="form-control text-center" style="resize: none;"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Residual Risk Rating -->
+            <div class="col-md-1 d-flex align-items-center">
+                <div class="w-100 rounded p-3">
+                    <label for="txtResidualRisk">Residual Risk</label>
+                    <textarea id="txtResidualRisk" name="txtResidualRisk" class="form-control text-center" style="resize: none;"></textarea>
+                </div>
+            </div>
+
+            <div class="col-md-2"></div>
         </div>
     </div>
-    <div class="col-md-2" style="background-color: white"></div>
     <div class="col-md-1" style="background-color: black"></div>
 </div>
+
 
 <div class="row">
     <div class="col-md-1" style="background-color: black"></div>
@@ -944,6 +993,18 @@ thead {
                         <input type="range" class="form-range" id="countermeasureCostsRange" name="countermeasureCostsRange" min="0" max="1000000" step="1000" oninput="updateCountermeasureCostsOutput(this.value)">
                     </div>
                     <div class="col-3"><h6><output for="countermeasureCostsRange" id="countermeasureCostsOutput">$0</output></h6></div>
+                </div>
+            </div>
+        </div>
+
+          <div class="card mb-3 shadow-sm" style="visibility: hidden"> <!-- Bootstrap card with shadow -->
+            <div class="card-body">
+                <div class="slider-container d-flex align-items-center">
+                    <div class="col-2"><label class="small-font d-flex align-items-center " >Security Level (SL)</label></div>
+                    <div class="col-7">
+                      <input type="range" min="1" max="10" value="1" class="form-range" id="sl_range" name="sl_range" onchange="initSlider('sl_range','range_sl');">
+                    </div>
+                    <div class="col-3"><h6><label id="range_sl" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                 </div>
             </div>
         </div>
@@ -1184,140 +1245,183 @@ thead {
 
           // Event listener for form submission
           function processFormData() {
-            // Check the value of the local session variable named "ls"
-            var lsValue = sessionStorage.getItem("ls");
-            if (lsValue === "1") {
-                swal("iOTa Scenario Manager", "Changes cannot be made to this scenario because it has been added to the risk register");
-                return; // Exit the function
-            }
-            // Prompt the user for confirmation
-            var isConfirmed = window.confirm("Are you sure you want to save the scenario data?");
+              // Check the value of the local session variable named "ls"
+              var lsValue = sessionStorage.getItem("ls");
+              var riskSnapshotCheckbox = document.getElementById('risk_snapshot');
 
-            // If the user clicked "Cancel", exit the function
-            if (!isConfirmed) {
-                return;
-            }
+              if (lsValue === "1") {
+                  if (riskSnapshotCheckbox.checked) {
+                      swal({
+                          title: "iOTa Scenario Manager",
+                          text: "The version of this scenario saved to the risk register cannot be changed. You are about to create a snapshot version of the scenario. Do you want to proceed?",
+                          icon: "warning",
+                          buttons: true,
+                          dangerMode: true,
+                      })
+                          .then((willProceed) => {
+                              if (willProceed) {
+                                  continueProcessing(true); // Continue with the rest of the function without asking for scenario data save confirmation
+                              }
+                          });
+                  } else {
+                      swal("iOTa Scenario Manager", "Changes cannot be made to this scenario because it has been added to the risk register");
+                      return; // Exit the function
+                  }
+              } else {
+                  continueProcessing(false); // Continue with the rest of the function and ask for scenario data save confirmation
+              }
 
-            $('#loadingSpinner').show();
-            // Get the values of the form fields
-            const scenario = document.getElementById('txtScenario').value;
-            const consequence = document.getElementById('txtConsequence').value
-            const threatSource = document.getElementById('threat-intelligence').value;
-            const threatactions = document.getElementById('threatactions');
-            let selectedThreatOptions = Array.from(threatactions.selectedOptions).map(option => option.value);
-            const mitigationMeasures = document.getElementById('mitigation-measure');
-            let selectedMitigationOptions = Array.from(mitigationMeasures.selectedOptions).map(option => option.value);
-            const riskCategory = document.getElementById('risk-category').value;
-            const safety = document.getElementById('range_safety').value;
-            const life = document.getElementById('range_life').value;
-            const production = document.getElementById('range_production').value;
-            const financial = document.getElementById('range_finance').value;
-            const reputation = document.getElementById('range_reputation').value;
-            const environment = document.getElementById('range_environment').value;
-            const regulatory = document.getElementById('range_regulatory').value;
-            const supply = document.getElementById('range_supply').value;
-            const data = document.getElementById('range_data').value;
-            const sm = document.getElementById('SMrange').value;
-            const mel = document.getElementById('MELrange').value;
-            const rrm = document.getElementById('RRMrange').value;
-            const sa = document.getElementById('SArange').value;
-            const mela = document.getElementById('MELarange').value;
-            const uel = document.getElementById('uel_range').value;
-            const rru = document.getElementById('rru_range').value;
-            const sl = document.getElementById('sl_range').value;
-            const cyberpha = sessionStorage.getItem('activeCyberPHA')
-            const recommendations = document.getElementById('txtScenarioAnalysis').value
-            const controls = document.getElementById('txtControlAnalysis').value
-            const rra =  document.getElementById('txtResidualRisk').value
-            const justifySafety =  document.getElementById('txtsafetyJustify').value
-            const justifyLife =  document.getElementById('txtlifeJustify').value
-            const justifyProduction =  document.getElementById('txtproductionJustify').value
-            const justifyFinance =  document.getElementById('txtfinanceJustify').value
-            const justifyReputation =  document.getElementById('txtreputationJustify').value
-            const justifyEnvironment =  document.getElementById('txtenvironmentJustify').value
-            const justifyRegulation =  document.getElementById('txtregulatoryJustify').value
-            const justifySupply =  document.getElementById('txtsupplyJustify').value
-            const dataRegulation =  document.getElementById('txtdataJustify').value
-            //const sle =  document.getElementById('hdn_sle').value
-            const aleValue = document.getElementById('ale').value;
-            let ale = parseInt(aleValue.replace(/[^0-9]/g, ''), 10);
-            const probability = document.getElementById('txtProbability').value;
-            const sle_low =  document.getElementById('txtEventCosts_low').value;
-            const sle_high =  document.getElementById('txtEventCosts_high').value;
-            const sle_median =  document.getElementById('txtEventCosts').value;
-            const standards =  document.getElementById('selStandards').value;
-            const aro = document.getElementById('aro').value;
-            const risk_register = document.getElementById('risk_register').checked;
-            const sis_outage = document.getElementById('sisOutageYes').checked;
-            const sis_compromise = document.getElementById('sisIntegrityYes').checked;
-            const safety_hazard = document.getElementById('hazardNature').value;
-              // Check if the "yes" option was selected for outage
-            const outageSelector = document.getElementById('outageYes'); // Replace 'outageSelectorId' with the actual ID of your Yes/No selector
-            const outage = outageSelector.value === "yes" ? "yes" : "no";
-            // If outage is "yes", get the values for outageDuration and outageCost
-            let outageDuration = 0;
-            let outageCost = 0;
-            if (outage === "yes") {
-                outageDuration = parseInt(document.getElementById('outageDuration').value, 10); // Replace 'outageDurationId' with the actual ID of your outage duration input
-                outageCost = parseInt(document.getElementById('outageCost').value, 10); // Replace 'outageCostId' with the actual ID of your outage cost input
-            }
-            // Create a FormData object
-                const formData = new FormData();
-                formData.append('sis_outage', sis_outage);
-                formData.append('sis_compromise', sis_compromise);
-                formData.append('safety_hazard', safety_hazard);
-                formData.append('scenario', scenario);
-                formData.append('consequence', consequence);
-                formData.append('threatSource', threatSource);
-                formData.append('threatAction', selectedThreatOptions);
-                formData.append('mitigationMeasures', selectedMitigationOptions);
-                formData.append('riskCategory', riskCategory);
-                formData.append('safety', safety);
-                formData.append('life', life);
-                formData.append('production', production);
-                formData.append('financial', financial);
-                formData.append('reputation', reputation);
-                formData.append('environment', environment);
-                formData.append('regulatory', regulatory);
-                formData.append('data', data);
-                formData.append('supply', supply);
-                formData.append('sm', sm);
-                formData.append('mel', mel);
-                formData.append('rrm', rrm);
-                formData.append('sa', sa);
-                formData.append('mela', mela);
-                formData.append('rra', rra);
-                formData.append('aro', aro);
-                formData.append('uel', uel);
-                formData.append('rru', rru);
-                formData.append('sl', sl);
-                formData.append('recommendations',recommendations)
-                formData.append('cyberpha', cyberpha);
-                formData.append('controls', controls);
-                formData.append('justifySafety', justifySafety);
-                formData.append('justifyLife', justifyLife);
-                formData.append('justifyProduction', justifyProduction);
-                formData.append('justifyFinance', justifyFinance);
-                formData.append('justifyReputation', justifyReputation);
-                formData.append('justifyEnvironment', justifyEnvironment);
-                formData.append('justifyRegulation', justifyRegulation);
-                formData.append('dataRegulation', dataRegulation);
-                formData.append('justifySupply', justifySupply);
-                formData.append('sle_low', sle_low);
-                formData.append('sle_median', sle_median);
-                formData.append('sle_high', sle_high);
-                formData.append('ale', ale);
-                formData.append('outage', outage);
-                formData.append('outageDuration', outageDuration);
-                formData.append('outageCost', outageCost);
-                formData.append('probability', probability);
-                formData.append('standards', standards);
-                formData.append('risk_register', risk_register);
+              function continueProcessing(skipConfirmation) {
+                  if (!skipConfirmation) {
+                      // Prompt the user for confirmation
+                      var isConfirmed = window.confirm("Are you sure you want to save the scenario data?");
 
-                // Call the saveOrUpdateCyberPHA function
-                saveOrUpdateCyberPHA(formData);
+                      // If the user clicked "Cancel", exit the function
+                      if (!isConfirmed) {
+                          return;
+                      }
+                  }
 
-                $('#loadingSpinner').hide();
+                  $('#loadingSpinner').show();
+                  // Get the values of the form fields
+                  const scenario = document.getElementById('txtScenario').value;
+                  const consequence = document.getElementById('txtConsequence').value
+                  const threatSource = document.getElementById('threat-intelligence').value;
+                  const threatactions = document.getElementById('threatactions');
+                  let selectedThreatOptions = Array.from(threatactions.selectedOptions).map(option => option.value);
+                  const mitigationMeasures = document.getElementById('mitigation-measure');
+                  let selectedMitigationOptions = Array.from(mitigationMeasures.selectedOptions).map(option => option.value);
+                  const riskCategory = document.getElementById('risk-category').value;
+                  const safety = document.getElementById('range_safety').value;
+                  const life = document.getElementById('range_life').value;
+                  const production = document.getElementById('range_production').value;
+                  const financial = document.getElementById('range_finance').value;
+                  const reputation = document.getElementById('range_reputation').value;
+                  const environment = document.getElementById('range_environment').value;
+                  const regulatory = document.getElementById('range_regulatory').value;
+                  const supply = document.getElementById('range_supply').value;
+                  const data = document.getElementById('range_data').value;
+                  const sm = document.getElementById('SMrange').value;
+                  const mel = document.getElementById('MELrange').value;
+                  const rrm = document.getElementById('RRMrange').value;
+                  const sa = document.getElementById('SArange').value;
+                  const mela = document.getElementById('MELarange').value;
+                  const uel = document.getElementById('uel_range').value;
+                  const uel_threat = document.getElementById('uel_threat').value;
+                  const uel_vuln = document.getElementById('uel_vuln').value;
+                  const uel_exposure = document.getElementById('uel_exposure').value;
+                  const rru = document.getElementById('rru_range').value;
+                  const sl = document.getElementById('sl_range').value;
+                  const cyberpha = sessionStorage.getItem('activeCyberPHA')
+                  const recommendations = document.getElementById('txtScenarioAnalysis').value
+                  const controls = document.getElementById('txtControlAnalysis').value
+                  const rra = document.getElementById('txtResidualRisk').value
+                  const justifySafety = document.getElementById('txtsafetyJustify').value
+                  const justifyLife = document.getElementById('txtlifeJustify').value
+                  const justifyProduction = document.getElementById('txtproductionJustify').value
+                  const justifyFinance = document.getElementById('txtfinanceJustify').value
+                  const justifyReputation = document.getElementById('txtreputationJustify').value
+                  const justifyEnvironment = document.getElementById('txtenvironmentJustify').value
+                  const justifyRegulation = document.getElementById('txtregulatoryJustify').value
+                  const justifySupply = document.getElementById('txtsupplyJustify').value
+                  const dataRegulation = document.getElementById('txtdataJustify').value
+                  //const sle =  document.getElementById('hdn_sle').value
+                  const aleValue = document.getElementById('ale').value;
+                  let ale = parseInt(aleValue.replace(/[^0-9]/g, ''), 10);
+                  const probability = document.getElementById('txtProbability').value;
+                  const control_effectiveness = document.getElementById('control_effectiveness').value;
+                  const sle_low = document.getElementById('txtEventCosts_low').value;
+                  const sle_high = document.getElementById('txtEventCosts_high').value;
+                  const sle_median = document.getElementById('txtEventCosts').value;
+                  const standards = document.getElementById('selStandards').value;
+                  const aro = document.getElementById('aro').value;
+                  const risk_register = document.getElementById('risk_register').checked;
+                  const sis_outage = document.getElementById('sisOutageYes').checked;
+                  const sis_compromise = document.getElementById('sisIntegrityYes').checked;
+                  const safety_hazard = document.getElementById('hazardNature').value;
+                  // Check if the "yes" option was selected for outage
+                  const outageSelector = document.getElementById('outageYes'); // Replace 'outageSelectorId' with the actual ID of your Yes/No selector
+                  const outage = outageSelector.value === "yes" ? "yes" : "no";
+                  // If outage is "yes", get the values for outageDuration and outageCost
+                  let outageDuration = 0;
+                  let outageCost = 0;
+                  if (outage === "yes") {
+                      outageDuration = parseInt(document.getElementById('outageDuration').value, 10); // Replace 'outageDurationId' with the actual ID of your outage duration input
+                      outageCost = parseInt(document.getElementById('outageCost').value, 10); // Replace 'outageCostId' with the actual ID of your outage cost input
+                  }
+                  var sid = sessionStorage.getItem('sid');
+                    if (!sid) {
+                        sid = 0;
+                    }
+                  // Create a FormData object
+                  const formData = new FormData();
+                  formData.append('scenarioID', sid);
+                  formData.append('sis_outage', sis_outage);
+                  formData.append('sis_compromise', sis_compromise);
+                  formData.append('safety_hazard', safety_hazard);
+                  formData.append('scenario', scenario);
+                  formData.append('consequence', consequence);
+                  formData.append('threatSource', threatSource);
+                  formData.append('threatAction', selectedThreatOptions);
+                  formData.append('mitigationMeasures', selectedMitigationOptions);
+                  formData.append('riskCategory', riskCategory);
+                  formData.append('safety', safety);
+                  formData.append('life', life);
+                  formData.append('production', production);
+                  formData.append('financial', financial);
+                  formData.append('reputation', reputation);
+                  formData.append('environment', environment);
+                  formData.append('regulatory', regulatory);
+                  formData.append('data', data);
+                  formData.append('supply', supply);
+                  formData.append('sm', sm);
+                  formData.append('mel', mel);
+                  formData.append('rrm', rrm);
+                  formData.append('sa', sa);
+                  formData.append('mela', mela);
+                  formData.append('rra', rra);
+                  formData.append('aro', aro);
+                  formData.append('uel', uel);
+                  formData.append('uel_threat', uel_threat);
+                  formData.append('uel_vuln', uel_vuln);
+                  formData.append('uel_exposure', uel_exposure);
+                  formData.append('rru', rru);
+                  formData.append('sl', sl);
+                  formData.append('recommendations', recommendations)
+                  formData.append('cyberpha', cyberpha);
+                  formData.append('controls', controls);
+                  formData.append('justifySafety', justifySafety);
+                  formData.append('justifyLife', justifyLife);
+                  formData.append('justifyProduction', justifyProduction);
+                  formData.append('justifyFinance', justifyFinance);
+                  formData.append('justifyReputation', justifyReputation);
+                  formData.append('justifyEnvironment', justifyEnvironment);
+                  formData.append('justifyRegulation', justifyRegulation);
+                  formData.append('dataRegulation', dataRegulation);
+                  formData.append('justifySupply', justifySupply);
+                  formData.append('sle_low', sle_low);
+                  formData.append('sle_median', sle_median);
+                  formData.append('sle_high', sle_high);
+                  formData.append('ale', ale);
+                  formData.append('outage', outage);
+                  formData.append('outageDuration', outageDuration);
+                  formData.append('outageCost', outageCost);
+                  formData.append('probability', probability);
+                  formData.append('control_effectiveness', control_effectiveness);
+                  formData.append('standards', standards);
+                  formData.append('risk_register', risk_register);
+                    // Check if snapshot should be created
+                  let snapshot = 0
+                  const riskSnapshotCheckbox = document.getElementById('risk_snapshot');
+                  if (riskSnapshotCheckbox.checked) {
+                        snapshot = 1;
+                    }
+                  formData.append('snapshot', snapshot);
+                  // Call the saveOrUpdateCyberPHA function
+                  saveOrUpdateCyberPHA(formData);
+
+                  $('#loadingSpinner').hide();
+              }
           }
     </script>
 
@@ -1526,6 +1630,104 @@ thead {
     </div>
   </div>
 </div>
+
+
+<div class="modal fade" id="uelModal" tabindex="-1" aria-labelledby="uelModal" aria-hidden="true">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="uelModal_Label">UEL Assessment</h5>
+        <!-- Threat Capability -->
+        <div class="control-group">
+          <label for="threatCapability">Threat Capability:</label>
+          <div class="range-container">
+            <input type="range" id="uel_threat" name="uel_threat" min="1" max="10" step="1" orient="vertical">
+            <span id="threatLabel">Low Skills</span>
+          </div>
+        </div>
+
+        <!-- Vulnerability Presence -->
+        <div class="control-group">
+          <label for="vulnerabilityPresence">Vulnerability Presence:</label>
+          <div class="range-container">
+            <input type="range" id="uel_vuln" name="uel_vuln" min="0" max="10" step="1" orient="vertical">
+            <span id="vulnerabilityLabel">No Vulnerabilities</span>
+          </div>
+        </div>
+
+        <!-- System Exposure -->
+        <div class="control-group">
+          <label for="systemExposure">System Exposure:</label>
+          <div class="range-container">
+            <input type="range" id="uel_exposure" name="uel_exposure" min="0" max="10" step="1" orient="vertical">
+            <span id="exposureLabel">No Exposure</span>
+          </div>
+        </div>
+
+        <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    // Function to update labels based on range values
+    function updateLabels() {
+        // Threat Capability
+        let threatValue = $('#uel_threat').val();
+        let threatLabel = "Low Skills";
+        if (threatValue <= 3) threatLabel = "Low Skills";
+        else if (threatValue <= 5) threatLabel = "Moderate Skills";
+        else if (threatValue <= 7) threatLabel = "Advanced Skills";
+        else if (threatValue <= 9) threatLabel = "Expert";
+        else threatLabel = "Highly Skilled";
+        $('#threatLabel').text(threatLabel);
+
+        // Vulnerability Presence
+        let vulnerabilityValue = $('#uel_vuln').val();
+        let vulnerabilityLabel = "No Vulnerabilities";
+        if (vulnerabilityValue <= 3) vulnerabilityLabel = "Minor Vulnerabilities";
+        else if (vulnerabilityValue <= 5) vulnerabilityLabel = "Some Vulnerabilities";
+        else if (vulnerabilityValue <= 7) vulnerabilityLabel = "Major Vulnerabilities";
+        else if (vulnerabilityValue <= 9) vulnerabilityLabel = "Critical Vulnerabilities";
+        else vulnerabilityLabel = "Easily Exploitable Vulnerabilities";
+        $('#vulnerabilityLabel').text(vulnerabilityLabel);
+
+        // System Exposure
+        let exposureValue = $('#uel_exposure').val();
+        let exposureLabel = "No Exposure";
+        if (exposureValue <= 3) exposureLabel = "Minimal Exposure";
+        else if (exposureValue <= 5) exposureLabel = "Moderate Exposure";
+        else if (exposureValue <= 7) exposureLabel = "Significant Exposure";
+        else if (exposureValue <= 9) exposureLabel = "High Exposure";
+        else exposureLabel = "Unrestricted External Exposure";
+        $('#exposureLabel').text(exposureLabel);
+    }
+
+    // Function to compute and set the overall UEL score
+    function computeAndSetUEL() {
+        let threatValue = parseInt($('#uel_threat').val());
+        let vulnerabilityValue = parseInt($('#uel_vuln').val());
+        let exposureValue = parseInt($('#uel_exposure').val());
+
+        // Compute the average
+        let overallUEL = Math.round((threatValue + vulnerabilityValue + exposureValue) / 3);
+
+        // Set the value to the uel_range control
+        $('#uel_range').val(overallUEL);
+    }
+
+    // Event listeners for the range controls
+    $('#uel_threat, #uel_vuln, #uel_exposure').on('input', function() {
+        updateLabels();
+        computeAndSetUEL();
+        initSlider('uel_range','range_uel');
+    });
+});
+
+
+</script>
 </form>
 
 <!-- RAActionsModal.html -->
@@ -1980,7 +2182,7 @@ thead {
          // AJAX function to call the Django view
         function assessScenario() {
             $('#loadingSpinner').show();
-
+            let cpha = sessionStorage.getItem('activeCyberPHA');
             let scenario = document.getElementById('txtScenario').value;
             let consequence = document.getElementById('txtConsequence').value
             let threatsource = document.getElementById('threat-intelligence').value;
@@ -2036,7 +2238,8 @@ thead {
                     supply: supply,
                     country: country,
                     uel: uel,
-                    financial: financial
+                    financial: financial,
+                    cpha: cpha
                 },
                 success: function (response) {
 
@@ -2067,6 +2270,7 @@ thead {
                     // Set the float value to the hidden 'hdn_sle' field
                     //document.getElementById('hdn_sle').value = costsFloat;
                     document.getElementById('txtProbability').value = response.probability;
+                    document.getElementById('control_effectiveness').value = response.control_effectiveness;
                     //document.getElementById('txtEventCosts').value = formattedCosts;
                     document.getElementById('txtResidualRisk').value = response.adjustedRR
 
@@ -2108,7 +2312,10 @@ document.addEventListener("DOMContentLoaded", function() {
         });
 
         // Check on textarea change
+
         textarea.addEventListener('input', function() {
+            console.log(textarea);
+            console.log(indicator);
             updateIndicator(textarea, indicator);
         });
     });
@@ -2165,6 +2372,7 @@ function resetformcontrols() {
       document.getElementById('txtControlAnalysis').value = 0;
       document.getElementById('txtRRa').value = 0;
       document.getElementById('txtProbability').value = '';
+      document.getElementById('control_effectiveness').value = '';
       document.getElementById('txtEventCosts_low').value = '';
       document.getElementById('txtEventCosts').value = '';
       document.getElementById('txtEventCosts_high').value = '';
@@ -2182,9 +2390,10 @@ function resetformcontrols() {
 
 
  function fillScenario(scenarioId) {
-
+     sessionStorage.setItem('sid', scenarioId);
     $('#threatactions').val([]);
     $('#threatactions').trigger('change');
+
     // Send a GET request to the getSingleScenario view
     $.get("{% url 'OTRisk:getSingleScenario' %}", { id: scenarioId }, function(data) {
          if (data.risk_register === true) {
@@ -2235,7 +2444,13 @@ function resetformcontrols() {
         $('#RRMrange').val(data.RRM);
         $('#SArange').val(data.SA);
         $('#MELarange').val(data.MELA);
+        $('#uel_range').val(data.UEL);
+        $('#uel_vuln').val(data.uel_vuln);
+        $('#uel_exposure').val(data.uel_exposure);
+        $('#uel_threat').val(data.uel_threat);
+
         $('#sle').val(data.sle);
+
 
         let costs = parseFloat(data.sle); // Assuming response.costs is a string representation of a number
         let formattedCosts = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(costs);
@@ -2251,6 +2466,7 @@ function resetformcontrols() {
 
         document.getElementById('txtResidualRisk').value= data.RRa;
         document.getElementById('txtProbability').value= data.probability;
+        document.getElementById('control_effectiveness').value= data.control_effectiveness;
         document.getElementById('hdnScenario').value = scenarioId;
 
          $('#txtRRa').val(data.RRa);

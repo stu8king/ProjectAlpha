@@ -4,6 +4,22 @@ import json
 register = template.Library()
 
 
+@register.filter
+def currency_format(value):
+    if value >= 1000000:
+        return f"${value / 1000000:.2f}M"
+    elif value >= 1000:
+        return f"${value / 1000:.2f}K"
+    else:
+        return f"${value}"
+
+
+@register.filter
+def getattr(obj, attr_name):
+    """Get an attribute of an object dynamically."""
+    return getattr(obj, attr_name)
+
+
 @register.filter(name='to_int')
 def to_int(value):
     try:

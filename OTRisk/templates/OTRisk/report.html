@@ -274,110 +274,37 @@
                         </div>
                     </div>
                     <div class="row">
-                        <div class="col-md-4">
-                            <div class="card">
-                                <div class="card-header">
-                                        Safety Impact
-                                    </div>
-                                    <div class="card-body">
-                                        <h5 class="card-title"><span id="safety_status"></span></h5>
-                                        <p class="card-text">Overall impact on safety from all scenarios.</p>
-                                    </div>
-                                </div>
+                        <div class="col-md-3">
+                            <div class="card-body">
+                                <canvas id="costImpactChart"></canvas>
                             </div>
-                        <div class="col-md-4">
+
+                        </div>
+                        <div class="col-md-3">
                             <div class="card">
                                 <div class="card-header">
-                                        Danger Impact
+                                        Overall Risk Assessment
                                     </div>
                                     <div class="card-body">
-                                        <h5 class="card-title"><span id="life_status"></span></h5>
-                                        <p class="card-text">Overall impact on danger-to-life from all scenarios.</p>
+                                        <h5 class="card-title"><span id="risk_status"></span></h5>
+                                        <p class="card-text">Overall assessment from all scenarios.</p>
                                     </div>
                                 </div>
+
                         </div>
-                        <div class="col-md-4">
-                            <div class="card">
-                                <div class="card-header">
-                                        Environment Impact
+                        <div class="col-md-6">
+                            <div class="card-header">
                                     </div>
                                     <div class="card-body">
-                                        <h5 class="card-title"><span id="environment_status"></span></h5>
-                                        <p class="card-text">Overall impact on the environment from all scenarios.</p>
+                                        <canvas id="impactChart"></canvas>
                                     </div>
+
                                 </div>
                         </div>
+
+                        <div class="col-md-3"></div>
                     </div>
-                    <div class="row">
-                        <div class="col-md-4">
-                            <div class="card">
-                                <div class="card-header">
-                                        Operational Impact
-                                    </div>
-                                    <div class="card-body">
-                                        <h5 class="card-title"><span id="operational_status"></span></h5>
-                                        <p class="card-text">Overall impact on operations and production from all scenarios.</p>
-                                    </div>
-                                </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="card">
-                                <div class="card-header">
-                                        Regulatory Impact
-                                    </div>
-                                    <div class="card-body">
-                                        <h5 class="card-title"><span id="regulatory_status"></span></h5>
-                                        <p class="card-text">Overall regulatory impact from all scenarios.</p>
-                                    </div>
-                                </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="card">
-                                <div class="card-header">
-                                        Financial Impact
-                                    </div>
-                                    <div class="card-body">
-                                        <h5 class="card-title"><span id="financial_status"></span></h5>
-                                        <p class="card-text">Overall impact on finances from all scenarios.</p>
-                                    </div>
-                                </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-4">
-                            <div class="card">
-                                <div class="card-header">
-                                        Data Impact
-                                    </div>
-                                    <div class="card-body">
-                                        <h5 class="card-title"><span id="data_status"></span></h5>
-                                        <p class="card-text">Overall impact on data and IP from all scenarios.</p>
-                                    </div>
-                                </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="card">
-                                <div class="card-header">
-                                        Reputation Impact
-                                    </div>
-                                    <div class="card-body">
-                                        <h5 class="card-title"><span id="reputation_status"></span></h5>
-                                        <p class="card-text">Overall impact on company reputation from all scenarios.</p>
-                                    </div>
-                                </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="card">
-                                <div class="card-header">
-                                        Supply Chain Impact
-                                    </div>
-                                    <div class="card-body">
-                                        <h5 class="card-title"><span id="supplychain_status"></span></h5>
-                                        <p class="card-text">Overall impact on the supply chain from all scenarios.</p>
-                                    </div>
-                                </div>
-                        </div>
-                    </div>
+
                     <div id="scenarioCount">Number of Scenarios: <span></span></div>
                     <div id="scenariosContainer"></div>
 
@@ -398,6 +325,7 @@
         $('#reportLeader').text(data.raworksheet.AssessorName);
 
         $('#safety_status').text(data.safety_status);
+        $('#risk_status').text(data.risk_status);
         $('#life_status').text(data.life_status);
         $('#environment_status').text(data.environment_status);
         $('#operational_status').text(data.operational_status);
@@ -665,6 +593,8 @@ $('#rawtable tbody tr').on('click', function() {
         success: function(data) {
             // Handle the returned data and display it underneath the rawtable
             displayReportData(data);
+            displayBarChart(data);
+            displayCostImpactChart(data)
         },
         error: function(error) {
             console.error("Error fetching report data:", error);
@@ -672,6 +602,138 @@ $('#rawtable tbody tr').on('click', function() {
     });
 });
 });
+// function to display impacts bar chart
+    var myChart;
+
+function displayBarChart(data) {
+
+    var ctx = document.getElementById('impactChart').getContext('2d');
+
+    if (myChart) {
+        myChart.destroy();
+    }
+
+    myChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Safety', 'Danger', 'Supply Chain', 'Environment', 'Production', 'Finance', 'Data', 'Reputation', 'Regulation'],
+            datasets: [{
+                label: 'Impact Average',
+                data: [
+                    data.safety_score_total,
+                    data.life_score_total,
+                    data.supplychain_score_total,
+                    data.environment_score_total,
+                    data.operational_score_total,
+                    data.financial_score_total,
+                    data.data_score_total,
+                    data.reputation_score_total,
+                    data.regulatory_score_total
+                ],
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.2)',
+                    'rgba(54, 162, 235, 0.2)',
+                    'rgba(255, 206, 86, 0.2)',
+                    'rgba(75, 192, 192, 0.2)',
+                    'rgba(153, 102, 255, 0.2)',
+                    'rgba(255, 159, 64, 0.2)',
+                    'rgba(255, 99, 132, 0.2)',
+                    'rgba(54, 162, 235, 0.2)'
+                ],
+                borderColor: [
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 206, 86, 1)',
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(153, 102, 255, 1)',
+                    'rgba(255, 159, 64, 1)',
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(54, 162, 235, 1)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    min: 0,  // Set minimum value for y-axis
+                    max: 10  // Set maximum value for y-axis
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                },
+                title: {
+                    display: true,
+                    text: 'Business Impact Analysis (n/10)'
+                }
+            }
+        }
+    });
+}
+    // function to display total high, medium, and low event costs graph
+var costImpactChart;
+
+function displayCostImpactChart(data) {
+    console.log(data)
+    var ctx = document.getElementById('costImpactChart').getContext('2d');
+
+    if (costImpactChart) {
+        costImpactChart.destroy();
+    }
+
+    costImpactChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Total Cost Impact (Low)', 'Total Cost Impact (Median)', 'Total Cost Impact (High)'],
+            datasets: [{
+                label: 'Cost Impact',
+                data: [
+                    data.total_event_cost_low,
+                    data.total_event_cost_median,
+                    data.total_event_cost_high
+                ],
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.2)',
+                    'rgba(54, 162, 235, 0.2)',
+                    'rgba(255, 206, 86, 0.2)'
+                ],
+                borderColor: [
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 206, 86, 1)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            elements: {
+              bar: {
+                  borderWidth: 2,
+              }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                },
+                title: {
+                    display: true,
+                    text: '$ Total Impact Costs (Low, Medium, High)'
+                }
+            }
+        }
+    });
+}
+//emd of event costs graph
+
 
 $(document).ready(function(){
     $('#rawtable').dataTable({

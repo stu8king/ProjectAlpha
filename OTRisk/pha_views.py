@@ -257,7 +257,8 @@ def pha_report(request, cyberpha_id):
 
     control_effectiveness = math.ceil(get_overall_control_effectiveness_score(cyberpha_id))
     # Retrieve the top 5 most effective controls
-    top_5_controls = MitreControlAssessment.objects.filter(cyberPHA=cyberpha_id).order_by('-effectiveness_percentage')[:5]
+    top_5_controls = MitreControlAssessment.objects.filter(cyberPHA=cyberpha_id).order_by('-effectiveness_percentage')[
+                     :5]
 
     # Retrieve the bottom 5 least effective controls
     bottom_5_controls = MitreControlAssessment.objects.filter(cyberPHA=cyberpha_id).order_by(
@@ -363,6 +364,7 @@ def phascenarioreport(request):
     })
 
 
+@login_required()
 def getSingleScenario(request):
     # Get the ID from the GET parameters
     scenario_id = request.GET.get('id')
@@ -392,6 +394,7 @@ def getSingleScenario(request):
         'impactEnvironment': scenario.impactEnvironment,
         'impactRegulation': scenario.impactRegulation,
         'impactData': scenario.impactData,
+        'impactSupply': scenario.impactSupply,
         'justifySafety': scenario.justifySafety,
         'justifyLife': scenario.justifyLife,
         'justifyProduction': scenario.justifyProduction,
@@ -401,6 +404,9 @@ def getSingleScenario(request):
         'justifyRegulation': scenario.justifyRegulation,
         'justifyData': scenario.justifyData,
         'UEL': scenario.UEL,
+        'uel_threat': scenario.uel_threat,
+        'uel_vuln': scenario.uel_vuln,
+        'uel_exposure': scenario.uel_exposure,
         'RRU': scenario.RRU,
         'SM': scenario.SM,
         'MEL': scenario.MEL,
@@ -423,11 +429,44 @@ def getSingleScenario(request):
         'risk_register': scenario.risk_register,
         'safety_hazard': scenario.safety_hazard,
         'sis_compromise': scenario.sis_compromise,
-        'sis_outage': scenario.sis_outage
-  }
+        'sis_outage': scenario.sis_outage,
+        'risk_priority': scenario.risk_priority,
+        'risk_status': scenario.risk_status,
+        'risk_owner': scenario.risk_owner,
+        'risk_response': scenario.risk_response,
+        'risk_open_date': scenario.risk_open_date,
+        'risk_close_date': scenario.risk_close_date,
+        'control_effectiveness': scenario.control_effectiveness
+    }
 
     # Return the scenario as a JSON response
     return JsonResponse(scenario_dict)
+
+
+# function to calculate overall control effectiveness for a given cyberpha
+def calculate_effectiveness(cyberPHA_value):
+    # Filter assessments by the given cyberPHA value
+    assessments = MitreControlAssessment.objects.filter(cyberPHA=cyberPHA_value)
+
+    # If there are no matching records, return 0
+    if not assessments.exists():
+        return 0
+
+    # Calculate the numerator (sum of effectiveness_percentage multiplied by weighting)
+    numerator = assessments.aggregate(
+        total_effectiveness=Sum(F('effectiveness_percentage') * F('weighting'))
+    )['total_effectiveness']
+
+    # Calculate the denominator (sum of weighting)
+    denominator = assessments.aggregate(total_weighting=Sum('weighting'))['total_weighting']
+
+    # Calculate the weighted average
+    if denominator:
+        overall_effectiveness = numerator / denominator
+    else:
+        overall_effectiveness = 0
+
+    return overall_effectiveness
 
 
 @login_required()
@@ -453,9 +492,13 @@ def scenario_analysis(request):
         country = request.GET.get('country')
         uel = request.GET.get('uel')
         financial = request.GET.get('financial')
+        cyberPHAID = request.GET.get('cpha')
+
+        # get the effectiveness of controls for the given cyberPHA
+        control_effectiveness = calculate_effectiveness(cyberPHAID)
 
         def common_content_prefix():
-            return f"In the {industry} industry, at a {facility_type} in {country}, given the scenario {scenario} with consequences {consequences}, the threat source is {threatSource} performing actions.  Business impact scores (out of 10) are: safety: {safetyimpact}, life: {lifeimpact}, production: {productionimpact}, reputation: {reputationimpact}, environment: {environmentimpact}, regulatory: {regulatoryimpact}, data: {dataimpact}, and supply: {supplyimpact}. The unmitigated risk without controls is rated as {uel}/10."
+            return f"In the {industry} industry, at a {facility_type} in {country}, given the scenario {scenario} with consequences {consequences}, the threat source is {threatSource} performing actions.  Business impact scores (out of 10) are: safety: {safetyimpact}, life: {lifeimpact}, production: {productionimpact}, reputation: {reputationimpact}, environment: {environmentimpact}, regulatory: {regulatoryimpact}, data: {dataimpact}, and supply: {supplyimpact}. The unmitigated risk likelihood without controls is rated as {uel}/10."
 
         openai.api_key = os.environ.get('OPENAI_API_KEY')
         # Define the common part of the user message
@@ -491,7 +534,7 @@ def scenario_analysis(request):
             },
             {
                 "role": "user",
-                "content": f"Given the context: {common_content_prefix()} and analysis of publicly reported cybersecurity incidents, provide ONLY the estimated probability (as a percentage) of a successful targeted attack given the current controls given in the context. Answer with a number followed by a percentage sign (e.g., nn%). Do NOT include any other words, sentences, or explanations."
+                "content": f"Given the context: {common_content_prefix()} and analysis of publicly reported cybersecurity incidents, provide ONLY the estimated probability (as a whole number percentage) of a successful targeted attack given that the assessed effectiveness of current cybersecurity controls is {control_effectiveness}% . Answer with a number followed by a percentage sign (e.g., nn%). Do NOT include any other words, sentences, or explanations."
             }
 
         ]
@@ -518,7 +561,8 @@ def scenario_analysis(request):
             'adjustedRR': responses[1],
             'costs': responses[2],
             'recommendations': responses[3],
-            'probability': responses[4]
+            'probability': responses[4],
+            'control_effectiveness': control_effectiveness
         })
 
 

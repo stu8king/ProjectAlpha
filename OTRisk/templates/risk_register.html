@@ -6,16 +6,32 @@
 <head>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.1/font/bootstrap-icons.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.3/css/jquery.dataTables.css">
-    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.js"></script>
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
-    <script src="https://cdn.anychart.com/releases/8.11.0/js/anychart-core.min.js"></script>
-    <script src="https://cdn.anychart.com/releases/8.11.0/js/anychart-heatmap.min.js"></script>
+    <!-- Load jQuery (only one version) -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- Bootstrap and related scripts -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.1/font/bootstrap-icons.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+
+<!-- DataTables -->
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.3/css/jquery.dataTables.css">
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.js"></script>
+
+<!-- Select2 -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<!-- SweetAlert -->
+<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+
+<!-- AnyChart -->
+<script src="https://cdn.anychart.com/releases/8.10.0/js/anychart-bundle.min.js"></script>
+<link href="https://cdn.anychart.com/releases/8.10.0/css/anychart-ui.min.css" rel="stylesheet" type="text/css">
+<script src="https://cdn.anychart.com/releases/8.10.0/js/anychart-exports.min.js"></script>
+<script src="https://cdn.anychart.com/releases/v8/js/anychart-bullet.min.js"></script>
+<script src="https://cdn.anychart.com/releases/8.11.1/js/anychart-base.min.js"></script>
+
+
 
 
     <script src="{% static 'OTRisk/assesscyberpha.js' %}"></script>
@@ -174,11 +190,13 @@
                 <th>Assessment Start</th>
                 <th>Assessment End</th>
                 <th>Probability</th>
+                <th>Snapshots</th>
             </tr>
         </thead>
         <tbody>
             {% for item in data %}
-            <tr>
+            <tr data-id="{{ item.ID }}">
+
                 <td>{{ item.CyberPHA__FacilityName }}</td>
                 <td>{{ item.CyberPHA__AssessmentUnit }}</td>
                 <td>{{ item.Scenario }}</td>
@@ -214,13 +232,267 @@
                     {% endif %}
                     {{ item.probability }}%
                 </td>
-
+                <td>
+                    {% if item.snapshots == 1 %}
+                        <a href="{% url 'OTRisk:view_snapshots' item.ID %}">View Snapshots</a>
+                    {% endif %}
+                </td>
 
             </tr>
             {% endfor %}
         </tbody>
     </table>
+    <script>
+    $(document).ready(function() {
 
+        $("table tbody tr").click(function() {
+            var scenarioId = $(this).data("id");
+
+            $.get("{% url 'OTRisk:getSingleScenario' %}", { id: scenarioId }, function(data) {
+
+                 var detailsHtml = `
+
+            <p><strong>ID:</strong> ${data.ID}      <strong>CyberPHA:</strong> ${data.CyberPHA}</p>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="card shadow-lg inner-card">
+                        <div class="card-body">
+                            <div class="row">
+                                <h5 class="card-title text-center text-black card-title-light">Scenario</h5>
+                            </div>
+                            <div class="row">
+                                <p>${data.Scenario}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <br>
+                    <div class="card shadow-lg inner-card">
+                        <div class="card-body">
+                            <div class="row">
+                                <h5 class="card-title text-center text-black card-title-light">Consequences</h5>
+                            </div>
+                            <div class="row">
+                                <p>${data.Consequence}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-8" id="impactChartContainer"></div>
+            </div>
+            <br>
+            <div class="row">
+                <div class="col-md-4" style="border: 1px solid darkgrey;">
+                    <!-- user controls -->
+                    <form id="riskForm">
+                        {% csrf_token %}
+                        <br>
+                        <input type="hidden" id="scenario_id" name="scenario_id" value="${data.ID}">
+                        <label for="risk_owner" class="form-control" style="border: none;">Risk Owner:</label>
+
+                        <input type="text" class="form-control" id="risk_owner" name="risk_owner" required>
+                        <br>
+                        <label for="risk_priority"class="form-control" style="border: none;">Risk Priority:</label>
+                        <select id="risk_priority" name="risk_priority" class="form-control">
+                            <option value="Low">Low</option>
+                            <option value="Medium">Medium</option>
+                            <option value="High">High</option>
+                            <option value="Critical">Critical</option>
+                        </select>
+                        <br>
+                        <label for="risk_response" class="form-control" style="border: none;">Risk Response:</label>
+                        <select id="risk_response" name="risk_response" class="form-control">
+                            <option value="Manage">Manage</option>
+                            <option value="Mitigate">Mitigate</option>
+                            <option value="Transfer">Transfer</option>
+                            <option value="Accept">Accept</option>
+                        </select>
+                        <br>
+                        <label for="risk_status" class="form-control" style="border: none;">Risk Status:</label>
+                        <select id="risk_status" name="risk_status" class="form-control">
+                            <option value="Open">Open</option>
+                            <option value="Closed">Closed</option>
+                        </select>
+                        <br>
+                        <label for="risk_open_date" class="form-control" style="border: none;">Risk Open Date:</label>
+                        <input type="date" class="form-control" id="risk_open_date" name="risk_open_date" required>
+                        <br>
+                        <label for="risk_close_date" class="form-control" style="border: none;">Risk Close Date:</label>
+                        <input type="date" class="form-control" id="risk_close_date" name="risk_close_date" required>
+                        <br>
+                        <button type="button"  class="btn btn-primary"  id="saveRiskData">Save</button>
+                    </form>
+                </div>
+                <div class="col-md-8">
+                    <div class="row">
+                        <div class="col-md-2">
+                            <div class="card shadow-lg inner-card">
+                                <div class="card-body">
+                                    <div class="row">
+                                        <h5 class="card-title text-center text-black card-title-light">Attack Success Probability</h5>
+                                    </div>
+                                    <div class="row">
+                                        <p>${data.probability}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-2">
+                            <div class="card shadow-lg inner-card">
+                                <div class="card-body">
+                                    <div class="row">
+                                        <h5 class="card-title text-center text-black card-title-light">Production Outage</h5>
+                                    </div>
+                                    <div class="row">
+                                        <p>${data.outage}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-2">
+                            <div class="card shadow-lg inner-card">
+                                <div class="card-body">
+                                    <div class="row">
+                                        <h5 class="card-title text-center text-black card-title-light">SIS Outage</h5>
+                                    </div>
+                                    <div class="row">
+                                        <p>${data.sis_outage}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="card shadow-lg inner-card">
+                                <div class="card-body">
+                                    <div class="row">
+                                        <h5 class="card-title text-center text-black card-title-light">SIS Compromise</h5>
+                                    </div>
+                                    <div class="row">
+                                        <p>${data.sis_compromise}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="card shadow-lg inner-card">
+                                <div class="card-body">
+                                    <div class="row">
+                                        <h5 class="card-title text-center text-black card-title-light">Risk Category</h5>
+                                    </div>
+                                    <div class="row">
+                                        <p>${data.RiskCategory}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="card shadow-lg inner-card">
+                                <div class="card-body">
+                                    <div class="row">
+                                        <h5 class="card-title text-center text-black card-title-light">Standards</h5>
+                                    </div>
+                                    <div class="row">
+                                        <p>${data.standards}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12" id="bulletChartContainer"></div>
+                    </div>
+
+                  </div>
+
+            </div>
+        `;
+
+
+        $("#scenarioDetails").html(detailsHtml);
+        $("#scenarioDetailsCard").show(); // Show the card
+        var riskPriorityValue = data.risk_priority;
+        var riskOwner = data.risk_owner;
+        var riskResponse = data.risk_response;
+        var riskStatus = data.risk_status;
+        var riskOpenDate = data.risk_open_date;
+        var riskCloseDate = data.risk_close_date;
+        // Set the dropdown to the correct value
+        $("#risk_priority").val(riskPriorityValue);
+        $("#risk_owner").val(riskOwner);
+        $("#risk_response").val(riskResponse);
+        $("#risk_status").val(riskStatus);
+        $("#risk_open_date").val(riskOpenDate);
+        $("#risk_close_date").val(riskCloseDate);
+
+
+        var rangeData = [
+                {x: "Best Case", low: 0, high: data.sle_low},
+                {x: "Median Case", low: 0, high: data.sle},
+                {x: "Worst Case", low: 0, high: data.sle_high}
+            ];
+
+            anychart.theme('darkBlue');
+            var rangechart = anychart.area();
+
+            var series = rangechart.rangeStepArea(rangeData);
+            // Format the y-axis to show values in US$
+            var yAxis = rangechart.yAxis();
+            yAxis.labels().format('${%Value}');
+            // Set the container for the chart
+            rangechart.container("bulletChartContainer");
+            rangechart.draw();
+
+
+
+
+ // Create the bar chart
+            var chartData = [
+                {x: "Safety", value: data.impactSafety},
+                {x: "Danger", value: data.impactDanger},
+                {x: "Production", value: data.impactProduction},
+                {x: "Finance", value: data.impactFinance},
+                {x: "Reputation", value: data.impactReputation},
+                {x: "Environment", value: data.impactEnvironment},
+                {x: "Regulation", value: data.impactRegulation},
+                {x: "Data", value: data.impactData},
+                {x: "Supply", value: data.impactSupply}
+            ];
+
+            var chart = anychart.column();
+            chart.data(chartData);
+            chart.title("Impact Analysis");
+            // Set the y-axis scale to range from 0 to 10
+            var yAxisScale = anychart.scales.linear();
+            yAxisScale.minimum(0);
+            yAxisScale.maximum(10);
+
+            var yAxis = chart.yAxis();
+            yAxis.scale(yAxisScale);
+            chart.container("impactChartContainer");
+            chart.draw();
+
+        });
+
+    });
+});
+
+$(document).ready(function() {
+    $(document).on('click', '#saveRiskData', function() {
+        var formData = $("#riskForm").serialize();
+        $.post("{% url 'OTRisk:save_risk_data' %}", formData, function(response) {
+            if(response.status == 'success') {
+                alert("Data saved successfully!");
+            } else {
+                alert("Error saving data!");
+            }
+        });
+    });
+});
+
+
+
+    </script>
 
 </div>
 <div class="col-md-1 " style="background-color: black"></div>
@@ -278,7 +550,27 @@
     </div>
     <div class="col-md-1 " style="background-color: black"></div>
 </div>
+<div class="row" style="height: 10px;">
+    <div class="col-md-1 " style="background-color: black"></div>
+    <div class="col-md-10 " style="background-color: black"></div>
+    <div class="col-md-1 " style="background-color: black"></div>
+</div>
+<div class="row">
+    <div class="col-md-1 " style="background-color: black"></div>
+    <div class="col-md-10 " style="background-color: black">
+        <div class="card" style="display: none;" id="scenarioDetailsCard">
+          <div class="card-header">
+            Scenario Details
+          </div>
+          <div class="card-body" id="scenarioDetails">
+            <!-- Details will be populated here -->
+          </div>
+        </div>
+    </div>
+    <div class="col-md-1 " style="background-color: black"></div>
+</div>
 <script>
+
     anychart.onDocumentReady(function() {
         // create data
         var data = [];
@@ -341,5 +633,8 @@
         // initiate drawing the chart
         chart.draw();
     });
+
+
+
 </script>
 

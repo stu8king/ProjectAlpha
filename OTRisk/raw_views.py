@@ -217,6 +217,7 @@ def rawreport(request, raworksheet_id):
         return HttpResponseForbidden("Unauthorized Action.")
 
     scenarios = RAWorksheetScenario.objects.filter(RAWorksheetID=raworksheet)
+
     total_scenario_cost = scenarios.aggregate(Sum('scenarioCost'))['scenarioCost__sum']
     formatted_cost = "${:,.2f}".format(total_scenario_cost)
     total_event_cost_high = scenarios.aggregate(Sum('event_cost_high'))['event_cost_high__sum']
@@ -240,11 +241,30 @@ def rawreport(request, raworksheet_id):
     reputation_status = get_risk_status(scenarios.aggregate(Max('ReputationScore'))['ReputationScore__max'])
     supplychain_status = get_risk_status(scenarios.aggregate(Max('SupplyChainScore'))['SupplyChainScore__max'])
 
+    safety_score_total = scenarios.aggregate(Max('SafetyScore'))['SafetyScore__max']
+    life_score_total = scenarios.aggregate(Max('lifeScore'))['lifeScore__max']
+    environment_score_total = scenarios.aggregate(Max('environmentScore'))['environmentScore__max']
+    operational_score_total = scenarios.aggregate(Max('productionScore'))['productionScore__max']
+    regulatory_score_total = scenarios.aggregate(Max('regulatoryScore'))['regulatoryScore__max']
+    financial_score_total = scenarios.aggregate(Max('FinancialScore'))['FinancialScore__max']
+    data_score_total = scenarios.aggregate(Max('DataScore'))['DataScore__max']
+    reputation_score_total = scenarios.aggregate(Max('ReputationScore'))['ReputationScore__max']
+    supplychain_score_total = scenarios.aggregate(Max('SupplyChainScore'))['SupplyChainScore__max']
+
     referer = request.META.get('HTTP_REFERER', '')
 
     if 'reports' in referer:
         # If the calling template is report.html, return a JsonResponse
         return JsonResponse({
+            'safety_score_total': safety_score_total,
+            'life_score_total': life_score_total,
+            'environment_score_total': environment_score_total,
+            'operational_score_total': operational_score_total,
+            'regulatory_score_total': regulatory_score_total,
+            'financial_score_total': financial_score_total,
+            'data_score_total': data_score_total,
+            'reputation_score_total': reputation_score_total,
+            'supplychain_score_total': supplychain_score_total,
             'raworksheet': model_to_dict(raworksheet),
             'scenarios': list(scenarios.values()),
             'formatted_cost': formatted_cost,
@@ -258,9 +278,9 @@ def rawreport(request, raworksheet_id):
             'data_status': data_status,
             'reputation_status': reputation_status,
             'supplychain_status': supplychain_status,
-            'formatted_total_event_cost_high': formatted_total_event_cost_high,
-            'formatted_total_event_cost_low': formatted_total_event_cost_low,
-            'formatted_total_event_cost_median': formatted_total_event_cost_median
+            'total_event_cost_high': total_event_cost_high,
+            'total_event_cost_low': total_event_cost_low,
+            'total_event_cost_median': total_event_cost_median
         })
     else:
         return render(request, 'rawreport.html',
@@ -277,9 +297,9 @@ def rawreport(request, raworksheet_id):
                        'data_status': data_status,
                        'reputation_status': reputation_status,
                        'supplychain_status': supplychain_status,
-                       'formatted_total_event_cost_high': formatted_total_event_cost_high,
-                       'formatted_total_event_cost_low': formatted_total_event_cost_low,
-                       'formatted_total_event_cost_median': formatted_total_event_cost_median})
+                       'total_event_cost_high': total_event_cost_high,
+                       'total_event_cost_low': total_event_cost_low,
+                       'total_event_cost_median': total_event_cost_median})
 
 
 def get_risk_status(risk_score):
@@ -366,8 +386,9 @@ def qraw(request):
 
         edit_mode_value = request.POST.get('edit_mode', 0)
         edit_mode = 1 if edit_mode_value == '' else int(edit_mode_value)
-
+        print("p1")
         if edit_mode == 0:
+            print("edit mode = 0")
             if not is_duplicate:
                 # adding new records
                 revenue_str = ensure_non_empty(request.POST.get('txtRevenue'))
@@ -440,8 +461,10 @@ def qraw(request):
                         )
                         scenario.save()
         elif edit_mode == 1:
+            print("edit mode = 1")
             ra_worksheet_id = int(request.POST.get('hdnRawID'))
             ra_worksheet = RAWorksheet.objects.get(ID=ra_worksheet_id)
+
             ra_worksheet.RATitle = request.POST.get('txtTitle')
             ra_worksheet.BusinessUnit = request.POST.get('txtBU')
             ra_worksheet.AssessorName = request.POST.get('txtLeader')
@@ -454,60 +477,65 @@ def qraw(request):
             ra_worksheet.save()
 
             scenario_count = int(request.POST.get('scenarioCount', 0))
+            print(scenario_count)
             for i in range(1, scenario_count + 1):
-                scenario_id_str = request.POST.get(f'hdnScenarioID_{i}')
-                ra_worksheet_id = int(
-                    request.POST.get('hdnRawID'))
-                ra_worksheet_instance = RAWorksheet.objects.get(ID=ra_worksheet_id)
-
-                if scenario_id_str and scenario_id_str != '0':
-                    scenario_id = int(scenario_id_str)
-                    try:
-                        scenario = RAWorksheetScenario.objects.get(ID=scenario_id)
-                    except RAWorksheetScenario.DoesNotExist:
-                        scenario = RAWorksheetScenario()  # Create a new instance if not found.
-                else:
-                    scenario = RAWorksheetScenario()  # Create a new instance.
-
+                print(i)
                 raw_cost = request.POST.get(f'lblriskCost_{i}')
                 formatted_cost = parse_currency(re.sub(r'[^\d.]', '', raw_cost))
-                scenario.RAWorksheetID = ra_worksheet_instance
+
+                # Check for duplicate scenario
+                is_scenario_duplicate = RAWorksheetScenario.objects.filter(
+                    RAWorksheetID=ra_worksheet,
+                    ScenarioDescription=request.POST.get(f'txtScenarioDescription_{i}')
+                ).exists()
+
+                if is_scenario_duplicate:
+                    scenario = RAWorksheetScenario.objects.get(
+                        RAWorksheetID=ra_worksheet,
+                        ScenarioDescription=request.POST.get(f'txtScenarioDescription_{i}'),
+                    )
+                else:
+                    scenario = RAWorksheetScenario()
+
+                # Now set the attributes for the scenario
+                scenario.RAWorksheetID = ra_worksheet
                 scenario.ScenarioDescription = request.POST.get(f'txtScenarioDescription_{i}')
                 scenario.threatSource = request.POST.get(f'selectThreat_{i}')
                 scenario.threatTactic = request.POST.get(f'selectTactics_{i}')
                 scenario.SafetyScore = request.POST.get(f'range_safety_{i}')
                 scenario.lifeScore = request.POST.get(f'range_life_{i}')
-                scenario.productionScore = ensure_non_empty(request.POST.get(f'range_production_{i}'))
-                scenario.SupplyChainScore = ensure_non_empty(request.POST.get(f'range_supply_{i}'))
-                scenario.DataScore = ensure_non_empty(request.POST.get(f'range_data_{i}'))
-                scenario.FinancialScore = ensure_non_empty(request.POST.get(f'range_finance_{i}'))
-                scenario.ReputationScore = ensure_non_empty(request.POST.get(f'range_reputation_{i}'))
-                scenario.environmentScore = ensure_non_empty(request.POST.get(f'range_environment_{i}'))
-                scenario.regulatoryScore = ensure_non_empty(request.POST.get(f'range_regulatory_{i}'))
-                scenario.OperationScore = ensure_non_empty(request.POST.get(f'range_production_{i}'))
-                scenario.VulnScore = ensure_non_empty(request.POST.get(f'range_vuln_{i}'))
-                scenario.ThreatScore = ensure_non_empty(request.POST.get(f'range_threat_{i}'))
+                scenario.productionScore = request.POST.get(f'range_production_{i}')
+                scenario.SupplyChainScore = request.POST.get(f'range_supply_{i}')
+                scenario.DataScore = request.POST.get(f'range_data_{i}')
+                scenario.FinancialScore = request.POST.get(f'range_finance_{i}')
+                scenario.ReputationScore = request.POST.get(f'range_reputation_{i}')
+                scenario.environmentScore = request.POST.get(f'range_environment_{i}')
+                scenario.regulatoryScore = request.POST.get(f'range_regulatory_{i}')
+                scenario.VulnScore = request.POST.get(f'range_vuln_{i}')
+                scenario.ThreatScore = request.POST.get(f'range_threat_{i}')
                 scenario.notes = request.POST.get(f'txtAssets_{i}')
-                scenario.RiskScore = parse_currency(request.POST.get(f'lblriskScore_{i}'))
+                scenario.RiskScore = int(request.POST.get(f'lblriskScore_{i}'))
                 scenario.RiskStatus = request.POST.get(f'lblriskRating_{i}')
                 scenario.riskSummary = request.POST.get(f'lblriskSummary_{i}')
                 scenario.scenarioCost = formatted_cost
-                scenario.justifySafety = ensure_non_null(request.POST.get(f'txtSafetyJustify_{i}'))
-                scenario.justifyLife = ensure_non_null(request.POST.get(f'txtlifeJustify_{i}'))
-                scenario.justifyData = ensure_non_null(request.POST.get(f'txtdataJustify_{i}'))
-                scenario.justifyFinancial = ensure_non_null(request.POST.get(f'txtfinanceJustify_{i}'))
-                scenario.justifyProduction = ensure_non_null(request.POST.get(f'txtproductionJustify_{i}'))
-                scenario.justifyEnvironment = ensure_non_null(request.POST.get(f'txtenvironmentJustify_{i}'))
-                scenario.justifyRegulation = ensure_non_null(request.POST.get(f'txtregulationJustify_{i}'))
-                scenario.justifyReputation = ensure_non_null(request.POST.get(f'txtreputationJustify_{i}'))
-                scenario.justifySupply = ensure_non_null(request.POST.get(f'txtsupplyJustify_{i}'))
+                scenario.justifySafety = request.POST.get(f'txtSafetyJustify_{i}')
+                scenario.justifyLife = request.POST.get(f'txtlifeJustify_{i}')
+                scenario.justifyData = request.POST.get(f'txtdataJustify_{i}')
+                scenario.justifyFinancial = request.POST.get(f'txtfinanceJustify_{i}')
+                scenario.justifyProduction = request.POST.get(f'txtproductionJustify_{i}')
+                scenario.justifyEnvironment = request.POST.get(f'txtenvironmentJustify_{i}')
+                scenario.justifyRegulation = request.POST.get(f'txtregulationJustify_{i}')
+                scenario.justifyReputation = request.POST.get(f'txtreputationJustify_{i}')
+                scenario.justifySupply = request.POST.get(f'txtsupplyJustify_{i}')
                 scenario.event_cost_low = parse_currency(request.POST.get(f'lblriskCost_{i}'))
                 scenario.event_cost_high = parse_currency(request.POST.get(f'lblriskCostHigh_{i}'))
                 scenario.event_cost_median = parse_currency(request.POST.get(f'lblriskCostMedian_{i}'))
                 scenario.outage = request.POST.get(f'selectOutage_{i}')
                 scenario.outageLength = request.POST.get(f'outage_{i}')
+                scenario.OperationScore = 0
                 scenario.save()
 
+    print("p2")
     raws = RAWorksheet.objects.filter(organization_id=org_id)
 
     facilities = FacilityType.objects.all().order_by('FacilityType')
@@ -572,17 +600,17 @@ def openai_assess_risk(request):
         outageLength = int(request.GET.get('outageLength'))
 
         # check that the user hasn't entered anything that does not comply with openai moderation policy
-        moderation_result = moderate_content(scenario)
+        # moderation_result = moderate_content(scenario)
 
-        if moderation_result != "pass":
-            risk_rating = "Non-compliant"
-            risk_score = "Non-compliant"
-            low_estimate = "Non-compliant"
-            high_estimate = "Non-compliant"
-            risk_summary = "Non-compliant"
-            median_estimate = "Non-compliant"
-            result_array = [risk_rating, risk_score, low_estimate, high_estimate, risk_summary, median_estimate]
-            return JsonResponse(result_array, safe=False)
+        # if moderation_result != "pass":
+        #    risk_rating = "Non-compliant"
+        #    risk_score = "Non-compliant"
+        #    low_estimate = "Non-compliant"
+        #    high_estimate = "Non-compliant"
+        #    risk_summary = "Non-compliant"
+        #    median_estimate = "Non-compliant"
+        #    result_array = [risk_rating, risk_score, low_estimate, high_estimate, risk_summary, median_estimate]
+        #    return JsonResponse(result_array, safe=False)
 
         # get the definitions for each of the numeric values
         safetydef = safety_definition(safety_impact)
@@ -611,6 +639,7 @@ def openai_assess_risk(request):
         asset_lc = ASSET_STATUS_MAPPING.get(asset_status, "Unknown status")
 
         # Assuming all the variables (threat_source, threat_tactic, scenario, etc.) are already defined
+        content = "Outage information not provided."
 
         if outage == "Yes":
             content = f"The scenario is expected to result in a production outage of {outageLength}."
@@ -731,24 +760,16 @@ def openai_assess_risk(request):
         # Query for the Model
         risk_summary_message = {
             "role": "user",
-            "content": {
-                "prompt": "Based on the provided risk factors, make a brief and concise bullet point assessment of the overall likelihood and consequences of the given scenario in a maximum of 100 words.",
-                "factors": risk_factors,
-                "response_options": [
-                    "Unrealistic scenario",
-                    "Very Low Risk",
-                    "Low Risk",
-                    "Moderate Risk",
-                    "High Risk",
-                    "Very High Risk"
-                ],
-                "additional_request": {
-                    "confidence_score": "Provide a confidence score (0-100) on your prediction.",
-                    "brief_explanation": "Provide a brief rationale for the chosen risk level.",
-                    "recommendations": "Suggest initial steps or measures to mitigate the identified risk.",
-                    "formatting": "Place line breaks between paragraphs. Start each section as a new paragraph"
+            "content": dict(
+                prompt=(
+                    "Based on the provided risk factors, generate a concise bullet point list of the most relevant OT and ICS Cybersecurity controls necessary to mitigate the risks:\n"
+                    "Controls should be focused on mitigating risks most relevant to OT Cybersecurity."
+                ),
+                factors=risk_factors,
+                additional_request={
+                    "formatting": "Place line breaks between lines. No more than 10 words per bullet point. No extra commentary or explanation"
                 }
-            }
+            )
         }
 
         risk_rating = query_openai(risk_rating_message['content'])
@@ -770,7 +791,6 @@ def write_to_audit(user_id, user_action, user_ip):
 
 
 def raw_action(request):
-
     if request.method == "POST":
         RAWorksheetID = request.POST.get('hdnRAWorksheetID')
         actionTitle = request.POST.get('actionTitle')

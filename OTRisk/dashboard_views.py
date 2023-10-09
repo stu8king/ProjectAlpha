@@ -50,7 +50,12 @@ def dashboardhome(request):
     total_scenario_cost = scenarios.aggregate(sum_scenarioCost=Sum('scenarioCost'))['sum_scenarioCost']
 
     try:
-        formatted_scenario_cost = "${:,.0f}".format(total_scenario_cost)
+        if total_scenario_cost >= 1000000:
+            formatted_scenario_cost = "${:.2f}M".format(total_scenario_cost / 1000000)
+        elif total_scenario_cost >= 1000:
+            formatted_scenario_cost = "${:.2f}K".format(total_scenario_cost / 1000)
+        else:
+            formatted_scenario_cost = "${:.2f}".format(total_scenario_cost)
     except Exception:
         formatted_scenario_cost = "$--"
 
@@ -174,10 +179,21 @@ def dashboardhome(request):
     total_sle = tblCyberPHAScenario.objects.filter(userID__in=organization_users).aggregate(sum_sle=Sum('sle'))[
         'sum_sle']
 
+    #  try:
+    #    formatted_sle = "${:,.0f}".format(total_sle)
+    #    formatted_sle= "$--"
+
+    # total_scenario_cost = scenarios.aggregate(sum_scenarioCost=Sum('scenarioCost'))['sum_scenarioCost']
+
     try:
-        formatted_sle = "${:,.0f}".format(total_sle)
+        if total_sle >= 1000000:
+            formatted_sle = "${:.2f}M".format(total_sle / 1000000)
+        elif total_scenario_cost >= 1000:
+            formatted_sle = "${:.2f}K".format(total_sle / 1000)
+        else:
+            formatted_sle = "${:.2f}".format(total_sle)
     except Exception:
-        formatted_sle= "$--"
+        formatted_sle = "$--"
 
     ra_actions_records_count = RAActions.objects.filter(organizationid=user_organization_id).exclude(
         actionStatus="Closed").count()
@@ -219,7 +235,9 @@ def dashboardhome(request):
         'data_scores_list': data_scores_list,
         'financial_scores_list': financial_scores_list,
         'reputation_scores_list': reputation_scores_list,
-        'supply_scores_list': supply_scores_list
+        'supply_scores_list': supply_scores_list,
+        'total_sle': total_sle,
+        'total_scenario_cost': total_scenario_cost
     }
 
     return render(request, 'dashboard.html', context)

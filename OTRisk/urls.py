@@ -100,6 +100,8 @@ urlpatterns = [
     path('get_mitigations/', views.get_mitigations, name='get_mitigations'),
     path('save_control_assessment/', views.save_control_assessment, name='save_control_assessment'),
     path('risk_register/', views.risk_register, name='risk_register'),
+    path('save_risk_data/', views.save_risk_data, name='save_risk_data'),
+    path('view_snapshots/<int:scenario>/', views.view_snapshots, name='view_snapshots'),
 ]
 
 if settings.DEBUG:

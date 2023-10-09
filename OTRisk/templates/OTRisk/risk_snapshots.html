@@ -1,0 +1,508 @@
+{% load static %}
+{% load humanize %}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+    <!-- Load jQuery (only one version) -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- Bootstrap and related scripts -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.1/font/bootstrap-icons.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+
+<!-- DataTables -->
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.3/css/jquery.dataTables.css">
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.js"></script>
+
+<!-- Select2 -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<!-- SweetAlert -->
+<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+
+<!-- AnyChart -->
+<script src="https://cdn.anychart.com/releases/8.10.0/js/anychart-bundle.min.js"></script>
+<link href="https://cdn.anychart.com/releases/8.10.0/css/anychart-ui.min.css" rel="stylesheet" type="text/css">
+<script src="https://cdn.anychart.com/releases/8.10.0/js/anychart-exports.min.js"></script>
+<script src="https://cdn.anychart.com/releases/v8/js/anychart-bullet.min.js"></script>
+<script src="https://cdn.anychart.com/releases/8.11.1/js/anychart-base.min.js"></script>
+<script src="https://cdn.anychart.com/releases/v8/themes/light_provence.min.js"></script>
+
+
+
+
+    <script src="{% static 'OTRisk/assesscyberpha.js' %}"></script>
+    {% load django_bootstrap5 %}
+    {% bootstrap_css %}
+    {% bootstrap_javascript %}
+
+    <title>Assess CyberPHA</title>
+    <style>
+    .small-font {
+        font-size: 0.8rem; /* adjust as needed */
+   }
+
+    .navbar-scroll .nav-link,
+    .navbar-scroll .navbar-toggler-icon,
+    .navbar-scroll .navbar-brand {
+      color: #ffffff;
+    }
+
+    /* Color of the navbar BEFORE scroll */
+    .navbar-scroll {
+      background-color: #000000;
+        text-decoration-color: #FFFFFF;
+    }
+
+
+    /* Color of the links AFTER scroll */
+    .navbar-scrolled .nav-link,
+    .navbar-scrolled .navbar-toggler-icon,
+    .navbar-scroll .navbar-brand {
+      color: #262626;
+    }
+
+    .navbar-logo {
+    position: absolute;
+    top: 5px; /* Adjust this as needed */
+    left: 5; /* Adjust this as needed */
+    height: 100px; /* Adjust this as needed */
+    z-index: 10;
+}
+        .table-wrap {
+          height: 200px;
+          overflow-y: auto;
+        }
+
+        .small-font {
+        font-size: 0.8rem; /* adjust as needed */
+        }
+
+    .clickable-label:hover {
+        cursor: pointer;
+    }
+
+    .table tbody tr:hover {
+    cursor: pointer;
+    }
+
+
+
+    .heatmap {
+        border-collapse: collapse;
+    }
+    .heatmap td {
+        width: 60px;
+        height: 60px;
+        text-align: center;
+        border: 1px solid #ccc;
+    }
+    .Low { background-color: #d8e6d6; }
+    .Low-Medium { background-color: #f7e5a0; }
+    .Medium { background-color: #f9d56e; }
+    .Medium-High { background-color: #f9a56e; }
+    .High { background-color: #f95d6a; }
+</style>
+
+
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-scroll fixed-top shadow-0 border-bottom border-dark rounded">
+  <div class="container-fluid d-flex justify-content-between">
+   <a class="navbar-brand" href="{% url 'OTRisk:dashboardhome' %}"><img src="/static/images/logo1-2.jpg" style="height: 140px; width: 140px" class="navbar-logo" alt="">  </a>
+      <h4 class="my-auto text-center flex-grow-1"><font color="white">OT Cybersecurity Risk Register - Snapshot View</font></h4>
+
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ms-auto">
+
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'OTRisk:qraw' %}"><i class="bi bi-journal-text"></i> Risk Assessment</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'OTRisk:iotaphamanager' %}"><i class="bi bi-journal-text"></i> CyberPHA</a>
+        </li>
+          <li class="nav-item">
+          <a class="nav-link" href="{% url 'OTRisk:ra_actions_view' %}" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Actions</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'OTRisk:risk_register' %}" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Risk Register</a>
+        </li>
+        <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="bi-file-earmark-easel"></i> Reports
+              </a>
+              <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                  <li><a class="dropdown-item" href="{% url 'OTRisk:reports' %}" >QRAW Reports</a></li>
+                  <li><a class="dropdown-item" href="{% url 'OTRisk:reports_pha' %}">CyberPHA Reports</a></li>
+              </ul>
+        </li>
+        <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="bi bi-diagram-3"></i> Admin
+              </a>
+              <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                  <li><a  class="dropdown-item" href="{% url 'OTRisk:add_scenario' %}">Scenario Manager</a></li>
+                  <li><a  class="dropdown-item" href="{% url 'OTRisk:add_consequence' %}">Consequence Manager</a></li>
+                  <li><a  class="dropdown-item" href="{% url 'OTRisk:admin_users' %}">Admin Users</a></li>
+                  {% if user.is_staff %}
+                    <!-- Links visible only to superusers -->
+                    <li><a class="dropdown-item" href="{% url 'OTRisk:user_admin' %}">User Administration</a></li>
+                      <li><a class="dropdown-item" href="{% url 'OTRisk:execute_sql' %}">Execute SQL</a></li>
+                    {% endif %}
+
+              </ul>
+
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="{% url 'accounts:profile' %}">
+                <i class="bi bi-person-fill"></i> {{ user.first_name }} {{ user.last_name }} | {{ user.userprofile.organization.name }}
+            </a>
+        </li>
+
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'logout' %}">
+                <i class="bi bi-box-arrow-right"></i> Logout
+            </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+</nav>
+<div class="row" style="height: 70px">
+    <div class="col-md-1 " style="background-color: black"></div>
+    <div class="col-md-10 "></div>
+    <div class="col-md-1 " style="background-color: black"></div>
+</div>
+<div class="row">
+    <div class="col-md-1 " style="background-color: black"></div>
+    <div class="col-md-10 ">
+         <div class="card shadow-lg inner-card">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-12">
+                        <H4>CyberPHA Scenario Snapshots for {{ header_record.FacilityName }}</H4>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6" style="background-color: rgb(255,255,255)">
+                        <div class="row" >
+                            <div class="col-md-6">
+
+                                <p><b>Facility Type:</b> {{ header_record.FacilityType }}</p>
+                                <p><b>Industry:</b> {{ header_record.Industry }}</p>
+                                <p><b>Assessment Leader:</b> {{ header_record.PHALeader }}</p>
+                                <p><b>FacilityName:</b> {{ header_record.FacilityName }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><b>Unit:</b> {{ header_record.AssessmentUnit }}</p>
+                                <p><b>Zone:</b> {{ header_record.AssessmentZone }}</p>
+                                <p><b>Start:</b> {{ header_record.AssessmentStartDate|date:"j F Y" }}</p>
+                                 <p><b>Finish:</b> {{ header_record.AssessmentEndDate|date:"j F Y" }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6" style="background-color: rgb(255,255,255)">
+                        <div class="row" >
+                            <div class="col-md-6">
+
+                                <p><b>Scenario:</b> {{ scenario_record.Scenario }}</p>
+                                <p><b>Consequence/s:</b> {{ scenario_record.Consequence }}</p>
+
+                            </div>
+                            <div class="col-md-6">
+                                <p><b>Unit:</b> {{ header_record.AssessmentUnit }}</p>
+                                <p><b>Zone:</b> {{ header_record.AssessmentZone }}</p>
+                                <p><b>Start:</b> {{ header_record.AssessmentStartDate|date:"j F Y" }}</p>
+                                 <p><b>Finish:</b> {{ header_record.AssessmentEndDate|date:"j F Y" }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+         </div>
+    </div>
+    <div class="col-md-1 " style="background-color: black"></div>
+</div>
+
+<div class="row">
+    <div class="col-md-1 " style="background-color: black">
+
+    </div>
+    <div class="col-md-10 ">
+        <div class="card shadow-lg inner-card">
+            <div class="card-body">
+                Risk assessment saved on {{ scenario_record.timestamp|date:"j F Y" }} /
+                {% for snapshot in snapshots %}
+                    <b>Snapshot {{ forloop.counter }}:</b> {{ snapshot.snapshot_date|date:"j F Y" }}/
+                {% endfor %}
+
+            </div>
+        </div>
+    </div>
+    <div class="col-md-1 " style="background-color: black"></div>
+</div>
+
+<div class="row">
+    <div class="col-md-1 " style="background-color: black"></div>
+    <div class="col-md-10 ">
+         <div class="card shadow-lg inner-card">
+            <div class="card-body">
+                <!-- Containers for the line charts -->
+                <div class="row">
+                    <div class="col-md-12">
+                <script>
+                    anychart.onDocumentReady(function() {
+                        var scenarioValue1 = {{ scenario_record.impactFinance }};
+                        var snapshotsValues1 = [{% for snapshot in snapshots %}{{ snapshot.impactFinance }}{% if not forloop.last %},{% endif %}{% endfor %}];
+                        var data1 = [scenarioValue1].concat(snapshotsValues1);
+                        var scenarioValue2 = {{ scenario_record.impactReputation }};
+                        var snapshotsValues2 = [{% for snapshot in snapshots %}{{ snapshot.impactReputation }}{% if not forloop.last %},{% endif %}{% endfor %}];
+                        var data2 = [scenarioValue2].concat(snapshotsValues2);
+                        var scenarioValue3 = {{ scenario_record.impactSafety }};
+                        var snapshotsValues3= [{% for snapshot in snapshots %}{{ snapshot.impactSafety }}{% if not forloop.last %},{% endif %}{% endfor %}];
+                        var data3 = [scenarioValue3].concat(snapshotsValues3);
+                        var scenarioValue4 = {{ scenario_record.impactDanger }};
+                        var snapshotsValues4= [{% for snapshot in snapshots %}{{ snapshot.impactDanger }}{% if not forloop.last %},{% endif %}{% endfor %}];
+                        var data4 = [scenarioValue4].concat(snapshotsValues4);
+                        var scenarioValue5 = {{ scenario_record.impactProduction }};
+                        var snapshotsValues5= [{% for snapshot in snapshots %}{{ snapshot.impactProduction }}{% if not forloop.last %},{% endif %}{% endfor %}];
+                        var data5 = [scenarioValue5].concat(snapshotsValues5);
+                        var scenarioValue6 = {{ scenario_record.impactReputation }};
+                        var snapshotsValues6= [{% for snapshot in snapshots %}{{ snapshot.impactReputation }}{% if not forloop.last %},{% endif %}{% endfor %}];
+                        var data6 = [scenarioValue6].concat(snapshotsValues6);
+                        var scenarioValue7 = {{ scenario_record.impactEnvironment }};
+                        var snapshotsValues7= [{% for snapshot in snapshots %}{{ snapshot.impactEnvironment }}{% if not forloop.last %},{% endif %}{% endfor %}];
+                        var data7 = [scenarioValue7].concat(snapshotsValues7);
+                        var scenarioValue8 = {{ scenario_record.impactRegulation }};
+                        var snapshotsValues8= [{% for snapshot in snapshots %}{{ snapshot.impactRegulation }}{% if not forloop.last %},{% endif %}{% endfor %}];
+                        var data8 = [scenarioValue8].concat(snapshotsValues8);
+                        var scenarioValue9 = {{ scenario_record.impactData }};
+                        var snapshotsValues9= [{% for snapshot in snapshots %}{{ snapshot.impactData }}{% if not forloop.last %},{% endif %}{% endfor %}];
+                        var data9 = [scenarioValue9].concat(snapshotsValues9);
+
+                        var chart = anychart.line();
+                        chart.animation(true);
+                        chart.padding([10, 180, 5, 20]);
+                        chart.title('Business Impact Analysis');
+
+                        chart.yScale().minimum(0).maximum(10);
+
+                        chart.yScale().ticks().set([2, 4, 6, 8, 10]);
+
+                        chart.xAxis().title('Snapshots');
+
+                        var line;
+                        line = chart.line(data1).name('Finance');
+                        line.hovered().markers().enabled(true).type('circle').size(4);
+
+                        line = chart.line(data2).name('Reputation');
+                        line.hovered().markers().enabled(true).type('circle').size(4);
+
+                        line = chart.line(data3).name('Safety');
+                        line.hovered().markers().enabled(true).type('circle').size(4);
+
+                        line = chart.line(data4).name('Danger-to-Life');
+                        line.hovered().markers().enabled(true).type('circle').size(4);
+
+                        line = chart.line(data5).name('Production');
+                        line.hovered().markers().enabled(true).type('circle').size(4);
+
+                        line = chart.line(data6).name('Reputation');
+                        line.hovered().markers().enabled(true).type('circle').size(4);
+
+                        line = chart.line(data7).name('Environment');
+                        line.hovered().markers().enabled(true).type('circle').size(4);
+
+                        line = chart.line(data8).name('Regulatory');
+                        line.hovered().markers().enabled(true).type('circle').size(4);
+
+                        line = chart.line(data9).name('Data/IP');
+                        line.hovered().markers().enabled(true).type('circle').size(4);
+
+                        chart.rangeMarker(0).from(0).to(3).fill('#e0f2f1 0.4');
+                        chart.rangeMarker(1).from(3).to(6).fill('#b2dfdb 0.4');
+                        chart.rangeMarker(2).from(6).to(8).fill('#80cbc4 0.4');
+                        chart.rangeMarker(3).from(8).to(10).fill('#4db6ac 0.4');
+
+                        chart
+                        .textMarker(0)
+                        .value(2)
+                        .fontColor('#263238')
+                        .align('right')
+                        .anchor('left-center')
+                        .offsetX(10)
+                        .useHtml(true)
+                        .text('BIA = Low');
+
+                        chart
+                        .textMarker(1)
+                        .value(5)
+                        .fontColor('#263238')
+                        .align('right')
+                        .anchor('left-center')
+                        .offsetX(10)
+                        .useHtml(true)
+                        .text('BIA = Medium');
+
+                        chart
+                        .textMarker(2)
+                        .value(7)
+                        .fontColor('#263238')
+                        .align('right')
+                        .anchor('left-center')
+                        .offsetX(10)
+                        .useHtml(true)
+                        .text('BIA = High');
+
+                        chart
+                        .textMarker(3)
+                        .value(10)
+                        .fontColor('#263238')
+                        .align('right')
+                        .anchor('left-center')
+                        .offsetX(10)
+                        .useHtml(true)
+                        .text('BIA = Very High');
+
+                        chart.legend().enabled(true).fontSize(13).padding([0, 0, 15, 0]);
+                        chart.container('biaContainer');
+                        chart.draw();
+                    });
+                </script>
+                       <div class="card shadow-lg inner-card">
+                            <div class="card-body">
+                                <div id="biaContainer" style="width: 100%; height: 400px;"></div>
+                            </div>
+                       </div>
+                    </div>
+                </div>
+                <br>
+                <div class="row">
+                    <div class="col-md-6">
+                <script>
+                   anychart.onDocumentReady(function() {
+
+                       anychart.theme('lightProvence');
+                        // Create a dataset
+                        var dataSet = anychart.data.set([
+                            ['Scenario Record', {{ scenario_record.sle_low }}, {{ scenario_record.sle }}, {{ scenario_record.sle_high }}],
+                            {% for snapshot in snapshots %}
+                            ['Snapshot {{ forloop.counter }}', {{ snapshot.sle_low }}, {{ snapshot.sle }}, {{ snapshot.sle_high }}],
+                            {% endfor %}
+                        ]);
+
+                        // Map the data for the series
+                        var firstSeriesData = dataSet.mapAs({ x: 0, value: 1 });
+                        var secondSeriesData = dataSet.mapAs({ x: 0, value: 2 });
+                        var thirdSeriesData = dataSet.mapAs({ x: 0, value: 3 });
+
+                        // Create a column chart instance
+                        var chart = anychart.column();
+
+                        // Stack values on y scale
+                        chart.yScale().stackMode('value');
+
+                        // Function to configure label, padding, and color settings for all series
+                        var setupSeries = function(series, name, color, hoveredColor) {
+                            series.name(name).stroke('2 #fff 1').fill(color);
+                            series.hovered().stroke('1 #fff 1').fill(hoveredColor);
+                        };
+
+                        // Create the series with the mapped data
+                        setupSeries(chart.column(thirdSeriesData), 'Worst Case', '#dc7466', '#e77244');
+                        setupSeries(chart.column(secondSeriesData), 'Likely Case', '#c0ba4d', '#e5d178');
+                        setupSeries(chart.column(firstSeriesData), 'Best Case', '#78f90e', '#41df0c');
+
+
+                        // Turn on the legend
+                        chart.legend().enabled(true).fontSize(16).padding([10, 0, 0, 0]);
+
+                        // Set the union tooltip
+                        chart.tooltip().displayMode('union');
+
+                        // Customize the tooltip
+                        chart.tooltip().titleFormat(function() {
+                            return this.x + ' - ' + this.points[0].getStat('categoryYSum');
+                        });
+
+                        // Set the chart title and adjust it
+                        chart.title('Event Cost Overview');
+                        chart.title().fontSize(20).fontColor('#2b2b2b').padding([5, 0, 0, 0]);
+
+                        chart.container('costContainer');
+                        chart.draw();
+                    });
+                </script>
+                        <div class="card shadow-lg inner-card">
+                            <div class="card-body">
+                                <div id="costContainer" style="width: 100%; height: 400px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                    <script>
+                    anychart.onDocumentReady(function() {
+                        var scenarioValue1 = parseInt("{{ scenario_record.probability|slice:":-1" }}", 10);
+                        var snapshotsValues1 = [{% for snapshot in snapshots %}parseInt("{{ snapshot.probability|slice:":-1" }}", 10){% if not forloop.last %},{% endif %}{% endfor %}];
+                        var data1 = [scenarioValue1].concat(snapshotsValues1);
+
+                        var scenarioValue2 = parseInt("{{ scenario_record.control_effectiveness }}", 10);
+                        var snapshotsValues2 = [{% for snapshot in snapshots %}parseInt("{{ snapshot.control_effectiveness }}", 10){% if not forloop.last %},{% endif %}{% endfor %}];
+                        var data2 = [scenarioValue2].concat(snapshotsValues2);
+
+                        var chart = anychart.column();  // Changed to column chart
+                        chart.animation(true);
+                        chart.padding([10, 120, 5, 20]);
+                        chart.title('Probability of Attack Success');
+
+                        chart.yScale().minimum(0).maximum(100);
+
+                        chart.xAxis().title('Snapshots');
+                        chart.yAxis().title('Probability %');
+
+                        var columnSeries = chart.column(data1);
+                        columnSeries.name('Probability').fill('#1c92d3');
+
+                         var lineSeries = chart.line(data2);
+                        lineSeries.name('Control Effectiveness').stroke({color: "#FF5733", thickness: 2});  // Setting the color and thickness of the line
+
+
+                        chart.legend().enabled(true).fontSize(13).fontColor('#000').padding([0, 0, 15, 0]);
+                        chart.container('probContainer');
+                        chart.draw();
+                    });
+                    </script>
+                    <div class="card shadow-lg inner-card">
+                            <div class="card-body">
+                                <div id="probContainer" style="width: 100%; height: 400px;"></div>
+                            </div>
+                    </div>
+                </div>
+
+
+
+                </div>
+
+
+                <div id="impactRegulationContainer" style="width: 100%; height: 400px;"></div>
+                <div id="impactDataContainer" style="width: 100%; height: 400px;"></div>
+                <div id="impactSupplyContainer" style="width: 100%; height: 400px;"></div>
+
+
+            </div>
+         </div>
+    </div>
+    <div class="col-md-1 " style="background-color: black"></div>
+</div>
+
+
+
+
+</body>
+</html>

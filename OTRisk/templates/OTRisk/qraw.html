@@ -130,7 +130,14 @@
 #rawtable tbody tr:hover {
             cursor: pointer;
         }
+
+.cursor-pointer {
+    cursor: pointer;
+}
+
     </style>
+
+
 </head>
     <!-- Initialize sliders when the page loads -->
    <script>
@@ -663,7 +670,7 @@
             <div class="col-md-4">
              <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                     <div class="card-body">
-                        <label for="txtRevenue">Annual Revenue</label>
+                        <label for="txtRevenue"><i class="bi bi-currency-exchange"></i> Annual Revenue</label>
                         <input type="text" class="form-control" name="txtRevenue" id="txtRevenue" >
                     </div>
                  <script>
@@ -684,7 +691,7 @@
              </div>
              <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                     <div class="card-body">
-                        <label for="txtInsurance">Cyber Insurance Cover</label>
+                        <label for="txtInsurance"><i class="bi bi-cash-coin"></i> Cyber Insurance Cover</label>
                         <input type="text" class="form-control" name="txtInsurance" id="txtInsurance" >
                         <script>
                  $(document).ready(function() {
@@ -701,7 +708,7 @@
                 });
                  </script>
                         <br>
-                        <label for="txtDeductable">Insurance Deductable Amount</label>
+                        <label for="txtDeductable"><i class="bi bi-calculator"></i> Insurance Deductable Amount</label>
                         <script>
                  $(document).ready(function() {
                     $("#txtDeductable").on("input", function() {
@@ -775,7 +782,7 @@
                 <input type="hidden" name="hdnScenarioID_1" id="hdnScenarioID_1">
               <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                 <div class="card-body">
-                    <label for="txtScenarioDescription_1" class="form-control border-0 align-text-bottom small-font" data-bs-toggle="modal" data-bs-target="#scenarioModal">Scenario Description (click for table)</label>
+                    <label for="txtScenarioDescription_1" class="form-control border-0 align-text-bottom small-font cursor-pointer" data-bs-toggle="modal" data-bs-target="#scenarioModal"><i class="bi bi-mouse2"></i> Scenario Description (click for table)</label>
                     <textarea class="form-control small-font" name="txtScenarioDescription_1" id="txtScenarioDescription_1" rows="3" style="resize: none; word-wrap: normal" onchange="setRiskAssessmentRefreshRequired(1)"></textarea>
                 </div>
               </div>
@@ -979,7 +986,7 @@
             </div>
             <div class="col-md-4 small-font">
                 <!-- Risk Assessment Button -->
-                <button id="risk-assessment-btn_1" type="button" class="btn btn-primary" onclick="executeRiskAssessment(this.id, 'loadingSpinner1');">
+                <button id="risk-assessment-btn_1" type="button" class="btn btn-primary" onclick="checkEditModeAndExecute(this.id, 'loadingSpinner1')">
                     <i class="bi bi-play-fill mr-2"></i>Execute Risk Assessment
                 </button>
 
@@ -1016,7 +1023,7 @@
 
                     <div class="card mb-3 shadow-sm">
                         <div class="card-body">
-                            <label class="form-label">Risk Summary: </label>
+                            <label class="form-label">Suggested Controls: </label>
                             <textarea id="lblriskSummary_1" name="lblriskSummary_1" class="form-control" readonly style="resize: none" rows="15"></textarea>
                         </div>
                     </div>
@@ -1033,7 +1040,7 @@
                     <input type="hidden" name="hdnScenarioID_2" id="hdnScenarioID_2">
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                         <div class="card-body">
-                            <label for="txtScenarioDescription_2" class="form-control border-0 align-text-bottom small-font" data-bs-toggle="modal" data-bs-target="#scenarioModal">Scenario Description (click for table)</label>
+                            <label for="txtScenarioDescription_2" class="form-control border-0 align-text-bottom small-font cursor-pointer" data-bs-toggle="modal" data-bs-target="#scenarioModal"><i class="bi bi-mouse2"></i> Scenario Description (click for table)</label>
                             <textarea class="form-control small-font" name="txtScenarioDescription_2" id="txtScenarioDescription_2" rows="3" style="resize: none; word-wrap: normal" onchange="setRiskAssessmentRefreshRequired(2)"></textarea>
                         </div>
                     </div>
@@ -1238,9 +1245,12 @@
 
             <div class="col-md-4 small-font">
                 <!-- Risk Assessment Button -->
-                <button id="risk-assessment-btn_2" type="button" class="btn btn-primary" onclick="executeRiskAssessment(this.id, 'loadingSpinner2')">
+                <button id="risk-assessment-btn_2" type="button" class="btn btn-primary" onclick="checkEditModeAndExecute(this.id, 'loadingSpinner2')">
                     <i class="bi bi-play-fill mr-2"></i>Execute Risk Assessment
                 </button>
+
+
+
 
                 <!-- Add this HTML element where you want to display the loading spinner -->
                 <div id="loadingSpinner2" class="spinner-border" role="status" style="display: none;">
@@ -1291,7 +1301,7 @@
                 <input type="hidden" name="hdnScenarioID_3" id="hdnScenarioID_3">
                 <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                     <div class="card-body">
-                          <label for="txtScenarioDescription_3" class="form-control border-0 align-text-bottom small-font" data-bs-toggle="modal" data-bs-target="#scenarioModal">Scenario Description (click for table)</label>
+                          <label for="txtScenarioDescription_3" class="form-control border-0 align-text-bottom small-font cursor-pointer" data-bs-toggle="modal" data-bs-target="#scenarioModal"><i class="bi bi-mouse2"></i> Scenario Description (click for table)</label>
                           <textarea class="form-control small-font" name="txtScenarioDescription_3" id="txtScenarioDescription_3" rows="3" style="resize: none; word-wrap: normal" onchange="setRiskAssessmentRefreshRequired(3)"></textarea>
                     </div>
                 </div>
@@ -1497,7 +1507,7 @@
             </div>
             <div class="col-md-4 small-font">
                 <!-- Risk Assessment Button -->
-                <button id="risk-assessment-btn_3" type="button" class="btn btn-primary" onclick="executeRiskAssessment(this.id, 'loadingSpinner3')">
+                <button id="risk-assessment-btn_3" type="button" class="btn btn-primary" onclick="checkEditModeAndExecute(this.id, 'loadingSpinner3')">
                     <i class="bi bi-play-fill mr-2"></i>Execute Risk Assessment
                 </button>
 
@@ -1550,7 +1560,7 @@
                 <input type="hidden" name="hdnScenarioID_4" id="hdnScenarioID_4">
               <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                 <div class="card-body">
-                      <label for="txtScenarioDescription_4" class="form-control border-0 align-text-bottom small-font" data-bs-toggle="modal" data-bs-target="#scenarioModal">Scenario Description (click for table)</label>
+                      <label for="txtScenarioDescription_4" class="form-control border-0 align-text-bottom small-font cursor-pointer" data-bs-toggle="modal" data-bs-target="#scenarioModal"><i class="bi bi-mouse2"></i> Scenario Description (click for table)</label>
                       <textarea class="form-control small-font" name="txtScenarioDescription_4" id="txtScenarioDescription_4" rows="3" style="resize: none; word-wrap: normal" onchange="setRiskAssessmentRefreshRequired(4)"></textarea>
                 </div>
               </div>
@@ -1755,7 +1765,7 @@
             </div>
             <div class="col-md-4 small-font">
                 <!-- Risk Assessment Button -->
-                <button id="risk-assessment-btn_4" type="button" class="btn btn-primary" onclick="executeRiskAssessment(this.id, 'loadingSpinner4')">
+                <button id="risk-assessment-btn_4" type="button" class="btn btn-primary" onclick="checkEditModeAndExecute(this.id, 'loadingSpinner4')">
                     <i class="bi bi-play-fill mr-2"></i>Execute Risk Assessment
                 </button>
 
@@ -1808,7 +1818,7 @@
             <input type="hidden" name="hdnScenarioID_5" id="hdnScenarioID_5">
             <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                 <div class="card-body">
-                  <label for="txtScenarioDescription_5" class="form-control border-0 align-text-bottom small-font" data-bs-toggle="modal" data-bs-target="#scenarioModal">Scenario Description (click for table)</label>
+                  <label for="txtScenarioDescription_5" class="form-control border-0 align-text-bottom small-font cursor-pointer" data-bs-toggle="modal" data-bs-target="#scenarioModal"><i class="bi bi-mouse2"></i> Scenario Description (click for table)</label>
 
                   <textarea class="form-control small-font" name="txtScenarioDescription_5" id="txtScenarioDescription_5" rows="3" style="resize: none; word-wrap: normal" onchange="setRiskAssessmentRefreshRequired(5)"></textarea>
                 </div>
@@ -2015,7 +2025,7 @@
             </div>
             <div class="col-md-4 small-font">
                 <!-- Risk Assessment Button -->
-                <button id="risk-assessment-btn_5" type="button" class="btn btn-primary" onclick="executeRiskAssessment(this.id, 'loadingSpinner5');">
+                <button id="risk-assessment-btn_5" type="button" class="btn btn-primary" onclick="checkEditModeAndExecute(this.id, 'loadingSpinner5')">
                     <i class="bi bi-play-fill mr-2"></i>Execute Risk Assessment
                 </button>
 
@@ -3189,6 +3199,21 @@
 </div>
 
 <script>
+
+
+
+function checkEditModeAndExecute(buttonId, spinnerId) {
+    // Assuming you're using JavaScript to get the session variable
+    let editMode = sessionStorage.getItem('editMode');
+
+    if (editMode == 0) {
+        alert('Please click the edit button first.');
+        return; // Exit the function
+    } else if (editMode == 1) {
+        executeRiskAssessment(buttonId, spinnerId);
+    }
+}
+
     function getCookie(name) {
         let value = "; " + document.cookie;
         let parts = value.split("; " + name + "=");
@@ -3237,6 +3262,7 @@
         // AJAX function to call the Django view
         function executeRiskAssessment(buttonID, spinnerID) {
 
+            alert(buttonID);
 
             $('#' + spinnerID).show();
             var buttonNumber = buttonID.split('_')[1];

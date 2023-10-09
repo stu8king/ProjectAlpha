@@ -8,3 +8,4 @@ class OtriskConfig(AppConfig):
     def ready(self):
         # Import signal handlers
         import OTRisk.signals
+        import OTRisk.templatetags.custom_filters
