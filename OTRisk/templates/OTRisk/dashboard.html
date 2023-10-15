@@ -18,23 +18,39 @@
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <!-- Bootstrap JS -->
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.bundle.min.js"></script>
+    <script src="{% static 'bootstrap/dist/js/bootstrap.bundle.min.js' %}"></script>
 
-    <!-- Bootstrap Select JS -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.1/js/bootstrap-select.min.js"></script>
-
-
-    <script src="https://d3js.org/d3.v7.min.js"></script>
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.3/css/jquery.dataTables.css">
-    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.js"></script>
-
-
+    <script src="{% static 'anychart/dist/js/anychart-bundle.min.js' %}"></script>
+    <script src="{% static 'anychart/dist/js/anychart-heatmap.min.js' %}"></script>
+    <script src="{% static 'anychart/dist/js/anychart-sunburst.min.js' %}"></script>
+    <script src="{% static 'anychart/dist/js/anychart-pie.min.js' %}"></script>
 
 
      {% load django_bootstrap5 %}
      {% bootstrap_css %}
      {% bootstrap_javascript %}
     <style>
+        .no-gap {
+            padding-left: 2px;
+            padding-right: 2px;
+            margin-bottom: 2px;
+        }
+
+        #sunburstcontainer {
+        width: 100%;
+        height: 100%;
+        border: 1px solid #ccc; /* border color */
+        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1); /* shadow effect */
+        border-radius: 4px; /* rounded corners (optional) */
+    }
+        .doughnut_container {
+        width: 100%;
+        height: 100%;
+        border: 1px solid #ccc; /* border color */
+        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1); /* shadow effect */
+        border-radius: 4px; /* rounded corners (optional) */
+    }
+
        .navbar-scroll .nav-link,
         .navbar-scroll .navbar-toggler-icon,
         .navbar-scroll .navbar-brand {
@@ -84,10 +100,11 @@
     .card-title-light {
         font-weight: lighter;
     }
+
     </style>
 </head>
-<body style="background-color: black">
-<nav class="navbar navbar-expand-lg navbar-scroll fixed-top shadow-0 border-bottom border-dark rounded">
+<body>
+<nav class="navbar navbar-expand-lg navbar-scroll shadow-0 border-bottom border-dark rounded">
   <div class="container-fluid d-flex justify-content-between">
    <a class="navbar-brand" href="{% url 'OTRisk:dashboardhome' %}"><img src="/static/images/logo1-2.jpg" style="height: 140px; width: 140px" class="navbar-logo" alt="">  </a>
       <h4 class="my-auto text-center flex-grow-1"><font color="white">Dashboard</font></h4>
@@ -158,590 +175,374 @@
   </div>
 
 </nav>
-<br><br><br>
-    <div class="row">
-        <div class="col-md-1 "></div>
+
+    <div class="row" style="height: 10px">
+        <div class="col-md-1 " style="background-color: black"></div>
         <div class="col-md-10 ">
-         <div class="row" style="background-color: white; height: 10px"></div>
+
        </div>
         <div class="col-md-1 "></div>
     </div> <!-- dark grey stripe -->
 
-<div class="row" style="height: 150px">
-    <div class="col-md-1 col-sm-1"></div>
-    <div class="col-md-1 col-sm-1" style="background-color: white"></div>
-
-    <div class="col-md-2 col-sm-6 stat-card">
-        <div class="card shadow-lg inner-card">
-            <div class="card-body">
-                <div class="row">
-                    <h5 class="card-title text-center text-black card-title-light">Open Risk Exposure (CyberPHA):</h5>
-                </div>
-                <div class="row">
-                    <h1 class="card-text text-center text-black">{{ formatted_sle }}</h1>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-md-2 col-sm-6 stat-card">
-        <div class="card shadow-lg inner-card">
-            <div class="card-body">
-                <div class="row">
-                    <h5 class="card-title text-center text-black card-title-light">Open Risk Exposure (QRAW):</h5>
-                </div>
-                <div class="row">
-                    <h1 class="card-text text-center text-black">{{ formatted_scenario_cost }}</h1>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-md-2 col-sm-6 stat-card">
-        <div class="card shadow-lg inner-card">
-            <div class="card-body">
-                <div class="row">
-                    <h5 class="card-title text-center text-black card-title-light">Open Action Items:</h5>
-                </div>
-                <div class="row">
-                    <h1 class="card-text text-center text-black">{{ ra_actions_records_count }}</h1>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-md-2 col-sm-6 stat-card">
-        <div class="card shadow-lg inner-card">
-            <div class="card-body">
-                <div class="row">
-                    <h5 class="card-title text-center text-black card-title-light">Open Risk Assessments:</h5>
-                </div>
-                <div class="row">
-                    <h1 class="card-text text-center text-black">{{ open_raws_count }}</h1>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-md-1 col-sm-1" style="background-color: white"></div>
-    <div class="col-md-1 col-sm-1"></div>
-</div>
-
-
-
-
-<div class="row" style="height: 150px">
-    <div class="col-md-1"></div>
+<div class="row" >
+    <div class="col-md-1" style="background-color: black"></div>
     <div class="col-md-1" style="background-color: white"></div>
-    <div class="col-md-2" id="statDisplay" style="background-color: lightgrey">
+    <div class="col-md-5 ">
+        <div id="heatmapContainer" style="width:100%; height:400px;"></div>
+        <script>
+         anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
+         anychart.onDocumentReady(function () {
 
-        <div class="card shadow-lg" style="background-color: white; border-radius: 10px; margin: 10px 10px 20px 10px; height: 70%;">
-            <div class="card-body">
-                <div class="row">
-                    <h5 class="card-title text-center text-black" style="font-weight: lighter;">Total Risk Assessments:</h5>
-                </div>
-                <div class="row">
-                    <h1 class="card-text text-center text-black">{{ raw_count }}</h1>
-                </div>
-                <div class="row">
-                    <h5 class="text-center"></h5>
-                </div>
-            </div>
-        </div>
-    </div>
+             // create data
+             var heatmapStructure = [
+                 {x: "Low", y: "Very High", fill: "#ff4b33", value: 0},
+                 {x: "Low/Medium", y: "Very High", fill: "#ff4b33", value: 0},
+                 {x: "Medium", y: "Very High", fill: "#ff4b33", value: 0},
+                 {x: "Medium/High", y: "Very High", fill: "#ff4b33", value: 0},
+                 {x: "High", y: "Very High", fill: "#ff4b33", value: 0},
+                 {x: "Very High", y: "Very High", fill: "#ff4b33", value: 0},
 
-    <div class="col-md-2" id="statDisplay" style="background-color: lightgrey">
-        <div class="card shadow-lg" style="background-color: white; border-radius: 10px; margin: 10px 10px 20px 10px; height: 70%;">
-            <div class="card-body">
-                <div class="row">
-                    <h5 class="card-title text-center text-black" style="font-weight: lighter;">Risk Scenarios:</h5>
-                </div>
-                <div class="row">
-                    <h1 class="card-text text-center text-black">{{ scenarios_count }}</h1>
-                </div>
-                <div class="row">
-                    <h5 class="text-center"></h5>
-                </div>
-            </div>
-        </div>
-    </div>
+                 {x: "Low", y: "High", fill: "#ff9933", value: 0},
+                 {x: "Low/Medium", y: "High", fill: "#ff9933", value: 0},
+                 {x: "Medium", y: "High", fill: "#ff9933", value: 0},
+                 {x: "Medium/High", y: "High", fill: "#ff4b33", value: 0},
+                  {x: "High", y: "High", fill: "#ff4b33", value: 0},
+                 {x: "Very High", y: "High", fill: "#ff4b33", value: 0},
 
-<div class="col-md-2" id="statDisplay" style="background-color: lightgrey">
-        <div class="card shadow-lg" style="background-color: white; border-radius: 10px; margin: 10px 10px 20px 10px; height: 70%;">
-            <div class="card-body">
-                <div class="row">
-                    <h5 class="card-title text-center text-black" style="font-weight: lighter;">Total CyberPHAs:</h5>
-                </div>
-                <div class="row">
-                    <h1 class="card-text text-center text-black">{{ cyberpha_count }}</h1>
-                </div>
-                <div class="row">
-                    <h5 class="text-center"></h5>
-                </div>
-            </div>
-        </div>
-    </div>
+                 {x: "Low", y: "Medium/High", fill: "#ffcc00", value: 0},
+                 {x: "Low/Medium", y: "Medium/High", fill: "#ff9933", value: 0},
+                 {x: "Medium", y: "Medium/High", fill: "#ff9933", value: 0},
+                 {x: "Medium/High", y: "Medium/High", fill: "#ff9933", value: 0},
+                 {x: "High", y: "Medium/High", fill: "#ff4b33", value: 0},
+                  {x: "Very High", y: "Medium/High", fill: "#ff4b33", value: 0},
 
-<div class="col-md-2" id="statDisplay" style="background-color: lightgrey">
-        <div class="card shadow-lg" style="background-color: white; border-radius: 10px; margin: 10px 10px 20px 10px; height: 70%;">
-            <div class="card-body">
-                <div class="row">
-                    <h5 class="card-title text-center text-black" style="font-weight: lighter;">CyberPHA Scenarios:</h5>
-                </div>
-                <div class="row">
-                    <h1 class="card-text text-center text-black">{{ cyberpha_scenario_count }}</h1>
-                </div>
-                <div class="row">
-                    <h5 class="text-center"></h5>
-                </div>
-            </div>
-        </div>
-    </div>
+                 {x: "Low", y: "Medium", fill: "#ffcc00", value: 0},
+                 {x: "Low/Medium", y: "Medium", fill: "#ffcc00", value: 0},
+                 {x: "Medium", y: "Medium", fill: "#ffcc00", value: 0},
+                 {x: "Medium/High", y: "Medium", fill: "#ff9933", value: 0},
+                 {x: "High", y: "Medium", fill: "#ff9933", value: 0},
+                 {x: "Very High", y: "Medium", fill: "#ff4b33", value: 0},
+
+                  {x: "Low", y: "Low/Medium", fill: "#5eff00", value: 0},
+                 {x: "Low/Medium", y: "Low/Medium", fill: "#ffcc00", value: 0},
+                 {x: "Medium", y: "Low/Medium", fill: "#ffcc00", value: 0},
+                 {x: "Medium/High", y: "Low/Medium", fill: "#ffcc00", value: 0},
+                 {x: "High", y: "Low/Medium", fill: "#ffcc00", value: 0},
+                 {x: "Very High", y: "Low/Medium", fill: "#ff9933", value: 0},
+
+                  {x: "Low", y: "Low", fill: "#5eff00", value: 0},
+                 {x: "Low/Medium", y: "Low", fill: "#5eff00", value: 0},
+                 {x: "Medium", y: "Low", fill: "#ffcc00", value: 0},
+                 {x: "Medium/High", y: "Low", fill: "#ffcc00", value: 0},
+                 {x: "High", y: "Low", fill: "#ffcc00", value: 0},
+                 {x: "Very High", y: "Low", fill: "#ff9933", value: 0},
 
 
+             ];
 
-    <div class="col-md-1" style="background-color: white"></div>
-    <div class="col-md-1"></div>
-</div>
+             function updateHeatmapStructure(heatmap_data) {
+                heatmapStructure.forEach(function(cell) {
+                    if (heatmap_data[cell.y] && heatmap_data[cell.y][cell.x]) {
+                        cell.value = heatmap_data[cell.y][cell.x];
+                    }
+                });
+            }
 
-    <div class="row">
-        <div class="col-md-1 "></div>
-        <div class="col-md-10 ">
-         <div class="row" style="background-color: white; height: 10px"></div>
-       </div>
-        <div class="col-md-1 "></div>
-    </div> <!-- dark grey stripe -->
-<div class="row">
-    <div class="col-md-1 "></div>
-    <div class="col-md-1 " style="background-color: white"></div>
-    <div class="col-md-8" style="background-color: darkgray">
-        <ul class="nav nav-tabs" id="myTabs" role="tablist">
-            <li class="nav-item">
-                <a class="nav-link active" id="pha-tab" data-toggle="tab" href="#tab_pha" role="tab" aria-controls="tab_pha" aria-selected="true">Cyber-PHA</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" id="qraw-tab" data-toggle="tab" href="#tab_qraw" role="tab" aria-controls="tab_qraw" aria-selected="false">QRAW</a>
-            </li>
-        </ul>
-    </div>
-    <div class="col-md-1 " style="background-color: white"></div>
-    <div class="col-md-1 "></div>
-</div>
-<div class="tab-content" id="myTabContent">
-    <!-- PHA Tab Content -->
-    <div class="tab-pane fade show active" id="tab_pha" role="tabpanel" aria-labelledby="pha-tab">
-    <div id="tab_pha">
-        <div class="row">
-        <div class="col-md-1" style="background-color: black"></div>
-        <div class="col-md-1" style="background-color: white"></div>
-        <div class="col-md-6" style="background-color: lightgrey"><h4 style="text-align: center">CyberPHA Scenario Summary</h4></div>
-        <div class="col-md-2" style="background-color: white"><div class="row">
-                <h5 style="text-align: center; font-weight: lighter; color: darkslategrey; " > CyberPHA Threat Classes: </h5>
-            </div></div>
-        <div class="col-md-1" style="background-color: white"></div>
-        <div class="col-md-1"></div>
-    </div>
+            var heatmapDataFromServer = {{ heatmap_data|safe }};
+            updateHeatmapStructure(heatmapDataFromServer);
 
-        <div class="row" style="height: 400px">
-            <div class="col-md-1"></div>
-            <div class="col-md-1" style="background-color: white"></div>
+            // Create a chart and set the data
+             var chart = anychart.heatMap(heatmapStructure);
+            var credits = chart.credits();
+            credits.enabled(false);
+             // Disable tooltips
+             chart.tooltip(false);
 
-            <div class="col-md-2" style="background-color: lightgrey">
-                <div class="row" style="height: 1px">
-                    <h5 style="text-align: center; font-weight: lighter; color: darkslategrey; " > Safety: </h5>
-                </div>
-                <div class="row">
-                    <div class="d-flex justify-content-center">
-                        <div id="phasafetyChart"><br></div>
-                    </div>
-                </div>
-            </div>
-            <!-- Doughnut Danger Chart -->
-            <div class="col-md-2" style="background-color: lightgrey">
-                <div class="row" style="height: 1px">
-                    <h5 style="text-align: center; font-weight: lighter; color: darkslategrey; " > Danger to Life: </h5>
-                </div>
-                <div class="row">
-                    <div class="d-flex justify-content-center">
-                        <div id="phadangerChart"><br></div>
-                    </div>
-                </div>
-            </div>
+             // Set the chart title
+             chart.title("Scenario Residual Risk vs Likelihood Heatmap");
 
-            <!-- Environment Chart -->
-            <div class="col-md-2" style="background-color: lightgrey">
-                <div class="row" style="height: 1px">
-                    <h5 style="text-align: center; font-weight: lighter; color: darkslategrey; " > Environment: </h5>
-                </div>
-                <div class="row">
-                    <div class="d-flex justify-content-center">
-                        <div id="phaenvironmentChart"><br></div>
-                    </div>
-                </div>
-            </div>
-            <!-- end of div for doughnut safety chart -->
-            <div class="col-md-2" style="background-color: white">
+             // Set the x-axis title
+             chart.xAxis().title("Likelihood");
+             chart.xAxis().orientation("bottom");
+             // Set the y-axis title
+             chart.yAxis().title("Residual Risk");
+             chart.yAxis().labels(["Very High", "High", "Medium/High", "Medium", "Low/Medium", "Low"]);
 
-               <div class="row justify-content-center">
-                <div class="col-md-12">
-                <div class="card shadow-lg">
+             // Set the container id
+             chart.container("heatmapContainer");
+
+             // Initiate drawing the chart
+             chart.draw();
+         });
+
+        </script>
+        <br>
+        <div class="row" >
+            <div class="col-md-3 ">
+                <div class="card shadow-lg inner-card">
                     <div class="card-body">
-                        <table id="dataTable" class="table table-bordered table-hover small-font">
-                            <thead class="thead-light">
-                                <tr>
-                                    <th>Threat</th>
-                                    <th>Scenarios</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for pha_threat_class in pha_threat_class %}
-                                    <tr>
-                                        <td>{{ pha_threat_class.ThreatClass }}</td>
-                                        <td>{{ pha_threat_class.total }}</td>
-                                    </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-
-            </div>
-            <div class="col-md-1" style="background-color: white"></div>
-            <div class="col-md-1"></div>
-        </div>
-        <div class="row" style="height: 400px">
-            <div class="col-md-1"></div>
-            <div class="col-md-1" style="background-color: white"></div>
-
-            <div class="col-md-2" style="background-color: lightgrey">
-                <div class="row" style="height: 1px">
-                    <h5 style="text-align: center; font-weight: lighter; color: darkslategrey; " > Finance: </h5>
-                </div>
-                <div class="row">
-                    <div class="d-flex justify-content-center">
-                        <div id="phafinanceChart"><br></div>
-                    </div>
-                </div>
-            </div>
-            <!-- Doughnut Danger Chart -->
-            <div class="col-md-2" style="background-color: lightgrey">
-                <div class="row" style="height: 1px">
-                    <h5 style="text-align: center; font-weight: lighter; color: darkslategrey; " > Operations: </h5>
-                </div>
-                <div class="row">
-                    <div class="d-flex justify-content-center">
-                        <div id="phaproductionChart"><br></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Environment Chart -->
-            <div class="col-md-2" style="background-color: lightgrey">
-                <div class="row" style="height: 1px">
-                    <h5 style="text-align: center; font-weight: lighter; color: darkslategrey; " > Reputation: </h5>
-                </div>
-                <div class="row">
-                    <div class="d-flex justify-content-center">
-                        <div id="phareputationChart"><br></div>
-                    </div>
-                </div>
-            </div>
-            <!-- end of div for doughnut safety chart -->
-            <div class="col-md-2"></div>
-            <div class="col-md-1" style="background-color: white"></div>
-            <div class="col-md-1"></div>
-        </div>
-        <div class="row" style="height: 400px">
-            <div class="col-md-1"></div>
-            <div class="col-md-1" style="background-color: white"></div>
-
-            <div class="col-md-2" style="background-color: lightgrey">
-                <div class="row" style="height: 1px">
-                    <h5 style="text-align: center; font-weight: lighter; color: darkslategrey; " > Regulation: </h5>
-                </div>
-                <div class="row">
-                    <div class="d-flex justify-content-center">
-                        <div id="pharegulationChart"><br></div>
-                    </div>
-                </div>
-            </div>
-            <!-- Doughnut Danger Chart -->
-            <div class="col-md-2" style="background-color: lightgrey">
-                <div class="row" style="height: 1px">
-                    <h5 style="text-align: center; font-weight: lighter; color: darkslategrey; " > Data and IP: </h5>
-                </div>
-                <div class="row">
-                    <div class="d-flex justify-content-center">
-                        <div id="phadataChart"><br></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Environment Chart -->
-            <div class="col-md-2" style="background-color: lightgrey">
-                <div class="row" style="height: 1px">
-                    <h5 style="text-align: center; font-weight: lighter; color: darkslategrey; " > Supply Chain: </h5>
-                </div>
-                <div class="row">
-                    <div class="d-flex justify-content-center">
-                        <div id="phasupplyChart"><br></div>
-                    </div>
-                </div>
-            </div>
-            <!-- end of div for doughnut safety chart -->
-            <div class="col-md-2"></div>
-            <div class="col-md-1" style="background-color: white"></div>
-            <div class="col-md-1"></div>
-        </div>
-
-
-
-
-</div>
-    </div>
-    <div class="tab-pane fade" id="tab_qraw" role="tabpanel" aria-labelledby="qraw-tab">
-
-    <div id="tab_qraw">
-    <div class="row">
-        <div class="col-md-1" style="background-color: black"></div>
-        <div class="col-md-1" style="background-color: white"></div>
-        <div class="col-md-6" style="background-color: lightgrey"><h4 style="text-align: center">Risk Assessment Scenario Summary</h4></div>
-        <div class="col-md-2" style="background-color: white"></div>
-        <div class="col-md-1" style="background-color: white"></div>
-        <div class="col-md-1"></div>
-    </div>
-    <div class="row" style="height: 400px">
-        <div class="col-md-1"></div>
-        <div class="col-md-1" style="background-color: white"></div>
-            <!-- Doughnut Safety Chart -->
-         <div class="col-md-2" style="background-color: lightgrey">
-                <div class="row" style="height: 1px">
-                    <h5 style="text-align: center; font-weight: lighter; color: darkslategrey; " > Safety: </h5>
-                </div>
-                <div class="row">
-                        <div class="d-flex justify-content-center">
-
-                            <div id="safetyChart"><br></div>
+                        <div class="row">
+                            <h6 class="card-title text-center text-black card-title-light">Open Risk Exposure (CyberPHA):</h6>
                         </div>
-                </div>
-
-        </div>
-        <!-- end of div for doughnut safety chart -->
-        <!-- Doughnut Danger Chart -->
-        <div class="col-md-2" style="background-color: lightgrey">
-            <div class="row" style="height: 1px">
-                <h5 style="text-align: center; font-weight: lighter; color: darkslategrey; " > Danger to Life: </h5>
-            </div>
-            <div class="row">
-                <div class="d-flex justify-content-center">
-                    <div id="dangerChart"><br></div>
+                        <div class="row">
+                            <h2 class="card-text text-center text-black">{{ formatted_sle }}</h2>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
-
-                    <!-- Environment Chart -->
-         <div class="col-md-2" style="background-color: lightgrey">
-
-         <div class="row" style="height: 1px">
-            <h5 style="text-align: center; font-weight: lighter; color: darkslategrey; " > Environment: </h5>
-         </div>
-         <div class="row">
-            <div class="d-flex justify-content-center">
-
-                <div id="environmentChart"><br></div>
+            <div class="col-md-3 ">
+                <div class="card shadow-lg inner-card">
+                    <div class="card-body">
+                        <div class="row">
+                            <h6 class="card-title text-center text-black card-title-light">Open Risk Exposure (QRAW):</h6>
+                        </div>
+                        <div class="row">
+                            <h2 class="card-text text-center text-black">{{ formatted_scenario_cost }}</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 ">
+               <div class="card shadow-lg inner-card">
+                    <div class="card-body">
+                        <div class="row">
+                            <h6 class="card-title text-center text-black card-title-light">Open Action Items:</h6>
+                        </div>
+                        <div class="row">
+                            <h2 class="card-text text-center text-black">{{ ra_actions_records_count }}</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 ">
+               <div class="card shadow-lg inner-card">
+                    <div class="card-body">
+                        <div class="row">
+                            <h6 class="card-title text-center text-black card-title-light">Open Risk Assessments:</h6>
+                        </div>
+                        <div class="row">
+                            <h2 class="card-text text-center text-black">{{ open_raws_count }}</h2>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-
-        </div>
-        <!-- end of div for doughnut safety chart -->
-
-        <div class="col-md-2" style="background-color: white">
-            <div class="row">
-                    <h5 style="text-align: center; font-weight: lighter; color: darkslategrey; " > Scenario Risk Rating: </h5>
-            </div>
-            <br>
-            <div class="row">
-            <!-- Canvas for StatusFlag Chart -->
-            <div>
-                <div id="riskStatus"></div>
-             </div>
-            </div>
-        </div>
-
-        <div class="col-md-1" style="background-color: white"></div>
-        <div class="col-md-1"></div>
-
-    </div>
-
-    <div class="row" style="height: 400px">
-        <div class="col-md-1"></div>
-        <div class="col-md-1" style="background-color: white"></div>
-            <!-- Doughnut Safety Chart -->
-         <div class="col-md-2" style="background-color: lightgrey">
-                <div class="row" style="height: 1px">
-                    <h5 style="text-align: center; font-weight: lighter; color: darkslategrey; " > Finance: </h5>
+        <div class="row" >
+            <div class="col-md-3 ">
+                <div class="card shadow-lg" style="background-color: white; border-radius: 10px; margin: 10px 10px 20px 10px; height: 70%;">
+            <div class="card-body">
+                <div class="row">
+                    <h6 class="card-title text-center text-black" style="font-weight: lighter;">Total Risk Assessments:</h6>
                 </div>
                 <div class="row">
-                        <div class="d-flex justify-content-center">
-
-                            <div id="financeChart"><br></div>
-                        </div>
-                </div>
-
-        </div>
-        <!-- end of div for doughnut safety chart -->
-        <!-- Doughnut Danger Chart -->
-        <div class="col-md-2" style="background-color: lightgrey">
-            <div class="row" style="height: 1px">
-                <h5 style="text-align: center; font-weight: lighter; color: darkslategrey; " > Operations: </h5>
-            </div>
-            <div class="row">
-                <div class="d-flex justify-content-center">
-                    <div id="productionChart"><br></div>
-                </div>
-            </div>
-        </div>
-         <div class="col-md-2" style="background-color: lightgrey">
-
-         <div class="row" style="height: 1px">
-            <h5 style="text-align: center; font-weight: lighter; color: darkslategrey; " > Reputation: </h5>
-         </div>
-         <div class="row">
-            <div class="d-flex justify-content-center">
-
-                <div id="reputationChart"><br></div>
-            </div>
-        </div>
-
-        </div>
-        <div class="col-md-2" style="background-color: white">
-
-        </div>
-
-        <div class="col-md-1" style="background-color: white"></div>
-        <div class="col-md-1"></div>
-
-    </div>
-
-    <div class="row" style="height: 400px">
-        <div class="col-md-1"></div>
-        <div class="col-md-1" style="background-color: white"></div>
-            <!-- Doughnut Safety Chart -->
-         <div class="col-md-2" style="background-color: lightgrey">
-                <div class="row" style="height: 1px">
-                    <h5 style="text-align: center; font-weight: lighter; color: darkslategrey; " > Regulation: </h5>
+                    <h2 class="card-text text-center text-black">{{ raw_count }}</h2>
                 </div>
                 <div class="row">
-                        <div class="d-flex justify-content-center">
-
-                            <div id="regulationChart"><br></div>
-                        </div>
-                </div>
-
-        </div>
-        <!-- end of div for doughnut safety chart -->
-        <!-- Doughnut Danger Chart -->
-        <div class="col-md-2" style="background-color: lightgrey">
-            <div class="row" style="height: 1px">
-                <h5 style="text-align: center; font-weight: lighter; color: darkslategrey; " > Data and IP: </h5>
-            </div>
-            <div class="row">
-                <div class="d-flex justify-content-center">
-                    <div id="dataChart"><br></div>
+                    <h5 class="text-center"></h5>
                 </div>
             </div>
         </div>
-         <div class="col-md-2" style="background-color: lightgrey">
-
-         <div class="row" style="height: 1px">
-            <h5 style="text-align: center; font-weight: lighter; color: darkslategrey; " > Supply Chain: </h5>
-         </div>
-         <div class="row">
-            <div class="d-flex justify-content-center">
-
-                <div id="supplyChart"><br></div>
+            </div>
+            <div class="col-md-3 ">
+                <div class="card shadow-lg" style="background-color: white; border-radius: 10px; margin: 10px 10px 20px 10px; height: 70%;">
+            <div class="card-body">
+                <div class="row">
+                    <h6 class="card-title text-center text-black" style="font-weight: lighter;">Risk Scenarios:</h6>
+                </div>
+                <div class="row">
+                    <h2 class="card-text text-center text-black">{{ scenarios_count }}</h2>
+                </div>
+                <div class="row">
+                    <h5 class="text-center"></h5>
+                </div>
             </div>
         </div>
-
+            </div>
+            <div class="col-md-3 ">
+               <div class="card shadow-lg" style="background-color: white; border-radius: 10px; margin: 10px 10px 20px 10px; height: 70%;">
+            <div class="card-body">
+                <div class="row">
+                    <h6 class="card-title text-center text-black" style="font-weight: lighter;">Total CyberPHAs:</h6>
+                </div>
+                <div class="row">
+                    <h2 class="card-text text-center text-black">{{ cyberpha_count }}</h2>
+                </div>
+                <div class="row">
+                    <h5 class="text-center"></h5>
+                </div>
+            </div>
         </div>
-        <div class="col-md-2" style="background-color: white">
-
+            </div>
+            <div class="col-md-3 ">
+               <div class="card shadow-lg" style="background-color: white; border-radius: 10px; margin: 10px 10px 20px 10px; height: 70%;">
+            <div class="card-body">
+                <div class="row">
+                    <h6 class="card-title text-center text-black" style="font-weight: lighter;">CyberPHA Scenarios:</h6>
+                </div>
+                <div class="row">
+                    <h2 class="card-text text-center text-black">{{ cyberpha_scenario_count }}</h2>
+                </div>
+                <div class="row">
+                    <h5 class="text-center"></h5>
+                </div>
+            </div>
         </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4 ">
+        <div id="sunburstcontainer" style="width:100%; height:100%;"></div>
 
-        <div class="col-md-1" style="background-color: white"></div>
-        <div class="col-md-1"></div>
+        <script>
+            anychart.onDocumentReady(function() {
+                var data = {{ sunburst_processed_data|safe }};
+                var chart = anychart.sunburst(data, "as-tree");
+                chart.title("Country > Industry > Facility Type");
+
+                chart.labels().fontSize(16);
+
+                // Modifying the label text to display only first 5 letters
+                chart.labels().format(function() {
+                    var label = this.getData("name");
+                    if (label.length > 5) {
+                        return label.substr(0, 5) + "...";  // If you want to add ellipsis for truncated labels
+                    }
+                    return label;
+                });
+                var credits = chart.credits();
+                credits.enabled(false);
+                chart.container("sunburstcontainer");
+                chart.draw();
+            });
+        </script>
 
     </div>
 
-</div>
-    </div>
+    <div class="col-md-1"></div>
 </div>
 
+<div class="row" style="height:400px">
+    <div class="col-md-1 "  style="background-color: black"></div>
+    <div class="col-md-1 " ></div>
+    <div class="col-md-3 no-gap">
 
-<div class="row">
-        <div class="col-md-1 "></div>
-        <div class="col-md-10 ">
-         <div class="row" style="background-color: white; height: 10px"></div>
-       </div>
-        <div class="col-md-1 "></div>
-    </div>  <!-- dark grey stripe -->
+        <div id="raw_bia_container" style="width:100%; height:100%;" class="doughnut_container"></div>
+        <script>
+            anychart.onDocumentReady(function() {
+                var pie_data = {{ bia_summary|safe }};
+                let chart_data = [];
+                for (let [key, value] of Object.entries(pie_data)) {
+                    chart_data.push({x: key, value: value});
+                }
 
-<div class="row" style="height: 50px">
-    <div class="col-md-1 "></div>
-    <div class="col-md-1 " style="background-color: white"></div>
-        <div class="col-md-8 ">
+                var chart = anychart.pie(chart_data);
+                var colors = {
+                    'Low': 'green',
+                    'Low/Medium': '#ADFF2F',  // Green-yellow
+                    'Medium': '#ffcc00',
+                    'Medium/High': '#FFA500',  // Orange
+                    'High': '#c7471e',
+                    'Very High': '#ef4710'
+                };
+                var chartColors = [];
+                for (let item of chart_data) {
+                    chartColors.push(colors[item.x]);
+                }
 
-        <div class="row justify-content-center" style="background-color: white;">
-            <div class="col-md-5 m-3 p-3 border border-dark shadow-lg ">
-                <h4>Risk Assessment Worksheets</h4><br>
-                <table id="myTable" class="display" >
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Business Unit</th>
-                            <th>Business Unit Type</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for facility in raw_facilities %}
-                            <tr onclick="getAssessment({{ facility.0 }})">
-                                <td>{{ facility.0 }}</td>
-                                <td>{{ facility.1 }}</td>
-                                <td>{{ facility.2 }}</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+                chart.palette(chartColors);
+                chart.labels().format("{%Value}");
+                 chart.labels().fontSize(16);
+                chart.title("QRAW BIA Summary");
+                chart.innerRadius("30%");
+                var credits = chart.credits();
+                credits.enabled(false);
+                chart.container("raw_bia_container");
+                chart.draw();
 
-            <div class="col-md-5 m-3 p-3 border border-dark shadow-lg">
-                <h4>CyberPHA Assessments</h4><br>
-                <table id="phaTable" class="display">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Business Unit</th>
-                            <th>Business Unit Type</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for phafacility in pha_facilities %}
-                            <tr onclick="getAssessment({{ phafacility.0 }})">
-                                <td>{{ phafacility.0 }}</td>
-                                <td>{{ phafacility.1 }}</td>
-                                <td>{{ phafacility.2 }}</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
+            });
+        </script>
+
     </div>
-    <div class="col-md-1 " style="background-color: white"></div>
-    <div class="col-md-1 "></div>
+    <div class="col-md-3 no-gap">
+
+        <div id="residual_risk_container" style="width:100%; height:100%;" class="doughnut_container"></div>
+        <script>
+            anychart.onDocumentReady(function() {
+                var pie_data = {{ pha_risk_summary|safe }};
+                let chart_data = [];
+                for (let [key, value] of Object.entries(pie_data)) {
+                    chart_data.push({x: key, value: value});
+                }
+
+                var chart = anychart.pie(chart_data);
+                var colors = {
+                    'Low': 'green',
+                    'Low/Medium': '#ADFF2F',  // Green-yellow
+                    'Medium': '#ffcc00',
+                    'Medium/High': '#FFA500',  // Orange
+                    'High': '#c7471e',
+                    'Very High': '#ef4710'
+                };
+                var chartColors = [];
+                for (let item of chart_data) {
+                    chartColors.push(colors[item.x]);
+                }
+
+                chart.palette(chartColors);
+                chart.labels().format("{%Value}");
+                 chart.labels().fontSize(16);
+                chart.title("CyberPHA Residual Risks");
+                chart.innerRadius("30%");
+                var credits = chart.credits();
+                credits.enabled(false);
+                chart.container("residual_risk_container");
+                chart.draw();
+
+            });
+        </script>
+
+    </div>
+    <div class="col-md-3 no-gap">
+
+        <div id="pha_bia_container" style="width:100%; height:100%;" class="doughnut_container"></div>
+        <script>
+            anychart.onDocumentReady(function() {
+                var pie_data = {{ pha_bia_summary|safe }};
+                let chart_data = [];
+                for (let [key, value] of Object.entries(pie_data)) {
+                    chart_data.push({x: key, value: value});
+                }
+
+                var chart = anychart.pie(chart_data);
+                var colors = {
+                    'Low': 'green',
+                    'Low/Medium': '#ADFF2F',  // Green-yellow
+                    'Medium': '#ffcc00',
+                    'Medium/High': '#FFA500',  // Orange
+                    'High': '#c7471e',
+                    'Very High': '#ef4710'
+                };
+                var chartColors = [];
+                for (let item of chart_data) {
+                    chartColors.push(colors[item.x]);
+                }
+
+                chart.palette(chartColors);
+                chart.labels().format("{%Value}");
+                 chart.labels().fontSize(16);
+                chart.title("CyberPHA BIA Summary");
+                chart.innerRadius("30%");
+                var credits = chart.credits();
+                credits.enabled(false);
+                chart.container("pha_bia_container");
+                chart.draw();
+
+            });
+        </script>
+
+    </div>
+
+    <div class="col-md-1 "  style="background-color: white"></div>
 </div>
 
 
