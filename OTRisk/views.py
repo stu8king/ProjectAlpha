@@ -28,14 +28,14 @@ from django.contrib.auth.decorators import login_required
 from .forms import LoginForm
 from datetime import date, datetime
 import json
-import openai
+import openai, math
 import requests
 from xml.etree import ElementTree as ET
 from .raw_views import qraw, openai_assess_risk, GetTechniquesView, raw_action, check_vulnerabilities, rawreport, \
-    raw_from_walkdown, save_ra_action, get_rawactions, ra_actions_view, UpdateRAAction, reports, reports_pha
+    raw_from_walkdown, save_ra_action, get_rawactions, ra_actions_view, UpdateRAAction, reports, reports_pha, create_or_update_raw_scenario
 from .dashboard_views import dashboardhome
 from .pha_views import iotaphamanager, facility_risk_profile, get_headerrecord, scenario_analysis, phascenarioreport, \
-    getSingleScenario, pha_report, scenario_vulnerability, add_vulnerability, get_asset_types
+    getSingleScenario, pha_report, scenario_vulnerability, add_vulnerability, get_asset_types, calculate_effectiveness, generate_ppt
 from .forms import CustomScenarioForm, CustomConsequenceForm
 from .models.Model_Scenario import CustomScenario, CustomConsequence
 from accounts.models import Organization
@@ -394,7 +394,6 @@ def save_or_update_cyberpha(request):
         rru = request.POST.get('rru')
         sl = request.POST.get('sl')
         recommendations = request.POST.get('recommendations')
-        controlrecs = request.POST.get('controls')
         justifySafety = request.POST.get('justifySafety')
         justifyLife = request.POST.get('justifyLife')
         justifyProduction = request.POST.get('justifyProduction')
@@ -423,6 +422,7 @@ def save_or_update_cyberpha(request):
         sis_outage = sis_outage_str.lower() == 'true'
         sis_compromise = sis_compromise_str.lower() == 'true'
         safety_hazard = request.POST.get('safety_hazard')
+        likelihood = request.POST.get('likelihood')
         snapshot = request.POST.get('snapshot')
         control_effectiveness = int(float(request.POST.get('control_effectiveness')))
 
@@ -506,7 +506,6 @@ def save_or_update_cyberpha(request):
                 RRU=rru,
                 sl=sl,
                 Deleted=deleted,
-                control_recommendations=controlrecs,
                 justifySafety='',
                 justifyLife='',
                 justifyProduction='',
@@ -539,7 +538,8 @@ def save_or_update_cyberpha(request):
                 risk_owner='',
                 risk_response='',
                 organizationID=org_id,
-                control_effectiveness=control_effectiveness
+                control_effectiveness=control_effectiveness,
+                likelihood=likelihood
             )
             snapshot_record.save()
         else:
@@ -575,7 +575,6 @@ def save_or_update_cyberpha(request):
                     'RRU': rru,
                     'sl': sl,
                     'Deleted': deleted,
-                    'control_recommendations': controlrecs,
                     'justifySafety': justifySafety,
                     'justifyLife': justifyLife,
                     'justifyProduction': justifyProduction,
@@ -604,7 +603,8 @@ def save_or_update_cyberpha(request):
                     'timestamp': timezone.now(),
                     'risk_open_date': timezone.now(),
                     'risk_close_date': '2099-01-01',
-                    'control_effectiveness': control_effectiveness
+                    'control_effectiveness': control_effectiveness,
+                    'likelihood': likelihood
                 }
             )
             # write to the audit log
@@ -950,6 +950,7 @@ def get_scenarios(request):
     raw_id = request.GET.get('raw_id', None)
     scenarios = RAWorksheetScenario.objects.filter(RAWorksheetID=raw_id)
     scenarios_json = serializers.serialize('json', scenarios)
+    print(scenarios_json)
     return JsonResponse(json.loads(scenarios_json), safe=False)
 
 
@@ -1510,9 +1511,13 @@ def save_control_assessment(request):
 
         # Save the record to the database
         record.save()
-
+        control_effectiveness = math.ceil(calculate_effectiveness(cyberPHA_id))
         # Return a success message as a JSON response
-        return JsonResponse({"status": "success", "message": "Record saved/updated successfully!"})
+        return JsonResponse({
+            "status": "success",
+            "message": "Record saved/updated successfully!",
+            "control_effectiveness": control_effectiveness
+        })
 
     # Handle the case when the request method is not POST
     form = ControlAssessmentForm()

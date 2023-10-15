@@ -102,6 +102,9 @@ urlpatterns = [
     path('risk_register/', views.risk_register, name='risk_register'),
     path('save_risk_data/', views.save_risk_data, name='save_risk_data'),
     path('view_snapshots/<int:scenario>/', views.view_snapshots, name='view_snapshots'),
+    path('create_or_update_raw_scenario/', views.create_or_update_raw_scenario, name='create_or_update_raw_scenario'),
+    path('generate_ppt/', views.generate_ppt, name='generate_ppt'),
+
 ]
 
 if settings.DEBUG:

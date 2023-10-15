@@ -112,6 +112,22 @@ class RAWorksheetScenario(models.Model):
     outage = models.CharField(max_length=3, choices=OUTAGE_CHOICES, default='N/A')
     outageLength = models.IntegerField(default=0)
     risk_register = models.BooleanField(default=False)
+    IMPACT_CHOICES = [
+        ("N/A", "N/A"),
+        ("Damage to Property", "Damage to Property"),
+        ("Denial of Control", "Denial of Control"),
+        ("Denial of View", "Denial of View"),
+        ("Loss of Availability", "Loss of Availability"),
+        ("Loss of Control", "Loss of Control"),
+        ("Loss of Productivity and Revenue", "Loss of Productivity and Revenue"),
+        ("Loss of Protection", "Loss of Protection"),
+        ("Loss of Safety", "Loss of Safety"),
+        ("Loss of View", "Loss of View"),
+        ("Manipulation of Control", "Manipulation of Control"),
+        ("Manipulation of View", "Manipulation of View"),
+        ("Theft of Operational Information", "Theft of Operational Information"),
+    ]
+    impact = models.CharField(max_length=30, choices=IMPACT_CHOICES, default='N/A')
 
     class Meta:
         db_table = 'tblRAWorksheetScenario'

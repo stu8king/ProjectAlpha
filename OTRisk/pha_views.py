@@ -8,29 +8,39 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, get_object_or_404, redirect
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
-from datetime import date
+from datetime import date, time
 from django.views import View
 from django.http import JsonResponse
 from django.core.exceptions import ObjectDoesNotExist
 import openai
 import re
-from django.db.models import Avg, Sum, F
+from django.db.models import Avg, Sum, F, Count
 import concurrent.futures
 import os
 import math
+
+from ProjectAlpha import settings
+from ProjectAlpha.settings import BASE_DIR
 from .dashboard_views import get_user_organization_id
 from django.contrib.auth.models import User
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from .forms import VulnerabilityAnalysisForm
 import aiohttp
 import asyncio
+import tempfile
+import time
+import uuid
 from django.core import serializers
+from django.http import FileResponse
+from pptx import Presentation
+from pptx.util import Inches, Pt
 
 
 @login_required
 def iotaphamanager(request):
     pha_header = None
     new_record_id = None  # Initialize new_record_id to None
+    annual_revenue_str = "$0"
     if request.method == 'POST':
         title = request.POST.get('txtTitle')
         facility_name = request.POST.get('txtFacility')
@@ -62,11 +72,26 @@ def iotaphamanager(request):
         pha_header.chemicalSummary = request.POST.get('txtChemical')
         pha_header.physicalSummary = request.POST.get('txtPhysical')
         pha_header.otherSummary = request.POST.get('txtOther')
+        pha_header.complianceSummary = request.POST.get('txtCompliance')
         pha_header.country = request.POST.get('countrySelector')
         pha_header.Date = request.POST.get('txtStartDate')
         pha_header.EmployeesOnSite = request.POST.get('txtEmployees')
         pha_header.shift_model = request.POST.get('shift_model')
-        pha_header.annual_revenue = request.POST.get('annual_revenue')
+        pha_header.pha_score = request.POST.get('hdn_pha_score')
+        annual_revenue_str = request.POST.get('annual_revenue', '')
+
+        # Strip out $ and , characters
+        cleaned_annual_revenue_str = ''.join(filter(str.isdigit, annual_revenue_str))
+
+        # Convert the cleaned string to an integer
+        try:
+            annual_revenue_int = int(cleaned_annual_revenue_str)
+        except ValueError:  # Handle cases where the input might still not be a valid integer
+            annual_revenue_int = 0  # Or handle this situation differently if needed
+
+        # Save to your model
+        pha_header.annual_revenue = annual_revenue_int
+
         cyber_insurance_value = request.POST.get('cyber_insurance')
         pha_header.cyber_insurance = False if cyber_insurance_value is None else bool(cyber_insurance_value)
 
@@ -79,7 +104,7 @@ def iotaphamanager(request):
 
     users_in_organization = User.objects.filter(userprofile__organization__id=organization_id_from_session)
 
-    pha_header_records = tblCyberPHAHeader.objects.filter(UserID__in=users_in_organization, Deleted=0)
+    pha_header_records = tblCyberPHAHeader.objects.filter(UserID__in=users_in_organization, Deleted=0).annotate(scenario_count=Count('tblcyberphascenario'))
 
     industries = tblIndustry.objects.all().order_by('Industry')
     facilities = FacilityType.objects.all().order_by('FacilityType')
@@ -95,7 +120,8 @@ def iotaphamanager(request):
         'current_pha_header': pha_header,
         'new_record_id': new_record_id,
         'mitigations': mitigations,
-        'SHIFT_MODELS': tblCyberPHAHeader.SHIFT_MODELS
+        'SHIFT_MODELS': tblCyberPHAHeader.SHIFT_MODELS,
+        'annual_revenue_str': annual_revenue_str
     })
 
 
@@ -120,14 +146,17 @@ def get_headerrecord(request):
         'chemicalsummary': headerrecord.chemicalSummary,
         'physicalsummary': headerrecord.physicalSummary,
         'othersummary': headerrecord.otherSummary,
+        'compliancesummary': headerrecord.complianceSummary,
         'country': headerrecord.country,
         'shift_model': headerrecord.shift_model,
         'EmployeesOnSite': headerrecord.EmployeesOnSite,
         'cyber_insurance': headerrecord.cyber_insurance,
-        'annual_revenue': headerrecord.annual_revenue
+        'annual_revenue': headerrecord.annual_revenue,
+        'pha_score': headerrecord.pha_score
     }
 
     control_assessments = MitreControlAssessment.objects.filter(cyberPHA=headerrecord)
+    control_effectiveness = math.ceil(calculate_effectiveness(record_id))
 
     # Create a list of dictionaries for control assessments
     control_assessments_data = []
@@ -143,6 +172,7 @@ def get_headerrecord(request):
     response_data = {
         'headerrecord': headerrecord_data,
         'control_assessments': control_assessments_data,
+        'control_effectiveness': control_effectiveness
     }
 
     return JsonResponse(response_data)
@@ -196,7 +226,9 @@ def facility_risk_profile(request):
             f"For the {facility} {facility_type} at {address}, {country} in the {Industry} industry, with {employees} employees working a {shift_model} shift model, provide a concise bullet point list of the likely chemicals stored or used and their hazards given the {facility_type}. Limit the response to a maximum of 100 words, or less. EXTRA INSTRUCTION: Add a line space between each bullet point",
             f"For the {facility} {facility_type} at {address}, {country} in the {Industry} industry, with {employees} employees working a {shift_model} shift model, provide a concise bullet-point list of the Physical security challenges given the location of {address}, {country}. Limit the response to a maximum of 100 words, or less. EXTRA INSTRUCTION: Add a line space between each bullet point",
             # f"For the {facility} {facility_type} at {address}, {country} in the {Industry} industry, provide a concise bullet point list of other localized risks that are likely to be identified for a {facility_type} at {address}. Limit the response to a maximum of 100 words, or less. Add a line space between each bullet point"
-            f"For the {facility} {facility_type} at {address}, {country} in the {Industry} industry, with {employees} employees working a {shift_model} shift model, provide a concise bullet point list of the likely OT devices and equipment that may be connected to IT networks for monitoring and control at  {facility_type} at {address}. Limit the response to a maximum of 100 words, or less. EXTRA INSTRUCTION: Add a line space between each bullet point"
+            f"For the {facility} {facility_type} at {address}, {country} in the {Industry} industry, with {employees} employees working a {shift_model} shift model, provide a concise bullet point list of the likely OT devices and equipment that may be connected to IT networks for monitoring and control at  {facility_type} at {address}. Limit the response to a maximum of 100 words, or less. EXTRA INSTRUCTION: Add a line space between each bullet point",
+            f"For a {facility_type} located in {country} operating within the {Industry} industry, please provide a concise bullet point list of ONLY the current and most relevant regulatory compliance requirements that will apply to that specific industry and facility and that EXPLICITLY state requirements for cybersecurity controls. List only the full title of the regulation - no additional text or explanation. DO NOT REPEAT OR DUPLICATE TITLES IN THE FINAL LIST.  EXTRA INSTRUCTION: Add a line space between each bullet point",
+            f"You are an expert in risk assessment for industrial facilities. For a {facility} {facility_type} in {country}, within the {Industry} industry, with {employees} employees on a {shift_model} shift, using ONLY this information, provide an estimated and pragmatic process hazard analysis (PHA) risk score out of 100 based on the hazards that COULD be expected to be found at the site. INSTRUCTION: Provide only a single number without extra characters or explanations."
         ]
 
         responses = []
@@ -224,13 +256,17 @@ def facility_risk_profile(request):
         chemical_summary = responses[1]['choices'][0]['message']['content'].strip()
         physical_security_summary = responses[2]['choices'][0]['message']['content'].strip()
         other_summary = responses[3]['choices'][0]['message']['content'].strip()
+        compliance_summary = responses[4]['choices'][0]['message']['content'].strip()
+        pha_score = responses[5]['choices'][0]['message']['content'].strip()
 
         # Return the individual parts as variables
         return JsonResponse({
             'safety_summary': safety_summary.strip(),
             'chemical_summary': chemical_summary.strip(),
             'physical_security_summary': physical_security_summary.strip(),
-            'other_summary': other_summary.strip()
+            'other_summary': other_summary.strip(),
+            'compliance_summary': compliance_summary,
+            'pha_score': pha_score
         })
 
 
@@ -436,7 +472,8 @@ def getSingleScenario(request):
         'risk_response': scenario.risk_response,
         'risk_open_date': scenario.risk_open_date,
         'risk_close_date': scenario.risk_close_date,
-        'control_effectiveness': scenario.control_effectiveness
+        'control_effectiveness': scenario.control_effectiveness,
+        'likelihood': scenario.likelihood
     }
 
     # Return the scenario as a JSON response
@@ -506,9 +543,13 @@ def scenario_analysis(request):
 
         # Define the refined user messages
         user_messages = [
+            ## {
+            ##    "role": "user",
+            ##    "content": f"Based on the following context, concisely list the necessary OT and ICS cybersecurity controls in order of effectiveness. Limit to 100 words. Context: {common_content_prefix()}. Give the response only. No preamble or commentary"
+            ## },
             {
                 "role": "user",
-                "content": f"Based on the following context, concisely list the necessary OT and ICS cybersecurity controls in order of effectiveness. Limit to 100 words. Context: {common_content_prefix()}. Give the response only. No preamble or commentary"
+                "content": f"Given the context: {common_content_prefix()} and analysis of publicly reported cybersecurity incidents, in the context of an OT Cybersecurity Risk Assessment provide ONLY the estimated likelihood (as a whole number percentage) of a targeted attack based on the specific scenario of {scenario}. Answer with a whole number. Do NOT include any other words, sentences, or explanations."
             },
             ##{
             ##    "role": "user",
@@ -537,6 +578,7 @@ def scenario_analysis(request):
                 "content": f"Given the context: {common_content_prefix()} and analysis of publicly reported cybersecurity incidents, provide ONLY the estimated probability (as a whole number percentage) of a successful targeted attack given that the assessed effectiveness of current cybersecurity controls is {control_effectiveness}% . Answer with a number followed by a percentage sign (e.g., nn%). Do NOT include any other words, sentences, or explanations."
             }
 
+
         ]
 
         def get_response_safe(user_message):
@@ -557,7 +599,7 @@ def scenario_analysis(request):
 
         # Return the responses as variables
         return JsonResponse({
-            'controls': responses[0],
+            'likelihood': responses[0],
             'adjustedRR': responses[1],
             'costs': responses[2],
             'recommendations': responses[3],
@@ -637,3 +679,72 @@ def get_asset_types(request):
     asset_types = tblAssetType.objects.all()
     asset_type_list = [{'id': asset_type.id, 'AssetType': asset_type.AssetType} for asset_type in asset_types]
     return JsonResponse({'asset_types': asset_type_list})
+
+
+def generate_ppt(request):
+    if request.method == "POST":
+        print("POST Called")
+        # Extract data from POST parameters
+        safety = request.POST.get('txtSafetySummary', '')
+        chemical = request.POST.get('txtChemical', '')
+        physical = request.POST.get('txtPhysical', '')
+        other = request.POST.get('txtOther', '')
+        compliance = request.POST.get('txtCompliance', '')
+        facility = request.POST.get('FacilityName', '')
+
+        # Create a new PowerPoint presentation
+        prs = Presentation()
+
+        # For each section, add a slide and set its title and content
+        sections = [
+            (f"{facility} Safety Profile", safety),
+            (f"{facility} Chemical Profile", chemical),
+            (f"{facility} Physical Security Profile", physical),
+            (f"{facility} OT Asset Profile", other),
+            (f"{facility} Compliance Profile", compliance)
+        ]
+
+        for title, content in sections:
+            slide_layout = prs.slide_layouts[1]  # Using a title and content layout
+            slide = prs.slides.add_slide(slide_layout)
+            title_shape = slide.shapes.title
+            content_shape = slide.placeholders[1]  # Using the primary content placeholder
+
+            title_shape.text = title
+            title_shape.text_frame.paragraphs[0].font.name = 'Arial'
+            title_shape.text_frame.paragraphs[0].font.size = Pt(18)
+
+            content_shape.text = content
+            for paragraph in content_shape.text_frame.paragraphs:
+                paragraph.font.name = 'Arial'
+                paragraph.font.size = Pt(10)
+
+        # Save to a temporary file
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.pptx') as temp_file:
+            prs.save(temp_file.name)
+            temp_path = temp_file.name
+
+        # Return a response to provide the file for download
+        response = FileResponse(open(temp_path, 'rb'),
+                                content_type='application/vnd.openxmlformats-officedocument.presentationml.presentation')
+        response['Content-Disposition'] = 'attachment; filename=report.pptx'
+
+        # Remove the temporary file after sending it to the client
+        os.remove(temp_path)
+        filename = f"report_{uuid.uuid4()}.pptx"
+
+        filepath = os.path.join(os.path.join(BASE_DIR, 'static'), filename)
+
+        prs.save(filepath)
+        download_url = os.path.join(settings.STATIC_URL, filename)
+
+        return JsonResponse({
+            'status': 'success',
+            'download_url': download_url
+        })
+
+    else:
+        return JsonResponse({
+            'status': 'error',
+            'error': 'Invalid request method'
+        })

@@ -22,7 +22,32 @@
 
     <title>Assess CyberPHA</title>
     <style>
+      .green-circle {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    background-color: green;
+    border-radius: 50%;
+    margin-right: 5px;
+}
 
+.orange-circle {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    background-color: orange;
+    border-radius: 50%;
+    margin-right: 5px;
+}
+
+.red-circle {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    background-color: red;
+    border-radius: 50%;
+    margin-right: 5px;
+}
     input[type="range"][orient="vertical"] {
     writing-mode: bt-lr; /* IE */
     -webkit-appearance: slider-vertical;
@@ -106,7 +131,38 @@ thead {
         cursor: not-allowed;
     }
 
+.slider {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 15px;
+  background: #b0acac;
+  outline: none;
+  border: 3px solid rgba(77, 127, 192, 0.75);
+  border-radius: 4px;
+}
 
+
+/* for chrome/safari */
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 15px;
+  height: 40px;
+  background: rgba(77, 127, 192, 0.75);
+  cursor: pointer;
+  border: 3px solid rgba(77, 127, 192, 0.75);
+  border-radius: 4px;
+}
+
+/* for firefox */
+.slider::-moz-range-thumb {
+  width: 20px;
+  height: 60px;
+  background: #000;
+  cursor: pointer;
+  border: 5px solid lawngreen;
+  border-radius: 4px;
+}
     </style>
     <script>
 
@@ -249,8 +305,8 @@ thead {
                 <thead>
                     <tr>
                         <th rowspan="2">ID</th>
-                        <th rowspan="2">Scenario</th>
-                        <th colspan="8">Impact Assessment Scores (Max = 10)</th>
+                        <th rowspan="2" style="width: 40%">Scenario</th>
+                        <th colspan="9">Impact Assessment Scores (Max = 10)</th>
                         <th rowspan="2">Threat</th>
                         <th rowspan="2">Risk</th>
                         <th rowspan="2"></th>
@@ -259,7 +315,8 @@ thead {
                         <th>Sfty</th>
                         <th>Dgr</th>
                         <th>Env</th>
-                        <th>Cst</th>
+                        <th>Sup</th>
+                        <th>Fin</th>
                         <th>Ops</th>
                         <th>Data</th>
                         <th>Regs</th>
@@ -272,14 +329,100 @@ thead {
                   <tr onclick="fillScenario({{ saved_scenarios.ID}})">
                     <td>{{ saved_scenarios.ID }}</td>
                     <td>{{ saved_scenarios.Scenario }}</td>
-                    <td>{{ saved_scenarios.impactSafety }}</td>
-                    <td>{{ saved_scenarios.impactDanger}}</td>
-                    <td>{{ saved_scenarios.impactEnvironment }}</td>
-                    <td>{{ saved_scenarios.impactFinance}}</td>
-                    <td>{{ saved_scenarios.impactProduction}}</td>
-                    <td>{{ saved_scenarios.impactData}}</td>
-                    <td>{{ saved_scenarios.impactRegulation}}</td>
-                    <td>{{ saved_scenarios.impactReputation}}</td>
+                    <td>
+                        {% if saved_scenarios.impactSafety < 4 %}
+                            <span class="green-circle"></span>
+                        {% elif saved_scenarios.impactSafety >= 4 and saved_scenarios.impactSafety < 8 %}
+                            <span class="orange-circle"></span>
+                        {% elif saved_scenarios.impactSafety >= 8 %}
+                            <span class="red-circle"></span>
+                        {% endif %}
+                        {{ saved_scenarios.impactSafety }}
+                    </td>
+
+                    <td>
+                        {% if saved_scenarios.impactDanger < 4 %}
+                            <span class="green-circle"></span>
+                        {% elif saved_scenarios.impactDanger  >= 4 and saved_scenarios.impactDanger  < 8 %}
+                            <span class="orange-circle"></span>
+                        {% elif saved_scenarios.impactDanger  >= 8 %}
+                            <span class="red-circle"></span>
+                        {% endif %}
+                        {{ saved_scenarios.impactDanger  }}
+                    </td>
+                    <td>
+                        {% if saved_scenarios.impactEnvironment < 4 %}
+                            <span class="green-circle"></span>
+                        {% elif saved_scenarios.impactEnvironment  >= 4 and saved_scenarios.impactEnvironment  < 8 %}
+                            <span class="orange-circle"></span>
+                        {% elif saved_scenarios.impactEnvironment  >= 8 %}
+                            <span class="red-circle"></span>
+                        {% endif %}
+                        {{ saved_scenarios.impactEnvironment  }}
+                    </td>
+                  <td>
+                      {% if saved_scenarios.impactSupply < 4 %}
+                          <span class="green-circle"></span>
+                      {% elif saved_scenarios.impactSupply >= 4 and saved_scenarios.impactSupply < 8 %}
+                          <span class="orange-circle"></span>
+                      {% elif saved_scenarios.impactSupply >= 8 %}
+                          <span class="red-circle"></span>
+                      {% endif %}
+                      {{ saved_scenarios.impactSupply }}
+                  </td>
+
+                    <td>
+                        {% if saved_scenarios.impactFinance < 4 %}
+                            <span class="green-circle"></span>
+                        {% elif saved_scenarios.impactFinance >= 4 and saved_scenarios.impactFinance < 8 %}
+                            <span class="orange-circle"></span>
+                        {% elif saved_scenarios.impactFinance >= 8 %}
+                            <span class="red-circle"></span>
+                        {% endif %}
+                        {{ saved_scenarios.impactFinance }}
+                    </td>
+                    <td>
+                        {% if saved_scenarios.impactProduction < 4 %}
+                            <span class="green-circle"></span>
+                        {% elif saved_scenarios.impactProduction >= 4 and saved_scenarios.impactProduction < 8 %}
+                            <span class="orange-circle"></span>
+                        {% elif saved_scenarios.impactProduction >= 8 %}
+                            <span class="red-circle"></span>
+                        {% endif %}
+                        {{ saved_scenarios.impactProduction }}
+                    </td>
+                    <td>
+                        {% if saved_scenarios.impactData < 4 %}
+                            <span class="green-circle"></span>
+                        {% elif saved_scenarios.impactData >= 4 and saved_scenarios.impactData < 8 %}
+                            <span class="orange-circle"></span>
+                        {% elif saved_scenarios.impactData >= 8 %}
+                            <span class="red-circle"></span>
+                        {% endif %}
+                        {{ saved_scenarios.impactData }}
+                    </td>
+                    <td>
+                        {% if saved_scenarios.impactRegulation < 4 %}
+                            <span class="green-circle"></span>
+                        {% elif saved_scenarios.impactRegulation >= 4 and saved_scenarios.impactRegulation < 8 %}
+                            <span class="orange-circle"></span>
+                        {% elif saved_scenarios.impactRegulation >= 8 %}
+                            <span class="red-circle"></span>
+                        {% endif %}
+                        {{ saved_scenarios.impactRegulation }}
+                    </td>
+                    <td>
+                        {% if saved_scenarios.impactReputation < 4 %}
+                            <span class="green-circle"></span>
+                        {% elif saved_scenarios.impactReputation >= 4 and saved_scenarios.impactReputation < 8 %}
+                            <span class="orange-circle"></span>
+                        {% elif saved_scenarios.impactReputation >= 8 %}
+                            <span class="red-circle"></span>
+                        {% endif %}
+                        {{ saved_scenarios.impactReputation }}
+                    </td>
+
+
                     <td>{{ saved_scenarios.ThreatClass }}</td>
                     <td>{{ saved_scenarios.RiskCategory }}</td>
                     <td>
@@ -585,7 +728,7 @@ thead {
                     <div class="col-2"> <label class="small-font d-flex align-items-center clickable-label" data-bs-toggle="modal" data-bs-target="#safetyModal" data-modal-id="safetyModal" data-textarea-id="txtsafetyJustify">Safety</label><span id="textIndicator" style="display: none;"><i class="bi bi-journal-text"></i></span></div>
 
                     <div class="col-7">
-                      <input type="range" min="1" max="10" value="1" class="form-range" id="range_safety" name="range_safety" onchange="initSlider('range_safety', 'safetyrange');">
+                      <input type="range" min="1" max="10" value="1" class="slider" id="range_safety" name="range_safety" onchange="initSlider('range_safety', 'safetyrange');">
                     </div>
                     <div class="col-3"><label id="safetyrange" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></div>
                 </div>
@@ -597,7 +740,7 @@ thead {
                 <div class="slider-container d-flex align-items-center">
                     <div class="col-2"><label class="small-font d-flex align-items-center clickable-label" data-bs-toggle="modal" data-bs-target="#lifeModal" data-bs-placement="top" data-modal-id="lifeModal" data-textarea-id="txtlifeJustify">Life</label><span id="textIndicator" style="display: none;"><i class="bi bi-journal-text"></i></span></div>
                     <div class="col-7">
-                      <input type="range" min="1" max="10" value="1" class="form-range" id="range_life" name="range_life" onchange="initSlider('range_life', 'liferange');">
+                      <input type="range" min="1" max="10" value="1" class="slider" id="range_life" name="range_life" onchange="initSlider('range_life', 'liferange');">
                     </div>
                     <div class="col-3"><h6><label id="liferange" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                 </div>
@@ -609,7 +752,7 @@ thead {
                 <div class="slider-container d-flex align-items-center">
                     <div class="col-2"><label for="range_production" class="small-font d-flex align-items-center clickable-label" data-bs-toggle="modal" data-bs-target="#productionModal" data-bs-placement="top" data-modal-id="productionModal" data-textarea-id="txtproductionJustify">Production</label><span id="textIndicator" style="display: none;"><i class="bi bi-journal-text"></i></span></div>
                     <div class="col-7">
-                      <input type="range" min="1" max="10" value="1" class="form-range" id="range_production" name="range_production" onchange="initSlider('range_production', 'productionrange');">
+                      <input type="range" min="1" max="10" value="1" class="slider" id="range_production" name="range_production" onchange="initSlider('range_production', 'productionrange');">
                     </div>
                     <div class="col-3"><h6><label id="productionrange" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                 </div>
@@ -621,7 +764,7 @@ thead {
                 <div class="slider-container d-flex align-items-center">
                     <div class="col-2"><label class="small-font d-flex align-items-center clickable-label" data-bs-toggle="modal" data-bs-target="#financeModal" data-bs-placement="top" data-modal-id="financeModal" data-textarea-id="txtfinanceJustify">Financial</label><span id="textIndicator" style="display: none;"><i class="bi bi-journal-text"></i></span></div>
                     <div class="col-7">
-                      <input type="range" min="1" max="10" value="1" class="form-range" id="range_finance" name="range_finance" onchange="initSlider('range_finance', 'financerange');">
+                      <input type="range" min="1" max="10" value="1" class="slider" id="range_finance" name="range_finance" onchange="initSlider('range_finance', 'financerange');">
                     </div>
                     <div class="col-3"><h6><label id="financerange" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                 </div>
@@ -633,7 +776,7 @@ thead {
                 <div class="slider-container d-flex align-items-center">
                     <div class="col-2"><label class="small-font d-flex align-items-center clickable-label" data-bs-toggle="modal" data-bs-target="#reputationModal" data-bs-placement="top" data-modal-id="reputationModal" data-textarea-id="txtreputationJustify">Reputation</label><span id="textIndicator" style="display: none;"><i class="bi bi-journal-text"></i></span></div>
                     <div class="col-7">
-                      <input type="range" min="1" max="10" value="1" class="form-range" id="range_reputation" name="range_reputation" onchange="initSlider('range_reputation', 'reputationrange');">
+                      <input type="range" min="1" max="10" value="1" class="slider" id="range_reputation" name="range_reputation" onchange="initSlider('range_reputation', 'reputationrange');">
                     </div>
                     <div class="col-3"><h6><label id="reputationrange" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                 </div>
@@ -645,7 +788,7 @@ thead {
                 <div class="slider-container d-flex align-items-center">
                     <div class="col-2"><label class="small-font d-flex align-items-center clickable-label" data-bs-toggle="modal" data-bs-target="#environmentModal" data-bs-placement="top" data-modal-id="environmentModal" data-textarea-id="txtenvironmentJustify">Environment</label><span id="textIndicator" style="display: none;"><i class="bi bi-journal-text"></i></span></div>
                     <div class="col-7">
-                      <input type="range" min="1" max="10" value="1" class="form-range" id="range_environment" name="range_environment" onchange="initSlider('range_environment', 'environmentrange');">
+                      <input type="range" min="1" max="10" value="1" class="slider" id="range_environment" name="range_environment" onchange="initSlider('range_environment', 'environmentrange');">
                     </div>
                     <div class="col-3"><h6><label id="environmentrange" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                 </div>
@@ -657,7 +800,7 @@ thead {
                 <div class="slider-container d-flex align-items-center">
                     <div class="col-2"><label class="small-font d-flex align-items-center clickable-label" data-bs-toggle="modal" data-bs-target="#regulatoryModal" data-bs-placement="top" data-modal-id="regulatoryModal" data-textarea-id="txtregulatoryJustify">Regulatory</label><span id="textIndicator" style="display: none;"><i class="bi bi-journal-text"></i></span></div>
                     <div class="col-7">
-                      <input type="range" min="1" max="10" value="1" class="form-range" id="range_regulatory" name="range_regulatory" onchange="initSlider('range_regulatory', 'regulatoryrange');">
+                      <input type="range" min="1" max="10" value="1" class="slider" id="range_regulatory" name="range_regulatory" onchange="initSlider('range_regulatory', 'regulatoryrange');">
                     </div>
                     <div class="col-3"><h6><label id="regulatoryrange" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                 </div>
@@ -669,7 +812,7 @@ thead {
                 <div class="slider-container d-flex align-items-center">
                     <div class="col-2"><label for="range_data" class="small-font d-flex align-items-center clickable-label" data-bs-toggle="modal" data-bs-target="#dataModal" data-bs-placement="top" data-modal-id="dataModal" data-textarea-id="txtdataJustify">Data/IP</label><span id="textIndicator" style="display: none;"><i class="bi bi-journal-text"></i></span></div>
                     <div class="col-7">
-                      <input type="range" min="1" max="10" value="1" class="form-range" id="range_data" name="range_data" onchange="initSlider('range_data', 'datarange');">
+                      <input type="range" min="1" max="10" value="1" class="slider" id="range_data" name="range_data" onchange="initSlider('range_data', 'datarange');">
                     </div>
                     <div class="col-3"><h6><label id="datarange" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                 </div>
@@ -681,7 +824,7 @@ thead {
                 <div class="slider-container d-flex align-items-center">
                     <div class="col-2"><label for="range_supply" class="small-font d-flex align-items-center clickable-label" data-bs-toggle="modal" data-bs-target="#supplyModal" data-bs-placement="top" data-modal-id="supplyModal" data-textarea-id="txtsupplyJustify">Supply Chain</label><span id="textIndicator" style="display: none;"><i class="bi bi-journal-text"></i></span></div>
                     <div class="col-7">
-                      <input type="range" min="1" max="10" value="1" class="form-range" id="range_supply" name="range_supply" onchange="initSlider('range_supply', 'supplyrange');">
+                      <input type="range" min="1" max="10" value="1" class="slider" id="range_supply" name="range_supply" onchange="initSlider('range_supply', 'supplyrange');">
                     </div>
                     <div class="col-3"><h6><label id="supplyrange" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                 </div>
@@ -698,7 +841,7 @@ thead {
                 <div class="slider-container d-flex align-items-center">
                     <div class="col-2"><label class="small-font d-flex align-items-center clickable-label" data-bs-toggle="modal" data-bs-target="#uelModal" data-bs-placement="top" >Unmitigated Event Likelihood (UEL)</label></div>
                     <div class="col-7">
-                      <input type="range" min="1" max="10" value="1" class="form-range" id="uel_range" name="uel_range" onchange="initSlider('uel_range','range_uel');">
+                      <input type="range" min="1" max="10" value="1" class="slider" id="uel_range" name="uel_range" onchange="initSlider('uel_range','range_uel');">
                     </div>
                     <div class="col-3"><h6><label id="range_uel" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                 </div>
@@ -710,7 +853,7 @@ thead {
                 <div class="slider-container d-flex align-items-center">
                     <div class="col-2"><label class="small-font d-flex align-items-center " >Residual Risk Unmitigated (RRu)</label></div>
                     <div class="col-7">
-                      <input type="range" min="1" max="10" value="1" class="form-range" id="rru_range" name="rru_range" onchange="initSlider('rru_range','range_rru');">
+                      <input type="range" min="1" max="10" value="1" class="slider" id="rru_range" name="rru_range" onchange="initSlider('rru_range','range_rru');">
                     </div>
                     <div class="col-3"><h6><label id="range_rru" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                 </div>
@@ -726,7 +869,7 @@ thead {
                 <div class="slider-container d-flex align-items-center">
                     <div class="col-2"><label class="small-font d-flex align-items-center " >Severity Mitigated (Sm)</label></div>
                     <div class="col-7">
-                      <input type="range" min="1" max="10" value="1" class="form-range" id="SMrange" name="SMrange" onchange="initSlider('SMrange','range_SM');">
+                      <input type="range" min="1" max="10" value="1" class="slider" id="SMrange" name="SMrange" onchange="initSlider('SMrange','range_SM');">
                     </div>
                     <div class="col-3"><h6><label id="range_SM" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                 </div>
@@ -738,7 +881,7 @@ thead {
                 <div class="slider-container d-flex align-items-center">
                     <div class="col-2"><label class="small-font d-flex align-items-center " >Mitigated Exposure (MEL)</label></div>
                     <div class="col-7">
-                      <input type="range" min="1" max="10" value="1" class="form-range" id="MELrange" name="MELrange" onchange="initSlider('MELrange','range_MEL');">
+                      <input type="range" min="1" max="10" value="1" class="slider" id="MELrange" name="MELrange" onchange="initSlider('MELrange','range_MEL');">
                     </div>
                     <div class="col-3"><h6><label id="range_MEL" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                 </div>
@@ -750,7 +893,7 @@ thead {
                 <div class="slider-container d-flex align-items-center">
                     <div class="col-2"><label class="small-font d-flex align-items-center " >Residual Risk (RRm)</label></div>
                     <div class="col-7">
-                      <input type="range" min="1" max="10" value="1" class="form-range" id="RRMrange" name="RRMrange" onchange="initSlider('RRMrange','range_RRM');">
+                      <input type="range" min="1" max="10" value="1" class="slider" id="RRMrange" name="RRMrange" onchange="initSlider('RRMrange','range_RRM');">
                     </div>
                     <div class="col-3"><h6><label id="range_RRM" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                 </div>
@@ -811,82 +954,72 @@ thead {
     <div class="col-md-1 " style="background-color: black"></div>
 </div> <!-- dark grey stripe -->
 
+<div class="row" style="height: 10px">
+    <div class="col-md-1" style="background-color: black"></div>
+    <div class="col-md-10 " style="background-color: white; height: 10px"></div>
+    <div class="col-md-1 " style="background-color: black"></div>
+</div> <!-- dark grey stripe -->
 <div class="row">
     <div class="col-md-1" style="background-color: black"></div>
-    <div class="col-md-10" style="background-color: white">
-        <div class="row h-100">
-            <div class="col-md-1"></div>
-            <!-- Control Effectiveness -->
-            <div class="col-md-1 d-flex align-items-center">
-                <div class="w-100 rounded p-3">
-                    <label for="control_effectiveness">Controls</label>
-                    <textarea id="control_effectiveness" name="control_effectiveness" class="form-control text-center" style="resize: none;"></textarea>
+    <div class="col-md-1" style="background-color: white"></div>
+    <div class="col-md-8">
+        <div class="row">
+            <div class="col-md-2">
+                <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                <div class="card-body">
+                    <label for="control_effectiveness" class="small-font">Control Effectiveness</label>
+                    <input type="text" id="control_effectiveness" name="control_effectiveness" class="form-control text-center" readonly>
+                    <input type="hidden" id="hdn_control_effectiveness" name="hdn_control_effectiveness">
+                    <br>
+                    <label for="txtProbability" class="small-font">Attack Success Probability</label>
+                    <input type="text" id="txtProbability" name="txtProbability" class="form-control text-center" readonly>
+                    <br>
+                    <label for="txtLikelihood" class="small-font">Risk Likelihood</label>
+                    <input type="text" id="txtLikelihood" name="txtLikelihood" class="form-control text-center" readonly>
+                    <input type="hidden" id="hdnLikelihood" name="hdnLikelihood">
+                    <br>
+                    <label for="txtResidualRisk" class="small-font">Residual Risk</label>
+                    <input type="text" id="txtResidualRisk" name="txtResidualRisk" class="form-control text-center" readonly>
+                </div>
                 </div>
             </div>
-
-            <!-- Attack Success Rate -->
-            <div class="col-md-1 d-flex align-items-center">
-                <div class="w-100 rounded p-3">
-                    <label for="txtProbability">Attack Success Rate</label>
-                    <textarea id="txtProbability" name="txtProbability" class="form-control text-center" style="resize: none;"></textarea>
+            <div class="col-md-2">
+                <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                <div class="card-body">
+                    <label>Estimated Incident Costs</label><br><br>
+                    <label for="txtEventCosts_low" class="small-font">Low (Best Case)</label>
+                    <input type="text" id="txtEventCosts_low" name="txtEventCosts_low" class="form-control text-center" readonly>
+                    <br>
+                    <label for="txtEventCosts" class="small-font">Medium (Expected Case)</label>
+                    <input type="text" id="txtEventCosts" name="txtEventCosts" class="form-control text-center" readonly>
+                    <br>
+                    <label for="txtEventCosts_high" class="small-font">High (Worst Case)</label>
+                    <input type="text" id="txtEventCosts_high" name="txtEventCosts_high" class="form-control text-center" readonly>
+                </div>
                 </div>
             </div>
-
-            <!-- Estimated Incident Costs -->
-            <div class="col-md-6">
-                <div class="row h-100">
-                    <!-- Low -->
-                    <div class="col-md-4 d-flex align-items-center">
-                        <div class="w-100 rounded p-3">
-                            <label for="txtEventCosts_low">Low</label>
-                            <textarea id="txtEventCosts_low" name="txtEventCosts_low" class="form-control text-center" style="resize: none;"></textarea>
-                        </div>
-                    </div>
-                    <!-- Medium -->
-                    <div class="col-md-4 d-flex align-items-center">
-                        <div class="w-100 rounded p-3">
-                            <label for="txtEventCosts">Medium</label>
-                            <textarea id="txtEventCosts" name="txtEventCosts" class="form-control text-center" style="resize: none;"></textarea>
-                        </div>
-                    </div>
-                    <!-- High -->
-                    <div class="col-md-4 d-flex align-items-center">
-                        <div class="w-100 rounded p-3">
-                            <label for="txtEventCosts_high">High</label>
-                            <textarea id="txtEventCosts_high" name="txtEventCosts_high" class="form-control text-center" style="resize: none;"></textarea>
-                        </div>
-                    </div>
-                </div>
+            <div class="col-md-8">
+                <label for="txtScenarioAnalysis" class="small-font">Recommendations will align with selected standards:</label>
+                <textarea id="txtScenarioAnalysis" name="txtScenarioAnalysis" class="form-control border border-danger small-font" rows="15"  style="resize: none; border: 3px #97979A; border-radius: 10px; box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5);  padding: 20px; background-color: white"></textarea>
             </div>
-
-            <!-- Residual Risk Rating -->
-            <div class="col-md-1 d-flex align-items-center">
-                <div class="w-100 rounded p-3">
-                    <label for="txtResidualRisk">Residual Risk</label>
-                    <textarea id="txtResidualRisk" name="txtResidualRisk" class="form-control text-center" style="resize: none;"></textarea>
-                </div>
-            </div>
-
-            <div class="col-md-2"></div>
         </div>
+
     </div>
-    <div class="col-md-1" style="background-color: black"></div>
+    <div class="col-md-1" style="background-color: white"></div>
+    <div class="col-md-1 " style="background-color: black"></div>
 </div>
 
-
 <div class="row">
     <div class="col-md-1" style="background-color: black"></div>
     <div class="col-md-5" style="background-color: white">
         <div class="row  rounded p-3 ">
-            <label for="txtControlAnalysis" class="small-font">Control Recommendations:</label>
-            <textarea id="txtControlAnalysis" name="txtControlAnalysis" class="form-control border border-danger small-font" rows="10"  style="resize: none; border: 3px #97979A; border-radius: 10px; box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5);  padding: 20px; background-color: white"></textarea><br>
+
         </div>
 
     </div>
     <div class="col-md-5" style="background-color: white">
         <div class="row  rounded p-3 ">
-            <label for="txtScenarioAnalysis" class="small-font">Recommendations will align with selected standards:</label>
-            <textarea id="txtScenarioAnalysis" name="txtScenarioAnalysis" class="form-control border border-danger small-font" rows="10"  style="resize: none; border: 3px #97979A; border-radius: 10px; box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5);  padding: 20px; background-color: white"></textarea>
+
         </div>
 
     </div>
@@ -913,7 +1046,7 @@ thead {
                 <div class="slider-container d-flex align-items-center">
                     <div class="col-2"><label class="small-font d-flex align-items-center " >Severity Adjusted(Sa)</label></div>
                     <div class="col-7">
-                      <input type="range" min="1" max="10" value="1" class="form-range" id="SArange" name="SArange" onchange="initSlider('SArange','range_SA');">
+                      <input type="range" min="1" max="10" value="1" class="slider" id="SArange" name="SArange" onchange="initSlider('SArange','range_SA');">
                     </div>
                     <div class="col-3"><h6><label id="range_SA" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                 </div>
@@ -925,7 +1058,7 @@ thead {
                 <div class="slider-container d-flex align-items-center">
                     <div class="col-2"><label class="small-font d-flex align-items-center " >Mitigated Exposure (MELa)</label></div>
                     <div class="col-7">
-                      <input type="range" min="1" max="10" value="1" class="form-range" id="MELarange" name="MELarange" onchange="initSlider('MELarange','range_MELa');">
+                      <input type="range" min="1" max="10" value="1" class="slider" id="MELarange" name="MELarange" onchange="initSlider('MELarange','range_MELa');">
                     </div>
                     <div class="col-3"><h6><label id="range_MELa" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                 </div>
@@ -937,7 +1070,7 @@ thead {
                 <div class="slider-container d-flex align-items-center">
                     <div class="col-2"><label class="small-font d-flex align-items-center " >Residual Risk (RRa)</label></div>
                     <div class="col-7"><input type="text" id="txtRRa" name="txtRRa" class="form-control">
-                      <!-- <input type="range" min="1" max="10" value="1" class="form-range" id="RRarange" name="RRarange" onchange="initSlider('RRarange','range_RRa');"> -->
+                      <!-- <input type="range" min="1" max="10" value="1" class="slider" id="RRarange" name="RRarange" onchange="initSlider('RRarange','range_RRa');"> -->
                     </div>
                     <div class="col-3"><h6><label id="range_RRa" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                 </div>
@@ -953,7 +1086,7 @@ thead {
                 <div class="slider-container d-flex align-items-center">
                     <div class="col-2"><label class="small-font d-flex align-items-center " >Annualized Rate of Occurrence (ARO):</label></div>
                     <div class="col-7">
-                      <input type="range" class="form-range" id="aro" name="aro" min="0" max="12" step="1" oninput="updatearoOutput(this.value)">
+                      <input type="range" class="slider" id="aro" name="aro" min="0" max="12" step="1" oninput="updatearoOutput(this.value)">
                     </div>
                     <div class="col-3"><h6><output for="aro" id="aroOutput">0</output></h6></div>
                 </div>
@@ -966,7 +1099,7 @@ thead {
                 <div class="slider-container d-flex align-items-center">
                     <div class="col-2"><label class="small-font d-flex align-items-center " >Event Costs (SLE): </label></div>
                     <div class="col-7">
-                        <input type="text" class="form-range" id="sle" name="sle" style="border: 3px #97979A; border-radius: 10px; box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5);  padding: 20px; background-color: white">
+                        <input type="text" class="slider" id="sle" name="sle" style="border: 3px #97979A; border-radius: 10px; box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5);  padding: 20px; background-color: white">
                         <input type="hidden" id="hdn_sle" name="hdn_sle">
                     </div>
 
@@ -990,7 +1123,7 @@ thead {
                 <div class="slider-container d-flex align-items-center">
                     <div class="col-2"><label class="small-font d-flex align-items-center " >Cost of Countermeasures:</label></div>
                     <div class="col-7">
-                        <input type="range" class="form-range" id="countermeasureCostsRange" name="countermeasureCostsRange" min="0" max="1000000" step="1000" oninput="updateCountermeasureCostsOutput(this.value)">
+                        <input type="range" class="slider" id="countermeasureCostsRange" name="countermeasureCostsRange" min="0" max="1000000" step="1000" oninput="updateCountermeasureCostsOutput(this.value)">
                     </div>
                     <div class="col-3"><h6><output for="countermeasureCostsRange" id="countermeasureCostsOutput">$0</output></h6></div>
                 </div>
@@ -1002,7 +1135,7 @@ thead {
                 <div class="slider-container d-flex align-items-center">
                     <div class="col-2"><label class="small-font d-flex align-items-center " >Security Level (SL)</label></div>
                     <div class="col-7">
-                      <input type="range" min="1" max="10" value="1" class="form-range" id="sl_range" name="sl_range" onchange="initSlider('sl_range','range_sl');">
+                      <input type="range" min="1" max="10" value="1" class="slider" id="sl_range" name="sl_range" onchange="initSlider('sl_range','range_sl');">
                     </div>
                     <div class="col-3"><h6><label id="range_sl" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                 </div>
@@ -1314,7 +1447,7 @@ thead {
                   const sl = document.getElementById('sl_range').value;
                   const cyberpha = sessionStorage.getItem('activeCyberPHA')
                   const recommendations = document.getElementById('txtScenarioAnalysis').value
-                  const controls = document.getElementById('txtControlAnalysis').value
+                  const likelihood = document.getElementById('hdnLikelihood').value
                   const rra = document.getElementById('txtResidualRisk').value
                   const justifySafety = document.getElementById('txtsafetyJustify').value
                   const justifyLife = document.getElementById('txtlifeJustify').value
@@ -1329,7 +1462,7 @@ thead {
                   const aleValue = document.getElementById('ale').value;
                   let ale = parseInt(aleValue.replace(/[^0-9]/g, ''), 10);
                   const probability = document.getElementById('txtProbability').value;
-                  const control_effectiveness = document.getElementById('control_effectiveness').value;
+                  const control_effectiveness = document.getElementById('hdn_control_effectiveness').value;
                   const sle_low = document.getElementById('txtEventCosts_low').value;
                   const sle_high = document.getElementById('txtEventCosts_high').value;
                   const sle_median = document.getElementById('txtEventCosts').value;
@@ -1389,7 +1522,6 @@ thead {
                   formData.append('sl', sl);
                   formData.append('recommendations', recommendations)
                   formData.append('cyberpha', cyberpha);
-                  formData.append('controls', controls);
                   formData.append('justifySafety', justifySafety);
                   formData.append('justifyLife', justifyLife);
                   formData.append('justifyProduction', justifyProduction);
@@ -1410,6 +1542,7 @@ thead {
                   formData.append('control_effectiveness', control_effectiveness);
                   formData.append('standards', standards);
                   formData.append('risk_register', risk_register);
+                  formData.append('likelihood', likelihood);
                     // Check if snapshot should be created
                   let snapshot = 0
                   const riskSnapshotCheckbox = document.getElementById('risk_snapshot');
@@ -2246,8 +2379,8 @@ $(document).ready(function() {
                    //document.getElementById('SArange').value = response.adjustedSeverity;
                    //document.getElementById('MELarange').value = response.adjustedExposure;
                    document.getElementById('txtRRa').value = response.adjustedRR
-
-                   document.getElementById('txtControlAnalysis').value = response.controls;
+                   document.getElementById('hdnLikelihood').value = response.likelihood;
+                   document.getElementById('txtLikelihood').value = response.likelihood +'%';
                    document.getElementById('txtScenarioAnalysis').value = response.recommendations;
                    let costsString = response.costs;
                    let costsArray = costsString.split('|');
@@ -2270,7 +2403,27 @@ $(document).ready(function() {
                     // Set the float value to the hidden 'hdn_sle' field
                     //document.getElementById('hdn_sle').value = costsFloat;
                     document.getElementById('txtProbability').value = response.probability;
-                    document.getElementById('control_effectiveness').value = response.control_effectiveness;
+
+                    document.getElementById('hdn_control_effectiveness').value = response.control_effectiveness;
+
+                    var controlEffectivenessPercentage = response.control_effectiveness;
+
+                    // Define the text values based on the percentage range
+                    var textValue = "";
+                    if (controlEffectivenessPercentage < 25) {
+                        textValue = "Low";
+                    } else if (controlEffectivenessPercentage < 50) {
+                        textValue = "Low/Medium";
+                    } else if (controlEffectivenessPercentage < 75) {
+                        textValue = "Medium";
+                    } else if (controlEffectivenessPercentage < 90) {
+                        textValue = "Medium/High";
+                    } else {
+                        textValue = "High";
+                    }
+
+                    // Set the value of the 'control_effectiveness' text control
+                    document.getElementById('control_effectiveness').value = textValue;
                     //document.getElementById('txtEventCosts').value = formattedCosts;
                     document.getElementById('txtResidualRisk').value = response.adjustedRR
 
@@ -2369,10 +2522,12 @@ function resetformcontrols() {
       document.getElementById('SArange').value = 0;
       document.getElementById('MELarange').value = 0;
       document.getElementById('txtScenarioAnalysis').value = 0;
-      document.getElementById('txtControlAnalysis').value = 0;
+      document.getElementById('txtLikelihood').value = 0;
+      document.getElementById('hdnLikelihood').value = 0;
       document.getElementById('txtRRa').value = 0;
       document.getElementById('txtProbability').value = '';
       document.getElementById('control_effectiveness').value = '';
+      document.getElementById('hdn_control_effectiveness').value = '';
       document.getElementById('txtEventCosts_low').value = '';
       document.getElementById('txtEventCosts').value = '';
       document.getElementById('txtEventCosts_high').value = '';
@@ -2466,11 +2621,28 @@ function resetformcontrols() {
 
         document.getElementById('txtResidualRisk').value= data.RRa;
         document.getElementById('txtProbability').value= data.probability;
-        document.getElementById('control_effectiveness').value= data.control_effectiveness;
+        document.getElementById('hdn_control_effectiveness').value= data.control_effectiveness;
+        // Define the text values based on the percentage range
+                    var textValue = "";
+                    if (data.control_effectiveness < 25) {
+                        textValue = "Low";
+                    } else if (data.control_effectiveness < 50) {
+                        textValue = "Low/Medium";
+                    } else if (data.control_effectiveness < 75) {
+                        textValue = "Medium";
+                    } else if (data.control_effectiveness < 90) {
+                        textValue = "Medium/High";
+                    } else {
+                        textValue = "High";
+                    }
+
+                    // Set the value of the 'control_effectiveness' text control
+                    document.getElementById('control_effectiveness').value = textValue;
         document.getElementById('hdnScenario').value = scenarioId;
 
          $('#txtRRa').val(data.RRa);
-        $('#txtControlAnalysis').val(data.control_recommendations);
+         $('#hdnLikelihood').val(data.likelihood);
+        $('#txtLikelihood').val(data.likelihood + '%');
         $('#txtdataJustify').val(data.justifyData);
         $('#txtregulatoryJustify').val(data.justifyRegulation);
         $('#txtenvironmentJustify').val(data.justifyEnvironment);

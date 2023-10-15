@@ -40,6 +40,75 @@
  <title>Risk Assessment Worksheet</title>
 
   <style>
+
+.highlighted {
+background-color: #85a4e7 !important;
+color: white !important;
+}
+
+   .selectable-row:hover {
+    cursor: pointer;
+    background-color: #f5f5f5;  /* Optional: to give a slight background change on hover */
+}
+.slider {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 15px;
+  background: #b0acac;
+  outline: none;
+  border: 3px solid rgba(77, 127, 192, 0.75);
+  border-radius: 4px;
+}
+
+
+/* for chrome/safari */
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 15px;
+  height: 40px;
+  background: rgba(77, 127, 192, 0.75);
+  cursor: pointer;
+  border: 3px solid rgba(77, 127, 192, 0.75);
+  border-radius: 4px;
+}
+
+/* for firefox */
+.slider::-moz-range-thumb {
+  width: 20px;
+  height: 60px;
+  background: #000;
+  cursor: pointer;
+  border: 5px solid lawngreen;
+  border-radius: 4px;
+}
+      .green-circle {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    background-color: green;
+    border-radius: 50%;
+    margin-right: 5px;
+}
+
+.orange-circle {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    background-color: orange;
+    border-radius: 50%;
+    margin-right: 5px;
+}
+
+.red-circle {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    background-color: red;
+    border-radius: 50%;
+    margin-right: 5px;
+}
+
     .small-font {
         font-size: 0.8rem; /* adjust as needed */
    }
@@ -75,23 +144,6 @@
     #rawtable tbody tr:hover {
         background-color: #f5f5f5; /* Change this to the color you want */
     }
-
-        .impactGauge {
-            position: relative;
-            width: 7vw;
-            height: 7vw;
-            box-sizing: border-box;
-            float:left;
-            margin:20px
-        }
-        .RRGauge {
-            position: relative;
-            width: 7vw;
-            height: 7vw;
-            box-sizing: border-box;
-            float:left;
-            margin:20px
-        }
 
 
         .tab-content {
@@ -246,6 +298,12 @@
         document.getElementById("selectTactics_3").setAttribute('disabled', true);
         document.getElementById("selectTactics_4").setAttribute('disabled', true);
         document.getElementById("selectTactics_5").setAttribute('disabled', true);
+        document.getElementById("id_impact_1").setAttribute('disabled', true);
+        document.getElementById("id_impact_2").setAttribute('disabled', true);
+        document.getElementById("id_impact_3").setAttribute('disabled', true);
+        document.getElementById("id_impact_4").setAttribute('disabled', true);
+        document.getElementById("id_impact_5").setAttribute('disabled', true);
+
         document.getElementById("txtAssets_1").setAttribute('disabled', true);
         document.getElementById("txtAssets_2").setAttribute('disabled', true);
         document.getElementById("txtAssets_3").setAttribute('disabled', true);
@@ -271,7 +329,7 @@
 
 </script>
 
-<nav class="navbar navbar-expand-lg navbar-scroll fixed-top shadow-0 border-bottom border-dark rounded">
+<nav class="navbar navbar-expand-lg navbar-scroll shadow-0 border-bottom border-dark rounded">
   <div class="container-fluid d-flex justify-content-between">
    <a class="navbar-brand" href="{% url 'OTRisk:dashboardhome' %}"><img src="/static/images/logo1-2.jpg" style="height: 140px; width: 140px" class="navbar-logo" alt="">  </a>
       <h4 class="my-auto text-center flex-grow-1"><font color="white">Quick Risk Assessment Worksheet</font></h4>
@@ -338,27 +396,20 @@
 
 <form name="frmRAW" id="frmRAW" method="POST" action="{% url 'OTRisk:qraw' %}">
 {% csrf_token %}
-<div class="row">
-        <div class="col-md-1 "></div>
-        <div class="col-md-10 ">
-         <div class="row" style="background-color: darkgray; height: 10px"></div>
-       </div>
-        <div class="col-md-1 "></div>
-    </div> <!-- dark grey stripe -->
+
 
 <div class="row">
     <div class="col-md-1 bg-black"></div>
 
     <div class="col-md-10 bg-light">
-        <br><br><br>
-        <label for="rawtable" class="form-label">Select a record in the table to view and edit the assessment</label>
+
         <table id="rawtable" class="table table-striped table-bordered small-font">
         <thead>
             <tr>
-                <th>ID</th>
+                <th></th>
                 <th>Title</th>
                 <th>Status</th>
-                <th>Date</th>
+                <th>BIA</th>
                 <th>Trigger</th>
                 <th>Facility Type</th>
                 <th>Industry</th>
@@ -369,14 +420,24 @@
         </thead>
         <tbody>
             {% for raws in raws %}
-                <tr
+                <tr class="selectable-row"
                     data-revenue="{{ raws.revenue }}"
                     data-insurance="{{ raws.insurance }}"
                     data-deductable="{{ raws.deductable }}">
                     <td>{{ raws.ID }}</td>
-                    <td>{{ raws.RATitle }}</td>
+                    <td><b>{{ raws.RATitle }}</b></td>
                     <td>{{ raws.StatusFlag }}</td>
-                    <td>{{ raws.RADate }}</td>
+                    <td>
+                        {% if raws.bia_text == 'Low' or raws.bia_text == 'Low/Medium' %}
+                            <span class="green-circle"></span>
+                        {% elif raws.bia_text == 'Medium' or raws.bia_text == 'Medium/High' %}
+                            <span class="orange-circle"></span>
+                        {% elif raws.bia_text == 'High' or raws.bia_text == 'Very High' %}
+                            <span class="red-circle"></span>
+                        {% endif %}
+                        {{ raws.bia_text }}
+                    </td>
+
                     <td>{{ raws.RATrigger }}</td>
                     <td>{{ raws.BusinessUnitType }}</td>
                     <td>{{ raws.industry }}</td>
@@ -386,7 +447,17 @@
             {% endfor %}
         </tbody>
         </table>
+        <script>
+        $(document).ready(function() {
+            $('#rawtable').on('click', 'tbody tr.selectable-row', function() {
+            // Remove 'highlighted' class from all other rows
+            $('tr.selectable-row').removeClass('highlighted');
 
+            // Add 'highlighted' class to the clicked row
+            $(this).addClass('highlighted');
+            });
+        });
+    </script>
     </div> <!-- table view of existing risk assessments -->
     <div class="col-md-1 bg-black"></div>
 </div>
@@ -401,11 +472,11 @@
 <div class="row">
     <div class="col-md-1 bg-black"></div>
     <div class="col-md-1" style="background-color: darkgray"></div>
-    <div class="col-md-2" style="background-color: darkgray"><button class="form-control" id="addNewBtn" type="button"   data-bs-toggle="tooltip" data-bs-placement="top" title="Click this button to clear the form and enter and begin a new risk assessment">New Assessment</button></div>
-    <div class="col-md-2" style="background-color: darkgray"><button class="form-control" id="editBtn" type="button" data-bs-toggle="tooltip" data-bs-placement="top" title="Click this button to edit the current risk assessment and scenarios">Edit Assessment</button></div>
-    <div class="col-md-2" style="background-color: darkgray"><button class="form-control" type="submit" id="saveBtn" data-bs-toggle="tooltip" data-bs-placement="top" title="Click this button to save the risk assessment and scenarios" onclick="return checkRiskAssessmentRefreshVariables();" >Save Assessment</button></div>
+    <div class="col-md-2" style="background-color: darkgray"><button class="form-control" id="addNewBtn" type="button"   data-bs-toggle="tooltip" data-bs-placement="top" title="Click this button to clear the form and enter and begin a new risk assessment"><i class="bi bi-folder-plus"></i> New</button></div>
+    <div class="col-md-2" style="background-color: darkgray"><button class="form-control" id="editBtn" type="button" data-bs-toggle="tooltip" data-bs-placement="top" title="Click this button to edit the current risk assessment and scenarios"><i class="bi bi-pencil-square"></i> Edit</button></div>
+    <div class="col-md-2" style="background-color: darkgray"><button class="form-control" type="submit" id="saveBtn" data-bs-toggle="tooltip" data-bs-placement="top" title="Click this button to save the risk assessment and scenarios" onclick="return checkRiskAssessmentRefreshVariables();" ><i class="bi bi-download"></i> Save</button></div>
     <div class="col-md-2" style="background-color: darkgray">
-    <button class="form-control" type="button" id="actionBtn" onclick="showRAActionsModal()">Add Remediation Action</button>
+    <button class="form-control" type="button" id="actionBtn" onclick="showRAActionsModal()"><i class="bi bi-subtract"></i> Action</button>
     </div>
 
         <!-- clear and reset scenario tabs -->
@@ -459,6 +530,8 @@
                 document.getElementById("selectThreat_2").value = "";
                 document.getElementById("selectTactics_2").disabled = false;
                 document.getElementById("selectTactics_2").value = "";
+                document.getElementById("id_impact_2").disabled = false;
+                document.getElementById("id_impact_2").value = "";
                  document.getElementById("txtAssets_2").disabled = false;
                  document.getElementById("txtAssets_2").value = "";
                  document.getElementById("selectOutage_2").value = '';
@@ -471,6 +544,8 @@
                 document.getElementById("selectThreat_3").value = "";
                 document.getElementById("selectTactics_3").disabled = false;
                 document.getElementById("selectTactics_3").value = "";
+                document.getElementById("id_impact_3").disabled = false;
+                document.getElementById("id_impact_3").value = "";
                 document.getElementById("txtAssets_3").disabled = false;
                 document.getElementById("txtAssets_3").value = "";
                 document.getElementById("selectOutage_3").value = '';
@@ -481,6 +556,8 @@
                 document.getElementById("selectThreat_4").value = "";
                 document.getElementById("selectTactics_4").disabled = false;
                 document.getElementById("selectTactics_4").value = "";
+                document.getElementById("id_impact_4").disabled = false;
+                document.getElementById("id_impact_4").value = "";
                 document.getElementById("txtAssets_4").disabled = false;
                 document.getElementById("txtAssets_4").value = "";
                 document.getElementById("txtScenarioDescription_4").disabled = false;
@@ -493,6 +570,8 @@
                 document.getElementById("selectThreat_5").value = "";
                 document.getElementById("selectTactics_5").disabled = false;
                 document.getElementById("selectTactics_5").value = "";
+                document.getElementById("id_impact_5").disabled = false;
+                document.getElementById("id_impact_5").value = "";
                 document.getElementById("txtAssets_5").disabled = false;
                 document.getElementById("txtAssets_5").value = "";
                 document.getElementById("txtScenarioDescription_5").disabled = false;
@@ -502,6 +581,8 @@
                 document.getElementById("selectThreat_1").value = "";
                 document.getElementById("selectTactics_1").disabled = false;
                 document.getElementById("selectTactics_1").value = "";
+                document.getElementById("id_impact_1").disabled = false;
+                document.getElementById("id_impact_1").value = "";
                 document.getElementById("txtAssets_1").disabled = false;
                 document.getElementById("txtAssets_1").value = "";
                 document.getElementById("txtScenarioDescription_1").disabled = false;
@@ -538,6 +619,7 @@
                 document.getElementById("txtScenarioDescription_2").disabled = false;
                 document.getElementById("selectThreat_2").disabled = false;
                 document.getElementById("selectTactics_2").disabled = false;
+                document.getElementById("id_impact_2").disabled = false;
                  document.getElementById("txtAssets_2").disabled = false;
                  document.getElementById("selectOutage_2").disabled = false;
                  document.getElementById("outage_2").disabled = false;
@@ -546,6 +628,7 @@
                 document.getElementById("txtScenarioDescription_3").disabled = false;
                 document.getElementById("selectThreat_3").disabled = false;
                 document.getElementById("selectTactics_3").disabled = false;
+                document.getElementById("id_impact_3").disabled = false;
                 document.getElementById("txtAssets_3").disabled = false;
                  document.getElementById("selectOutage_3").disabled = false;
                  document.getElementById("outage_3").disabled = false;
@@ -553,6 +636,7 @@
                 document.getElementById("scenario4-tab").click();
                 document.getElementById("selectThreat_4").disabled = false;
                 document.getElementById("selectTactics_4").disabled = false;
+                document.getElementById("id_impact_4").disabled = false;
                 document.getElementById("txtAssets_4").disabled = false;
                 document.getElementById("txtScenarioDescription_4").disabled = false;
                  document.getElementById("selectOutage_4").disabled = false;
@@ -561,6 +645,7 @@
                 document.getElementById("scenario5-tab").click();
                 document.getElementById("selectThreat_5").disabled = false;
                 document.getElementById("selectTactics_5").disabled = false;
+                document.getElementById("id_impact_5").disabled = false;
                 document.getElementById("txtAssets_5").disabled = false;
                 document.getElementById("txtScenarioDescription_5").disabled = false;
                  document.getElementById("selectOutage_5").disabled = false;
@@ -568,6 +653,7 @@
 
                 document.getElementById("scenario1-tab").click();
                 document.getElementById("selectTactics_1").disabled = false;
+                document.getElementById("id_impact_1").disabled = false;
                 document.getElementById("txtAssets_1").disabled = false;
                 document.getElementById("txtScenarioDescription_1").disabled = false;
                 document.getElementById("selectThreat_1").disabled = false;
@@ -651,6 +737,7 @@
                         <option value="Audit - Internal">Audit - Internal</option>
                         <option value="Change Request">Change Request</option>
                         <option value="Incident">Incident</option>
+                        <option value="Policy Exception">Policy Exception</option>
                         <option value="Scheduled Assessment">Scheduled Assessment</option>
                         <option value="Site Walkdown">Site Walkdown</option>
                     </select>
@@ -726,11 +813,11 @@
                         <input type="text" class="form-control" name="txtDeductable" id="txtDeductable" >
                     </div>
              </div>
-             <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+             <!-- <div class="card mb-3 shadow-sm">
                     <div class="card-body">
                         <a id="generateReportLink" href="#">Generate Report</a>
                     </div>
-                </div>
+                </div> -->
 
                 <br>
             </div>
@@ -828,6 +915,18 @@
               </div>
               <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                 <div class="card-body">
+                    <label for="id_impact_1" class="form-control border-0 small-font">Impact</label>
+                    <select id="id_impact_1" name="impact" class="form-control small-font">
+                        <option value="">-- Select Impact --</option>
+                        {% for value, display in scenario_form.fields.impact.choices %}
+                            <option value="{{ value }}">{{ display }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+              </div>
+
+              <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                <div class="card-body">
                     <label for="txtAssets_1" class="form-control border-0 align-text-bottom small-font">Asset Name/s:</label>
                     <textarea class="form-control small-font" name="txtAssets_1" id="txtAssets_1" rows="3" style="resize: none; word-wrap: normal" placeholder="Add asset names relevant to the scenario..."></textarea>
                 </div>
@@ -841,7 +940,9 @@
                             <div class="slider-container d-flex align-items-center" >
                                 <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#safetyModal_1" data-bs-placement="top" style="cursor: pointer">Safety</label></div>
                                 <div class="col-7">
-                                    <label for="range_safety_1"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_safety_1" name="range_safety_1" onchange="initSlider('range_safety_1', 'safetyrange_1');setRiskAssessmentRefreshRequired(1);">
+                                    <label for="range_safety_1"></label>
+
+                                    <input type="range" min="1" max="10" value="1" class="slider" id="range_safety_1" name="range_safety_1" onchange="initSlider('range_safety_1', 'safetyrange_1');setRiskAssessmentRefreshRequired(1);">
                                 </div>
                                 <div class="col-3"><label id="safetyrange_1" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></div>
                               </div>
@@ -853,7 +954,7 @@
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#lifeModal_1" data-bs-placement="top" style="cursor: pointer">Life</label></div>
                                 <div class="col-7">
-                                    <label for="range_life_1"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_life_1" name="range_life_1" onchange="initSlider('range_life_1', 'liferange_1');setRiskAssessmentRefreshRequired(1);">
+                                    <label for="range_life_1"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_life_1" name="range_life_1" onchange="initSlider('range_life_1', 'liferange_1');setRiskAssessmentRefreshRequired(1);">
                                 </div>
                                 <div class="col-3"><h6><label id="liferange_1" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
@@ -866,7 +967,7 @@
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#productionModal_1" data-bs-placement="top" style="cursor: pointer">Production</label></div>
                                 <div class="col-7">
-                                    <label for="range_production_1"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_production_1" name="range_production_1" onchange="initSlider('range_production_1', 'productionrange_1');setRiskAssessmentRefreshRequired(1);">
+                                    <label for="range_production_1"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_production_1" name="range_production_1" onchange="initSlider('range_production_1', 'productionrange_1');setRiskAssessmentRefreshRequired(1);">
                                 </div>
                                 <div class="col-3"><h6><label id="productionrange_1" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
@@ -879,7 +980,7 @@
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#financeModal_1"  data-bs-placement="top" style="cursor: pointer">Financial</label></div>
                                 <div class="col-7">
-                                    <label for="range_finance_1"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_finance_1" name="range_finance_1" onchange="initSlider('range_finance_1', 'financerange_1');setRiskAssessmentRefreshRequired(1);">
+                                    <label for="range_finance_1"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_finance_1" name="range_finance_1" onchange="initSlider('range_finance_1', 'financerange_1');setRiskAssessmentRefreshRequired(1);">
                                 </div>
                                 <div class="col-3"><h6><label id="financerange_1" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
@@ -891,7 +992,7 @@
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#reputationModal_1"  data-bs-placement="top" style="cursor: pointer">Reputation</label></div>
                                 <div class="col-7">
-                                    <label for="range_reputation_1"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_reputation_1" name="range_reputation_1" onchange="initSlider('range_reputation_1', 'reputationrange_1');setRiskAssessmentRefreshRequired(1);">
+                                    <label for="range_reputation_1"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_reputation_1" name="range_reputation_1" onchange="initSlider('range_reputation_1', 'reputationrange_1');setRiskAssessmentRefreshRequired(1);">
                                 </div>
                                 <div class="col-3"><h6><label id="reputationrange_1" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
@@ -903,7 +1004,7 @@
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#environmentModal_1"  data-bs-placement="top" style="cursor: pointer">Environment</label></div>
                                 <div class="col-7">
-                                    <label for="range_environment_1"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_environment_1" name="range_environment_1" onchange="initSlider('range_environment_1', 'environmentrange_1');setRiskAssessmentRefreshRequired(1);">
+                                    <label for="range_environment_1"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_environment_1" name="range_environment_1" onchange="initSlider('range_environment_1', 'environmentrange_1');setRiskAssessmentRefreshRequired(1);">
                                 </div>
                                 <div class="col-3"><h6><label id="environmentrange_1" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
@@ -915,7 +1016,7 @@
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#regulationModal_1"  data-bs-placement="top" style="cursor: pointer">Regulatory</label></div>
                                 <div class="col-7">
-                                    <label for="range_regulatory_1"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_regulatory_1" name="range_regulatory_1" onchange="initSlider('range_regulatory_1', 'regulatoryrange_1');setRiskAssessmentRefreshRequired(1);">
+                                    <label for="range_regulatory_1"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_regulatory_1" name="range_regulatory_1" onchange="initSlider('range_regulatory_1', 'regulatoryrange_1');setRiskAssessmentRefreshRequired(1);">
                                 </div>
                                 <div class="col-3"><h6><label id="regulatoryrange_1" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
@@ -927,7 +1028,7 @@
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#dataModal_1"  data-bs-placement="top" style="cursor: pointer">Data/IP</label></div>
                                 <div class="col-7">
-                                    <label for="range_data_1"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_data_1" name="range_data_1" onchange="initSlider('range_data_1', 'datarange_1');setRiskAssessmentRefreshRequired(1);">
+                                    <label for="range_data_1"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_data_1" name="range_data_1" onchange="initSlider('range_data_1', 'datarange_1');setRiskAssessmentRefreshRequired(1);">
                                 </div>
                                 <div class="col-3"><h6><label id="datarange_1" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
@@ -939,7 +1040,7 @@
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#supplyModal_1"  data-bs-placement="top" style="cursor: pointer">Supply Chain</label></div>
                                 <div class="col-7">
-                                    <label for="range_supply_1"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_supply_1" name="range_supply_1" onchange="initSlider('range_supply_1', 'supplyrange_1');setRiskAssessmentRefreshRequired(1);">
+                                    <label for="range_supply_1"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_supply_1" name="range_supply_1" onchange="initSlider('range_supply_1', 'supplyrange_1');setRiskAssessmentRefreshRequired(1);">
                                 </div>
                                 <div class="col-3"><h6><label id="supplyrange_1" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
@@ -952,7 +1053,7 @@
                             <div class="slider-container d-flex align-items-center" >
                                 <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#vulnModal_1"  data-bs-placement="top" style="cursor: pointer">Vulnerability</label></div>
                                 <div class="col-7">
-                                    <label for="range_vuln_1"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_vuln_1" name="range_vuln_1" onchange="initSlider('range_vuln_1', 'vulnrange_1')">
+                                    <label for="range_vuln_1"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_vuln_1" name="range_vuln_1" onchange="initSlider('range_vuln_1', 'vulnrange_1')">
                                 </div>
                                 <div class="col-3"><label id="vulnrange_1" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></div>
                             </div>
@@ -964,7 +1065,7 @@
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the danger to life of the selected scenario">Threat</label></div>
                                 <div class="col-7">
-                                    <label for="range_threat_1"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_threat_1" name="range_threat_1" onchange="initSlider('range_threat_1', 'threatrange_1');">
+                                    <label for="range_threat_1"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_threat_1" name="range_threat_1" onchange="initSlider('range_threat_1', 'threatrange_1');">
                                 </div>
                                 <div class="col-3"><h6><label id="threatrange_1" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
@@ -976,7 +1077,7 @@
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to indicate asset status">Asset Status</label></div>
                                 <div class="col-7">
-                                    <label for="range_frequency_1"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_frequency_1" name="range_frequency_1" onchange="initFrequencySlider('range_frequency_1', 'frequencyrange_1');">
+                                    <label for="range_frequency_1"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_frequency_1" name="range_frequency_1" onchange="initFrequencySlider('range_frequency_1', 'frequencyrange_1');">
                                 </div>
                                 <div class="col-3"><h6><label id="frequencyrange_1" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
@@ -986,7 +1087,7 @@
             </div>
             <div class="col-md-4 small-font">
                 <!-- Risk Assessment Button -->
-                <button id="risk-assessment-btn_1" type="button" class="btn btn-primary" onclick="checkEditModeAndExecute(this.id, 'loadingSpinner1')">
+                <button id="risk-assessment-btn_1" type="button" class="btn btn-primary" style="background-color: #e24e42"   onclick="checkEditModeAndExecute(this.id, 'loadingSpinner1')">
                     <i class="bi bi-play-fill mr-2"></i>Execute Risk Assessment
                 </button>
 
@@ -1028,7 +1129,9 @@
                         </div>
                     </div>
 
-
+                    <button id="save_scenario_1" type="button" class="btn btn-primary" style="background-color: #e24e42" onclick="save_scenario(1);">
+                    <i class="bi bi-play-fill mr-2"></i>Save Scenario 1
+                </button>
                 </div>
             </div>
         </div>
@@ -1085,6 +1188,17 @@
                         </div>
                     </div>
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                    <div class="card-body">
+                        <label for="id_impact_2" class="form-control border-0 small-font">Impact</label>
+                        <select id="id_impact_2" name="impact" class="form-control small-font">
+                            <option value="">-- Select Impact --</option>
+                            {% for value, display in scenario_form.fields.impact.choices %}
+                                <option value="{{ value }}">{{ display }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                  </div>
+                    <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                         <div class="card-body">
                            <label for="txtAssets_1" class="form-control border-0 align-text-bottom small-font">Asset Name/s</label>
                            <textarea class="form-control small-font" name="txtAssets_2" id="txtAssets_2" rows="3" style="resize: none; word-wrap: normal" placeholder="Add asset names relevant to the scenario..."></textarea>
@@ -1100,7 +1214,7 @@
                             <div class="slider-container d-flex align-items-center" >
                                 <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#safetyModal_2" data-bs-placement="top" style="cursor: pointer">Safety</label></div>
                                 <div class="col-7">
-                                    <label for="range_safety_2"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_safety_2" name="range_safety_2" onchange="initSlider('range_safety_2', 'safetyrange_2');setRiskAssessmentRefreshRequired(2);">
+                                    <label for="range_safety_2"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_safety_2" name="range_safety_2" onchange="initSlider('range_safety_2', 'safetyrange_2');setRiskAssessmentRefreshRequired(2);">
                                 </div>
                                 <div class="col-3"><label id="safetyrange_2" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></div>
                             </div>
@@ -1112,7 +1226,7 @@
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#lifeModal_2" data-bs-placement="top" style="cursor: pointer">Life</label></div>
                                 <div class="col-7">
-                                    <label for="range_life_2"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_life_2" name="range_life_2" onchange="initSlider('range_life_2', 'liferange_2'); setRiskAssessmentRefreshRequired(2);">
+                                    <label for="range_life_2"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_life_2" name="range_life_2" onchange="initSlider('range_life_2', 'liferange_2'); setRiskAssessmentRefreshRequired(2);">
                                 </div>
                                 <div class="col-3"><h6><label id="liferange_2" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
@@ -1124,7 +1238,7 @@
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#productionModal_2" data-bs-placement="top" style="cursor: pointer">Production</label></div>
                                 <div class="col-7">
-                                    <label for="range_production_2"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_production_2" name="range_production_2" onchange="initSlider('range_production_2', 'productionrange_2');setRiskAssessmentRefreshRequired(2);">
+                                    <label for="range_production_2"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_production_2" name="range_production_2" onchange="initSlider('range_production_2', 'productionrange_2');setRiskAssessmentRefreshRequired(2);">
                                 </div>
                                 <div class="col-3"><h6><label id="productionrange_2" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
@@ -1137,7 +1251,7 @@
                                 <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#financeModal_2" data-bs-placement="top" style="cursor: pointer">Financial</label></div>
                                 <div class="col-7">
                                     <label for="range_finance_2"></label>
-                                    <input type="range" min="1" max="10" value="1" class="form-range" id="range_finance_2" name="range_finance_2" onchange="initSlider('range_finance_2', 'financerange_2');setRiskAssessmentRefreshRequired(2);">
+                                    <input type="range" min="1" max="10" value="1" class="slider" id="range_finance_2" name="range_finance_2" onchange="initSlider('range_finance_2', 'financerange_2');setRiskAssessmentRefreshRequired(2);">
                                 </div>
                                 <div class="col-3"><h6><label id="financerange_2" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
@@ -1149,7 +1263,7 @@
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#reputationModal_2" data-bs-placement="top" style="cursor: pointer">Reputation</label></div>
                                 <div class="col-7">
-                                    <label for="range_reputation_2"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_reputation_2" name="range_reputation_2" onchange="initSlider('range_reputation_2', 'reputationrange_2');setRiskAssessmentRefreshRequired(2);">
+                                    <label for="range_reputation_2"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_reputation_2" name="range_reputation_2" onchange="initSlider('range_reputation_2', 'reputationrange_2');setRiskAssessmentRefreshRequired(2);">
                                 </div>
                                 <div class="col-3"><h6><label id="reputationrange_2" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
@@ -1161,7 +1275,7 @@
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#environmentModal_2" data-bs-placement="top" style="cursor: pointer">Environment</label></div>
                                 <div class="col-7">
-                                    <label for="range_environment_2"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_environment_2" name="range_environment_2" onchange="initSlider('range_environment_2', 'environmentrange_2');setRiskAssessmentRefreshRequired(2);">
+                                    <label for="range_environment_2"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_environment_2" name="range_environment_2" onchange="initSlider('range_environment_2', 'environmentrange_2');setRiskAssessmentRefreshRequired(2);">
                                 </div>
                                 <div class="col-3"><h6><label id="environmentrange_2" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
@@ -1173,7 +1287,7 @@
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#regulationModal_2" data-bs-placement="top" style="cursor: pointer">Regulatory</label></div>
                                 <div class="col-7">
-                                    <label for="range_regulatory_2"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_regulatory_2" name="range_regulatory_2" onchange="initSlider('range_regulatory_2', 'regulatoryrange_2');setRiskAssessmentRefreshRequired(2);">
+                                    <label for="range_regulatory_2"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_regulatory_2" name="range_regulatory_2" onchange="initSlider('range_regulatory_2', 'regulatoryrange_2');setRiskAssessmentRefreshRequired(2);">
                                 </div>
                                 <div class="col-3"><h6><label id="regulatoryrange_2" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
@@ -1185,7 +1299,7 @@
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#dataModal_2" data-bs-placement="top" style="cursor: pointer">Data/IP</label></div>
                                 <div class="col-7">
-                                    <label for="range_data_2"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_data_2" name="range_data_2" onchange="initSlider('range_data_2', 'datarange_2');setRiskAssessmentRefreshRequired(2);">
+                                    <label for="range_data_2"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_data_2" name="range_data_2" onchange="initSlider('range_data_2', 'datarange_2');setRiskAssessmentRefreshRequired(2);">
                                 </div>
                                 <div class="col-3"><h6><label id="datarange_2" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
@@ -1197,7 +1311,7 @@
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#supplyModal_2" data-bs-placement="top" style="cursor: pointer">Supply Chain</label></div>
                                 <div class="col-7">
-                                    <label for="range_supply_2"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_supply_2" name="range_supply_2" onchange="initSlider('range_supply_2', 'supplyrange_2');setRiskAssessmentRefreshRequired(2);">
+                                    <label for="range_supply_2"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_supply_2" name="range_supply_2" onchange="initSlider('range_supply_2', 'supplyrange_2');setRiskAssessmentRefreshRequired(2);">
                                 </div>
                                 <div class="col-3"><h6><label id="supplyrange_2" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
@@ -1210,7 +1324,7 @@
                            <div class="slider-container d-flex align-items-center" >
                                <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#vulnModal_2"  data-bs-placement="top" style="cursor: pointer">Vulnerability</label></div>
                                <div class="col-7">
-                                   <label for="range_vuln_2"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_vuln_2" name="range_vuln_2" onchange="initSlider('range_vuln_2', 'vulnrange_2')">
+                                   <label for="range_vuln_2"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_vuln_2" name="range_vuln_2" onchange="initSlider('range_vuln_2', 'vulnrange_2')">
                                </div>
                                <div class="col-3"><label id="vulnrange_2" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></div>
                            </div>
@@ -1222,7 +1336,7 @@
                            <div class="slider-container d-flex align-items-center">
                                <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the danger to life of the selected scenario">Threat</label></div>
                                <div class="col-7">
-                                   <label for="range_threat_2"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_threat_2" name="range_threat_2" onchange="initSlider('range_threat_2', 'threatrange_2');">
+                                   <label for="range_threat_2"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_threat_2" name="range_threat_2" onchange="initSlider('range_threat_2', 'threatrange_2');">
                                </div>
                                <div class="col-3"><h6><label id="threatrange_2" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                            </div>
@@ -1234,7 +1348,7 @@
                            <div class="slider-container d-flex align-items-center">
                                <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to indicate asset status">Asset Status</label></div>
                                <div class="col-7">
-                                   <label for="range_frequency_2"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_frequency_2" name="range_frequency_2" onchange="initFrequencySlider('range_frequency_2', 'frequencyrange_2');">
+                                   <label for="range_frequency_2"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_frequency_2" name="range_frequency_2" onchange="initFrequencySlider('range_frequency_2', 'frequencyrange_2');">
                                </div>
                                <div class="col-3"><h6><label id="frequencyrange_2" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                            </div>
@@ -1245,7 +1359,7 @@
 
             <div class="col-md-4 small-font">
                 <!-- Risk Assessment Button -->
-                <button id="risk-assessment-btn_2" type="button" class="btn btn-primary" onclick="checkEditModeAndExecute(this.id, 'loadingSpinner2')">
+                <button id="risk-assessment-btn_2" type="button" class="btn btn-primary" style="background-color: #e98000" onclick="checkEditModeAndExecute(this.id, 'loadingSpinner2')">
                     <i class="bi bi-play-fill mr-2"></i>Execute Risk Assessment
                 </button>
 
@@ -1285,10 +1399,14 @@
 
                     <div class="card mb-3 shadow-sm">
                         <div class="card-body">
-                            <label class="form-label">Risk Summary: </label>
+                            <label class="form-label">Control Recommendations: </label>
                             <textarea id="lblriskSummary_2" name="lblriskSummary_2" class="form-control" readonly style="resize: none" rows="15"></textarea>
                         </div>
                     </div>
+
+                <button id="save_scenario_2" type="button" class="btn btn-primary" style="background-color: #e98000" onclick="save_scenario(2);">
+                    <i class="bi bi-play-fill mr-2"></i>Save Scenario 2
+                </button>
 
 
                 </div>
@@ -1346,6 +1464,17 @@
                     </div>
                 </div>
                 <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                <div class="card-body">
+                    <label for="id_impact_3" class="form-control border-0 small-font">Impact</label>
+                    <select id="id_impact_3" name="impact" class="form-control small-font">
+                        <option value="">-- Select Impact --</option>
+                        {% for value, display in scenario_form.fields.impact.choices %}
+                            <option value="{{ value }}">{{ display }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+              </div>
+                <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                     <div class="card-body">
                         <label for="txtAssets_3" class="form-control border-0 align-text-bottom">Asset Name/s</label>
                         <textarea class="form-control" name="txtAssets_3" id="txtAssets_3" rows="3" style="resize: none; word-wrap: normal" placeholder="Add asset names relevant to the scenario..."></textarea>
@@ -1361,7 +1490,7 @@
                             <div class="slider-container d-flex align-items-center" >
                                 <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#safetyModal_3" data-bs-placement="top" style="cursor: pointer">Safety</label></div>
                                 <div class="col-7">
-                                    <label for="range_safety_3"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_safety_3" name="range_safety_3" onchange="initSlider('range_safety_3', 'safetyrange_3');setRiskAssessmentRefreshRequired(3);">
+                                    <label for="range_safety_3"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_safety_3" name="range_safety_3" onchange="initSlider('range_safety_3', 'safetyrange_3');setRiskAssessmentRefreshRequired(3);">
                                 </div>
                                 <div class="col-3"><label id="safetyrange_3" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></div>
                             </div>
@@ -1373,7 +1502,7 @@
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#lifeModal_3" data-bs-placement="top" style="cursor: pointer">Life</label></div>
                                 <div class="col-7">
-                                    <label for="range_life_3"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_life_3" name="range_life_3" onchange="initSlider('range_life_3', 'liferange_3');setRiskAssessmentRefreshRequired(3);">
+                                    <label for="range_life_3"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_life_3" name="range_life_3" onchange="initSlider('range_life_3', 'liferange_3');setRiskAssessmentRefreshRequired(3);">
                                 </div>
                                 <div class="col-3"><h6><label id="liferange_3" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
@@ -1385,7 +1514,7 @@
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#productionModal_3" data-bs-placement="top" style="cursor: pointer">Production</label></div>
                                 <div class="col-7">
-                                    <label for="range_production_3"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_production_3" name="range_production_3" onchange="initSlider('range_production_3', 'productionrange_3');setRiskAssessmentRefreshRequired(3);">
+                                    <label for="range_production_3"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_production_3" name="range_production_3" onchange="initSlider('range_production_3', 'productionrange_3');setRiskAssessmentRefreshRequired(3);">
                                 </div>
                                 <div class="col-3"><h6><label id="productionrange_3" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
@@ -1397,7 +1526,7 @@
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#financeModal_3" data-bs-placement="top" style="cursor: pointer">Financial</label></div>
                                 <div class="col-7">
-                                    <label for="range_finance_3"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_finance_3" name="range_finance_3" onchange="initSlider('range_finance_3', 'financerange_3');setRiskAssessmentRefreshRequired(3);">
+                                    <label for="range_finance_3"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_finance_3" name="range_finance_3" onchange="initSlider('range_finance_3', 'financerange_3');setRiskAssessmentRefreshRequired(3);">
                                 </div>
                                 <div class="col-3"><h6><label id="financerange_3" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
@@ -1410,7 +1539,7 @@
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#reputationModal_3" data-bs-placement="top" style="cursor: pointer">Reputation</label></div>
                                 <div class="col-7">
-                                    <label for="range_reputation_3"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_reputation_3" name="range_reputation_3" onchange="initSlider('range_reputation_3', 'reputationrange_3');setRiskAssessmentRefreshRequired(3);">
+                                    <label for="range_reputation_3"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_reputation_3" name="range_reputation_3" onchange="initSlider('range_reputation_3', 'reputationrange_3');setRiskAssessmentRefreshRequired(3);">
                                 </div>
                                 <div class="col-3"><h6><label id="reputationrange_3" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
@@ -1423,7 +1552,7 @@
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#environmentModal_3" data-bs-placement="top" style="cursor: pointer">Environment</label></div>
                                 <div class="col-7">
-                                    <label for="range_environment_3"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_environment_3" name="range_environment_3" onchange="initSlider('range_environment_3', 'environmentrange_3');setRiskAssessmentRefreshRequired(3);">
+                                    <label for="range_environment_3"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_environment_3" name="range_environment_3" onchange="initSlider('range_environment_3', 'environmentrange_3');setRiskAssessmentRefreshRequired(3);">
                                 </div>
                                 <div class="col-3"><h6><label id="environmentrange_3" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
@@ -1435,7 +1564,7 @@
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#regulationModal_3" data-bs-placement="top" style="cursor: pointer">Regulatory</label></div>
                                 <div class="col-7">
-                                    <label for="range_regulatory_3"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_regulatory_3" name="range_regulatory_3" onchange="initSlider('range_regulatory_3', 'regulatoryrange_3');setRiskAssessmentRefreshRequired(3);">
+                                    <label for="range_regulatory_3"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_regulatory_3" name="range_regulatory_3" onchange="initSlider('range_regulatory_3', 'regulatoryrange_3');setRiskAssessmentRefreshRequired(3);">
                                 </div>
                                 <div class="col-3"><h6><label id="regulatoryrange_3" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
@@ -1447,7 +1576,7 @@
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#dataModal_3" data-bs-placement="top" style="cursor: pointer">Data/IP</label></div>
                                 <div class="col-7">
-                                    <label for="range_data_3"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_data_3" name="range_data_3" onchange="initSlider('range_data_3', 'datarange_3');setRiskAssessmentRefreshRequired(3);">
+                                    <label for="range_data_3"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_data_3" name="range_data_3" onchange="initSlider('range_data_3', 'datarange_3');setRiskAssessmentRefreshRequired(3);">
                                 </div>
                                 <div class="col-3"><h6><label id="datarange_3" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
@@ -1459,7 +1588,7 @@
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#supplyModal_3" data-bs-placement="top" style="cursor: pointer">Supply Chain</label></div>
                                 <div class="col-7">
-                                    <label for="range_supply_3"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_supply_3" name="range_supply_3" onchange="initSlider('range_supply_3', 'supplyrange_3');setRiskAssessmentRefreshRequired(3);">
+                                    <label for="range_supply_3"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_supply_3" name="range_supply_3" onchange="initSlider('range_supply_3', 'supplyrange_3');setRiskAssessmentRefreshRequired(3);">
                                 </div>
                                 <div class="col-3"><h6><label id="supplyrange_3" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
@@ -1473,7 +1602,7 @@
                             <div class="slider-container d-flex align-items-center" >
                                 <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#vulnModal_3" data-bs-placement="top" style="cursor: pointer">Vulnerability</label></div>
                                 <div class="col-7">
-                                    <label for="range_vuln_3"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_vuln_3" name="range_vuln_3" onchange="initSlider('range_vuln_3', 'vulnrange_3')">
+                                    <label for="range_vuln_3"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_vuln_3" name="range_vuln_3" onchange="initSlider('range_vuln_3', 'vulnrange_3')">
                                 </div>
                                 <div class="col-3"><label id="vulnrange_3" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></div>
                             </div>
@@ -1485,7 +1614,7 @@
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="">Threat</label></div>
                                 <div class="col-7">
-                                    <label for="range_threat_3"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_threat_3" name="range_threat_3" onchange="initSlider('range_threat_3', 'threatrange_3');">
+                                    <label for="range_threat_3"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_threat_3" name="range_threat_3" onchange="initSlider('range_threat_3', 'threatrange_3');">
                                 </div>
                                 <div class="col-3"><h6><label id="threatrange_3" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
@@ -1497,7 +1626,7 @@
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to indicate asset status">Asset Status</label></div>
                                 <div class="col-7">
-                                    <label for="range_frequency_3"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_frequency_3" name="range_frequency_3" onchange="initFrequencySlider('range_frequency_3', 'frequencyrange_3');">
+                                    <label for="range_frequency_3"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_frequency_3" name="range_frequency_3" onchange="initFrequencySlider('range_frequency_3', 'frequencyrange_3');">
                                 </div>
                                 <div class="col-3"><h6><label id="frequencyrange_3" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
@@ -1507,7 +1636,7 @@
             </div>
             <div class="col-md-4 small-font">
                 <!-- Risk Assessment Button -->
-                <button id="risk-assessment-btn_3" type="button" class="btn btn-primary" onclick="checkEditModeAndExecute(this.id, 'loadingSpinner3')">
+                <button id="risk-assessment-btn_3" type="button" class="btn btn-primary" style="background-color: #eb6e80" onclick="checkEditModeAndExecute(this.id, 'loadingSpinner3')">
                     <i class="bi bi-play-fill mr-2"></i>Execute Risk Assessment
                 </button>
 
@@ -1548,7 +1677,9 @@
                             <textarea id="lblriskSummary_3" name="lblriskSummary_3" class="form-control" readonly style="resize: none" rows="15"></textarea>
                         </div>
                     </div>
-
+                    <button id="save_scenario_3" type="button" class="btn btn-primary" style="background-color: #eb6e80" onclick="save_scenario(3);">
+                    <i class="bi bi-play-fill mr-2"></i>Save Scenario 3
+                </button>
 
                 </div>
             </div>
@@ -1604,6 +1735,17 @@
                       </select>
                 </div>
               </div>
+                <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                <div class="card-body">
+                    <label for="id_impact_4" class="form-control border-0 small-font">Impact</label>
+                    <select id="id_impact_4" name="impact" class="form-control small-font">
+                        <option value="">-- Select Impact --</option>
+                        {% for value, display in scenario_form.fields.impact.choices %}
+                            <option value="{{ value }}">{{ display }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+              </div>
               <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                 <div class="card-body">
                     <label for="txtAssets_4" class="form-control border-0 align-text-bottom">Asset Name/s</label>
@@ -1620,7 +1762,7 @@
                             <div class="slider-container d-flex align-items-center" >
                                 <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#safetyModal_4" data-bs-placement="top" style="cursor: pointer">Safety</label></div>
                                 <div class="col-7">
-                                    <label for="range_safety_4"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_safety_4" name="range_safety_4" onchange="initSlider('range_safety_4', 'safetyrange_4');setRiskAssessmentRefreshRequired(4);">
+                                    <label for="range_safety_4"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_safety_4" name="range_safety_4" onchange="initSlider('range_safety_4', 'safetyrange_4');setRiskAssessmentRefreshRequired(4);">
                                 </div>
                                 <div class="col-3"><label id="safetyrange_4" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></div>
                             </div>
@@ -1632,7 +1774,7 @@
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#lifeModal_4" data-bs-placement="top" style="cursor: pointer">Life</label></div>
                                 <div class="col-7">
-                                    <label for="range_life_4"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_life_4" name="range_life_4" onchange="initSlider('range_life_4', 'liferange_4');setRiskAssessmentRefreshRequired(4);">
+                                    <label for="range_life_4"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_life_4" name="range_life_4" onchange="initSlider('range_life_4', 'liferange_4');setRiskAssessmentRefreshRequired(4);">
                                 </div>
                                 <div class="col-3"><h6><label id="liferange_4" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
@@ -1644,7 +1786,7 @@
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#productionModal_4" data-bs-placement="top" style="cursor: pointer">Production</label></div>
                                 <div class="col-7">
-                                    <label for="range_production_4"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_production_4" name="range_production_4" onchange="initSlider('range_production_4', 'productionrange_4');setRiskAssessmentRefreshRequired(4);">
+                                    <label for="range_production_4"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_production_4" name="range_production_4" onchange="initSlider('range_production_4', 'productionrange_4');setRiskAssessmentRefreshRequired(4);">
                                 </div>
                                 <div class="col-3"><h6><label id="productionrange_4" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
@@ -1656,7 +1798,7 @@
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#financeModal_4" data-bs-placement="top" style="cursor: pointer">Financial</label></div>
                                 <div class="col-7">
-                                    <label for="range_finance_4"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_finance_4" name="range_finance_4" onchange="initSlider('range_finance_4', 'financerange_4');setRiskAssessmentRefreshRequired(4);">
+                                    <label for="range_finance_4"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_finance_4" name="range_finance_4" onchange="initSlider('range_finance_4', 'financerange_4');setRiskAssessmentRefreshRequired(4);">
                                 </div>
                                 <div class="col-3"><h6><label id="financerange_4" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
@@ -1668,7 +1810,7 @@
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#reputationModal_4" data-bs-placement="top" style="cursor: pointer">Reputation</label></div>
                                 <div class="col-7">
-                                    <label for="range_reputation_4"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_reputation_4" name="range_reputation_4" onchange="initSlider('range_reputation_4', 'reputationrange_4');setRiskAssessmentRefreshRequired(4);">
+                                    <label for="range_reputation_4"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_reputation_4" name="range_reputation_4" onchange="initSlider('range_reputation_4', 'reputationrange_4');setRiskAssessmentRefreshRequired(4);">
                                 </div>
                                 <div class="col-3"><h6><label id="reputationrange_4" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
@@ -1680,7 +1822,7 @@
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#environmentModal_4" data-bs-placement="top" style="cursor: pointer">Environment</label></div>
                                 <div class="col-7">
-                                    <label for="range_environment_4"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_environment_4" name="range_environment_4" onchange="initSlider('range_environment_4', 'environmentrange_4');setRiskAssessmentRefreshRequired(4);">
+                                    <label for="range_environment_4"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_environment_4" name="range_environment_4" onchange="initSlider('range_environment_4', 'environmentrange_4');setRiskAssessmentRefreshRequired(4);">
                                 </div>
                                 <div class="col-3"><h6><label id="environmentrange_4" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
@@ -1692,7 +1834,7 @@
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#regulationModal_4" data-bs-placement="top" style="cursor: pointer">Regulatory</label></div>
                                 <div class="col-7">
-                                    <label for="range_regulatory_4"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_regulatory_4" name="range_regulatory_4" onchange="initSlider('range_regulatory_4', 'regulatoryrange_4');setRiskAssessmentRefreshRequired(4);">
+                                    <label for="range_regulatory_4"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_regulatory_4" name="range_regulatory_4" onchange="initSlider('range_regulatory_4', 'regulatoryrange_4');setRiskAssessmentRefreshRequired(4);">
                                 </div>
                                 <div class="col-3"><h6><label id="regulatoryrange_4" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
@@ -1704,7 +1846,7 @@
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#dataModal_4" data-bs-placement="top" style="cursor: pointer">Data/IP</label></div>
                                 <div class="col-7">
-                                    <label for="range_data_4"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_data_4" name="range_data_4" onchange="initSlider('range_data_4', 'datarange_4');setRiskAssessmentRefreshRequired(4);">
+                                    <label for="range_data_4"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_data_4" name="range_data_4" onchange="initSlider('range_data_4', 'datarange_4');setRiskAssessmentRefreshRequired(4);">
                                 </div>
                                 <div class="col-3"><h6><label id="datarange_4" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
@@ -1716,7 +1858,7 @@
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#supplyModal_4" data-bs-placement="top" style="cursor: pointer">Supply Chain</label></div>
                                 <div class="col-7">
-                                    <label for="range_supply_4"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_supply_4" name="range_supply_4" onchange="initSlider('range_supply_4', 'supplyrange_4');setRiskAssessmentRefreshRequired(4);">
+                                    <label for="range_supply_4"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_supply_4" name="range_supply_4" onchange="initSlider('range_supply_4', 'supplyrange_4');setRiskAssessmentRefreshRequired(4);">
                                 </div>
                                 <div class="col-3"><h6><label id="supplyrange_4" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
@@ -1730,7 +1872,7 @@
                             <div class="slider-container d-flex align-items-center" >
                                 <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#vulnModal_4"  data-bs-placement="top" style="cursor: pointer">Vulnerability</label></div>
                                 <div class="col-7">
-                                    <label for="range_vuln_4"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_vuln_4" name="range_vuln_4" onchange="initSlider('range_vuln_4', 'vulnrange_4')">
+                                    <label for="range_vuln_4"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_vuln_4" name="range_vuln_4" onchange="initSlider('range_vuln_4', 'vulnrange_4')">
                                 </div>
                                 <div class="col-3"><label id="vulnrange_4" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></div>
                             </div>
@@ -1742,7 +1884,7 @@
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the danger to life of the selected scenario">Threat</label></div>
                                 <div class="col-7">
-                                    <label for="range_threat_4"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_threat_4" name="range_threat_4" onchange="initSlider('range_threat_4', 'threatrange_4');">
+                                    <label for="range_threat_4"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_threat_4" name="range_threat_4" onchange="initSlider('range_threat_4', 'threatrange_4');">
                                 </div>
                                 <div class="col-3"><h6><label id="threatrange_4" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
@@ -1755,7 +1897,7 @@
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to indicate asset status">Asset Status</label></div>
                                 <div class="col-7">
-                                    <label for="range_frequency_4"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_frequency_4" name="range_frequency_4" onchange="initFrequencySlider('range_frequency_4', 'frequencyrange_4');">
+                                    <label for="range_frequency_4"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_frequency_4" name="range_frequency_4" onchange="initFrequencySlider('range_frequency_4', 'frequencyrange_4');">
                                 </div>
                                 <div class="col-3"><h6><label id="frequencyrange_4" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
@@ -1765,7 +1907,7 @@
             </div>
             <div class="col-md-4 small-font">
                 <!-- Risk Assessment Button -->
-                <button id="risk-assessment-btn_4" type="button" class="btn btn-primary" onclick="checkEditModeAndExecute(this.id, 'loadingSpinner4')">
+                <button id="risk-assessment-btn_4" type="button" class="btn btn-primary" style="background-color: #008f95" onclick="checkEditModeAndExecute(this.id, 'loadingSpinner4')">
                     <i class="bi bi-play-fill mr-2"></i>Execute Risk Assessment
                 </button>
 
@@ -1807,7 +1949,9 @@
                         </div>
                     </div>
 
-
+                    <button id="save_scenario_4" type="button" class="btn btn-primary" style="background-color: #008f95" onclick="save_scenario(4);">
+                    <i class="bi bi-play-fill mr-2"></i>Save Scenario 4
+                </button>
                 </div>
             </div>
         </div>
@@ -1865,6 +2009,17 @@
             </div>
             <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                 <div class="card-body">
+                    <label for="id_impact_5" class="form-control border-0 small-font">Impact</label>
+                    <select id="id_impact_5" name="impact" class="form-control small-font">
+                        <option value="">-- Select Impact --</option>
+                        {% for value, display in scenario_form.fields.impact.choices %}
+                            <option value="{{ value }}">{{ display }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+              </div>
+            <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                <div class="card-body">
                     <label for="txtAssets_5" class="form-control border-0 align-text-bottom">Asset Name/s</label>
                     <textarea class="form-control" name="txtAssets_5" id="txtAssets_5" rows="3" style="resize: none; word-wrap: normal" placeholder="Add asset names relevant to the scenario..."></textarea>
                 </div>
@@ -1880,7 +2035,7 @@
                             <div class="slider-container d-flex align-items-center" >
                                 <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#safetyModal_5" data-bs-placement="top" style="cursor: pointer">Safety</label></div>
                                 <div class="col-7">
-                                    <label for="range_safety_5"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_safety_5" name="range_safety_5" onchange="initSlider('range_safety_5', 'safetyrange_5');setRiskAssessmentRefreshRequired(5);">
+                                    <label for="range_safety_5"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_safety_5" name="range_safety_5" onchange="initSlider('range_safety_5', 'safetyrange_5');setRiskAssessmentRefreshRequired(5);">
                                 </div>
                                 <div class="col-3"><label id="safetyrange_5" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></div>
                             </div>
@@ -1892,7 +2047,7 @@
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#lifeModal_5" data-bs-placement="top" style="cursor: pointer">Life</label></div>
                                 <div class="col-7">
-                                    <label for="range_life_5"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_life_5" name="range_life_5" onchange="initSlider('range_life_5', 'liferange_5');setRiskAssessmentRefreshRequired(5);">
+                                    <label for="range_life_5"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_life_5" name="range_life_5" onchange="initSlider('range_life_5', 'liferange_5');setRiskAssessmentRefreshRequired(5);">
                                 </div>
                                 <div class="col-3"><h6><label id="liferange_5" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
@@ -1904,7 +2059,7 @@
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#productionModal_5" data-bs-placement="top" style="cursor: pointer">Production</label></div>
                                 <div class="col-7">
-                                    <label for="range_production_5"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_production_5" name="range_production_5" onchange="initSlider('range_production_5', 'productionrange_5');setRiskAssessmentRefreshRequired(5);">
+                                    <label for="range_production_5"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_production_5" name="range_production_5" onchange="initSlider('range_production_5', 'productionrange_5');setRiskAssessmentRefreshRequired(5);">
                                 </div>
                                 <div class="col-3"><h6><label id="productionrange_5" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
@@ -1916,7 +2071,7 @@
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#financeModal_5" data-bs-placement="top" style="cursor: pointer">Financial</label></div>
                                 <div class="col-7">
-                                    <label for="range_finance_5"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_finance_5" name="range_finance_5" onchange="initSlider('range_finance_5', 'financerange_5');setRiskAssessmentRefreshRequired(5);">
+                                    <label for="range_finance_5"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_finance_5" name="range_finance_5" onchange="initSlider('range_finance_5', 'financerange_5');setRiskAssessmentRefreshRequired(5);">
                                 </div>
                                 <div class="col-3"><h6><label id="financerange_5" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
@@ -1928,7 +2083,7 @@
                              <div class="slider-container d-flex align-items-center">
                                 <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#reputationModal_5" data-bs-placement="top" style="cursor: pointer">Reputation</label></div>
                                     <div class="col-7">
-                                        <label for="range_reputation_5"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_reputation_5" name="range_reputation_5" onchange="initSlider('range_reputation_5', 'reputationrange_5');setRiskAssessmentRefreshRequired(5);">
+                                        <label for="range_reputation_5"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_reputation_5" name="range_reputation_5" onchange="initSlider('range_reputation_5', 'reputationrange_5');setRiskAssessmentRefreshRequired(5);">
                                     </div>
                                 <div class="col-3"><h6><label id="reputationrange_5" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
@@ -1940,7 +2095,7 @@
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#environmentModal_5" data-bs-placement="top" style="cursor: pointer">Environment</label></div>
                                 <div class="col-7">
-                                    <label for="range_environment_5"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_environment_5" name="range_environment_5" onchange="initSlider('range_environment_5', 'environmentrange_5');setRiskAssessmentRefreshRequired(5);">
+                                    <label for="range_environment_5"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_environment_5" name="range_environment_5" onchange="initSlider('range_environment_5', 'environmentrange_5');setRiskAssessmentRefreshRequired(5);">
                                 </div>
                                 <div class="col-3"><h6><label id="environmentrange_5" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
@@ -1952,7 +2107,7 @@
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#regulationModal_5" data-bs-placement="top" style="cursor: pointer">Regulatory</label></div>
                                 <div class="col-7">
-                                    <label for="range_regulatory_5"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_regulatory_5" name="range_regulatory_5" onchange="initSlider('range_regulatory_5', 'regulatoryrange_5');setRiskAssessmentRefreshRequired(5);">
+                                    <label for="range_regulatory_5"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_regulatory_5" name="range_regulatory_5" onchange="initSlider('range_regulatory_5', 'regulatoryrange_5');setRiskAssessmentRefreshRequired(5);">
                                 </div>
                                 <div class="col-3"><h6><label id="regulatoryrange_5" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
@@ -1964,7 +2119,7 @@
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#dataModal_3" data-bs-placement="top" style="cursor: pointer">Data/IP</label></div>
                                 <div class="col-7">
-                                    <label for="range_data_5"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_data_5" name="range_data_5" onchange="initSlider('range_data_5', 'datarange_5'); setRiskAssessmentRefreshRequired(5);">
+                                    <label for="range_data_5"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_data_5" name="range_data_5" onchange="initSlider('range_data_5', 'datarange_5'); setRiskAssessmentRefreshRequired(5);">
                                 </div>
                                 <div class="col-3"><h6><label id="datarange_5" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
@@ -1976,7 +2131,7 @@
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#supplyModal_5" data-bs-placement="top" style="cursor: pointer">Supply Chain</label></div>
                                 <div class="col-7">
-                                    <label for="range_supply_1"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_supply_5" name="range_supply_5" onchange="initSlider('range_supply_5', 'supplyrange_5');setRiskAssessmentRefreshRequired(5);">
+                                    <label for="range_supply_1"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_supply_5" name="range_supply_5" onchange="initSlider('range_supply_5', 'supplyrange_5');setRiskAssessmentRefreshRequired(5);">
                                 </div>
                                 <div class="col-3"><h6><label id="supplyrange_5" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
@@ -1990,7 +2145,7 @@
                             <div class="slider-container d-flex align-items-center" >
                                 <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#vulnModal_5"  data-bs-placement="top" style="cursor: pointer">Vulnerability</label></div>
                                 <div class="col-7">
-                                    <label for="range_vuln_5"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_vuln_5" name="range_vuln_5" onchange="initSlider('range_vuln_5', 'vulnrange_5')">
+                                    <label for="range_vuln_5"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_vuln_5" name="range_vuln_5" onchange="initSlider('range_vuln_5', 'vulnrange_5')">
                                 </div>
                                 <div class="col-3"><label id="vulnrange_5" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></div>
                             </div>
@@ -2002,7 +2157,7 @@
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the danger to life of the selected scenario">Threat</label></div>
                                 <div class="col-7">
-                                    <label for="range_threat_5"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_threat_5" name="range_threat_5" onchange="initSlider('range_threat_5', 'threatrange_5');">
+                                    <label for="range_threat_5"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_threat_5" name="range_threat_5" onchange="initSlider('range_threat_5', 'threatrange_5');">
                                 </div>
                                 <div class="col-3"><h6><label id="threatrange_5" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
@@ -2014,7 +2169,7 @@
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to indicate asset status">Asset Status</label></div>
                                 <div class="col-7">
-                                    <label for="range_frequency_5"></label><input type="range" min="1" max="10" value="1" class="form-range" id="range_frequency_5" name="range_frequency_5" onchange="initFrequencySlider('range_frequency_5', 'frequencyrange_5');">
+                                    <label for="range_frequency_5"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_frequency_5" name="range_frequency_5" onchange="initFrequencySlider('range_frequency_5', 'frequencyrange_5');">
                                 </div>
                                 <div class="col-3"><h6><label id="frequencyrange_5" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
@@ -2025,7 +2180,7 @@
             </div>
             <div class="col-md-4 small-font">
                 <!-- Risk Assessment Button -->
-                <button id="risk-assessment-btn_5" type="button" class="btn btn-primary" onclick="checkEditModeAndExecute(this.id, 'loadingSpinner5')">
+                <button id="risk-assessment-btn_5" type="button" class="btn btn-primary" style="background-color: #007849" onclick="checkEditModeAndExecute(this.id, 'loadingSpinner5')">
                     <i class="bi bi-play-fill mr-2"></i>Execute Risk Assessment
                 </button>
 
@@ -2066,7 +2221,9 @@
                             <textarea id="lblriskSummary_5" name="lblriskSummary_5" class="form-control" readonly style="resize: none" rows="15"></textarea>
                         </div>
                     </div>
-
+                    <button id="save_scenario_5" type="button" class="btn btn-primary" style="background-color: #007849" onclick="save_scenario(5);">
+                    <i class="bi bi-play-fill mr-2"></i>Save Scenario 5
+                </button>
 
                 </div>
             </div>
@@ -3262,8 +3419,6 @@ function checkEditModeAndExecute(buttonId, spinnerId) {
         // AJAX function to call the Django view
         function executeRiskAssessment(buttonID, spinnerID) {
 
-            alert(buttonID);
-
             $('#' + spinnerID).show();
             var buttonNumber = buttonID.split('_')[1];
             var scenarioCountTextbox = document.querySelector('input[name="scenarioCount"]');
@@ -3297,13 +3452,14 @@ function checkEditModeAndExecute(buttonId, spinnerId) {
             var dataImpact = document.getElementById('range_data_' + buttonNumber).value;
             var threatSource = document.getElementById('selectThreat_' + buttonNumber).value;
             var threatTactic = document.getElementById('selectTactics_' + buttonNumber).value;
+            var impact = document.getElementById('id_impact_' + buttonNumber).value;
             var vulnerabilityExposure = document.getElementById('range_vuln_' + buttonNumber).value;
             var threatExposure = document.getElementById('range_threat_' + buttonNumber).value;
             var assetStatus = document.getElementById('range_frequency_' + buttonNumber).value;
             var insurance = document.getElementById('txtInsurance').value;
             var deductable = document.getElementById('txtDeductable').value;
             var outage = document.getElementById('selectOutage_' + buttonNumber).value;
-            var outageLength = document.getElementById('outage_' + buttonNumber).value;
+            var outageLength = document.getElementById('outage_' + buttonNumber).value
 
             // Make the AJAX call to the Django view using a separate endpoint for risk assessment
             $.ajax({
@@ -3332,9 +3488,9 @@ function checkEditModeAndExecute(buttonId, spinnerId) {
                     insurance: insurance,
                     deductable: deductable,
                     outage: outage,
-                    outageLength: outageLength
-
-                },
+                    outageLength: outageLength,
+                    impact: impact
+                 },
                 success: function (response) {
 
                     // Extract the risk score and risk rating from the response
@@ -3348,24 +3504,31 @@ function checkEditModeAndExecute(buttonId, spinnerId) {
                     $('#lblriskScore_' +buttonNumber).val(riskScore);
 
                     $('#lblriskRating_' + buttonNumber).val(riskRating);
-                    //$('#lblriskCost_' + buttonNumber).val(low_estimate);
-                    $('#lblriskCost_' + buttonNumber).val(low_estimate.toLocaleString('en-US', {
+
+                    let numberValue1 = parseFloat(low_estimate);  // Convert string to number if needed
+
+                    $('#lblriskCost_' + buttonNumber).val(numberValue1.toLocaleString('en-US', {
                         style: 'currency',
                         currency: 'USD',
-                        maximumFractionDigits: 0 // To ensure no decimal point
+                        maximumFractionDigits: 0  // To ensure no decimal point
                     }));
-                    //$('#lblriskCostHigh_' + buttonNumber).val(high_estimate);
-                    $('#lblriskCostHigh_' + buttonNumber).val(high_estimate.toLocaleString('en-US', {
+
+                    let numberValue2 = parseFloat(high_estimate);  // Convert string to number if needed
+
+                    $('#lblriskCostHigh_' + buttonNumber).val(numberValue2.toLocaleString('en-US', {
                         style: 'currency',
                         currency: 'USD',
-                        maximumFractionDigits: 0 // To ensure no decimal point
+                        maximumFractionDigits: 0
                     }));
-                    //$('#lblriskCostMedian_' + buttonNumber).val(median_estimate);
-                    $('#lblriskCostMedian_' + buttonNumber).val(median_estimate.toLocaleString('en-US', {
+
+                    let numberValue3 = parseFloat(median_estimate);
+
+                    $('#lblriskCostMedian_' + buttonNumber).val(numberValue3.toLocaleString('en-US', {
                         style: 'currency',
                         currency: 'USD',
-                        maximumFractionDigits: 0 // To ensure no decimal point
+                        maximumFractionDigits: 0  // To ensure no decimal point
                     }));
+
                     $('#lblriskSummary_' + buttonNumber).val(riskSummary);
                     $('#' + spinnerID).hide();
 
@@ -3557,6 +3720,7 @@ $(document).ready(function() {
                       document.getElementById("txtScenarioDescription_2").value = scenarios[1].fields.ScenarioDescription;
                       document.getElementById("selectThreat_2").value = scenarios[1].fields.threatSource;
                       document.getElementById("selectTactics_2").value = scenarios[1].fields.threatTactic;
+                      document.getElementById("id_impact_2").value = scenarios[1].fields.impact;
                       document.getElementById("selectOutage_2").value = scenarios[1].fields.outage;
                       document.getElementById("outage_2").value = scenarios[1].fields.outageLength;
 
@@ -3622,6 +3786,7 @@ $(document).ready(function() {
                       document.getElementById("txtScenarioDescription_3").value = scenarios[2].fields.ScenarioDescription;
                       document.getElementById("selectThreat_3").value = scenarios[2].fields.threatSource;
                       document.getElementById("selectTactics_3").value = scenarios[2].fields.threatTactic;
+                      document.getElementById("id_impact_3").value = scenarios[2].fields.impact;
                       document.getElementById("selectOutage_3").value = scenarios[2].fields.outage;
                       document.getElementById("outage_3").value = scenarios[2].fields.outageLength;
 
@@ -3687,6 +3852,7 @@ $(document).ready(function() {
                       document.getElementById("txtScenarioDescription_4").value = scenarios[3].fields.ScenarioDescription;
                       document.getElementById("selectThreat_4").value = scenarios[3].fields.threatSource;
                       document.getElementById("selectTactics_4").value = scenarios[3].fields.threatTactic;
+                      document.getElementById("id_impact_4").value = scenarios[3].fields.impact;
                       document.getElementById("selectOutage_4").value = scenarios[3].fields.outage;
                       document.getElementById("outage_4").value = scenarios[3].fields.outageLength;
 
@@ -3752,6 +3918,7 @@ $(document).ready(function() {
                       document.getElementById("txtScenarioDescription_5").value = scenarios[4].fields.ScenarioDescription;
                       document.getElementById("selectThreat_5").value = scenarios[4].fields.threatSource;
                       document.getElementById("selectTactics_5").value = scenarios[4].fields.threatTactic;
+                      document.getElementById("id_impact_5").value = scenarios[4].fields.impact;
                       document.getElementById("selectOutage_5").value = scenarios[4].fields.outage;
                       document.getElementById("outage_5").value = scenarios[4].fields.outageLength;
 
@@ -3817,6 +3984,7 @@ $(document).ready(function() {
                          document.getElementById("txtScenarioDescription_1").value = scenarios[0].fields.ScenarioDescription;
                          document.getElementById("selectThreat_1").value = scenarios[0].fields.threatSource;
                          document.getElementById("selectTactics_1").value = scenarios[0].fields.threatTactic;
+                         document.getElementById("id_impact_1").value = scenarios[0].fields.impact;
                          document.getElementById("selectOutage_1").value = scenarios[0].fields.outage;
                          document.getElementById("outage_1").value = scenarios[0].fields.outageLength;
                          document.getElementById("lblriskScore_1").value = scenarios[0].fields.RiskScore;
@@ -4003,6 +4171,7 @@ function initFrequencySlider(sliderId, outputId) {
       document.getElementById("txtScenarioDescription_2").value = '';
       document.getElementById("selectThreat_2").value = '';
       document.getElementById("selectTactics_2").value = '';
+        document.getElementById("id_impact_2").value = '';
       document.getElementById("range_safety_2").value = 0;
       initSlider('range_safety_2', 'safetyrange_2')
       document.getElementById("range_life_2").value = 0;
@@ -4039,6 +4208,7 @@ function initFrequencySlider(sliderId, outputId) {
       document.getElementById("txtScenarioDescription_3").value = '';
       document.getElementById("selectThreat_3").value = '';
       document.getElementById("selectTactics_3").value = '';
+        document.getElementById("id_impact_3").value = '';
       document.getElementById("range_safety_3").value = 0;
       initSlider('range_safety_3', 'safetyrange_3')
       document.getElementById("range_life_3").value = 0;
@@ -4075,6 +4245,7 @@ function initFrequencySlider(sliderId, outputId) {
       document.getElementById("txtScenarioDescription_4").value = '';
       document.getElementById("selectThreat_4").value = '';
       document.getElementById("selectTactics_4").value = '';
+        document.getElementById("id_impact_4").value = '';
       document.getElementById("range_safety_4").value = 0;
       initSlider('range_safety_4', 'safetyrange_4')
       document.getElementById("range_life_4").value = 0;
@@ -4111,6 +4282,7 @@ function initFrequencySlider(sliderId, outputId) {
       document.getElementById("txtScenarioDescription_5").value = '';
       document.getElementById("selectThreat_5").value = '';
       document.getElementById("selectTactics_5").value = '';
+        document.getElementById("id_impact_5").value = '';
       document.getElementById("selectOutage_5").value = '';
       document.getElementById("outage_5").value = 0;
 
@@ -4148,6 +4320,7 @@ function initFrequencySlider(sliderId, outputId) {
       document.getElementById("selectOutage_1").value = '';
       document.getElementById("outage_1").value = '';
       document.getElementById("selectTactics_1").value = '';
+      document.getElementById("id_impact_1").value = '';
       document.getElementById("range_safety_1").value = 0;
       initSlider('range_safety_1', 'safetyrange_1')
       document.getElementById("range_life_1").value = 0;
@@ -4198,8 +4371,66 @@ function checkRiskAssessmentRefreshVariables() {
     return true; // This will allow the form to be submitted
 }
 
+function save_scenario(buttonId) {
+
+        // Gather data from your form controls
+        var scenarioData = {
+            'scenarioID': $('#hdnScenarioID_' + buttonId).val(),
+            'rawID': sessionStorage.getItem('rawid'),
+            'ScenarioDescription': $('#txtScenarioDescription_' +buttonId).val(),
+            'RiskScore': $('#lblriskScore_' + buttonId).val(),
+            'ThreatScore': $('#range_threat_' + buttonId).val(),
+            'VulnScore': $('#range_vuln_' + buttonId).val(),
+            'ReputationScore': $('#range_reputation_' + buttonId).val(),
+            'OperationScore': $('#range_production_' + buttonId).val(),
+            'FinancialScore': $('#range_finance_' + buttonId).val(),
+            'SafetyScore': $('#range_safety_' + buttonId).val(),
+            'DataScore': $('#range_data_' + buttonId).val(),
+            'SupplyChainScore': $('#range_supply_' + buttonId).val(),
+            'lifeScore': $('#range_life_' + buttonId).val(),
+            'productionScore': $('#range_production_' + buttonId).val(),
+            'environmentScore': $('#range_environment_' + buttonId).val(),
+            'regulatoryScore': $('#range_regulatory_' + buttonId).val(),
+            'RiskStatus': $('#lblriskRating_' + buttonId).val(),
+            'threatSource': $('#selectThreat_' + buttonId).val(),
+            'threatTactic': $('#selectTactics_' + buttonId).val(),
+            'impact': $('#id_impact_' + buttonId).val(),
+            'riskSummary': $('#lblriskSummary_' + buttonId).val(),
+            'scenarioCost': $('#lblriskCostMedian_' + buttonId).val(),
+            'event_cost_low': $('#lblriskCost_' + buttonId).val(),
+            'event_cost_high': $('#lblriskCostHigh_' + buttonId).val(),
+            'event_cost_median': $('#lblriskCostMedian_' + buttonId).val(),
+            'justifySafety': $('#txtSafetyJustify_' + buttonId).val(),
+            'justifyLife': $('#txtlifeJustify_' + buttonId).val(),
+            'justifyProduction': $('#txtproductionJustify_' + buttonId).val(),
+            'justifyFinancial': $('#txtfinanceJustify_' + buttonId).val(),
+            'justifyReputation': $('#txtreputationJustify_' + buttonId).val(),
+            'justifyEnvironment': $('#txtenvironmentJustify_' + buttonId).val(),
+            'justifyRegulation': $('#txtregulationJustify_' + buttonId).val(),
+            'justifyData': $('#txtdataJustify_' + buttonId).val(),
+            'justifySupply': $('#txtsupplyJustify_' + buttonId).val(),
+            'outage': $('#selectOutage_' + buttonId).val(),
+            'outageLength': $('#outage_' + buttonId).val(),
+            'threatSource': $('#selectThreat_' + buttonId).val(),
+        };
 
 
+        // Make an AJAX POST request to your Django server
+        $.ajax({
+            type: 'POST',
+            url: '/OTRisk/create_or_update_raw_scenario/',
+            data: scenarioData,
+            dataType: 'json',
+            success: function (response) {
+                // Handle success response from the server, e.g., show a success message
+                alert('Scenario saved successfully: ' + response.message);
+            },
+            error: function (error) {
+                // Handle error response from the server, e.g., display an error message
+                alert('Error saving scenario: ' + error.responseJSON.error);
+            }
+        });
+    }
 
 </script>
 

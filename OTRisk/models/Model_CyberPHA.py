@@ -125,6 +125,7 @@ class tblCyberPHAHeader(models.Model):
     chemicalSummary = models.TextField()
     physicalSummary = models.TextField()
     otherSummary = models.TextField()
+    complianceSummary = models.TextField()
     country = models.TextField()
     SHIFT_MODELS = [
         ('Single Shift Model', 'Single Shift Model'),
@@ -142,6 +143,7 @@ class tblCyberPHAHeader(models.Model):
     shift_model = models.CharField(max_length=50, choices=SHIFT_MODELS)
     annual_revenue = models.DecimalField(max_digits=10, decimal_places=0)
     cyber_insurance = models.BooleanField(default=False)
+    pha_score = models.IntegerField()
 
     class Meta:
         db_table = 'tblCyberPHAHeader'
@@ -272,6 +274,7 @@ class tblCyberPHAScenario(models.Model):
     outageDuration = models.IntegerField()
     outageCost = models.IntegerField()
     probability = models.TextField()
+    likelihood = models.IntegerField()
     sle_low = models.IntegerField()
     sle_high = models.IntegerField()
     risk_register = models.BooleanField(default=False)
@@ -496,3 +499,4 @@ class CyberPHAScenario_snapshot(models.Model):
     risk_close_date = models.DateField()
     snapshot_date = models.DateField()
     control_effectiveness = models.IntegerField()
+    likelihood = models.IntegerField()

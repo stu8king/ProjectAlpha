@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 from django.shortcuts import render
 from django.template.loader import render_to_string
 from django.utils.html import mark_safe
@@ -25,7 +27,6 @@ def get_organization_users(organization_id):
 
 @login_required()
 def dashboardhome(request):
-
     user_organization_id = get_user_organization_id(request)
 
     organization_users = get_organization_users(user_organization_id)
@@ -60,6 +61,30 @@ def dashboardhome(request):
         formatted_scenario_cost = "$--"
 
     raw_count = RAWorksheet.objects.filter(**filters).count()
+
+    bia_summary = defaultdict(int)
+    raws = RAWorksheet.objects.filter(**filters)
+    for raw in raws:
+        business_impact_score = calculate_business_impact_score(raw.ID)
+        bia_text = map_score_to_text(business_impact_score)
+        bia_summary[bia_text] += 1
+    bia_summary = json.dumps(dict(bia_summary))
+
+    pha_bia_summary = defaultdict(int)
+    phas = tblCyberPHAHeader.objects.filter(UserID__in=organization_users)
+    for pha in phas:
+        business_impact_score = calculate_pha_business_impact_score(pha.ID)
+        bia_text = map_score_to_text(business_impact_score)
+        pha_bia_summary[bia_text] += 1
+    pha_bia_summary = json.dumps(dict(pha_bia_summary))
+
+    pha_risk_summary = defaultdict(int)
+    pha_risks = tblCyberPHAScenario.objects.filter(userID__in=organization_users)
+    for pha_risk in pha_risks:
+        risk_text = pha_risk.RRa
+        pha_risk_summary[risk_text] += 1
+    pha_risk_summary = json.dumps(dict(pha_risk_summary))
+
     # raw_scenarios = RAWorksheetScenario.objects.all()
     scenarios_count = RAWorksheetScenario.objects.filter(RAWorksheetID__organization=user_organization_id).count()
 
@@ -174,7 +199,8 @@ def dashboardhome(request):
                                                                                                'BusinessUnitType')
 
     # cyberPHA facilities
-    pha_facilities = tblCyberPHAHeader.objects.filter(UserID__in=organization_users).values_list('ID', 'FacilityName', 'FacilityType')
+    pha_facilities = tblCyberPHAHeader.objects.filter(UserID__in=organization_users).values_list('ID', 'FacilityName',
+                                                                                                 'FacilityType')
 
     total_sle = tblCyberPHAScenario.objects.filter(userID__in=organization_users).aggregate(sum_sle=Sum('sle'))[
         'sum_sle']
@@ -199,6 +225,40 @@ def dashboardhome(request):
         actionStatus="Closed").count()
 
     num_records = raw_facilities.count()
+    categories = ["Low", "Low/Medium", "Medium", "Medium/High", "High", "Very High"]
+
+    # Convert the likelihood to one of the required categories
+    def get_likelihood_category(likelihood):
+        if likelihood < 20:
+            return "Low"
+        elif likelihood < 40:
+            return "Low/Medium"
+        elif likelihood < 60:
+            return "Medium"
+        elif likelihood < 80:
+            return "Medium/High"
+        elif likelihood <= 95:
+            return "High"
+        else:
+            return "Very High"
+
+    # Create a defaultdict to hold the counts
+    heatmap_counts = defaultdict(int)
+
+    scenarios = tblCyberPHAScenario.objects.filter(userID__in=organization_users)
+    for scenario in scenarios:
+        likelihood_category = get_likelihood_category(scenario.likelihood)
+        heatmap_counts[(scenario.RRa, likelihood_category)] += 1
+
+    heatmap_data = {}
+    for key, value in heatmap_counts.items():
+        if key[0] not in heatmap_data:
+            heatmap_data[key[0]] = {}
+        heatmap_data[key[0]][key[1]] = value
+
+    sunburst_data = tblCyberPHAHeader.objects.filter(UserID__in=organization_users).values('country', 'Industry',
+                                                                                           'FacilityType')
+    sunburst_processed_data = process_data(sunburst_data)
 
     context = {
         'records_by_business_unit_type': list(records_by_business_unit_type),
@@ -212,32 +272,154 @@ def dashboardhome(request):
         'cyberpha_count': cyberpha_count,
         'cyberpha_scenario_count': cyberpha_scenario_count,
         'doughnut_data': safety_scores_list,
-        'life_scores_list': life_scores_list,
-        'raw_facilities': raw_facilities,
-        'pha_facilities': pha_facilities,
-        'environment_scores_list': environment_scores_list,
-        'pha_safety_scores_list': pha_safety_scores_list,
-        'pha_danger_scores_list': pha_danger_scores_list,
-        'pha_environment_scores_list': pha_environment_scores_list,
-        'pha_finance_scores_list': pha_finance_scores_list,
-        'pha_production_scores_list': pha_production_scores_list,
-        'pha_reputation_scores_list': pha_reputation_scores_list,
-        'pha_regulation_scores_list': pha_regulation_scores_list,
-        'pha_data_scores_list': pha_data_scores_list,
-        'pha_supply_scores_list': pha_supply_scores_list,
         'formatted_sle': formatted_sle,
         'formatted_scenario_cost': formatted_scenario_cost,
         'ra_actions_records_count': ra_actions_records_count,
         'open_raws_count': open_raws_count,
         'pha_threat_class': pha_threat_class,
-        'production_scores_list': production_scores_list,
-        'regulatory_scores_list': regulatory_scores_list,
-        'data_scores_list': data_scores_list,
-        'financial_scores_list': financial_scores_list,
-        'reputation_scores_list': reputation_scores_list,
-        'supply_scores_list': supply_scores_list,
         'total_sle': total_sle,
-        'total_scenario_cost': total_scenario_cost
+        'total_scenario_cost': total_scenario_cost,
+        'heatmap_data': json.dumps(heatmap_data),
+        'sunburst_processed_data': sunburst_processed_data,
+        'bia_summary': bia_summary,
+        'pha_bia_summary': pha_bia_summary,
+        'pha_risk_summary': pha_risk_summary
     }
 
     return render(request, 'dashboard.html', context)
+
+
+def process_data(data):
+    hierarchy = {}
+
+    for entry in data:
+        country = entry['country']
+        industry = entry['Industry']
+        facility = entry['FacilityType']
+
+        if country not in hierarchy:
+            hierarchy[country] = {}
+
+        if industry not in hierarchy[country]:
+            hierarchy[country][industry] = {}
+
+        if facility not in hierarchy[country][industry]:
+            hierarchy[country][industry][facility] = 1
+        else:
+            hierarchy[country][industry][facility] += 1
+
+    return hierarchy_to_list(hierarchy)
+
+
+def hierarchy_to_list(hierarchy):
+    result = []
+    for country, industries in hierarchy.items():
+        country_node = {"name": country, "children": []}
+        for industry, facilities in industries.items():
+            industry_node = {"name": industry, "children": []}
+            for facility, count in facilities.items():
+                facility_node = {"name": facility, "value": count}
+                industry_node["children"].append(facility_node)
+            country_node["children"].append(industry_node)
+        result.append(country_node)
+
+    return result
+
+
+def calculate_business_impact_score(ra_worksheet_id):
+    # Define the weights for each field
+    field_weights = {
+        'ReputationScore': 1,
+        'SafetyScore': 2,
+        'lifeScore': 2,
+        'FinancialScore': 1,
+        'DataScore': 1,
+        'SupplyChainScore': 1,
+        'productionScore': 1,
+        'environmentScore': 1,
+        'regulatoryScore': 1,
+    }
+
+    try:
+        # Retrieve the RAWorksheet with the given ID
+        ra_worksheet = RAWorksheet.objects.get(ID=ra_worksheet_id)
+
+        # Retrieve all associated RAWorksheetScenario instances for this RAWorksheet
+        scenarios = RAWorksheetScenario.objects.filter(RAWorksheetID=ra_worksheet)
+
+        # Initialize a total score
+        total_score = 0
+
+        # Calculate the total score based on weighted fields for each scenario
+        for scenario in scenarios:
+            scenario_score = 0
+            for field, weight in field_weights.items():
+                # Get the value of the field from the scenario
+                field_value = getattr(scenario, field)
+                # Convert it to a numeric score (assuming it's an integer out of 10)
+                numeric_score = int(field_value)
+                # Add the weighted score to the scenario score
+                scenario_score += numeric_score * weight
+
+            # Add the scenario score to the total score
+            total_score += scenario_score
+
+        return total_score
+
+    except RAWorksheet.DoesNotExist:
+        return None
+
+
+def calculate_pha_business_impact_score(pha_id):
+    # Define the weights for each field
+    field_weights = {
+        'impactReputation': 1,
+        'impactSafety': 2,
+        'impactDanger': 2,
+        'impactFinance': 1,
+        'impactData': 1,
+        'impactSupply': 1,
+        'impactProduction': 1,
+        'impactEnvironment': 1,
+        'impactRegulation': 1,
+    }
+
+    # Retrieve the RAWorksheet with the given ID
+    pha_header = tblCyberPHAHeader.objects.get(ID=pha_id)
+
+    # Retrieve all associated RAWorksheetScenario instances for this RAWorksheet
+    scenarios = tblCyberPHAScenario.objects.filter(CyberPHA=pha_header)
+
+    # Initialize a total score
+    total_score = 0
+
+    # Calculate the total score based on weighted fields for each scenario
+    for scenario in scenarios:
+        scenario_score = 0
+        for field, weight in field_weights.items():
+            # Get the value of the field from the scenario
+            field_value = getattr(scenario, field)
+            # Convert it to a numeric score (assuming it's an integer out of 10)
+            numeric_score = int(field_value)
+            # Add the weighted score to the scenario score
+            scenario_score += numeric_score * weight
+
+        # Add the scenario score to the total score
+        total_score += scenario_score
+
+    return total_score
+
+
+def map_score_to_text(score):
+    if score < 20:
+        return 'Low'
+    elif score < 40:
+        return 'Low/Medium'
+    elif score < 60:
+        return 'Medium'
+    elif score < 80:
+        return 'Medium/High'
+    elif score < 95:
+        return 'High'
+    else:
+        return 'Very High'

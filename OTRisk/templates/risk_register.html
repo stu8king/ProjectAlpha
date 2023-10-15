@@ -176,9 +176,9 @@
 <div class="row">
 <div class="col-md-1 " style="background-color: black"></div>
 <div class="col-md-10 ">
-
+    <br><br><br>
     <h2>Risk Register</h2>
-    <table class="table table-bordered table-striped">
+    <table class="table table-bordered table-striped" id="tbl_risk_register">
         <thead>
             <tr>
                 <th>Facility Name</th>
@@ -399,7 +399,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="row">
+                    <div class="row" style="height: 70%">
                         <div class="col-md-12" id="bulletChartContainer"></div>
                     </div>
 
@@ -634,6 +634,15 @@ $(document).ready(function() {
         chart.draw();
     });
 
+    $(document).ready(function() {
+    // Initialize DataTable with options
+    $('#tbl_risk_register').DataTable({
+        "paging": true, // Enable pagination
+        "pageLength": 5, // Set the number of rows per page
+        "searching": true, // Enable searching
+        "order": [] // Disable initial sorting if needed
+    });
+});
 
 
 </script>

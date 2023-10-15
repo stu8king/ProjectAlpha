@@ -25,12 +25,12 @@
 <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
 
 <!-- AnyChart -->
-<script src="https://cdn.anychart.com/releases/8.10.0/js/anychart-bundle.min.js"></script>
 <link href="https://cdn.anychart.com/releases/8.10.0/css/anychart-ui.min.css" rel="stylesheet" type="text/css">
+<script src="https://cdn.anychart.com/releases/8.11.1/js/anychart-pie.min.js"></script>
 <script src="https://cdn.anychart.com/releases/8.10.0/js/anychart-exports.min.js"></script>
-<script src="https://cdn.anychart.com/releases/v8/js/anychart-bullet.min.js"></script>
 <script src="https://cdn.anychart.com/releases/8.11.1/js/anychart-base.min.js"></script>
 <script src="https://cdn.anychart.com/releases/v8/themes/light_provence.min.js"></script>
+<script src="https://cdn.anychart.com/releases/8.11.1/js/anychart-graph.min.js"></script>
 
 
 
@@ -42,6 +42,8 @@
 
     <title>Assess CyberPHA</title>
     <style>
+
+
     .small-font {
         font-size: 0.8rem; /* adjust as needed */
    }
@@ -111,6 +113,10 @@
 
 </head>
 <body>
+<script>
+    anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
+
+</script>
 
 <nav class="navbar navbar-expand-lg navbar-scroll fixed-top shadow-0 border-bottom border-dark rounded">
   <div class="container-fluid d-flex justify-content-between">
@@ -287,6 +293,8 @@
                         var data9 = [scenarioValue9].concat(snapshotsValues9);
 
                         var chart = anychart.line();
+                        var credits = chart.credits();
+                        credits.enabled(false);
                         chart.animation(true);
                         chart.padding([10, 180, 5, 20]);
                         chart.title('Business Impact Analysis');
@@ -404,7 +412,8 @@
 
                         // Create a column chart instance
                         var chart = anychart.column();
-
+                        var credits = chart.credits();
+                        credits.enabled(false);
                         // Stack values on y scale
                         chart.yScale().stackMode('value');
 
@@ -457,6 +466,8 @@
                         var data2 = [scenarioValue2].concat(snapshotsValues2);
 
                         var chart = anychart.column();  // Changed to column chart
+                        var credits = chart.credits();
+                        credits.enabled(false);
                         chart.animation(true);
                         chart.padding([10, 120, 5, 20]);
                         chart.title('Probability of Attack Success');

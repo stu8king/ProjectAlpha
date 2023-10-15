@@ -1,12 +1,18 @@
 from django import forms
 from OTRisk.models.RiskScenario import RiskScenario
 from OTRisk.models.Model_CyberPHA import vulnerability_analysis, tblAssetType, tblMitigationMeasures
-from .models.raw import RAWorksheet, RAActions, MitreICSMitigations
+from .models.raw import RAWorksheet, RAActions, MitreICSMitigations, RAWorksheetScenario
 from .models.Model_Scenario import CustomScenario, CustomConsequence
 import accounts
 from django.contrib.auth.models import User
 from accounts.models import UserProfile, Organization
 from django.contrib.auth.password_validation import validate_password
+
+
+class RAWorksheetScenarioForm(forms.ModelForm):
+    class Meta:
+        model = RAWorksheetScenario
+        fields = '__all__'  # This includes all fields, but you can specify only the ones you need.
 
 
 class VulnerabilityAnalysisForm(forms.ModelForm):
