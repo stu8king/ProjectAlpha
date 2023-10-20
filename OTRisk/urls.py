@@ -104,6 +104,10 @@ urlpatterns = [
     path('view_snapshots/<int:scenario>/', views.view_snapshots, name='view_snapshots'),
     path('create_or_update_raw_scenario/', views.create_or_update_raw_scenario, name='create_or_update_raw_scenario'),
     path('generate_ppt/', views.generate_ppt, name='generate_ppt'),
+    path('manage_organization/', views.manage_organization, name='manage_organization'),
+    path('get_organization_details/<int:org_id>/', views.get_organization_details, name='get_organization_details'),
+    path('get_cve_details/', views.get_cve_details, name='get_cve_details'),
+
 
 ]
 

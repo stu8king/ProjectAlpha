@@ -2,9 +2,10 @@ import os
 
 from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404
+from django.utils.crypto import get_random_string
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
-from django.db.models import Subquery, OuterRef, Count, IntegerField, Case, When, Value
+from django.db.models import Subquery, OuterRef, Count, IntegerField, Case, When, Value, Prefetch
 from OTRisk.models.RiskScenario import RiskScenario, tblScenarioRecommendations
 from OTRisk.models.Model_Scenario import tblConsequence
 from OTRisk.models.questionnairemodel import Questionnaire, FacilityType
@@ -12,6 +13,8 @@ from OTRisk.models.ThreatAssessment import ThreatAssessment
 from OTRisk.models.raw import RAWorksheet, RAWorksheetScenario, RAActions, MitreICSMitigations
 from django.db.models import F, Count, Avg, Case, When, Value, CharField, Sum
 from django.db.models.functions import Ceil
+
+from accounts import models
 from accounts.views import get_client_ip
 from django.http import JsonResponse, HttpResponse, HttpResponseForbidden
 from django.utils import timezone
@@ -21,7 +24,7 @@ from OTRisk.models.Model_CyberPHA import tblCyberPHAHeader, tblRiskCategories, \
     tblControlObjectives, \
     tblThreatIntelligence, tblMitigationMeasures, tblScenarios, tblSafeguards, tblThreatSources, tblThreatActions, \
     tblNodes, tblUnits, tblZones, tblCyberPHAScenario, tblIndustry, auditlog, tblStandards, MitreControlAssessment, \
-    CyberPHAScenario_snapshot
+    CyberPHAScenario_snapshot, Audit
 from django.shortcuts import render, redirect
 from .dashboard_views import get_user_organization_id
 from django.contrib.auth.decorators import login_required
@@ -29,18 +32,20 @@ from .forms import LoginForm
 from datetime import date, datetime
 import json
 import openai, math
-import requests
+import requests, re
 from xml.etree import ElementTree as ET
 from .raw_views import qraw, openai_assess_risk, GetTechniquesView, raw_action, check_vulnerabilities, rawreport, \
-    raw_from_walkdown, save_ra_action, get_rawactions, ra_actions_view, UpdateRAAction, reports, reports_pha, create_or_update_raw_scenario
+    raw_from_walkdown, save_ra_action, get_rawactions, ra_actions_view, UpdateRAAction, reports, reports_pha, \
+    create_or_update_raw_scenario
 from .dashboard_views import dashboardhome
 from .pha_views import iotaphamanager, facility_risk_profile, get_headerrecord, scenario_analysis, phascenarioreport, \
-    getSingleScenario, pha_report, scenario_vulnerability, add_vulnerability, get_asset_types, calculate_effectiveness, generate_ppt
-from .forms import CustomScenarioForm, CustomConsequenceForm
+    getSingleScenario, pha_report, scenario_vulnerability, add_vulnerability, get_asset_types, calculate_effectiveness, \
+    generate_ppt
+from .forms import CustomScenarioForm, CustomConsequenceForm, OrganizationAdmin
 from .models.Model_Scenario import CustomScenario, CustomConsequence
 from accounts.models import Organization
 from accounts.models import UserProfile
-from .forms import UserForm, UserProfileForm, OrganizationForm, ChangePasswordForm
+from .forms import UserForm, UserProfileForm, ChangePasswordForm
 import secrets
 import string
 from django.core.mail import send_mail
@@ -94,13 +99,23 @@ def edit_organization(request, org_id):
     return render(request, 'OTRisk/edit_organization.html', {'form': form})
 
 
-@user_passes_test(lambda u: u.is_staff)
+@user_passes_test(lambda u: u.is_staff or u.is_superuser)  # Allow access for both is_staff and is_superuser
 def user_admin(request):
-    users = User.objects.all()
-    organizations = Organization.objects.all()
-    user_profiles = UserProfile.objects.all()
-    return render(request, 'OTRisk/user_admin.html',
-                  {'users': users, 'organizations': organizations, 'user_profiles': user_profiles})
+    org_name = None  # Default value
+    # If the user is staff, return all user records.
+    if request.user.is_staff:
+        users = User.objects.prefetch_related(
+            Prefetch('userprofile', to_attr='user_profile')
+        ).all()
+
+    # If user is not staff but is a superuser, return users from the same organization.
+    elif request.user.is_superuser:
+        user_org = UserProfile.objects.get(user=request.user).organization
+        users = User.objects.filter(userprofile__organization=user_org).prefetch_related(
+            Prefetch('userprofile', to_attr='user_profile')
+        )
+
+    return render(request, 'OTRisk/user_admin.html', {'users': users})
 
 
 @user_passes_test(lambda u: u.is_staff)
@@ -116,18 +131,41 @@ def edit_user(request, user_id):
     return render(request, 'OTRisk/edit_user.html', {'form': form})
 
 
-@user_passes_test(lambda u: u.is_staff)
+@user_passes_test(lambda u: u.is_staff or u.is_superuser)
 def change_password(request, user_id):
-    user = User.objects.get(id=user_id)
-    if request.method == 'POST':
-        form = ChangePasswordForm(request.POST)
-        if form.is_valid():
-            user.set_password(form.cleaned_data['password1'])
-            user.save()
-            return redirect('OTRisk:user_admin')
+    target_user = User.objects.get(id=user_id)
+
+    # If the current user is an 'is_staff' user, they have permission to change any user's password.
+    if request.user.is_staff:
+        pass
+    # If the current user is a 'is_superuser', they can only change the password of users within their organization.
+    elif request.user.is_superuser:
+        if target_user.userprofile.organization != request.user.userprofile.organization:
+            return HttpResponseForbidden("You don't have permission to change the password for this user.")
     else:
-        form = ChangePasswordForm()
-    return render(request, 'OTRisk/change_password.html', {'form': form})
+        return HttpResponseForbidden("You don't have permission to change the password.")
+
+    # Generate a secure random password
+    password = get_random_string(length=10,
+                                 allowed_chars="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()")
+
+    # Set the target user's password
+    target_user.set_password(password)
+    target_user.save()
+
+    # Set the must_change_password flag for the target user
+    profile = target_user.userprofile
+    profile.must_change_password = True
+    profile.save()
+
+    # Email the new password to the target user
+    subject = 'Your new password'
+    message = f'Hello {target_user.username},\n\nYour new password is: {password}\n\nPlease login and change it immediately.'
+    send_mail(subject, message, 'support@iotarisk.com', [target_user.email])
+
+    # Send a confirmation message to the current user/administrator
+    message = "Password reset successfully and email sent to user!"
+    return render(request, 'OTRisk/user_admin.html', {'message': message})
 
 
 def generate_password(length=12):
@@ -649,19 +687,42 @@ def get_mitigation_measures(request):
 @login_required()
 def assess_cyberpha(request):
     active_cyberpha = request.GET.get('active_cyberpha', None)
+    organization_id = request.session['user_organization']
+
+    try:
+        pha_record = tblCyberPHAHeader.objects.get(ID=active_cyberpha)
+    # if the record doesn't exist then the user is trying to access a record via manipulating the url - throw them out of the system
+    except tblCyberPHAHeader.DoesNotExist:
+        request.session.flush()
+        return redirect('OTRisk:logout')
 
     if active_cyberpha is None:
         active_cyberpha = request.session.get('cyberPHAID', 0)
 
-    # Check if active_cyberpha is None, an empty string, or 0
-    if not active_cyberpha or active_cyberpha in ["0", "null"]:
-        return redirect('OTRisk:iotaphamanager')
+    try:
+
+        record_owner_organization = UserProfile.objects.get(user=pha_record.UserID).organization_id
+
+        # Fetch the organization associated with the currently logged-in user
+        user_organization = UserProfile.objects.get(user=request.user).organization_id
+
+        # Check if the logged-in user's organization matches the record's owner's organization
+        if user_organization != record_owner_organization:
+            request.session.flush()
+            return redirect('OTRisk:logout')  # Redirect to logout path which will then redirect to login
+    except (tblCyberPHAHeader.DoesNotExist, UserProfile.DoesNotExist):
+        # Handle if the provided active_cyberpha does not match any record or if the UserProfile doesn't exist for a user.
+        # For instance, you can log out the user or raise a 404 error.
+        pass
+
+    # industry_id = tblIndustry.objects.get(Industry=pha_record.Industry).id
 
     # scenarios = tblScenarios.objects.all()
+    # tbl_scenarios = tblScenarios.objects.filter(industry_id=industry_id)
     tbl_scenarios = tblScenarios.objects.all()
+
     tbl_consequences = tblConsequence.objects.all()
     # Get custom scenarios for the current user's organization
-    organization_id = request.session['user_organization']
     custom_scenarios = CustomScenario.objects.filter(organization_id=organization_id)
     # Convert querysets to lists of dictionaries
     tbl_scenarios_list = [{'ID': obj.ID, 'Scenario': obj.Scenario} for obj in tbl_scenarios]
@@ -1731,6 +1792,7 @@ def get_weightings_from_openai(facility_type, industry):
     return weightings
 
 
+@login_required()
 def view_snapshots(request, scenario):
     # Retrieve the single record from tblCyberPHAScenario where ID = scenario
     scenario_record = tblCyberPHAScenario.objects.get(ID=scenario)
@@ -1748,3 +1810,99 @@ def view_snapshots(request, scenario):
         'header_record': header_record
     }
     return render(request, 'risk_snapshots.html', context)
+
+
+@login_required()
+def manage_organization(request):
+    org_to_edit = None
+
+    if request.method == "POST":
+        org_id = request.POST.get('organization_id', None)
+        if org_id:
+            org_to_edit = Organization.objects.get(id=org_id)
+
+        form = OrganizationAdmin(request.POST, instance=org_to_edit)
+
+        if form.is_valid():
+            form.save()
+            return redirect('OTRisk:manage_organization')
+    else:
+        form = OrganizationAdmin()
+
+    organizations = Organization.objects.all()
+    context = {
+        'organizations': organizations,
+        'form': form,
+        'org_to_edit': org_to_edit
+    }
+    return render(request, 'OTRisk/manage_organization.html', context)
+
+
+@login_required()
+def get_organization_details(request, org_id):
+    org = Organization.objects.get(id=org_id)
+    data = {
+        'name': org.name,
+        'address': org.address,
+        'address2': org.address2,
+        'city': org.city,
+        'state': org.state,
+        'zip': org.zip,
+        'country': org.country,
+        'max_users': org.max_users,
+        'subscription_status': org.subscription_status,
+        'subscription_start': org.subscription_start,
+        'subscription_end': org.subscription_end
+    }
+    return JsonResponse(data)
+
+
+@login_required()
+def write_audit_record(user, organization_id, ip_address, session_id, user_action, record_type, record_id=None):
+    audit_record = Audit(
+        user=user,
+        organization_id=organization_id,
+        ip_address=ip_address,
+        session_id=session_id,
+        user_action=user_action,
+        record_type=record_type,
+        record_id=record_id
+    )
+    audit_record.save()
+
+
+@login_required()
+def read_audit_records(user):
+    return Audit.objects.filter(organization_id=user.userprofile.organization_id)
+
+
+def get_cve_details(request):
+    if request.method == 'POST':
+        cve_number = request.POST['cve_number']
+
+        # Ensure that the input is in the correct CVE format (e.g., CVE-2023-123456)
+        if not re.match(r'^CVE-\d{4}-\d+$', cve_number):
+            return JsonResponse({"error": "Invalid CVE format"})
+
+        # Fetch details from NIST NVD API
+        url = f"https://services.nvd.nist.gov/rest/json/cve/1.0/{cve_number}"
+        response = requests.get(url)
+        data = response.json()
+
+        # Ensure the request was successful and the CVE exists
+        if data.get('result') and data['result'].get('CVE_data_type') == 'CVE':
+            cve_item = data['result']['CVE_Items'][0]
+            # Extract relevant details or modify this based on your needs
+            description = cve_item['cve']['description']['description_data'][0]['value']
+            published_date = cve_item['publishedDate']
+            last_modified_date = cve_item['lastModifiedDate']
+
+            return JsonResponse({
+                "description": description,
+                "published_date": published_date,
+                "last_modified_date": last_modified_date
+            })
+
+        return JsonResponse({"error": "CVE not found or an error occurred"})
+
+    return JsonResponse({"error": "Invalid request method"})

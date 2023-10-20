@@ -41,12 +41,6 @@ class ChangePasswordForm(forms.Form):
             raise forms.ValidationError("Passwords do not match!")
 
 
-class OrganizationForm(forms.ModelForm):
-    class Meta:
-        model = Organization
-        fields = '__all__'
-
-
 class UserProfileForm(forms.ModelForm):
     class Meta:
         model = UserProfile
@@ -157,3 +151,20 @@ class ControlAssessmentForm(forms.Form):
                     'class': 'custom-range'
                 })
             )
+
+
+class OrganizationAdmin(forms.ModelForm):
+    class Meta:
+        model = Organization
+        widgets = {
+            'address': forms.TextInput(),
+            'address2': forms.TextInput(),
+            'city': forms.TextInput(),
+            'state': forms.TextInput(),
+            'zip': forms.TextInput(),
+            'max_users': forms.TextInput(),
+            'subscription_start': forms.DateInput(attrs={'type': 'date'}),
+            'subscription_end': forms.DateInput(attrs={'type': 'date'})
+        }
+        exclude = ['subscription_type']
+

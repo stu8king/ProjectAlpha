@@ -1,52 +1,56 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>User Profile</title>
-</head>
-<body>
-  <h2>User Profile</h2>
-  <table>
-    <tr>
-      <th>First Name:</th>
-      <td>{{ user.first_name }}</td>
-    </tr>
-    <tr>
-      <th>Last Name:</th>
-      <td>{{ user.last_name }}</td>
-    </tr>
-    <tr>
-      <th>Email:</th>
-      <td>{{ user.email }}</td>
-    </tr>
-    <tr>
-      <th>Organization:</th>
-      <td>{{ user.userprofile.organization.name }}</td>
-    </tr>
-    <tr>
-      <th>Is Superuser:</th>
-      <td>{{ user.is_superuser }}</td>
-    </tr>
-  </table>
+{% extends "OTRisk/base.html" %}
 
-  <!-- Check if the user is a superuser -->
-  {% if user.is_superuser %}
-    <h3>Add New User to Organization</h3>
-    <form action="{% url 'accounts:add_user_to_organization' %}" method="post">
-      {% csrf_token %}
-      <label for="first_name">First Name:</label>
-      <input type="text" name="first_name" required><br>
+{% load static %}
 
-      <label for="last_name">Last Name:</label>
-      <input type="text" name="last_name" required><br>
+{% block nav_title %}
+    Profile
+{% endblock %}
 
-      <label for="email">Email:</label>
-      <input type="email" name="email" required><br>
+{% block content %}
+    <br>
+    <div class="row">
+        <div class="col-md-2" style="background-color: white"></div>
+        <div class="col-md-3">
+            <div class="card-style">
+                <h4><i class="bi bi-person-circle"></i> User Profile</h4>
+                <br>
+                <p>Name: {{ user.first_name }} {{ user.last_name }}</p>
+                <p>Company: {{ user.userprofile.organization.name }}</p>
+                <p>Email: {{ user.email }}</p>
+                <p>
+                    {% if user.is_superuser %}
+                        Administrator - can add or edit user information
+                    {% else %}
+                        Standard User
+                    {% endif %}
+                </p>
+            </div>
+         </div>
+        <div class="col-md-3">
+            <div class="card-style">
+                <h4><i class="bi bi-key"></i> Subscription</h4>
 
-      <label for="password">Password:</label>
-      <input type="password" name="password" required><br>
-
-      <input type="submit" value="Add User">
-    </form>
-  {% endif %}
-</body>
-</html>
+                <div class="row">
+                    <div class="col-md-6">
+                        <p>Subscription Start:</p>
+                        {{ org_data.subscription_start }}
+                    </div>
+                    <div class="col-md-6">
+                        <p>Subscription End:</p>
+                        {{ org_data.subscription_end }}
+                    </div>
+                </div>
+                <br>
+                <div class="progress" style="background-color: black; height: 30px; border-radius: 15px;">
+                    <div class="progress-bar" role="progressbar" style="width: {{ percentage_complete }}%; background-color: darkgreen; border-radius: 15px; line-height: 30px;" aria-valuenow="{{ percentage_complete }}" aria-valuemin="0" aria-valuemax="100">
+                        {{ days_remaining }} days remaining
+                    </div>
+                </div>
+                <br>
+                User licenses: {{ org_data.max_users }}<br>
+                User Licenses Used: {{ org_data.user_count }}
+            </div>
+        </div>
+        <div class="col-md-4"></div>
+    </div>
+{% endblock %}

@@ -1,8 +1,9 @@
+from django.db.models.functions import Coalesce
 from django.forms import model_to_dict
 
 from OTRisk.models.Model_CyberPHA import tblIndustry, tblCyberPHAHeader, tblZones, tblStandards, \
     tblCyberPHAScenario, vulnerability_analysis, tblAssetType, tblMitigationMeasures, MitreControlAssessment
-from OTRisk.models.raw import MitreICSMitigations
+from OTRisk.models.raw import MitreICSMitigations, RAActions
 from OTRisk.models.questionnairemodel import FacilityType
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, get_object_or_404, redirect
@@ -14,7 +15,7 @@ from django.http import JsonResponse
 from django.core.exceptions import ObjectDoesNotExist
 import openai
 import re
-from django.db.models import Avg, Sum, F, Count
+from django.db.models import Avg, Sum, F, Count, Subquery, OuterRef, Case, When, Value, IntegerField
 import concurrent.futures
 import os
 import math
@@ -104,7 +105,13 @@ def iotaphamanager(request):
 
     users_in_organization = User.objects.filter(userprofile__organization__id=organization_id_from_session)
 
-    pha_header_records = tblCyberPHAHeader.objects.filter(UserID__in=users_in_organization, Deleted=0).annotate(scenario_count=Count('tblcyberphascenario'))
+    ra_actions_subquery = RAActions.objects.filter(phaID=OuterRef('ID')).values('phaID').annotate(
+        action_count=Count('ID')).values('action_count')
+
+    pha_header_records = tblCyberPHAHeader.objects.filter(UserID__in=users_in_organization, Deleted=0).annotate(
+        scenario_count=Count('tblcyberphascenario'),
+        ra_action_count=Coalesce(Subquery(ra_actions_subquery, output_field=IntegerField()), Value(0))
+    )
 
     industries = tblIndustry.objects.all().order_by('Industry')
     facilities = FacilityType.objects.all().order_by('FacilityType')
@@ -578,7 +585,6 @@ def scenario_analysis(request):
                 "content": f"Given the context: {common_content_prefix()} and analysis of publicly reported cybersecurity incidents, provide ONLY the estimated probability (as a whole number percentage) of a successful targeted attack given that the assessed effectiveness of current cybersecurity controls is {control_effectiveness}% . Answer with a number followed by a percentage sign (e.g., nn%). Do NOT include any other words, sentences, or explanations."
             }
 
-
         ]
 
         def get_response_safe(user_message):
@@ -636,6 +642,7 @@ def scenario_vulnerability(request, scenario_id):
 
 
 def add_vulnerability(request, scenario_id):
+
     scenario = get_object_or_404(tblCyberPHAScenario, pk=scenario_id)
     action = request.POST.get('action')
     if request.method == 'POST':
@@ -644,6 +651,7 @@ def add_vulnerability(request, scenario_id):
             asset_type_id = request.POST.get('asset_type')
             asset_name = request.POST.get('asset_name')
             cve = request.POST.get('cve')
+            cve_detail = request.POST.get('cve_detail')
 
             # Create a new vulnerability instance and save it
             vulnerability = vulnerability_analysis(
@@ -652,6 +660,7 @@ def add_vulnerability(request, scenario_id):
                 asset_type_id=asset_type_id,
                 cve=cve,
                 scenario=scenario,
+                cve_detail=cve_detail
             )
             vulnerability.save()
 
@@ -661,6 +670,7 @@ def add_vulnerability(request, scenario_id):
             asset_type_id = request.POST.get('asset_type')
             asset_name = request.POST.get('asset_name')
             cve = request.POST.get('cve')
+            cve_detail = request.POST.get('cve_detail')
 
             # Get the existing vulnerability instance
             vulnerability = get_object_or_404(vulnerability_analysis, pk=vulnerability_id)
@@ -670,6 +680,7 @@ def add_vulnerability(request, scenario_id):
             vulnerability.asset_type_id = asset_type_id
             vulnerability.asset_name = asset_name
             vulnerability.cve = cve
+            vulnerability.cve_detail = cve_detail
             vulnerability.save()
 
     return redirect('OTRisk:scenario_vulnerability', scenario_id=scenario_id)

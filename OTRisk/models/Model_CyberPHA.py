@@ -174,6 +174,7 @@ class tblMitigationMeasures(models.Model):
 class tblScenarios(models.Model):
     ID = models.AutoField(primary_key=True)
     Scenario = models.CharField(max_length=255)
+    industry = models.ForeignKey(tblIndustry, on_delete=models.SET_NULL, null=True, blank=True)
 
     class Meta:
         db_table = 'tblScenarios'
@@ -326,6 +327,7 @@ class vulnerability_analysis(models.Model):
     asset_type = models.ForeignKey(tblAssetType, on_delete=models.CASCADE)  # Foreign key to tblAssetType
     cve = models.TextField()
     scenario = models.ForeignKey(tblCyberPHAScenario, on_delete=models.CASCADE)  # Foreign key to tblCyberPHAScenario
+    cve_detail = models.TextField()
 
     def __str__(self):
         return self.description
@@ -500,3 +502,36 @@ class CyberPHAScenario_snapshot(models.Model):
     snapshot_date = models.DateField()
     control_effectiveness = models.IntegerField()
     likelihood = models.IntegerField()
+
+
+class Audit(models.Model):
+    USER_ACTIONS = [
+        ("Edit", "Edit"),
+        ("Add New", "Add New"),
+        ("Delete", "Delete"),
+        ("Login", "Login"),
+        ("Logout", "Logout"),
+        ("Create Profile", "Create Profile"),
+        ("Generate Risk Assessment", "Generate Risk Assessment")
+    ]
+
+    RECORD_TYPES = [
+        ("Application", "Application"),
+        ("QRAW", "QRAW"),
+        ("CyberPHA", "CyberPHA"),
+        ("RiskRegister", "RiskRegister"),
+        ("ActionItem", "ActionItem")
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    organization_id = models.PositiveIntegerField()
+    ip_address = models.GenericIPAddressField()
+    session_id = models.CharField(max_length=256)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    user_action = models.CharField(choices=USER_ACTIONS, max_length=50)
+    record_type = models.CharField(choices=RECORD_TYPES, max_length=50)
+    record_id = models.PositiveIntegerField(null=True, blank=True)
+
+    class Meta:
+        db_table = 'audit'
+        managed = True

@@ -1,5 +1,5 @@
 import os
-from datetime import timedelta
+from datetime import timedelta, date
 
 import stripe
 import stripe.error
@@ -19,6 +19,9 @@ from django.utils import timezone
 from django.core.mail import send_mail
 import string
 import random
+
+from django.views.decorators.csrf import csrf_exempt
+
 from accounts.models import UserProfile, SubscriptionType, Organization, LoginAttempt, ActiveUserSession
 from .forms import CustomUserCreationForm, PasswordChangeForm, SetPasswordForm, \
     SubscriptionForm
@@ -60,10 +63,13 @@ def two_factor_setup(request):
     return render(request, 'accounts/two_factor_setup.html', {'form': form})
 
 
+@csrf_exempt
 def two_factor_verify(request):
     if request.method == 'POST':
+
         form = TwoFactorVerifyForm(request.POST)
         if form.is_valid():
+
             token = form.cleaned_data['token']
             try:
 
@@ -72,10 +78,12 @@ def two_factor_verify(request):
                 device = TOTPDevice.objects.get(user=user.id)
 
                 if device.verify_token(token):
+
                     device.confirmed = True
                     device.save()
                     return redirect('OTRisk:dashboardhome')
                 else:
+
                     messages.error(request, 'Invalid token.')
             except TOTPDevice.DoesNotExist:
 
@@ -210,10 +218,23 @@ def get_client_ip(request):
 def profile_view(request):
     user = request.user
     profile = UserProfile.objects.get(user=user)
+    org_data = get_organization_details(request)
+
+    # Calculate the number of days from the start to the end of the subscription
+    total_days = (org_data['subscription_end'] - org_data['subscription_start']).days
+
+    # Calculate the number of days from today to the end of the subscription
+    days_remaining = (org_data['subscription_end'] - date.today()).days
+
+    # Calculate the percentage of the subscription that's completed
+    percentage_complete = ((total_days - days_remaining) / total_days) * 100
 
     context = {
         'user': user,
         'profile': profile,
+        'org_data': org_data,
+        'percentage_complete': percentage_complete,
+        'days_remaining': days_remaining
     }
     return render(request, 'accounts/profile.html', context)
 
@@ -291,21 +312,26 @@ def verify_2fa(request):
 
     form = Verify2FAForm(request.POST or None)
     if request.method == "POST" and form.is_valid():
+
         token = form.cleaned_data['code']
         try:
+
             device = TOTPDevice.objects.get(user=request.user, confirmed=False)
             # Convert the hexadecimal key back to base32
             base32_key = base64.b32encode(bytes.fromhex(device.key)).decode()
 
             totp = pyotp.TOTP(base32_key)
             if totp.verify(token):
+
                 device.confirmed = True
                 device.save()
                 messages.success(request, "2FA setup and verification successful!")
                 return redirect('OTRisk:dashboardhome')
             else:
+
                 messages.error(request, "Invalid token. Please try again.")
         except TOTPDevice.DoesNotExist:
+
             messages.error(request, "No unconfirmed 2FA setup found for your account. Please set up 2FA first.")
         except Exception as e:
             messages.error(request, f"An error occurred: {str(e)}")
@@ -314,6 +340,7 @@ def verify_2fa(request):
     return render(request, 'accounts/verify_2fa.html', context)
 
 
+@csrf_exempt
 def login_view(request):
     if request.method == 'POST':
         form = AuthenticationForm(request, data=request.POST)
@@ -324,7 +351,8 @@ def login_view(request):
             login(request, user)
             user_profile = UserProfile.objects.get(user=user)
             if user_profile.must_change_password:
-                return redirect('accounts:password_change')
+                request.session['user_id_for_password_change'] = user.id
+                return redirect('accounts:password_change', user_id=user.id)
 
             # Check if the user has 2FA set up and confirmed
             if TOTPDevice.objects.filter(user=user, confirmed=True).exists():
@@ -430,19 +458,23 @@ def add_user_to_organization(request):
 
 # If not a POST request, redirect back to the profile page
 
-def password_change_view(request):
+def password_change_view(request, user_id):
+    user_to_change_password_for = User.objects.get(id=user_id)
+
     if request.method == 'POST':
-        form = PasswordChangeForm(user=request.user, data=request.POST)
+        form = PasswordChangeForm(user=user_to_change_password_for, data=request.POST)
+
         if form.is_valid():
             form.save()
             # Update the must_change_password field
-            user_profile = UserProfile.objects.get(user=request.user)
+            user_profile = UserProfile.objects.get(user=user_to_change_password_for)
             user_profile.must_change_password = False
             user_profile.save()
             messages.success(request, 'Password changed successfully.')
             return redirect('OTRisk:dashboardhome')
     else:
-        form = PasswordChangeForm(user=request.user)
+        form = PasswordChangeForm(user=user_to_change_password_for)
+
     return render(request, 'accounts/password_change.html', {'form': form})
 
 
@@ -640,3 +672,33 @@ def contact_form(request):
         form = ContactForm()
 
     return render(request, 'accounts/contact.html', {'form': form})
+
+
+@login_required()
+def get_organization_details(request):
+    # Retrieve the organization instance from the user profile
+
+    org_id = request.user.userprofile.organization_id
+
+    org = Organization.objects.get(id=org_id)
+
+    # Count the number of users in the organization
+    user_count = UserProfile.objects.filter(organization=org).count()
+    # Construct the data dictionary
+    data = {
+        'id': org.id,  # This will give you the organization ID
+        'name': org.name,
+        'address': org.address,
+        'address2': org.address2,
+        'city': org.city,
+        'state': org.state,
+        'zip': org.zip,
+        'country': org.country,
+        'max_users': org.max_users,
+        'subscription_status': org.subscription_status,
+        'subscription_start': org.subscription_start,
+        'subscription_end': org.subscription_end,
+        'user_count': user_count
+    }
+
+    return data

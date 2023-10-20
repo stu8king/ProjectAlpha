@@ -4,12 +4,13 @@ from django.contrib.auth import views as auth_views
 from accounts import views
 from .views import login_view
 from two_factor.urls import urlpatterns as tf_urls
+from django.contrib.auth.views import LogoutView
 
 urlpatterns = [
     # path('admin/', admin.site.urls),
     path('OTRisk/', include('OTRisk.urls', namespace='OTRisk')),
     path('login/', views.login_view, name='login'),
-    path('logout/', auth_views.LogoutView.as_view(next_page='login'), name='logout'),
+    path('logout/', LogoutView.as_view(next_page='/accounts/login/'), name='logout'),
     path('register/', views.register, name='register'),
     path('profile/', views.profile_view, name='profile'),
     path('add_user_to_organization/', views.add_user_to_organization, name='add_user_to_organization'),
@@ -17,7 +18,7 @@ urlpatterns = [
     path('faq/', views.faq_view, name='faq'),
     path('contact/', views.contact_view, name='contact'),
     path('faq/', views.faq_view, name='faq'),
-    path('password_change/', views.password_change_view, name='password_change'),
+    path('password_change/<int:user_id>/', views.password_change_view, name='password_change'),
     path('subscription/', views.subscription_view, name='subscription_view'),
     path('payment/', views.payment_view, name='payment_view'),
     path('set-password/', views.set_password_view, name='set_password_view'),

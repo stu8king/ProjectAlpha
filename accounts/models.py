@@ -75,7 +75,7 @@ class SubscriptionType(models.Model):
             'max_users': self.max_users,
             'duration': self.duration,
             'description': self.description,
-            'price': self.price
+            'price': str(self.price)  # Convert the Decimal to a string
         })
 
     class Meta:
@@ -95,6 +95,7 @@ class Organization(models.Model):
     subscription_status = models.BooleanField(default=False)
     subscription_start = models.DateField(null=True, blank=True)
     subscription_end = models.DateField(null=True, blank=True)
+    max_users = models.IntegerField(default=1, null=False)
 
     class Meta:
         db_table = 'organization'

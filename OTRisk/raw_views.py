@@ -44,13 +44,36 @@ class UpdateRAAction(View):
         action_status = data.get('actionStatus')
         action_title = data.get('actionTitle')
         action_description = data.get('actionDescription')
+        dataMitigation = data.get('dataMitigation')
+        environmentMitigation = data.get('environmentMitigation')
+        financeMitigation = data.get('financeMitigation')
+        lifeMitigation = data.get('lifeMitigation')
+        productionMitigation = data.get('productionMitigation')
+        regulationMitigation = data.get('regulationMitigation')
+        reputationMitigation = data.get('reputationMitigation')
+        safetyMitigation = data.get('safetyMitigation')
+        supplyMitigation = data.get('supplyMitigation')
+        threatMitigation = data.get('threatMitigation')
+        vulnerabilityMitigation = data.get('vulnerabilityMitigation')
+
         ra_action = RAActions.objects.get(ID=action_id)
         ra_action.actionDueDate = action_due_date
         ra_action.actionStatus = action_status
         ra_action.actionDescription = action_description
         ra_action.actionTitle = action_title
+        ra_action.dataMitigation = dataMitigation
+        ra_action.environmentMitigation = environmentMitigation
+        ra_action.financeMitigation = financeMitigation
+        ra_action.lifeMitigation = lifeMitigation
+        ra_action.productionMitigation = productionMitigation
+        ra_action.regulationMitigation = regulationMitigation
+        ra_action.reputationMitigation = reputationMitigation
+        ra_action.safetyMitigation = safetyMitigation
+        ra_action.supplyMitigation = supplyMitigation
+        ra_action.threatMitigation = threatMitigation
+        ra_action.vulnerabilityMitigation = vulnerabilityMitigation
         current_user_name = request.user.first_name + " " + request.user.last_name
-        history_update = f"\n\n{timezone.now()}: {current_user_name} updated the record to change the status to {action_status} and the due date to {action_due_date}. The title is {action_title} and description is: {action_description}"
+        history_update = f"\n\n{timezone.now()}: {current_user_name} updated the record "
         ra_action.history += history_update
         ra_action.save()
 
@@ -129,7 +152,6 @@ def save_ra_action(request):
         action_affinity = request.POST.get('actionAffinity')
         action_status = request.POST.get('actionStatus')
         action_description = request.POST.get('actionDescription')
-        action_assets = request.POST.get('actionAssets')
         action_due_date = request.POST.get('actionDueDate')
         action_priority = request.POST.get('actionPriority')
         outageSIS = request.POST.get('outageSIS')
@@ -138,6 +160,17 @@ def save_ra_action(request):
         outageIT = request.POST.get('outageIT')
         outagePS = request.POST.get('outagePS')
         outageWWW = request.POST.get('outageWWW')
+        environmentMitigation = request.POST.get('environmentMitigation')
+        financeMitigation = request.POST.get('financeMitigation')
+        lifeMitigation = request.POST.get('lifeMitigation')
+        productionMitigation = request.POST.get('productionMitigation')
+        regulationMitigation = request.POST.get('regulationMitigation')
+        reputationMitigation = request.POST.get('reputationMitigation')
+        dataMitigation = request.POST.get('dataMitigation')
+        safetyMitigation = request.POST.get('safetyMitigation')
+        supplyMitigation = request.POST.get('supplyMitigation')
+        threatMitigation = request.POST.get('threatMitigation')
+        vulnerabilityMitigation = request.POST.get('vulnerabilityMitigation')
         phaID = int(request.POST.get('hdnphaID'))
         RAWorksheetID = int(request.POST.get('hdntxtModalRAW'))
         current_user_organization_id = request.user.userprofile.organization_id
@@ -160,7 +193,7 @@ def save_ra_action(request):
             actionDescription=action_description,
             actionDueDate=action_due_date,
             actionPriority=action_priority,
-            actionAssets=action_assets,
+            actionAssets='',
             actionAffinity=action_affinity,
             outageSIS=outageSIS,
             outageICS=outageICS,
@@ -172,7 +205,18 @@ def save_ra_action(request):
             phaID=phaID,
             userid=request.user,
             organizationid=organization_instance,
-            history=history
+            history=history,
+            dataMitigation=dataMitigation,
+            environmentMitigation=environmentMitigation,
+            financeMitigation=financeMitigation,
+            lifeMitigation=lifeMitigation,
+            regulationMitigation=regulationMitigation,
+            productionMitigation=productionMitigation,
+            reputationMitigation=reputationMitigation,
+            safetyMitigation=safetyMitigation,
+            supplyMitigation=supplyMitigation,
+            threatMitigation=threatMitigation,
+            vulnerabilityMitigation=vulnerabilityMitigation
         )
         ra_action.save()
 
@@ -1091,7 +1135,6 @@ def clean_numeric_string(value):
 
 
 def create_or_update_raw_scenario(request):
-
     if request.method == 'POST':
         raw_id = int(request.POST.get('rawID'))  # Assuming rawID is the ID of RAWorksheet
 
