@@ -35,16 +35,50 @@
      {% bootstrap_css %}
      {% bootstrap_javascript %}
     <style>
+
+        .slider {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 15px;
+  background: #b0acac;
+  outline: none;
+  border: 3px solid rgba(77, 127, 192, 0.75);
+  border-radius: 4px;
+}
+
+
+/* for chrome/safari */
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 15px;
+  height: 40px;
+  background: rgba(77, 127, 192, 0.75);
+  cursor: pointer;
+  border: 3px solid rgba(77, 127, 192, 0.75);
+  border-radius: 4px;
+}
+
+/* for firefox */
+.slider::-moz-range-thumb {
+  width: 20px;
+  height: 60px;
+  background: #000;
+  cursor: pointer;
+  border: 5px solid lawngreen;
+  border-radius: 4px;
+}
+
        .navbar-scroll .nav-link,
         .navbar-scroll .navbar-toggler-icon,
         .navbar-scroll .navbar-brand {
-          color: #ffffff;
+          color: #000000;
         }
 
         /* Color of the navbar BEFORE scroll */
         .navbar-scroll {
-          background-color: #000000;
-            text-decoration-color: #FFFFFF;
+          background-color: #FFFFFF;
+            text-decoration-color: #000000;
         }
 
 
@@ -71,14 +105,17 @@
      .action-row {
          cursor: pointer;
      }
+
     </style>
+
+
 </head>
 <body>
 
-<nav class="navbar navbar-expand-lg navbar-scroll fixed-top shadow-0 border-bottom border-dark rounded">
+<nav class="navbar navbar-expand-lg navbar-scroll shadow-0 border-bottom border-dark rounded">
   <div class="container-fluid d-flex justify-content-between">
-   <a class="navbar-brand" href="{% url 'OTRisk:dashboardhome' %}"><img src="/static/images/logo1-2.jpg" style="height: 140px; width: 140px" class="navbar-logo" alt="">  </a>
-      <h4 class="my-auto text-center flex-grow-1"><font color="white">Actions</font></h4>
+   <a class="navbar-brand" href="{% url 'OTRisk:dashboardhome' %}"><img src="{% static 'images/iota - white 1.png' %}" style="height: 140px; width: 140px" class="navbar-logo" alt="">   </a>
+      <h4 class="my-auto text-center flex-grow-1">Actions</h4>
 
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
       <ul class="navbar-nav ms-auto">
@@ -138,16 +175,16 @@
 
 </nav>
 <div class="row" style="height: 20px;">
-    <div class="col-md-1" style="background-color: black"></div>
+    <div class="col-md-1" style="background-color: white"></div>
     <div class="col-md-1" style="background-color: white"></div>
     <div class="col-md-8 " ></div>
     <div class="col-md-1" style="background-color: white"></div>
-    <div class="col-md-1 " style="background-color: black"></div>
+    <div class="col-md-1 " style="background-color: white"></div>
 </div> <!-- dark grey stripe -->
 
 
 <div class="row">
-    <div class="col-md-1" style="background-color: black"></div>
+    <div class="col-md-1" style="background-color: white"></div>
     <div class="col-md-10 " >
         {% block content %}
             <form method="post" action="" id="actionForm">
@@ -195,12 +232,11 @@
         </form>
     {% endblock %}
         </div>
-    <div class="col-md-1 " style="background-color: black"></div>
+    <div class="col-md-1 " style="background-color: white"></div>
 </div>
 
-
 <div class="row small-font">
-    <div class="col-md-1" style="background-color: black"></div>
+    <div class="col-md-1" style="background-color: white"></div>
     <div class="col-md-10" style="background-color: white">
     <!-- Display selected action details -->
     {% if selected_action %}
@@ -347,6 +383,83 @@
             </div>
         </div>
         <div class="row small-font">
+        <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                        <div class="card-body">
+                            <div class="row justify-content-center">
+                                <div class="col-md-12">
+                                <p class="justify-content-center">Expected Risk Mitigation from Action</p>
+                                </div>
+                            </div>
+                            <div class="row justify-content-center">
+                                <div class="col-md-4">
+                                    <label for="safetyMitigation">Safety: <span id="safetyMitigationValue">{{ selected_action.safetyMitigation }}</span>%</label>
+                                    <input type="range" class="form-control slider" id="safetyMitigation" name="safetyMitigation" min="0" max="100" value="{{ selected_action.safetyMitigation }}">
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="lifeMitigation">Life: <span id="lifeMitigationValue">{{ selected_action.lifeMitigation }}</span>%</label>
+                                    <input type="range" class="form-control slider" id="lifeMitigation" name="lifeMitigation" min="0" max="100" value="{{ selected_action.lifeMitigation }}">
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="productionMitigation">Production: <span id="productionMitigationValue">{{ selected_action.productionMitigation }}</span>%</label>
+                                    <input type="range" class="form-control slider" id="productionMitigation" name="productionMitigation" min="0" max="100" value="{{ selected_action.productionMitigation }}">
+                                </div>
+                            </div>
+                            <div class="row justify-content-center mt-4">
+                                <div class="col-md-4">
+                                    <label for="financeMitigation">Finance: <span id="financeMitigationValue">{{ selected_action.financeMitigation }}</span>%</label>
+                                    <input type="range" class="form-control slider" id="financeMitigation" name="financeMitigation" min="0" max="100" value="{{ selected_action.financeMitigation }}">
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label for="reputationMitigation">Reputation: <span id="reputationMitigationValue">{{ selected_action.reputationMitigation }}</span>%</label>
+                                    <input type="range" class="form-control slider" id="reputationMitigation" name="reputationMitigation" min="0" max="100" value="{{ selected_action.reputationMitigation }}">
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="environmentMitigation">Environment: <span id="environmentMitigationValue">{{ selected_action.environmentMitigation }}</span>%</label>
+                                    <input type="range" class="form-control slider" id="environmentMitigation" name="environmentMitigation" min="0" max="100" value="{{ selected_action.environmentMitigation }}">
+                                </div>
+                            </div>
+                            <div class="row justify-content-center mt-4">
+                                <div class="col-md-4">
+                                    <label for="regulationMitigation">Regulation: <span id="regulationMitigationValue">{{ selected_action.productionMitigation }}</span>%</label>
+                                    <input type="range" class="form-control slider" id="regulationMitigation" name="regulationMitigation" min="0" max="100" value="{{ selected_action.productionMitigation }}">
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="dataMitigation">Data: <span id="dataMitigationValue">{{ selected_action.dataMitigation }}</span>%</label>
+                                    <input type="range" class="form-control slider" id="dataMitigation" name="dataMitigation" min="0" max="100" value="{{ selected_action.dataMitigation }}">
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label for="supplyMitigation">Supply: <span id="supplyMitigationValue">{{ selected_action.supplyMitigation }}</span>%</label>
+                                    <input type="range" class="form-control slider" id="supplyMitigation" name="supplyMitigation" min="0" max="100" value="{{ selected_action.supplyMitigation }}">
+                                </div>
+                            </div>
+                            <div class="row justify-content-center mt-4">
+                                <div class="col-md-4">
+                                    <label for="threatMitigation">Threat: <span id="threatMitigationValue">{{ selected_action.threatMitigation }}</span>%</label>
+                                    <input type="range" class="form-control slider" id="threatMitigation" name="threatMitigation" min="0" max="100" value="{{ selected_action.threatMitigation }}">
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="vulnerabilityMitigation">Vulnerability: <span id="vulnerabilityMitigationValue">{{ selected_action.vulnerabilityMitigation }}</span>%</label>
+                                    <input type="range" class="form-control slider" id="vulnerabilityMitigation" name="vulnerabilityMitigation" min="0" max="100" value="{{ selected_action.vulnerabilityMitigation }}">
+                                </div>
+                            </div>
+                        </div>
+
+        </div>
+        <script>
+        document.querySelectorAll('input[type="range"]').forEach(slider => {
+        slider.addEventListener('input', function() {
+            let displaySpan = document.getElementById(this.id + 'Value');
+            displaySpan.textContent = this.value;
+        });
+        });
+
+        </script>
+
+
+
+        <div class="row small-font">
             <div class="col-md-4"></div>
             <div class="col-md-2">
                 <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
@@ -361,7 +474,7 @@
     {% endif %}
     </div>
 
-<div class="col-md-1 " style="background-color: black"></div>
+<div class="col-md-1 " style="background-color: white"></div>
 </div>
 
 
@@ -392,7 +505,18 @@
             const actionStatus = $('#selectStatus').val();
             const actionTitle = $('#txtTitle').val();
             const actionDescription = $('#txtDescription').val();
-             const selectedActionId = sessionStorage.getItem('selectedActionId');
+            const selectedActionId = sessionStorage.getItem('selectedActionId');
+            const dataMitigation = $('#dataMitigation').val();
+            const environmentMitigation = $('#environmentMitigation').val();
+            const financeMitigation = $('#financeMitigation').val();
+            const lifeMitigation = $('#lifeMitigation').val();
+            const productionMitigation = $('#productionMitigation').val();
+            const regulationMitigation = $('#regulationMitigation').val();
+            const reputationMitigation = $('#reputationMitigation').val();
+            const safetyMitigation = $('#safetyMitigation').val();
+            const supplyMitigation = $('#supplyMitigation').val();
+            const threatMitigation = $('#threatMitigation').val();
+            const vulnerabilityMitigation = $('#vulnerabilityMitigation').val();
 
             // Get CSRF token
             const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
@@ -408,7 +532,18 @@
                     'actionDueDate': actionDueDate,
                     'actionStatus': actionStatus,
                     'actionTitle': actionTitle,
-                    'actionDescription': actionDescription
+                    'actionDescription': actionDescription,
+                    'dataMitigation': dataMitigation,
+                    'environmentMitigation': environmentMitigation,
+                    'financeMitigation': financeMitigation,
+                    'lifeMitigation': lifeMitigation,
+                    'productionMitigation': productionMitigation,
+                    'regulationMitigation': regulationMitigation,
+                    'reputationMitigation': reputationMitigation,
+                    'safetyMitigation': safetyMitigation,
+                    'supplyMitigation': supplyMitigation,
+                    'threatMitigation': threatMitigation,
+                    'vulnerabilityMitigation': vulnerabilityMitigation
                 }),
                 contentType: 'application/json',
 

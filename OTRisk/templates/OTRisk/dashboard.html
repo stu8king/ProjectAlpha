@@ -2,7 +2,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Dashboard Home</title>
+    <title>iOTa</title>
+    <link rel="icon" href="{% static 'images/iota - white 1.png' %}" type="image/x-icon">
 
 
     <!-- Bootstrap CSS -->
@@ -10,6 +11,7 @@
 
     <!-- Bootstrap Select CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.1/css/bootstrap-select.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <!-- Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.1/font/bootstrap-icons.css" rel="stylesheet">
@@ -54,13 +56,13 @@
        .navbar-scroll .nav-link,
         .navbar-scroll .navbar-toggler-icon,
         .navbar-scroll .navbar-brand {
-          color: #ffffff;
+          color: #000000;
         }
 
         /* Color of the navbar BEFORE scroll */
         .navbar-scroll {
-          background-color: #000000;
-            text-decoration-color: #FFFFFF;
+          background-color: #ffffff;
+            text-decoration-color: #000000;
         }
 
 
@@ -102,14 +104,12 @@
     }
 
     </style>
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-
 </head>
 <body>
 <nav class="navbar navbar-expand-lg navbar-scroll shadow-0 border-bottom border-dark rounded">
-  <div class="container-fluid">
-   <a class="navbar-brand" href="{% url 'OTRisk:dashboardhome' %}"><img src="/static/images/logo1-2.jpg" style="height: 140px; width: 140px" class="navbar-logo" alt="">  </a>
-      <h4 class="my-auto text-center flex-grow-1"><font color="white">Dashboard</font></h4>
+  <div class="container-fluid d-flex justify-content-between">
+   <a class="navbar-brand" href="{% url 'OTRisk:dashboardhome' %}"><img src="{% static 'images/iota - white 1.png' %}" style="height: 140px; width: 140px" class="navbar-logo" alt="">  </a>
+      <h4 class="my-auto text-center flex-grow-1">Dashboard</h4>
 
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
       <ul class="navbar-nav ms-auto">
@@ -142,10 +142,10 @@
               <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
                   <li><a  class="dropdown-item" href="{% url 'OTRisk:add_scenario' %}">Scenario Manager</a></li>
                   <li><a  class="dropdown-item" href="{% url 'OTRisk:add_consequence' %}">Consequence Manager</a></li>
-                  <li><a  class="dropdown-item" href="{% url 'OTRisk:admin_users' %}">Admin Users</a></li>
                   {% if user.is_staff %}
                     <!-- Links visible only to superusers -->
                     <li><a class="dropdown-item" href="{% url 'OTRisk:user_admin' %}">User Administration</a></li>
+                      <li><a class="dropdown-item" href="{% url 'OTRisk:manage_organization' %}">Organization Management</a></li>
                       <li><a class="dropdown-item" href="{% url 'OTRisk:execute_sql' %}">Execute SQL</a></li>
                     {% endif %}
 
@@ -178,17 +178,19 @@
 
 </nav>
 
-<div class="row mb-4">
-    <div class="col-1 bg-black"></div>
-    <div class="col-10 bg-light-grey"></div>
-    <div class="col-1"></div>
-</div>
+    <div class="row" style="height: 10px">
+        <div class="col-md-1 " style="background-color: white"></div>
+        <div class="col-md-10 ">
+
+       </div>
+        <div class="col-md-1 "></div>
+    </div> <!-- dark grey stripe -->
 
 <div class="row" >
-    <div class="col-md-1" style="background-color: black"></div>
+    <div class="col-md-1" style="background-color: white"></div>
     <div class="col-md-1" style="background-color: white"></div>
     <div class="col-md-5 ">
-        <div id="heatmapContainer" class="mb-4" style="width:100%; height:400px;"></div>
+        <div id="heatmapContainer" style="width:100%; height:400px;"></div>
         <script>
          anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
          anychart.onDocumentReady(function () {
@@ -260,7 +262,7 @@
 
              // Set the chart title
              chart.title("Scenario Residual Risk vs Likelihood Heatmap");
-
+            chart.labels().fontSize(16);
              // Set the x-axis title
              chart.xAxis().title("Likelihood");
              chart.xAxis().orientation("bottom");
@@ -391,7 +393,7 @@
         </div>
     </div>
     <div class="col-md-4 ">
-        <div id="sunburstcontainer" class="mt-4" style="width:100%; height:100%;"></div>
+        <div id="sunburstcontainer" style="width:100%; height:100%;"></div>
 
         <script>
             anychart.onDocumentReady(function() {
@@ -422,7 +424,7 @@
 </div>
 
 <div class="row" style="height:400px">
-    <div class="col-md-1 "  style="background-color: black"></div>
+    <div class="col-md-1 "  style="background-color: white"></div>
     <div class="col-md-1 " ></div>
     <div class="col-md-3 no-gap">
 

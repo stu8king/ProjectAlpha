@@ -1,0 +1,207 @@
+{% extends "base.html" %}  {# Assuming you have a base.html for a common page layout #}
+{% load static %}
+
+
+{% block nav_title %}
+    Manage Organizations
+{% endblock %}
+
+{% block content %}
+
+<div class="row">
+    <div class="col-md-2" style="background-color: white"></div>
+    <div class="col-md-10"><h2></h2></div>
+<div class="col-md-1"></div>
+</div>
+
+<div class="row">
+    <div class="col-md-2" style="background-color: white"></div>
+    <div class="col-md-3"><!-- Dropdown to select existing organization for editing -->
+        <form method="post" action="{%  url 'OTRisk:manage_organization' %}"   class="mt-3" id="editOrganizationForm">
+
+         {% csrf_token %}
+        <h3 class="mt-4">Edit Existing Organization</h3>
+        <input type="hidden" name="organization_id" id="organizationIdField" value="">
+
+            <select id="organizationDropdown" class="form-control mb-3">
+            <option value="">-- Select Organization --</option>
+            {% for org in organizations %}
+                <option value="{{ org.id }}">{{ org.name }}</option>
+            {% endfor %}
+        </select>
+
+
+         <div class="form-group">
+            {{ form.name.label_tag }}
+            <!-- Add an id attribute to the rendered form.name input -->
+            <input type="text" name="{{ form.name.name }}" id="orgNameInput" value="{{ form.name.value|default:'' }}" class="form-control">
+        </div>
+        <script>
+            document.getElementById('organizationDropdown').addEventListener('change', function() {
+            const orgId = this.value;
+            document.getElementById('organizationIdField').value = orgId;
+
+            if (orgId) {
+            fetch(`/OTRisk/get_organization_details/${orgId}`)
+            .then(response => response.json())
+            .then(data => {
+                // Populate form fields with the received data
+                document.getElementById('orgNameInput').value = data.name || '';
+                document.getElementById('id_address').value = data.address || '';
+                document.getElementById('id_address2').value = data.address2 || '';
+                document.getElementById('id_city').value = data.city || '';
+                document.getElementById('id_state').value = data.state || '';
+                document.getElementById('id_zip').value = data.zip || '';
+                document.getElementById('editCountrySelector').value = data.country || '';
+                document.getElementById('id_max_users').value = data.max_users || '';
+                document.getElementById('id_subscription_status').value = data.subscription_status || '';
+                document.getElementById('id_subscription_start').value = data.subscription_start || '';
+                document.getElementById('id_subscription_end').value = data.subscription_end || '';
+            });
+            }
+            });
+
+        </script>
+        <div class="form-group">
+            {{ form.address.label_tag }} {{ form.address }}
+        </div>
+        <div class="form-group">
+            {{ form.address2.label_tag }} {{ form.address2 }}
+        </div>
+        <div class="form-group">
+            {{ form.city.label_tag }} {{ form.city }}
+        </div>
+        <div class="form-group">
+            {{ form.state.label_tag }} {{ form.state }}
+        </div>
+        <div class="form-group">
+            {{ form.zip.label_tag }} {{ form.zip }}
+        </div>
+        <div class="form-group">
+            <label for="editCountrySelector">Country</label>
+                <select name="country" id="editCountrySelector" class="form-control"></select>
+
+            </div>
+            <div class="form-group">
+                {{ form.max_users.label_tag }} {{ form.max_users }}
+            </div>
+        <div class="form-group">
+            {{ form.subscription_status.label_tag }} {{ form.subscription_status }}
+        </div>
+        <div class="form-group">
+            {{ form.subscription_start.label_tag }} {{ form.subscription_start }}
+        </div>
+        <div class="form-group">
+            {{ form.subscription_end.label_tag }} {{ form.subscription_end }}
+        </div>
+
+        <button type="submit" class="btn btn-primary">Save Organization</button>
+</form>
+    </div>
+    <div class="col-md-2" style="background-color: white">
+
+
+
+    </div>
+    <div class="col-md-3">
+
+
+
+<h3 class="mt-4">Add New Organization</h3>
+
+<form method="post" class="mt-4" id="addOrganizationForm">
+    {% csrf_token %}
+    <!-- The fields are the same as above so we can reuse them. -->
+
+    <div class="form-group">
+        {{ form.name.label_tag }} {{ form.name }}
+    </div>
+    <div class="form-group">
+        {{ form.address.label_tag }} {{ form.address }}
+    </div>
+    <div class="form-group">
+        {{ form.address2.label_tag }} {{ form.address2 }}
+    </div>
+    <div class="form-group">
+        {{ form.city.label_tag }} {{ form.city }}
+    </div>
+    <div class="form-group">
+        {{ form.state.label_tag }} {{ form.state }}
+    </div>
+    <div class="form-group">
+        {{ form.zip.label_tag }} {{ form.zip }}
+    </div>
+        <div class="form-group">
+            <label for="addCountrySelector">Country</label>
+                <select name="country" id="addCountrySelector" class="form-control"></select>
+
+            </div>
+    <div class="form-group">
+        {{ form.max_users.label_tag }} {{ form.max_users }}
+    </div>
+    <div class="form-group">
+        {{ form.subscription_status.label_tag }} {{ form.subscription_status }}
+    </div>
+        <div class="form-group">
+            {{ form.subscription_start.label_tag }} {{ form.subscription_start }}
+        </div>
+        <div class="form-group">
+            {{ form.subscription_end.label_tag }} {{ form.subscription_end }}
+        </div>
+
+
+    <button type="submit" class="btn btn-primary">Add New Organization</button>
+</form>
+    </div>
+    <div class="col-md-1"></div>
+    <div class="col-md-1"></div>
+</div>
+
+
+
+
+
+
+<script>
+    fetch('https://restcountries.com/v3.1/all')
+    .then(response => response.json())
+    .then(data => {
+        // Sort the countries alphabetically
+        data.sort((a, b) => a.name.common.localeCompare(b.name.common));
+
+        const populateDropdown = (selector) => {
+            // Add a blank option as the default
+            $(selector).append(new Option('', ''));
+
+            // Populate the dropdown
+            data.forEach(country => {
+                const countryName = country.name.common;
+                $(selector).append(new Option(countryName, countryName));
+            });
+
+            // Initialize select2
+            $(selector).select2({
+                placeholder: "Select a country", // This will display the placeholder text
+                allowClear: true // This allows users to clear the selected value
+            });
+        };
+
+        // Populate both dropdowns
+        populateDropdown('#editCountrySelector');
+        populateDropdown('#addCountrySelector');
+    });
+
+
+    $(function() {
+        $("#id_subscription_start, #id_subscription_end").datepicker({
+            dateFormat: 'yy-mm-dd', // Date format string. 'yy' represents the year as a two-digit number.
+            changeMonth: true,
+            changeYear: true,
+        });
+    });
+</script>
+
+
+{% endblock %}
+
+

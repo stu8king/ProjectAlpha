@@ -3,7 +3,7 @@
 <html>
 <head>
     <title>iOTa</title>
-
+    <link rel="icon" href="{% static 'images/iota - white 1.png' %}" type="image/x-icon">
 
 
     <!-- Bootstrap CSS -->
@@ -11,24 +11,34 @@
 
     <!-- Bootstrap Select CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.1/css/bootstrap-select.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <!-- Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.1/font/bootstrap-icons.css" rel="stylesheet">
 
     <!-- jQuery -->
-        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <!-- Bootstrap JS -->
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.bundle.min.js"></script>
+    <script src="{% static 'bootstrap/dist/js/bootstrap.bundle.min.js' %}"></script>
 
-    <!-- Bootstrap Select JS -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.1/js/bootstrap-select.min.js"></script>
+    <script src="{% static 'anychart/dist/js/anychart-bundle.min.js' %}"></script>
+    <script src="{% static 'anychart/dist/js/anychart-heatmap.min.js' %}"></script>
+    <script src="{% static 'anychart/dist/js/anychart-sunburst.min.js' %}"></script>
+    <script src="{% static 'anychart/dist/js/anychart-pie.min.js' %}"></script>
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-beta.1/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-beta.1/dist/js/select2.min.js"></script>
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.0/themes/base/jquery-ui.css">
+    <script src="https://code.jquery.com/ui/1.13.0/jquery-ui.js"></script>
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.4/css/jquery.dataTables.css">
 
+    <!-- jQuery -->
+    <script type="text/javascript" charset="utf8" src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-    <script src="https://d3js.org/d3.v7.min.js"></script>
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.3/css/jquery.dataTables.css">
-    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.js"></script>
-
+    <!-- DataTables JS -->
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.4/js/jquery.dataTables.js"></script>
 
 
 
@@ -36,16 +46,37 @@
      {% bootstrap_css %}
      {% bootstrap_javascript %}
     <style>
+        .no-gap {
+            padding-left: 2px;
+            padding-right: 2px;
+            margin-bottom: 2px;
+        }
+
+        #sunburstcontainer {
+        width: 100%;
+        height: 100%;
+        border: 1px solid #ccc; /* border color */
+        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1); /* shadow effect */
+        border-radius: 4px; /* rounded corners (optional) */
+    }
+        .doughnut_container {
+        width: 100%;
+        height: 100%;
+        border: 1px solid #ccc; /* border color */
+        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1); /* shadow effect */
+        border-radius: 4px; /* rounded corners (optional) */
+    }
+
        .navbar-scroll .nav-link,
         .navbar-scroll .navbar-toggler-icon,
         .navbar-scroll .navbar-brand {
-          color: #ffffff;
+          color: #000000;
         }
 
         /* Color of the navbar BEFORE scroll */
         .navbar-scroll {
-          background-color: #000000;
-            text-decoration-color: #FFFFFF;
+          background-color: #ffffff;
+            text-decoration-color: #000000;
         }
 
 
@@ -72,13 +103,40 @@
      .small-font {
         font-size: 0.8rem; /* adjust as needed */
    }
+
+         .stat-card {
+        background-color: lightgrey;
+    }
+    .inner-card {
+        background-color: white;
+        border-radius: 10px;
+        margin: 10px 10px 20px 10px;
+        height: 70%;
+    }
+    .card-title-light {
+        font-weight: lighter;
+    }
+
+            .card-style {
+            background-color: #fff;
+            border-radius: 5px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Shadow effect */
+            transition: all 0.3s; /* Transition effect */
+        }
+
+        .card-style:hover {
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); /* Bigger shadow effect when hovering */
+            transform: translateY(-5px); /* Small upward shift when hovering */
+        }
+
     </style>
 </head>
 <body>
-<nav class="navbar navbar-expand-lg navbar-scroll fixed-top shadow-0 border-bottom border-dark rounded">
+<nav class="navbar navbar-expand-lg navbar-scroll shadow-0 border-bottom border-dark rounded">
   <div class="container-fluid d-flex justify-content-between">
-   <a class="navbar-brand" href="{% url 'OTRisk:dashboardhome' %}"><img src="/static/images/logo1-2.jpg" style="height: 140px; width: 140px" class="navbar-logo" alt="">  </a>
-      <h4 class="my-auto text-center flex-grow-1"><font color="white"></font></h4>
+   <a class="navbar-brand" href="{% url 'OTRisk:dashboardhome' %}"><img src="{% static 'images/iota - white 1.png' %}" style="height: 140px; width: 140px" class="navbar-logo" alt="">  </a>
+      <h4 class="my-auto text-center flex-grow-1">{% block nav_title %}Default Title{% endblock %}</h4>
 
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
       <ul class="navbar-nav ms-auto">
@@ -111,10 +169,11 @@
               <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
                   <li><a  class="dropdown-item" href="{% url 'OTRisk:add_scenario' %}">Scenario Manager</a></li>
                   <li><a  class="dropdown-item" href="{% url 'OTRisk:add_consequence' %}">Consequence Manager</a></li>
-                  <li><a  class="dropdown-item" href="{% url 'OTRisk:admin_users' %}">Admin Users</a></li>
+
                   {% if user.is_staff %}
                     <!-- Links visible only to superusers -->
                     <li><a class="dropdown-item" href="{% url 'OTRisk:user_admin' %}">User Administration</a></li>
+                      <li><a class="dropdown-item" href="{% url 'OTRisk:manage_organization' %}">Add Organization</a></li>
                       <li><a class="dropdown-item" href="{% url 'OTRisk:execute_sql' %}">Execute SQL</a></li>
                     {% endif %}
 
@@ -128,8 +187,17 @@
         </li>
 
           <li class="nav-item">
-            <a class="nav-link" href="{% url 'logout' %}">
+            <a class="nav-link" href="#" onclick="confirmLogout()">
                 <i class="bi bi-box-arrow-right"></i> Logout
+                <script>
+                    function confirmLogout() {
+                        var userResponse = confirm("Are you sure you want to logout?");
+                        if (userResponse) {
+                            window.location.href = "{% url 'logout' %}";
+                        }
+                    }
+
+                </script>
             </a>
         </li>
       </ul>
