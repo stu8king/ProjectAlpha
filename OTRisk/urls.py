@@ -107,6 +107,10 @@ urlpatterns = [
     path('manage_organization/', views.manage_organization, name='manage_organization'),
     path('get_organization_details/<int:org_id>/', views.get_organization_details, name='get_organization_details'),
     path('get_cve_details/', views.get_cve_details, name='get_cve_details'),
+    path('pha_reports/<int:cyber_pha_header_id>/', views.pha_reports, name='pha_reports'),
+    path('qraw_reports/<int:qraw_id>/', views.qraw_reports, name='qraw_reports'),
+    path('get_scenario_report_details/', views.get_scenario_report_details, name='get_scenario_report_details'),
+    path('get_qraw_scenario_report_details/', views.get_qraw_scenario_report_details, name='get_qraw_scenario_report_details'),
 
 
 ]

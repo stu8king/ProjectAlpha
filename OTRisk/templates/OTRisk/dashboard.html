@@ -106,70 +106,65 @@
     </style>
 </head>
 <body>
+
+
+
 <nav class="navbar navbar-expand-lg navbar-scroll shadow-0 border-bottom border-dark rounded">
   <div class="container-fluid d-flex justify-content-between">
-   <a class="navbar-brand" href="{% url 'OTRisk:dashboardhome' %}"><img src="{% static 'images/iota - white 1.png' %}" style="height: 140px; width: 140px" class="navbar-logo" alt="">  </a>
-      <h4 class="my-auto text-center flex-grow-1">Dashboard</h4>
+   <a class="navbar-brand" href="{% url 'OTRisk:dashboardhome' %}"><img src="{% static 'images/iota - white 1.png' %}" style="height: 140px; width: 140px" class="navbar-logo" alt="">   </a>
+      <h6 class="my-auto text-center flex-grow-1">CyberPHA</h6>
 
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
       <ul class="navbar-nav ms-auto">
 
         <li class="nav-item">
-          <a class="nav-link" href="{% url 'OTRisk:qraw' %}"><i class="bi bi-journal-text"></i> Risk Assessment</a>
+          <a class="nav-link"  style="font-size: 12px;" href="{% url 'OTRisk:qraw' %}"><i class="bi bi-journal-text"></i> Risk Assessment</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="{% url 'OTRisk:iotaphamanager' %}"><i class="bi bi-journal-text"></i> CyberPHA</a>
+          <a class="nav-link" style="font-size: 12px;" href="{% url 'OTRisk:iotaphamanager' %}"><i class="bi bi-journal-text"></i> CyberPHA</a>
         </li>
           <li class="nav-item">
-          <a class="nav-link" href="{% url 'OTRisk:ra_actions_view' %}" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Actions</a>
+          <a class="nav-link" style="font-size: 12px;" href="{% url 'OTRisk:ra_actions_view' %}" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Actions</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="{% url 'OTRisk:risk_register' %}" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Risk Register</a>
+          <a class="nav-link" style="font-size: 12px;" href="{% url 'OTRisk:risk_register' %}" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Risk Register</a>
         </li>
-        <li class="nav-item dropdown">
+        <li class="nav-item dropdown" style="font-size: 12px;">
             <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                 <i class="bi-file-earmark-easel"></i> Reports
               </a>
               <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                  <li><a class="dropdown-item" href="{% url 'OTRisk:reports' %}" >QRAW Reports</a></li>
-                  <li><a class="dropdown-item" href="{% url 'OTRisk:reports_pha' %}">CyberPHA Reports</a></li>
+                  <li><a class="dropdown-item" href="{% url 'OTRisk:reports' %}" style="font-size: 12px;">QRAW Reports</a></li>
+                  <li><a class="dropdown-item" href="{% url 'OTRisk:reports_pha' %}" style="font-size: 12px;">CyberPHA Reports</a></li>
+                  <li><a class="dropdown-item" href="{% url 'OTRisk:pha_reports'  cyber_pha_header_id=85 %}">NewReports</a></li>
               </ul>
         </li>
         <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="font-size: 12px;">
                 <i class="bi bi-diagram-3"></i> Admin
               </a>
               <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                  <li><a  class="dropdown-item" href="{% url 'OTRisk:add_scenario' %}">Scenario Manager</a></li>
-                  <li><a  class="dropdown-item" href="{% url 'OTRisk:add_consequence' %}">Consequence Manager</a></li>
+                  <li><a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:add_scenario' %}">Scenario Manager</a></li>
+                  <li><a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:add_consequence' %}">Consequence Manager</a></li>
+                  <li><a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:admin_users' %}">Admin Users</a></li>
                   {% if user.is_staff %}
                     <!-- Links visible only to superusers -->
-                    <li><a class="dropdown-item" href="{% url 'OTRisk:user_admin' %}">User Administration</a></li>
-                      <li><a class="dropdown-item" href="{% url 'OTRisk:manage_organization' %}">Organization Management</a></li>
-                      <li><a class="dropdown-item" href="{% url 'OTRisk:execute_sql' %}">Execute SQL</a></li>
+                    <li><a class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:user_admin' %}">User Administration</a></li>
+                      <li><a class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:execute_sql' %}">Execute SQL</a></li>
                     {% endif %}
 
               </ul>
 
         </li>
         <li class="nav-item">
-            <a class="nav-link" href="{% url 'accounts:profile' %}">
+            <a class="nav-link" href="{% url 'accounts:profile' %}" style="font-size: 12px;">
                 <i class="bi bi-person-fill"></i> {{ user.first_name }} {{ user.last_name }} | {{ user.userprofile.organization.name }}
             </a>
         </li>
 
           <li class="nav-item">
-            <a class="nav-link" href="#" onclick="confirmLogout()">
+            <a class="nav-link" href="{% url 'logout' %}">
                 <i class="bi bi-box-arrow-right"></i> Logout
-                <script>
-                    function confirmLogout() {
-                        var userResponse = confirm("Are you sure you want to logout?");
-                        if (userResponse) {
-                            window.location.href = "{% url 'logout' %}";
-                        }
-                    }
-
-                </script>
             </a>
         </li>
       </ul>
@@ -188,7 +183,7 @@
 
 <div class="row" >
     <div class="col-md-1" style="background-color: white"></div>
-    <div class="col-md-1" style="background-color: white"></div>
+
     <div class="col-md-5 ">
         <div id="heatmapContainer" style="width:100%; height:400px;"></div>
         <script>
@@ -284,10 +279,11 @@
                 <div class="card shadow-lg inner-card">
                     <div class="card-body">
                         <div class="row">
-                            <h6 class="card-title text-center text-black card-title-light">Open Risk Exposure (CyberPHA):</h6>
+                            <h6 class="card-title text-center text-black card-title-light" style="font-size: 12px;">Open Risk Exposure (CyberPHA):</h6>
+
                         </div>
                         <div class="row">
-                            <h2 class="card-text text-center text-black">{{ formatted_sle }}</h2>
+                            <h5 class="card-text text-center text-black">{{ formatted_sle }}</h5>
                         </div>
                     </div>
                 </div>
@@ -296,22 +292,10 @@
                 <div class="card shadow-lg inner-card">
                     <div class="card-body">
                         <div class="row">
-                            <h6 class="card-title text-center text-black card-title-light">Open Risk Exposure (QRAW):</h6>
+                            <h6 class="card-title text-center text-black card-title-light" style="font-size: 12px;">Open Risk Exposure (QRAW):</h6>
                         </div>
                         <div class="row">
-                            <h2 class="card-text text-center text-black">{{ formatted_scenario_cost }}</h2>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3 ">
-               <div class="card shadow-lg inner-card">
-                    <div class="card-body">
-                        <div class="row">
-                            <h6 class="card-title text-center text-black card-title-light">Open Action Items:</h6>
-                        </div>
-                        <div class="row">
-                            <h2 class="card-text text-center text-black">{{ ra_actions_records_count }}</h2>
+                            <h5 class="card-text text-center text-black">{{ formatted_scenario_cost }}</h5>
                         </div>
                     </div>
                 </div>
@@ -320,10 +304,22 @@
                <div class="card shadow-lg inner-card">
                     <div class="card-body">
                         <div class="row">
-                            <h6 class="card-title text-center text-black card-title-light">Open Risk Assessments:</h6>
+                            <h6 class="card-title text-center text-black card-title-light" style="font-size: 12px;">Open Action Items:</h6>
                         </div>
                         <div class="row">
-                            <h2 class="card-text text-center text-black">{{ open_raws_count }}</h2>
+                            <h5 class="card-text text-center text-black">{{ ra_actions_records_count }}</h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 ">
+               <div class="card shadow-lg inner-card">
+                    <div class="card-body">
+                        <div class="row">
+                            <h6 class="card-title text-center text-black card-title-light" style="font-size: 12px;">Open Risk Assessments:</h6>
+                        </div>
+                        <div class="row">
+                            <h5 class="card-text text-center text-black">{{ open_raws_count }}</h5>
                         </div>
                     </div>
                 </div>
@@ -334,10 +330,10 @@
                 <div class="card shadow-lg" style="background-color: white; border-radius: 10px; margin: 10px 10px 20px 10px; height: 70%;">
             <div class="card-body">
                 <div class="row">
-                    <h6 class="card-title text-center text-black" style="font-weight: lighter;">Total Risk Assessments:</h6>
+                   <h6 class="card-title text-center text-black card-title-light" style="font-size: 12px;">Total Risk Assessments:</h6>
                 </div>
                 <div class="row">
-                    <h2 class="card-text text-center text-black">{{ raw_count }}</h2>
+                    <h5 class="card-text text-center text-black">{{ raw_count }}</h5>
                 </div>
                 <div class="row">
                     <h5 class="text-center"></h5>
@@ -349,25 +345,10 @@
                 <div class="card shadow-lg" style="background-color: white; border-radius: 10px; margin: 10px 10px 20px 10px; height: 70%;">
             <div class="card-body">
                 <div class="row">
-                    <h6 class="card-title text-center text-black" style="font-weight: lighter;">Risk Scenarios:</h6>
+                    <h6 class="card-title text-center text-black card-title-light" style="font-size: 12px;">Risk Scenarios:</h6>
                 </div>
                 <div class="row">
-                    <h2 class="card-text text-center text-black">{{ scenarios_count }}</h2>
-                </div>
-                <div class="row">
-                    <h5 class="text-center"></h5>
-                </div>
-            </div>
-        </div>
-            </div>
-            <div class="col-md-3 ">
-               <div class="card shadow-lg" style="background-color: white; border-radius: 10px; margin: 10px 10px 20px 10px; height: 70%;">
-            <div class="card-body">
-                <div class="row">
-                    <h6 class="card-title text-center text-black" style="font-weight: lighter;">Total CyberPHAs:</h6>
-                </div>
-                <div class="row">
-                    <h2 class="card-text text-center text-black">{{ cyberpha_count }}</h2>
+                    <h5 class="card-text text-center text-black">{{ scenarios_count }}</h5>
                 </div>
                 <div class="row">
                     <h5 class="text-center"></h5>
@@ -379,10 +360,25 @@
                <div class="card shadow-lg" style="background-color: white; border-radius: 10px; margin: 10px 10px 20px 10px; height: 70%;">
             <div class="card-body">
                 <div class="row">
-                    <h6 class="card-title text-center text-black" style="font-weight: lighter;">CyberPHA Scenarios:</h6>
+                    <h6 class="card-title text-center text-black card-title-light" style="font-size: 12px;">Total CyberPHAs:</h6>
                 </div>
                 <div class="row">
-                    <h2 class="card-text text-center text-black">{{ cyberpha_scenario_count }}</h2>
+                    <h5 class="card-text text-center text-black">{{ cyberpha_count }}</h5>
+                </div>
+                <div class="row">
+                    <h5 class="text-center"></h5>
+                </div>
+            </div>
+        </div>
+            </div>
+            <div class="col-md-3 ">
+               <div class="card shadow-lg" style="background-color: white; border-radius: 10px; margin: 10px 10px 20px 10px; height: 70%;">
+            <div class="card-body">
+                <div class="row">
+                    <h6 class="card-title text-center text-black card-title-light" style="font-size: 12px;">CyberPHA Scenarios:</h6>
+                </div>
+                <div class="row">
+                    <h5 class="card-text text-center text-black">{{ cyberpha_scenario_count }}</h5>
                 </div>
                 <div class="row">
                     <h5 class="text-center"></h5>
@@ -392,7 +388,7 @@
             </div>
         </div>
     </div>
-    <div class="col-md-4 ">
+    <div class="col-md-5 ">
         <div id="sunburstcontainer" style="width:100%; height:100%;"></div>
 
         <script>
@@ -425,125 +421,127 @@
 
 <div class="row" style="height:400px">
     <div class="col-md-1 "  style="background-color: white"></div>
-    <div class="col-md-1 " ></div>
-    <div class="col-md-3 no-gap">
+    <div class="col-md-10"  style="background-color: white">
+        <div class="row" style="height:300px">
+            <div class="col-md-4 no-gap">
 
-        <div id="raw_bia_container" style="width:100%; height:100%;" class="doughnut_container"></div>
-        <script>
-            anychart.onDocumentReady(function() {
-                var pie_data = {{ bia_summary|safe }};
-                let chart_data = [];
-                for (let [key, value] of Object.entries(pie_data)) {
-                    chart_data.push({x: key, value: value});
-                }
+                <div id="raw_bia_container" style="width:100%; height:100%;" class="doughnut_container"></div>
+                <script>
+                    anychart.onDocumentReady(function() {
+                        var pie_data = {{ bia_summary|safe }};
+                        let chart_data = [];
+                        for (let [key, value] of Object.entries(pie_data)) {
+                            chart_data.push({x: key, value: value});
+                        }
 
-                var chart = anychart.pie(chart_data);
-                var colors = {
-                    'Low': 'green',
-                    'Low/Medium': '#ADFF2F',  // Green-yellow
-                    'Medium': '#ffcc00',
-                    'Medium/High': '#FFA500',  // Orange
-                    'High': '#c7471e',
-                    'Very High': '#ef4710'
-                };
-                var chartColors = [];
-                for (let item of chart_data) {
-                    chartColors.push(colors[item.x]);
-                }
+                        var chart = anychart.pie(chart_data);
+                        var colors = {
+                            'Low': 'green',
+                            'Low/Medium': '#ADFF2F',  // Green-yellow
+                            'Medium': '#ffcc00',
+                            'Medium/High': '#FFA500',  // Orange
+                            'High': '#c7471e',
+                            'Very High': '#ef4710'
+                        };
+                        var chartColors = [];
+                        for (let item of chart_data) {
+                            chartColors.push(colors[item.x]);
+                        }
 
-                chart.palette(chartColors);
-                chart.labels().format("{%Value}");
-                 chart.labels().fontSize(16);
-                chart.title("QRAW BIA Summary");
-                chart.innerRadius("30%");
-                var credits = chart.credits();
-                credits.enabled(false);
-                chart.container("raw_bia_container");
-                chart.draw();
+                        chart.palette(chartColors);
+                        chart.labels().format("{%Value}");
+                         chart.labels().fontSize(16);
+                        chart.title("QRAW BIA Summary");
+                        chart.innerRadius("30%");
+                        var credits = chart.credits();
+                        credits.enabled(false);
+                        chart.container("raw_bia_container");
+                        chart.draw();
 
-            });
-        </script>
+                    });
+                </script>
 
+            </div>
+            <div class="col-md-4 no-gap">
+
+                <div id="residual_risk_container" style="width:100%; height:100%;" class="doughnut_container"></div>
+                <script>
+                    anychart.onDocumentReady(function() {
+                        var pie_data = {{ pha_risk_summary|safe }};
+                        let chart_data = [];
+                        for (let [key, value] of Object.entries(pie_data)) {
+                            chart_data.push({x: key, value: value});
+                        }
+
+                        var chart = anychart.pie(chart_data);
+                        var colors = {
+                            'Low': 'green',
+                            'Low/Medium': '#ADFF2F',  // Green-yellow
+                            'Medium': '#ffcc00',
+                            'Medium/High': '#FFA500',  // Orange
+                            'High': '#c7471e',
+                            'Very High': '#ef4710'
+                        };
+                        var chartColors = [];
+                        for (let item of chart_data) {
+                            chartColors.push(colors[item.x]);
+                        }
+
+                        chart.palette(chartColors);
+                        chart.labels().format("{%Value}");
+                         chart.labels().fontSize(16);
+                        chart.title("CyberPHA Residual Risks");
+                        chart.innerRadius("30%");
+                        var credits = chart.credits();
+                        credits.enabled(false);
+                        chart.container("residual_risk_container");
+                        chart.draw();
+
+                    });
+                </script>
+
+            </div>
+            <div class="col-md-4 no-gap">
+
+                <div id="pha_bia_container" style="width:100%; height:100%;" class="doughnut_container"></div>
+                <script>
+                    anychart.onDocumentReady(function() {
+                        var pie_data = {{ pha_bia_summary|safe }};
+                        let chart_data = [];
+                        for (let [key, value] of Object.entries(pie_data)) {
+                            chart_data.push({x: key, value: value});
+                        }
+
+                        var chart = anychart.pie(chart_data);
+                        var colors = {
+                            'Low': 'green',
+                            'Low/Medium': '#ADFF2F',  // Green-yellow
+                            'Medium': '#ffcc00',
+                            'Medium/High': '#FFA500',  // Orange
+                            'High': '#c7471e',
+                            'Very High': '#ef4710'
+                        };
+                        var chartColors = [];
+                        for (let item of chart_data) {
+                            chartColors.push(colors[item.x]);
+                        }
+
+                        chart.palette(chartColors);
+                        chart.labels().format("{%Value}");
+                         chart.labels().fontSize(16);
+                        chart.title("CyberPHA BIA Summary");
+                        chart.innerRadius("30%");
+                        var credits = chart.credits();
+                        credits.enabled(false);
+                        chart.container("pha_bia_container");
+                        chart.draw();
+
+                    });
+                </script>
+
+            </div>
+        </div>
     </div>
-    <div class="col-md-3 no-gap">
-
-        <div id="residual_risk_container" style="width:100%; height:100%;" class="doughnut_container"></div>
-        <script>
-            anychart.onDocumentReady(function() {
-                var pie_data = {{ pha_risk_summary|safe }};
-                let chart_data = [];
-                for (let [key, value] of Object.entries(pie_data)) {
-                    chart_data.push({x: key, value: value});
-                }
-
-                var chart = anychart.pie(chart_data);
-                var colors = {
-                    'Low': 'green',
-                    'Low/Medium': '#ADFF2F',  // Green-yellow
-                    'Medium': '#ffcc00',
-                    'Medium/High': '#FFA500',  // Orange
-                    'High': '#c7471e',
-                    'Very High': '#ef4710'
-                };
-                var chartColors = [];
-                for (let item of chart_data) {
-                    chartColors.push(colors[item.x]);
-                }
-
-                chart.palette(chartColors);
-                chart.labels().format("{%Value}");
-                 chart.labels().fontSize(16);
-                chart.title("CyberPHA Residual Risks");
-                chart.innerRadius("30%");
-                var credits = chart.credits();
-                credits.enabled(false);
-                chart.container("residual_risk_container");
-                chart.draw();
-
-            });
-        </script>
-
-    </div>
-    <div class="col-md-3 no-gap">
-
-        <div id="pha_bia_container" style="width:100%; height:100%;" class="doughnut_container"></div>
-        <script>
-            anychart.onDocumentReady(function() {
-                var pie_data = {{ pha_bia_summary|safe }};
-                let chart_data = [];
-                for (let [key, value] of Object.entries(pie_data)) {
-                    chart_data.push({x: key, value: value});
-                }
-
-                var chart = anychart.pie(chart_data);
-                var colors = {
-                    'Low': 'green',
-                    'Low/Medium': '#ADFF2F',  // Green-yellow
-                    'Medium': '#ffcc00',
-                    'Medium/High': '#FFA500',  // Orange
-                    'High': '#c7471e',
-                    'Very High': '#ef4710'
-                };
-                var chartColors = [];
-                for (let item of chart_data) {
-                    chartColors.push(colors[item.x]);
-                }
-
-                chart.palette(chartColors);
-                chart.labels().format("{%Value}");
-                 chart.labels().fontSize(16);
-                chart.title("CyberPHA BIA Summary");
-                chart.innerRadius("30%");
-                var credits = chart.credits();
-                credits.enabled(false);
-                chart.container("pha_bia_container");
-                chart.draw();
-
-            });
-        </script>
-
-    </div>
-
     <div class="col-md-1 "  style="background-color: white"></div>
 </div>
 

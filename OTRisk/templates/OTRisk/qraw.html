@@ -3,7 +3,8 @@
 <!--suppress ALL -->
 <html lang="">
 <head>
-
+<title>iOTa</title>
+    <link rel="icon" href="{% static 'images/iota - white 1.png' %}" type="image/x-icon">
 <!-- Bootstrap CSS -->
 <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css">
 
@@ -187,6 +188,10 @@ color: white !important;
     cursor: pointer;
 }
 
+.body {
+
+    font-size: 10px;
+}
     </style>
 
 
@@ -331,52 +336,52 @@ color: white !important;
 
 <nav class="navbar navbar-expand-lg navbar-scroll shadow-0 border-bottom border-dark rounded">
   <div class="container-fluid d-flex justify-content-between">
-   <a class="navbar-brand" href="{% url 'OTRisk:dashboardhome' %}"><img src="{% static 'images/iota - white 1.png' %}"style="height: 140px; width: 140px" class="navbar-logo" alt="">  </a>
-      <h4 class="my-auto text-center flex-grow-1">Quick Risk Assessment Worksheet</font></h4>
+   <a class="navbar-brand" href="{% url 'OTRisk:dashboardhome' %}"><img src="{% static 'images/iota - white 1.png' %}" style="height: 140px; width: 140px" class="navbar-logo" alt="">   </a>
+      <h6 class="my-auto text-center flex-grow-1">Quick Risk Assessment Worksheet (QRAW)</h6>
 
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
       <ul class="navbar-nav ms-auto">
 
         <li class="nav-item">
-          <a class="nav-link" href="{% url 'OTRisk:qraw' %}"><i class="bi bi-journal-text"></i> Risk Assessment</a>
+          <a class="nav-link"  style="font-size: 12px;" href="{% url 'OTRisk:qraw' %}"><i class="bi bi-journal-text"></i> Risk Assessment</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="{% url 'OTRisk:iotaphamanager' %}"><i class="bi bi-journal-text"></i> CyberPHA</a>
+          <a class="nav-link" style="font-size: 12px;" href="{% url 'OTRisk:iotaphamanager' %}"><i class="bi bi-journal-text"></i> CyberPHA</a>
         </li>
           <li class="nav-item">
-          <a class="nav-link" href="{% url 'OTRisk:ra_actions_view' %}" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Actions</a>
+          <a class="nav-link" style="font-size: 12px;" href="{% url 'OTRisk:ra_actions_view' %}" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Actions</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="{% url 'OTRisk:risk_register' %}" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Risk Register</a>
+          <a class="nav-link" style="font-size: 12px;" href="{% url 'OTRisk:risk_register' %}" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Risk Register</a>
         </li>
-        <li class="nav-item dropdown">
+        <li class="nav-item dropdown" style="font-size: 12px;">
             <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                 <i class="bi-file-earmark-easel"></i> Reports
               </a>
               <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                  <li><a class="dropdown-item" href="{% url 'OTRisk:reports' %}" >QRAW Reports</a></li>
-                  <li><a class="dropdown-item" href="{% url 'OTRisk:reports_pha' %}">CyberPHA Reports</a></li>
+                  <li><a class="dropdown-item" href="{% url 'OTRisk:reports' %}" style="font-size: 12px;">QRAW Reports</a></li>
+                  <li><a class="dropdown-item" href="{% url 'OTRisk:reports_pha' %}" style="font-size: 12px;">CyberPHA Reports</a></li>
               </ul>
         </li>
         <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="font-size: 12px;">
                 <i class="bi bi-diagram-3"></i> Admin
               </a>
               <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                  <li><a  class="dropdown-item" href="{% url 'OTRisk:add_scenario' %}">Scenario Manager</a></li>
-                  <li><a  class="dropdown-item" href="{% url 'OTRisk:add_consequence' %}">Consequence Manager</a></li>
-                  <li><a  class="dropdown-item" href="{% url 'OTRisk:admin_users' %}">Admin Users</a></li>
+                  <li><a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:add_scenario' %}">Scenario Manager</a></li>
+                  <li><a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:add_consequence' %}">Consequence Manager</a></li>
+                  <li><a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:admin_users' %}">Admin Users</a></li>
                   {% if user.is_staff %}
                     <!-- Links visible only to superusers -->
-                    <li><a class="dropdown-item" href="{% url 'OTRisk:user_admin' %}">User Administration</a></li>
-                      <li><a class="dropdown-item" href="{% url 'OTRisk:execute_sql' %}">Execute SQL</a></li>
+                    <li><a class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:user_admin' %}">User Administration</a></li>
+                      <li><a class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:execute_sql' %}">Execute SQL</a></li>
                     {% endif %}
 
               </ul>
 
         </li>
         <li class="nav-item">
-            <a class="nav-link" href="{% url 'accounts:profile' %}">
+            <a class="nav-link" href="{% url 'accounts:profile' %}" style="font-size: 12px;">
                 <i class="bi bi-person-fill"></i> {{ user.first_name }} {{ user.last_name }} | {{ user.userprofile.organization.name }}
             </a>
         </li>
@@ -403,7 +408,7 @@ color: white !important;
 
     <div class="col-md-10 bg-light">
 
-        <table id="rawtable" class="table table-striped table-bordered small-font">
+        <table id="rawtable" class="table table-striped table-bordered" style="font-size: 10px">
         <thead>
             <tr>
                 <th></th>
@@ -415,6 +420,7 @@ color: white !important;
                 <th>Industry</th>
                 <th>Business Unit</th>
                 <th>Leader</th>
+                <th></th>
                 <!-- Add more <th> elements for each field in the RAWorksheet model -->
             </tr>
         </thead>
@@ -443,6 +449,7 @@ color: white !important;
                     <td>{{ raws.industry }}</td>
                     <td>{{ raws.BusinessUnit }}</td>
                     <td>{{ raws.AssessorName }}</td>
+                    <td><a class="dropdown-item" href="{% url 'OTRisk:qraw_reports'  qraw_id=raws.ID  %}">Report</a></td>
                 </tr>
             {% endfor %}
         </tbody>
@@ -465,17 +472,17 @@ color: white !important;
 <div class="row">
     <div class="col-md-1 bg-white"></div>
     <div class="col-md-10 ">
-     <div class="row" style="background-color: darkgray; height: 10px"></div>
+     <div class="row" style="height: 10px"></div>
    </div>
     <div class="col-md-1 bg-white"></div>
-</div> <!-- dark grey stripe -->
+</div> <!-- white stripe -->
 <div class="row">
     <div class="col-md-1 bg-white"></div>
-    <div class="col-md-1" style="background-color: darkgray"></div>
-    <div class="col-md-2" style="background-color: darkgray"><button class="form-control" id="addNewBtn" type="button"   data-bs-toggle="tooltip" data-bs-placement="top" title="Click this button to clear the form and enter and begin a new risk assessment"><i class="bi bi-folder-plus"></i> New</button></div>
-    <div class="col-md-2" style="background-color: darkgray"><button class="form-control" id="editBtn" type="button" data-bs-toggle="tooltip" data-bs-placement="top" title="Click this button to edit the current risk assessment and scenarios"><i class="bi bi-pencil-square"></i> Edit</button></div>
-    <div class="col-md-2" style="background-color: darkgray"><button class="form-control" type="submit" id="saveBtn" data-bs-toggle="tooltip" data-bs-placement="top" title="Click this button to save the risk assessment and scenarios" onclick="return checkRiskAssessmentRefreshVariables();" ><i class="bi bi-download"></i> Save</button></div>
-    <div class="col-md-2" style="background-color: darkgray">
+    <div class="col-md-1" ></div>
+    <div class="col-md-2" ><button class="form-control" id="addNewBtn" type="button"   data-bs-toggle="tooltip" data-bs-placement="top" title="Click this button to clear the form and enter and begin a new risk assessment"><i class="bi bi-folder-plus"></i> New</button></div>
+    <div class="col-md-2" ><button class="form-control" id="editBtn" type="button" data-bs-toggle="tooltip" data-bs-placement="top" title="Click this button to edit the current risk assessment and scenarios"><i class="bi bi-pencil-square"></i> Edit</button></div>
+    <div class="col-md-2" ><button class="form-control" type="submit" id="saveBtn" data-bs-toggle="tooltip" data-bs-placement="top" title="Click this button to save the risk assessment and scenarios" onclick="return checkRiskAssessmentRefreshVariables();" ><i class="bi bi-download"></i> Save</button></div>
+    <div class="col-md-2" >
     <button class="form-control" type="button" id="actionBtn" onclick="showRAActionsModal()"><i class="bi bi-subtract"></i> Action</button>
     </div>
 
@@ -663,17 +670,17 @@ color: white !important;
             });
 
         </script>
-    <div class="col-md-1" style="background-color: darkgray"></div>
+    <div class="col-md-1" ></div>
     <div class="col-md-1 bg-white"></div>
 
 </div>
 <div class="row">
     <div class="col-md-1 bg-white"></div>
     <div class="col-md-10 ">
-     <div class="row" style="background-color: darkgray; height: 10px"></div>
+     <div class="row" style="height: 10px"></div>
    </div>
     <div class="col-md-1 bg-white"></div>
-</div> <!-- dark grey stripe -->
+</div> <!-- white stripe -->
 <input type="hidden" name="edit_mode" id="edit_mode">
 <input type="hidden" name="scenarioCount" id="scenarioCount">
 <input type="hidden" name="hdnRawID" id="hdnRawID">
@@ -832,10 +839,10 @@ color: white !important;
 <div class="row">
     <div class="col-md-1 bg-white"></div>
     <div class="col-md-10 ">
-     <div class="row" style="background-color: darkgray; height: 10px"></div>
+     <div class="row" style="background-color: white; height: 10px"></div>
    </div>
     <div class="col-md-1 bg-white"></div>
-</div> <!-- dark grey stripe -->
+</div> <!-- white stripe -->
 
 <div class="row">
     <div class="col-md-1 bg-white"></div>
@@ -2239,10 +2246,10 @@ color: white !important;
 <div class="row">
     <div class="col-md-1 bg-white"></div>
     <div class="col-md-10 ">
-     <div class="row" style="background-color: darkgray; height: 15px"></div>
+     <div class="row" style="background-color: white; height: 15px"></div>
    </div>
     <div class="col-md-1 bg-white"></div>
-</div> <!-- dark grey stripe -->
+</div> <!-- white stripe -->
 
 <!-- table for actions -->
 <div class="row">

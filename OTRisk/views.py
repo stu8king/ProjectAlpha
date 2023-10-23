@@ -41,6 +41,7 @@ from .dashboard_views import dashboardhome
 from .pha_views import iotaphamanager, facility_risk_profile, get_headerrecord, scenario_analysis, phascenarioreport, \
     getSingleScenario, pha_report, scenario_vulnerability, add_vulnerability, get_asset_types, calculate_effectiveness, \
     generate_ppt
+from .report_views import pha_reports, get_scenario_report_details, qraw_reports, get_qraw_scenario_report_details
 from .forms import CustomScenarioForm, CustomConsequenceForm, OrganizationAdmin
 from .models.Model_Scenario import CustomScenario, CustomConsequence
 from accounts.models import Organization
@@ -663,7 +664,7 @@ def save_or_update_cyberpha(request):
             request.session['cyberPHAID'] = cyberphaid  # Set the session variable
 
         # Call the assess_cyberpha function
-        return assess_cyberpha(request)
+        return assess_cyberpha(request, cyberphaid=cyberphaid)
 
 
 def set_active_cyberpha(request):
@@ -685,14 +686,21 @@ def get_mitigation_measures(request):
 
 
 @login_required()
-def assess_cyberpha(request):
-    active_cyberpha = request.GET.get('active_cyberpha', None)
+def assess_cyberpha(request, cyberphaid=None):
+    if cyberphaid:
+        active_cyberpha = cyberphaid
+    else:
+        active_cyberpha = request.GET.get('active_cyberpha', None)
+        if active_cyberpha is None:
+            active_cyberpha = request.session.get('cyberPHAID', 0)
+
     organization_id = request.session['user_organization']
 
     try:
         pha_record = tblCyberPHAHeader.objects.get(ID=active_cyberpha)
     # if the record doesn't exist then the user is trying to access a record via manipulating the url - throw them out of the system
     except tblCyberPHAHeader.DoesNotExist:
+
         request.session.flush()
         return redirect('OTRisk:logout')
 
@@ -1011,7 +1019,7 @@ def get_scenarios(request):
     raw_id = request.GET.get('raw_id', None)
     scenarios = RAWorksheetScenario.objects.filter(RAWorksheetID=raw_id)
     scenarios_json = serializers.serialize('json', scenarios)
-    print(scenarios_json)
+
     return JsonResponse(json.loads(scenarios_json), safe=False)
 
 
@@ -1649,6 +1657,12 @@ def risk_register(request):
         'business_impact_analysis_code',  # Include the computed code in the returned data
         'snapshots'
     )
+
+    bia_data_with_id = [
+        {'x': idx + 1, 'value': item['business_impact_analysis_score'], 'id': item['ID']} for idx, item in
+        enumerate(data)
+    ]
+
     sle_sum = tblCyberPHAScenario.objects.filter(
         risk_register=True,
         CyberPHA__UserID__in=User.objects.filter(userprofile__organization_id=org_id).values_list('id', flat=True)
@@ -1711,6 +1725,7 @@ def risk_register(request):
 
     return render(request, 'risk_register.html', {
         'data': data,
+        'bia_data_with_id': bia_data_with_id,
         'heatmap_data': heatmap_data,
         'sle_sum': sle_sum['sle__sum'],
         'sle_low_sum': sle_low_sum['sle_low__sum'],
@@ -1719,7 +1734,7 @@ def risk_register(request):
 
 @login_required()
 def save_risk_data(request):
-    print(request.POST)
+
     if request.method == 'POST':
         # Get the existing record
         scenario_id = request.POST.get('scenario_id')

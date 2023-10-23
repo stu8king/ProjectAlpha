@@ -694,7 +694,7 @@ def get_asset_types(request):
 
 def generate_ppt(request):
     if request.method == "POST":
-        print("POST Called")
+
         # Extract data from POST parameters
         safety = request.POST.get('txtSafetySummary', '')
         chemical = request.POST.get('txtChemical', '')

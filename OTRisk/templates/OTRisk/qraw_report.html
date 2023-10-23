@@ -1,0 +1,584 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>iOTa</title>
+    <link rel="icon" href="{% static 'images/iota - white 1.png' %}" type="image/x-icon">
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css">
+
+    <!-- Bootstrap Select CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.1/css/bootstrap-select.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.1/font/bootstrap-icons.css" rel="stylesheet">
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+
+    <!-- jQuery library -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+    <!-- Popper JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+
+    <!-- Latest compiled JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC9z71m0_5oIR2tg4ygvOt61jCL-IgxlBI"></script>
+
+    <!-- Bootstrap JS -->
+    <script src="{% static 'bootstrap/dist/js/bootstrap.bundle.min.js' %}"></script>
+
+    <script src="{% static 'anychart/dist/js/anychart-bundle.min.js' %}"></script>
+    <script src="{% static 'anychart/dist/js/anychart-heatmap.min.js' %}"></script>
+    <script src="{% static 'anychart/dist/js/anychart-sunburst.min.js' %}"></script>
+    <script src="{% static 'anychart/dist/js/anychart-pie.min.js' %}"></script>
+    <script src="{% static 'anychart/dist/js/anychart-cartesian.min.js' %}"></script>
+    <script src="{% static 'anychart/dist/js/anychart-radar.min.js' %}"></script>
+
+
+     {% load django_bootstrap5 %}
+     {% bootstrap_css %}
+     {% bootstrap_javascript %}
+    <style>
+        .no-gap {
+            padding-left: 2px;
+            padding-right: 2px;
+            margin-bottom: 2px;
+        }
+
+        #sunburstcontainer {
+        width: 100%;
+        height: 100%;
+        border: 1px solid #ccc; /* border color */
+        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1); /* shadow effect */
+        border-radius: 4px; /* rounded corners (optional) */
+    }
+        .doughnut_container {
+        width: 100%;
+        height: 100%;
+        border: 1px solid #ccc; /* border color */
+        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1); /* shadow effect */
+        border-radius: 4px; /* rounded corners (optional) */
+    }
+
+       .navbar-scroll .nav-link,
+        .navbar-scroll .navbar-toggler-icon,
+        .navbar-scroll .navbar-brand {
+          color: #000000;
+        }
+
+        /* Color of the navbar BEFORE scroll */
+        .navbar-scroll {
+          background-color: #ffffff;
+            text-decoration-color: #000000;
+        }
+
+
+        /* Color of the links AFTER scroll */
+        .navbar-scrolled .nav-link,
+        .navbar-scrolled .navbar-toggler-icon,
+        .navbar-scroll .navbar-brand {
+          color: #262626;
+        }
+
+        .navbar-logo {
+        position: absolute;
+        top: 5px; /* Adjust this as needed */
+        left: 5px; /* Adjust this as needed */
+        height: 100px; /* Adjust this as needed */
+        z-index: 10;
+        }
+
+            .col-md-2 {
+        place-items: center;
+    }
+
+     .small-font {
+        font-size: 0.8rem; /* adjust as needed */
+   }
+
+         .stat-card {
+        background-color: lightgrey;
+    }
+    .inner-card {
+        background-color: white;
+        border-radius: 10px;
+        margin: 10px 10px 20px 10px;
+        height: 70%;
+    }
+    .card-title-light {
+        font-weight: lighter;
+    }
+
+.scenario-item {
+    width: 100%;
+    box-sizing: border-box; /* Include padding and border in the element's total width and height */
+}
+
+
+.scenario-link {
+    display: block;
+    width: 100%; /* Set width to 100% */
+    padding: 5px;
+    margin: 0; /* Remove any default margins */
+    border: 0px solid transparent;
+    border-right: none; /* Remove the right border */
+    background-color: white;
+    transition: background-color 0.3s, border-color 0.3s; /* Smooth transition for color changes */
+    text-decoration: none; /* Remove underline from link */
+    color: black; /* Set link text color */
+    box-sizing: border-box; /* Include padding and border in the element's total width and height */
+}
+
+
+
+.scenario-link.highlighted {
+    border-color: black;
+    background-color: #fff8e8;
+}
+
+body {
+    font-size: 12px;
+}
+
+.scrollable-content {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+#recommendations {
+    border: none;
+    background-color: #fff8e8;
+    font-size: 12px;
+    resize: none; /* Optional: to prevent the user from resizing the textarea */
+}
+
+.border-cell {
+    border: 1px solid black;
+}
+
+.equal-height {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.equal-card {
+    display: flex;
+    flex-direction: column;
+}
+
+.equal-card .card-body {
+    flex: 1; /* This will make sure the content takes up all available space */
+}
+
+
+    </style>
+</head>
+<body>
+<script>anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");</script>
+<nav class="navbar navbar-expand-lg navbar-scroll shadow-0 border-bottom border-dark rounded">
+  <div class="container-fluid d-flex justify-content-between">
+   <a class="navbar-brand" href="{% url 'OTRisk:dashboardhome' %}"><img src="{% static 'images/iota - white 1.png' %}" style="height: 140px; width: 140px" class="navbar-logo" alt="">   </a>
+      <h6 class="my-auto text-center flex-grow-1">CyberPHA</h6>
+
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ms-auto">
+
+        <li class="nav-item">
+          <a class="nav-link"  style="font-size: 12px;" href="{% url 'OTRisk:qraw' %}"><i class="bi bi-journal-text"></i> Risk Assessment</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" style="font-size: 12px;" href="{% url 'OTRisk:iotaphamanager' %}"><i class="bi bi-journal-text"></i> CyberPHA</a>
+        </li>
+          <li class="nav-item">
+          <a class="nav-link" style="font-size: 12px;" href="{% url 'OTRisk:ra_actions_view' %}" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Actions</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" style="font-size: 12px;" href="{% url 'OTRisk:risk_register' %}" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Risk Register</a>
+        </li>
+        <li class="nav-item dropdown" style="font-size: 12px;">
+            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="bi-file-earmark-easel"></i> Reports
+              </a>
+              <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                  <li><a class="dropdown-item" href="{% url 'OTRisk:reports' %}" style="font-size: 12px;">QRAW Reports</a></li>
+                  <li><a class="dropdown-item" href="{% url 'OTRisk:reports_pha' %}" style="font-size: 12px;">CyberPHA Reports</a></li>
+              </ul>
+        </li>
+        <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="font-size: 12px;">
+                <i class="bi bi-diagram-3"></i> Admin
+              </a>
+              <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                  <li><a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:add_scenario' %}">Scenario Manager</a></li>
+                  <li><a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:add_consequence' %}">Consequence Manager</a></li>
+                  <li><a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:admin_users' %}">Admin Users</a></li>
+                  {% if user.is_staff %}
+                    <!-- Links visible only to superusers -->
+                    <li><a class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:user_admin' %}">User Administration</a></li>
+                      <li><a class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:execute_sql' %}">Execute SQL</a></li>
+                    {% endif %}
+
+              </ul>
+
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="{% url 'accounts:profile' %}" style="font-size: 12px;">
+                <i class="bi bi-person-fill"></i> {{ user.first_name }} {{ user.last_name }} | {{ user.userprofile.organization.name }}
+            </a>
+        </li>
+
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'logout' %}">
+                <i class="bi bi-box-arrow-right"></i> Logout
+            </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+</nav>
+
+<div class="row">
+    <div class="col-md-1"></div>
+    <div class="col-md-10" id="pha_header">
+        <div class="row">
+            <div class="col-md-12">
+                <p>
+                    <H4 style="color: #0a53be; display: inline-block;">{{ qraw_header.RATitle }}</H4>
+                    <h6 style="display: inline-block; color: #0a53be"> Risk Assessment (QRAW)</h6>
+                </p>
+            </div>
+         </div>
+        <div class="row"  style="font-size: 10px">
+            <div class="col" style="font-size: 12px">
+                 Facility Type: {{ qraw_header.BusinessUnitType }}<br>
+                 Industry: {{ qraw_header.industry }}<br>
+                 Status: {{ qraw_header.StatusFlag }}<br>
+
+                <div id="bia_container" style="width: 100%; height: 250px;"></div>
+                <div class="row d-flex">
+                    <div class="col-md-4">
+                        <div class="card mb-3 shadow-sm h-100"> <!-- Bootstrap card with shadow -->
+                            <div class="card-body text-center">
+                           </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card mb-3 shadow-sm h-100"> <!-- Bootstrap card with shadow -->
+                            <div class="card-body text-center">
+
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card mb-3 shadow-sm h-100"> <!-- Bootstrap card with shadow -->
+                            <div class="card-body text-center">
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+
+            </div>
+            <div class="col">
+                <div class="row">
+                    <div class="col-md-3">
+                        Estimated Event Costs
+                        <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                            <div class="card-body">
+                                Low Estimate<br>
+                                <h6>{{ total_cost_impact_low }}</h6>
+                            </div>
+                        </div>
+                        <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                            <div class="card-body">
+                                Most Likely<br>
+                                <h6>{{ total_cost_impact }}</h6>
+                            </div>
+                        </div>
+                        <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                            <div class="card-body">
+                                Worst Case<br>
+                                <h6>{{ total_cost_impact_high }}</h6>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-9">
+                        <div class="card mb-2 shadow-sm"> <!-- Bootstrap card with shadow -->
+
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+            <div class="col">
+
+        </div>
+
+        </div>
+        <div class="row"  style="font-size: 10px">
+
+        </div>
+
+
+
+
+
+    </div>
+    <div class="col-md-1"></div>
+</div> <!-- BIA Summary and profile -->
+<br>
+<div class="row">
+    <div class="col-md-1"></div>
+    <div class="col-md-3" style="padding-right: 0; padding-left: 0">
+    <u><b>Scenario's</b></u><br><br>
+    {% for scenario in qraw_scenarios %}
+        <div class="scenario-item">
+            <a href="#" data-id="{{ scenario.ID }}" class="scenario-link">{{ forloop.counter }}. {{ scenario.ScenarioDescription }}</a>
+        </div>
+    {% endfor %}
+</div>
+
+
+    <script>
+    $(document).ready(function() {
+        $('.scenario-link').on('click', function(e) {
+            e.preventDefault(); // Prevents the default action of the link
+
+            // Remove highlighted class from all links
+            $('.scenario-link').removeClass('highlighted');
+
+            // Add highlighted class to the clicked link
+            $(this).addClass('highlighted');
+
+            var scenarioId = $(this).data("id");  // Get the ID of the clicked scenario
+
+            // Fetch the details of the scenario (assuming you have an endpoint to do this)
+            $.ajax({
+                url: `/OTRisk/get_qraw_scenario_report_details/?id=${scenarioId}`,
+                method: "GET",
+                success: function(data) {
+                    // Generate the radar chart using the fetched data
+                    generateRadarChart(data);
+                    writeScenarioData(data);
+                },
+                error: function(error) {
+                    console.error("Error fetching scenario data:", error);
+                }
+            });
+        });
+
+        // Automatically click on the first scenario link
+        $('.scenario-link').first().trigger('click');
+    });
+
+
+    </script>
+
+
+    <div class="col-7" style="border: 0px solid; padding-left: 0; background-color: #fff8e8;">
+        <div class="row" style="height: 5px"></div>
+        <div class="row">
+            <div class="col-md-1"></div>
+
+            <div class="col-md-4">
+                <u><b>Consequences</b></u><br>
+                <label id="lblConsequence"></label>
+            </div>
+            <div class="col-md-7">
+                <div class="row">
+                    <div class="col-md-9 text-center">
+                        <b>Estimated Single Event Costs</b>
+                    </div>
+                    <div class="col-md-3"></div>
+                </div>
+                <div class = "row">
+                    <div class="col-md-3">
+                        <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                            <div class="card-body text-center">
+                                Best Case<br>
+                                <h5 style="color: #0a53be"><label id="sle_low"></label></h5>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                            <div class="card-body text-center">
+                                Median<br>
+                                <h5 style="color: #0a53be"><label id="sle"></label></h5>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card mb-3 shadow-sm "> <!-- Bootstrap card with shadow -->
+                            <div class="card-body text-center">
+                                Worst Case<br>
+                                <h5 style="color: #0a53be"><label id="sle_high"></label></h5>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3"></div>
+                </div>
+
+            </div>
+
+
+
+            <div class="col-md-3"></div>
+
+        </div>
+        <div class="row">
+            <div class="col-md-1"></div>
+
+            <div class="col-md-4">
+                <div id="radarChartContainer" style="width: 100%; height: 400px;"></div>
+            </div>
+            <div class="col-md-4"> </div>
+            <div class="col-md-3 d-flex flex-column justify-content-end" style="font-size: 10px;">
+                <div class="card mb-3 shadow-sm "> <!-- Bootstrap card with shadow -->
+                    <div class="card-body text-center" style="background-color: #fff8e8; font-size: 12px">
+                        Scenario Likelihood<br>
+                        <h6><label id="scenario_likelihood"></label></h6>
+                    </div>
+                </div>
+                <div class="card mb-3 shadow-sm "> <!-- Bootstrap card with shadow -->
+                    <div class="card-body text-center" style="background-color: #fff8e8; font-size: 12px">
+                        Residual Risk<br>
+                        <h6><label id="RRa"></label></h6>
+                    </div>
+                </div>
+                <br><br><br>
+
+
+            </div>
+
+        </div>
+        <div class="row">
+            <div class="col-md-1"></div>
+
+            <div class="col-md-5">
+                <label for="recommendations">Recommendations: </label><label id="standards"></label><textarea id="recommendations" class="form-control" style="resize: none;" rows="8"></textarea>
+            </div>
+            <div class="col-md-4">
+
+            </div>
+            <div class="col-md-2"></div>
+
+        </div>
+
+
+
+
+    </div>
+    <div class="col-md-1"></div>
+
+
+</div>
+
+<script>
+    anychart.onDocumentReady(function() {
+        // Create data for AnyChart
+        var data = [];
+        {% for field, avg_value in impact_summary.items %}
+            data.push({"x": "{{ field }}", "value": {{ avg_value }}});
+        {% endfor %}
+
+        // Create a chart
+        var chart = anychart.column3d();
+
+        // Add data to the chart
+        chart.data(data);
+        var credits = chart.credits();
+        credits.enabled(false);
+        // Set chart title
+        chart.title("Business Impact Summary");
+        chart.palette(anychart.palettes.provence);
+        chart.yScale().minimum(0).maximum(10);
+
+        // Draw the chart
+        chart.container("bia_container");
+        chart.draw();
+    });
+
+    $(document).ready(function() {
+    $(".scenario-link").click(function(e) {
+        e.preventDefault();  // Prevent the default link behavior
+
+        var scenarioId = $(this).data("id");  // Get the ID of the clicked scenario
+
+        // Fetch the details of the scenario (assuming you have an endpoint to do this)
+        $.ajax({
+            url: `/OTRisk/get_qraw_scenario_report_details/?id=${scenarioId}`,
+             method: "GET",
+            success: function(data) {
+                // Generate the radar chart using the fetched data
+                generateRadarChart(data);
+                writeScenarioData(data);
+
+            },
+            error: function(error) {
+                console.error("Error fetching scenario data:", error);
+            }
+        });
+    });
+});
+
+    function writeScenarioData(data) {
+    document.getElementById('recommendations').value = data.riskSummary;
+    document.getElementById('sle_low').textContent = data.event_cost_low;
+    document.getElementById('sle').textContent = data.event_cost_median;
+    document.getElementById('sle_high').textContent = data.event_cost_high;
+    document.getElementById('RRa').textContent = data.residual_risk;
+}
+
+    function generateRadarChart(data) {
+    anychart.onDocumentReady(function() {
+
+        $('#radarChartContainer').empty();
+
+        var chart = anychart.radar();
+
+        var seriesData = [
+            {x: "Safety", value: data.SafetyScore},
+            {x: "Danger", value: data.lifeScore},
+            {x: "Production", value: data.productionScore},
+            {x: "Finance", value: data.FinancialScore},
+            {x: "Reputation", value: data.ReputationScore},
+            {x: "Environment", value: data.environmentScore},
+            {x: "Regulation", value: data.regulatoryScore},
+            {x: "Data", value: data.DataScore},
+            {x: "Supply", value: data.SupplyChainScore}
+        ];
+        var credits = chart.credits();
+        credits.enabled(false);
+        chart.line(seriesData);
+        chart.background().fill("#fff8e8");
+        chart.yScale().minimum(0).maximum(10);
+        chart.xGrid().palette(["gray 0.05", "gray 0.1"]);
+        chart.yGrid().palette(["gray 0.05", "gray 0.1"]);
+        var title = chart.title();
+        title.text("Business Impact Analysis");
+        title.orientation("top");
+        title.align("center");
+        title.enabled(true);
+        chart.container('radarChartContainer');
+        chart.draw();
+    });
+}
+
+
+
+</script>
+
+
+
+
+</body>
+</html>
