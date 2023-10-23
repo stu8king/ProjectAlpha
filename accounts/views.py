@@ -375,7 +375,7 @@ def login_view(request):
 
     else:
         form = AuthenticationForm()
-    return render(request, 'accounts/login.html', {'form': form})
+    return render(request, 'accounts/home.html', {'form': form})
 
 
 def login_view_bak(request):
@@ -423,7 +423,7 @@ def login_view_bak(request):
 
     else:
         form = AuthenticationForm()
-    return render(request, 'accounts/login.html', {'form': form})
+    return render(request, 'accounts/home.html', {'form': form})
 
 
 def add_user_to_organization(request):
@@ -550,7 +550,7 @@ def set_password_view(request):
 def success_view(request):
     messages.success(request,
                      'Thank you for purchasing iOTa. Check your email for your temporary password and then click on Customer Login to get started. To get the best out of iOTa, we recommend that you read the user guide. Click on help after logging in for the latest information.')
-    return render(request, 'accounts/login.html')
+    return render(request, 'accounts/home.html')
 
 
 def get_subscription_details(request, subscription_id):
