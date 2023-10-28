@@ -65,7 +65,12 @@ urlpatterns = [
     path('raw_from_walkdown/', views.raw_from_walkdown, name='raw_from_walkdown'),
     path('save_ra_action', views.save_ra_action, name='save_ra_action'),
     path('get_rawactions/', views.get_rawactions, name='get_rawactions'),
-    path('ra_actions_view', views.ra_actions_view, name='ra_actions_view'),
+
+    path('ra_actions_view/', views.ra_actions_view, name='ra_actions_view_default'),
+    path('ra_actions_view/pha/<int:pha_id>/', views.ra_actions_view, name='ra_actions_view_pha'),
+    path('ra_actions_view/qraw/<int:qraw_id>/', views.ra_actions_view, name='ra_actions_view_qraw'),
+    path('ra_actions_view/qraw/<int:qraw_id>/pha/<int:pha_id>/', views.ra_actions_view, name='ra_actions_view_both'),
+
     path('update_ra_action/', views.UpdateRAAction.as_view(), name='update_ra_action'),
     # For adding and editing scenarios
     path('scenario/add/', views.add_or_update_scenario, name='add_scenario'),

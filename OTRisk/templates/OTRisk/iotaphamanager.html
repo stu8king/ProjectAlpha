@@ -299,20 +299,12 @@ function drawControlGauge(score) {
           <a class="nav-link" style="font-size: 12px;" href="{% url 'OTRisk:iotaphamanager' %}"><i class="bi bi-journal-text"></i> CyberPHA</a>
         </li>
           <li class="nav-item">
-          <a class="nav-link" style="font-size: 12px;" href="{% url 'OTRisk:ra_actions_view' %}" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Actions</a>
+          <a class="nav-link" style="font-size: 12px;" href="{% url 'OTRisk:ra_actions_view_default' %}" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Actions</a>
         </li>
         <li class="nav-item">
           <a class="nav-link" style="font-size: 12px;" href="{% url 'OTRisk:risk_register' %}" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Risk Register</a>
         </li>
-        <li class="nav-item dropdown" style="font-size: 12px;">
-            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                <i class="bi-file-earmark-easel"></i> Reports
-              </a>
-              <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                  <li><a class="dropdown-item" href="{% url 'OTRisk:reports' %}" style="font-size: 12px;">QRAW Reports</a></li>
-                  <li><a class="dropdown-item" href="{% url 'OTRisk:reports_pha' %}" style="font-size: 12px;">CyberPHA Reports</a></li>
-              </ul>
-        </li>
+
         <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="font-size: 12px;">
                 <i class="bi bi-diagram-3"></i> Admin
@@ -383,8 +375,21 @@ function drawControlGauge(score) {
                     <td>{{ pha_header_records.PHALeader }}</td>
                     <td>{{ pha_header_records.AssessmentStartDate|date:"m/d/Y" }}</td>
                     <td>{{ pha_header_records.scenario_count }}</td>
-                    <td>{{ pha_header_records.ra_action_count }}</td>
-                    <td><a class="dropdown-item" href="{% url 'OTRisk:pha_reports'  cyber_pha_header_id=pha_header_records.ID  %}">Report</a></td>
+                     <td>
+                        {% if pha_header_records.ra_action_count > 0 %}
+                            <a href="{% url 'OTRisk:ra_actions_view_pha' pha_id=pha_header_records.ID %}">{{ pha_header_records.ra_action_count }}</a>
+
+                        {% else %}
+                            {{ pha_header_records.ra_action_count }}
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if pha_header_records.scenario_count != 0 %}
+                            <a class="dropdown-item" href="{% url 'OTRisk:pha_reports'  cyber_pha_header_id=pha_header_records.ID  %}">Report</a>
+                        {% else %}
+
+                        {% endif %}
+                    </td>
                     <!-- Add more <td> elements for each field in the RAWorksheet model -->
                 </tr>
             {% endfor %}
@@ -454,9 +459,10 @@ function drawControlGauge(score) {
                         sessionStorage.setItem('sessionFacilityType', data.headerrecord.facilitytype);
                         sessionStorage.setItem('sessionFacility', data.headerrecord.facility);
                         sessionStorage.setItem('sessionCountry', data.headerrecord.country);
+                        var pha_score = data.headerrecord.pha_score;
 
                         // Enable the controls
-                        $('#txtTitle, #txtLeader, #txtUnit, #txtStartDate, #txtAddress, #txtFacility, #txtLeaderEmail, #txtEndDate, #txtSafetySummary, #txtChemical, #txtPhysical, #txtOther, #txtCompliance, #selFacilityType, #cyber_insurance, #shift_model, #annual_revenue, #txtEmployees, #selIndustry, #selZone, #countrySelector, #btnformSubmit, #risk-assessment-btn, #scenarioButton #generatePPT').prop('disabled', false);
+                        $('#txtTitle, #txtLeader, #txtUnit, #txtStartDate, #txtAddress, #txtFacility, #txtLeaderEmail, #txtEndDate, #txtSafetySummary, #txtChemical, #txtPhysical, #txtOther, #txtCompliance, #selFacilityType, #cyber_insurance, #shift_model, #annual_revenue, #txtEmployees, #selIndustry, #selZone, #countrySelector, #btnformSubmit,  #risk-assessment-btn, #scenarioButton, #generatePPT').prop('disabled', false);
                         $('#btnformSubmit').prop('disabled', false);
                         $('#scenarioButton').prop('disabled', false);
 

@@ -43,6 +43,64 @@
      {% bootstrap_css %}
      {% bootstrap_javascript %}
     <style>
+
+        .control-item {
+    border: 1px solid #ccc;
+    padding: 10px;
+    margin: 10px 0;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 2px;
+    display: flex;
+    flex-direction: column;  /* This will stack the children vertically */
+    align-items: center;      /* Aligns items to the start (left for LTR languages) */
+}
+
+.control-slider {
+    align-items: center;
+    margin-top: 2px;
+    width: 95%;             /* Makes the slider take the full width of the container */
+}
+
+
+.control-slider {
+    margin-left: 10px;
+    flex: 1;
+}
+
+    .control-slider {
+    appearance: none;
+    width: 100%;
+    height: 15px;
+    border-radius: 5px;
+    background: #d3d3d3;
+    outline: none;
+    opacity: 0.7;
+    transition: opacity .2s;
+
+}
+
+.control-slider::-webkit-slider-thumb {
+    appearance: none;
+    width: 40px;
+    height: 15px;
+    border-radius: 3px;
+    background: green;
+    cursor: pointer;
+    transition: background .2s;
+     background: var(--thumb-color, grey);  // default to green if --thumb-color is not set
+     background-color: var(--thumb-color);
+}
+
+.control-slider::-moz-range-thumb {
+    width: 40px;
+    height: 15px;
+    border-radius: 3px;
+    background: green;
+    cursor: pointer;
+    transition: background .2s;
+    background: var(--thumb-color, grey);  // default to green if --thumb-color is not set
+     background-color: var(--thumb-color);
+}
         .no-gap {
             padding-left: 2px;
             padding-right: 2px;
@@ -194,20 +252,12 @@ body {
           <a class="nav-link" style="font-size: 12px;" href="{% url 'OTRisk:iotaphamanager' %}"><i class="bi bi-journal-text"></i> CyberPHA</a>
         </li>
           <li class="nav-item">
-          <a class="nav-link" style="font-size: 12px;" href="{% url 'OTRisk:ra_actions_view' %}" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Actions</a>
+          <a class="nav-link" style="font-size: 12px;" href="{% url 'OTRisk:ra_actions_view_default' %}" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Actions</a>
         </li>
         <li class="nav-item">
           <a class="nav-link" style="font-size: 12px;" href="{% url 'OTRisk:risk_register' %}" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Risk Register</a>
         </li>
-        <li class="nav-item dropdown" style="font-size: 12px;">
-            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                <i class="bi-file-earmark-easel"></i> Reports
-              </a>
-              <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                  <li><a class="dropdown-item" href="{% url 'OTRisk:reports' %}" style="font-size: 12px;">QRAW Reports</a></li>
-                  <li><a class="dropdown-item" href="{% url 'OTRisk:reports_pha' %}" style="font-size: 12px;">CyberPHA Reports</a></li>
-              </ul>
-        </li>
+
         <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="font-size: 12px;">
                 <i class="bi bi-diagram-3"></i> Admin
@@ -254,7 +304,7 @@ body {
             </div>
          </div>
         <div class="row"  style="font-size: 10px">
-            <div class="col" style="font-size: 12px">
+            <div class="col-md-4" style="font-size: 12px">
                  Facility Type: {{ cyber_pha_header.FacilityType }}<br>
                  Industry: {{ cyber_pha_header.Industry }}<br>
                  Assessment Zone: {{ cyber_pha_header.AssessmentZone }}<br>
@@ -291,83 +341,151 @@ body {
 
 
             </div>
-            <div class="col">
+            <div class="col-md-8">
                 <div class="row">
-                    <div class="col-md-3">
-                        Estimated Event Costs
-                        <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                            <div class="card-body">
-                                Low Estimate<br>
-                                <h6>{{ total_cost_impact_low }}</h6>
+                    <div class="col">
+                        <div class="row">
+                            <div class="col-md-3">
+                                Estimated Event Costs
+                                <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                                    <div class="card-body">
+                                        Low Estimate<br>
+                                        <h6>{{ total_cost_impact_low }}</h6>
+                                    </div>
+                                </div>
+                                <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                                    <div class="card-body">
+                                        Most Likely<br>
+                                        <h6>{{ total_cost_impact }}</h6>
+                                    </div>
+                                </div>
+                                <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                                    <div class="card-body">
+                                        Worst Case<br>
+                                        <h6>{{ total_cost_impact_high }}</h6>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                        <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                            <div class="card-body">
-                                Most Likely<br>
-                                <h6>{{ total_cost_impact }}</h6>
-                            </div>
-                        </div>
-                        <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                            <div class="card-body">
-                                Worst Case<br>
-                                <h6>{{ total_cost_impact_high }}</h6>
+                            <div class="col-md-9">
+                                <div class="card mb-2 shadow-sm">
+                                    <div class="card-body text-center">
+                                        Facility Profile
+                                        <!-- Nav tabs -->
+                                        <ul class="nav nav-tabs" id="myTabs" role="tablist">
+                                            <li class="nav-item">
+                                                <a class="nav-link active" id="safety-tab" data-toggle="tab" href="#safety" role="tab" aria-controls="safety" aria-selected="true">Safety</a>
+                                            </li> <!-- safety summary -->
+                                            <li class="nav-item">
+                                                <a class="nav-link" id="chemical-tab" data-toggle="tab" href="#chemical" role="tab" aria-controls="chemical" aria-selected="false">Chemical</a>
+                                            </li> <!-- chemical summary -->
+                                            <li class="nav-item">
+                                                <a class="nav-link" id="physical-tab" data-toggle="tab" href="#physical" role="tab" aria-controls="physical" aria-selected="false">Physical</a>
+                                            </li> <!-- physical security summary -->
+                                            <li class="nav-item">
+                                                <a class="nav-link" id="compliance-tab" data-toggle="tab" href="#compliance" role="tab" aria-controls="compliance" aria-selected="false">Compliance</a>
+                                            </li> <!-- compliance summary -->
+                                            <li class="nav-item">
+                                                <a class="nav-link" id="other-tab" data-toggle="tab" href="#other" role="tab" aria-controls="other" aria-selected="false">OT</a>
+                                            </li> <!-- OT controls summary -->
+                                        </ul>
+
+                                        <!-- Tab panes -->
+                                        <div class="tab-content">
+                                            <div class="tab-pane active text-left" id="safety" role="tabpanel" aria-labelledby="safety-tab">
+                                            <div class="col scrollable-content">{{ safety_summary_html|safe }}</div>
+                                        </div>
+                                        <div class="tab-pane text-left" id="chemical" role="tabpanel" aria-labelledby="chemical-tab">
+                                            <div class="col scrollable-content">{{ chemical_summary_html|safe }}</div>
+                                        </div>
+                                        <div class="tab-pane text-left" id="physical" role="tabpanel" aria-labelledby="physical-tab">
+                                            <div class="col scrollable-content">{{ physical_summary_html|safe }}</div>
+                                        </div>
+                                        <div class="tab-pane text-left" id="compliance" role="tabpanel" aria-labelledby="compliance-tab">
+                                            <div class="col scrollable-content">{{ compliance_summary_html|safe }}</div>
+                                        </div>
+                                        <div class="tab-pane text-left" id="other" role="tabpanel" aria-labelledby="other-tab">
+                                            <div class="col scrollable-content">{{ other_summary_html|safe }}</div>
+                                        </div>
+
+                                        </div>
+                                    </div> <!-- facility profile -->
+                                </div>
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-9">
-                        <div class="card mb-2 shadow-sm"> <!-- Bootstrap card with shadow -->
-                            <div class="card-body text-center">
-                                Facility Profile
-                                <!-- Nav tabs -->
-                                <ul class="nav nav-tabs" id="myTabs" role="tablist">
-                                    <li class="nav-item">
-                                        <a class="nav-link active" id="safety-tab" data-toggle="tab" href="#safety" role="tab" aria-controls="safety" aria-selected="true">Safety</a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a class="nav-link" id="chemical-tab" data-toggle="tab" href="#chemical" role="tab" aria-controls="chemical" aria-selected="false">Chemical</a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a class="nav-link" id="physical-tab" data-toggle="tab" href="#physical" role="tab" aria-controls="physical" aria-selected="false">Physical</a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a class="nav-link" id="compliance-tab" data-toggle="tab" href="#compliance" role="tab" aria-controls="compliance" aria-selected="false">Compliance</a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a class="nav-link" id="other-tab" data-toggle="tab" href="#other" role="tab" aria-controls="other" aria-selected="false">OT</a>
-                                    </li>
-                                </ul>
-
-                                <!-- Tab panes -->
-                                <div class="tab-content">
-                                    <div class="tab-pane active text-left" id="safety" role="tabpanel" aria-labelledby="safety-tab">
-                                    <div class="col scrollable-content">{{ safety_summary_html|safe }}</div>
-                                </div>
-                                <div class="tab-pane text-left" id="chemical" role="tabpanel" aria-labelledby="chemical-tab">
-                                    <div class="col scrollable-content">{{ chemical_summary_html|safe }}</div>
-                                </div>
-                                <div class="tab-pane text-left" id="physical" role="tabpanel" aria-labelledby="physical-tab">
-                                    <div class="col scrollable-content">{{ physical_summary_html|safe }}</div>
-                                </div>
-                                <div class="tab-pane text-left" id="compliance" role="tabpanel" aria-labelledby="compliance-tab">
-                                    <div class="col scrollable-content">{{ compliance_summary_html|safe }}</div>
-                                </div>
-                                <div class="tab-pane text-left" id="other" role="tabpanel" aria-labelledby="other-tab">
-                                    <div class="col scrollable-content">{{ other_summary_html|safe }}</div>
-                                </div>
-
-                                </div>
-                            </div>
-                        </div>
-
+                    <div class="col">
+                        Facility Address: {{ cyber_pha_header.facilityAddress }}, {{ cyber_pha_header.country }}
+                    <div id="map" style="width: 85%; height: 350px;"></div>
+                </div>  <!-- google map view -->
+                </div>
+                <div class="row">
+                    <div class="col">
+                        <b>Open Actions:</b>
+                    <div id="action_container">
+                        <table id="action_table">
+                            <thead>
+                                <tr>
+                                    <th>Action Title</th>
+                                    <th>Action Description</th>
+                                    <th>Due Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Rows will be appended here by the script -->
+                            </tbody>
+                        </table>
                     </div>
 
+                    <style>
+                        #action_table {
+                            border-collapse: collapse;
+                            width: 100%;
+                            background-color: #fff8e8;
+                        }
+
+                        #action_table th, #action_table td {
+                            border: 1px solid #ddd;
+                            padding: 8px;
+                        }
+
+                        #action_table th {
+                            padding-top: 12px;
+                            padding-bottom: 12px;
+                            text-align: left;
+                            background-color: #f2f2f2;
+                            color: black;
+                            border-bottom: 3px solid #ddd;
+                        }
+
+                        #action_table tr:hover {
+                            background-color: #f5f5f5;
+                        }
+
+                        /* 3D shading effect */
+                        #action_table {
+                            box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.3);
+                        }
+                    </style>
+
+                    <script>
+                        var raActionsData = {{ ra_actions_json|safe }};
+
+                        var tbody = document.querySelector('#action_table tbody');
+
+                        raActionsData.forEach(function(action) {
+                            var row = tbody.insertRow();
+                            var cell1 = row.insertCell(0);
+                            var cell2 = row.insertCell(1);
+                            var cell3 = row.insertCell(2);
+                            cell1.textContent = action.fields.actionTitle;
+                            cell2.textContent = action.fields.actionDescription;
+                            cell3.textContent = action.fields.actionDueDate;
+                        });
+                    </script>
+
+                    </div>
                 </div>
             </div>
-            <div class="col">
-                Facility Address: {{ cyber_pha_header.facilityAddress }}, {{ cyber_pha_header.country }}
-            <div id="map" style="width: 85%; height: 350px;"></div>
-        </div>
-
         </div>
         <div class="row"  style="font-size: 10px">
 
@@ -542,11 +660,17 @@ body {
         </div>
         <div class="row">
             <div class="col-md-1"></div>
-
+            <!--
             <div class="col-md-5">
                 <label for="recommendations">Recommendations: </label><label id="standards"></label><textarea id="recommendations" class="form-control" style="resize: none;" rows="8"></textarea>
             </div>
-            <div class="col-md-4">
+            -->
+            <div class="col-md-6">
+                <b>Recommended Controls</b> (Using <label id="standards"></label>)
+
+                <div id="controls"></div>
+            </div> <!-- recommended controls -->
+            <div class="col-md-3">
 
             </div>
             <div class="col-md-2"></div>
@@ -613,16 +737,62 @@ body {
 
     function writeScenarioData(data) {
     document.getElementById('lblConsequence').textContent = data.Consequence;
-    document.getElementById('recommendations').value = data.recommendations;
-    document.getElementById('standards').textContent = data.standards;
+    // document.getElementById('recommendations').value = data.recommendations;
+        document.getElementById('standards').textContent = data.standards;
     document.getElementById('sle_low').textContent = data.sle_low;
     document.getElementById('sle').textContent = data.sle;
     document.getElementById('sle_high').textContent = data.sle_high;
     document.getElementById('RRa').textContent = data.residual_risk;
     document.getElementById('scenario_likelihood').textContent = data.scenario_likelihood;
+    // Get the controls container
+    var controlsContainer = document.getElementById('controls');
+
+    // Clear any existing controls
+    controlsContainer.innerHTML = '';
+
+    // Loop through the controls and add them to the container
+    data.controls.forEach(function(control) {
+        // Create a new div for the control
+        var controlDiv = document.createElement('div');
+        controlDiv.className = 'control-item';
+
+        // Add the control name
+        var controlText = document.createElement('p');
+        controlText.textContent = control.control +  control.reference;
+        controlDiv.appendChild(controlText);
+
+        // Add the slider
+        var slider = document.createElement('input');
+        slider.type = 'range';
+        slider.min = '0';
+        slider.max = '100';
+        slider.value = control.score;
+        slider.className = 'control-slider';
+        slider.disabled = true;
+        controlDiv.appendChild(slider);
+        setSliderColor(slider)
+
+        // Append the control div to the container
+        controlsContainer.appendChild(controlDiv);
+    });
 
 }
 
+function setSliderColor(slider) {
+
+    let value = slider.value;
+    let color;
+    if (value <= 30) {
+        color = "red";
+    } else if (value <= 60) {
+        color = "orange";
+    } else if (value <= 80) {
+        color = "yellow";
+    } else {
+        color = "green";
+    }
+    slider.style.setProperty("--thumb-color", color);  // Set the color variable
+}
     function generateRadarChart(data) {
     anychart.onDocumentReady(function() {
 

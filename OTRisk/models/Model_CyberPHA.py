@@ -535,3 +535,20 @@ class Audit(models.Model):
     class Meta:
         db_table = 'audit'
         managed = True
+
+
+class PHAControlList(models.Model):
+    ID = models.AutoField(primary_key=True)
+    scenarioID = models.ForeignKey(tblCyberPHAScenario, on_delete=models.CASCADE, db_column='scenarioID',
+                                   related_name='controls')
+    control = models.TextField()
+    reference = models.TextField()
+    score = models.IntegerField(validators=[MinValueValidator(0), MaxValueValidator(100)])
+
+    class Meta:
+        db_table = 'tblPHAControlList'
+        verbose_name = 'PHA Control List'
+        verbose_name_plural = 'PHA Control Lists'
+
+    def __str__(self):
+        return self.control

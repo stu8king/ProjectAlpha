@@ -43,6 +43,63 @@
      {% bootstrap_css %}
      {% bootstrap_javascript %}
     <style>
+.control-item {
+    border: 1px solid #ccc;
+    padding: 10px;
+    margin: 10px 0;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 2px;
+    display: flex;
+    flex-direction: column;  /* This will stack the children vertically */
+    align-items: center;      /* Aligns items to the start (left for LTR languages) */
+}
+
+.control-slider {
+    align-items: center;
+    margin-top: 2px;
+    width: 95%;             /* Makes the slider take the full width of the container */
+}
+
+
+.control-slider {
+    margin-left: 10px;
+    flex: 1;
+}
+
+    .control-slider {
+    appearance: none;
+    width: 100%;
+    height: 15px;
+    border-radius: 5px;
+    background: #d3d3d3;
+    outline: none;
+    opacity: 0.7;
+    transition: opacity .2s;
+
+}
+
+.control-slider::-webkit-slider-thumb {
+    appearance: none;
+    width: 40px;
+    height: 15px;
+    border-radius: 3px;
+    background: green;
+    cursor: pointer;
+    transition: background .2s;
+     background: var(--thumb-color, grey);  // default to green if --thumb-color is not set
+     background-color: var(--thumb-color);
+}
+
+.control-slider::-moz-range-thumb {
+    width: 40px;
+    height: 15px;
+    border-radius: 3px;
+    background: green;
+    cursor: pointer;
+    transition: background .2s;
+    background: var(--thumb-color, grey);  // default to green if --thumb-color is not set
+     background-color: var(--thumb-color);
+}
         .no-gap {
             padding-left: 2px;
             padding-right: 2px;
@@ -116,6 +173,7 @@
 .scenario-item {
     width: 100%;
     box-sizing: border-box; /* Include padding and border in the element's total width and height */
+    font-size: 16px;
 }
 
 
@@ -182,7 +240,7 @@ body {
 <nav class="navbar navbar-expand-lg navbar-scroll shadow-0 border-bottom border-dark rounded">
   <div class="container-fluid d-flex justify-content-between">
    <a class="navbar-brand" href="{% url 'OTRisk:dashboardhome' %}"><img src="{% static 'images/iota - white 1.png' %}" style="height: 140px; width: 140px" class="navbar-logo" alt="">   </a>
-      <h6 class="my-auto text-center flex-grow-1">CyberPHA</h6>
+      <h6 class="my-auto text-center flex-grow-1">QRAW Report</h6>
 
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
       <ul class="navbar-nav ms-auto">
@@ -194,20 +252,12 @@ body {
           <a class="nav-link" style="font-size: 12px;" href="{% url 'OTRisk:iotaphamanager' %}"><i class="bi bi-journal-text"></i> CyberPHA</a>
         </li>
           <li class="nav-item">
-          <a class="nav-link" style="font-size: 12px;" href="{% url 'OTRisk:ra_actions_view' %}" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Actions</a>
+          <a class="nav-link" style="font-size: 12px;" href="{% url 'OTRisk:ra_actions_view_default' %}" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Actions</a>
         </li>
         <li class="nav-item">
           <a class="nav-link" style="font-size: 12px;" href="{% url 'OTRisk:risk_register' %}" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Risk Register</a>
         </li>
-        <li class="nav-item dropdown" style="font-size: 12px;">
-            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                <i class="bi-file-earmark-easel"></i> Reports
-              </a>
-              <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                  <li><a class="dropdown-item" href="{% url 'OTRisk:reports' %}" style="font-size: 12px;">QRAW Reports</a></li>
-                  <li><a class="dropdown-item" href="{% url 'OTRisk:reports_pha' %}" style="font-size: 12px;">CyberPHA Reports</a></li>
-              </ul>
-        </li>
+
         <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="font-size: 12px;">
                 <i class="bi bi-diagram-3"></i> Admin
@@ -250,7 +300,6 @@ body {
                 <p>
                     <H4 style="color: #0a53be; display: inline-block;">{{ qraw_header.RATitle }}</H4>
                     <h6 style="display: inline-block; color: #0a53be"> Risk Assessment (QRAW)</h6>
-                </p>
             </div>
          </div>
         <div class="row"  style="font-size: 10px">
@@ -260,93 +309,60 @@ body {
                  Status: {{ qraw_header.StatusFlag }}<br>
 
                 <div id="bia_container" style="width: 100%; height: 250px;"></div>
-                <div class="row d-flex">
-                    <div class="col-md-4">
-                        <div class="card mb-3 shadow-sm h-100"> <!-- Bootstrap card with shadow -->
-                            <div class="card-body text-center">
-                           </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="card mb-3 shadow-sm h-100"> <!-- Bootstrap card with shadow -->
-                            <div class="card-body text-center">
 
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="card mb-3 shadow-sm h-100"> <!-- Bootstrap card with shadow -->
-                            <div class="card-body text-center">
-
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-
-
-            </div>
+            </div> <!--  BIA summary chart -->
             <div class="col">
                 <div class="row">
                     <div class="col-md-3">
                         Estimated Event Costs
                         <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                             <div class="card-body">
-                                Low Estimate<br>
-                                <h6>{{ total_cost_impact_low }}</h6>
+                                <img src="{% static 'images/bestcase.png' %}" alt="" style="height: 2em; vertical-align: middle; color: #3B6BF9"> Best Case<br>
+                                <h4>{{ total_cost_impact_low }}</h4>
                             </div>
                         </div>
                         <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                             <div class="card-body">
-                                Most Likely<br>
-                                <h6>{{ total_cost_impact }}</h6>
+                                <img src="{% static 'images/mostlikely.png' %}" alt="" style="height: 2em; vertical-align: middle;"> Median<br>
+                                <h4>{{ total_cost_impact }}</h4>
                             </div>
                         </div>
                         <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                             <div class="card-body">
-                                Worst Case<br>
-                                <h6>{{ total_cost_impact_high }}</h6>
+                                <img src="{% static 'images/worstcase.png' %}" alt="" style="height: 2em; vertical-align: middle;"> Worst Case<br>
+                                <h4>{{ total_cost_impact_high }}</h4>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-9">
-                        <div class="card mb-2 shadow-sm"> <!-- Bootstrap card with shadow -->
-
-                        </div>
+                        <div id="risk_score_container" style="width: 100%; height: 350px;"></div>
 
                     </div>
 
                 </div>
-            </div>
+            </div> <!-- QRAW Risk Summary bar chart -->
             <div class="col">
 
-        </div>
+            </div>
 
         </div>
         <div class="row"  style="font-size: 10px">
-
-        </div>
-
-
-
-
-
     </div>
+
     <div class="col-md-1"></div>
 </div> <!-- BIA Summary and profile -->
 <br>
+
 <div class="row">
     <div class="col-md-1"></div>
     <div class="col-md-3" style="padding-right: 0; padding-left: 0">
-    <u><b>Scenario's</b></u><br><br>
-    {% for scenario in qraw_scenarios %}
-        <div class="scenario-item">
-            <a href="#" data-id="{{ scenario.ID }}" class="scenario-link">{{ forloop.counter }}. {{ scenario.ScenarioDescription }}</a>
-        </div>
-    {% endfor %}
-</div>
-
-
+        <u><b>Scenario's</b></u><br><br>
+        {% for scenario in qraw_scenarios %}
+            <div class="scenario-item">
+                <a href="#" data-id="{{ scenario.ID }}" class="scenario-link">{{ forloop.counter }}. {{ scenario.ScenarioDescription }}</a>
+            </div>
+        {% endfor %}
+    </div>
     <script>
     $(document).ready(function() {
         $('.scenario-link').on('click', function(e) {
@@ -367,7 +383,9 @@ body {
                 success: function(data) {
                     // Generate the radar chart using the fetched data
                     generateRadarChart(data);
+                    generateRiskBarChart(data);
                     writeScenarioData(data);
+
                 },
                 error: function(error) {
                     console.error("Error fetching scenario data:", error);
@@ -381,80 +399,84 @@ body {
 
 
     </script>
+    <div class="col-7" style="padding-left: 0; background-color: #fff8e8;">
 
-
-    <div class="col-7" style="border: 0px solid; padding-left: 0; background-color: #fff8e8;">
         <div class="row" style="height: 5px"></div>
         <div class="row">
             <div class="col-md-1"></div>
 
             <div class="col-md-4">
-                <u><b>Consequences</b></u><br>
-                <label id="lblConsequence"></label>
-            </div>
+                <b>Recommended Controls</b>
+
+                <div id="controls"></div>
+            </div> <!-- recommended controls -->
+
             <div class="col-md-7">
-                <div class="row">
-                    <div class="col-md-9 text-center">
+                <div class="row" >
+                    <div class="col-md-1"></div>
+                    <div class="col-md-10 text-center">
                         <b>Estimated Single Event Costs</b>
                     </div>
-                    <div class="col-md-3"></div>
+                    <div class="col-md-1"></div>
                 </div>
-                <div class = "row">
-                    <div class="col-md-3">
-                        <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                            <div class="card-body text-center">
-                                Best Case<br>
-                                <h5 style="color: #0a53be"><label id="sle_low"></label></h5>
+                <div class="row" >
+                    <div class="col-md-1"></div>
+                    <div class="col-md-10 text-center">
+                        <div class="row" >
+                            <div class="col-md-4 text-center">
+                                <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                                    <div class="card-body text-center" style="font-size: 18px">
+                                        <img src="{% static 'images/bestcase.png' %}" alt="" style="height: 2em; vertical-align: middle; color: #3B6BF9"> Best Case<br>
+                                        <h4 style="color: #0a53be"><label id="sle_low"></label></h4>
+                                    </div>
+                                </div>
+
                             </div>
+                             <div class="col-md-4 text-center">
+                                 <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                                    <div class="card-body text-center" style="font-size: 18px">
+                                        <img src="{% static 'images/mostlikely.png' %}" alt="" style="height: 2em; vertical-align: middle;"> Median<br>
+                                        <h4 style="color: #0a53be"><label id="sle"></label></h4>
+                                    </div>
+                                </div>
+
+                             </div>
+                             <div class="col-md-4 text-center">
+                                 <div class="card mb-3 shadow-sm "> <!-- Bootstrap card with shadow -->
+                                    <div class="card-body text-center" style="font-size: 18px">
+                                        <img src="{% static 'images/worstcase.png' %}" alt="" style="height: 2em; vertical-align: middle;"> Worst Case<br>
+                                        <h4 style="color: #0a53be"><label id="sle_high"></label></h4>
+                                    </div>
+                                </div>
+
+                             </div>
                         </div>
                     </div>
-                    <div class="col-md-3">
-                        <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                            <div class="card-body text-center">
-                                Median<br>
-                                <h5 style="color: #0a53be"><label id="sle"></label></h5>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="card mb-3 shadow-sm "> <!-- Bootstrap card with shadow -->
-                            <div class="card-body text-center">
-                                Worst Case<br>
-                                <h5 style="color: #0a53be"><label id="sle_high"></label></h5>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3"></div>
+                    <div class="col-md-1"></div>
                 </div>
 
+                <div class = "row ">
+                    <div class="col">
+                        <div id="radarChartContainer" style="width: 100%; height: 400px;"></div>
+                    </div>
+                </div>
+                <div class = "row" >
+                    <div class="col">
+                        <div id="riskContainer" style="width: 85%; height: 350px;"></div>
+                    </div>
+                </div>
             </div>
-
-
-
-            <div class="col-md-3"></div>
 
         </div>
         <div class="row">
             <div class="col-md-1"></div>
 
-            <div class="col-md-4">
-                <div id="radarChartContainer" style="width: 100%; height: 400px;"></div>
+            <div class="col-md-8">
+
             </div>
-            <div class="col-md-4"> </div>
+
             <div class="col-md-3 d-flex flex-column justify-content-end" style="font-size: 10px;">
-                <div class="card mb-3 shadow-sm "> <!-- Bootstrap card with shadow -->
-                    <div class="card-body text-center" style="background-color: #fff8e8; font-size: 12px">
-                        Scenario Likelihood<br>
-                        <h6><label id="scenario_likelihood"></label></h6>
-                    </div>
-                </div>
-                <div class="card mb-3 shadow-sm "> <!-- Bootstrap card with shadow -->
-                    <div class="card-body text-center" style="background-color: #fff8e8; font-size: 12px">
-                        Residual Risk<br>
-                        <h6><label id="RRa"></label></h6>
-                    </div>
-                </div>
-                <br><br><br>
+
 
 
             </div>
@@ -464,7 +486,7 @@ body {
             <div class="col-md-1"></div>
 
             <div class="col-md-5">
-                <label for="recommendations">Recommendations: </label><label id="standards"></label><textarea id="recommendations" class="form-control" style="resize: none;" rows="8"></textarea>
+
             </div>
             <div class="col-md-4">
 
@@ -478,34 +500,80 @@ body {
 
     </div>
     <div class="col-md-1"></div>
-
-
 </div>
 
 <script>
-    anychart.onDocumentReady(function() {
-        // Create data for AnyChart
-        var data = [];
-        {% for field, avg_value in impact_summary.items %}
-            data.push({"x": "{{ field }}", "value": {{ avg_value }}});
-        {% endfor %}
+anychart.onDocumentReady(function() {
+    // Create data for AnyChart
+    var data = [];
 
-        // Create a chart
-        var chart = anychart.column3d();
-
-        // Add data to the chart
-        chart.data(data);
-        var credits = chart.credits();
-        credits.enabled(false);
-        // Set chart title
-        chart.title("Business Impact Summary");
-        chart.palette(anychart.palettes.provence);
-        chart.yScale().minimum(0).maximum(10);
-
-        // Draw the chart
-        chart.container("bia_container");
-        chart.draw();
+    // Add the normalized scores to the data
+    data.push({
+        "x": "Vulnerability",
+        "value": {{ overall_vulnerability_score }},
+        "fill": getColor({{ overall_vulnerability_score }})
     });
+    data.push({
+        "x": "Threat",
+        "value": {{ overall_threat_score }},
+        "fill": getColor({{ overall_threat_score }})
+    });
+    data.push({
+        "x": "Inherent Risk",
+        "value": {{ overall_inherent_risk_score }},
+        "fill": getColor({{ overall_inherent_risk_score }})
+    });
+    data.push({
+        "x": "Residual Risk",
+        "value": {{ overall_residual_risk_score }},
+        "fill": getColor({{ overall_residual_risk_score }})
+    });
+
+    // Create a chart
+    var chart = anychart.bar3d();
+
+    // Add data to the chart
+    chart.data(data);
+    var credits = chart.credits();
+    credits.enabled(false);
+    // Set chart title
+    chart.title("QRAW Risk Summary");
+    chart.palette(anychart.palettes.provence);
+    chart.yScale().minimum(0).maximum(10);
+
+    // Draw the chart
+    chart.container("risk_score_container");
+    chart.draw();
+    });
+
+anychart.onDocumentReady(function() {
+    // Create data for AnyChart
+    var data = [];
+    {% for field, avg_value in impact_summary.items %}
+        data.push({
+            "x": "{{ field }}",
+            "value": {{ avg_value }},
+            "fill": getColor({{ avg_value }})
+        });
+    {% endfor %}
+
+    // Create a chart
+    var chart = anychart.column3d();
+
+    // Add data to the chart
+    chart.data(data);
+    var credits = chart.credits();
+    credits.enabled(false);
+    chart.xAxis().labels().rotation(-45);
+
+    chart.title("Business Impact Summary");
+    chart.palette(anychart.palettes.provence);
+    chart.yScale().minimum(0).maximum(10);
+
+    // Draw the chart
+    chart.container("bia_container");
+    chart.draw();
+});
 
     $(document).ready(function() {
     $(".scenario-link").click(function(e) {
@@ -520,6 +588,7 @@ body {
             success: function(data) {
                 // Generate the radar chart using the fetched data
                 generateRadarChart(data);
+                generateRiskBarChart(data);
                 writeScenarioData(data);
 
             },
@@ -531,13 +600,60 @@ body {
 });
 
     function writeScenarioData(data) {
-    document.getElementById('recommendations').value = data.riskSummary;
-    document.getElementById('sle_low').textContent = data.event_cost_low;
-    document.getElementById('sle').textContent = data.event_cost_median;
-    document.getElementById('sle_high').textContent = data.event_cost_high;
-    document.getElementById('RRa').textContent = data.residual_risk;
-}
 
+        document.getElementById('sle_low').textContent = data.event_cost_low;
+        document.getElementById('sle').textContent = data.event_cost_median;
+        document.getElementById('sle_high').textContent = data.event_cost_high;
+
+
+    // Get the controls container
+    var controlsContainer = document.getElementById('controls');
+
+    // Clear any existing controls
+    controlsContainer.innerHTML = '';
+
+    // Loop through the controls and add them to the container
+    data.controls.forEach(function(control) {
+        // Create a new div for the control
+        var controlDiv = document.createElement('div');
+        controlDiv.className = 'control-item';
+
+        // Add the control name
+        var controlName = document.createElement('p');
+        controlName.textContent = control.control;
+        controlDiv.appendChild(controlName);
+
+        // Add the slider
+        var slider = document.createElement('input');
+        slider.type = 'range';
+        slider.min = '0';
+        slider.max = '100';
+        slider.value = control.score;
+        slider.className = 'control-slider';
+        slider.disabled = true;
+        controlDiv.appendChild(slider);
+        setSliderColor(slider)
+
+        // Append the control div to the container
+        controlsContainer.appendChild(controlDiv);
+    });
+    }
+
+function setSliderColor(slider) {
+
+    let value = slider.value;
+    let color;
+    if (value <= 30) {
+        color = "red";
+    } else if (value <= 60) {
+        color = "orange";
+    } else if (value <= 80) {
+        color = "yellow";
+    } else {
+        color = "green";
+    }
+    slider.style.setProperty("--thumb-color", color);  // Set the color variable
+}
     function generateRadarChart(data) {
     anychart.onDocumentReady(function() {
 
@@ -546,16 +662,16 @@ body {
         var chart = anychart.radar();
 
         var seriesData = [
-            {x: "Safety", value: data.SafetyScore},
-            {x: "Danger", value: data.lifeScore},
-            {x: "Production", value: data.productionScore},
-            {x: "Finance", value: data.FinancialScore},
-            {x: "Reputation", value: data.ReputationScore},
-            {x: "Environment", value: data.environmentScore},
-            {x: "Regulation", value: data.regulatoryScore},
-            {x: "Data", value: data.DataScore},
-            {x: "Supply", value: data.SupplyChainScore}
+            {x: "Safety", value: data.impactSafety},
+            {x: "Production", value: data.impactProduction},
+            {x: "Finance", value: data.impactFinance},
+            {x: "Reputation", value: data.impactReputation},
+            {x: "Environment", value: data.impactEnvironment},
+            {x: "Regulation", value: data.impactRegulation},
+            {x: "Data", value: data.impactData},
+            {x: "Supply", value: data.impactSupply}
         ];
+
         var credits = chart.credits();
         credits.enabled(false);
         chart.line(seriesData);
@@ -573,8 +689,44 @@ body {
     });
 }
 
+function generateRiskBarChart(data) {
 
+    anychart.onDocumentReady(function() {
+        $('#riskContainer').empty();
+        // Create data for the bar chart
+        var barData = [
+            {x: "Vulnerability Score", value: data.vulnerability_score, fill: getColor(data.vulnerability_score)},
+            {x: "Threat Score", value: data.threat_score, fill: getColor(data.threat_score)},
+            {x: "Inherent Risk Score", value: data.inherent_risk_score, fill: getColor(data.inherent_risk_score)},
+            {x: "Residual Risk", value: data.residual_risk, fill: getColor(data.residual_risk)}
+        ];
 
+        // Create the bar chart
+        var chart = anychart.bar3d();
+        chart.data(barData);
+        var credits = chart.credits();
+        credits.enabled(false);
+        chart.background().fill("#fff8e8");
+        chart.yScale().minimum(0).maximum(10);
+        chart.title("Scenario Risk Analysis Summary");
+        chart.container("riskContainer");
+        chart.draw();
+    });
+}
+
+function getColor(value) {
+    let color;
+    if (value <= 3) {
+        color = "green";
+    } else if (value <= 6) {
+        color = "yellow";
+    } else if (value <= 8) {
+        color = "orange";
+    } else {
+        color = "red";
+    }
+    return color;
+}
 </script>
 
 

@@ -234,7 +234,7 @@ def facility_risk_profile(request):
             f"For the {facility} {facility_type} at {address}, {country} in the {Industry} industry, with {employees} employees working a {shift_model} shift model, provide a concise bullet-point list of the Physical security challenges given the location of {address}, {country}. Limit the response to a maximum of 100 words, or less. EXTRA INSTRUCTION: Add a line space between each bullet point",
             # f"For the {facility} {facility_type} at {address}, {country} in the {Industry} industry, provide a concise bullet point list of other localized risks that are likely to be identified for a {facility_type} at {address}. Limit the response to a maximum of 100 words, or less. Add a line space between each bullet point"
             f"For the {facility} {facility_type} at {address}, {country} in the {Industry} industry, with {employees} employees working a {shift_model} shift model, provide a concise bullet point list of the likely OT devices and equipment that may be connected to IT networks for monitoring and control at  {facility_type} at {address}. Limit the response to a maximum of 100 words, or less. EXTRA INSTRUCTION: Add a line space between each bullet point",
-            f"For a {facility_type} located in {country} operating within the {Industry} industry, please provide a concise bullet point list of ONLY the current and most relevant regulatory compliance requirements that will apply to that specific industry and facility and that EXPLICITLY state requirements for cybersecurity controls. List only the full title of the regulation - no additional text or explanation. DO NOT REPEAT OR DUPLICATE TITLES IN THE FINAL LIST.  EXTRA INSTRUCTION: Add a line space between each bullet point",
+            f"For a {facility_type} located in {country} operating within the {Industry} industry, please provide a concise bullet point list up to a maximum of 15 of ONLY the most current and most relevant regulatory compliance requirements that will apply to that specific industry and facility and that EXPLICITLY state requirements for cybersecurity controls. List only the full title of the regulation - no additional text or explanation. DO NOT REPEAT OR DUPLICATE TITLES IN THE FINAL LIST.  EXTRA INSTRUCTION: Add a line space between each bullet point.",
             f"You are an expert in risk assessment for industrial facilities. For a {facility} {facility_type} in {country}, within the {Industry} industry, with {employees} employees on a {shift_model} shift, using ONLY this information, provide an estimated and pragmatic process hazard analysis (PHA) risk score out of 100 based on the hazards that COULD be expected to be found at the site. INSTRUCTION: Provide only a single number without extra characters or explanations."
         ]
 
@@ -243,7 +243,8 @@ def facility_risk_profile(request):
         # Loop through the prompts and make an API call for each one
         def fetch_response(prompt):
             return openai.ChatCompletion.create(
-                model="gpt-4",
+                # model="gpt-4",
+                model="gtp-3.5-turbo",
                 messages=[
                     {"role": "system",
                      "content": "You are a model trained to provide concise responses. Please provide a concise numbered bullet-point list based on the given statement."},
@@ -482,7 +483,19 @@ def getSingleScenario(request):
         'control_effectiveness': scenario.control_effectiveness,
         'likelihood': scenario.likelihood
     }
+    # Retrieve the related PHAControlList records
+    control_list = []
+    for control in scenario.controls.all():
+        control_dict = {
+            'ID': control.ID,
+            'control': control.control,
+            'reference': control.reference,
+            'score': control.score
+        }
+        control_list.append(control_dict)
 
+    # Add the control list to the scenario dictionary
+    scenario_dict['controls'] = control_list
     # Return the scenario as a JSON response
     return JsonResponse(scenario_dict)
 
@@ -578,7 +591,7 @@ def scenario_analysis(request):
 
             {
                 "role": "user",
-                "content": f"Using the {standards} standard and the following context, concisely provide up to 10 key recommendations and their reference section in {standards} in 200 words or less for a CyberPHA. Context: {common_content_prefix()}. Give the response only. No preamble or commentary"
+                "content": f"Using the {standards} standard and the following context, concisely provide up to 10 key recommendations and their reference section in {standards} in 200 words or less for a CyberPHA. Context: {common_content_prefix()}. Each recommendation should be formatted as follows: 'X (where 'X' is the recommendation number). Recommendation text (academic citation to reference within {standards}). No preamble or commentary"
             },
             {
                 "role": "user",
@@ -603,6 +616,8 @@ def scenario_analysis(request):
             # Collect the results in the order the futures were submitted
             responses = [future.result() for future in futures]
 
+        r_list = parse_recommendations((responses[3]))
+
         # Return the responses as variables
         return JsonResponse({
             'likelihood': responses[0],
@@ -610,8 +625,26 @@ def scenario_analysis(request):
             'costs': responses[2],
             'recommendations': responses[3],
             'probability': responses[4],
-            'control_effectiveness': control_effectiveness
+            'control_effectiveness': control_effectiveness,
+            'r_list': r_list
         })
+
+
+def parse_recommendations(recommendations_str):
+    # Regular expression to match the format
+    pattern = re.compile(r'(\d+)\.\s(.*?)(\([^)]+\))')  # This regex captures any content within brackets
+
+    matches = pattern.findall(recommendations_str)
+
+    # Convert matches to a list of dictionaries
+    parsed_data = [{
+        'line_number': int(match[0]),
+        'control_text': match[1].strip(),
+        'reference': match[2]
+    } for match in matches]
+
+    return parsed_data
+
 
 
 def scenario_vulnerability(request, scenario_id):
@@ -642,7 +675,6 @@ def scenario_vulnerability(request, scenario_id):
 
 
 def add_vulnerability(request, scenario_id):
-
     scenario = get_object_or_404(tblCyberPHAScenario, pk=scenario_id)
     action = request.POST.get('action')
     if request.method == 'POST':

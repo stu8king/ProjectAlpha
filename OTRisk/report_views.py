@@ -3,6 +3,7 @@ from django.db.models.functions import Cast, Substr, Length, math
 from math import ceil
 from django.forms import IntegerField
 from django.shortcuts import get_object_or_404
+from django.core import serializers
 from OTRisk.models.Model_CyberPHA import tblCyberPHAHeader, tblCyberPHAScenario, vulnerability_analysis, \
     MitreControlAssessment
 from OTRisk.models.raw import RAWorksheet, RAWorksheetScenario
@@ -67,7 +68,7 @@ def get_pha_records(cyber_pha_header_id):
 
     # Retrieve related records from RAActions where phaID matches the given cyber_pha_header_id
     ra_actions = RAActions.objects.filter(phaID=cyber_pha_header_id)
-
+    ra_actions_json = serializers.serialize('json', ra_actions)
     # Retrieve related records from MitreControlAssessment
     mitre_control_assessments = MitreControlAssessment.objects.filter(cyberPHA=cyber_pha_header)
 
@@ -91,7 +92,7 @@ def get_pha_records(cyber_pha_header_id):
         'risk_category_summary': risk_category_summary,
         'impact_summary': impact_summary,
         'vulnerability_analyses': vulnerability_analyses,
-        'ra_actions': ra_actions,
+        'ra_actions_json': ra_actions_json,
         'mitre_control_assessments': mitre_control_assessments,
         'total_cost_impact': total_cost_impact,
         'total_cost_impact_low': total_cost_impact_low,
@@ -132,7 +133,7 @@ def get_scenario_report_details(request):
     scenario_id = request.GET.get('id')
     scenario = tblCyberPHAScenario.objects.get(ID=scenario_id)
     control_effectiveness = int(ceil(get_overall_control_effectiveness_score(scenario.CyberPHA)))
-
+    controls = scenario.controls.all().values('control', 'score', 'reference')
     sle = format_currency(scenario.sle)
 
     sle_low = format_currency(scenario.sle_low)
@@ -172,7 +173,8 @@ def get_scenario_report_details(request):
         'sle_high': sle_high,
         'residual_risk': scenario.RRa,
         'control_effectiveness': control_effectiveness,
-        'scenario_likelihood': scenario_likelihood
+        'scenario_likelihood': scenario_likelihood,
+        'controls': list(controls)
     }
     return JsonResponse(data)
 
@@ -204,7 +206,6 @@ def get_qraw_records(qraw_id):
 
     # Retrieve related records from tblCyberPHAScenario
     qraw_scenarios = RAWorksheetScenario.objects.filter(RAWorksheetID=qraw_id)
-    print(qraw_scenarios)
 
     total_cost_impact = format_currency(qraw_scenarios.aggregate(Sum('event_cost_median'))['event_cost_median__sum'])
 
@@ -217,16 +218,37 @@ def get_qraw_records(qraw_id):
 
     model_class = RAWorksheetScenario
 
-    impact_fields = [f.name for f in model_class._meta.get_fields() if 'score' in f.name.lower()]
+    # Define a set of fields to exclude
+    exclude_fields = {'RiskScore', 'ThreatScore', 'VulnScore', 'OperationScore'}
+
+    # Adjust the list comprehension to exclude the unwanted fields
+    impact_fields = [f.name for f in model_class._meta.get_fields() if
+                     'score' in f.name.lower() and f.name not in exclude_fields]
 
     impact_summary = {}
     for field in impact_fields:
         avg_value = qraw_scenarios.aggregate(avg_value=Avg(field))['avg_value']
-        custom_name = field.replace('impact', '')
+        custom_name = field.replace('Score', '')
+        custom_name = custom_name.title()
         impact_summary[custom_name] = avg_value
 
     # Retrieve related records from RAActions where phaID matches the given cyber_pha_header_id
     ra_actions = RAActions.objects.filter(RAWorksheetID=qraw_id)
+
+    overall_scores = qraw_scenarios.aggregate(
+        avg_vulnerability=Avg('VulnScore'),
+        avg_threat=Avg('ThreatScore'),
+        avg_inherent_risk=Avg('RiskScore'),
+        avg_residual_risk=Avg('residual_risk')
+    )
+
+    # Normalize the scores to be out of 10
+    normalized_scores = {
+        'overall_vulnerability_score': overall_scores['avg_vulnerability'] ,
+        'overall_threat_score': overall_scores['avg_threat'] ,
+        'overall_inherent_risk_score': overall_scores['avg_inherent_risk'] ,
+        'overall_residual_risk_score': overall_scores['avg_residual_risk']
+    }
 
     return {
         'risk_category_summary': risk_category_summary,
@@ -236,13 +258,17 @@ def get_qraw_records(qraw_id):
         'total_cost_impact': total_cost_impact,
         'total_cost_impact_low': total_cost_impact_low,
         'total_cost_impact_high': total_cost_impact_high,
-        'qraw_scenarios': qraw_scenarios
+        'qraw_scenarios': qraw_scenarios,
+        **normalized_scores
     }
 
 
 def get_qraw_scenario_report_details(request):
     scenario_id = request.GET.get('id')
+
     scenario = RAWorksheetScenario.objects.get(ID=scenario_id)
+    # Retrieve associated controls for the scenario
+    controls = scenario.controls.all().values('control', 'score')
 
     event_cost_low = format_currency(scenario.event_cost_low)
 
@@ -261,12 +287,17 @@ def get_qraw_scenario_report_details(request):
         'impactData': scenario.DataScore,
         'impactSupply': scenario.SupplyChainScore,
         'risk_summary': scenario.riskSummary,
-        'residual_risk': scenario.RiskStatus,
+        'residual_risk': scenario.residual_risk,
+        'inherent_risk_score': scenario.RiskScore,
+        'inherent_risk_status': scenario.RiskStatus,
         'outage': scenario.outage,
         'event_cost_low': event_cost_low,
         'event_cost_median': event_cost_median,
         'event_cost_high': event_cost_high,
-        'scenario': scenario
+        'vulnerability_score': scenario.VulnScore,
+        'threat_score': scenario.ThreatScore,
+        'threat_source': scenario.threatSource,
+        'controls': list(controls)
 
     }
     return JsonResponse(data)

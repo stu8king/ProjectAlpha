@@ -1,6 +1,7 @@
 import os
 
 from django.contrib.auth.models import User
+from django.core.serializers import serialize
 from django.shortcuts import get_object_or_404
 from django.utils.crypto import get_random_string
 from django.views import View
@@ -10,7 +11,7 @@ from OTRisk.models.RiskScenario import RiskScenario, tblScenarioRecommendations
 from OTRisk.models.Model_Scenario import tblConsequence
 from OTRisk.models.questionnairemodel import Questionnaire, FacilityType
 from OTRisk.models.ThreatAssessment import ThreatAssessment
-from OTRisk.models.raw import RAWorksheet, RAWorksheetScenario, RAActions, MitreICSMitigations
+from OTRisk.models.raw import RAWorksheet, RAWorksheetScenario, RAActions, MitreICSMitigations, RawControlList
 from django.db.models import F, Count, Avg, Case, When, Value, CharField, Sum
 from django.db.models.functions import Ceil
 
@@ -24,7 +25,7 @@ from OTRisk.models.Model_CyberPHA import tblCyberPHAHeader, tblRiskCategories, \
     tblControlObjectives, \
     tblThreatIntelligence, tblMitigationMeasures, tblScenarios, tblSafeguards, tblThreatSources, tblThreatActions, \
     tblNodes, tblUnits, tblZones, tblCyberPHAScenario, tblIndustry, auditlog, tblStandards, MitreControlAssessment, \
-    CyberPHAScenario_snapshot, Audit
+    CyberPHAScenario_snapshot, Audit, PHAControlList
 from django.shortcuts import render, redirect
 from .dashboard_views import get_user_organization_id
 from django.contrib.auth.decorators import login_required
@@ -401,6 +402,7 @@ def scenarioreport(request):
 
 @login_required()
 def save_or_update_cyberpha(request):
+
     if request.method == 'POST':
         # Get the form data
         cyberphaid = request.POST.get('cyberpha')
@@ -464,6 +466,9 @@ def save_or_update_cyberpha(request):
         likelihood = request.POST.get('likelihood')
         snapshot = request.POST.get('snapshot')
         control_effectiveness = int(float(request.POST.get('control_effectiveness')))
+
+        control_list_str = request.POST.get('controlList')
+        control_list = json.loads(control_list_str)
 
         if outageDuration in ('NaN', ''):
             outageDuration = 0
@@ -646,6 +651,26 @@ def save_or_update_cyberpha(request):
                     'likelihood': likelihood
                 }
             )
+            scenario_id_value = cyberpha_entry.ID
+            # save the controls
+            for control_item in control_list:
+                control_name = control_item['control']
+                control_score = control_item['score']
+                control_reference = control_item['reference']
+
+                # Check if the control already exists for the given scenario
+                control_instance, created = PHAControlList.objects.get_or_create(
+                    scenarioID_id=scenario_id_value,
+                    # Note: scenarioID_id is the way to reference the ID of a ForeignKey in Django
+                    control=control_name,
+                    reference=control_reference,
+                    defaults={'score': control_score}  # This sets the score if a new instance is created
+                )
+
+                # If the control instance already exists, just update the score
+                if not created:
+                    control_instance.score = control_score
+                    control_instance.save()
             # write to the audit log
             action = "created" if created else "updated"
 
@@ -1017,10 +1042,22 @@ def save_raw_actions(request):
 
 def get_scenarios(request):
     raw_id = request.GET.get('raw_id', None)
-    scenarios = RAWorksheetScenario.objects.filter(RAWorksheetID=raw_id)
-    scenarios_json = serializers.serialize('json', scenarios)
 
-    return JsonResponse(json.loads(scenarios_json), safe=False)
+    # Fetch scenarios
+    scenarios = RAWorksheetScenario.objects.filter(RAWorksheetID=raw_id)
+    scenarios_json = serialize('json', scenarios)
+
+    # Fetch controls associated with the scenarios
+    controls = RawControlList.objects.filter(scenarioID__in=scenarios)
+    controls_json = serialize('json', controls)
+
+    # Return both serialized lists in the response
+    response_data = {
+        'scenarios': json.loads(scenarios_json),
+        'controls': json.loads(controls_json)
+    }
+
+    return JsonResponse(response_data, safe=False)
 
 
 # saves a new scenario on riskassess.html

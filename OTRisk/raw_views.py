@@ -3,7 +3,7 @@ import os
 
 from django.forms import model_to_dict
 
-from OTRisk.models.raw import RAWorksheet, RAWorksheetScenario, RAActions, MitreICSMitigations, MitreICSTechniques
+from OTRisk.models.raw import RAWorksheet, RAWorksheetScenario, RAActions, MitreICSMitigations, MitreICSTechniques, RawControlList
 from django.contrib.auth.decorators import login_required
 from OTRisk.models.questionnairemodel import FacilityType
 from OTRisk.models.Model_CyberPHA import tblIndustry, tblThreatSources, auditlog, tblScenarios, tblCyberPHAHeader
@@ -84,7 +84,7 @@ class UpdateRAAction(View):
 
 
 @login_required()
-def ra_actions_view(request):
+def ra_actions_view(request, qraw_id=None, pha_id=None):
     selected_action = None
     ra_title = None  # This will store the RATitle or the record from tblCyberPHAHeader
 
@@ -110,8 +110,13 @@ def ra_actions_view(request):
     # Get the organization_id of the current user
     current_user_organization_id = request.user.userprofile.organization_id
 
-    # Filter RAActions by organization_id
-    ra_actions = RAActions.objects.filter(organizationid=current_user_organization_id)
+    # Filter RAActions based on the provided parameters
+    if qraw_id and isinstance(qraw_id, int) and qraw_id > 0:
+        ra_actions = RAActions.objects.filter(organizationid=current_user_organization_id, RAWorksheetID=qraw_id)
+    elif pha_id and isinstance(pha_id, int) and pha_id > 0:
+        ra_actions = RAActions.objects.filter(organizationid=current_user_organization_id, phaID=pha_id)
+    else:
+        ra_actions = RAActions.objects.filter(organizationid=current_user_organization_id)
 
     context = {
         'ra_actions': ra_actions,
@@ -631,6 +636,7 @@ def openai_assess_risk(request):
         outage = request.GET.get('outage')
         outageLength = int(request.GET.get('outageLength'))
         impact = request.GET.get('impact')
+        controlScore = request.GET.get('controlScore')
 
         ASSET_STATUS_MAPPING = {
             1: "New / Hardened",
@@ -766,32 +772,50 @@ def openai_assess_risk(request):
             }
         }
 
-        # Query for the Model
-        risk_summary_message = {
-            "role": "user",
-            "content": dict(
-                prompt=(
-                    "Based on the provided risk factors, generate a concise bullet point list of the most relevant OT and ICS Cybersecurity controls necessary to mitigate the risks:\n"
-                    "Controls should be focused on mitigating risks most relevant to OT Cybersecurity."
-                ),
-                factors=risk_factors,
-                additional_request={
-                    "formatting": "Place line breaks between lines. No more than 10 words per bullet point. No extra commentary or explanation"
-                }
-            )
-        }
+        try:
+            controlScoreValue = int(controlScore)
+        except ValueError:  # This will catch if controlScore is not a valid integer (e.g., NaN)
+            controlScoreValue = 0
+
+        if controlScoreValue > 0:
+            risk_summary = 'x'
+        else:
+            risk_summary_message = {
+                "role": "user",
+                "content": dict(
+                    prompt=(
+                        "Based on the provided risk factors, generate a concise bullet point list of the most relevant OT (operational technology) and ICS (industrial control system) Cybersecurity controls necessary to mitigate the risks:\n"
+                        "Controls should be focused on mitigating risks most relevant to OT Cybersecurity."
+                    ),
+                    factors=risk_factors,
+                    additional_request={
+                        "formatting": "Place line breaks between lines. No more than 10 words per bullet point. No extra commentary or explanation"
+                    }
+                )
+            }
+            risk_summary = query_openai(risk_summary_message['content'])
 
         risk_rating = query_openai(risk_rating_message['content'])
         risk_score = query_openai(risk_score_message['content'])
         event_cost_estimate = query_openai(event_cost_estimate_message['content'])
-        risk_summary = query_openai(risk_summary_message['content'])
-
+        # risk_summary = query_openai(risk_summary_message['content'])
+        risk_summary_array = parse_risk_summary(risk_summary) if risk_summary != 'x' else []
         values = event_cost_estimate.split('|')
         low_estimate, high_estimate, median_estimate = values
 
         # Return the results
-        result_array = [risk_rating, risk_score, low_estimate, high_estimate, risk_summary, median_estimate]
+        result_array = [risk_rating, risk_score, low_estimate, high_estimate, risk_summary, median_estimate, risk_summary_array]
         return JsonResponse(result_array, safe=False)
+
+
+def parse_risk_summary(risk_summary):
+    # Split the string by newline
+    lines = risk_summary.split('\n')
+
+    # Remove the bullet symbol and any leading/trailing whitespace from each line
+    parsed_lines = [line.replace('-', '').strip() for line in lines if line.strip() != '']
+
+    return parsed_lines
 
 
 def write_to_audit(user_id, user_action, user_ip):
@@ -1135,6 +1159,7 @@ def clean_numeric_string(value):
 
 
 def create_or_update_raw_scenario(request):
+
     if request.method == 'POST':
         raw_id = int(request.POST.get('rawID'))  # Assuming rawID is the ID of RAWorksheet
 
@@ -1148,6 +1173,9 @@ def create_or_update_raw_scenario(request):
             scenario_id = 0
         else:
             scenario_id = int(scenario_id_value)
+
+        control_list_str = request.POST.get('controlList')
+        control_list = json.loads(control_list_str)
 
         scenario_data = {
             'RAWorksheetID': raw_worksheet,
@@ -1184,8 +1212,9 @@ def create_or_update_raw_scenario(request):
             'outageLength': request.POST.get('outageLength'),
             'ThreatScore': request.POST.get('ThreatScore'),
             'threatTactic': request.POST.get('threatTactic'),
-            'impact': request.POST.get('impact')
-        }
+            'impact': request.POST.get('impact'),
+            'residual_risk': int(round(float(request.POST.get('residual_risk'))))
+         }
 
         # Check if scenario_id is provided to determine if it's an update or create
         if scenario_id > 0:
@@ -1196,6 +1225,23 @@ def create_or_update_raw_scenario(request):
         else:
             new_scenario = RAWorksheetScenario(**scenario_data)
             new_scenario.save()
+
+        for control_item in control_list:
+            control_name = control_item['control']
+            control_score = control_item['score']
+
+            # Check if the control already exists for the given scenario
+            control_instance, created = RawControlList.objects.get_or_create(
+                scenarioID_id=scenario_id,
+                # Note: scenarioID_id is the way to reference the ID of a ForeignKey in Django
+                control=control_name,
+                defaults={'score': control_score}  # This sets the score if a new instance is created
+            )
+
+            # If the control instance already exists, just update the score
+            if not created:
+                control_instance.score = control_score
+                control_instance.save()
 
         return JsonResponse({'message': 'Scenario created/updated successfully'}, status=200)
 

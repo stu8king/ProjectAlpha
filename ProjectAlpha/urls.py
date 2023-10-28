@@ -10,7 +10,7 @@ urlpatterns = [
     path('', RedirectView.as_view(url='/accounts/login/', permanent=True), name='root_redirect'),
     path('OTRisk/', include('OTRisk.urls', namespace='OTRisk')),
     path('accounts/', include(('accounts.urls', 'accounts'), namespace='accounts')),
-    path('accounts/login/', auth_views.LoginView.as_view(template_name='accounts/login.html'), name='login'),
+    path('accounts/login/', auth_views.LoginView.as_view(template_name='accounts/home.html'), name='login'),
     path('logout/', LogoutView.as_view(next_page='/accounts/login/'), name='logout'),
 
 ]

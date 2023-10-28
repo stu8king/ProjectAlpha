@@ -1,3 +1,4 @@
+from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 from accounts.models import Organization
 
@@ -38,7 +39,7 @@ class RAWorksheet(models.Model):
     RASynopsis = models.CharField(max_length=255)
     UserID = models.IntegerField()
     STATUS_CHOICES = [
-        ("Open","Open"),
+        ("Open", "Open"),
         ("Closed", "Closed"),
     ]
     StatusFlag = models.CharField(max_length=5, choices=STATUS_CHOICES, default='Open')
@@ -127,7 +128,8 @@ class RAWorksheetScenario(models.Model):
         ("Manipulation of View", "Manipulation of View"),
         ("Theft of Operational Information", "Theft of Operational Information"),
     ]
-    impact = models.CharField(max_length=30, choices=IMPACT_CHOICES, default='N/A')
+    impact = models.CharField(max_length=30, choices=IMPACT_CHOICES, default='N/A'),
+    residual_risk = models.IntegerField(validators=[MinValueValidator(0), MaxValueValidator(10)])
 
     class Meta:
         db_table = 'tblRAWorksheetScenario'
@@ -196,3 +198,19 @@ class ControlRiskAffinity(models.Model):
 
     class Meta:
         db_table = 'tblControlRiskAffinity'
+
+
+class RawControlList(models.Model):
+    ID = models.AutoField(primary_key=True)
+    scenarioID = models.ForeignKey(RAWorksheetScenario, on_delete=models.CASCADE, db_column='scenarioID',
+                                   related_name='controls')
+    control = models.TextField()
+    score = models.IntegerField(validators=[MinValueValidator(0), MaxValueValidator(100)])
+
+    class Meta:
+        db_table = 'tblRawControlList'
+        verbose_name = 'Control List'
+        verbose_name_plural = 'Control Lists'
+
+    def __str__(self):
+        return self.control
