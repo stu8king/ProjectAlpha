@@ -37,7 +37,9 @@
     <script src="{% static 'anychart/dist/js/anychart-pie.min.js' %}"></script>
     <script src="{% static 'anychart/dist/js/anychart-cartesian.min.js' %}"></script>
     <script src="{% static 'anychart/dist/js/anychart-radar.min.js' %}"></script>
+    <script src="{% static 'anychart/dist/js/anychart-circular-gauge.min.js' %}"></script>
 
+     <script src="https://cdn.anychart.com/releases/8.11.1/js/anychart-linear-gauge.min.js" type="text/javascript"></script>
 
      {% load django_bootstrap5 %}
      {% bootstrap_css %}
@@ -305,11 +307,62 @@ body {
          </div>
         <div class="row"  style="font-size: 10px">
             <div class="col-md-4" style="font-size: 12px">
-                 Facility Type: {{ cyber_pha_header.FacilityType }}<br>
-                 Industry: {{ cyber_pha_header.Industry }}<br>
-                 Assessment Zone: {{ cyber_pha_header.AssessmentZone }}<br>
-                 Assessment Start: {{ cyber_pha_header.AssessmentStartDate }} /
-                Assessment End: {{ cyber_pha_header.AssessmentEndDate }}
+                <div class="row">
+                    <div class="col-md-6" style="font-size: 14px">
+                        Facility Type: {{ cyber_pha_header.FacilityType }}<br>
+                        Industry: {{ cyber_pha_header.Industry }}<br>
+                        Assessment Unit: {{ cyber_pha_header.AssessmentUnit }}<br>
+                        Assessment Zone: {{ cyber_pha_header.AssessmentZone }}<br>
+                        Assessment Start: {{ cyber_pha_header.AssessmentStartDate }} /
+                        Assessment End: {{ cyber_pha_header.AssessmentEndDate }}
+                    </div>
+                    <div class="col-md-6" style="font-size: 12px">
+                        <div class="card mb-3" style="border: 0px"> <!-- Bootstrap card with shadow -->
+                            <div class="card-body">
+                                <div id="pha_gauge" style="width: 100%; height: 75%;"></div>
+                            </div>
+                            <script type="text/javascript">
+                        anychart.onDocumentReady(function() {
+                            // Assume pha_score is a variable holding your PHA score
+                            var pha_score = {{ cyber_pha_header.pha_score }};
+
+                            // Create data for the gauge
+                            var data = anychart.data.set([
+                                ['PHA Score', pha_score]
+                            ]);
+
+                            // Create and configure the gauge chart
+                            var gauge = anychart.gauges.circular();
+                            gauge.data(data);
+
+                            var credits = gauge.credits();
+                            credits.enabled(false);
+                            // Set gauge settings
+                            gauge.data(data).padding('4%');
+                            gauge.startAngle(270);
+                            gauge.sweepAngle(180);
+
+                            // Set axis scale settings
+                            var scale = gauge.axis().scale();
+                            scale.minimum(0)
+                                .maximum(100)
+                                .ticks()
+                                .interval(10);
+
+                            // Set the look of the bar that presents data
+                            gauge.bar(0)
+                                .position('i')
+                                .fill('#F0673B .9')
+                                .stroke('#F0673B')
+                                .radius(65);
+                            gauge.title("PHA Profile Rating (/100)");
+                            // Draw the chart
+                            gauge.container('pha_gauge').draw();
+                        });
+                            </script></div>
+                    </div>
+                </div>
+                <div class="row">
                 <div id="bia_container" style="width: 100%; height: 250px;"></div>
                 <div class="row d-flex">
                     <div class="col-md-4">
@@ -337,7 +390,7 @@ body {
                         </div>
                     </div>
                 </div>
-
+                </div>
 
 
             </div>
@@ -346,7 +399,7 @@ body {
                     <div class="col">
                         <div class="row">
                             <div class="col-md-3">
-                                Estimated Event Costs
+                                                      Estimated Event Costs
                                 <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                                     <div class="card-body">
                                         Low Estimate<br>
