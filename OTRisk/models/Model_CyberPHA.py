@@ -305,6 +305,7 @@ class tblCyberPHAScenario(models.Model):
     risk_open_date = models.DateField()
     risk_close_date = models.DateField()
     control_effectiveness = models.IntegerField()
+    frequency = models.DecimalField(max_digits=4, decimal_places=1)
 
     class Meta:
         db_table = 'tblCyberPHAScenario'
@@ -502,6 +503,7 @@ class CyberPHAScenario_snapshot(models.Model):
     snapshot_date = models.DateField()
     control_effectiveness = models.IntegerField()
     likelihood = models.IntegerField()
+    frequency = models.DecimalField(max_digits=4, decimal_places=1)
 
 
 class Audit(models.Model):

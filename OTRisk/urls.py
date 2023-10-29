@@ -54,7 +54,10 @@ urlpatterns = [
     path('raw_action', views.raw_action, name='raw_action'),
     path('get_techniques/', views.GetTechniquesView.as_view(), name='get_techniques'),
     path('dashboardhome', views.dashboardhome, name='dashboardhome'),
-    path('iotaphamanager', views.iotaphamanager, name='iotaphamanager'),
+
+    path('iotaphamanager/', views.iotaphamanager, name='iotaphamanager'),
+    path('iotaphamanager/<int:record_id>/', views.iotaphamanager, name='iotaphamanager_with_id'),
+
     path('facility_risk_profile', views.facility_risk_profile, name='facility_risk_profile'),
     path('get_headerrecord', views.get_headerrecord, name='get_headerrecord'),
     path('scenario_analysis',views.scenario_analysis, name='scenario_analysis'),

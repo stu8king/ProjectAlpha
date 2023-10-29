@@ -38,7 +38,7 @@ from pptx.util import Inches, Pt
 
 
 @login_required
-def iotaphamanager(request):
+def iotaphamanager(request, record_id=None):
     pha_header = None
     new_record_id = None  # Initialize new_record_id to None
     annual_revenue_str = "$0"
@@ -128,7 +128,8 @@ def iotaphamanager(request):
         'new_record_id': new_record_id,
         'mitigations': mitigations,
         'SHIFT_MODELS': tblCyberPHAHeader.SHIFT_MODELS,
-        'annual_revenue_str': annual_revenue_str
+        'annual_revenue_str': annual_revenue_str,
+        'selected_record_id': record_id
     })
 
 
@@ -244,7 +245,7 @@ def facility_risk_profile(request):
         def fetch_response(prompt):
             return openai.ChatCompletion.create(
                 # model="gpt-4",
-                model="gtp-3.5-turbo",
+                model="gpt-4",
                 messages=[
                     {"role": "system",
                      "content": "You are a model trained to provide concise responses. Please provide a concise numbered bullet-point list based on the given statement."},
@@ -481,7 +482,8 @@ def getSingleScenario(request):
         'risk_open_date': scenario.risk_open_date,
         'risk_close_date': scenario.risk_close_date,
         'control_effectiveness': scenario.control_effectiveness,
-        'likelihood': scenario.likelihood
+        'likelihood': scenario.likelihood,
+        'frequency': scenario.frequency
     }
     # Retrieve the related PHAControlList records
     control_list = []
@@ -596,6 +598,10 @@ def scenario_analysis(request):
             {
                 "role": "user",
                 "content": f"Given the context: {common_content_prefix()} and analysis of publicly reported cybersecurity incidents, provide ONLY the estimated probability (as a whole number percentage) of a successful targeted attack given that the assessed effectiveness of current cybersecurity controls is {control_effectiveness}% . Answer with a number followed by a percentage sign (e.g., nn%). Do NOT include any other words, sentences, or explanations."
+            },
+            {
+                "role": "user",
+                "content": f"Given the context: {common_content_prefix()} and news reports of publicly reported cybersecurity incidents, provide ONLY the estimated frequency of a successful targeted attack of the scenario {scenario} where a successful targeted attack means that it succeeds in causing {consequences} at the {facility_type}. Your answer should be given as an integer that represents the number of times per year to expect such a scenario. If the estimated frequency is less than once per year then provide a decimal to indicate the frequency per year. Do NOT include any other words, sentences, or explanations."
             }
 
         ]
@@ -625,6 +631,7 @@ def scenario_analysis(request):
             'costs': responses[2],
             'recommendations': responses[3],
             'probability': responses[4],
+            'frequency': responses[5],
             'control_effectiveness': control_effectiveness,
             'r_list': r_list
         })

@@ -464,6 +464,7 @@ def save_or_update_cyberpha(request):
         sis_compromise = sis_compromise_str.lower() == 'true'
         safety_hazard = request.POST.get('safety_hazard')
         likelihood = request.POST.get('likelihood')
+        frequency = request.POST.get('frequency')
         snapshot = request.POST.get('snapshot')
         control_effectiveness = int(float(request.POST.get('control_effectiveness')))
 
@@ -583,7 +584,8 @@ def save_or_update_cyberpha(request):
                 risk_response='',
                 organizationID=org_id,
                 control_effectiveness=control_effectiveness,
-                likelihood=likelihood
+                likelihood=likelihood,
+                frequency=frequency
             )
             snapshot_record.save()
         else:
@@ -648,7 +650,8 @@ def save_or_update_cyberpha(request):
                     'risk_open_date': timezone.now(),
                     'risk_close_date': '2099-01-01',
                     'control_effectiveness': control_effectiveness,
-                    'likelihood': likelihood
+                    'likelihood': likelihood,
+                    'frequency': frequency
                 }
             )
             scenario_id_value = cyberpha_entry.ID
