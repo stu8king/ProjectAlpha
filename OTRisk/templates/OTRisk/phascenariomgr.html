@@ -325,7 +325,22 @@
     <div class="col-md-10" style="background-color: white">
     <figure class="text-center">
 
-    <h5>CyberPHA Scenario Analysis - <span id="facilityName"></span></h5>
+    <h5>
+    <a href="#" id="cyberPHALink">CyberPHA Scenario Analysis - <span id="facilityName"></span></a>
+</h5>
+
+<script>
+    $(document).ready(function() {
+        // Get the activeCyberPHA value from the session storage
+        let activeCyberPHA = sessionStorage.getItem('activeCyberPHA');
+
+        // If activeCyberPHA exists, set the href attribute of the link
+        if (activeCyberPHA) {
+            let linkUrl = `/OTRisk/iotaphamanager/${activeCyberPHA}/`;  // Modify the URL path as needed
+            $('#cyberPHALink').attr('href', linkUrl);
+        }
+    });
+</script>
         <h6>Risk weightings set to <span id="facilityName2" class="text-decoration-underline text-body-emphasis" data-bs-toggle="tooltip" data-bs-placement="top" title="If the incorrect industry is displayed, return to the 'CyberPHA Manager' screen and select the 'Edit' button for this assessment from the table. Select the correct industry in the Assessment Setup form and save the record before re-selecting it to return to this screen"></span> industry</h6>
 
 
@@ -867,7 +882,8 @@
         <div class="card mb-3 shadow-sm">
             <div class="card-body">
                 <div class="slider-container d-flex align-items-center">
-                    <div class="col-3"><label class="small-font d-flex align-items-center clickable-label" data-bs-toggle="modal" data-bs-target="#uelModal" data-bs-placement="top" ><img src="{% static 'images/click.png' %}" alt="" class="align-bottom" style="max-height: 2rem; margin-left: 5px;"> Unmitigated Event Likelihood (UEL)</label></div>
+                    <div class="col-3">
+                        <label class="small-font d-flex align-items-center clickable-label" data-bs-toggle="modal" data-bs-target="#uelModal" data-bs-placement="top" ><img src="{% static 'images/click.png' %}" alt="" class="align-bottom" style="max-height: 2rem; margin-left: 5px;"> Unmitigated Event Likelihood (UEL)</label></div>
                     <div class="col-6">
                       <input type="range" min="1" max="10" value="1" class="slider" id="uel_range" name="uel_range" onchange="initSlider('uel_range','range_uel');">
                     </div>
@@ -879,8 +895,10 @@
         <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
             <div class="card-body">
                 <div class="slider-container d-flex align-items-center">
-                    <div class="col-2"><label class="small-font d-flex align-items-center " >Residual Risk Unmitigated (RRu)</label></div>
-                    <div class="col-7">
+                    <div class="col-3">
+                        <label class="small-font d-flex align-items-center clickable-label" data-bs-toggle="modal" data-bs-target="#rruModal" data-bs-placement="top" ><img src="{% static 'images/click.png' %}" alt="" class="align-bottom" style="max-height: 2rem; margin-left: 5px;"> Residual Risk Unmitigated (RRu)</label>
+                    </div>
+                    <div class="col-6">
                       <input type="range" min="1" max="10" value="1" class="slider" id="rru_range" name="rru_range" onchange="initSlider('rru_range','range_rru');">
                     </div>
                     <div class="col-3"><h6><label id="range_rru" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
@@ -1026,6 +1044,9 @@
             <div class="col-md-2 flex-fill">
                 <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                 <div class="card-body">
+                    <label for="frequency" class="small-font">Event Frequency (events/year)</label>
+                    <input type="text" id="frequency" name="frequency" class="form-control text-center" readonly>
+                    <br>
                     <label>Estimated Incident Costs</label><br><br>
                     <label for="txtEventCosts_low" class="small-font">Low (Best Case)</label>
                     <input type="text" id="txtEventCosts_low" name="txtEventCosts_low" class="form-control text-center" readonly>
@@ -1549,6 +1570,7 @@
                   const sle_low = document.getElementById('txtEventCosts_low').value;
                   const sle_high = document.getElementById('txtEventCosts_high').value;
                   const sle_median = document.getElementById('txtEventCosts').value;
+                  const frequency = document.getElementById('frequency').value;
                   const standards = document.getElementById('selStandards').value;
                   const aro = document.getElementById('aro').value;
                   const risk_register = document.getElementById('risk_register').checked;
@@ -1633,6 +1655,7 @@
                   formData.append('sle_low', sle_low);
                   formData.append('sle_median', sle_median);
                   formData.append('sle_high', sle_high);
+                  formData.append('frequency', frequency);
                   formData.append('ale', ale);
                   formData.append('outage', outage);
                   formData.append('outageDuration', outageDuration);
@@ -1901,6 +1924,43 @@
     </div>
   </div>
 </div>
+    <div class="modal fade" id="rruModal" tabindex="-1" aria-labelledby="rruModal" aria-hidden="true">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="rruModal_Label">RRU Assessment</h5>
+        <!-- Threat Capability -->
+        <div class="control-group">
+          <label for="threatCapability">Threat Likelihood:</label>
+          <div class="range-container">
+            <input type="range" id="rru_threat" name="rru_threat" min="1" max="10" step="1" orient="vertical">
+            <span id="rru_threat_Label">Low Skills</span>
+          </div>
+        </div>
+
+        <!-- Vulnerability Presence -->
+        <div class="control-group">
+          <label for="vulnerabilityPresence">Vulnerability Severity:</label>
+          <div class="range-container">
+            <input type="range" id="rru_vuln" name="rru_vuln" min="0" max="10" step="1" orient="vertical">
+            <span id="rru_vuln_Label">No Vulnerabilities</span>
+          </div>
+        </div>
+
+        <!-- System Exposure -->
+        <div class="control-group">
+          <label for="systemExposure">Event Magnitude:</label>
+          <div class="range-container">
+            <input type="range" id="rru_event" name="rru_event" min="0" max="10" step="1" orient="vertical">
+            <span id="rru_exposure_Label">No Event</span>
+          </div>
+        </div>
+
+        <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <script>
 $(document).ready(function() {
@@ -1957,6 +2017,68 @@ $(document).ready(function() {
         initSlider('uel_range','range_uel');
     });
 });
+
+$(document).ready(function() {
+    // Function to update labels based on range values
+    function updateLabels() {
+        // Threat Capability
+        let rru_threat_Value = $('#rru_threat').val();
+        let rru_threat_Label = "Low Likelihood";
+        if (rru_threat_Value <= 3) rru_threat_Label = "Low Likelihood";
+        else if (rru_threat_Value <= 5) rru_threat_Label = "Moderate Likelihood";
+        else if (rru_threat_Value <= 7) rru_threat_Label = "High Likelihood";
+        else if (rru_threat_Value <= 9) rru_threat_Label = "Very High Likelihood";
+        else rru_threat_Label = "Very High Likelihood";
+        $('#rru_threat_Label').text(rru_threat_Label);
+
+        // Vulnerability Presence
+        let rru_vuln = $('#rru_vuln').val();
+        let rru_vuln_Label = "No Vulnerabilities";
+        if (rru_vuln <= 3) rru_vuln_Label = "Minor Vulnerabilities";
+        else if (rru_vuln <= 5) rru_vuln_Label = "Some Vulnerabilities";
+        else if (rru_vuln <= 7) rru_vuln_Label = "Major Vulnerabilities";
+        else if (rru_vuln <= 9) rru_vuln_Label = "Critical Vulnerabilities";
+        else rru_vuln_Label = "Easily Exploitable Vulnerabilities";
+        $('#rru_vuln_Label').text(rru_vuln_Label);
+
+        // System Exposure
+        let rru_exposure_Value = $('#rru_event').val();
+        let rru_exposure_Label = "No Consequence";
+        if (rru_exposure_Value <= 3) rru_exposure_Label = "Minimal Consequence";
+        else if (rru_exposure_Value <= 5) rru_exposure_Label = "Moderate Consequence";
+        else if (rru_exposure_Value <= 7) rru_exposure_Label = "Significant Consequence";
+        else if (rru_exposure_Value <= 9) rru_exposure_Label = "High Consequence";
+        else rru_exposure_Label = "Critical Consequence";
+        $('#rru_exposure_Label').text(rru_exposure_Label);
+    }
+
+    // Function to compute and set the overall rru score
+    function computeAndSetrru() {
+        let rru_threat_Value = parseInt($('#rru_threat').val());
+        let rru_vuln_Value = parseInt($('#rru_vuln').val());
+        let rru_exposure_Value = parseInt($('#rru_event').val());
+
+        // Compute the average
+        let overallrru = Math.round((rru_threat_Value + rru_vuln_Value + rru_exposure_Value) / 3);
+        // Set the value to the rru_range control
+        $('#rru_range').val(overallrru);
+    }
+
+    // Event listeners for the range controls
+    $('#rru_threat, #rru_vuln, #rru_event').on('input', function() {
+        updateLabels();
+        computeAndSetrru();
+        initSlider('rru_range','range_rru');
+    });
+});
+
+
+
+
+
+
+
+
 
 
 </script>
@@ -2507,7 +2629,7 @@ $(document).ready(function() {
             let facilityType = sessionStorage.getItem('sessionFacilityType')
             let standards = document.getElementById('selStandards').value;
             let country = document.getElementById('hdnCountry').value;
-            let uel = document.getElementById('uel_range').value
+            let uel = document.getElementById('uel_range').value;
             // Check if the table 'r_list_table' is populated
             var isTablePopulated = $('#r_list_table tbody tr').length > 0 ? 1 : 0;
 
@@ -2544,7 +2666,6 @@ $(document).ready(function() {
                     control_table_populated: isTablePopulated
                 },
                 success: function (response) {
-
                    //document.getElementById('SArange').value = response.adjustedSeverity;
                    //document.getElementById('MELarange').value = response.adjustedExposure;
                    document.getElementById('txtRRa').value = response.adjustedRR
@@ -2559,7 +2680,7 @@ $(document).ready(function() {
                     document.getElementById('txtEventCosts').value = sle_medium;
                     document.getElementById('txtEventCosts_low').value = sle_low;
                     document.getElementById('txtEventCosts_high').value = sle_high;
-
+                    document.getElementById('frequency').value = response.frequency;
 
                     document.getElementById('txtProbability').value = response.probability;
 
@@ -2731,6 +2852,7 @@ function resetformcontrols() {
       document.getElementById('txtEventCosts_low').value = '';
       document.getElementById('txtEventCosts').value = '';
       document.getElementById('txtEventCosts_high').value = '';
+      document.getElementById('frequency').value = '';
       document.getElementById('txtResidualRisk').value = '';
       sessionStorage.setItem('ls', '0');
     var tableBody = document.getElementById('r_list_table').getElementsByTagName('tbody')[0];
@@ -2804,6 +2926,8 @@ function resetformcontrols() {
         $('#uel_vuln').val(data.uel_vuln);
         $('#uel_exposure').val(data.uel_exposure);
         $('#uel_threat').val(data.uel_threat);
+        $('#rru_range').val(data.RRU);
+        $('#frequency').val(data.frequency);
 
         $('#sle').val(data.sle);
 

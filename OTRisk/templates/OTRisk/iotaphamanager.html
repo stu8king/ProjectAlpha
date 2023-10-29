@@ -405,18 +405,22 @@ function drawControlGauge(score) {
             // Add 'highlighted' class to the clicked row
             $(this).addClass('highlighted');
             });
-        });
-            function formatAsCurrency(value) {
-                // Strip any non-digit characters
-                let cleanedValue = String(value).replace(/\D/g, '');
 
-                // Convert the number to a currency format
-                return parseInt(cleanedValue).toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 });
-            }
-
-            $(document).ready(function() {
-            $('#headertable').on('click', 'tbody tr', function () {
+            // Fetching header record when a row is clicked
+            $('#headertable').on('click', 'tbody tr', function() {
                 let recordId = $(this).data('id');  // get the ID of the clicked row
+                fetchHeaderRecord(recordId);
+            });
+
+            // Check if a selected_record_id is provided in the rendered context
+                let selectedRecordId = "{{ selected_record_id }}";  // Get the selected_record_id from the Django context
+                if (selectedRecordId) {
+                    // If a selectedRecordId is provided, automatically trigger the AJAX call
+                    fetchHeaderRecord(selectedRecordId);
+                }
+            });
+
+            function fetchHeaderRecord(recordId) {
                 sessionStorage.setItem('activeCyberPHA', recordId);
                 // Set the value of the hidden text field
                 document.getElementById('txtHdnCyberPHAID').value = recordId;
@@ -435,6 +439,8 @@ function drawControlGauge(score) {
                         $('#txtFacility').val(data.headerrecord.facility);
                         $('#txtLeaderEmail').val(data.headerrecord.leaderemail);
                         $('#selFacilityType').val(data.headerrecord.facilitytype);
+                        $('#selFacilityType').val(data.headerrecord.facilitytype).trigger('change');
+
                         $('#selZone').val(data.headerrecord.zone);
                         $('#txtStartDate').val(data.headerrecord.startdate);
                         $('#txtEndDate').val(data.headerrecord.enddate);
@@ -449,7 +455,8 @@ function drawControlGauge(score) {
                         $('#txtEmployees').val(data.headerrecord.EmployeesOnSite);
                         $('#annual_revenue').val(formatAsCurrency(data.headerrecord.annual_revenue));
                         $('#cyber_insurance').val(data.headerrecord.cyber_insurance);
-                         $('#hdn_pha_score').val(data.headerrecord.pha_score);
+                        $('#cyber_insurance').val(data.headerrecord.cyber_insurance).trigger('change');
+                        $('#hdn_pha_score').val(data.headerrecord.pha_score);
 
                         drawGauge(data.headerrecord.pha_score);
 
@@ -466,9 +473,9 @@ function drawControlGauge(score) {
                         $('#btnformSubmit').prop('disabled', false);
                         $('#scenarioButton').prop('disabled', false);
 
-                         $('#generatePPT').prop('disabled', false);
+                        $('#generatePPT').prop('disabled', false);
 
-                         $.each(data.control_assessments, function(index, assessment) {
+                        $.each(data.control_assessments, function (index, assessment) {
                             var controlId = assessment.mitigation_id;
                             var effectivenessPercentage = assessment.effectiveness_percentage;
                             var weighting = assessment.weighting;
@@ -480,12 +487,18 @@ function drawControlGauge(score) {
 
                             $('#weighting_' + controlId).val(weighting);
 
-                         });
+                        });
                     }
                 });
-            });
-        });
+            }
 
+            function formatAsCurrency(value) {
+                // Strip any non-digit characters
+                let cleanedValue = String(value).replace(/\D/g, '');
+
+                // Convert the number to a currency format
+                return parseInt(cleanedValue).toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 });
+            }
 
 
     </script>
@@ -717,13 +730,23 @@ function drawControlGauge(score) {
         </div>
         <div class="card mb-3 shadow-sm">
             <div class="card-body">
-                <label for="cyber_insurance">Cyber Insurance</label>
-                <select class="form-control" name="cyber_insurance" id="cyber_insurance">
-                    <option value=""> -- Select Insurance -- </option>
-                    <option value="0" {% if current_pha_header.cyber_insurance == 'false' %}selected{% endif %}>No</option>
-                    <option value="1" {% if current_pha_header.cyber_insurance == 'true' %}selected{% endif %}>Yes</option>
-                </select>
-            </div>
+    <label for="cyber_insurance">Cyber Insurance</label>
+    <select class="form-control" name="cyber_insurance" id="cyber_insurance">
+
+        <option value="0" {% if current_pha_header.cyber_insurance == false %}selected{% endif %}>No</option>
+        <option value="1" {% if current_pha_header.cyber_insurance == true %}selected{% endif %}>Yes</option>
+    </select>
+    <script>
+       $(document).ready(function() {
+                $('#cyber_insurance').select2();
+
+                var cyber_insurance_value = data.headerrecord.cyber_insurance ? "1" : "0";
+                $('#cyber_insurance').val(cyber_insurance_value).trigger('change');
+            });
+
+    </script>
+</div>
+
 
 
 
