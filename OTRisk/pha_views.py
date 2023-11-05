@@ -2,7 +2,8 @@ from django.db.models.functions import Coalesce
 from django.forms import model_to_dict
 
 from OTRisk.models.Model_CyberPHA import tblIndustry, tblCyberPHAHeader, tblZones, tblStandards, \
-    tblCyberPHAScenario, vulnerability_analysis, tblAssetType, tblMitigationMeasures, MitreControlAssessment
+    tblCyberPHAScenario, vulnerability_analysis, tblAssetType, tblMitigationMeasures, MitreControlAssessment, \
+    cyberpha_safety, SECURITY_LEVELS
 from OTRisk.models.raw import MitreICSMitigations, RAActions
 from OTRisk.models.questionnairemodel import FacilityType
 from django.contrib.auth.decorators import login_required
@@ -78,7 +79,19 @@ def iotaphamanager(request, record_id=None):
         pha_header.Date = request.POST.get('txtStartDate')
         pha_header.EmployeesOnSite = request.POST.get('txtEmployees')
         pha_header.shift_model = request.POST.get('shift_model')
-        pha_header.pha_score = request.POST.get('hdn_pha_score')
+        try:
+            # Attempt to convert the POST value to an integer.
+            pha_header.pha_score = int(request.POST.get('hdn_pha_score', 0))
+        except ValueError:
+            # If conversion fails, set pha_score to 0.
+            pha_header.pha_score = 0
+
+        # Continue with the rest of the processing
+
+        pha_header.sl_t = request.POST.get('selSL')
+        pha_header.FacilityID = 0
+        pha_header.Deleted = 0
+
         annual_revenue_str = request.POST.get('annual_revenue', '')
 
         # Strip out $ and , characters
@@ -129,7 +142,9 @@ def iotaphamanager(request, record_id=None):
         'mitigations': mitigations,
         'SHIFT_MODELS': tblCyberPHAHeader.SHIFT_MODELS,
         'annual_revenue_str': annual_revenue_str,
-        'selected_record_id': record_id
+        'selected_record_id': record_id,
+        'SECURITY_LEVELS': SECURITY_LEVELS
+
     })
 
 
@@ -160,7 +175,8 @@ def get_headerrecord(request):
         'EmployeesOnSite': headerrecord.EmployeesOnSite,
         'cyber_insurance': headerrecord.cyber_insurance,
         'annual_revenue': headerrecord.annual_revenue,
-        'pha_score': headerrecord.pha_score
+        'pha_score': headerrecord.pha_score,
+        'sl_t': headerrecord.sl_t
     }
 
     control_assessments = MitreControlAssessment.objects.filter(cyberPHA=headerrecord)
@@ -228,15 +244,16 @@ def facility_risk_profile(request):
 
         openai_api_key = os.environ.get('OPENAI_API_KEY')
         openai.api_key = openai_api_key
+        context = f"You are an expert in risk assessment for industrial facilities. For the {facility} {facility_type} at {address}, {country} in the {Industry} industry, with {employees} employees working a {shift_model} shift model,"
 
         prompts = [
-            f"For the {facility} {facility_type} at {address}, {country} in the {Industry} industry, with {employees} employees working a {shift_model} shift model, provide a concise bullet-point list of the likely personnel safety hazards present at {address}. Limit the response to a maximum of 100 words, or less. EXTRA INSTRUCTION: Add a line space between each bullet point",
-            f"For the {facility} {facility_type} at {address}, {country} in the {Industry} industry, with {employees} employees working a {shift_model} shift model, provide a concise bullet point list of the likely chemicals stored or used and their hazards given the {facility_type}. Limit the response to a maximum of 100 words, or less. EXTRA INSTRUCTION: Add a line space between each bullet point",
-            f"For the {facility} {facility_type} at {address}, {country} in the {Industry} industry, with {employees} employees working a {shift_model} shift model, provide a concise bullet-point list of the Physical security challenges given the location of {address}, {country}. Limit the response to a maximum of 100 words, or less. EXTRA INSTRUCTION: Add a line space between each bullet point",
+            f"{context}, provide a concise bullet-point list of the likely personnel safety hazards present. Limit the response to a maximum of 100 words, or less. EXTRA INSTRUCTIONS: Do not give commentary or extra information. List only the specific hazard relevant to the facility. Add a line space between each bullet point",
+            f"{context}, provide a concise bullet point list of the likely chemicals stored or used and their hazards given the {facility_type}. Limit the response to a maximum of 100 words, or less. EXTRA INSTRUCTIONS: Only list the chemical - no additional information. Add a line space between each bullet point",
+            f"{context}, provide a concise bullet-point list of the most likely Physical security challenges. Limit the response to a maximum of 100 words, or less. EXTRA INSTRUCTION: Add a line space between each bullet point",
             # f"For the {facility} {facility_type} at {address}, {country} in the {Industry} industry, provide a concise bullet point list of other localized risks that are likely to be identified for a {facility_type} at {address}. Limit the response to a maximum of 100 words, or less. Add a line space between each bullet point"
-            f"For the {facility} {facility_type} at {address}, {country} in the {Industry} industry, with {employees} employees working a {shift_model} shift model, provide a concise bullet point list of the likely OT devices and equipment that may be connected to IT networks for monitoring and control at  {facility_type} at {address}. Limit the response to a maximum of 100 words, or less. EXTRA INSTRUCTION: Add a line space between each bullet point",
+            f"{context}, provide a concise bullet point list of the likely OT devices and equipment that may be connected to IT networks for monitoring and control at  {facility_type} at {address}. Limit the response to a maximum of 100 words, or less. EXTRA INSTRUCTION: Add a line space between each bullet point",
             f"For a {facility_type} located in {country} operating within the {Industry} industry, please provide a concise bullet point list up to a maximum of 15 of ONLY the most current and most relevant regulatory compliance requirements that will apply to that specific industry and facility and that EXPLICITLY state requirements for cybersecurity controls. List only the full title of the regulation - no additional text or explanation. DO NOT REPEAT OR DUPLICATE TITLES IN THE FINAL LIST.  EXTRA INSTRUCTION: Add a line space between each bullet point.",
-            f"You are an expert in risk assessment for industrial facilities. For a {facility} {facility_type} in {country}, within the {Industry} industry, with {employees} employees on a {shift_model} shift, using ONLY this information, provide an estimated and pragmatic process hazard analysis (PHA) risk score out of 100 based on the hazards that COULD be expected to be found at the site. INSTRUCTION: Provide only a single number without extra characters or explanations."
+            f"{context}: considering the specific nature of a {facility_type} and the regional industrial safety standards in {country}, estimate a detailed and nuanced PHA risk score. Use a scale from 0 to 100, where 0 indicates an absence of safety hazards and 100 signifies the presence of extreme and imminent fatal hazards. Provide a score reflecting the unique risk factors associated with the facility type and its operational context in {country}. Scores should reflect increments of 10, with each decile corresponding to escalating levels of hazard severity and likelihood of occurrence. Base your score on a typical facility of this type and in this region, adhering to standard safety protocols, equipment conditions, and operational practices. Provide the score as a single, precise number without additional commentary."
         ]
 
         responses = []
@@ -252,7 +269,7 @@ def facility_risk_profile(request):
                     {"role": "user", "content": prompt}
                 ],
                 temperature=0.1,
-                max_tokens=500
+                max_tokens=600
             )
 
             # Use ThreadPoolExecutor to parallelize the API calls
@@ -483,7 +500,8 @@ def getSingleScenario(request):
         'risk_close_date': scenario.risk_close_date,
         'control_effectiveness': scenario.control_effectiveness,
         'likelihood': scenario.likelihood,
-        'frequency': scenario.frequency
+        'frequency': scenario.frequency,
+        'sl_a': scenario.sl_a
     }
     # Retrieve the related PHAControlList records
     control_list = []
@@ -498,6 +516,11 @@ def getSingleScenario(request):
 
     # Add the control list to the scenario dictionary
     scenario_dict['controls'] = control_list
+    has_controls = 1 if len(control_list) > 0 else 0
+
+    # Add has_controls to the scenario_dict
+    scenario_dict['has_controls'] = has_controls
+
     # Return the scenario as a JSON response
     return JsonResponse(scenario_dict)
 
@@ -528,7 +551,86 @@ def calculate_effectiveness(cyberPHA_value):
     return overall_effectiveness
 
 
-@login_required()
+@login_required
+def scenario_analysis_estimates_only(request):
+    if request.method == 'GET':
+        industry = request.GET.get('industry')
+        facility_type = request.GET.get('facility_type')
+        scenario = request.GET.get('scenario')
+        consequences = request.GET.get('consequence')
+        threatSource = request.GET.get('threatsource')
+        safetyimpact = request.GET.get('safety')
+        lifeimpact = request.GET.get('life')
+        productionimpact = request.GET.get('production')
+        reputationimpact = request.GET.get('reputation')
+        environmentimpact = request.GET.get('environment')
+        regulatoryimpact = request.GET.get('regulatory')
+        dataimpact = request.GET.get('data')
+        supplyimpact = request.GET.get('supply')
+        severitymitigated = request.GET.get('sm')
+        mitigatedexposure = request.GET.get('mel')
+        residualrisk = request.GET.get('rrm')
+        country = request.GET.get('country')
+        uel = request.GET.get('uel')
+        financial = request.GET.get('financial')
+        cyberPHAID = request.GET.get('cpha')
+
+        # get the effectiveness of controls for the given cyberPHA
+        control_effectiveness = calculate_effectiveness(cyberPHAID)
+
+        def common_content_prefix():
+            return f"In the {industry} industry, at a {facility_type} in {country}, given the scenario {scenario} with consequences {consequences}, the threat source is {threatSource} performing actions.  Business impact scores (out of 10) are: safety: {safetyimpact}, life: {lifeimpact}, production: {productionimpact}, reputation: {reputationimpact}, environment: {environmentimpact}, regulatory: {regulatoryimpact}, data: {dataimpact}, and supply: {supplyimpact}. The unmitigated risk likelihood without controls is rated as {uel}/10."
+
+        openai.api_key = os.environ.get('OPENAI_API_KEY')
+        # Define the common part of the user message
+        common_content = f"Given the scenario {scenario} with consequences {consequences} affecting a {facility_type} in the {industry} industry in {country}, the threat source {threatSource} performing actions. The business impact assessment is as follows,  scores are of 10 where 10 represents maximum impact, impact on safety: {safetyimpact}, danger to life: {lifeimpact}, production and operations: {productionimpact}, company reputation: {reputationimpact}, environmental impact: {environmentimpact}, impact of regulatory consequences: {regulatoryimpact}, supply chain impact: {supplyimpact}  data and intellectual property: {dataimpact}. The effectiveness of current controls has been assessed as: Severity of incident mitigated: {severitymitigated}, risk exposure to the scenario mitigated {mitigatedexposure}, and overall residual risk {residualrisk}. The amount of unmitigated rate without control is assumed to be {uel}"
+
+        # Define the refined user messages
+        user_messages = [
+
+            {
+                "role": "user",
+                "content": f"Given the context: {common_content} and analysis of publicly reported cybersecurity incidents, in the context of an OT Cybersecurity Risk Assessment provide ONLY the estimated likelihood (as a whole number percentage) of a targeted attack based on the specific scenario of {scenario}. Answer with a whole number. Do NOT include any other words, sentences, or explanations."
+            },
+            {
+                "role": "user",
+                "content": f"Given the detailed context that follows, give an assessment of the residual cybersecurity risk risk after all new recommended controls have been implemented. Based on this, provide a residual risk rating from the following options: Very Low, Low, Low/Medium, Medium, Medium/High, High, Very High. Context: {common_content_prefix()}, where it is emphasized that new controls have significantly reduced vulnerabilities and threats. The expected outcome is a much lower risk than before. Provide ONLY one of the given risk ratings without any additional text or explanations."
+            },
+
+            {
+                "role": "user",
+                "content": f"Given the context: {common_content}, estimate the DIRECT COSTS of a single loss event (SLE) in US dollars for the {facility_type} for the scenario: {scenario}. Guidelines: Give three estimates best case, worst case, and most likely case. Output as integers in the format low|medium|high where | is the delimiter between the three integer values. Your estimates should be realistic and specific to the scenario. Consider only the relevant Direct costs which can include all or some of the following depending on the incident: incident response, remediation, legal fees, notification costs, regulatory fines, compensations, and increased insurance premiums. In the business impact analysis the evaluation of financial impact for the given scenario is rated as {financial}/10 by the business. Your response should be a single positive integer for each of the three values in the order low|medium|high without any additional text or commentary."
+            },
+
+            {
+                "role": "user",
+                "content": f"Given the context: {common_content} and analysis of publicly reported cybersecurity incidents, provide ONLY the estimated probability (as a whole number percentage) of a successful targeted attack given that the assessed effectiveness of current cybersecurity controls is {control_effectiveness}% . Answer with a number followed by a percentage sign (e.g., nn%). Do NOT include any other words, sentences, or explanations."
+            },
+            {
+                "role": "user",
+                "content": f"Given the context: {common_content} and news reports of publicly reported cybersecurity incidents, provide ONLY the estimated frequency of a successful targeted attack of the scenario {scenario} where a successful targeted attack means that it succeeds in causing {consequences} at the {facility_type}. Your answer should be given as an integer that represents the number of times per year to expect such a scenario. If the estimated frequency is less than once per year then provide a decimal to indicate the frequency per year. Do NOT include any other words, sentences, or explanations."
+            }
+
+        ]
+
+        # Use ThreadPoolExecutor to parallelize the API calls
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            # Submit all the tasks and get a list of futures
+            futures = [executor.submit(get_response, msg) for msg in user_messages]
+            # Collect the results in the order the futures were submitted
+            responses = [future.result() for future in futures]
+
+        # Return the responses as variables
+        return JsonResponse({
+            'likelihood': responses[0],
+            'adjustedRR': responses[1],
+            'costs': responses[2],
+            'probability': responses[3],
+            'frequency': responses[4]
+        })
+
+
+@login_required
 def scenario_analysis(request):
     if request.method == 'GET':
         industry = request.GET.get('industry')
@@ -565,22 +667,11 @@ def scenario_analysis(request):
 
         # Define the refined user messages
         user_messages = [
-            ## {
-            ##    "role": "user",
-            ##    "content": f"Based on the following context, concisely list the necessary OT and ICS cybersecurity controls in order of effectiveness. Limit to 100 words. Context: {common_content_prefix()}. Give the response only. No preamble or commentary"
-            ## },
+
             {
                 "role": "user",
-                "content": f"Given the context: {common_content_prefix()} and analysis of publicly reported cybersecurity incidents, in the context of an OT Cybersecurity Risk Assessment provide ONLY the estimated likelihood (as a whole number percentage) of a targeted attack based on the specific scenario of {scenario}. Answer with a whole number. Do NOT include any other words, sentences, or explanations."
+                "content": f"Given the context: {common_content} and analysis of publicly reported cybersecurity incidents, in the context of an OT Cybersecurity Risk Assessment provide ONLY the estimated likelihood (as a whole number percentage) of a targeted attack based on the specific scenario of {scenario}. Answer with a whole number. Do NOT include any other words, sentences, or explanations."
             },
-            ##{
-            ##    "role": "user",
-            ##    "content": f"Based on the following context, provide the cyberPHA adjusted severity score (Sa) out of 10. Context: {common_content_prefix()}. Answer with a number . Do NOT include any other words, sentences, or explanations."
-            ##},
-            ##{
-            ##    "role": "user",
-            ##    "content": f"Based on the following context, provide the adjusted exposure level (MELa) out of 10. Context: {common_content_prefix()}. Answer with a number . Do NOT include any other words, sentences, or explanations."
-            ##},
             {
                 "role": "user",
                 "content": f"Given the detailed context that follows, give an assessment of the residual cybersecurity risk risk after all new recommended controls have been implemented. Based on this, provide a residual risk rating from the following options: Very Low, Low, Low/Medium, Medium, Medium/High, High, Very High. Context: {common_content_prefix()}, where it is emphasized that new controls have significantly reduced vulnerabilities and threats. The expected outcome is a much lower risk than before. Provide ONLY one of the given risk ratings without any additional text or explanations."
@@ -588,7 +679,7 @@ def scenario_analysis(request):
 
             {
                 "role": "user",
-                "content": f"Given the context: {common_content_prefix()}, estimate the DIRECT COSTS of a single loss event (SLE) in US dollars for the {facility_type} for the scenario: {scenario}. Guidelines: Give three estimates best case, worst case, and most likely case. Output as integers in the format low|medium|high where | is the delimiter between the three integer values. Your estimates should be realistic and specific to the scenario. Consider only the relevant Direct costs which can include all or some of the following depending on the incident: incident response, remediation, legal fees, notification costs, regulatory fines, compensations, and increased insurance premiums. In the business impact analysis the evaluation of financial impact for the given scenario is rated as {financial}/10 by the business. Your response should be a single positive integer for each of the three values in the order low|medium|high without any additional text or commentary."
+                "content": f"Given the context: {common_content}, estimate the DIRECT COSTS of a single loss event (SLE) in US dollars for the {facility_type} for the scenario: {scenario}. Guidelines: Give three estimates best case, worst case, and most likely case. Output as integers in the format low|medium|high where | is the delimiter between the three integer values. Your estimates should be realistic and specific to the scenario. Consider only the relevant Direct costs which can include all or some of the following depending on the incident: incident response, remediation, legal fees, notification costs, regulatory fines, compensations, and increased insurance premiums. In the business impact analysis the evaluation of financial impact for the given scenario is rated as {financial}/10 by the business. Your response should be a single positive integer for each of the three values in the order low|medium|high without any additional text or commentary."
             },
 
             {
@@ -597,11 +688,11 @@ def scenario_analysis(request):
             },
             {
                 "role": "user",
-                "content": f"Given the context: {common_content_prefix()} and analysis of publicly reported cybersecurity incidents, provide ONLY the estimated probability (as a whole number percentage) of a successful targeted attack given that the assessed effectiveness of current cybersecurity controls is {control_effectiveness}% . Answer with a number followed by a percentage sign (e.g., nn%). Do NOT include any other words, sentences, or explanations."
+                "content": f"Given the context: {common_content} and analysis of publicly reported cybersecurity incidents, provide ONLY the estimated probability (as a whole number percentage) of a successful targeted attack given that the assessed effectiveness of current cybersecurity controls is {control_effectiveness}% . Answer with a number followed by a percentage sign (e.g., nn%). Do NOT include any other words, sentences, or explanations."
             },
             {
                 "role": "user",
-                "content": f"Given the context: {common_content_prefix()} and news reports of publicly reported cybersecurity incidents, provide ONLY the estimated frequency of a successful targeted attack of the scenario {scenario} where a successful targeted attack means that it succeeds in causing {consequences} at the {facility_type}. Your answer should be given as an integer that represents the number of times per year to expect such a scenario. If the estimated frequency is less than once per year then provide a decimal to indicate the frequency per year. Do NOT include any other words, sentences, or explanations."
+                "content": f"Given the context: {common_content} and news reports of publicly reported cybersecurity incidents, provide ONLY the estimated frequency of a successful targeted attack of the scenario {scenario} where a successful targeted attack means that it succeeds in causing {consequences} at the {facility_type}. Your answer should be given as an integer that represents the number of times per year to expect such a scenario. If the estimated frequency is less than once per year then provide a decimal to indicate the frequency per year. Do NOT include any other words, sentences, or explanations."
             }
 
         ]
@@ -651,7 +742,6 @@ def parse_recommendations(recommendations_str):
     } for match in matches]
 
     return parsed_data
-
 
 
 def scenario_vulnerability(request, scenario_id):

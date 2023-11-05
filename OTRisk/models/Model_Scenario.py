@@ -1,6 +1,7 @@
 from django.db import models
 from django.conf import settings
 from accounts.models import UserProfile, Organization
+from OTRisk.models.Model_CyberPHA import tblIndustry
 
 
 class CustomScenario(models.Model):
@@ -42,7 +43,9 @@ class CustomConsequence(models.Model):
 class tblConsequence(models.Model):
     ID = models.AutoField(primary_key=True)
     Consequence = models.TextField()
+    industry = models.ForeignKey('tblIndustry', related_name='consequences', null=True, on_delete=models.CASCADE)
 
     class Meta:
         db_table = 'tblConsequences'
-        managed = False
+        managed = True
+

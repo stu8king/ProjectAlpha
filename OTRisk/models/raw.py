@@ -42,7 +42,7 @@ class RAWorksheet(models.Model):
         ("Open", "Open"),
         ("Closed", "Closed"),
     ]
-    StatusFlag = models.CharField(max_length=5, choices=STATUS_CHOICES, default='Open')
+    StatusFlag = models.CharField(max_length=6, choices=STATUS_CHOICES, default='Open')
     RATrigger = models.CharField(max_length=25)
     AssessorName = models.CharField(max_length=50)
     BusinessUnit = models.CharField(max_length=50)

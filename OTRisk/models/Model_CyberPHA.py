@@ -95,7 +95,13 @@ class tblAssetType(models.Model):
     def __str__(self):
         return self.AssetType
 
-
+SECURITY_LEVELS = [
+    (0, 'SL 0: No security requirements or security protection necessary'),
+    (1, 'SL 1: Protection against casual or coincidental violation'),
+    (2, 'SL 2: Protection against intentional violation using simple means with low resources, generic skills and low motivation'),
+    (3, 'SL 3: Protection against intentional violation using sophisticated means with moderate resources, IACS specific skills and moderate motivation'),
+    (4, 'SL 4: Protection against intentional violation using sophisticated means with extended resources, IACS specific skills and high motivation'),
+]
 class tblCyberPHAHeader(models.Model):
     ID = models.AutoField(primary_key=True)
     PHALeader = models.CharField(max_length=30)
@@ -144,13 +150,64 @@ class tblCyberPHAHeader(models.Model):
     annual_revenue = models.DecimalField(max_digits=10, decimal_places=0)
     cyber_insurance = models.BooleanField(default=False)
     pha_score = models.IntegerField()
-
+    sl_t = models.PositiveSmallIntegerField(choices=SECURITY_LEVELS, default=0)
     class Meta:
         db_table = 'tblCyberPHAHeader'
 
     def __str__(self):
         return self.FacilityName
 
+
+class cyberpha_safety(models.Model):
+    id = models.AutoField(primary_key=True)
+    description = models.TextField()
+    rating = models.IntegerField()
+    validated = models.BooleanField(default=False)
+    cyberphaID = models.ForeignKey(tblCyberPHAHeader, on_delete=models.CASCADE, db_column='cyberphaID')
+
+    class Meta:
+        db_table = 'cyberpha_safety'
+
+class cyberpha_chemical(models.Model):
+    id = models.AutoField(primary_key=True)
+    description = models.TextField()
+    rating = models.IntegerField()
+    validated = models.BooleanField(default=False)
+    cyberphaID = models.ForeignKey(tblCyberPHAHeader, on_delete=models.CASCADE, db_column='cyberphaID')
+
+    class Meta:
+        db_table = 'cyberpha_chemical'
+
+class cyberpha_physicalsecurity(models.Model):
+    id = models.AutoField(primary_key=True)
+    description = models.TextField()
+    rating = models.IntegerField()
+    validated = models.BooleanField(default=False)
+    cyberphaID = models.ForeignKey(tblCyberPHAHeader, on_delete=models.CASCADE, db_column='cyberphaID')
+
+    class Meta:
+        db_table = 'cyberpha_physicalsecurity'
+
+class cyberpha_compliance(models.Model):
+    id = models.AutoField(primary_key=True)
+    description = models.TextField()
+    rating = models.IntegerField()
+    validated = models.BooleanField(default=False)
+    cyberphaID = models.ForeignKey(tblCyberPHAHeader, on_delete=models.CASCADE, db_column='cyberphaID')
+
+    class Meta:
+        db_table = 'cyberpha_compliance'
+
+
+class cyberpha_ot(models.Model):
+    id = models.AutoField(primary_key=True)
+    description = models.TextField()
+    rating = models.IntegerField()
+    validated = models.BooleanField(default=False)
+    cyberphaID = models.ForeignKey(tblCyberPHAHeader, on_delete=models.CASCADE, db_column='cyberphaID')
+
+    class Meta:
+        db_table = 'cyberpha_ot'
 
 class tblControlObjectives(models.Model):
     ID = models.AutoField(primary_key=True)
@@ -306,6 +363,8 @@ class tblCyberPHAScenario(models.Model):
     risk_close_date = models.DateField()
     control_effectiveness = models.IntegerField()
     frequency = models.DecimalField(max_digits=4, decimal_places=1)
+    sl_a = models.PositiveSmallIntegerField(choices=SECURITY_LEVELS, default=0)
+
 
     class Meta:
         db_table = 'tblCyberPHAScenario'
@@ -504,6 +563,7 @@ class CyberPHAScenario_snapshot(models.Model):
     control_effectiveness = models.IntegerField()
     likelihood = models.IntegerField()
     frequency = models.DecimalField(max_digits=4, decimal_places=1)
+    sl_a = models.PositiveSmallIntegerField(choices=SECURITY_LEVELS, default=0)
 
 
 class Audit(models.Model):

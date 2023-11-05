@@ -55,6 +55,7 @@ class UpdateRAAction(View):
         supplyMitigation = data.get('supplyMitigation')
         threatMitigation = data.get('threatMitigation')
         vulnerabilityMitigation = data.get('vulnerabilityMitigation')
+        closeAction = data.get('closeAction')
 
         ra_action = RAActions.objects.get(ID=action_id)
         ra_action.actionDueDate = action_due_date

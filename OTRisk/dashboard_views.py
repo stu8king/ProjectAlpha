@@ -24,7 +24,6 @@ def get_organization_users(organization_id):
     """Fetch users for the given organization ID."""
     return UserProfile.objects.filter(organization_id=organization_id).values_list('user', flat=True)
 
-
 @login_required()
 def dashboardhome(request):
     user_organization_id = get_user_organization_id(request)
@@ -283,7 +282,9 @@ def dashboardhome(request):
         'sunburst_processed_data': sunburst_processed_data,
         'bia_summary': bia_summary,
         'pha_bia_summary': pha_bia_summary,
-        'pha_risk_summary': pha_risk_summary
+        'pha_risk_summary': pha_risk_summary,
+        'scenarios': scenarios,
+        'phas': phas
     }
 
     return render(request, 'dashboard.html', context)

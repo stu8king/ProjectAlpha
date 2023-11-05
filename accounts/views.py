@@ -684,6 +684,7 @@ def get_organization_details(request):
 
     # Count the number of users in the organization
     user_count = UserProfile.objects.filter(organization=org).count()
+
     # Construct the data dictionary
     data = {
         'id': org.id,  # This will give you the organization ID
@@ -700,5 +701,5 @@ def get_organization_details(request):
         'subscription_end': org.subscription_end,
         'user_count': user_count
     }
-
+    print(data)
     return data

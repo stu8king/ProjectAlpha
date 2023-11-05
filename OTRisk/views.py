@@ -25,7 +25,7 @@ from OTRisk.models.Model_CyberPHA import tblCyberPHAHeader, tblRiskCategories, \
     tblControlObjectives, \
     tblThreatIntelligence, tblMitigationMeasures, tblScenarios, tblSafeguards, tblThreatSources, tblThreatActions, \
     tblNodes, tblUnits, tblZones, tblCyberPHAScenario, tblIndustry, auditlog, tblStandards, MitreControlAssessment, \
-    CyberPHAScenario_snapshot, Audit, PHAControlList
+    CyberPHAScenario_snapshot, Audit, PHAControlList, SECURITY_LEVELS
 from django.shortcuts import render, redirect
 from .dashboard_views import get_user_organization_id
 from django.contrib.auth.decorators import login_required
@@ -41,7 +41,7 @@ from .raw_views import qraw, openai_assess_risk, GetTechniquesView, raw_action, 
 from .dashboard_views import dashboardhome
 from .pha_views import iotaphamanager, facility_risk_profile, get_headerrecord, scenario_analysis, phascenarioreport, \
     getSingleScenario, pha_report, scenario_vulnerability, add_vulnerability, get_asset_types, calculate_effectiveness, \
-    generate_ppt
+    generate_ppt, scenario_analysis_estimates_only
 from .report_views import pha_reports, get_scenario_report_details, qraw_reports, get_qraw_scenario_report_details
 from .forms import CustomScenarioForm, CustomConsequenceForm, OrganizationAdmin
 from .models.Model_Scenario import CustomScenario, CustomConsequence
@@ -402,7 +402,6 @@ def scenarioreport(request):
 
 @login_required()
 def save_or_update_cyberpha(request):
-
     if request.method == 'POST':
         # Get the form data
         cyberphaid = request.POST.get('cyberpha')
@@ -466,7 +465,12 @@ def save_or_update_cyberpha(request):
         likelihood = request.POST.get('likelihood')
         frequency = request.POST.get('frequency')
         snapshot = request.POST.get('snapshot')
-        control_effectiveness = int(float(request.POST.get('control_effectiveness')))
+        try:
+            control_effectiveness = int(float(request.POST.get('control_effectiveness', '0')))
+        except ValueError:
+            control_effectiveness = 0
+
+        sl_a = request.POST.get('sl_a')
 
         control_list_str = request.POST.get('controlList')
         control_list = json.loads(control_list_str)
@@ -585,7 +589,8 @@ def save_or_update_cyberpha(request):
                 organizationID=org_id,
                 control_effectiveness=control_effectiveness,
                 likelihood=likelihood,
-                frequency=frequency
+                frequency=frequency,
+                sl_a=sl_a
             )
             snapshot_record.save()
         else:
@@ -651,7 +656,8 @@ def save_or_update_cyberpha(request):
                     'risk_close_date': '2099-01-01',
                     'control_effectiveness': control_effectiveness,
                     'likelihood': likelihood,
-                    'frequency': frequency
+                    'frequency': frequency,
+                    'sl_a': sl_a
                 }
             )
             scenario_id_value = cyberpha_entry.ID
@@ -692,7 +698,7 @@ def save_or_update_cyberpha(request):
             request.session['cyberPHAID'] = cyberphaid  # Set the session variable
 
         # Call the assess_cyberpha function
-        return assess_cyberpha(request, cyberphaid=cyberphaid)
+        return assess_cyberpha(request, cyberPHAID=cyberphaid)
 
 
 def set_active_cyberpha(request):
@@ -714,9 +720,9 @@ def get_mitigation_measures(request):
 
 
 @login_required()
-def assess_cyberpha(request, cyberphaid=None):
-    if cyberphaid:
-        active_cyberpha = cyberphaid
+def assess_cyberpha(request, cyberPHAID=None):
+    if cyberPHAID:
+        active_cyberpha = cyberPHAID
     else:
         active_cyberpha = request.GET.get('active_cyberpha', None)
         if active_cyberpha is None:
@@ -751,11 +757,11 @@ def assess_cyberpha(request, cyberphaid=None):
         # For instance, you can log out the user or raise a 404 error.
         pass
 
-    # industry_id = tblIndustry.objects.get(Industry=pha_record.Industry).id
+    industry_id = tblIndustry.objects.get(Industry=pha_record.Industry).id
 
     # scenarios = tblScenarios.objects.all()
-    # tbl_scenarios = tblScenarios.objects.filter(industry_id=industry_id)
-    tbl_scenarios = tblScenarios.objects.all()
+    tbl_scenarios = tblScenarios.objects.filter(industry_id=industry_id)
+    # tbl_scenarios = tblScenarios.objects.all()
 
     tbl_consequences = tblConsequence.objects.all()
     # Get custom scenarios for the current user's organization
@@ -793,15 +799,6 @@ def assess_cyberpha(request, cyberphaid=None):
         except tblCyberPHAHeader.DoesNotExist:
             pass
 
-    if request.method == 'POST':
-        # Process form submission and save data to the database
-        assessment_name = request.POST.get('assessment_name')
-        scenarios_data = request.POST.getlist('scenarios[]')
-
-        # Save the data to the database according to your requirements
-
-        # return redirect('assessment_success')
-
     response = JsonResponse({'message': 'Success'})
     response['Access-Control-Allow-Origin'] = '*'  # Set the CORS header
 
@@ -823,7 +820,8 @@ def assess_cyberpha(request, cyberphaid=None):
         'saved_scenarios': saved_scenarios,
         'consequenceList': combined_consequences,
         'standardslist': standardslist,
-        'MitreControlAssessment_results': control_assessments_data
+        'MitreControlAssessment_results': control_assessments_data,
+        'SECURITY_LEVELS': SECURITY_LEVELS
     })
 
 
@@ -877,36 +875,14 @@ def deletecyberpha(request, cyberpha_id):
     return redirect('OTRisk:cyber_pha_manager')
 
 
+@login_required()
 def deletescenario(request, scenarioid, cyberPHAID):
-    organization_id = request.session['user_organization']
     scenario_to_del = tblCyberPHAScenario.objects.get(ID=scenarioid)
     scenario_to_del.Deleted = 1
+    scenario_to_del.timestamp = timezone.now()
     scenario_to_del.save()
-    saved_scenarios = tblCyberPHAScenario.objects.filter(CyberPHA=cyberPHAID, Deleted=0)
 
-    tbl_consequences = tblConsequence.objects.all()
-    # Get custom scenarios for the current user's organization
-    custom_consequences = CustomConsequence.objects.filter(organization_id=organization_id)
-
-    tbl_consequence_list = [{'ID': obj.ID, 'Consequence': obj.Consequence} for obj in tbl_consequences]
-    custom_consequence_list = [{'ID': obj.id, 'Consequence': obj.Consequence} for obj in custom_consequences]
-    # Combine these lists
-    combined_consequences = tbl_consequence_list + custom_consequence_list
-    standardslist = tblStandards.objects.all().order_by('standard')
-
-    return render(request, 'OTRisk/phascenariomgr.html', {
-        'scenarios': tblScenarios.objects.all(),
-        'control_objectives': tblControlObjectives.objects.all(),
-        'mitigation_measures': tblMitigationMeasures.objects.all().order_by('ControlObjective'),
-        'threat_intelligence': tblThreatIntelligence.objects.all().order_by('ThreatDescription'),
-        'threatsources': tblThreatSources.objects.all().order_by('ThreatSource'),
-        'threataction': tblThreatActions.objects.all().order_by('ThreatAction'),
-        'risk_categories': tblRiskCategories.objects.all(),
-        'saved_scenarios': saved_scenarios,
-        'consequenceList': combined_consequences,
-        'standardslist': standardslist
-    })
-    # return redirect('OTRisk:assess_cyberpha')
+    return redirect('OTRisk:cyberpha_id', cyberPHAID=cyberPHAID)
 
 
 def save_cyberpha(request):
@@ -1774,7 +1750,6 @@ def risk_register(request):
 
 @login_required()
 def save_risk_data(request):
-
     if request.method == 'POST':
         # Get the existing record
         scenario_id = request.POST.get('scenario_id')
