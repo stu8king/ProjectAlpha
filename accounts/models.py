@@ -7,7 +7,6 @@ from django.utils import timezone
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
-
 class TOTPDevice(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='accounts_totpdevice')
     secret_key = models.CharField(max_length=100)

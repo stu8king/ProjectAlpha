@@ -122,6 +122,8 @@ urlpatterns = [
     path('get_scenario_report_details/', views.get_scenario_report_details, name='get_scenario_report_details'),
     path('get_qraw_scenario_report_details/', views.get_qraw_scenario_report_details, name='get_qraw_scenario_report_details'),
 
+    path('create/', views.setup_org, name='setup_org'),
+    path('edit/<int:pk>/', views.edit_org, name='edit_org'),
 
 ]
 

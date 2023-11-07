@@ -1,12 +1,31 @@
 from django import forms
 from OTRisk.models.RiskScenario import RiskScenario
-from OTRisk.models.Model_CyberPHA import vulnerability_analysis, tblAssetType, tblMitigationMeasures
+from OTRisk.models.Model_CyberPHA import vulnerability_analysis, tblAssetType, tblMitigationMeasures, \
+    OrganizationDefaults, tblIndustry
 from .models.raw import RAWorksheet, RAActions, MitreICSMitigations, RAWorksheetScenario
 from .models.Model_Scenario import CustomScenario, CustomConsequence
 import accounts
 from django.contrib.auth.models import User
 from accounts.models import UserProfile, Organization
 from django.contrib.auth.password_validation import validate_password
+
+
+class OrganizationDefaultsForm(forms.ModelForm):
+    class Meta:
+        model = OrganizationDefaults
+        exclude = ('organization',)  # Exclude the organization field from the form
+
+    industry = forms.ModelChoiceField(
+        queryset=tblIndustry.objects.all(),
+        required=False,
+        label="Industry",
+        empty_label="Select Industry"
+    )
+
+    def __init__(self, *args, **kwargs):
+        super(OrganizationDefaultsForm, self).__init__(*args, **kwargs)
+        self.fields['industry'].label_from_instance = lambda obj: "{}".format(obj.Industry)
+
 
 
 class RAWorksheetScenarioForm(forms.ModelForm):

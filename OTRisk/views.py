@@ -25,11 +25,11 @@ from OTRisk.models.Model_CyberPHA import tblCyberPHAHeader, tblRiskCategories, \
     tblControlObjectives, \
     tblThreatIntelligence, tblMitigationMeasures, tblScenarios, tblSafeguards, tblThreatSources, tblThreatActions, \
     tblNodes, tblUnits, tblZones, tblCyberPHAScenario, tblIndustry, auditlog, tblStandards, MitreControlAssessment, \
-    CyberPHAScenario_snapshot, Audit, PHAControlList, SECURITY_LEVELS
+    CyberPHAScenario_snapshot, Audit, PHAControlList, SECURITY_LEVELS, OrganizationDefaults
 from django.shortcuts import render, redirect
 from .dashboard_views import get_user_organization_id
 from django.contrib.auth.decorators import login_required
-from .forms import LoginForm
+from .forms import LoginForm, OrganizationDefaultsForm
 from datetime import date, datetime
 import json
 import openai, math
@@ -58,7 +58,46 @@ from OTRisk.forms import SQLQueryForm, ControlAssessmentForm
 app_name = 'OTRisk'
 
 
-@login_required()
+@login_required
+def setup_org(request):
+    user_organization = request.user.userprofile.organization
+    defaults_instance, created = OrganizationDefaults.objects.get_or_create(organization=user_organization)
+
+    if request.method == 'POST':
+        form = OrganizationDefaultsForm(request.POST, instance=defaults_instance)
+        if form.is_valid():
+            # Set the organization to the current user's organization and save
+            org_defaults = form.save(commit=False)
+            org_defaults.organization = user_organization
+            org_defaults.save()
+            return redirect('OTRisk:setup_org')
+    else:
+        form = OrganizationDefaultsForm(instance=defaults_instance)
+    return render(request, 'org_setup.html', {'form': form})
+
+
+@login_required
+def edit_org(request):
+    # Get the current user's organization
+    user_organization = request.user.userprofile.organization
+    # Get the OrganizationDefaults instance for the current organization
+    try:
+        defaults_instance = OrganizationDefaults.objects.get(organization=user_organization)
+    except OrganizationDefaults.DoesNotExist:
+        # Redirect to setup page if defaults do not exist
+        return redirect('OTRisk:setup_org')
+
+    if request.method == 'POST':
+        form = OrganizationDefaultsForm(request.POST, instance=defaults_instance)
+        if form.is_valid():
+            form.save()
+            return redirect('OTRisk:setup_org')
+    else:
+        form = OrganizationDefaultsForm(instance=defaults_instance)
+    return render(request, 'org_setup.html', {'form': form})
+
+
+@login_required
 def execute_sql(request):
     if not request.user.is_superuser:
         return HttpResponseForbidden("You don't have permission to access this page.")

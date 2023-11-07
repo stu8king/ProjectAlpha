@@ -4,6 +4,55 @@ from accounts.models import Organization
 from OTRisk.models.raw import MitreICSMitigations
 
 
+class OrganizationDefaults(models.Model):
+    LANGUAGE_CHOICES = [
+        ('en', 'English'),
+        ('de', 'German'),
+        ('es', 'Spanish'),
+        ('ar', 'Arabic'),
+        ('ja', 'Japanese'),
+        ('zh', 'Mandarin'),
+    ]
+
+    organization = models.OneToOneField(
+        Organization,
+        on_delete=models.CASCADE,
+        primary_key=True,
+        related_name='defaults'
+    )
+    industry = models.ForeignKey(
+        'tblIndustry',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
+    )
+    language = models.CharField(
+        max_length=30,
+        choices=LANGUAGE_CHOICES,  # Add the choices here
+        null=True,
+        blank=True
+    )
+    annual_revenue = models.IntegerField(
+        null=True,
+        blank=True
+    )
+    cyber_insurance = models.IntegerField(
+        null=True,
+        blank=True
+    )
+    insurance_deductible = models.IntegerField(
+        null=True,
+        blank=True
+    )
+    employees = models.IntegerField(
+        null=True,
+        blank=True
+    )
+
+    def __str__(self):
+        return f"{self.organization.name} Defaults"
+
+
 class tblStandards(models.Model):
     id = models.AutoField(primary_key=True)
     standard = models.TextField()
@@ -95,13 +144,19 @@ class tblAssetType(models.Model):
     def __str__(self):
         return self.AssetType
 
+
 SECURITY_LEVELS = [
     (0, 'SL 0: No security requirements or security protection necessary'),
     (1, 'SL 1: Protection against casual or coincidental violation'),
-    (2, 'SL 2: Protection against intentional violation using simple means with low resources, generic skills and low motivation'),
-    (3, 'SL 3: Protection against intentional violation using sophisticated means with moderate resources, IACS specific skills and moderate motivation'),
-    (4, 'SL 4: Protection against intentional violation using sophisticated means with extended resources, IACS specific skills and high motivation'),
+    (2,
+     'SL 2: Protection against intentional violation using simple means with low resources, generic skills and low motivation'),
+    (3,
+     'SL 3: Protection against intentional violation using sophisticated means with moderate resources, IACS specific skills and moderate motivation'),
+    (4,
+     'SL 4: Protection against intentional violation using sophisticated means with extended resources, IACS specific skills and high motivation'),
 ]
+
+
 class tblCyberPHAHeader(models.Model):
     ID = models.AutoField(primary_key=True)
     PHALeader = models.CharField(max_length=30)
@@ -151,6 +206,7 @@ class tblCyberPHAHeader(models.Model):
     cyber_insurance = models.BooleanField(default=False)
     pha_score = models.IntegerField()
     sl_t = models.PositiveSmallIntegerField(choices=SECURITY_LEVELS, default=0)
+
     class Meta:
         db_table = 'tblCyberPHAHeader'
 
@@ -168,6 +224,7 @@ class cyberpha_safety(models.Model):
     class Meta:
         db_table = 'cyberpha_safety'
 
+
 class cyberpha_chemical(models.Model):
     id = models.AutoField(primary_key=True)
     description = models.TextField()
@@ -178,6 +235,7 @@ class cyberpha_chemical(models.Model):
     class Meta:
         db_table = 'cyberpha_chemical'
 
+
 class cyberpha_physicalsecurity(models.Model):
     id = models.AutoField(primary_key=True)
     description = models.TextField()
@@ -187,6 +245,7 @@ class cyberpha_physicalsecurity(models.Model):
 
     class Meta:
         db_table = 'cyberpha_physicalsecurity'
+
 
 class cyberpha_compliance(models.Model):
     id = models.AutoField(primary_key=True)
@@ -208,6 +267,7 @@ class cyberpha_ot(models.Model):
 
     class Meta:
         db_table = 'cyberpha_ot'
+
 
 class tblControlObjectives(models.Model):
     ID = models.AutoField(primary_key=True)
@@ -364,7 +424,6 @@ class tblCyberPHAScenario(models.Model):
     control_effectiveness = models.IntegerField()
     frequency = models.DecimalField(max_digits=4, decimal_places=1)
     sl_a = models.PositiveSmallIntegerField(choices=SECURITY_LEVELS, default=0)
-
 
     class Meta:
         db_table = 'tblCyberPHAScenario'
