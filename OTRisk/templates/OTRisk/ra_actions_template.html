@@ -489,14 +489,22 @@
 
 
         $('#actionBtn').on('click', function() {
-            // Prompt the user for confirmation
-            const isConfirmed = confirm("Do you want to save the changes?");
-            if (!isConfirmed) {
-                return;
+            const actionStatus = $('#selectStatus').val();
+            let confirmMessage = "Do you want to save the changes?";
+            let closeAction = 0; // Default to 0, indicating the action is not closed
+
+            // If the action status is 'Closed', modify the confirmation message
+            if (actionStatus === "Closed") {
+                confirmMessage = "Do you want to mark the action as Closed and create a new snapshot?";
+                closeAction = 1; // Set to 1 if the user wants to close the action
             }
 
+            // Prompt the user for confirmation with the appropriate message
+            const isConfirmed = confirm(confirmMessage);
+            if (!isConfirmed) {
+                return; // Exit if the user does not confirm
+            }
             const actionDueDate = $('#txtDueDate').val();
-            const actionStatus = $('#selectStatus').val();
             const actionTitle = $('#txtTitle').val();
             const actionDescription = $('#txtDescription').val();
             const selectedActionId = sessionStorage.getItem('selectedActionId');
@@ -537,7 +545,8 @@
                     'safetyMitigation': safetyMitigation,
                     'supplyMitigation': supplyMitigation,
                     'threatMitigation': threatMitigation,
-                    'vulnerabilityMitigation': vulnerabilityMitigation
+                    'vulnerabilityMitigation': vulnerabilityMitigation,
+                    'closeAction': closeAction
                 }),
                 contentType: 'application/json',
 

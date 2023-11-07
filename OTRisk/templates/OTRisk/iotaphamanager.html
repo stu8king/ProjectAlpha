@@ -190,6 +190,7 @@ fetch('https://restcountries.com/v3.1/all')
         document.getElementById("txtLeaderEmail").setAttribute('disabled', true);
         document.getElementById("selFacilityType").setAttribute('disabled', true);
         document.getElementById("selZone").setAttribute('disabled', true);
+        document.getElementById("selSL").setAttribute('disabled', true);
         document.getElementById("txtEndDate").setAttribute('disabled', true);
         document.getElementById("txtEmployees").setAttribute('disabled', true);
         document.getElementById("cyber_insurance").disabled = true;
@@ -385,7 +386,7 @@ function drawControlGauge(score) {
                     </td>
                     <td>
                         {% if pha_header_records.scenario_count != 0 %}
-                            <a class="dropdown-item" href="{% url 'OTRisk:pha_reports'  cyber_pha_header_id=pha_header_records.ID  %}">Report</a>
+                            <a class="dropdown-item" href="{% url 'OTRisk:pha_reports'  cyber_pha_header_id=pha_header_records.ID  %}" style="font-weight: bold;">Report</a>
                         {% else %}
 
                         {% endif %}
@@ -442,6 +443,7 @@ function drawControlGauge(score) {
                         $('#selFacilityType').val(data.headerrecord.facilitytype).trigger('change');
 
                         $('#selZone').val(data.headerrecord.zone);
+                        $('#selSL').val(data.headerrecord.sl_t);
                         $('#txtStartDate').val(data.headerrecord.startdate);
                         $('#txtEndDate').val(data.headerrecord.enddate);
                         $('#txtSafetySummary').val(data.headerrecord.safetysummary);
@@ -469,7 +471,7 @@ function drawControlGauge(score) {
                         var pha_score = data.headerrecord.pha_score;
 
                         // Enable the controls
-                        $('#txtTitle, #txtLeader, #txtUnit, #txtStartDate, #txtAddress, #txtFacility, #txtLeaderEmail, #txtEndDate, #txtSafetySummary, #txtChemical, #txtPhysical, #txtOther, #txtCompliance, #selFacilityType, #cyber_insurance, #shift_model, #annual_revenue, #txtEmployees, #selIndustry, #selZone, #countrySelector, #btnformSubmit,  #risk-assessment-btn, #scenarioButton, #generatePPT').prop('disabled', false);
+                        $('#txtTitle, #txtLeader, #txtUnit, #txtStartDate, #txtAddress, #txtFacility, #txtLeaderEmail, #txtEndDate, #txtSafetySummary, #txtChemical, #txtPhysical, #txtOther, #txtCompliance, #selFacilityType, #cyber_insurance, #shift_model, #annual_revenue, #txtEmployees, #selIndustry, #selZone, #selSL, #countrySelector, #btnformSubmit,  #risk-assessment-btn, #scenarioButton, #generatePPT').prop('disabled', false);
                         $('#btnformSubmit').prop('disabled', false);
                         $('#scenarioButton').prop('disabled', false);
 
@@ -545,10 +547,10 @@ function drawControlGauge(score) {
                 $('#txtTitle, #txtLeader, #txtUnit, #txtStartDate, #txtAddress, #txtFacility, #txtLeaderEmail, #txtEndDate, #txtSafetySummary, #txtChemical, #txtPhysical, #txtEmployees, #annual_revenue, #cyber_insurance, #shift_model, #txtOther, #txtCompliance').val('');
 
                 // Reset select dropdowns
-                $('#selIndustry, #selFacilityType, #selZone').prop('selectedIndex', 0);
+                $('#selIndustry, #selFacilityType, #selZone, #selSL').prop('selectedIndex', 0);
 
                 // Enable the controls
-                $('#txtTitle, #txtLeader, #txtUnit, #txtStartDate, #txtAddress, #txtFacility, #txtLeaderEmail, #txtEndDate, #txtSafetySummary, #txtChemical, #txtPhysical, #txtOther, #txtCompliance, #selFacilityType, #selIndustry, #selZone, #shift_model, #txtEmployees, #annual_revenue, #cyber_insurance, #countrySelector, #btnformSubmit, #risk-assessment-btn').prop('disabled', false);
+                $('#txtTitle, #txtLeader, #txtUnit, #txtStartDate, #txtAddress, #txtFacility, #txtLeaderEmail, #txtEndDate, #txtSafetySummary, #txtChemical, #txtPhysical, #txtOther, #txtCompliance, #selFacilityType, #selIndustry, #selZone, #selSL, #shift_model, #txtEmployees, #annual_revenue, #cyber_insurance, #countrySelector, #btnformSubmit, #risk-assessment-btn').prop('disabled', false);
                 $('#btnformSubmit').prop('disabled', false);
 
                 //reset session variables
@@ -606,12 +608,12 @@ function drawControlGauge(score) {
     <div class="col-md-3 bg-white">
         <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
             <div class="card-body">
-                <label for="txtTitle">Title</label><input type="text" class="form-control" name="txtTitle" id="txtTitle" value="{{ current_pha_header.title }}"  required>
+                <label for="txtTitle">Title</label><input type="text" class="form-control" name="txtTitle" id="txtTitle" value="{{ current_pha_header.title }}" maxlength="100" style="font-size: 16px; font-weight: bold; background-color: #f3dc47" required>
             </div>
         </div>
         <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
             <div class="card-body">
-                <label for="txtLeader">Leader</label><input type="text" class="form-control" name="txtLeader" id="txtLeader" value="{{ current_pha_header.PHALeader }}" required>
+                <label for="txtLeader">Leader</label><input type="text" class="form-control" name="txtLeader" id="txtLeader" value="{{ current_pha_header.PHALeader }}" maxlength="100"  required>
             </div>
         </div>
         <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
@@ -630,7 +632,7 @@ function drawControlGauge(score) {
         </div>
         <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
             <div class="card-body">
-                <label for="txtUnit">Unit</label><input type="text" class="form-control" name="txtUnit" id="txtUnit" value="{{ current_pha_header.AssessmentUnit }}" required>
+                <label for="txtUnit">Unit</label><input type="text" class="form-control" name="txtUnit" id="txtUnit" value="{{ current_pha_header.AssessmentUnit }}" required maxlength="100">
             </div>
         </div>
 
@@ -648,7 +650,7 @@ function drawControlGauge(score) {
     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
             <div class="card-body">
                 <label for="annual_revenue">Facility Annual Revenue</label>
-                <input type="text" class="form-control currency-input" name="annual_revenue" id="annual_revenue" value="{{ annual_revenue_str|default:'0' }}" required>
+                <input type="text" class="form-control currency-input" name="annual_revenue" id="annual_revenue" value="{{ annual_revenue_str|default:'0' }}" oninput="checkMaxValue(this)" required>
                 <script>
                     document.addEventListener("DOMContentLoaded", function() {
                         const currencyInput = document.getElementById('annual_revenue');
@@ -661,19 +663,31 @@ function drawControlGauge(score) {
                             e.target.value = parseInt(value).toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 });
                         });
                     });
+
+                    function checkMaxValue(input) {
+                        // Remove any non-digit characters (e.g., currency symbols, commas)
+                        var numericValue = input.value.replace(/[^0-9]/g, '');
+
+                        if (parseInt(numericValue) > 999999999) {
+                            input.value = '$999,999,999';
+                        } else {
+                            // Optionally, re-add currency formatting
+                            input.value = '$' + numericValue.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                        }
+                    }
                 </script>
 
             </div>
         </div>
         <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
             <div class="card-body">
-                <label for="txtStartDate">Start Date</label><input type="date" class="form-control" name="txtStartDate" id="txtStartDate" value="{{ current_pha_header.AssessmentStartDate }}" required>
+                <label for="txtStartDate">Start Date</label><input type="date" class="form-control" name="txtStartDate" id="txtStartDate"  value="{{ current_pha_header.AssessmentStartDate }}" required>
             </div>
         </div>
         <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
             <div class="card-body">
                 <label for="txtAddress">Facility Address</label>
-                <textarea class="form-control" rows="2" name="txtAddress" id="txtAddress" style="resize: none" required>{{ current_pha_header.facilityAddress }}</textarea>
+                <textarea class="form-control" rows="2" name="txtAddress" id="txtAddress" style="resize: none" maxlength="500" required>{{ current_pha_header.facilityAddress }}</textarea>
             </div>
         </div>
         <br>
@@ -682,12 +696,21 @@ function drawControlGauge(score) {
     <div class="col-md-3 bg-white">
         <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
             <div class="card-body">
-                <label for="txtFacility">Facility</label><input type="text" class="form-control" name="txtFacility" id="txtFacility" value="{{ current_pha_header.FacilityName }}" required>
+                <label for="txtFacility">Facility</label><input type="text" class="form-control" name="txtFacility" id="txtFacility" value="{{ current_pha_header.FacilityName }}"  maxlength="100"  required>
             </div>
         </div>
         <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
             <div class="card-body">
-                <label for="txtLeaderEmail">Leader Email</label><input type="text" class="form-control" name="txtLeaderEmail" id="txtLeaderEmail" value="{{ current_pha_header.PHALeaderEmail }}" required>
+                <label for="txtLeaderEmail">Leader Email</label><input type="email" class="form-control" name="txtLeaderEmail" id="txtLeaderEmail" value="{{ current_pha_header.PHALeaderEmail }}" required onblur="validateEmail(this)">
+                <script type="text/javascript">
+                    function validateEmail(input) {
+                        var regex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+                        if (!regex.test(input.value)) {
+                            alert('Please enter a valid email address');
+                            input.focus();
+                        }
+                    }
+                </script>
             </div>
         </div>
         <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
@@ -723,42 +746,47 @@ function drawControlGauge(score) {
             </div>
 
         </div>
-        <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-            <div class="card-body">
-                <label for="txtEmployees">Employees on Site</label><input type="text" class="form-control" name="txtEmployees" id="txtEmployees" value="{{ current_pha_header.EmployeesOnSite }}">
-            </div>
-        </div>
+
         <div class="card mb-3 shadow-sm">
             <div class="card-body">
-    <label for="cyber_insurance">Cyber Insurance</label>
-    <select class="form-control" name="cyber_insurance" id="cyber_insurance">
-
-        <option value="0" {% if current_pha_header.cyber_insurance == false %}selected{% endif %}>No</option>
-        <option value="1" {% if current_pha_header.cyber_insurance == true %}selected{% endif %}>Yes</option>
-    </select>
-    <script>
-       $(document).ready(function() {
-                $('#cyber_insurance').select2();
-
-                var cyber_insurance_value = data.headerrecord.cyber_insurance ? "1" : "0";
-                $('#cyber_insurance').val(cyber_insurance_value).trigger('change');
-            });
-
-    </script>
-</div>
-
-
-
-
-
+                <label for="selSL">Target Security Level (SL-T)</label>
+                <select class="form-control" name="selSL" id="selSL">
+            <option value=""> -- Select SL-T -- </option>
+            {% for value, description in SECURITY_LEVELS %}
+                <option value="{{ value }}"
+                {% if current_pha_header.sl_t|stringformat:"s" == value|stringformat:"s" %}selected{% endif %}>
+                    {{ description }}</option>
+            {% endfor %}
+        </select>
+            </div>
         </div>
 
 
         <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
             <div class="card-body">
-                <label for="txtEndDate">End Date</label><input type="date" class="form-control" name="txtEndDate" id="txtEndDate" value="{{ current_pha_header.AssessmentEndDate }}">
+                <label for="txtEmployees">Employees on Site</label><input type="number" class="form-control" name="txtEmployees" id="txtEmployees" value="{{ current_pha_header.EmployeesOnSite }}" max="99999">
+
             </div>
         </div>
+
+
+
+        <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+            <div class="card-body">
+                <label for="txtEndDate">End Date</label><input type="date" class="form-control" name="txtEndDate" id="txtEndDate" value="{{ current_pha_header.AssessmentEndDate }}" onchange="validateDates()">
+            </div>
+        </div>
+        <script type="text/javascript">
+            function validateDates() {
+                var startDate = document.getElementById('txtStartDate').value;
+                var endDate = document.getElementById('txtEndDate').value;
+
+                if (endDate < startDate) {
+                    alert('End date cannot be before start date');
+                    document.getElementById('txtEndDate').value = '';
+                }
+            }
+        </script>
 
     <div class="card mb-3 shadow-sm">
             <div class="card-body">
@@ -831,6 +859,8 @@ function drawControlGauge(score) {
         <div class="tab-content mt-3">
             <div class="tab-pane active" id="safety" role="tabpanel" aria-labelledby="safety-tab">
                 <label for="txtSafetySummary">Safety Summary:</label>
+
+
                 <textarea rows="20" name="txtSafetySummary" id="txtSafetySummary" class="form-control" style="resize: none; background-color: lightgrey ;" readonly>{{ current_pha_header.safetySummary }}</textarea>
             </div>
             <div class="tab-pane" id="chemical" role="tabpanel" aria-labelledby="chemical-tab">
@@ -955,6 +985,8 @@ $(document).ready(function() {
                     document.getElementById('txtOther').value = response.other_summary;
                     document.getElementById('txtCompliance').value = response.compliance_summary;
                     document.getElementById('hdn_pha_score').value = response.pha_score;
+
+
                     drawGauge(response.pha_score);
 
                      $('#loadingSpinner').hide();
@@ -1038,9 +1070,14 @@ $(document).ready(function() {
       <div class="modal-header">
         <h5 class="modal-title" id="assessmentModalLabel">Facility Control Assessment (Mitre ICS Mitigations)</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button><br>
+
       </div>
 
       <div class="modal-body">
+      <p><b>Instructions: </b></p>
+      <p>Estimate the effectiveness of the implementation of each control using the sliders. 100% means the control is fully effective, 0% means that the control is completely absent. The weighting number represents the importance of the control. 10 means that the control is critical. 0 means that the control has no importance. </p>
+      <p>You may save the assessment at any time by clicking the 'Submit Assessment' button.</p>
+      <p>A score will be calculated based on the submitted assessment. The effectiveness score is one of the factors considered when estimating residual risk scoring in the scenario analysis.</p>
         <form id="controlAssessmentForm">
 <!-- Tabs Navigation -->
 <ul class="nav nav-tabs" id="myTabs" role="tablist">
@@ -1205,6 +1242,29 @@ $(document).ready(function() {
 
 </script>
 
+<div class="card mb-3 shadow-sm" style="visibility: hidden">
+            <div class="card-body">
+    <label for="cyber_insurance">Cyber Insurance</label>
+    <select class="form-control" name="cyber_insurance" id="cyber_insurance">
 
+        <option value="0" {% if current_pha_header.cyber_insurance == false %}selected{% endif %}>No</option>
+        <option value="1" {% if current_pha_header.cyber_insurance == true %}selected{% endif %}>Yes</option>
+    </select>
+    <script>
+       $(document).ready(function() {
+                $('#cyber_insurance').select2();
+
+                // var cyber_insurance_value = data.headerrecord.cyber_insurance ? "1" : "0";
+                // $('#cyber_insurance').val(cyber_insurance_value).trigger('change');
+            });
+
+    </script>
+</div>
+
+
+
+
+
+        </div>
 </body>
 </html>

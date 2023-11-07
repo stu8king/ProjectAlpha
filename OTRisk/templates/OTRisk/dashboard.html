@@ -26,6 +26,9 @@
     <script src="{% static 'anychart/dist/js/anychart-heatmap.min.js' %}"></script>
     <script src="{% static 'anychart/dist/js/anychart-sunburst.min.js' %}"></script>
     <script src="{% static 'anychart/dist/js/anychart-pie.min.js' %}"></script>
+        <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.25/css/jquery.dataTables.css">
+    <script type="text/javascript" charset="utf8" src="https://code.jquery.com/jquery-3.5.1.js"></script>
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.js"></script>
 
 
      {% load django_bootstrap5 %}
@@ -136,6 +139,7 @@
               </a>
               <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
                   <li><a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:add_scenario' %}">Scenario Manager</a></li>
+                    <li><a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:setup_org' %}">Defaults</a></li>
                   <li><a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:add_consequence' %}">Consequence Manager</a></li>
                   <li><a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:admin_users' %}">Admin Users</a></li>
                   {% if user.is_staff %}
@@ -265,6 +269,10 @@
 
         </script>
         <br>
+
+
+
+
         <div class="row" >
             <div class="col-md-3 ">
                 <div class="card shadow-lg inner-card">
@@ -298,7 +306,7 @@
                             <h6 class="card-title text-center text-black card-title-light" style="font-size: 12px;">Open Action Items:</h6>
                         </div>
                         <div class="row">
-                            <h5 class="card-text text-center text-black">{{ ra_actions_records_count }}</h5>
+                            <h5 class="card-text text-center text-black"><a class="nav-link" href="{% url 'OTRisk:ra_actions_view_default' %}" tabindex="-1" >{{ ra_actions_records_count }}</a></h5>
                         </div>
                     </div>
                 </div>
@@ -410,6 +418,174 @@
     <div class="col-md-1"></div>
 </div>
 
+
+
+<script>
+
+        function formatCurrency(value) {
+        value = parseInt(value);
+        if (value >= 1000000) {
+            return `$${(value / 1000000).toFixed(1)}m`;
+            } else if (value >= 1000) {
+            return `$${(value / 1000).toFixed(1)}k`;
+            } else {
+            return `$${value}`;
+        }
+    }
+
+
+    document.addEventListener('DOMContentLoaded', (event) => {
+        const sleCells = document.querySelectorAll('.sle-cell');
+        sleCells.forEach(cell => {
+            cell.textContent = formatCurrency(cell.textContent);
+        });
+    });
+</script>
+<br>
+<div class="row d-flex" style="height:100%;">
+    <div class="col-md-1 " style="background-color: white"></div>
+        <div class="col-md-5 d-flex" style="display: flex; flex-direction: column;">
+            <div class="card shadow flex-fill">
+                <div class="card-body">
+                    <label for="headertable" class="form-label">CyberPHA Assessments</label>
+                    <table id="phaTable" class="table">
+                    <thead class="thead-dark">
+                        <tr>
+                        <th>ID</th>
+                        <th>Site</th>
+                        <th>Unit</th>
+                        <th>Zone</th>
+                        <th>PHA Score</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for pha in phas %}
+                        <tr>
+                        <td>{{ pha.ID }}</td>
+                        <td><a href="/OTRisk/iotaphamanager/{{ pha.ID }}/">{{ pha.FacilityName }}</a></td>
+                        <td>{{ pha.AssessmentUnit }}</td>
+                        <td>{{ pha.AssessmentZone }}</td>
+                         <td>
+                            {% if pha.pha_score <= 16 %}
+                                <div style="background-color: green; border-radius: 20px; text-align: center;">Low</div>
+                            {% elif pha.pha_score <= 33 %}
+                                <div style="background-color: lightgreen; border-radius: 20px; text-align: center;">Low/Medium</div>
+                            {% elif pha.pha_score <= 50 %}
+                                <div style="background-color: yellow; border-radius: 20px; text-align: center;">Medium</div>
+                            {% elif pha.pha_score <= 66 %}
+                                <div style="background-color: orange; border-radius: 20px; text-align: center;">Medium/High</div>
+                            {% elif pha.pha_score <= 83 %}
+                                <div style="background-color: red; border-radius: 20px; text-align: center;">High</div>
+                            {% else %}
+                                <div style="background-color: darkred; border-radius: 20px; text-align: center;">Very High</div>
+                            {% endif %}
+                        </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                    <script type="text/javascript">
+                $(document).ready( function () {
+                $('#phaTable').DataTable({
+                "paging": true,
+                "lengthChange": false,
+                "searching": false,
+                "pageLength": 10
+                });
+                });
+                </script>
+                </div>
+            </div>
+</div>  <!-- cyberpha assessment table -->
+        <div class="col-md-5 d-flex" style="display: flex; flex-direction: column;">
+            <div class="card shadow flex-fill">
+                <div class="card-body">
+                    <label for="headertable" class="form-label">CyberPHA Scenarios</label>
+                    <table id="scenarioTable" class="table">
+                    <thead class="thead-dark">
+                        <tr>
+                        <th>ID</th>
+                        <th>Scenario</th>
+                        <th>Risk</th>
+                        <th>Event Cost (Median)</th>
+                        <th>Risk Register</th>
+                        <th>Residual Risk</th>
+                        <th>Likelihood</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for scenario in scenarios %}
+                        <tr>
+                        <td>{{ scenario.ID }}</td>
+                        <td><i>{{ scenario.Scenario }}</i></td>
+                        <td>{{ scenario.RiskCategory }}</td>
+                        <td class="sle-cell">{{ scenario.sle }}</td>
+                        <td>
+                            {% if scenario.risk_register %}
+                                <img src="{% static 'images/check.png' %}" alt="Check Icon" style="height: 1.5rem">
+                            {% else %}
+                                <img src="{% static 'images/cross.png' %}" alt="Cross Icon" style="height: 1em">
+                            {% endif %}
+                        </td>
+
+
+                        <td>
+                            {% if scenario.RRa == "Low" %}
+                                <div style="background-color: green; border-radius: 20px; text-align: center;">{{ scenario.RRa }}</div>
+                            {% elif scenario.RRa == "Low/Medium" %}
+                                <div style="background-color: lightgreen; border-radius: 20px; text-align: center;">{{ scenario.RRa }}</div>
+                            {% elif scenario.RRa == "Medium" %}
+                                <div style="background-color: yellow; border-radius: 20px; text-align: center;">{{ scenario.RRa }}</div>
+                            {% elif scenario.RRa == "Medium/High" %}
+                                <div style="background-color: orange; border-radius: 20px; text-align: center;">{{ scenario.RRa }}</div>
+                            {% elif scenario.RRa == "High" %}
+                                <div style="background-color: red; border-radius: 20px; text-align: center;">{{ scenario.RRa }}</div>
+                            {% elif scenario.RRa == "Very High" %}
+                                <div style="background-color: darkred; border-radius: 20px; text-align: center;">{{ scenario.RRa }}</div>
+                            {% endif %}
+                        </td>
+                         <td>
+                            {% if scenario.likelihood <= 16 %}
+                                <div style="background-color: green; border-radius: 20px; text-align: center;">Low</div>
+                            {% elif scenario.likelihood <= 33 %}
+                                <div style="background-color: lightgreen; border-radius: 20px; text-align: center;">Low/Medium</div>
+                            {% elif scenario.likelihood <= 50 %}
+                                <div style="background-color: yellow; border-radius: 20px; text-align: center;">Medium</div>
+                            {% elif scenario.likelihood <= 66 %}
+                                <div style="background-color: orange; border-radius: 20px; text-align: center;">Medium/High</div>
+                            {% elif scenario.likelihood <= 83 %}
+                                <div style="background-color: red; border-radius: 20px; text-align: center;">High</div>
+                            {% else %}
+                                <div style="background-color: darkred; border-radius: 20px; text-align: center;">Very High</div>
+                            {% endif %}
+                        </td>
+
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+                    <script type="text/javascript">
+                $(document).ready( function () {
+                $('#scenarioTable').DataTable({
+                "paging": true,
+                "lengthChange": false,
+                "searching": false,
+                "pageLength": 10
+                });
+                });
+                </script>
+                </div>
+            </div>
+        </div>  <!-- cyberpha scenario table -->
+
+    <div class="col-md-1 " style="background-color: white">
+</div>
+
+<div class="row" style="height: 10px">
+    <div class="col"></div>
+</div>
+
 <div class="row" style="height:400px">
     <div class="col-md-1 "  style="background-color: white"></div>
     <div class="col-md-10"  style="background-color: white">
@@ -418,19 +594,22 @@
 
                 <div id="raw_bia_container" style="width:100%; height:100%;" class="doughnut_container"></div>
                 <script>
-                    anychart.onDocumentReady(function() {
-                        var pie_data = {{ bia_summary|safe }};
-                        let chart_data = [];
-                        for (let [key, value] of Object.entries(pie_data)) {
-                            chart_data.push({x: key, value: value});
-                        }
+                anychart.onDocumentReady(function() {
+                    var pie_data = {{ bia_summary|safe }};
+                    let chart_data = [];
+                    for (let [key, value] of Object.entries(pie_data)) {
+                        chart_data.push({x: key, value: value});
+                    }
 
+                    if (chart_data.length === 0) {
+                        document.getElementById('raw_bia_container').innerHTML = 'No QRAW Assessments';
+                    } else {
                         var chart = anychart.pie(chart_data);
                         var colors = {
                             'Low': 'green',
-                            'Low/Medium': '#ADFF2F',  // Green-yellow
+                            'Low/Medium': '#ADFF2F', // Green-yellow
                             'Medium': '#ffcc00',
-                            'Medium/High': '#FFA500',  // Orange
+                            'Medium/High': '#FFA500', // Orange
                             'High': '#c7471e',
                             'Very High': '#ef4710'
                         };
@@ -441,16 +620,17 @@
 
                         chart.palette(chartColors);
                         chart.labels().format("{%Value}");
-                         chart.labels().fontSize(16);
+                        chart.labels().fontSize(16);
                         chart.title("QRAW BIA Summary");
                         chart.innerRadius("30%");
                         var credits = chart.credits();
                         credits.enabled(false);
                         chart.container("raw_bia_container");
                         chart.draw();
+                    }
+                });
+            </script>
 
-                    });
-                </script>
 
             </div>
             <div class="col-md-4 no-gap">
@@ -535,7 +715,7 @@
     </div>
     <div class="col-md-1 "  style="background-color: white"></div>
 </div>
-
+</div>
 
 
 <script>
@@ -740,6 +920,7 @@ createDoughnutChart("#phasupplyChart", phaSupplyData, 'impactSupply');
 
 
 </script>
+
 
 </body>
 </html>

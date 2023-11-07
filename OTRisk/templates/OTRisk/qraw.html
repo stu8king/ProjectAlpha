@@ -522,109 +522,62 @@ color: white !important;
                 }
             }
 
-
+            // Start of reset controls when the new button is clicked
             document.addEventListener('DOMContentLoaded', function() {
               var enableButton = document.getElementById('addNewBtn');
 
               enableButton.addEventListener('click', function() {
-                $('#saveBtn').prop('disabled', false);
-                $('#actionBtn').prop('disabled', false);
-                sessionStorage.setItem('editMode', '0');
-                sessionStorage.setItem('addNew', '1');
-                sessionStorage.setItem('rawid', '');
-                document.getElementById("edit_mode").value="0";
-                document.getElementById("txtTitle").disabled = false;
-                document.getElementById("txtTitle").value = "";
-                document.getElementById("txtRevenue").disabled = false;
-                document.getElementById("txtRevenue").value = "";
-                document.getElementById("txtInsurance").disabled = false;
-                document.getElementById("txtInsurance").value = "";
-                document.getElementById("txtDeductable").disabled = false;
-                document.getElementById("txtDeductable").value = "";
-                document.getElementById("txtLeader").disabled = false;
-                document.getElementById("txtLeader").value = "";
-                document.getElementById("txtBU").disabled = false;
-                document.getElementById("txtBU").value = "";
-                document.getElementById("selectIndustry").disabled = false;
-                document.getElementById("selectIndustry").selectedIndex = 0;
-                document.getElementById("selectFacility").disabled = false;
-                document.getElementById("selectFacility").selectedIndex = 0;
-                document.getElementById("selectTrigger").disabled = false;
-                document.getElementById("selectTrigger").selectedIndex = 0;
-                document.getElementById("selectStatus").disabled = false;
-                document.getElementById("selectStatus").selectedIndex = 0;
+                // Enable buttons and set session storage
+                $('#saveBtn, #actionBtn').prop('disabled', false);
+                ['editMode', 'addNew', 'rawid'].forEach(key => sessionStorage.setItem(key, key === 'editMode' ? '0' : '1'));
 
-                document.getElementById("scenario2-tab").click();
-                document.getElementById("txtScenarioDescription_2").disabled = false;
-                document.getElementById("txtScenarioDescription_2").value = "";
-                document.getElementById("selectThreat_2").disabled = false;
-                document.getElementById("selectThreat_2").value = "";
-                document.getElementById("selectTactics_2").disabled = false;
-                document.getElementById("selectTactics_2").value = "";
-                document.getElementById("id_impact_2").disabled = false;
-                document.getElementById("id_impact_2").value = "";
-                 document.getElementById("txtAssets_2").disabled = false;
-                 document.getElementById("txtAssets_2").value = "";
-                 document.getElementById("selectOutage_2").value = '';
-                document.getElementById("outage_2").value = 0;
+                // Reset input fields and enable them
+                var inputFields = [
+                  "txtTitle", "txtRevenue", "txtInsurance", "txtDeductable",
+                  "txtLeader", "txtBU", "selectIndustry", "selectFacility",
+                  "selectTrigger", "selectStatus"
+                ];
+                inputFields.forEach(resetAndEnableField);
 
-                document.getElementById("scenario3-tab").click();
-                document.getElementById("txtScenarioDescription_3").disabled = false;
-                document.getElementById("txtScenarioDescription_3").value = "";
-                document.getElementById("selectThreat_3").disabled = false;
-                document.getElementById("selectThreat_3").value = "";
-                document.getElementById("selectTactics_3").disabled = false;
-                document.getElementById("selectTactics_3").value = "";
-                document.getElementById("id_impact_3").disabled = false;
-                document.getElementById("id_impact_3").value = "";
-                document.getElementById("txtAssets_3").disabled = false;
-                document.getElementById("txtAssets_3").value = "";
-                document.getElementById("selectOutage_3").value = '';
-                document.getElementById("outage_3").value = 0;
+                // Reset scenario tabs
+                for(let i = 1; i <= 5; i++) {
+                  resetScenarioTab(i);
+                }
 
-                document.getElementById("scenario4-tab").click();
-                document.getElementById("selectThreat_4").disabled = false;
-                document.getElementById("selectThreat_4").value = "";
-                document.getElementById("selectTactics_4").disabled = false;
-                document.getElementById("selectTactics_4").value = "";
-                document.getElementById("id_impact_4").disabled = false;
-                document.getElementById("id_impact_4").value = "";
-                document.getElementById("txtAssets_4").disabled = false;
-                document.getElementById("txtAssets_4").value = "";
-                document.getElementById("txtScenarioDescription_4").disabled = false;
-                document.getElementById("txtScenarioDescription_4").value = "";
-                document.getElementById("selectOutage_4").value = '';
-                document.getElementById("outage_4").value = 0;
-
-                document.getElementById("scenario5-tab").click();
-                document.getElementById("selectThreat_5").disabled = false;
-                document.getElementById("selectThreat_5").value = "";
-                document.getElementById("selectTactics_5").disabled = false;
-                document.getElementById("selectTactics_5").value = "";
-                document.getElementById("id_impact_5").disabled = false;
-                document.getElementById("id_impact_5").value = "";
-                document.getElementById("txtAssets_5").disabled = false;
-                document.getElementById("txtAssets_5").value = "";
-                document.getElementById("txtScenarioDescription_5").disabled = false;
-                document.getElementById("txtScenarioDescription_5").value = "";
-
+                // Click the first scenario tab to reset it to default
                 document.getElementById("scenario1-tab").click();
-                document.getElementById("selectThreat_1").value = "";
-                document.getElementById("selectTactics_1").disabled = false;
-                document.getElementById("selectTactics_1").value = "";
-                document.getElementById("id_impact_1").disabled = false;
-                document.getElementById("id_impact_1").value = "";
-                document.getElementById("txtAssets_1").disabled = false;
-                document.getElementById("txtAssets_1").value = "";
-                document.getElementById("txtScenarioDescription_1").disabled = false;
-                document.getElementById("txtScenarioDescription_1").value = "";
-                document.getElementById("selectThreat_1").disabled = false;
-                document.getElementById("selectOutage_1").value = '';
-                document.getElementById("outage_1").value = 0;
-                document.getElementById("editBtn").disabled = true;
-
-               });
+              });
             });
+
+            function resetAndEnableField(fieldId) {
+              var field = document.getElementById(fieldId);
+              if(field.type === 'select-one') field.selectedIndex = 0;
+              else field.value = "";
+              field.disabled = false;
+            }
+
+            function resetScenarioTab(tabNumber) {
+              var prefix = `scenario${tabNumber}`;
+              document.getElementById(`${prefix}-tab`).click();
+
+              var fieldsToReset = ["txtScenarioDescription", "selectThreat", "selectTactics",
+                                   "id_impact", "txtAssets", "selectOutage", "lblriskRating",
+                                   "lblriskCost", "lblriskCostHigh", "lblriskCostMedian",
+                                   "lblriskScore", "residual_risk", "outage"];
+
+              fieldsToReset.forEach(function(field) {
+                var element = document.getElementById(`${field}_${tabNumber}`);
+                if(element.tagName === 'SELECT') element.value = '';
+                else element.value = element.type === 'range' ? '0' : '';
+                element.style.backgroundColor = field === 'lblriskRating' ? 'lightgrey' : element.style.backgroundColor;
+                element.disabled = false;
+              });
+
+              // Clear the risk summary controls table
+              document.getElementById(`risk_summary_controls_table_${tabNumber}`)
+                .getElementsByTagName("tbody")[0].innerHTML = "";
+            }
+            // end of reset controls
 
             document.addEventListener('DOMContentLoaded', function() {
               var enableButton = document.getElementById('editBtn');
