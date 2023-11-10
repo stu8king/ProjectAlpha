@@ -70,6 +70,7 @@ def setup_org(request):
             org_defaults = form.save(commit=False)
             org_defaults.organization = user_organization
             org_defaults.save()
+            request.session['language'] = request.POST.get('language')
             return redirect('OTRisk:setup_org')
     else:
         form = OrganizationDefaultsForm(instance=defaults_instance)

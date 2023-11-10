@@ -5,7 +5,7 @@ from django.template.loader import render_to_string
 from django.utils.html import mark_safe
 from OTRisk.models.raw import RAWorksheet, RAWorksheetScenario, RAActions
 from django.contrib.auth.decorators import login_required
-from OTRisk.models.Model_CyberPHA import tblCyberPHAHeader, tblCyberPHAScenario
+from OTRisk.models.Model_CyberPHA import tblCyberPHAHeader, tblCyberPHAScenario, OrganizationDefaults
 from django.db.models import Count, Sum
 from django.db.models import Avg
 from accounts.models import Organization, UserProfile
@@ -24,6 +24,7 @@ def get_organization_users(organization_id):
     """Fetch users for the given organization ID."""
     return UserProfile.objects.filter(organization_id=organization_id).values_list('user', flat=True)
 
+
 @login_required()
 def dashboardhome(request):
     user_organization_id = get_user_organization_id(request)
@@ -31,6 +32,23 @@ def dashboardhome(request):
     organization_users = get_organization_users(user_organization_id)
     # Set the session variable
     request.session['user_organization'] = user_organization_id
+
+    try:
+        org_defaults = OrganizationDefaults.objects.get(organization_id=user_organization_id)
+        # Set organization defaults in the session
+        request.session['organization_defaults'] = {
+            'industry': org_defaults.industry_id,
+            'language': org_defaults.language,
+            'annual_revenue': org_defaults.annual_revenue,
+            'cyber_insurance': org_defaults.cyber_insurance,
+            'insurance_deductible': org_defaults.insurance_deductible,
+            'employees': org_defaults.employees,
+        }
+    except OrganizationDefaults.DoesNotExist:
+        # Handle the case where the organization does not have defaults set
+        request.session['organization_defaults'] = {}
+
+    print(request.session['organization_defaults'])
 
     # Filters added to all model queries to respect the organization of the user
     filters = {'organization_id': user_organization_id}

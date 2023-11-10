@@ -3,7 +3,8 @@ import os
 
 from django.forms import model_to_dict
 
-from OTRisk.models.raw import RAWorksheet, RAWorksheetScenario, RAActions, MitreICSMitigations, MitreICSTechniques, RawControlList
+from OTRisk.models.raw import RAWorksheet, RAWorksheetScenario, RAActions, MitreICSMitigations, MitreICSTechniques, \
+    RawControlList
 from django.contrib.auth.decorators import login_required
 from OTRisk.models.questionnairemodel import FacilityType
 from OTRisk.models.Model_CyberPHA import tblIndustry, tblThreatSources, auditlog, tblScenarios, tblCyberPHAHeader
@@ -488,10 +489,11 @@ def map_score_to_text(score):
         return 'Very High'
 
 
-@login_required()
+@login_required
 def qraw(request):
     # check the organization that the user belong to
     org_id = get_user_organization_id(request)
+    saved_worksheet_id = None
 
     if request.method == 'POST':
 
@@ -535,6 +537,7 @@ def qraw(request):
                     RADate=date.today(),
                 )
                 ra_worksheet.save()
+                saved_worksheet_id = ra_worksheet.ID
 
         elif edit_mode == 1:
             ra_worksheet_id = int(request.POST.get('hdnRawID'))
@@ -549,8 +552,9 @@ def qraw(request):
             ra_worksheet.revenue = parse_currency(request.POST.get('txtRevenue'))
             ra_worksheet.deductable = parse_currency(request.POST.get('txtDeductable'))
             ra_worksheet.save()
+            saved_worksheet_id = ra_worksheet.ID
 
-    raws = RAWorksheet.objects.filter(organization_id=org_id)
+    raws = RAWorksheet.objects.filter(organization_id=org_id, deleted=0)
 
     # Loop through the raws queryset and calculate business impact scores
     for raw in raws:
@@ -594,7 +598,8 @@ def qraw(request):
                    'mitreTactics': mitreTactics,
                    'mitreMitigations': mitreMitigations,
                    'scenarios': scenarios,
-                   'scenario_form': scenario_form})
+                   'scenario_form': scenario_form,
+                   'saved_worksheet_id': saved_worksheet_id})
 
 
 class GetTechniquesView(View):
@@ -611,6 +616,7 @@ class GetTechniquesView(View):
 
 # Function to assess the risk using the OpenAI GPT-3 API
 def openai_assess_risk(request):
+    language = request.session.get('organization_defaults', {}).get('language', 'en')  # 'en' is the default value
     if request.method == 'GET':
         openai.api_key = os.environ.get('OPENAI_API_KEY')
 
@@ -635,7 +641,13 @@ def openai_assess_risk(request):
         insurance = parse_currency(request.GET.get('insurance'))
         deductable = parse_currency(request.GET.get('deductable'))
         outage = request.GET.get('outage')
-        outageLength = int(request.GET.get('outageLength'))
+        outageLength = request.GET.get('outageLength')
+
+        if outageLength and outageLength.isdigit():
+            outageLength = int(outageLength)
+        else:
+            outageLength = 0
+
         impact = request.GET.get('impact')
         controlScore = request.GET.get('controlScore')
 
@@ -668,6 +680,7 @@ def openai_assess_risk(request):
         }
 
         def query_openai(user_message_content):
+
             # Convert dictionary content to string format if necessary
             if isinstance(user_message_content, dict):
                 prompt_parts = []
@@ -790,7 +803,7 @@ def openai_assess_risk(request):
                     ),
                     factors=risk_factors,
                     additional_request={
-                        "formatting": "Place line breaks between lines. No more than 10 words per bullet point. No extra commentary or explanation"
+                        "formatting": f"Place line breaks between lines. No more than 10 words per bullet point. No extra commentary or explanation. Give the response in language {language}"
                     }
                 )
             }
@@ -805,7 +818,8 @@ def openai_assess_risk(request):
         low_estimate, high_estimate, median_estimate = values
 
         # Return the results
-        result_array = [risk_rating, risk_score, low_estimate, high_estimate, risk_summary, median_estimate, risk_summary_array]
+        result_array = [risk_rating, risk_score, low_estimate, high_estimate, risk_summary, median_estimate,
+                        risk_summary_array]
         return JsonResponse(result_array, safe=False)
 
 
@@ -1159,6 +1173,17 @@ def clean_numeric_string(value):
     return int(''.join(filter(str.isdigit, value)))
 
 
+def get_int_or_zero(value):
+    try:
+        return int(value)
+    except (ValueError, TypeError):
+        return 0
+
+
+def checkbox_to_boolean(value):
+    return value == 'on'
+
+
 def create_or_update_raw_scenario(request):
 
     if request.method == 'POST':
@@ -1177,6 +1202,9 @@ def create_or_update_raw_scenario(request):
 
         control_list_str = request.POST.get('controlList')
         control_list = json.loads(control_list_str)
+
+        bia_sis_outage_bool = request.POST.get('bia_sis_outage') == 'yes'
+        bia_sis_compromise_bool = request.POST.get('bia_sis_compromise') == 'yes'
 
         scenario_data = {
             'RAWorksheetID': raw_worksheet,
@@ -1200,22 +1228,39 @@ def create_or_update_raw_scenario(request):
             'event_cost_low': clean_numeric_string(request.POST.get('event_cost_low')),
             'event_cost_high': clean_numeric_string(request.POST.get('event_cost_high')),
             'event_cost_median': clean_numeric_string(request.POST.get('event_cost_median')),
-            'justifySafety': request.POST.get('justifySafety'),
-            'justifyLife': request.POST.get('justifyLife'),
-            'justifyProduction': request.POST.get('justifyProduction'),
-            'justifyFinancial': request.POST.get('justifyFinancial'),
-            'justifyReputation': request.POST.get('justifyReputation'),
-            'justifyEnvironment': request.POST.get('justifyEnvironment'),
-            'justifyRegulation': request.POST.get('justifyRegulation'),
-            'justifyData': request.POST.get('justifyData'),
-            'justifySupply': request.POST.get('justifySupply'),
+            'justifySafety': request.POST.get('justifySafety') or "No data entered",
+            'justifyLife': request.POST.get('justifyLife') or "No data entered",
+            'justifyProduction': request.POST.get('justifyProduction') or "No data entered",
+            'justifyFinancial': request.POST.get('justifyFinancial') or "No data entered",
+            'justifyReputation': request.POST.get('justifyReputation') or "No data entered",
+            'justifyEnvironment': request.POST.get('justifyEnvironment') or "No data entered",
+            'justifyRegulation': request.POST.get('justifyRegulation') or "No data entered",
+            'justifyData': request.POST.get('justifyData') or "No data entered",
+            'justifySupply': request.POST.get('justifySupply') or "No data entered",
             'outage': request.POST.get('outage'),
-            'outageLength': request.POST.get('outageLength'),
+            'outageLength': get_int_or_zero(request.POST.get('outageLength')),
             'ThreatScore': request.POST.get('ThreatScore'),
             'threatTactic': request.POST.get('threatTactic'),
             'impact': request.POST.get('impact'),
-            'residual_risk': int(round(float(request.POST.get('residual_risk'))))
-         }
+            'residual_risk': int(round(float(request.POST.get('residual_risk')))),
+            'bia_safety_hazard': request.POST.get('bia_safety_hazard'),
+            'bia_sis_outage': bia_sis_outage_bool,
+            'bia_sis_compromise': bia_sis_compromise_bool,
+            'bia_life_scope': request.POST.get('bia_life_scope'),
+            'bia_contaminants': request.POST.get('bia_contaminants'),
+            'bia_contamination': request.POST.get('bia_contamination'),
+            'bia_resident': request.POST.get('bia_resident'),
+            'bia_wildlife': request.POST.get('bia_wildlife'),
+            'bia_data_pii': checkbox_to_boolean(request.POST.get('bia_data_pii', False)),
+            'bia_data_ip': checkbox_to_boolean(request.POST.get('bia_data_ip', False)),
+            'bia_data_customer': checkbox_to_boolean(request.POST.get('bia_data_customer', False)),
+            'bia_data_finance': checkbox_to_boolean(request.POST.get('bia_data_finance', False)),
+            'bia_supply_outbound': checkbox_to_boolean(request.POST.get('bia_supply_outbound', False)),
+            'bia_supply_inbound': checkbox_to_boolean(request.POST.get('bia_supply_inbound', False)),
+
+            'bia_supply_prodimpact': request.POST.get('bia_supply_prodimpact'),
+            'bia_supply_security': checkbox_to_boolean(request.POST.get('bia_supply_security', False)),
+        }
 
         # Check if scenario_id is provided to determine if it's an update or create
         if scenario_id > 0:

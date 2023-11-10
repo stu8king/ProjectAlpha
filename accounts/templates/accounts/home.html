@@ -39,6 +39,80 @@
          {% load django_bootstrap5 %}
         {% bootstrap_css %}
         {% bootstrap_javascript %}
+    <style>
+    /* Custom Stylesheet - custom_stylesheet.css */
+
+/* General Modal Styling */
+.modal-content {
+    border-radius: 5px;
+}
+
+.modal-header {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.modal-title {
+    font-size: 24px;
+    font-weight: 600;
+}
+
+.close {
+    outline: none;
+}
+
+/* Form Styling */
+.login-form .form-group {
+    margin-bottom: 15px;
+}
+
+.login-form .form-control {
+    height: 45px;
+    font-size: 16px;
+    border-radius: 4px;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.075);
+    border: 1px solid #ced4da;
+}
+
+.login-form .btn-primary {
+    background-color: #0056b3;
+    border-color: #004085;
+    color: #fff;
+    font-size: 18px;
+    padding: 10px 0;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+}
+
+.login-form .btn-primary:hover {
+    background-color: #004085;
+}
+
+.login-form .btn-primary.btn-block {
+    display: block;
+    width: 100%;
+}
+
+/* Link Styling */
+.login-form a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+.login-form a:hover {
+    text-decoration: underline;
+}
+
+/* Responsive adjustments */
+@media (max-width: 576px) {
+    .modal-dialog {
+        margin: 20px;
+    }
+    .modal-content {
+        padding: 20px;
+    }
+}
+</style>
     </head>
 
 <body>
@@ -254,19 +328,17 @@
 
 
 
-<div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModal" aria-hidden="true">
-  <div class="modal-dialog modal-xl">
+<div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header">
-        <h3 class="modal-title" id="loginModal_Label"><i class="bi bi-box-arrow-in-right"></i> Login to iOTa</h3>
+        <h3 class="modal-title" id="loginModalLabel"><i class="bi bi-box-arrow-in-right"></i> Login to iOTa</h3>
         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
             <span aria-hidden="true">&times;</span>
         </button>
-
       </div>
       <div class="modal-body">
         <div class="login-form">
-
             <form method="POST" action="{% url 'accounts:login' %}">
                 {% csrf_token %}
                 <div class="form-group">
@@ -278,18 +350,22 @@
                     <input type="password" id="password" name="password" class="form-control" required>
                 </div>
                 <div class="form-group">
-                    <button type="submit" class="btn btn-primary">Login</button>
+                    <button type="submit" class="btn btn-primary btn-block">Login</button>
                 </div>
-                <div class="form-group">
+                <div class="form-group text-center">
                     <a href="{% url 'accounts:password_reset_request' %}">Forgot Password?</a>
                 </div>
-
             </form>
         </div>
       </div>
     </div>
   </div>
 </div>
+
+
+
+
+
         <script src="{% static 'js/vendor/jquery-2.2.4.min.js' %}"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
         <script src="{% static 'js/vendor/bootstrap.min.js' %}"></script>

@@ -19,13 +19,29 @@ class OrganizationDefaultsForm(forms.ModelForm):
         queryset=tblIndustry.objects.all(),
         required=False,
         label="Industry",
-        empty_label="Select Industry"
+        empty_label="Select Industry",
+        widget=forms.Select(attrs={'class': 'form-control'})
     )
 
     def __init__(self, *args, **kwargs):
         super(OrganizationDefaultsForm, self).__init__(*args, **kwargs)
         self.fields['industry'].label_from_instance = lambda obj: "{}".format(obj.Industry)
 
+        # Define currency fields
+        currency_fields = ['annual_revenue', 'cyber_insurance', 'insurance_deductible']
+        for field_name in currency_fields:
+            if field_name in self.fields:
+                self.fields[field_name].widget = forms.NumberInput(attrs={
+                    'class': 'form-control',
+                    'step': '0.01',  # Allows input to have two decimal places
+                    'min': '0',  # Optional: ensures that the value is not negative
+                    'type': 'text',  # Set as text to prevent spinner UI
+                    'pattern': '^\d+(\.?\d{2})?$'  # Pattern for currency (optional)
+                })
+
+        # Add Bootstrap form-control class to all fields
+        for field_name, field in self.fields.items():
+            field.widget.attrs['class'] = 'form-control'
 
 
 class RAWorksheetScenarioForm(forms.ModelForm):

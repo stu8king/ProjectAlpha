@@ -56,6 +56,7 @@ class RAWorksheet(models.Model):
     revenue = models.IntegerField()
     insurance = models.IntegerField()
     deductable = models.IntegerField()
+    deleted = models.IntegerField()
 
     class Meta:
         db_table = 'tblRAWorksheet'
@@ -128,8 +129,71 @@ class RAWorksheetScenario(models.Model):
         ("Manipulation of View", "Manipulation of View"),
         ("Theft of Operational Information", "Theft of Operational Information"),
     ]
-    impact = models.CharField(max_length=30, choices=IMPACT_CHOICES, default='N/A'),
+    impact = models.CharField(max_length=32, choices=IMPACT_CHOICES, default='N/A')
     residual_risk = models.IntegerField(validators=[MinValueValidator(0), MaxValueValidator(10)])
+    BIA_SAFETY_CHOICES = [
+        ("N/A", "N/A"),
+        ("Chemical", "Chemical"),
+        ("Electrical", "Electrical"),
+        ("Mechanical", "Mechanical"),
+        ("Radiation", "Radiation")
+
+    ]
+    bia_safety_hazard = models.CharField(max_length=12, choices=BIA_SAFETY_CHOICES, default='N/A' )
+    bia_sis_outage = models.BooleanField(default=False)
+    bia_sis_compromise = models.BooleanField(default=False)
+    BIA_LIFE_SCOPE_CHOICES = [
+        ("N/A", "N/A"),
+        ("Facility", "Facility"),
+        ("External", "External"),
+        ("Both", "Both")
+
+    ]
+    bia_life_scope = models.CharField(max_length=12, choices=BIA_LIFE_SCOPE_CHOICES, default='N/A')
+    BIA_CONTAMINANTS_CHOICES = [
+        ("N/A", "N/A"),
+        ("Chemical", "Chemical"),
+        ("Biological", "Biological"),
+        ("Radiological", "Radiological"),
+        ("Physical", "Physical")
+    ]
+    BIA_ECOSYSTEM_CHOICES = [
+        ("N/A", "N/A"),
+        ("Aquatic", "Aquatic"),
+        ("Terrestrial", "Terrestrial"),
+        ("Urban", "Urban"),
+        ("Agriculture", "Agriculture")
+    ]
+    BIA_CONTAMINATION_CHOICES = [
+        ("N/A", "N/A"),
+        ("Localized", "Localized"),
+        ("Wide Area", "Wide Area")
+    ]
+    BIA_RESIDENTS_CHOICES = [
+        ("N/A", "N/A"),
+        ("Harmless", "Harmless"),
+        ("Harmful", "Harmful"),
+        ("Deadly", "Deadly")
+    ]
+    BIA_WILDLIFE_CHOICES = [
+        ("N/A", "N/A"),
+        ("Harmless", "Harmless"),
+        ("Harmful", "Harmful"),
+        ("Deadly", "Deadly")
+    ]
+    bia_contaminants = models.CharField(max_length=12, choices=BIA_CONTAMINANTS_CHOICES, default='N/A')
+    bia_ecosystem = models.CharField(max_length=12, choices=BIA_ECOSYSTEM_CHOICES, default='N/A')
+    bia_contamination = models.CharField(max_length=12, choices=BIA_CONTAMINATION_CHOICES, default='N/A')
+    bia_resident = models.CharField(max_length=12, choices=BIA_RESIDENTS_CHOICES, default='N/A')
+    bia_wildlife = models.CharField(max_length=12, choices=BIA_WILDLIFE_CHOICES, default='N/A')
+    bia_data_pii = models.BooleanField(default=False)
+    bia_data_ip = models.BooleanField(default=False)
+    bia_data_customer = models.BooleanField(default=False)
+    bia_data_finance = models.BooleanField(default=False)
+    bia_supply_inbound = models.BooleanField(default=False)
+    bia_supply_outbound = models.BooleanField(default=False)
+    bia_supply_prodimpact = models.CharField(max_length=6, default='Low')
+    bia_supply_security = models.CharField(max_length=6, default='Low')
 
     class Meta:
         db_table = 'tblRAWorksheetScenario'
