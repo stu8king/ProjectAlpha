@@ -1,5 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
+
+import OTRisk.models.model_assessment
 from accounts.models import Organization
 from OTRisk.models.raw import MitreICSMitigations
 
@@ -206,6 +208,7 @@ class tblCyberPHAHeader(models.Model):
     cyber_insurance = models.BooleanField(default=False)
     pha_score = models.IntegerField()
     sl_t = models.PositiveSmallIntegerField(choices=SECURITY_LEVELS, default=0)
+    assessment = models.IntegerField(null=True, blank=True)
 
     class Meta:
         db_table = 'tblCyberPHAHeader'
@@ -424,6 +427,8 @@ class tblCyberPHAScenario(models.Model):
     control_effectiveness = models.IntegerField()
     frequency = models.DecimalField(max_digits=4, decimal_places=1)
     sl_a = models.PositiveSmallIntegerField(choices=SECURITY_LEVELS, default=0)
+    dangerScope = models.TextField()
+    ai_bia_score = models.IntegerField()
 
     class Meta:
         db_table = 'tblCyberPHAScenario'
