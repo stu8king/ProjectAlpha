@@ -6,9 +6,6 @@
     <link rel="icon" href="{% static 'images/iota - white 1.png' %}" type="image/x-icon">
 
 
-    <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css">
-
     <!-- Bootstrap Select CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.1/css/bootstrap-select.min.css">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -19,16 +16,14 @@
     <!-- jQuery -->
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-    <!-- Bootstrap JS -->
-    <script src="{% static 'bootstrap/dist/js/bootstrap.bundle.min.js' %}"></script>
-
-    <script src="{% static 'anychart/dist/js/anychart-bundle.min.js' %}"></script>
-    <script src="{% static 'anychart/dist/js/anychart-heatmap.min.js' %}"></script>
-    <script src="{% static 'anychart/dist/js/anychart-sunburst.min.js' %}"></script>
-    <script src="{% static 'anychart/dist/js/anychart-pie.min.js' %}"></script>
         <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.25/css/jquery.dataTables.css">
     <script type="text/javascript" charset="utf8" src="https://code.jquery.com/jquery-3.5.1.js"></script>
     <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.js"></script>
+
+
+
+
+
 
 
      {% load django_bootstrap5 %}
@@ -86,6 +81,7 @@
 
             .col-md-2 {
         place-items: center;
+        background-color: lightgrey;
     }
 
      .small-font {
@@ -105,6 +101,12 @@
         font-weight: lighter;
     }
 
+        .border-container {
+        display: flex;
+        flex-direction: column;
+        padding: 20px;
+        gap: 20px; /* Creates space between the two sections */
+    }
     </style>
 </head>
 <body>
@@ -114,7 +116,7 @@
 <nav class="navbar navbar-expand-lg navbar-scroll shadow-0 border-bottom border-dark rounded">
   <div class="container-fluid d-flex justify-content-between">
    <a class="navbar-brand" href="{% url 'OTRisk:dashboardhome' %}"><img src="{% static 'images/iota - white 1.png' %}" style="height: 140px; width: 140px" class="navbar-logo" alt="">   </a>
-      <h6 class="my-auto text-center flex-grow-1">Dashboard</h6>
+      <h6 class="my-auto text-center flex-grow-1">Custom Assessment Upload</h6>
 
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
       <ul class="navbar-nav ms-auto">
@@ -143,6 +145,7 @@
                     <li><a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:setup_org' %}">Defaults</a></li>
                   <li><a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:add_consequence' %}">Consequence Manager</a></li>
                   <li><a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:admin_users' %}">Admin Users</a></li>
+              <li><a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:list_frameworks' %}">List Frameworks</a></li>
                   {% if user.is_staff %}
                     <!-- Links visible only to superusers -->
                     <li><a class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:user_admin' %}">User Administration</a></li>
@@ -168,86 +171,11 @@
   </div>
 
 </nav>
-<div class="row" style="height: 10px">
-    <div class="col"></div>
+
+<div class="container mt-5 border-container" style="border: 1px solid #000000; box-shadow: 0 4px 8px rgba(0,0,0,0.1); padding: 20px; background-color: white">
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Upload</button>
+</form>
 </div>
-<div class="row">
-    <div class="col-md-4"></div>
-    <div class="col-md-4 text-center">Default Settings for {{ user.userprofile.organization.name }}</div>
-    <div class="col-md-4"></div>
-</div>
-
-<div class="row" style="height: 10px">
-    <div class="col"></div>
-</div>
-<div class="row">
-    <div class="col-md-1"></div>
-    <div class="col-md-4"></div>
-    <div class="col-md-2 text-center" style="align-items: center">
-
-        <form method="post" class="form-horizontal">
-            {% csrf_token %}
-            {% for field in form %}
-                <div class="form-group">
-                    <label for="{{ field.id_for_label }}" class="control-label">{{ field.label }}</label>
-                    <div>
-                        {{ field }}  <!-- The form control classes are already added in the Python code -->
-                        {% if field.help_text %}
-                            <p class="help-block">{{ field.help_text }}</p>
-                        {% endif %}
-                    </div>
-                </div>
-            {% endfor %}
-            <div class="form-group">
-                <div>
-                    <input type="submit" value="Submit" class="btn btn-primary">
-                </div>
-            </div>
-        </form>
-
-
-
-
-    </div>
-    <div class="col-md-4"></div>
-
-    <div class="col-md-1"></div>
-
-</div>
-
- <script type="text/javascript">
-    document.addEventListener('DOMContentLoaded', function() {
-        // Function to format numbers as currency
-        function formatCurrency(value) {
-            return parseFloat(value).toLocaleString('en-US', {
-                style: 'currency',
-                currency: 'USD',
-                minimumFractionDigits: 2
-            });
-        }
-
-        // Format fields on load
-        document.querySelectorAll('input[type="text"][pattern="^\\d+(\\.?\\d{2})?$"]').forEach(function(input) {
-            var value = input.value;
-            if(value) input.value = formatCurrency(value);
-        });
-
-        // Format fields before submitting form
-        document.querySelector('form').addEventListener('submit', function() {
-            document.querySelectorAll('input[type="text"][pattern="^\\d+(\\.?\\d{2})?$"]').forEach(function(input) {
-                var value = input.value.replace(/[^0-9.-]+/g,"");
-                input.value = value; // Convert back to plain number for submission
-            });
-        });
-
-        // Reformat on field blur
-        document.querySelectorAll('input[type="text"][pattern="^\\d+(\\.?\\d{2})?$"]').forEach(function(input) {
-            input.addEventListener('blur', function(e) {
-                var value = e.target.value.replace(/[^0-9.-]+/g,"");
-                e.target.value = formatCurrency(value);
-            });
-        });
-    });
-</script>
-</body>
-</html>

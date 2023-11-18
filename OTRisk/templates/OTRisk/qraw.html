@@ -41,6 +41,93 @@
  <title>Risk Assessment Worksheet</title>
 
   <style>
+      .notification-message {
+    position: fixed; /* or absolute */
+    top: 20px; /* Distance from top */
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000; /* Ensure it's above other elements */
+    display: none;
+    padding: 10px 20px;
+    background-color: #4CAF50; /* Green for success */
+    color: white;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    animation: fadeOut 5s ease 3s forwards; /* fades out after 3 seconds, total 5s animation */
+}
+
+.notification-message.error {
+    background-color: #f44336; /* Red for error */
+}
+
+@keyframes fadeOut {
+    to {
+        opacity: 0;
+        visibility: hidden;
+    }
+}
+
+/* Apply a border, padding, and shadow to the modal */
+.modal-content {
+    border: 2px solid black; /* Solid black border */
+    border-radius: 5px; /* Slightly rounded corners for a modern look */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+    font-family: 'Arial', sans-serif; /* Modern font */
+}
+
+/* Style the modal header to stand out */
+.modal-header {
+    background-color: #f8f9fa; /* Light background for the header */
+    border-bottom: 1px solid #dee2e6; /* Separation line */
+}
+
+/* Style the title */
+.modal-title {
+    color: #333; /* Dark text for contrast */
+    font-weight: bold;
+}
+
+/* Style the buttons for better visual appeal */
+.btn-close, .btn-secondary {
+    border-color: #333; /* Matching border color */
+}
+
+/* Style the labels and inputs for a cleaner look */
+.modal-body label {
+    display: block; /* Ensure labels are on their own line */
+    margin-bottom: .5rem; /* Spacing below labels */
+    color: #495057; /* Slightly darker text for readability */
+    font-weight: bold; /* Make labels bold */
+}
+
+.modal-body .form-control {
+    margin-bottom: 1rem; /* Spacing below inputs */
+    border: 1px solid #ced4da; /* Matching border for inputs */
+}
+
+/* Style the textarea */
+textarea.form-control {
+    height: auto; /* Adjust height based on content */
+}
+
+/* Enhance radio buttons and select dropdown for better UX */
+.form-check-input {
+    margin-right: .5rem; /* Space between radio button and label */
+}
+
+select.form-control {
+    appearance: none; /* Remove default styling */
+    background-position: right .75rem center; /* Position for custom arrow */
+    background-repeat: no-repeat;
+    padding-right: 2.25rem; /* Make space for custom arrow */
+}
+
+/* Add padding to the modal body for better spacing */
+.modal-body {
+    padding: 20px;
+}
+
+
 .risk-slider {
     appearance: none;
     width: 100%;
@@ -74,8 +161,42 @@
     background: var(--thumb-color, grey);  // default to green if --thumb-color is not set
 }
 
+    .slider {
+        -webkit-appearance: none;
+        width: 100%;
+        height: 15px;
+        background: linear-gradient(to right, green, yellow, red);
+        outline: none;
+        border: 3px solid rgba(77, 127, 192, 0.75);
+        border-radius: 4px;
+    }
+
+    .slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 15px;
+        height: 40px;
+        background: rgba(77, 127, 192, 0.75);
+        cursor: pointer;
+        border: 3px solid rgba(77, 127, 192, 0.75);
+        border-radius: 4px;
+    }
+
+    .slider::-moz-range-thumb {
+        width: 20px;
+        height: 60px;
+        background: #000;
+        cursor: pointer;
+        border: 5px solid lawngreen;
+        border-radius: 4px;
+    }
+
+    /* for Firefox track */
+    .slider::-moz-range-track {
+        background: linear-gradient(to right, green, yellow, red);
+    }
 .highlighted {
-background-color: #85a4e7 !important;
+background-color: #f3dc47 !important;
 color: white !important;
 }
 
@@ -83,38 +204,7 @@ color: white !important;
     cursor: pointer;
     background-color: #f5f5f5;  /* Optional: to give a slight background change on hover */
 }
-.slider {
-  -webkit-appearance: none;
-  width: 100%;
-  height: 15px;
-  background: #b0acac;
-  outline: none;
-  border: 3px solid rgba(77, 127, 192, 0.75);
-  border-radius: 4px;
-}
 
-
-/* for chrome/safari */
-.slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 15px;
-  height: 40px;
-  background: rgba(77, 127, 192, 0.75);
-  cursor: pointer;
-  border: 3px solid rgba(77, 127, 192, 0.75);
-  border-radius: 4px;
-}
-
-/* for firefox */
-.slider::-moz-range-thumb {
-  width: 20px;
-  height: 60px;
-  background: #000;
-  cursor: pointer;
-  border: 5px solid lawngreen;
-  border-radius: 4px;
-}
       .green-circle {
     display: inline-block;
     width: 12px;
@@ -230,69 +320,21 @@ color: white !important;
 </head>
     <!-- Initialize sliders when the page loads -->
    <script>
+        window.onload = function() {
+            const categories = [
+                "safety", "life", "production", "finance", "reputation",
+                "environment", "regulatory", "supply", "data", "vuln",
+                "threat", "frequency"
+            ];
+            const numSliders = 5;
 
-      window.onload = function() {
-        initSlider("range_safety_1", "safetyrange_1");
-        initSlider("range_life_1", "liferange_1");
-        initSlider("range_production_1", "productionrange_1");
-        initSlider("range_finance_1", "financerange_1");
-        initSlider("range_reputation_1", "reputationrange_1");
-        initSlider("range_environment_1", "environmentrange_1");
-        initSlider("range_regulatory_1", "regulatoryrange_1");
-        initSlider("range_supply_1", "supplyrange_1");
-        initSlider("range_data_1", "datarange_1");
-        initSlider("range_safety_2", "safetyrange_2");
-        initSlider("range_life_2", "liferange_2");
-        initSlider("range_production_2", "productionrange_2");
-        initSlider("range_finance_2", "financerange_2");
-        initSlider("range_reputation_2", "reputationrange_2");
-        initSlider("range_environment_2", "environmentrange_2");
-        initSlider("range_regulatory_2", "regulatoryrange_2");
-        initSlider("range_supply_2", "supplyrange_2");
-        initSlider("range_data_2", "datarange_2");
-        initSlider("range_safety_3", "safetyrange_3");
-        initSlider("range_life_3", "liferange_3");
-        initSlider("range_production_3", "productionrange_3");
-        initSlider("range_finance_3", "financerange_3");
-        initSlider("range_reputation_3", "reputationrange_3");
-        initSlider("range_environment_3", "environmentrange_3");
-        initSlider("range_regulatory_3", "regulatoryrange_3");
-        initSlider("range_supply_3", "supplyrange_3");
-        initSlider("range_data_3", "datarange_3");
-        initSlider("range_safety_4", "safetyrange_4");
-        initSlider("range_life_4", "liferange_4");
-        initSlider("range_production_4", "productionrange_4");
-        initSlider("range_finance_4", "financerange_4");
-        initSlider("range_reputation_4", "reputationrange_4");
-        initSlider("range_environment_4", "environmentrange_4");
-        initSlider("range_regulatory_4", "regulatoryrange_4");
-        initSlider("range_supply_4", "supplyrange_4");
-        initSlider("range_data_4", "datarange_4");
-        initSlider("range_safety_5", "safetyrange_5");
-        initSlider("range_life_5", "liferange_5");
-        initSlider("range_production_5", "productionrange_5");
-        initSlider("range_finance_5", "financerange_5");
-        initSlider("range_reputation_5", "reputationrange_5");
-        initSlider("range_environment_5", "environmentrange_5");
-        initSlider("range_regulatory_5", "regulatoryrange_5");
-        initSlider("range_supply_5", "supplyrange_5");
-        initSlider("range_data_5", "datarange_5");
-        initSlider("range_vuln_1", "vulnrange_1");
-        initSlider("range_vuln_2", "vulnrange_2");
-        initSlider("range_vuln_3", "vulnrange_3");
-        initSlider("range_vuln_4", "vulnrange_4");
-        initSlider("range_vuln_5", "vulnrange_5");
-        initSlider("range_threat_1", "threatrange_1");
-        initSlider("range_threat_2", "threatrange_2");
-        initSlider("range_threat_3", "threatrange_3");
-        initSlider("range_threat_4", "threatrange_4");
-        initSlider("range_threat_5", "threatrange_5");
-        initSlider("range_frequency_1", "frequencyrange_1");
-        initSlider("range_frequency_2", "frequencyrange_2");
-        initSlider("range_frequency_3", "frequencyrange_3");
-        initSlider("range_frequency_4", "frequencyrange_4");
-        initSlider("range_frequency_5", "frequencyrange_5");
+            for (let i = 1; i <= numSliders; i++) {
+                categories.forEach(function(category) {
+                    initSlider(`range_${category}_${i}`, `${category}range_${i}`);
+                });
+            }
         };
+
       </script>
 <body>
 <script>
@@ -386,7 +428,9 @@ color: white !important;
         <li class="nav-item">
           <a class="nav-link" style="font-size: 12px;" href="{% url 'OTRisk:risk_register' %}" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Risk Register</a>
         </li>
-
+        <li class="nav-item">
+          <a class="nav-link" style="font-size: 12px;" href="{% url 'OTRisk:list_frameworks' %}" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Assessments</a>
+        </li>
         <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="font-size: 12px;">
                 <i class="bi bi-diagram-3"></i> Admin
@@ -421,11 +465,9 @@ color: white !important;
 
 </nav>
 
-
-
 <form name="frmRAW" id="frmRAW" method="POST" action="{% url 'OTRisk:qraw' %}">
 {% csrf_token %}
-
+<div id="notificationMessage" class="notification-message" style="display: none;"></div>
 
 <div class="row">
     <div class="col-md-1"></div>
@@ -451,11 +493,12 @@ color: white !important;
         <tbody>
             {% for raws in raws %}
                 <tr class="selectable-row"
+                    data-id="{{ raw.ID }}"
                     data-revenue="{{ raws.revenue }}"
                     data-insurance="{{ raws.insurance }}"
                     data-deductable="{{ raws.deductable }}">
                     <td>{{ raws.ID }}</td>
-                    <td><b>{{ raws.RATitle }}</b></td>
+                    <td style="font-size: 14px"><b>{{ raws.RATitle }}</b></td>
                     <td>{{ raws.StatusFlag }}</td>
                     <td>
                         {% if raws.bia_text == 'Low' or raws.bia_text == 'Low/Medium' %}
@@ -488,6 +531,7 @@ color: white !important;
             $(this).addClass('highlighted');
             });
         });
+
     </script>
     </div> <!-- table view of existing risk assessments -->
     <div class="col-md-1"></div>
@@ -543,9 +587,10 @@ color: white !important;
                 for(let i = 1; i <= 5; i++) {
                   resetScenarioTab(i);
                 }
-
+                document.getElementById("hdnRawID").value = 0;
                 // Click the first scenario tab to reset it to default
                 document.getElementById("scenario1-tab").click();
+                document.getElementById("txtTitle").focus();
               });
             });
 
@@ -573,6 +618,19 @@ color: white !important;
                 element.disabled = false;
               });
 
+             const categories = [
+                "safety", "life", "production", "finance", "reputation",
+                "environment", "regulatory", "supply", "data", "vuln",
+                "threat", "frequency"
+            ];
+            const numSliders = 5;
+
+            for (let i = 1; i <= numSliders; i++) {
+                categories.forEach(function(category) {
+                    document.getElementById(`range_${category}_${i}`).value = 0;
+                    initSlider(`range_${category}_${i}`, `${category}range_${i}`);
+                });
+            }
               // Clear the risk summary controls table
               document.getElementById(`risk_summary_controls_table_${tabNumber}`)
                 .getElementsByTagName("tbody")[0].innerHTML = "";
@@ -918,17 +976,18 @@ color: white !important;
                 </div>
             <div class="col-md-4 small-font">
                 <h5>Business Impact Analysis</h5>
+                Click the icons to add additional detail
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                         <div class="card-body">
                             <!--slider for safety rating -->
                             <div class="slider-container d-flex align-items-center" >
-                                <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#safetyModal_1" data-bs-placement="top" style="cursor: pointer">Safety</label></div>
+                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#safetyModal_1" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/safety.png' %}" style="height:2rem"> &nbsp;Safety</label></div>
                                 <div class="col-7">
                                     <label for="range_safety_1"></label>
 
                                     <input type="range" min="1" max="10" value="1" class="slider" id="range_safety_1" name="range_safety_1" onchange="initSlider('range_safety_1', 'safetyrange_1');setRiskAssessmentRefreshRequired(1);">
                                 </div>
-                                <div class="col-3"><label id="safetyrange_1" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></div>
+                                <div class="col-2"><label id="safetyrange_1" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></div>
                               </div>
                         </div>
                     </div>
@@ -936,49 +995,49 @@ color: white !important;
                         <div class="card-body">
                             <!--slider for life rating -->
                             <div class="slider-container d-flex align-items-center">
-                                <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#lifeModal_1" data-bs-placement="top" style="cursor: pointer">Life</label></div>
+                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#lifeModal_1" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/danger.png' %}" style="height:2rem"> &nbsp;Life</label></div>
                                 <div class="col-7">
                                     <label for="range_life_1"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_life_1" name="range_life_1" onchange="initSlider('range_life_1', 'liferange_1');setRiskAssessmentRefreshRequired(1);">
                                 </div>
-                                <div class="col-3"><h6><label id="liferange_1" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                                <div class="col-2"><h6><label id="liferange_1" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
                         </div>
                     </div>
 
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                         <div class="card-body">
-                            <!--slider for safety rating -->
+                            <!--slider for production rating -->
                             <div class="slider-container d-flex align-items-center">
-                                <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#productionModal_1" data-bs-placement="top" style="cursor: pointer">Production</label></div>
+                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#productionModal_1" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/production.png' %}" style="height:2rem">&nbsp; Production</label></div>
                                 <div class="col-7">
                                     <label for="range_production_1"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_production_1" name="range_production_1" onchange="initSlider('range_production_1', 'productionrange_1');setRiskAssessmentRefreshRequired(1);">
                                 </div>
-                                <div class="col-3"><h6><label id="productionrange_1" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                                <div class="col-2"><h6><label id="productionrange_1" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
                         </div>
                     </div>
 
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                         <div class="card-body">
-                             <!--slider for safety rating -->
+                             <!--slider for finance rating -->
                             <div class="slider-container d-flex align-items-center">
-                                <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#financeModal_1"  data-bs-placement="top" style="cursor: pointer">Financial</label></div>
+                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#financeModal_1"  data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/finance.png' %}" style="height:2rem">&nbsp; Financial</label></div>
                                 <div class="col-7">
                                     <label for="range_finance_1"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_finance_1" name="range_finance_1" onchange="initSlider('range_finance_1', 'financerange_1');setRiskAssessmentRefreshRequired(1);">
                                 </div>
-                                <div class="col-3"><h6><label id="financerange_1" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                                <div class="col-2"><h6><label id="financerange_1" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
                         </div>
                     </div>
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                         <div class="card-body">
-                            <!--slider for safety rating -->
+                            <!--slider for reputation rating -->
                             <div class="slider-container d-flex align-items-center">
-                                <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#reputationModal_1"  data-bs-placement="top" style="cursor: pointer">Reputation</label></div>
+                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#reputationModal_1"  data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/reputation.png' %}" style="height:2rem"> &nbsp;Reputation</label></div>
                                 <div class="col-7">
                                     <label for="range_reputation_1"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_reputation_1" name="range_reputation_1" onchange="initSlider('range_reputation_1', 'reputationrange_1');setRiskAssessmentRefreshRequired(1);">
                                 </div>
-                                <div class="col-3"><h6><label id="reputationrange_1" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                                <div class="col-2"><h6><label id="reputationrange_1" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
                         </div>
                     </div>
@@ -986,11 +1045,11 @@ color: white !important;
                         <div class="card-body">
                             <!--slider for environment impact rating -->
                             <div class="slider-container d-flex align-items-center">
-                                <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#environmentModal_1"  data-bs-placement="top" style="cursor: pointer">Environment</label></div>
+                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#environmentModal_1"  data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/environment.png' %}" style="height:2rem"> &nbsp;Environment</label></div>
                                 <div class="col-7">
                                     <label for="range_environment_1"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_environment_1" name="range_environment_1" onchange="initSlider('range_environment_1', 'environmentrange_1');setRiskAssessmentRefreshRequired(1);">
                                 </div>
-                                <div class="col-3"><h6><label id="environmentrange_1" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                                <div class="col-2"><h6><label id="environmentrange_1" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
                         </div>
                     </div>
@@ -998,11 +1057,11 @@ color: white !important;
                         <div class="card-body">
                             <!--slider for regulatory impact rating -->
                             <div class="slider-container d-flex align-items-center">
-                                <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#regulationModal_1"  data-bs-placement="top" style="cursor: pointer">Regulatory</label></div>
+                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#regulationModal_1"  data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/regulation.png' %}" style="height:2rem">&nbsp; Regulatory</label></div>
                                 <div class="col-7">
                                     <label for="range_regulatory_1"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_regulatory_1" name="range_regulatory_1" onchange="initSlider('range_regulatory_1', 'regulatoryrange_1');setRiskAssessmentRefreshRequired(1);">
                                 </div>
-                                <div class="col-3"><h6><label id="regulatoryrange_1" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                                <div class="col-2"><h6><label id="regulatoryrange_1" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
                         </div>
                     </div>
@@ -1010,11 +1069,11 @@ color: white !important;
                         <div class="card-body">
                             <!--slider for data impact rating -->
                             <div class="slider-container d-flex align-items-center">
-                                <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#dataModal_1"  data-bs-placement="top" style="cursor: pointer">Data/IP</label></div>
+                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#dataModal_1"  data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/data.png' %}" style="height:2rem"> &nbsp;Data/IP</label></div>
                                 <div class="col-7">
                                     <label for="range_data_1"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_data_1" name="range_data_1" onchange="initSlider('range_data_1', 'datarange_1');setRiskAssessmentRefreshRequired(1);">
                                 </div>
-                                <div class="col-3"><h6><label id="datarange_1" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                                <div class="col-2"><h6><label id="datarange_1" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
                         </div>
                     </div>
@@ -1022,11 +1081,11 @@ color: white !important;
                         <div class="card-body">
                             <!--slider for data impact rating -->
                             <div class="slider-container d-flex align-items-center">
-                                <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#supplyModal_1"  data-bs-placement="top" style="cursor: pointer">Supply Chain</label></div>
+                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#supplyModal_1"  data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/supply.png' %}" style="height:2rem"> &nbsp;Supply Chain</label></div>
                                 <div class="col-7">
                                     <label for="range_supply_1"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_supply_1" name="range_supply_1" onchange="initSlider('range_supply_1', 'supplyrange_1');setRiskAssessmentRefreshRequired(1);">
                                 </div>
-                                <div class="col-3"><h6><label id="supplyrange_1" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                                <div class="col-2"><h6><label id="supplyrange_1" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
                         </div>
                     </div>
@@ -1045,7 +1104,7 @@ color: white !important;
                     </div>
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                         <div class="card-body">
-                            <!--slider for safety rating -->
+                            <!--slider for threat rating -->
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the danger to life of the selected scenario">Threat</label></div>
                                 <div class="col-7">
@@ -1177,7 +1236,8 @@ color: white !important;
 
                     <button id="save_scenario_1" type="button" class="btn btn-primary" style="background-color: #e24e42" onclick="save_scenario(1);">
                     <i class="bi bi-play-fill mr-2"></i>Save Scenario 1
-                </button>
+                    </button>
+
                 </div>
             </div>
         </div>
@@ -1254,15 +1314,16 @@ color: white !important;
             <div class="col-md-4 small-font">
 
                 <h5>Business Impact Analysis</h5>
+                Click the icons to add additional detail
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                         <div class="card-body">
                             <!--slider for safety rating -->
                             <div class="slider-container d-flex align-items-center" >
-                                <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#safetyModal_2" data-bs-placement="top" style="cursor: pointer">Safety</label></div>
+                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#safetyModal_2" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/safety.png' %}" style="height:2rem"> &nbsp;Safety</label></div>
                                 <div class="col-7">
                                     <label for="range_safety_2"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_safety_2" name="range_safety_2" onchange="initSlider('range_safety_2', 'safetyrange_2');setRiskAssessmentRefreshRequired(2);">
                                 </div>
-                                <div class="col-3"><label id="safetyrange_2" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></div>
+                                <div class="col-2"><label id="safetyrange_2" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></div>
                             </div>
                         </div>
                     </div>
@@ -1270,48 +1331,48 @@ color: white !important;
                         <div class="card-body">
                             <!--slider for life rating -->
                             <div class="slider-container d-flex align-items-center">
-                                <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#lifeModal_2" data-bs-placement="top" style="cursor: pointer">Life</label></div>
+                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#lifeModal_2" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/danger.png' %}" style="height:2rem"> &nbsp;Life</label></div>
                                 <div class="col-7">
                                     <label for="range_life_2"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_life_2" name="range_life_2" onchange="initSlider('range_life_2', 'liferange_2'); setRiskAssessmentRefreshRequired(2);">
                                 </div>
-                                <div class="col-3"><h6><label id="liferange_2" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                                <div class="col-2"><h6><label id="liferange_2" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
                         </div>
                     </div>
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                         <div class="card-body">
-                            <!--slider for safety rating -->
+                            <!--slider for Production rating -->
                             <div class="slider-container d-flex align-items-center">
-                                <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#productionModal_2" data-bs-placement="top" style="cursor: pointer">Production</label></div>
+                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#productionModal_2" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/production.png' %}" style="height:2rem">&nbsp; Production</label></div>
                                 <div class="col-7">
                                     <label for="range_production_2"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_production_2" name="range_production_2" onchange="initSlider('range_production_2', 'productionrange_2');setRiskAssessmentRefreshRequired(2);">
                                 </div>
-                                <div class="col-3"><h6><label id="productionrange_2" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                                <div class="col-2"><h6><label id="productionrange_2" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
                         </div>
                     </div>
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                         <div class="card-body">
-                             <!--slider for safety rating -->
+                             <!--slider for finance rating -->
                             <div class="slider-container d-flex align-items-center">
-                                <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#financeModal_2" data-bs-placement="top" style="cursor: pointer">Financial</label></div>
+                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#financeModal_2" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/finance.png' %}" style="height:2rem">&nbsp; Financial</label></div>
                                 <div class="col-7">
                                     <label for="range_finance_2"></label>
                                     <input type="range" min="1" max="10" value="1" class="slider" id="range_finance_2" name="range_finance_2" onchange="initSlider('range_finance_2', 'financerange_2');setRiskAssessmentRefreshRequired(2);">
                                 </div>
-                                <div class="col-3"><h6><label id="financerange_2" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                                <div class="col-2"><h6><label id="financerange_2" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
                         </div>
                     </div>
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                         <div class="card-body">
-                            <!--slider for safety rating -->
+                            <!--slider for reputation rating -->
                             <div class="slider-container d-flex align-items-center">
-                                <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#reputationModal_2" data-bs-placement="top" style="cursor: pointer">Reputation</label></div>
+                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#reputationModal_2" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/reputation.png' %}" style="height:2rem"> &nbsp;Reputation</label></div>
                                 <div class="col-7">
                                     <label for="range_reputation_2"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_reputation_2" name="range_reputation_2" onchange="initSlider('range_reputation_2', 'reputationrange_2');setRiskAssessmentRefreshRequired(2);">
                                 </div>
-                                <div class="col-3"><h6><label id="reputationrange_2" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                                <div class="col-2"><h6><label id="reputationrange_2" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
                         </div>
                     </div>
@@ -1319,11 +1380,11 @@ color: white !important;
                         <div class="card-body">
                             <!--slider for environment impact rating -->
                             <div class="slider-container d-flex align-items-center">
-                                <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#environmentModal_2" data-bs-placement="top" style="cursor: pointer">Environment</label></div>
+                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#environmentModal_2" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/environment.png' %}" style="height:2rem"> &nbsp; Environment</label></div>
                                 <div class="col-7">
                                     <label for="range_environment_2"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_environment_2" name="range_environment_2" onchange="initSlider('range_environment_2', 'environmentrange_2');setRiskAssessmentRefreshRequired(2);">
                                 </div>
-                                <div class="col-3"><h6><label id="environmentrange_2" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                                <div class="col-2"><h6><label id="environmentrange_2" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
                         </div>
                     </div>
@@ -1331,11 +1392,11 @@ color: white !important;
                         <div class="card-body">
                             <!--slider for regulatory impact rating -->
                             <div class="slider-container d-flex align-items-center">
-                                <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#regulationModal_2" data-bs-placement="top" style="cursor: pointer">Regulatory</label></div>
+                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#regulationModal_2" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/regulation.png' %}" style="height:2rem">&nbsp; Regulatory</label></div>
                                 <div class="col-7">
                                     <label for="range_regulatory_2"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_regulatory_2" name="range_regulatory_2" onchange="initSlider('range_regulatory_2', 'regulatoryrange_2');setRiskAssessmentRefreshRequired(2);">
                                 </div>
-                                <div class="col-3"><h6><label id="regulatoryrange_2" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                                <div class="col-2"><h6><label id="regulatoryrange_2" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
                         </div>
                     </div>
@@ -1343,11 +1404,11 @@ color: white !important;
                         <div class="card-body">
                             <!--slider for data impact rating -->
                             <div class="slider-container d-flex align-items-center">
-                                <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#dataModal_2" data-bs-placement="top" style="cursor: pointer">Data/IP</label></div>
+                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#dataModal_2" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/data.png' %}" style="height:2rem"> &nbsp;Data/IP</label></div>
                                 <div class="col-7">
                                     <label for="range_data_2"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_data_2" name="range_data_2" onchange="initSlider('range_data_2', 'datarange_2');setRiskAssessmentRefreshRequired(2);">
                                 </div>
-                                <div class="col-3"><h6><label id="datarange_2" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                                <div class="col-2"><h6><label id="datarange_2" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
                         </div>
                     </div>
@@ -1355,11 +1416,11 @@ color: white !important;
                         <div class="card-body">
                             <!--slider for data impact rating -->
                             <div class="slider-container d-flex align-items-center">
-                                <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#supplyModal_2" data-bs-placement="top" style="cursor: pointer">Supply Chain</label></div>
+                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#supplyModal_2" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/supply.png' %}" style="height:2rem"> &nbsp;Supply Chain</label></div>
                                 <div class="col-7">
                                     <label for="range_supply_2"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_supply_2" name="range_supply_2" onchange="initSlider('range_supply_2', 'supplyrange_2');setRiskAssessmentRefreshRequired(2);">
                                 </div>
-                                <div class="col-3"><h6><label id="supplyrange_2" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                                <div class="col-2"><h6><label id="supplyrange_2" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
                         </div>
                     </div>
@@ -1368,23 +1429,23 @@ color: white !important;
                         <div class="card-body">
                            <!--slider for vulnerability rating -->
                            <div class="slider-container d-flex align-items-center" >
-                               <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#vulnModal_2"  data-bs-placement="top" style="cursor: pointer">Vulnerability</label></div>
+                               <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#vulnModal_2"  data-bs-placement="top" style="cursor: pointer">Vulnerability</label></div>
                                <div class="col-7">
                                    <label for="range_vuln_2"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_vuln_2" name="range_vuln_2" onchange="initSlider('range_vuln_2', 'vulnrange_2')">
                                </div>
-                               <div class="col-3"><label id="vulnrange_2" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></div>
+                               <div class="col-2"><label id="vulnrange_2" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></div>
                            </div>
                         </div>
                     </div>
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                         <div class="card-body">
-                           <!--slider for safety rating -->
+                           <!--slider for threat rating -->
                            <div class="slider-container d-flex align-items-center">
-                               <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the danger to life of the selected scenario">Threat</label></div>
+                               <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the danger to life of the selected scenario">Threat</label></div>
                                <div class="col-7">
                                    <label for="range_threat_2"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_threat_2" name="range_threat_2" onchange="initSlider('range_threat_2', 'threatrange_2');">
                                </div>
-                               <div class="col-3"><h6><label id="threatrange_2" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                               <div class="col-2"><h6><label id="threatrange_2" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                            </div>
                         </div>
                     </div>
@@ -1392,11 +1453,11 @@ color: white !important;
                         <div class="card-body">
                            <!--slider for frequency-->
                            <div class="slider-container d-flex align-items-center">
-                               <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to indicate asset status">Asset Status</label></div>
+                               <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to indicate asset status">Asset Status</label></div>
                                <div class="col-7">
                                    <label for="range_frequency_2"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_frequency_2" name="range_frequency_2" onchange="initFrequencySlider('range_frequency_2', 'frequencyrange_2');">
                                </div>
-                               <div class="col-3"><h6><label id="frequencyrange_2" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                               <div class="col-2"><h6><label id="frequencyrange_2" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                            </div>
                         </div>
                     </div>
@@ -1593,15 +1654,16 @@ color: white !important;
             <div class="col-md-4 small-font">
 
                 <h5>Business Impact Analysis</h5>
+                Click the icons to add additional detail
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                         <div class="card-body">
                             <!--slider for safety rating -->
                             <div class="slider-container d-flex align-items-center" >
-                                <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#safetyModal_3" data-bs-placement="top" style="cursor: pointer">Safety</label></div>
+                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#safetyModal_3" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/safety.png' %}" style="height:2rem"> &nbsp;Safety</label></div>
                                 <div class="col-7">
                                     <label for="range_safety_3"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_safety_3" name="range_safety_3" onchange="initSlider('range_safety_3', 'safetyrange_3');setRiskAssessmentRefreshRequired(3);">
                                 </div>
-                                <div class="col-3"><label id="safetyrange_3" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></div>
+                                <div class="col-2"><label id="safetyrange_3" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></div>
                             </div>
                         </div>
                     </div>
@@ -1609,48 +1671,48 @@ color: white !important;
                         <div class="card-body">
                             <!--slider for life rating -->
                             <div class="slider-container d-flex align-items-center">
-                                <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#lifeModal_3" data-bs-placement="top" style="cursor: pointer">Life</label></div>
+                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#lifeModal_3" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/danger.png' %}" style="height:2rem"> &nbsp;Life</label></div>
                                 <div class="col-7">
                                     <label for="range_life_3"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_life_3" name="range_life_3" onchange="initSlider('range_life_3', 'liferange_3');setRiskAssessmentRefreshRequired(3);">
                                 </div>
-                                <div class="col-3"><h6><label id="liferange_3" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                                <div class="col-2"><h6><label id="liferange_3" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
                         </div>
                     </div>
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                         <div class="card-body">
-                            <!--slider for safety rating -->
+                            <!--slider for production rating -->
                             <div class="slider-container d-flex align-items-center">
-                                <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#productionModal_3" data-bs-placement="top" style="cursor: pointer">Production</label></div>
+                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#productionModal_3" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/production.png' %}" style="height:2rem">&nbsp; Production</label></div>
                                 <div class="col-7">
                                     <label for="range_production_3"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_production_3" name="range_production_3" onchange="initSlider('range_production_3', 'productionrange_3');setRiskAssessmentRefreshRequired(3);">
                                 </div>
-                                <div class="col-3"><h6><label id="productionrange_3" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                                <div class="col-2"><h6><label id="productionrange_3" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
                         </div>
                     </div>
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                         <div class="card-body">
-                             <!--slider for safety rating -->
+                             <!--slider for finance rating -->
                             <div class="slider-container d-flex align-items-center">
-                                <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#financeModal_3" data-bs-placement="top" style="cursor: pointer">Financial</label></div>
+                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#financeModal_3" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/finance.png' %}" style="height:2rem">&nbsp; Financial</label></div>
                                 <div class="col-7">
                                     <label for="range_finance_3"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_finance_3" name="range_finance_3" onchange="initSlider('range_finance_3', 'financerange_3');setRiskAssessmentRefreshRequired(3);">
                                 </div>
-                                <div class="col-3"><h6><label id="financerange_3" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                                <div class="col-2"><h6><label id="financerange_3" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
                         </div>
                     </div>
 
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                         <div class="card-body">
-                            <!--slider for safety rating -->
+                            <!--slider for reputation rating -->
                             <div class="slider-container d-flex align-items-center">
-                                <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#reputationModal_3" data-bs-placement="top" style="cursor: pointer">Reputation</label></div>
+                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#reputationModal_3" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/reputation.png' %}" style="height:2rem"> &nbsp; Reputation</label></div>
                                 <div class="col-7">
                                     <label for="range_reputation_3"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_reputation_3" name="range_reputation_3" onchange="initSlider('range_reputation_3', 'reputationrange_3');setRiskAssessmentRefreshRequired(3);">
                                 </div>
-                                <div class="col-3"><h6><label id="reputationrange_3" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                                <div class="col-2"><h6><label id="reputationrange_3" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
                         </div>
                     </div>
@@ -1659,11 +1721,11 @@ color: white !important;
                         <div class="card-body">
                             <!--slider for environment impact rating -->
                             <div class="slider-container d-flex align-items-center">
-                                <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#environmentModal_3" data-bs-placement="top" style="cursor: pointer">Environment</label></div>
+                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#environmentModal_3" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/environment.png' %}" style="height:2rem"> &nbsp; Environment</label></div>
                                 <div class="col-7">
                                     <label for="range_environment_3"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_environment_3" name="range_environment_3" onchange="initSlider('range_environment_3', 'environmentrange_3');setRiskAssessmentRefreshRequired(3);">
                                 </div>
-                                <div class="col-3"><h6><label id="environmentrange_3" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                                <div class="col-2"><h6><label id="environmentrange_3" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
                         </div>
                     </div>
@@ -1671,11 +1733,11 @@ color: white !important;
                         <div class="card-body">
                             <!--slider for regulatory impact rating -->
                             <div class="slider-container d-flex align-items-center">
-                                <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#regulationModal_3" data-bs-placement="top" style="cursor: pointer">Regulatory</label></div>
+                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#regulationModal_3" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/regulation.png' %}" style="height:2rem">&nbsp; Regulatory</label></div>
                                 <div class="col-7">
                                     <label for="range_regulatory_3"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_regulatory_3" name="range_regulatory_3" onchange="initSlider('range_regulatory_3', 'regulatoryrange_3');setRiskAssessmentRefreshRequired(3);">
                                 </div>
-                                <div class="col-3"><h6><label id="regulatoryrange_3" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                                <div class="col-2"><h6><label id="regulatoryrange_3" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
                         </div>
                     </div>
@@ -1683,11 +1745,11 @@ color: white !important;
                         <div class="card-body">
                             <!--slider for data impact rating -->
                             <div class="slider-container d-flex align-items-center">
-                                <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#dataModal_3" data-bs-placement="top" style="cursor: pointer">Data/IP</label></div>
+                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#dataModal_3" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/data.png' %}" style="height:2rem"> &nbsp; Data/IP</label></div>
                                 <div class="col-7">
                                     <label for="range_data_3"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_data_3" name="range_data_3" onchange="initSlider('range_data_3', 'datarange_3');setRiskAssessmentRefreshRequired(3);">
                                 </div>
-                                <div class="col-3"><h6><label id="datarange_3" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                                <div class="col-2"><h6><label id="datarange_3" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
                         </div>
                     </div>
@@ -1695,11 +1757,11 @@ color: white !important;
                         <div class="card-body">
                             <!--slider for data impact rating -->
                             <div class="slider-container d-flex align-items-center">
-                                <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#supplyModal_3" data-bs-placement="top" style="cursor: pointer">Supply Chain</label></div>
+                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#supplyModal_3" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/supply.png' %}" style="height:2rem"> &nbsp;Supply Chain</label></div>
                                 <div class="col-7">
                                     <label for="range_supply_3"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_supply_3" name="range_supply_3" onchange="initSlider('range_supply_3', 'supplyrange_3');setRiskAssessmentRefreshRequired(3);">
                                 </div>
-                                <div class="col-3"><h6><label id="supplyrange_3" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                                <div class="col-2"><h6><label id="supplyrange_3" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
                         </div>
                     </div>
@@ -1709,23 +1771,23 @@ color: white !important;
                         <div class="card-body">
                             <!--slider for vulnerability rating -->
                             <div class="slider-container d-flex align-items-center" >
-                                <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#vulnModal_3" data-bs-placement="top" style="cursor: pointer">Vulnerability</label></div>
+                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#vulnModal_3" data-bs-placement="top" style="cursor: pointer">Vulnerability</label></div>
                                 <div class="col-7">
                                     <label for="range_vuln_3"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_vuln_3" name="range_vuln_3" onchange="initSlider('range_vuln_3', 'vulnrange_3')">
                                 </div>
-                                <div class="col-3"><label id="vulnrange_3" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></div>
+                                <div class="col-2"><label id="vulnrange_3" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></div>
                             </div>
                         </div>
                     </div>
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                         <div class="card-body">
-                            <!--slider for safety rating -->
+                            <!--slider for threat rating -->
                             <div class="slider-container d-flex align-items-center">
-                                <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="">Threat</label></div>
+                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="">Threat</label></div>
                                 <div class="col-7">
                                     <label for="range_threat_3"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_threat_3" name="range_threat_3" onchange="initSlider('range_threat_3', 'threatrange_3');">
                                 </div>
-                                <div class="col-3"><h6><label id="threatrange_3" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                                <div class="col-2"><h6><label id="threatrange_3" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
                         </div>
                     </div>
@@ -1733,11 +1795,11 @@ color: white !important;
                         <div class="card-body">
                             <!--slider for Asset Status-->
                             <div class="slider-container d-flex align-items-center">
-                                <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to indicate asset status">Asset Status</label></div>
+                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to indicate asset status">Asset Status</label></div>
                                 <div class="col-7">
                                     <label for="range_frequency_3"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_frequency_3" name="range_frequency_3" onchange="initFrequencySlider('range_frequency_3', 'frequencyrange_3');">
                                 </div>
-                                <div class="col-3"><h6><label id="frequencyrange_3" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                                <div class="col-2"><h6><label id="frequencyrange_3" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
                         </div>
                     </div>
@@ -1929,15 +1991,16 @@ color: white !important;
           </div>
             <div class="col-md-4 small-font">
                <h5>Business Impact Analysis</h5>
+                Click the icons to add additional detail
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                         <div class="card-body">
                             <!--slider for safety rating -->
                             <div class="slider-container d-flex align-items-center" >
-                                <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#safetyModal_4" data-bs-placement="top" style="cursor: pointer">Safety</label></div>
+                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#safetyModal_4" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/safety.png' %}" style="height:2rem"> &nbsp;Safety</label></div>
                                 <div class="col-7">
                                     <label for="range_safety_4"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_safety_4" name="range_safety_4" onchange="initSlider('range_safety_4', 'safetyrange_4');setRiskAssessmentRefreshRequired(4);">
                                 </div>
-                                <div class="col-3"><label id="safetyrange_4" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></div>
+                                <div class="col-2"><label id="safetyrange_4" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></div>
                             </div>
                         </div>
                     </div>
@@ -1945,47 +2008,47 @@ color: white !important;
                         <div class="card-body">
                             <!--slider for life rating -->
                             <div class="slider-container d-flex align-items-center">
-                                <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#lifeModal_4" data-bs-placement="top" style="cursor: pointer">Life</label></div>
+                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#lifeModal_4" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/danger.png' %}" style="height:2rem"> &nbsp;Life</label></div>
                                 <div class="col-7">
                                     <label for="range_life_4"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_life_4" name="range_life_4" onchange="initSlider('range_life_4', 'liferange_4');setRiskAssessmentRefreshRequired(4);">
                                 </div>
-                                <div class="col-3"><h6><label id="liferange_4" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                                <div class="col-2"><h6><label id="liferange_4" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
                         </div>
                     </div>
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                         <div class="card-body">
-                            <!--slider for safety rating -->
+                            <!--slider for production rating -->
                             <div class="slider-container d-flex align-items-center">
-                                <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#productionModal_4" data-bs-placement="top" style="cursor: pointer">Production</label></div>
+                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#productionModal_4" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/production.png' %}" style="height:2rem">&nbsp; Production</label></div>
                                 <div class="col-7">
                                     <label for="range_production_4"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_production_4" name="range_production_4" onchange="initSlider('range_production_4', 'productionrange_4');setRiskAssessmentRefreshRequired(4);">
                                 </div>
-                                <div class="col-3"><h6><label id="productionrange_4" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                                <div class="col-2"><h6><label id="productionrange_4" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
                         </div>
                     </div>
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                         <div class="card-body">
-                             <!--slider for safety rating -->
+                             <!--slider for finance rating -->
                             <div class="slider-container d-flex align-items-center">
-                                <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#financeModal_4" data-bs-placement="top" style="cursor: pointer">Financial</label></div>
+                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#financeModal_4" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/finance.png' %}" style="height:2rem">&nbsp; Financial</label></div>
                                 <div class="col-7">
                                     <label for="range_finance_4"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_finance_4" name="range_finance_4" onchange="initSlider('range_finance_4', 'financerange_4');setRiskAssessmentRefreshRequired(4);">
                                 </div>
-                                <div class="col-3"><h6><label id="financerange_4" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                                <div class="col-2"><h6><label id="financerange_4" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
                         </div>
                     </div>
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                         <div class="card-body">
-                            <!--slider for safety rating -->
+                            <!--slider for reputation rating -->
                             <div class="slider-container d-flex align-items-center">
-                                <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#reputationModal_4" data-bs-placement="top" style="cursor: pointer">Reputation</label></div>
+                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#reputationModal_4" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/reputation.png' %}" style="height:2rem"> &nbsp; Reputation</label></div>
                                 <div class="col-7">
                                     <label for="range_reputation_4"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_reputation_4" name="range_reputation_4" onchange="initSlider('range_reputation_4', 'reputationrange_4');setRiskAssessmentRefreshRequired(4);">
                                 </div>
-                                <div class="col-3"><h6><label id="reputationrange_4" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                                <div class="col-2"><h6><label id="reputationrange_4" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
                         </div>
                     </div>
@@ -1993,11 +2056,11 @@ color: white !important;
                         <div class="card-body">
                             <!--slider for environment impact rating -->
                             <div class="slider-container d-flex align-items-center">
-                                <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#environmentModal_4" data-bs-placement="top" style="cursor: pointer">Environment</label></div>
+                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#environmentModal_4" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/environment.png' %}" style="height:2rem"> &nbsp; Environment</label></div>
                                 <div class="col-7">
                                     <label for="range_environment_4"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_environment_4" name="range_environment_4" onchange="initSlider('range_environment_4', 'environmentrange_4');setRiskAssessmentRefreshRequired(4);">
                                 </div>
-                                <div class="col-3"><h6><label id="environmentrange_4" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                                <div class="col-2"><h6><label id="environmentrange_4" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
                         </div>
                     </div>
@@ -2005,11 +2068,11 @@ color: white !important;
                         <div class="card-body">
                             <!--slider for regulatory impact rating -->
                             <div class="slider-container d-flex align-items-center">
-                                <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#regulationModal_4" data-bs-placement="top" style="cursor: pointer">Regulatory</label></div>
+                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#regulationModal_4" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/regulation.png' %}" style="height:2rem">&nbsp; Regulatory</label></div>
                                 <div class="col-7">
                                     <label for="range_regulatory_4"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_regulatory_4" name="range_regulatory_4" onchange="initSlider('range_regulatory_4', 'regulatoryrange_4');setRiskAssessmentRefreshRequired(4);">
                                 </div>
-                                <div class="col-3"><h6><label id="regulatoryrange_4" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                                <div class="col-2"><h6><label id="regulatoryrange_4" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
                         </div>
                     </div>
@@ -2017,11 +2080,11 @@ color: white !important;
                         <div class="card-body">
                             <!--slider for data impact rating -->
                             <div class="slider-container d-flex align-items-center">
-                                <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#dataModal_4" data-bs-placement="top" style="cursor: pointer">Data/IP</label></div>
+                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#dataModal_4" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/data.png' %}" style="height:2rem"> &nbsp; Data/IP</label></div>
                                 <div class="col-7">
                                     <label for="range_data_4"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_data_4" name="range_data_4" onchange="initSlider('range_data_4', 'datarange_4');setRiskAssessmentRefreshRequired(4);">
                                 </div>
-                                <div class="col-3"><h6><label id="datarange_4" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                                <div class="col-2"><h6><label id="datarange_4" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
                         </div>
                     </div>
@@ -2029,11 +2092,11 @@ color: white !important;
                         <div class="card-body">
                             <!--slider for data impact rating -->
                             <div class="slider-container d-flex align-items-center">
-                                <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#supplyModal_4" data-bs-placement="top" style="cursor: pointer">Supply Chain</label></div>
+                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#supplyModal_4" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/supply.png' %}" style="height:2rem"> &nbsp;Supply Chain</label></div>
                                 <div class="col-7">
                                     <label for="range_supply_4"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_supply_4" name="range_supply_4" onchange="initSlider('range_supply_4', 'supplyrange_4');setRiskAssessmentRefreshRequired(4);">
                                 </div>
-                                <div class="col-3"><h6><label id="supplyrange_4" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                                <div class="col-2"><h6><label id="supplyrange_4" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
                         </div>
                     </div>
@@ -2043,23 +2106,23 @@ color: white !important;
                         <div class="card-body">
                             <!--slider for vulnerability rating -->
                             <div class="slider-container d-flex align-items-center" >
-                                <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#vulnModal_4"  data-bs-placement="top" style="cursor: pointer">Vulnerability</label></div>
+                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#vulnModal_4"  data-bs-placement="top" style="cursor: pointer">Vulnerability</label></div>
                                 <div class="col-7">
                                     <label for="range_vuln_4"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_vuln_4" name="range_vuln_4" onchange="initSlider('range_vuln_4', 'vulnrange_4')">
                                 </div>
-                                <div class="col-3"><label id="vulnrange_4" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></div>
+                                <div class="col-2"><label id="vulnrange_4" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></div>
                             </div>
                         </div>
                     </div>
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                         <div class="card-body">
-                            <!--slider for safety rating -->
+                            <!--slider for threat rating -->
                             <div class="slider-container d-flex align-items-center">
-                                <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the danger to life of the selected scenario">Threat</label></div>
+                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the danger to life of the selected scenario">Threat</label></div>
                                 <div class="col-7">
                                     <label for="range_threat_4"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_threat_4" name="range_threat_4" onchange="initSlider('range_threat_4', 'threatrange_4');">
                                 </div>
-                                <div class="col-3"><h6><label id="threatrange_4" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                                <div class="col-2"><h6><label id="threatrange_4" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
                         </div>
                     </div>
@@ -2068,11 +2131,11 @@ color: white !important;
                         <div class="card-body">
                             <!--slider for asset status-->
                             <div class="slider-container d-flex align-items-center">
-                                <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to indicate asset status">Asset Status</label></div>
+                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to indicate asset status">Asset Status</label></div>
                                 <div class="col-7">
                                     <label for="range_frequency_4"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_frequency_4" name="range_frequency_4" onchange="initFrequencySlider('range_frequency_4', 'frequencyrange_4');">
                                 </div>
-                                <div class="col-3"><h6><label id="frequencyrange_4" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                                <div class="col-2"><h6><label id="frequencyrange_4" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
                         </div>
                     </div>
@@ -2264,15 +2327,16 @@ color: white !important;
             <div class="col-md-4 small-font">
 
                 <h5>Business Impact Analysis</h5>
+                Click the icons to add additional detail
                     <!--slider for safety rating -->
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                         <div class="card-body">
                             <div class="slider-container d-flex align-items-center" >
-                                <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#safetyModal_5" data-bs-placement="top" style="cursor: pointer">Safety</label></div>
+                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#safetyModal_5" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/safety.png' %}" style="height:2rem"> &nbsp;Safety</label></div>
                                 <div class="col-7">
                                     <label for="range_safety_5"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_safety_5" name="range_safety_5" onchange="initSlider('range_safety_5', 'safetyrange_5');setRiskAssessmentRefreshRequired(5);">
                                 </div>
-                                <div class="col-3"><label id="safetyrange_5" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></div>
+                                <div class="col-2"><label id="safetyrange_5" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></div>
                             </div>
                         </div>
                     </div>
@@ -2280,11 +2344,11 @@ color: white !important;
                         <div class="card-body">
                             <!--slider for life rating -->
                             <div class="slider-container d-flex align-items-center">
-                                <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#lifeModal_5" data-bs-placement="top" style="cursor: pointer">Life</label></div>
+                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#lifeModal_5" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/danger.png' %}" style="height:2rem"> &nbsp;Life</label></div>
                                 <div class="col-7">
                                     <label for="range_life_5"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_life_5" name="range_life_5" onchange="initSlider('range_life_5', 'liferange_5');setRiskAssessmentRefreshRequired(5);">
                                 </div>
-                                <div class="col-3"><h6><label id="liferange_5" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                                <div class="col-2"><h6><label id="liferange_5" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
                         </div>
                     </div>
@@ -2292,11 +2356,11 @@ color: white !important;
                         <div class="card-body">
                             <!--slider for production rating -->
                             <div class="slider-container d-flex align-items-center">
-                                <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#productionModal_5" data-bs-placement="top" style="cursor: pointer">Production</label></div>
+                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#productionModal_5" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/production.png' %}" style="height:2rem">&nbsp; Production</label></div>
                                 <div class="col-7">
                                     <label for="range_production_5"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_production_5" name="range_production_5" onchange="initSlider('range_production_5', 'productionrange_5');setRiskAssessmentRefreshRequired(5);">
                                 </div>
-                                <div class="col-3"><h6><label id="productionrange_5" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                                <div class="col-2"><h6><label id="productionrange_5" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
                         </div>
                     </div>
@@ -2304,11 +2368,11 @@ color: white !important;
                         <div class="card-body">
                              <!--slider for finance rating -->
                             <div class="slider-container d-flex align-items-center">
-                                <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#financeModal_5" data-bs-placement="top" style="cursor: pointer">Financial</label></div>
+                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#financeModal_5" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/finance.png' %}" style="height:2rem">&nbsp; Financial</label></div>
                                 <div class="col-7">
                                     <label for="range_finance_5"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_finance_5" name="range_finance_5" onchange="initSlider('range_finance_5', 'financerange_5');setRiskAssessmentRefreshRequired(5);">
                                 </div>
-                                <div class="col-3"><h6><label id="financerange_5" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                                <div class="col-2"><h6><label id="financerange_5" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
                         </div>
                     </div>
@@ -2316,11 +2380,11 @@ color: white !important;
                         <div class="card-body">
                             <!--slider for reputation rating -->
                              <div class="slider-container d-flex align-items-center">
-                                <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#reputationModal_5" data-bs-placement="top" style="cursor: pointer">Reputation</label></div>
+                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#reputationModal_5" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/reputation.png' %}" style="height:2rem"> &nbsp; Reputation</label></div>
                                     <div class="col-7">
                                         <label for="range_reputation_5"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_reputation_5" name="range_reputation_5" onchange="initSlider('range_reputation_5', 'reputationrange_5');setRiskAssessmentRefreshRequired(5);">
                                     </div>
-                                <div class="col-3"><h6><label id="reputationrange_5" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                                <div class="col-2"><h6><label id="reputationrange_5" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
                         </div>
                     </div>
@@ -2328,11 +2392,11 @@ color: white !important;
                         <div class="card-body">
                             <!--slider for environment impact rating -->
                             <div class="slider-container d-flex align-items-center">
-                                <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#environmentModal_5" data-bs-placement="top" style="cursor: pointer">Environment</label></div>
+                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#environmentModal_5" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/environment.png' %}" style="height:2rem"> &nbsp; Environment</label></div>
                                 <div class="col-7">
                                     <label for="range_environment_5"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_environment_5" name="range_environment_5" onchange="initSlider('range_environment_5', 'environmentrange_5');setRiskAssessmentRefreshRequired(5);">
                                 </div>
-                                <div class="col-3"><h6><label id="environmentrange_5" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                                <div class="col-2"><h6><label id="environmentrange_5" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
                         </div>
                     </div>
@@ -2340,11 +2404,11 @@ color: white !important;
                         <div class="card-body">
                             <!--slider for regulatory impact rating -->
                             <div class="slider-container d-flex align-items-center">
-                                <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#regulationModal_5" data-bs-placement="top" style="cursor: pointer">Regulatory</label></div>
+                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#regulationModal_5" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/regulation.png' %}" style="height:2rem">&nbsp; Regulatory</label></div>
                                 <div class="col-7">
                                     <label for="range_regulatory_5"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_regulatory_5" name="range_regulatory_5" onchange="initSlider('range_regulatory_5', 'regulatoryrange_5');setRiskAssessmentRefreshRequired(5);">
                                 </div>
-                                <div class="col-3"><h6><label id="regulatoryrange_5" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                                <div class="col-2"><h6><label id="regulatoryrange_5" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
                         </div>
                     </div>
@@ -2352,11 +2416,11 @@ color: white !important;
                         <div class="card-body">
                             <!--slider for data impact rating -->
                             <div class="slider-container d-flex align-items-center">
-                                <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#dataModal_3" data-bs-placement="top" style="cursor: pointer">Data/IP</label></div>
+                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#dataModal_5" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/data.png' %}" style="height:2rem"> &nbsp; Data/IP</label></div>
                                 <div class="col-7">
                                     <label for="range_data_5"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_data_5" name="range_data_5" onchange="initSlider('range_data_5', 'datarange_5'); setRiskAssessmentRefreshRequired(5);">
                                 </div>
-                                <div class="col-3"><h6><label id="datarange_5" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                                <div class="col-2"><h6><label id="datarange_5" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
                         </div>
                     </div>
@@ -2364,11 +2428,11 @@ color: white !important;
                         <div class="card-body">
                             <!--slider for data impact rating -->
                             <div class="slider-container d-flex align-items-center">
-                                <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#supplyModal_5" data-bs-placement="top" style="cursor: pointer">Supply Chain</label></div>
+                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#supplyModal_5" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/supply.png' %}" style="height:2rem"> &nbsp;Supply Chain</label></div>
                                 <div class="col-7">
                                     <label for="range_supply_1"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_supply_5" name="range_supply_5" onchange="initSlider('range_supply_5', 'supplyrange_5');setRiskAssessmentRefreshRequired(5);">
                                 </div>
-                                <div class="col-3"><h6><label id="supplyrange_5" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                                <div class="col-2"><h6><label id="supplyrange_5" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
                         </div>
                     </div>
@@ -2656,7 +2720,50 @@ color: white !important;
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <textarea id="txtSafetyJustify_1" name="txtSafetyJustify_1" class="form-control" rows="3" style="resize: none"></textarea>
+
+        <!-- Drop-down select control for the nature of the safety hazard -->
+        <label for="hazardNature_1">Nature of Safety Hazard:</label>
+        <select id="hazardNature_1" name="hazardNature_1" class="form-control mb-3">
+            <option value="">-- Select Hazard --</option>
+          <option value="Chemical">Chemical</option>
+          <option value="Electrical">Electrical</option>
+          <option value="Mechanical">Mechanical</option>
+          <option value="Radiation">Radiation</option>
+        </select>
+
+        <!-- Yes/no option for SIS Outage -->
+        <!-- Yes/no option for SIS Outage -->
+        <div class="mb-3">
+          <label>SIS Outage:</label>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="sisOutage_1" id="sisOutageYes_1" value="yes">
+            <label class="form-check-label" for="sisOutageYes_1">Yes</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="sisOutage_1" id="sisOutageNo_1" value="no" checked>
+            <label class="form-check-label" for="sisOutageNo_1">No</label>
+          </div>
+        </div>
+
+
+        <!-- Yes/no option for SIS Integrity Compromise -->
+        <div class="mb-3">
+          <label>SIS Integrity Compromise:</label>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="sisIntegrity_1" id="sisIntegrityYes_1" value="yes">
+            <label class="form-check-label" for="sisIntegrityYes_1">Yes</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="sisIntegrity_1" id="sisIntegrityNo_1" value="no" checked>
+            <label class="form-check-label" for="sisIntegrityNo_1">No</label>
+          </div>
+        </div>
+
+
+        <!-- Textarea for justification -->
+        <label for="txtsafetyJustify_1">Justification:</label>
+        <textarea id="txtsafetyJustify_1" name="txtsafetyJustify_1" class="form-control mb-3" rows="3" style="resize: none"></textarea>
+
         <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
@@ -2670,7 +2777,47 @@ color: white !important;
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <textarea id="txtSafetyJustify_2" name="txtSafetyJustify_2" class="form-control" rows="3" style="resize: none"></textarea>
+
+        <!-- Drop-down select control for the nature of the safety hazard -->
+        <label for="hazardNature_2">Nature of Safety Hazard:</label>
+        <select id="hazardNature_2" name="hazardNature_2" class="form-control mb-3">
+            <option value="">-- Select Hazard --</option>
+          <option value="Chemical">Chemical</option>
+          <option value="Electrical">Electrical</option>
+          <option value="Mechanical">Mechanical</option>
+          <option value="Radiation">Radiation</option>
+        </select>
+
+        <!-- Yes/no option for SIS Outage -->
+        <div class="mb-3">
+          <label>SIS Outage:</label>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="sisOutage_2" id="sisOutageYes_2" value="yes">
+            <label class="form-check-label" for="sisOutageYes_2">Yes</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="sisOutage_2" id="sisOutageNo_2" value="no">
+            <label class="form-check-label" for="sisOutageNo_2">No</label>
+          </div>
+        </div>
+
+        <!-- Yes/no option for SIS Integrity Compromise -->
+        <div class="mb-3">
+          <label>SIS Integrity Compromise:</label>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="sisIntegrity_2" id="sisIntegrityYes_2" value="yes">
+            <label class="form-check-label" for="sisIntegrityYes">Yes</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="sisIntegrity_2" id="sisIntegrityNo_2" value="no">
+            <label class="form-check-label" for="sisIntegrityNo_2">No</label>
+          </div>
+        </div>
+
+        <!-- Textarea for justification -->
+        <label for="txtsafetyJustify_2">Justification:</label>
+        <textarea id="txtsafetyJustify_2" name="txtsafetyJustify_2" class="form-control mb-3" rows="3" style="resize: none"></textarea>
+
         <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
@@ -2684,7 +2831,47 @@ color: white !important;
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <textarea id="txtSafetyJustify_3" name="txtSafetyJustify_3" class="form-control" rows="3" style="resize: none"></textarea>
+
+        <!-- Drop-down select control for the nature of the safety hazard -->
+        <label for="hazardNature_3">Nature of Safety Hazard:</label>
+        <select id="hazardNature_3" name="hazardNature_3" class="form-control mb-3">
+            <option value="">-- Select Hazard --</option>
+          <option value="Chemical">Chemical</option>
+          <option value="Electrical">Electrical</option>
+          <option value="Mechanical">Mechanical</option>
+          <option value="Radiation">Radiation</option>
+        </select>
+
+        <!-- Yes/no option for SIS Outage -->
+        <div class="mb-3">
+          <label>SIS Outage:</label>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="sisOutage_3" id="sisOutageYes_3" value="yes">
+            <label class="form-check-label" for="sisOutageYes_3">Yes</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="sisOutage_3" id="sisOutageNo_3" value="no">
+            <label class="form-check-label" for="sisOutageNo_3">No</label>
+          </div>
+        </div>
+
+        <!-- Yes/no option for SIS Integrity Compromise -->
+        <div class="mb-3">
+          <label>SIS Integrity Compromise:</label>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="sisIntegrity_3" id="sisIntegrityYes_3" value="yes">
+            <label class="form-check-label" for="sisIntegrityYes">Yes</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="sisIntegrity_1" id="sisIntegrityNo_3" value="no">
+            <label class="form-check-label" for="sisIntegrityNo_1">No</label>
+          </div>
+        </div>
+
+        <!-- Textarea for justification -->
+        <label for="txtsafetyJustify_3">Justification:</label>
+        <textarea id="txtsafetyJustify_3" name="txtsafetyJustify_3" class="form-control mb-3" rows="3" style="resize: none"></textarea>
+
         <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
@@ -2698,7 +2885,47 @@ color: white !important;
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <textarea id="txtSafetyJustify_4" name="txtSafetyJustify_4" class="form-control" rows="3" style="resize: none"></textarea>
+
+        <!-- Drop-down select control for the nature of the safety hazard -->
+        <label for="hazardNature_4">Nature of Safety Hazard:</label>
+        <select id="hazardNature_4" name="hazardNature_4" class="form-control mb-3">
+            <option value="">-- Select Hazard --</option>
+          <option value="Chemical">Chemical</option>
+          <option value="Electrical">Electrical</option>
+          <option value="Mechanical">Mechanical</option>
+          <option value="Radiation">Radiation</option>
+        </select>
+
+        <!-- Yes/no option for SIS Outage -->
+        <div class="mb-3">
+          <label>SIS Outage:</label>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="sisOutage_4" id="sisOutageYes_4" value="yes">
+            <label class="form-check-label" for="sisOutageYes_4">Yes</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="sisOutage_4" id="sisOutageNo_4" value="no">
+            <label class="form-check-label" for="sisOutageNo_4">No</label>
+          </div>
+        </div>
+
+        <!-- Yes/no option for SIS Integrity Compromise -->
+        <div class="mb-3">
+          <label>SIS Integrity Compromise:</label>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="sisIntegrity_4" id="sisIntegrityYes_4" value="yes">
+            <label class="form-check-label" for="sisIntegrityYes">Yes</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="sisIntegrity_4" id="sisIntegrityNo_4" value="no">
+            <label class="form-check-label" for="sisIntegrityNo_4">No</label>
+          </div>
+        </div>
+
+        <!-- Textarea for justification -->
+        <label for="txtsafetyJustify_4">Justification:</label>
+        <textarea id="txtsafetyJustify_4" name="txtsafetyJustify_4" class="form-control mb-3" rows="3" style="resize: none"></textarea>
+
         <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
@@ -2712,12 +2939,54 @@ color: white !important;
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <textarea id="txtSafetyJustify_5" name="txtSafetyJustify_5" class="form-control" rows="3" style="resize: none"></textarea>
+
+        <!-- Drop-down select control for the nature of the safety hazard -->
+        <label for="hazardNature_5">Nature of Safety Hazard:</label>
+        <select id="hazardNature_5" name="hazardNature_1" class="form-control mb-3">
+            <option value="">-- Select Hazard --</option>
+          <option value="Chemical">Chemical</option>
+          <option value="Electrical">Electrical</option>
+          <option value="Mechanical">Mechanical</option>
+          <option value="Radiation">Radiation</option>
+        </select>
+
+        <!-- Yes/no option for SIS Outage -->
+        <div class="mb-3">
+          <label>SIS Outage:</label>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="sisOutage_5" id="sisOutageYes_5" value="yes">
+            <label class="form-check-label" for="sisOutageYes_5">Yes</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="sisOutage_5" id="sisOutageNo_5" value="no">
+            <label class="form-check-label" for="sisOutageNo_5">No</label>
+          </div>
+        </div>
+
+        <!-- Yes/no option for SIS Integrity Compromise -->
+        <div class="mb-3">
+          <label>SIS Integrity Compromise:</label>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="sisIntegrity_5" id="sisIntegrityYes_5" value="yes">
+            <label class="form-check-label" for="sisIntegrityYes">Yes</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="sisIntegrity_1" id="sisIntegrityNo_5" value="no">
+            <label class="form-check-label" for="sisIntegrityNo_5">No</label>
+          </div>
+        </div>
+
+        <!-- Textarea for justification -->
+        <label for="txtsafetyJustify_5">Justification:</label>
+        <textarea id="txtsafetyJustify_5" name="txtsafetyJustify_5" class="form-control mb-3" rows="3" style="resize: none"></textarea>
+
         <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
 </div>
+
+
 
 <!-- life ratings -->
 <div class="modal fade" id="lifeModal_1" tabindex="-1" aria-labelledby="lifeModal_1_Label" aria-hidden="true">
@@ -2729,6 +2998,13 @@ color: white !important;
       </div>
       <div class="modal-body">
         <textarea id="txtlifeJustify_1" name="txtlifeJustify_1" class="form-control" rows="3" style="resize: none"></textarea>
+          <label for="dangerScope">Scope of Danger:</label>
+        <select id="dangerScope_1" name="dangerScope_1" class="form-control mb-3">
+            <option value="">-- Select Scope --</option>
+          <option value="Facility">Facility</option>
+          <option value="External">External</option>
+          <option value="Both">Both</option>
+        </select>
         <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
@@ -2743,6 +3019,13 @@ color: white !important;
       </div>
       <div class="modal-body">
         <textarea id="txtlifeJustify_2" name="txtlifeJustify_2" class="form-control" rows="3" style="resize: none"></textarea>
+           <label for="dangerScope">Scope of Danger:</label>
+        <select id="dangerScope_2" name="dangerScope_2" class="form-control mb-3">
+            <option value="">-- Select Scope --</option>
+          <option value="Facility">Facility</option>
+          <option value="External">External</option>
+          <option value="Both">Both</option>
+        </select>
         <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
@@ -2757,6 +3040,13 @@ color: white !important;
       </div>
       <div class="modal-body">
         <textarea id="txtlifeJustify_3" name="txtlifeJustify_3" class="form-control" rows="3" style="resize: none"></textarea>
+           <label for="dangerScope">Scope of Danger:</label>
+        <select id="dangerScope_3" name="dangerScope_3" class="form-control mb-3">
+            <option value="">-- Select Scope --</option>
+          <option value="Facility">Facility</option>
+          <option value="External">External</option>
+          <option value="Both">Both</option>
+        </select>
         <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
@@ -2771,6 +3061,13 @@ color: white !important;
       </div>
       <div class="modal-body">
         <textarea id="txtlifeJustify_4" name="txtlifeJustify_4" class="form-control" rows="3" style="resize: none"></textarea>
+           <label for="dangerScope">Scope of Danger:</label>
+        <select id="dangerScope_4" name="dangerScope_4" class="form-control mb-3">
+            <option value="">-- Select Scope --</option>
+          <option value="Facility">Facility</option>
+          <option value="External">External</option>
+          <option value="Both">Both</option>
+        </select>
         <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
@@ -2785,6 +3082,13 @@ color: white !important;
       </div>
       <div class="modal-body">
         <textarea id="txtlifeJustify_5" name="txtlifeJustify_5" class="form-control" rows="3" style="resize: none"></textarea>
+           <label for="dangerScope">Scope of Danger:</label>
+        <select id="dangerScope_5" name="dangerScope_5" class="form-control mb-3">
+            <option value="">-- Select Scope --</option>
+          <option value="Facility">Facility</option>
+          <option value="External">External</option>
+          <option value="Both">Both</option>
+        </select>
         <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
@@ -3012,12 +3316,64 @@ color: white !important;
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <textarea id="txtenvironmentJustify_1" name="txtenvironmentJustify_1" class="form-control" rows="3" style="resize: none"></textarea>
+        <!-- Dropdown for the type of contaminants -->
+        <label for="contaminantType_1">Type of Contaminants:</label>
+        <select id="contaminantType_1" name="contaminantType_1" class="form-control mb-3">
+          <option value="">-- Select Contaminant Type --</option>
+          <!-- Populate with actual contaminant types -->
+          <option value="Chemical">Chemical</option>
+          <option value="Biological">Biological</option>
+          <option value="Radiological">Radiological</option>
+          <option value="Physical">Physical</option>
+        </select>
+
+        <!-- Dropdown for the affected ecosystem -->
+        <label for="affectedEcosystem_1">Affected Ecosystem:</label>
+        <select id="affectedEcosystem_1" name="affectedEcosystem_1" class="form-control mb-3">
+          <option value="">-- Select Ecosystem --</option>
+          <!-- Populate with different ecosystem types -->
+          <option value="Aquatic">Aquatic</option>
+          <option value="Terrestrial">Terrestrial</option>
+          <option value="Urban">Urban</option>
+          <option value="Agricultural">Agricultural</option>
+        </select>
+
+        <!-- Dropdown for the extent of the contamination -->
+        <label for="contaminationExtent_1">Extent of Contamination:</label>
+        <select id="contaminationExtent_1" name="contaminationExtent_1" class="form-control mb-3">
+          <option value="">-- Select Extent --</option>
+          <option value="Localised">Localised</option>
+          <option value="WideArea">Wide Area</option>
+        </select>
+
+        <!-- Dropdown for effect on local residential population -->
+        <label for="effectOnPopulation_1">Effect on Local Residential Population:</label>
+        <select id="effectOnPopulation_1" name="effectOnPopulation_1" class="form-control mb-3">
+          <option value="">-- Select Effect --</option>
+          <option value="Harmless">Harmless</option>
+          <option value="Harmful">Harmful</option>
+          <option value="Deadly">Deadly</option>
+        </select>
+
+        <!-- Dropdown for effect on local wildlife -->
+        <label for="effectOnWildlife_1">Effect on Local Wildlife:</label>
+        <select id="effectOnWildlife_1" name="effectOnWildlife_1" class="form-control mb-3">
+          <option value="">-- Select Effect --</option>
+          <option value="Harmless">Harmless</option>
+          <option value="Harmful">Harmful</option>
+          <option value="Deadly">Deadly</option>
+        </select>
+
+        <!-- Textarea for additional justification -->
+        <label for="txtenvironmentJustify_1">Justification:</label>
+        <textarea id="txtenvironmentJustify_1" name="txtenvironmentJustify_1" class="form-control mb-3" rows="3" style="resize: none"></textarea>
+
         <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
 </div>
+
 <div class="modal fade" id="environmentModal_2" tabindex="-1" aria-labelledby="environmentModal_2_Label" aria-hidden="true">
   <div class="modal-dialog modal-xl">
     <div class="modal-content">
@@ -3026,7 +3382,58 @@ color: white !important;
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <textarea id="txtenvironmentJustify_2" name="txtenvironmentJustify_2" class="form-control" rows="3" style="resize: none"></textarea>
+        <!-- Dropdown for the type of contaminants -->
+        <label for="contaminantType_2">Type of Contaminants:</label>
+        <select id="contaminantType_2" name="contaminantType_2" class="form-control mb-3">
+          <option value="">-- Select Contaminant Type --</option>
+          <!-- Populate with actual contaminant types -->
+          <option value="Chemical">Chemical</option>
+          <option value="Biological">Biological</option>
+          <option value="Radiological">Radiological</option>
+          <option value="Physical">Physical</option>
+        </select>
+
+        <!-- Dropdown for the affected ecosystem -->
+        <label for="affectedEcosystem_2">Affected Ecosystem:</label>
+        <select id="affectedEcosystem_2" name="affectedEcosystem_2" class="form-control mb-3">
+          <option value="">-- Select Ecosystem --</option>
+          <!-- Populate with different ecosystem types -->
+          <option value="Aquatic">Aquatic</option>
+          <option value="Terrestrial">Terrestrial</option>
+          <option value="Urban">Urban</option>
+          <option value="Agricultural">Agricultural</option>
+        </select>
+
+        <!-- Dropdown for the extent of the contamination -->
+        <label for="contaminationExtent_2">Extent of Contamination:</label>
+        <select id="contaminationExtent_2" name="contaminationExtent_2" class="form-control mb-3">
+          <option value="">-- Select Extent --</option>
+          <option value="Localised">Localised</option>
+          <option value="WideArea">Wide Area</option>
+        </select>
+
+        <!-- Dropdown for effect on local residential population -->
+        <label for="effectOnPopulation_2">Effect on Local Residential Population:</label>
+        <select id="effectOnPopulation_2" name="effectOnPopulation_2" class="form-control mb-3">
+          <option value="">-- Select Effect --</option>
+          <option value="Harmless">Harmless</option>
+          <option value="Harmful">Harmful</option>
+          <option value="Deadly">Deadly</option>
+        </select>
+
+        <!-- Dropdown for effect on local wildlife -->
+        <label for="effectOnWildlife_2">Effect on Local Wildlife:</label>
+        <select id="effectOnWildlife_2" name="effectOnWildlife_2" class="form-control mb-3">
+          <option value="">-- Select Effect --</option>
+          <option value="Harmless">Harmless</option>
+          <option value="Harmful">Harmful</option>
+          <option value="Deadly">Deadly</option>
+        </select>
+
+        <!-- Textarea for additional justification -->
+        <label for="txtenvironmentJustify_2">Justification:</label>
+        <textarea id="txtenvironmentJustify_2" name="txtenvironmentJustify_2" class="form-control mb-3" rows="3" style="resize: none"></textarea>
+
         <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
@@ -3040,7 +3447,58 @@ color: white !important;
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <textarea id="txtenvironmentJustify_3" name="txtenvironmentJustify_3" class="form-control" rows="3" style="resize: none"></textarea>
+        <!-- Dropdown for the type of contaminants -->
+        <label for="contaminantType_3">Type of Contaminants:</label>
+        <select id="contaminantType_3" name="contaminantType_3" class="form-control mb-3">
+          <option value="">-- Select Contaminant Type --</option>
+          <!-- Populate with actual contaminant types -->
+          <option value="Chemical">Chemical</option>
+          <option value="Biological">Biological</option>
+          <option value="Radiological">Radiological</option>
+          <option value="Physical">Physical</option>
+        </select>
+
+        <!-- Dropdown for the affected ecosystem -->
+        <label for="affectedEcosystem_3">Affected Ecosystem:</label>
+        <select id="affectedEcosystem_3" name="affectedEcosystem_3" class="form-control mb-3">
+          <option value="">-- Select Ecosystem --</option>
+          <!-- Populate with different ecosystem types -->
+          <option value="Aquatic">Aquatic</option>
+          <option value="Terrestrial">Terrestrial</option>
+          <option value="Urban">Urban</option>
+          <option value="Agricultural">Agricultural</option>
+        </select>
+
+        <!-- Dropdown for the extent of the contamination -->
+        <label for="contaminationExtent_3">Extent of Contamination:</label>
+        <select id="contaminationExtent_3" name="contaminationExtent_3" class="form-control mb-3">
+          <option value="">-- Select Extent --</option>
+          <option value="Localised">Localised</option>
+          <option value="WideArea">Wide Area</option>
+        </select>
+
+        <!-- Dropdown for effect on local residential population -->
+        <label for="effectOnPopulation_3">Effect on Local Residential Population:</label>
+        <select id="effectOnPopulation_3" name="effectOnPopulation_3" class="form-control mb-3">
+          <option value="">-- Select Effect --</option>
+          <option value="Harmless">Harmless</option>
+          <option value="Harmful">Harmful</option>
+          <option value="Deadly">Deadly</option>
+        </select>
+
+        <!-- Dropdown for effect on local wildlife -->
+        <label for="effectOnWildlife_3">Effect on Local Wildlife:</label>
+        <select id="effectOnWildlife_3" name="effectOnWildlife_3" class="form-control mb-3">
+          <option value="">-- Select Effect --</option>
+          <option value="Harmless">Harmless</option>
+          <option value="Harmful">Harmful</option>
+          <option value="Deadly">Deadly</option>
+        </select>
+
+        <!-- Textarea for additional justification -->
+        <label for="txtenvironmentJustify_3">Justification:</label>
+        <textarea id="txtenvironmentJustify_3" name="txtenvironmentJustify_3" class="form-control mb-3" rows="3" style="resize: none"></textarea>
+
         <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
@@ -3050,16 +3508,68 @@ color: white !important;
   <div class="modal-dialog modal-xl">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="environmentModal_4_Label">Justification for Scenario 4 Environment Rating</h5>
+        <h5 class="modal-title" id="environmentModal_4_Label">Justification for Scenario4 Environment Rating</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <textarea id="txtenvironmentJustify_4" name="txtenvironmentJustify_4" class="form-control" rows="3" style="resize: none"></textarea>
+        <!-- Dropdown for the type of contaminants -->
+        <label for="contaminantType_4">Type of Contaminants:</label>
+        <select id="contaminantType_4" name="contaminantType_4" class="form-control mb-3">
+          <option value="">-- Select Contaminant Type --</option>
+          <!-- Populate with actual contaminant types -->
+          <option value="Chemical">Chemical</option>
+          <option value="Biological">Biological</option>
+          <option value="Radiological">Radiological</option>
+          <option value="Physical">Physical</option>
+        </select>
+
+        <!-- Dropdown for the affected ecosystem -->
+        <label for="affectedEcosystem_4">Affected Ecosystem:</label>
+        <select id="affectedEcosystem_4" name="affectedEcosystem_4" class="form-control mb-3">
+          <option value="">-- Select Ecosystem --</option>
+          <!-- Populate with different ecosystem types -->
+          <option value="Aquatic">Aquatic</option>
+          <option value="Terrestrial">Terrestrial</option>
+          <option value="Urban">Urban</option>
+          <option value="Agricultural">Agricultural</option>
+        </select>
+
+        <!-- Dropdown for the extent of the contamination -->
+        <label for="contaminationExtent_4">Extent of Contamination:</label>
+        <select id="contaminationExtent_4" name="contaminationExtent_4" class="form-control mb-3">
+          <option value="">-- Select Extent --</option>
+          <option value="Localised">Localised</option>
+          <option value="WideArea">Wide Area</option>
+        </select>
+
+        <!-- Dropdown for effect on local residential population -->
+        <label for="effectOnPopulation_4">Effect on Local Residential Population:</label>
+        <select id="effectOnPopulation_4" name="effectOnPopulation_4" class="form-control mb-3">
+          <option value="">-- Select Effect --</option>
+          <option value="Harmless">Harmless</option>
+          <option value="Harmful">Harmful</option>
+          <option value="Deadly">Deadly</option>
+        </select>
+
+        <!-- Dropdown for effect on local wildlife -->
+        <label for="effectOnWildlife_4">Effect on Local Wildlife:</label>
+        <select id="effectOnWildlife_4" name="effectOnWildlife_4" class="form-control mb-3">
+          <option value="">-- Select Effect --</option>
+          <option value="Harmless">Harmless</option>
+          <option value="Harmful">Harmful</option>
+          <option value="Deadly">Deadly</option>
+        </select>
+
+        <!-- Textarea for additional justification -->
+        <label for="txtenvironmentJustify_4">Justification:</label>
+        <textarea id="txtenvironmentJustify_4" name="txtenvironmentJustify_4" class="form-control mb-3" rows="3" style="resize: none"></textarea>
+
         <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
 </div>
+
 <div class="modal fade" id="environmentModal_5" tabindex="-1" aria-labelledby="environmentModal_5_Label" aria-hidden="true">
   <div class="modal-dialog modal-xl">
     <div class="modal-content">
@@ -3068,12 +3578,64 @@ color: white !important;
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <textarea id="txtenvironmentJustify_5" name="txtenvironmentJustify_5" class="form-control" rows="3" style="resize: none"></textarea>
+        <!-- Dropdown for the type of contaminants -->
+        <label for="contaminantType_5">Type of Contaminants:</label>
+        <select id="contaminantType_5" name="contaminantType_5" class="form-control mb-3">
+          <option value="">-- Select Contaminant Type --</option>
+          <!-- Populate with actual contaminant types -->
+          <option value="Chemical">Chemical</option>
+          <option value="Biological">Biological</option>
+          <option value="Radiological">Radiological</option>
+          <option value="Physical">Physical</option>
+        </select>
+
+        <!-- Dropdown for the affected ecosystem -->
+        <label for="affectedEcosystem_5">Affected Ecosystem:</label>
+        <select id="affectedEcosystem_5" name="affectedEcosystem_5" class="form-control mb-3">
+          <option value="">-- Select Ecosystem --</option>
+          <!-- Populate with different ecosystem types -->
+          <option value="Aquatic">Aquatic</option>
+          <option value="Terrestrial">Terrestrial</option>
+          <option value="Urban">Urban</option>
+          <option value="Agricultural">Agricultural</option>
+        </select>
+
+        <!-- Dropdown for the extent of the contamination -->
+        <label for="contaminationExtent_5">Extent of Contamination:</label>
+        <select id="contaminationExtent_5" name="contaminationExtent_5" class="form-control mb-3">
+          <option value="">-- Select Extent --</option>
+          <option value="Localised">Localised</option>
+          <option value="WideArea">Wide Area</option>
+        </select>
+
+        <!-- Dropdown for effect on local residential population -->
+        <label for="effectOnPopulation_5">Effect on Local Residential Population:</label>
+        <select id="effectOnPopulation_5" name="effectOnPopulation_5" class="form-control mb-3">
+          <option value="">-- Select Effect --</option>
+          <option value="Harmless">Harmless</option>
+          <option value="Harmful">Harmful</option>
+          <option value="Deadly">Deadly</option>
+        </select>
+
+        <!-- Dropdown for effect on local wildlife -->
+        <label for="effectOnWildlife_5">Effect on Local Wildlife:</label>
+        <select id="effectOnWildlife_5" name="effectOnWildlife_5" class="form-control mb-3">
+          <option value="">-- Select Effect --</option>
+          <option value="Harmless">Harmless</option>
+          <option value="Harmful">Harmful</option>
+          <option value="Deadly">Deadly</option>
+        </select>
+
+        <!-- Textarea for additional justification -->
+        <label for="txtenvironmentJustify_5">Justification:</label>
+        <textarea id="txtenvironmentJustify_5" name="txtenvironmentJustify_5" class="form-control mb-3" rows="3" style="resize: none"></textarea>
+
         <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
 </div>
+
 <!-- Regulatory justification modals -->
 <div class="modal fade" id="regulationModal_1" tabindex="-1" aria-labelledby="regulationModal_1_Label" aria-hidden="true">
   <div class="modal-dialog modal-xl">
@@ -3145,150 +3707,458 @@ color: white !important;
     </div>
   </div>
 </div>
+
+
 <!-- Data justification modals -->
 <div class="modal fade" id="dataModal_1" tabindex="-1" aria-labelledby="dataModal_1_Label" aria-hidden="true">
-  <div class="modal-dialog modal-xl">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="dataModal_1_Label">Justification for Scenario 1 Data Rating</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <textarea id="txtdataJustify_1" name="txtdataJustify_1" class="form-control" rows="3" style="resize: none"></textarea>
-        <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
-      </div>
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="dataModal_1_Label">Justification for Scenario 1 Data Rating</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+        <div class="modal-body">
+        <label for="txtdataJustify_1" class="form-label">Justification for Data Rating:</label>
+        <textarea id="txtdataJustify_1" name="txtdataJustify_1" class="form-control mb-3" rows="3" style="resize: none"></textarea>
+
+        <!-- Checkbox for PII affected -->
+        <div class="mb-3 form-check">
+            <input type="checkbox" class="form-check-input" id="dataPII_1" name="dataPII_1">
+            <label class="form-check-label" for="dataPII_1">Personal Identifiable Information (PII) Affected</label>
+        </div>
+
+        <!-- Checkbox for Company IP affected -->
+        <div class="mb-3 form-check">
+            <input type="checkbox" class="form-check-input" id="dataCompanyIP_1" name="dataCompanyIP_1">
+            <label class="form-check-label" for="dataCompanyIP_1">Company Intellectual Property (IP) Affected</label>
+        </div>
+
+        <!-- Checkbox for Customer Data affected -->
+        <div class="mb-3 form-check">
+            <input type="checkbox" class="form-check-input" id="dataCustomer_1" name="dataCustomer_1">
+            <label class="form-check-label" for="dataCustomer_1">Customer Data Affected</label>
+        </div>
+
+        <!-- Checkbox for Financial Data affected -->
+        <div class="mb-3 form-check">
+            <input type="checkbox" class="form-check-input" id="dataFinancial_1" name="dataFinancial_1">
+            <label class="form-check-label" for="dataFinancial_1">Financial Data Affected</label>
+        </div>
+
+<!-- Close button -->
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+        </div>
     </div>
-  </div>
 </div>
 <div class="modal fade" id="dataModal_2" tabindex="-1" aria-labelledby="dataModal_2_Label" aria-hidden="true">
-  <div class="modal-dialog modal-xl">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="dataModal_2_Label">Justification for Scenario 2 Data Rating</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <textarea id="txtdataJustify_2" name="txtdataJustify_2" class="form-control" rows="3" style="resize: none"></textarea>
-        <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
-      </div>
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="dataModal_2_Label">Justification for Scenario 2 Data Rating</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+        <div class="modal-body">
+        <label for="txtdataJustify_2" class="form-label">Justification for Data Rating:</label>
+        <textarea id="txtdataJustify_2" name="txtdataJustify_1" class="form-control mb-3" rows="3" style="resize: none"></textarea>
+
+        <!-- Checkbox for PII affected -->
+        <div class="mb-3 form-check">
+            <input type="checkbox" class="form-check-input" id="dataPII_2" name="dataPII_2">
+            <label class="form-check-label" for="dataPII_2">Personal Identifiable Information (PII) Affected</label>
+        </div>
+
+        <!-- Checkbox for Company IP affected -->
+        <div class="mb-3 form-check">
+            <input type="checkbox" class="form-check-input" id="dataCompanyIP_2" name="dataCompanyIP_2">
+            <label class="form-check-label" for="dataCompanyIP_2">Company Intellectual Property (IP) Affected</label>
+        </div>
+
+        <!-- Checkbox for Customer Data affected -->
+        <div class="mb-3 form-check">
+            <input type="checkbox" class="form-check-input" id="dataCustomer_1" name="dataCustomer_2">
+            <label class="form-check-label" for="dataCustomer_2">Customer Data Affected</label>
+        </div>
+
+        <!-- Checkbox for Financial Data affected -->
+        <div class="mb-3 form-check">
+            <input type="checkbox" class="form-check-input" id="dataFinancial_2" name="dataFinancial_2">
+            <label class="form-check-label" for="dataFinancial_2">Financial Data Affected</label>
+        </div>
+
+<!-- Close button -->
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+        </div>
     </div>
-  </div>
 </div>
 <div class="modal fade" id="dataModal_3" tabindex="-1" aria-labelledby="dataModal_3_Label" aria-hidden="true">
-  <div class="modal-dialog modal-xl">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="dataModal_3_Label">Justification for Scenario 3 Data Rating</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <textarea id="txtdataJustify_3" name="txtdataJustify_3" class="form-control" rows="3" style="resize: none"></textarea>
-        <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
-      </div>
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="dataModal_3_Label">Justification for Scenario 3 Data Rating</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+        <div class="modal-body">
+        <label for="txtdataJustify_3" class="form-label">Justification for Data Rating:</label>
+        <textarea id="txtdataJustify_3" name="txtdataJustify_3" class="form-control mb-3" rows="3" style="resize: none"></textarea>
+
+        <!-- Checkbox for PII affected -->
+        <div class="mb-3 form-check">
+            <input type="checkbox" class="form-check-input" id="dataPII_3" name="dataPII_3">
+            <label class="form-check-label" for="dataPII_3">Personal Identifiable Information (PII) Affected</label>
+        </div>
+
+        <!-- Checkbox for Company IP affected -->
+        <div class="mb-3 form-check">
+            <input type="checkbox" class="form-check-input" id="dataCompanyIP_3" name="dataCompanyIP_3">
+            <label class="form-check-label" for="dataCompanyIP_3">Company Intellectual Property (IP) Affected</label>
+        </div>
+
+        <!-- Checkbox for Customer Data affected -->
+        <div class="mb-3 form-check">
+            <input type="checkbox" class="form-check-input" id="dataCustomer_3" name="dataCustomer_3">
+            <label class="form-check-label" for="dataCustomer_3">Customer Data Affected</label>
+        </div>
+
+        <!-- Checkbox for Financial Data affected -->
+        <div class="mb-3 form-check">
+            <input type="checkbox" class="form-check-input" id="dataFinancial_3" name="dataFinancial_3">
+            <label class="form-check-label" for="dataFinancial_3">Financial Data Affected</label>
+        </div>
+
+<!-- Close button -->
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+        </div>
     </div>
-  </div>
 </div>
 <div class="modal fade" id="dataModal_4" tabindex="-1" aria-labelledby="dataModal_4_Label" aria-hidden="true">
-  <div class="modal-dialog modal-xl">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="dataModal_4_Label">Justification for Scenario 4 Data Rating</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <textarea id="txtdataJustify_4" name="txtdataJustify_4" class="form-control" rows="3" style="resize: none"></textarea>
-        <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
-      </div>
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="dataModal_4_Label">Justification for Scenario 4 Data Rating</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+        <div class="modal-body">
+        <label for="txtdataJustify_4" class="form-label">Justification for Data Rating:</label>
+        <textarea id="txtdataJustify_4" name="txtdataJustify_4" class="form-control mb-3" rows="3" style="resize: none"></textarea>
+
+        <!-- Checkbox for PII affected -->
+        <div class="mb-3 form-check">
+            <input type="checkbox" class="form-check-input" id="dataPII_4" name="dataPII_4">
+            <label class="form-check-label" for="dataPII_4">Personal Identifiable Information (PII) Affected</label>
+        </div>
+
+        <!-- Checkbox for Company IP affected -->
+        <div class="mb-3 form-check">
+            <input type="checkbox" class="form-check-input" id="dataCompanyIP_4" name="dataCompanyIP_4">
+            <label class="form-check-label" for="dataCompanyIP_4">Company Intellectual Property (IP) Affected</label>
+        </div>
+
+        <!-- Checkbox for Customer Data affected -->
+        <div class="mb-3 form-check">
+            <input type="checkbox" class="form-check-input" id="dataCustomer_4" name="dataCustomer_4">
+            <label class="form-check-label" for="dataCustomer_4">Customer Data Affected</label>
+        </div>
+
+        <!-- Checkbox for Financial Data affected -->
+        <div class="mb-3 form-check">
+            <input type="checkbox" class="form-check-input" id="dataFinancial_4" name="dataFinancial_4">
+            <label class="form-check-label" for="dataFinancial_4">Financial Data Affected</label>
+        </div>
+
+<!-- Close button -->
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+        </div>
     </div>
-  </div>
 </div>
 <div class="modal fade" id="dataModal_5" tabindex="-1" aria-labelledby="dataModal_5_Label" aria-hidden="true">
-  <div class="modal-dialog modal-xl">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="dataModal_5_Label">Justification for Scenario 5 Data Rating</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <textarea id="txtdataJustify_5" name="txtdataJustify_5" class="form-control" rows="3" style="resize: none"></textarea>
-        <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
-      </div>
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="dataModal_5_Label">Justification for Scenario 5 Data Rating</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+        <div class="modal-body">
+        <label for="txtdataJustify_5" class="form-label">Justification for Data Rating:</label>
+        <textarea id="txtdataJustify_5" name="txtdataJustify_5" class="form-control mb-3" rows="3" style="resize: none"></textarea>
+
+        <!-- Checkbox for PII affected -->
+        <div class="mb-3 form-check">
+            <input type="checkbox" class="form-check-input" id="dataPII_5" name="dataPII_5">
+            <label class="form-check-label" for="dataPII_5">Personal Identifiable Information (PII) Affected</label>
+        </div>
+
+        <!-- Checkbox for Company IP affected -->
+        <div class="mb-3 form-check">
+            <input type="checkbox" class="form-check-input" id="dataCompanyIP_5" name="dataCompanyIP_5">
+            <label class="form-check-label" for="dataCompanyIP_5">Company Intellectual Property (IP) Affected</label>
+        </div>
+
+        <!-- Checkbox for Customer Data affected -->
+        <div class="mb-3 form-check">
+            <input type="checkbox" class="form-check-input" id="dataCustomer_5" name="dataCustomer_5">
+            <label class="form-check-label" for="dataCustomer_5">Customer Data Affected</label>
+        </div>
+
+        <!-- Checkbox for Financial Data affected -->
+        <div class="mb-3 form-check">
+            <input type="checkbox" class="form-check-input" id="dataFinancial_5" name="dataFinancial_5">
+            <label class="form-check-label" for="dataFinancial_5">Financial Data Affected</label>
+        </div>
+
+<!-- Close button -->
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+        </div>
     </div>
-  </div>
 </div>
 
 
-<!-- Supply Chain justification modals -->
 <div class="modal fade" id="supplyModal_1" tabindex="-1" aria-labelledby="supplyModal_1_Label" aria-hidden="true">
-  <div class="modal-dialog modal-xl">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="supplyModal_1_Label">Justification for Scenario 1 Supply Chain Rating</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <textarea id="txtsupplyJustify_1" name="txtsupplyJustify_1" class="form-control" rows="3" style="resize: none"></textarea>
-        <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
-      </div>
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="supplyModal_1_Label">Justification for Scenario 1 Supply Chain Rating</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+                <div class="modal-body">
+                <!-- Textarea for justification -->
+                <label for="txtsupplyJustify_1" class="form-label">Justification for Supply Chain Rating:</label>
+                <textarea id="txtsupplyJustify_1" name="txtsupplyJustify_1" class="form-control mb-3" rows="3" style="resize: none"></textarea>
+
+                <!-- Checkbox for inbound supply affected -->
+                <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" id="inboundSupplyAffected_1" name="inboundSupplyAffected_1">
+                    <label class="form-check-label" for="inboundSupplyAffected_1">Inbound Supply Affected</label>
+                </div>
+
+                <!-- Checkbox for outbound supply affected -->
+                <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" id="outboundSupplyAffected_1" name="outboundSupplyAffected_1">
+                    <label class="form-check-label" for="outboundSupplyAffected_1">Outbound Supply Affected</label>
+                </div>
+
+                <!-- Dropdown for overall impact on production -->
+                <label for="productionImpact_1" class="form-label">Overall Impact on Production:</label>
+                <select id="productionImpact_1" name="productionImpact_1" class="form-select mb-3">
+                <option value="Low">Low</option>
+                <option value="Medium">Medium</option>
+                <option value="High">High</option>
+                <option value="Critical">Critical</option>
+                </select>
+
+                <!-- Dropdown for impact on supply chain security -->
+                <label for="supplyChainSecurityImpact_1" class="form-label">Impact on Supply Chain Security:</label>
+                <select id="supplyChainSecurityImpact_1" name="supplyChainSecurityImpact_1" class="form-select mb-3">
+                <option value="Low">Low</option>
+                <option value="Medium">Medium</option>
+                <option value="High">High</option>
+                <option value="Critical">Critical</option>
+                </select>
+
+                <!-- Close button -->
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
     </div>
-  </div>
 </div>
 <div class="modal fade" id="supplyModal_2" tabindex="-1" aria-labelledby="supplyModal_2_Label" aria-hidden="true">
-  <div class="modal-dialog modal-xl">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="supplyModal_2_Label">Justification for Scenario 2 Supply Chain Rating</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <textarea id="txtsupplyJustify_2" name="txtsupplyJustify_2" class="form-control" rows="3" style="resize: none"></textarea>
-        <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
-      </div>
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="supplyModal_2_Label">Justification for Scenario 2 Supply Chain Rating</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+                <div class="modal-body">
+                <!-- Textarea for justification -->
+                <label for="txtsupplyJustify_2" class="form-label">Justification for Supply Chain Rating:</label>
+                <textarea id="txtsupplyJustify_2" name="txtsupplyJustify_2" class="form-control mb-3" rows="3" style="resize: none"></textarea>
+
+                <!-- Checkbox for inbound supply affected -->
+                <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" id="inboundSupplyAffected_2" name="inboundSupplyAffected_2">
+                    <label class="form-check-label" for="inboundSupplyAffected_2">Inbound Supply Affected</label>
+                </div>
+
+                <!-- Checkbox for outbound supply affected -->
+                <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" id="outboundSupplyAffected_2" name="outboundSupplyAffected_2">
+                    <label class="form-check-label" for="outboundSupplyAffected_2">Outbound Supply Affected</label>
+                </div>
+
+                <!-- Dropdown for overall impact on production -->
+                <label for="productionImpact_2" class="form-label">Overall Impact on Production:</label>
+                <select id="productionImpact_2" name="productionImpact_2" class="form-select mb-3">
+                <option value="Low">Low</option>
+                <option value="Medium">Medium</option>
+                <option value="High">High</option>
+                <option value="Critical">Critical</option>
+                </select>
+
+                <!-- Dropdown for impact on supply chain security -->
+                <label for="supplyChainSecurityImpact_2" class="form-label">Impact on Supply Chain Security:</label>
+                <select id="supplyChainSecurityImpact_2" name="supplyChainSecurityImpact_2" class="form-select mb-3">
+                <option value="Low">Low</option>
+                <option value="Medium">Medium</option>
+                <option value="High">High</option>
+                <option value="Critical">Critical</option>
+                </select>
+
+                <!-- Close button -->
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
     </div>
-  </div>
 </div>
 <div class="modal fade" id="supplyModal_3" tabindex="-1" aria-labelledby="supplyModal_3_Label" aria-hidden="true">
-  <div class="modal-dialog modal-xl">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="supplyModal_3_Label">Justification for Scenario 3 Supply Chain Rating</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <textarea id="txtsupplyJustify_3" name="txtsupplyJustify_3" class="form-control" rows="3" style="resize: none"></textarea>
-        <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
-      </div>
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="supplyModal_3_Label">Justification for Scenario 3 Supply Chain Rating</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+                <div class="modal-body">
+                <!-- Textarea for justification -->
+                <label for="txtsupplyJustify_3" class="form-label">Justification for Supply Chain Rating:</label>
+                <textarea id="txtsupplyJustify_3" name="txtsupplyJustify_3" class="form-control mb-3" rows="3" style="resize: none"></textarea>
+
+                <!-- Checkbox for inbound supply affected -->
+                <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" id="inboundSupplyAffected_3" name="inboundSupplyAffected_3">
+                    <label class="form-check-label" for="inboundSupplyAffected_3">Inbound Supply Affected</label>
+                </div>
+
+                <!-- Checkbox for outbound supply affected -->
+                <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" id="outboundSupplyAffected_3" name="outboundSupplyAffected_3">
+                    <label class="form-check-label" for="outboundSupplyAffected_3">Outbound Supply Affected</label>
+                </div>
+
+                <!-- Dropdown for overall impact on production -->
+                <label for="productionImpact_3" class="form-label">Overall Impact on Production:</label>
+                <select id="productionImpact_3" name="productionImpact_3" class="form-select mb-3">
+                <option value="Low">Low</option>
+                <option value="Medium">Medium</option>
+                <option value="High">High</option>
+                <option value="Critical">Critical</option>
+                </select>
+
+                <!-- Dropdown for impact on supply chain security -->
+                <label for="supplyChainSecurityImpact_3" class="form-label">Impact on Supply Chain Security:</label>
+                <select id="supplyChainSecurityImpact_3" name="supplyChainSecurityImpact_3" class="form-select mb-3">
+                <option value="Low">Low</option>
+                <option value="Medium">Medium</option>
+                <option value="High">High</option>
+                <option value="Critical">Critical</option>
+                </select>
+
+                <!-- Close button -->
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
     </div>
-  </div>
 </div>
 <div class="modal fade" id="supplyModal_4" tabindex="-1" aria-labelledby="supplyModal_4_Label" aria-hidden="true">
-  <div class="modal-dialog modal-xl">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="supplyModal_4_Label">Justification for Scenario 4 Supply Chain Rating</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <textarea id="txtsupplyJustify_4" name="txtsupplyJustify_4" class="form-control" rows="3" style="resize: none"></textarea>
-        <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
-      </div>
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="supplyModal_4_Label">Justification for Scenario 4 Supply Chain Rating</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+                <div class="modal-body">
+                <!-- Textarea for justification -->
+                <label for="txtsupplyJustify_4" class="form-label">Justification for Supply Chain Rating:</label>
+                <textarea id="txtsupplyJustify_4" name="txtsupplyJustify_1" class="form-control mb-3" rows="3" style="resize: none"></textarea>
+
+                <!-- Checkbox for inbound supply affected -->
+                <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" id="inboundSupplyAffected_4" name="inboundSupplyAffected_4">
+                    <label class="form-check-label" for="inboundSupplyAffected_4">Inbound Supply Affected</label>
+                </div>
+
+                <!-- Checkbox for outbound supply affected -->
+                <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" id="outboundSupplyAffected_4" name="outboundSupplyAffected_4">
+                    <label class="form-check-label" for="outboundSupplyAffected_4">Outbound Supply Affected</label>
+                </div>
+
+                <!-- Dropdown for overall impact on production -->
+                <label for="productionImpact_4" class="form-label">Overall Impact on Production:</label>
+                <select id="productionImpact_4" name="productionImpact_4" class="form-select mb-3">
+                <option value="Low">Low</option>
+                <option value="Medium">Medium</option>
+                <option value="High">High</option>
+                <option value="Critical">Critical</option>
+                </select>
+
+                <!-- Dropdown for impact on supply chain security -->
+                <label for="supplyChainSecurityImpact_4" class="form-label">Impact on Supply Chain Security:</label>
+                <select id="supplyChainSecurityImpact_4" name="supplyChainSecurityImpact_4" class="form-select mb-3">
+                <option value="Low">Low</option>
+                <option value="Medium">Medium</option>
+                <option value="High">High</option>
+                <option value="Critical">Critical</option>
+                </select>
+
+                <!-- Close button -->
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
     </div>
-  </div>
 </div>
 <div class="modal fade" id="supplyModal_5" tabindex="-1" aria-labelledby="supplyModal_5_Label" aria-hidden="true">
-  <div class="modal-dialog modal-xl">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="supplyModal_5_Label">Justification for Scenario 5 Supply Chain Rating</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <textarea id="txtsupplyJustify_5" name="txtsupplyJustify_5" class="form-control" rows="3" style="resize: none"></textarea>
-        <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
-      </div>
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="supplyModal_5_Label">Justification for Scenario 5 Supply Chain Rating</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+                <div class="modal-body">
+                <!-- Textarea for justification -->
+                <label for="txtsupplyJustify_5" class="form-label">Justification for Supply Chain Rating:</label>
+                <textarea id="txtsupplyJustify_5" name="txtsupplyJustify_5" class="form-control mb-3" rows="3" style="resize: none"></textarea>
+
+                <!-- Checkbox for inbound supply affected -->
+                <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" id="inboundSupplyAffected_5" name="inboundSupplyAffected_5">
+                    <label class="form-check-label" for="inboundSupplyAffected_5">Inbound Supply Affected</label>
+                </div>
+
+                <!-- Checkbox for outbound supply affected -->
+                <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" id="outboundSupplyAffected_5" name="outboundSupplyAffected_5">
+                    <label class="form-check-label" for="outboundSupplyAffected_5">Outbound Supply Affected</label>
+                </div>
+
+                <!-- Dropdown for overall impact on production -->
+                <label for="productionImpact_5" class="form-label">Overall Impact on Production:</label>
+                <select id="productionImpact_5" name="productionImpact_5" class="form-select mb-3">
+                <option value="Low">Low</option>
+                <option value="Medium">Medium</option>
+                <option value="High">High</option>
+                <option value="Critical">Critical</option>
+                </select>
+
+                <!-- Dropdown for impact on supply chain security -->
+                <label for="supplyChainSecurityImpact_5" class="form-label">Impact on Supply Chain Security:</label>
+                <select id="supplyChainSecurityImpact_5" name="supplyChainSecurityImpact_5" class="form-select mb-3">
+                <option value="Low">Low</option>
+                <option value="Medium">Medium</option>
+                <option value="High">High</option>
+                <option value="Critical">Critical</option>
+                </select>
+
+                <!-- Close button -->
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
     </div>
-  </div>
 </div>
+
+
 
 <!-- Vulnerability justification modals -->
 <div class="modal fade" id="vulnModal_1" tabindex="-1" aria-labelledby="vulnModal_1_Label" aria-hidden="true">
@@ -3978,11 +4848,21 @@ $(document).ready(function() {
 $(document).ready(function() {
     $('#rawtable').on('click', 'tbody tr', function() {
         clearValues();
-        sessionStorage.setItem('scenario1id', '');
-        sessionStorage.setItem('scenario2id', '');
-        sessionStorage.setItem('scenario3id', '');
-        sessionStorage.setItem('scenario4id', '');
-        sessionStorage.setItem('scenario5id', '');
+         if (sessionStorage.getItem('scenario1id') === null) {
+            sessionStorage.setItem('scenario1id', '');
+        }
+        if (sessionStorage.getItem('scenario2id') === null) {
+            sessionStorage.setItem('scenario2id', '');
+        }
+        if (sessionStorage.getItem('scenario3id') === null) {
+            sessionStorage.setItem('scenario3id', '');
+        }
+        if (sessionStorage.getItem('scenario4id') === null) {
+            sessionStorage.setItem('scenario4id', '');
+        }
+        if (sessionStorage.getItem('scenario5id') === null) {
+            sessionStorage.setItem('scenario5id', '');
+        }
 
         document.getElementById("txtScenarioDescription_1").value = "";
 
@@ -4061,100 +4941,100 @@ $(document).ready(function() {
             dataType: 'json',
 
             success: function(data) {
-                    var scenarios = data.scenarios;
-                    var controls = data.controls;
+                var scenarios = data.scenarios;
+                var controls = data.controls;
 
-                  document.getElementById("scenarioCount").value = "1";
+                document.getElementById("scenarioCount").value = "1";
 
-                  if (scenarios.length >= 2) {
-                      document.getElementById("scenarioCount").value = "2";
-                      document.getElementById("scenario2-tab").click();
-                      document.getElementById("hdnScenarioID_2").value = scenarios[1].pk;
-                      sessionStorage.setItem('scenario2id',scenarios[1].pk);
-                      document.getElementById("txtScenarioDescription_2").value = scenarios[1].fields.ScenarioDescription;
-                      document.getElementById("selectThreat_2").value = scenarios[1].fields.threatSource;
-                      document.getElementById("selectTactics_2").value = scenarios[1].fields.threatTactic;
-                      document.getElementById("id_impact_2").value = scenarios[1].fields.impact;
-                      document.getElementById("selectOutage_2").value = scenarios[1].fields.outage;
-                      document.getElementById("outage_2").value = scenarios[1].fields.outageLength;
+                if (scenarios.length >= 2) {
+                    document.getElementById("scenarioCount").value = "2";
+                    document.getElementById("scenario2-tab").click();
+                    document.getElementById("hdnScenarioID_2").value = scenarios[1].pk;
+                    sessionStorage.setItem('scenario2id',scenarios[1].pk);
+                    document.getElementById("txtScenarioDescription_2").value = scenarios[1].fields.ScenarioDescription;
+                    document.getElementById("selectThreat_2").value = scenarios[1].fields.threatSource;
+                    document.getElementById("selectTactics_2").value = scenarios[1].fields.threatTactic;
+                    document.getElementById("id_impact_2").value = scenarios[1].fields.impact;
+                    document.getElementById("selectOutage_2").value = scenarios[1].fields.outage;
+                    document.getElementById("outage_2").value = scenarios[1].fields.outageLength;
 
-                      document.getElementById("lblriskScore_2").value = scenarios[1].fields.RiskScore;
-                      setSliderColor(document.getElementById("lblriskScore_2"));
-                         const event = new Event('input', {
-                            'bubbles': true,
-                            'cancelable': true
-                        });
+                    document.getElementById("lblriskScore_2").value = scenarios[1].fields.RiskScore;
+                    setSliderColor(document.getElementById("lblriskScore_2"));
+                     const event = new Event('input', {
+                        'bubbles': true,
+                        'cancelable': true
+                    });
 
-                        document.getElementById("lblriskScore_2").dispatchEvent(event);
-                      document.getElementById("lblriskRating_2").value = scenarios[1].fields.RiskStatus;
-                      document.getElementById("lblriskSummary_2").value = scenarios[1].fields.riskSummary;
-                      document.getElementById("lblriskCost_2").value = parseFloat(scenarios[1].fields.event_cost_low).toLocaleString('en-US', {
-                            style: 'currency',
-                            currency: 'USD',
-                            maximumFractionDigits: 0
-                        });
-                         document.getElementById("lblriskCostHigh_2").value = parseFloat(scenarios[1].fields.event_cost_high).toLocaleString('en-US', {
-                            style: 'currency',
-                            currency: 'USD',
-                            maximumFractionDigits: 0
-                        });
+                    document.getElementById("lblriskScore_2").dispatchEvent(event);
+                    document.getElementById("lblriskRating_2").value = scenarios[1].fields.RiskStatus;
+                    document.getElementById("lblriskSummary_2").value = scenarios[1].fields.riskSummary;
+                    document.getElementById("lblriskCost_2").value = parseFloat(scenarios[1].fields.event_cost_low).toLocaleString('en-US', {
+                        style: 'currency',
+                        currency: 'USD',
+                        maximumFractionDigits: 0
+                    });
+                    document.getElementById("lblriskCostHigh_2").value = parseFloat(scenarios[1].fields.event_cost_high).toLocaleString('en-US', {
+                        style: 'currency',
+                        currency: 'USD',
+                        maximumFractionDigits: 0
+                    });
 
-                         document.getElementById("lblriskCostMedian_2").value = parseFloat(scenarios[1].fields.event_cost_median).toLocaleString('en-US', {
-                            style: 'currency',
-                            currency: 'USD',
-                            maximumFractionDigits: 0
-                        });
+                    document.getElementById("lblriskCostMedian_2").value = parseFloat(scenarios[1].fields.event_cost_median).toLocaleString('en-US', {
+                        style: 'currency',
+                        currency: 'USD',
+                        maximumFractionDigits: 0
+                    });
 
-                      document.getElementById("range_safety_2").value = scenarios[1].fields.SafetyScore;
-                      initSlider('range_safety_2', 'safetyrange_2')
-                      document.getElementById("range_life_2").value = scenarios[1].fields.lifeScore;
-                      initSlider('range_life_2', 'liferange_2')
-                      document.getElementById("range_production_2").value = scenarios[1].fields.productionScore;
-                      initSlider('range_production_2', 'productionrange_2')
-                      document.getElementById("range_finance_2").value = scenarios[1].fields.FinancialScore;
-                      initSlider('range_finance_1', 'financerange_2')
-                      document.getElementById("range_reputation_2").value = scenarios[1].fields.ReputationScore;
-                      initSlider('range_reputation_2', 'reputationrange_2')
-                      document.getElementById("range_environment_2").value = scenarios[1].fields.environmentScore;
-                      initSlider('range_environment_2', 'environmentrange_2')
-                      document.getElementById("range_regulatory_2").value = scenarios[1].fields.regulatoryScore;
-                      initSlider('range_regulatory_2', 'regulatoryrange_2')
-                      document.getElementById("range_supply_2").value = scenarios[1].fields.SupplyChainScore;
-                      initSlider('range_supply_2', 'supplyrange_2')
-                      document.getElementById("range_data_2").value = scenarios[1].fields.DataScore;
-                      initSlider('range_data_2', 'datarange_2')
-                      document.getElementById("range_vuln_2").value = scenarios[1].fields.VulnScore;
-                      initSlider('range_vuln_2', 'vulnrange_2')
-                      document.getElementById("range_threat_2").value = scenarios[1].fields.ThreatScore;
-                      initSlider('range_threat_2', 'threatrange_2')
-                      document.getElementById("txtAssets_2").value = scenarios[1].fields.notes;
-                      document.getElementById("txtSafetyJustify_2").value = scenarios[1].fields.justifySafety;
-                      document.getElementById("txtlifeJustify_2").value = scenarios[1].fields.justifyLife;
-                      document.getElementById("txtproductionJustify_2").value = scenarios[1].fields.justifyProduction;
-                      document.getElementById("txtfinanceJustify_2").value = scenarios[1].fields.justifyFinancial;
-                      document.getElementById("txtreputationJustify_2").value = scenarios[1].fields.justifyReputation;
-                      document.getElementById("txtenvironmentJustify_2").value = scenarios[1].fields.justifyEnvironment;
-                      document.getElementById("txtregulationJustify_2").value = scenarios[1].fields.justifyRegulation;
-                      document.getElementById("txtdataJustify_2").value = scenarios[1].fields.justifyData;
-                      document.getElementById("txtsupplyJustify_2").value = scenarios[1].fields.justifySupply;
+                    document.getElementById("range_safety_2").value = scenarios[1].fields.SafetyScore;
+                    initSlider('range_safety_2', 'safetyrange_2')
+                    document.getElementById("range_life_2").value = scenarios[1].fields.lifeScore;
+                    initSlider('range_life_2', 'liferange_2')
+                    document.getElementById("range_production_2").value = scenarios[1].fields.productionScore;
+                    initSlider('range_production_2', 'productionrange_2')
+                    document.getElementById("range_finance_2").value = scenarios[1].fields.FinancialScore;
+                    initSlider('range_finance_1', 'financerange_2')
+                    document.getElementById("range_reputation_2").value = scenarios[1].fields.ReputationScore;
+                    initSlider('range_reputation_2', 'reputationrange_2')
+                    document.getElementById("range_environment_2").value = scenarios[1].fields.environmentScore;
+                    initSlider('range_environment_2', 'environmentrange_2')
+                    document.getElementById("range_regulatory_2").value = scenarios[1].fields.regulatoryScore;
+                    initSlider('range_regulatory_2', 'regulatoryrange_2')
+                    document.getElementById("range_supply_2").value = scenarios[1].fields.SupplyChainScore;
+                    initSlider('range_supply_2', 'supplyrange_2')
+                    document.getElementById("range_data_2").value = scenarios[1].fields.DataScore;
+                    initSlider('range_data_2', 'datarange_2')
+                    document.getElementById("range_vuln_2").value = scenarios[1].fields.VulnScore;
+                    initSlider('range_vuln_2', 'vulnrange_2')
+                    document.getElementById("range_threat_2").value = scenarios[1].fields.ThreatScore;
+                    initSlider('range_threat_2', 'threatrange_2')
+                    document.getElementById("txtAssets_2").value = scenarios[1].fields.notes;
+                    document.getElementById("txtsafetyJustify_2").value = scenarios[1].fields.justifySafety;
+                    document.getElementById("txtlifeJustify_2").value = scenarios[1].fields.justifyLife;
+                    document.getElementById("txtproductionJustify_2").value = scenarios[1].fields.justifyProduction;
+                    document.getElementById("txtfinanceJustify_2").value = scenarios[1].fields.justifyFinancial;
+                    document.getElementById("txtreputationJustify_2").value = scenarios[1].fields.justifyReputation;
+                    document.getElementById("txtenvironmentJustify_2").value = scenarios[1].fields.justifyEnvironment;
+                    document.getElementById("txtregulationJustify_2").value = scenarios[1].fields.justifyRegulation;
+                    document.getElementById("txtdataJustify_2").value = scenarios[1].fields.justifyData;
+                    document.getElementById("txtsupplyJustify_2").value = scenarios[1].fields.justifySupply;
 
-                      // Check if controls exist for the scenario
-                        var relevantControls = controls.filter(function(controlItem) {
-                            return controlItem.fields.scenarioID === scenarios[1].pk;
-                        });
+                  // Check if controls exist for the scenario
+                    var relevantControls = controls.filter(function(controlItem) {
+                        return controlItem.fields.scenarioID === scenarios[1].pk;
+                    });
 
-                        if (relevantControls.length > 0) {
-                            var tableBody = document.querySelector('#risk_summary_controls_table_2 tbody');
+                    if (relevantControls.length > 0) {
+                        var tableBody = document.querySelector('#risk_summary_controls_table_2 tbody');
 
-                            // Clear existing rows
-                            while (tableBody.firstChild) {
-                            tableBody.removeChild(tableBody.firstChild);
-                            }
-                            // Populate the table with controls
-                            relevantControls.forEach(function(controlItem) {
-                                var row = tableBody.insertRow();
-                                var cell1 = row.insertCell(0);
-                                var cell2 = row.insertCell(1);
+                        // Clear existing rows
+                        while (tableBody.firstChild) {
+                        tableBody.removeChild(tableBody.firstChild);
+                        }
+                        // Populate the table with controls
+                        relevantControls.forEach(function(controlItem) {
+                            var row = tableBody.insertRow();
+                            var cell1 = row.insertCell(0);
+                            var cell2 = row.insertCell(1);
 
                                 cell1.textContent = controlItem.fields.control;
 
@@ -4225,7 +5105,7 @@ $(document).ready(function() {
                       document.getElementById("range_threat_3").value = scenarios[2].fields.ThreatScore;
                       initSlider('range_threat_3', 'threatrange_3')
                       document.getElementById("txtAssets_3").value = scenarios[2].fields.notes;
-                      document.getElementById("txtSafetyJustify_3").value = scenarios[2].fields.justifySafety;
+                      document.getElementById("txtsafetyJustify_3").value = scenarios[2].fields.justifySafety;
                       document.getElementById("txtlifeJustify_3").value = scenarios[2].fields.justifyLife;
                       document.getElementById("txtproductionJustify_3").value = scenarios[2].fields.justifyProduction;
                       document.getElementById("txtfinanceJustify_3").value = scenarios[2].fields.justifyFinancial;
@@ -4321,7 +5201,7 @@ $(document).ready(function() {
                       document.getElementById("range_threat_4").value = scenarios[3].fields.ThreatScore;
                       initSlider('range_threat_4', 'threatrange_4')
                       document.getElementById("txtAssets_4").value = scenarios[3].fields.notes;
-                      document.getElementById("txtSafetyJustify_4").value = scenarios[3].fields.justifySafety;
+                      document.getElementById("txtsafetyJustify_4").value = scenarios[3].fields.justifySafety;
                       document.getElementById("txtlifeJustify_4").value = scenarios[3].fields.justifyLife;
                       document.getElementById("txtproductionJustify_4").value = scenarios[3].fields.justifyProduction;
                       document.getElementById("txtfinanceJustify_4").value = scenarios[3].fields.justifyFinancial;
@@ -4417,7 +5297,7 @@ $(document).ready(function() {
                       document.getElementById("range_threat_5").value = scenarios[4].fields.ThreatScore;
                       initSlider('range_threat_5', 'threatrange_5');
                       document.getElementById("txtAssets_5").value = scenarios[4].fields.notes;
-                      document.getElementById("txtSafetyJustify_5").value = scenarios[4].fields.justifySafety;
+                      document.getElementById("txtsafetyJustify_5").value = scenarios[4].fields.justifySafety;
                       document.getElementById("txtlifeJustify_5").value = scenarios[4].fields.justifyLife;
                       document.getElementById("txtproductionJustify_5").value = scenarios[4].fields.justifyProduction;
                       document.getElementById("txtfinanceJustify_5").value = scenarios[4].fields.justifyFinancial;
@@ -4520,7 +5400,7 @@ $(document).ready(function() {
                          document.getElementById("range_threat_1").value = scenarios[0].fields.ThreatScore;
                          initSlider('range_threat_1', 'threatrange_1');
                          document.getElementById("txtAssets_1").value = scenarios[0].fields.notes;
-                         document.getElementById("txtSafetyJustify_1").value = scenarios[0].fields.justifySafety;
+                         document.getElementById("txtsafetyJustify_1").value = scenarios[0].fields.justifySafety;
                          document.getElementById("txtlifeJustify_1").value = scenarios[0].fields.justifyLife;
                           document.getElementById("txtproductionJustify_1").value = scenarios[0].fields.justifyProduction;
                           document.getElementById("txtfinanceJustify_1").value = scenarios[0].fields.justifyFinancial;
@@ -4949,7 +5829,7 @@ function save_scenario(buttonId) {
             'event_cost_low': $('#lblriskCost_' + buttonId).val(),
             'event_cost_high': $('#lblriskCostHigh_' + buttonId).val(),
             'event_cost_median': $('#lblriskCostMedian_' + buttonId).val(),
-            'justifySafety': $('#txtSafetyJustify_' + buttonId).val(),
+            'justifySafety': $('#txtsafetyJustify_' + buttonId).val(),
             'justifyLife': $('#txtlifeJustify_' + buttonId).val(),
             'justifyProduction': $('#txtproductionJustify_' + buttonId).val(),
             'justifyFinancial': $('#txtfinanceJustify_' + buttonId).val(),
@@ -4961,7 +5841,23 @@ function save_scenario(buttonId) {
             'outage': $('#selectOutage_' + buttonId).val(),
             'outageLength': $('#outage_' + buttonId).val(),
             'threatSource': $('#selectThreat_' + buttonId).val(),
-            'residual_risk': $('#residual_risk_' + buttonId).val()
+            'residual_risk': $('#residual_risk_' + buttonId).val(),
+            'bia_safety_hazard': $('#hazardNature_' + buttonId).val(),
+            'bia_sis_outage': $('input[name="sisOutage_' + buttonId + '"]:checked').val(),
+            'bia_sis_compromise': $('input[name="sisIntegrity_' + buttonId + '"]:checked').val(),
+            'bia_life_scope': $('#dangerScope_' + buttonId).val(),
+            'bia_contaminants': $('#contaminantType_' + buttonId).val(),
+            'bia_contamination': $('#contaminationExtent_' + buttonId).val(),
+            'bia_resident': $('#effectOnPopulation_' + buttonId).val(),
+            'bia_wildlife': $('#effectOnWildlife_' + buttonId).val(),
+            'bia_data_pii': $('#dataPII_' + buttonId).val(),
+            'bia_data_ip': $('#dataCompanyIP_' + buttonId).val(),
+            'bia_data_customer': $('#dataCustomer_' + buttonId).val(),
+            'bia_data_finance': $('#dataFinancial_' + buttonId).val(),
+            'bia_supply_outbound': $('#outboundSupplyAffected_' + buttonId).val(),
+            'bia_supply_inbound': $('#inboundSupplyAffected_' + buttonId).val(),
+            'bia_supply_prodimpact': $('#productionImpact_' + buttonId).val(),
+            'bia_supply_security': $('#supplyChainSecurityImpact_' + buttonId).val(),
         };
         // Extract controls and their scores from the table
         var controlList = [];
@@ -4983,7 +5879,7 @@ function save_scenario(buttonId) {
             dataType: 'json',
             success: function (response) {
                 // Handle success response from the server, e.g., show a success message
-                alert('Scenario saved successfully: ' + response.message);
+                showNotification('Scenario saved successfully: ' + response.message);
             },
             error: function (error) {
                 // Handle error response from the server, e.g., display an error message
@@ -4991,6 +5887,18 @@ function save_scenario(buttonId) {
             }
         });
     }
+
+function showNotification(message, isError = false) {
+    var notificationDiv = document.getElementById('notificationMessage');
+    notificationDiv.innerHTML = message;
+    notificationDiv.style.display = 'block';
+    notificationDiv.className = isError ? 'notification-message error' : 'notification-message';
+
+    // Automatically hide the notification after some time
+    setTimeout(function() {
+        notificationDiv.style.display = 'none';
+    }, 5000); // Hide after 5 seconds
+}
 
 
 function setSliderColor(slider) {

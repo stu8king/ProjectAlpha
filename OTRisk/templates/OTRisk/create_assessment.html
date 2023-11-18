@@ -86,6 +86,7 @@
 
             .col-md-2 {
         place-items: center;
+        background-color: lightgrey;
     }
 
      .small-font {
@@ -143,6 +144,7 @@
                     <li><a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:setup_org' %}">Defaults</a></li>
                   <li><a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:add_consequence' %}">Consequence Manager</a></li>
                   <li><a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:admin_users' %}">Admin Users</a></li>
+              <li><a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:list_frameworks' %}">List Frameworks</a></li>
                   {% if user.is_staff %}
                     <!-- Links visible only to superusers -->
                     <li><a class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:user_admin' %}">User Administration</a></li>
@@ -168,86 +170,111 @@
   </div>
 
 </nav>
-<div class="row" style="height: 10px">
-    <div class="col"></div>
-</div>
-<div class="row">
-    <div class="col-md-4"></div>
-    <div class="col-md-4 text-center">Default Settings for {{ user.userprofile.organization.name }}</div>
-    <div class="col-md-4"></div>
-</div>
 
-<div class="row" style="height: 10px">
-    <div class="col"></div>
-</div>
-<div class="row">
-    <div class="col-md-1"></div>
-    <div class="col-md-4"></div>
-    <div class="col-md-2 text-center" style="align-items: center">
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-12">
+            <form method="post" id="cyber_pha_form" class="needs-validation" novalidate>
+                {% csrf_token %}
 
-        <form method="post" class="form-horizontal">
-            {% csrf_token %}
-            {% for field in form %}
-                <div class="form-group">
-                    <label for="{{ field.id_for_label }}" class="control-label">{{ field.label }}</label>
-                    <div>
-                        {{ field }}  <!-- The form control classes are already added in the Python code -->
-                        {% if field.help_text %}
-                            <p class="help-block">{{ field.help_text }}</p>
-                        {% endif %}
+            <input type="hidden" name="form-TOTAL_FORMS" id="id_form-TOTAL_FORMS" value="{{ formset.total_form_count }}" />
+
+                <div class="card border-primary">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Cyber PHA Record Selection</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            {{ new_assessment_form.cyber_pha_header.label_tag }}
+                            {{ new_assessment_form.cyber_pha_header }}
+                            <button type="button" id="load_questions" class="btn btn-info ml-2">Load Questions</button>
+                        </div>
+                        <hr>
+                        <h5 class="card-title">Assessment Questions</h5>
+                        <!-- This is the part where the questionnaire questions will be displayed -->
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">Section</th>
+                                        <th scope="col">Question</th>
+                                        <th scope="col">Response</th>
+                                        <th scope="col">Effectiveness</th>
+                                        <th scope="col">Weighting</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for form in formset %}
+                                        <tr>
+                                            <td>{{ form.instance.question.section_reference }}</td>
+                                            <!-- Display the question text -->
+                                            <td style="width: 50%;">{{ form.question_text }}</td>
+                                            <!-- Display the input for the answer -->
+                                            <td>{{ form.response }}</td>
+                                            <!-- Display effectiveness if the question has been answered -->
+                                            <td class="effectiveness-field" {% if form.instance.response %}style="display: table-cell;"{% else %}style="display: none;"{% endif %}>
+                                                {{ form.effectiveness }}
+                                            </td>
+                                            <!-- Display the weighting for the answer -->
+                                            <td>{{ form.weighting }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        <!-- The submit button for the questionnaire -->
+                        <button type="submit" class="btn btn-success">Submit Assessment</button>
                     </div>
                 </div>
-            {% endfor %}
-            <div class="form-group">
-                <div>
-                    <input type="submit" value="Submit" class="btn btn-primary">
-                </div>
-            </div>
-        </form>
-
-
-
-
+            </form>
+        </div>
     </div>
-    <div class="col-md-4"></div>
-
-    <div class="col-md-1"></div>
-
 </div>
 
- <script type="text/javascript">
-    document.addEventListener('DOMContentLoaded', function() {
-        // Function to format numbers as currency
-        function formatCurrency(value) {
-            return parseFloat(value).toLocaleString('en-US', {
-                style: 'currency',
-                currency: 'USD',
-                minimumFractionDigits: 2
-            });
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    var loadQuestionsButton = document.getElementById('load_questions');
+    var totalFormsInput = document.querySelector('input[name="form-TOTAL_FORMS"]');
+
+    // Ensure both elements are present before attempting to add event listeners
+    if (loadQuestionsButton && totalFormsInput) {
+      loadQuestionsButton.addEventListener('click', function() {
+        if (totalFormsInput.value == "0") {
+          // If no questions are loaded, submit the form to load questions
+          document.getElementById('cyber_pha_form').submit();
+        } else {
+          // If questions are already loaded, prevent form resubmission
+          console.log('Questions are already loaded.');
         }
+      });
+    } else {
+      console.error('Could not find load questions button or total forms input.');
+    }
 
-        // Format fields on load
-        document.querySelectorAll('input[type="text"][pattern="^\\d+(\\.?\\d{2})?$"]').forEach(function(input) {
-            var value = input.value;
-            if(value) input.value = formatCurrency(value);
-        });
+    const effectivenessFields = document.querySelectorAll('.effectiveness-field');
+    const radios = document.querySelectorAll('input[type="radio"]');
 
-        // Format fields before submitting form
-        document.querySelector('form').addEventListener('submit', function() {
-            document.querySelectorAll('input[type="text"][pattern="^\\d+(\\.?\\d{2})?$"]').forEach(function(input) {
-                var value = input.value.replace(/[^0-9.-]+/g,"");
-                input.value = value; // Convert back to plain number for submission
-            });
-        });
+    radios.forEach((radio, index) => {
+      radio.addEventListener('change', function() {
+        const displayStyle = this.value ? 'table-cell' : 'none';
+        effectivenessFields[index].style.display = displayStyle;
+      });
 
-        // Reformat on field blur
-        document.querySelectorAll('input[type="text"][pattern="^\\d+(\\.?\\d{2})?$"]').forEach(function(input) {
-            input.addEventListener('blur', function(e) {
-                var value = e.target.value.replace(/[^0-9.-]+/g,"");
-                e.target.value = formatCurrency(value);
-            });
-        });
+      // Initialize visibility based on the current value
+      if(radio.checked) {
+        radio.dispatchEvent(new Event('change'));
+      }
     });
+
+    // Commented out code for handling changes on the 'cyber_pha_header' dropdown
+    // var selectElement = document.querySelector('select[name="cyber_pha_header"]');
+    // selectElement.addEventListener('change', function() {
+    //   document.getElementById('cyber_pha_form').submit();
+    // });
+
+  });
 </script>
+
+
 </body>
 </html>

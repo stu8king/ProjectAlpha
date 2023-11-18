@@ -48,8 +48,6 @@ def dashboardhome(request):
         # Handle the case where the organization does not have defaults set
         request.session['organization_defaults'] = {}
 
-    print(request.session['organization_defaults'])
-
     # Filters added to all model queries to respect the organization of the user
     filters = {'organization_id': user_organization_id}
     records_by_business_unit_type = RAWorksheet.objects.filter(**filters).values('BusinessUnitType').annotate(

@@ -1,13 +1,58 @@
 from django import forms
+from django.forms import BaseModelFormSet, modelformset_factory
+
 from OTRisk.models.RiskScenario import RiskScenario
 from OTRisk.models.Model_CyberPHA import vulnerability_analysis, tblAssetType, tblMitigationMeasures, \
-    OrganizationDefaults, tblIndustry
+    OrganizationDefaults, tblIndustry, tblCyberPHAHeader
 from .models.raw import RAWorksheet, RAActions, MitreICSMitigations, RAWorksheetScenario
 from .models.Model_Scenario import CustomScenario, CustomConsequence
+from .models.model_assessment import AssessmentFramework, AssessmentAnswer
 import accounts
 from django.contrib.auth.models import User
 from accounts.models import UserProfile, Organization
 from django.contrib.auth.password_validation import validate_password
+
+
+class QuestionnaireUploadForm(forms.Form):
+    file = forms.FileField()
+
+
+class AssessmentFrameworkForm(forms.ModelForm):
+    class Meta:
+        model = AssessmentFramework
+        fields = ['name', 'description', 'version']  # Add any other fields that you wish to display in the form.
+
+
+class NewAssessmentAnswerForm(forms.ModelForm):
+    class Meta:
+        model = AssessmentAnswer
+        fields = ['response', 'effectiveness', 'weighting']
+
+
+class EditAssessmentAnswerForm(forms.Form):
+    response = forms.ChoiceField(
+        choices=[(True, 'Yes'), (False, 'No')],
+        widget=forms.RadioSelect,
+        label="Response"
+    )
+    effectiveness = forms.IntegerField(
+        min_value=0,
+        max_value=100,
+        required=False,
+        label="Effectiveness",
+        widget=forms.NumberInput(attrs={'placeholder': '0-100%'})
+    )
+    weighting = forms.ChoiceField(
+        choices=[(1, 'Low'), (2, 'Medium'), (3, 'High')],
+        label="Weighting"
+    )
+
+    def __init__(self, *args, **kwargs):
+        question_id = kwargs.pop('question_id', None)
+        super(EditAssessmentAnswerForm, self).__init__(*args, **kwargs)
+
+        if question_id is not None:
+            self.fields['response'].widget.attrs.update({'name': f'response_{question_id}'})
 
 
 class OrganizationDefaultsForm(forms.ModelForm):
@@ -202,4 +247,3 @@ class OrganizationAdmin(forms.ModelForm):
             'subscription_end': forms.DateInput(attrs={'type': 'date'})
         }
         exclude = ['subscription_type']
-

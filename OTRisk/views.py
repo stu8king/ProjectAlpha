@@ -1,7 +1,9 @@
+import decimal
 import os
 
 from django.contrib.auth.models import User
 from django.core.serializers import serialize
+from django.forms import formset_factory, modelformset_factory
 from django.shortcuts import get_object_or_404
 from django.utils.crypto import get_random_string
 from django.views import View
@@ -17,7 +19,7 @@ from django.db.models.functions import Ceil
 
 from accounts import models
 from accounts.views import get_client_ip
-from django.http import JsonResponse, HttpResponse, HttpResponseForbidden
+from django.http import JsonResponse, HttpResponse, HttpResponseForbidden, HttpResponseRedirect
 from django.utils import timezone
 from django.core import serializers
 from OTRisk.models.Model_Workshop import tblWorkshopNarrative, tblWorkshopInformation
@@ -41,7 +43,7 @@ from .raw_views import qraw, openai_assess_risk, GetTechniquesView, raw_action, 
 from .dashboard_views import dashboardhome
 from .pha_views import iotaphamanager, facility_risk_profile, get_headerrecord, scenario_analysis, phascenarioreport, \
     getSingleScenario, pha_report, scenario_vulnerability, add_vulnerability, get_asset_types, calculate_effectiveness, \
-    generate_ppt, scenario_analysis_estimates_only
+    generate_ppt, scenario_analysis_estimates_only, analyze_scenario
 from .report_views import pha_reports, get_scenario_report_details, qraw_reports, get_qraw_scenario_report_details
 from .forms import CustomScenarioForm, CustomConsequenceForm, OrganizationAdmin
 from .models.Model_Scenario import CustomScenario, CustomConsequence
@@ -52,10 +54,357 @@ import secrets
 import string
 from django.core.mail import send_mail
 from django.contrib.auth.decorators import user_passes_test
-from django.db import connection
-from OTRisk.forms import SQLQueryForm, ControlAssessmentForm
+from django.db import connection, transaction
+from django.urls import reverse
+from OTRisk.forms import SQLQueryForm, ControlAssessmentForm, AssessmentFrameworkForm, NewAssessmentAnswerForm, \
+    EditAssessmentAnswerForm, QuestionnaireUploadForm
+from .models.model_assessment import AssessmentFramework, AssessmentQuestion, SelfAssessment, AssessmentAnswer
+import csv
+from django.contrib import messages
+import chardet
 
 app_name = 'OTRisk'
+
+
+# Assessment framework Code
+#########################
+@login_required
+def assessment_report_view(request, assessment_id):
+    # Get the SelfAssessment object or 404
+    self_assessment = get_object_or_404(SelfAssessment, pk=assessment_id)
+
+    # Get all answers related to the self assessment
+    answers = AssessmentAnswer.objects.filter(selfassessment=self_assessment)
+
+    # Pie Chart Data: Count of 'Yes' and 'No' answers
+    yes_count = answers.filter(response=True).count()
+    no_count = answers.filter(response=False).count()
+    pie_data = {'Yes': yes_count, 'No': no_count}
+
+    # Bar Graph Data: % of 'Yes' answers for each category
+    bar_data = {}
+    categories = AssessmentQuestion.objects.filter(
+        framework=self_assessment.framework
+    ).values_list('category', flat=True).distinct()
+
+    for category in categories:
+        category_questions = AssessmentQuestion.objects.filter(framework=self_assessment.framework, category=category)
+        total_questions = category_questions.count()
+        yes_questions = answers.filter(question__in=category_questions, response=True).count()
+        if total_questions > 0:
+            yes_percentage = (yes_questions / total_questions) * 100
+            bar_data[category] = yes_percentage
+        else:
+            bar_data[category] = 0
+
+    # Data for 'No' and 'Yes' answer tables
+    no_answers = answers.filter(response=False)
+    yes_answers = answers.filter(response=True)
+
+    # Pass data to context for rendering in the template
+    context = {
+        'self_assessment': self_assessment,
+        'pie_data': pie_data,
+        'bar_data': bar_data,
+        'no_answers': no_answers,
+        'yes_answers': yes_answers,
+    }
+
+    return render(request, 'assessment_report.html', context)
+
+
+@login_required
+def upload_questionnaire(request):
+    if request.method == 'POST':
+        form = QuestionnaireUploadForm(request.POST, request.FILES)
+        if form.is_valid():
+            file = request.FILES['file']
+            # Detect file encoding
+            raw_data = file.read()
+            result = chardet.detect(raw_data)
+            encoding = result['encoding']
+
+            # Decode file using detected encoding
+            try:
+                decoded_file = raw_data.decode(encoding)
+            except UnicodeDecodeError:
+                # Handle decode error, perhaps set a default encoding or return an error message
+                messages.error(request, "Error decoding the file. Please ensure it is a valid CSV file.")
+                return render(request, 'upload_questionnaire.html', {'form': form})
+
+            reader = csv.reader(decoded_file.splitlines())
+
+            # Process the first row for framework details
+            try:
+                with transaction.atomic():
+                    first_row = next(reader)
+                    if len(first_row) < 3:
+                        messages.error(request, "Framework row must have at least 3 columns.")
+                        return render(request, 'upload_questionnaire.html', {'form': form})
+
+                    framework_name, description, version = first_row[:3]
+                    owner_organization_id = request.session.get('user_organization')
+
+                    if not owner_organization_id:
+                        messages.error(request, "No organization information in session.")
+                        return render(request, 'upload_questionnaire.html', {'form': form})
+
+                    framework, created = AssessmentFramework.objects.get_or_create(
+                        name=framework_name, defaults={'description': description, 'version': version,
+                                                       'owner_organization': owner_organization_id}
+                    )
+
+                    # Process the remaining rows for questions
+                    for row in reader:
+                        if len(row) < 4:
+                            # Log or handle the error for rows with insufficient columns
+                            continue  # Skipping this row
+
+                        text, guidance, section_reference, category = row[:4]
+                        AssessmentQuestion.objects.create(
+                            framework=framework,
+                            text=text,
+                            guidance=guidance,
+                            section_reference=section_reference,
+                            category=category
+                        )
+
+                    messages.success(request, "Questionnaire uploaded successfully.")
+                    return redirect('OTRisk:list_frameworks')
+
+            except StopIteration:
+                # Handle the case where the CSV is empty or only has a header
+                messages.error(request, "The uploaded file is empty or not properly formatted.")
+                return render(request, 'upload_questionnaire.html', {'form': form})
+
+    else:
+        form = QuestionnaireUploadForm()
+
+    return render(request, 'upload_questionnaire.html', {'form': form})
+
+@login_required
+def fetch_updated_assessments(request):
+    assessments = SelfAssessment.objects.all()
+    data = []
+
+    for assessment in assessments:
+        assessment_data = {
+            'id': assessment.id,
+            'framework_name': assessment.framework.name,
+            'name': assessment.name,
+            'date_created': assessment.date_created.strftime("%Y-%m-%d %H:%M:%S"),
+            'date_modified': assessment.date_modified.strftime("%Y-%m-%d %H:%M:%S")
+        }
+        data.append(assessment_data)
+
+    return JsonResponse({'assessments': data})
+
+
+@csrf_exempt
+def update_assessment_name(request):
+    if request.method == 'POST':
+        assessment_id = request.POST.get('assessment_id')
+        new_name = request.POST.get('new_name')
+
+        assessment = SelfAssessment.objects.get(id=assessment_id)
+        assessment.name = new_name
+        assessment.save()
+
+        return JsonResponse({'status': 'success', 'message': 'Name updated successfully'})
+    return JsonResponse({'status': 'error', 'message': 'Invalid request'})
+
+@login_required
+def list_frameworks(request):
+    frameworks = AssessmentFramework.objects.all()
+    # Retrieve the assessments completed by the user
+    completed_assessments = SelfAssessment.objects.filter(user=request.user)
+    return render(request, 'list_frameworks.html', {
+        'frameworks': frameworks,
+        'completed_assessments': completed_assessments
+    })
+
+
+@login_required
+def edit_assessment(request, assessment_id):
+    # Retrieve the existing SelfAssessment or redirect if not found
+    self_assessment = get_object_or_404(SelfAssessment, pk=assessment_id, user=request.user)
+    framework = self_assessment.framework  # Get the associated framework
+    questions = AssessmentQuestion.objects.filter(framework=self_assessment.framework)
+
+    # Build a dictionary of existing answers for this assessment
+    existing_answers = {answer.question.id: answer for answer in self_assessment.answers.all()}
+    # Variables to calculate scores
+    total_questions = questions.count()
+    yes_count = 0
+    total_effectiveness = 0
+
+    if request.method == 'POST':
+        for question in questions:
+            response_key = f'response_{question.id}'
+            effectiveness_key = f'effectiveness_{question.id}'
+            weighting_key = f'weighting_{question.id}'
+
+            # Get the data from POST request using the unique keys
+            response = request.POST.get(response_key) == 'True'
+            effectiveness = request.POST.get(effectiveness_key, '0').isdigit() and int(
+                request.POST.get(effectiveness_key, '0')) or None
+            weighting = request.POST.get(weighting_key, '1').isdigit() and int(
+                request.POST.get(weighting_key, '1')) or 1
+
+            # Check if an answer already exists
+            if question.id in existing_answers:
+                answer = existing_answers[question.id]
+                answer.response = response
+                answer.effectiveness = effectiveness
+                answer.weighting = weighting
+            else:
+                # Create a new answer if it does not exist
+                answer = AssessmentAnswer.objects.create(
+                    question=question,
+                    response=response,
+                    effectiveness=effectiveness,
+                    weighting=weighting,
+                )
+                self_assessment.answers.add(answer)  # Add the new answer to the m2m field
+
+            answer.save()  # Save the answer
+
+            if response:
+                yes_count += 1
+                total_effectiveness += effectiveness or 0
+
+        # Update score fields in self_assessment
+        self_assessment.score_number = yes_count
+        if total_questions > 0:
+            self_assessment.score_percent = int((yes_count / total_questions) * 100)
+            self_assessment.score_effective = int(
+                (total_effectiveness / (yes_count * 100)) * 100) if yes_count > 0 else 0
+        else:
+            self_assessment.score_percent = 0
+            self_assessment.score_effective = 0
+
+        self_assessment.save()  # Save the SelfAssessment to update the 'date_modified' field
+        return redirect('OTRisk:list_frameworks')
+
+    # For GET request, initialize the forms with existing answer data
+    answer_forms = []
+    for question in questions:
+        answer = existing_answers.get(question.id)
+        # Initialize form data based on the existing answer if it exists
+        form_data = {
+            'response': answer.response if answer else False,
+            'effectiveness': answer.effectiveness if answer and answer.response else 0,
+            'weighting': answer.weighting if answer else 1,
+        }
+        form = EditAssessmentAnswerForm(initial=form_data, question_id=question.id)
+        answer_forms.append((question, form))
+
+    # Render the form with the context
+    context = {
+        'assessment_id': assessment_id,
+        'answer_forms': answer_forms,
+        'framework_description': framework.description,
+    }
+    return render(request, 'assessment_questions.html', context)
+
+
+# views.py
+
+@login_required
+def assessment_questions(request, framework_id):
+    # Retrieve the framework or return 404 if not found
+    framework = get_object_or_404(AssessmentFramework, pk=framework_id)
+    questions = framework.assessmentquestion_set.all()
+
+    # Initialize the formset for the given framework's questions
+    AnswerFormSet = modelformset_factory(
+        AssessmentAnswer,
+        form=NewAssessmentAnswerForm,
+        fields=('response', 'effectiveness', 'weighting'),
+        extra=len(questions),
+        can_delete=False
+    )
+    formset = AnswerFormSet(
+        request.POST or None,
+        queryset=AssessmentAnswer.objects.none()  # No pre-existing answers for a new assessment
+    )
+
+    # if request.method == 'POST' and formset.is_valid():
+    #    print(request.POST)
+    #    # Create a new SelfAssessment instance
+    #    self_assessment = SelfAssessment.objects.create(user=request.user, framework=framework)
+
+    # Save the formset instances and associate them with the new self_assessment
+    #    instances = formset.save(commit=False)
+    #    for instance, form in zip(instances, formset.forms):
+    # Extract the question ID from the form prefix
+    #        question_id = request.POST.get(f"{form.prefix}-question")
+    #        question = get_object_or_404(AssessmentQuestion, pk=question_id)
+    #        instance.question = question  # Link the instance to the question
+    #        instance.selfassessment = self_assessment  # Link to the self_assessment
+    #        instance.save()  # Now save the instance
+
+    #    return redirect('OTRisk:list_frameworks')
+
+    # Prepare the data for rendering the forms alongside the questions
+    # zipped_questions_forms = zip(questions, formset)
+
+    return redirect('OTRisk:list_frameworks')
+
+
+# return render(request, 'OTRisk/assessment_questions.html', {
+#     'framework': framework,
+#     'formset': formset,
+#     'questions': questions,
+#     'zipped_questions_forms': zipped_questions_forms,
+#     'is_new_assessment': True,  # This is always True since it's for new assessments
+# })
+
+
+@login_required
+def start_assessment(request, framework_id):
+    # Get the framework
+    framework = get_object_or_404(AssessmentFramework, pk=framework_id)
+    # Start a new assessment for this framework and user
+    new_self_assessment = SelfAssessment.objects.create(user=request.user, framework=framework)
+    # Redirect to the assessment questions view with the new self_assessment id
+    return redirect('OTRisk:assessment_questions', self_assessment_id=new_self_assessment.id)
+
+
+def save_assessment(request, framework_id):
+    if request.method == 'POST':
+        user = request.user
+        framework = AssessmentFramework.objects.get(id=framework_id)
+        self_assessment, created = SelfAssessment.objects.get_or_create(user=user, framework=framework)
+
+        for question in framework.assessmentquestion_set.all():
+            answer_data = {
+                'response': request.POST.get(f'response_{question.id}'),
+                'effectiveness': request.POST.get(f'effectiveness_{question.id}'),
+                'weighting': request.POST.get(f'weighting_{question.id}')
+            }
+            answer, created = AssessmentAnswer.objects.get_or_create(question=question, defaults=answer_data)
+            if not created:
+                for field, value in answer_data.items():
+                    setattr(answer, field, value)
+                answer.save()
+            self_assessment.answers.add(answer)
+        return redirect('some_view_to_redirect_to')
+
+
+def select_framework(request, framework_id):
+    # Get the selected framework or return 404 if not found
+    framework = get_object_or_404(AssessmentFramework, pk=framework_id)
+
+    # Create a new SelfAssessment for this framework and the current user
+    self_assessment = SelfAssessment.objects.create(user=request.user, framework=framework)
+
+    # Redirect to the assessment questions page for the new SelfAssessment
+    return redirect('OTRisk:assessment_questions', framework_id=framework_id)
+
+
+#########################
+#########################
 
 
 @login_required
@@ -505,6 +854,8 @@ def save_or_update_cyberpha(request):
         likelihood = request.POST.get('likelihood')
         frequency = request.POST.get('frequency')
         snapshot = request.POST.get('snapshot')
+        ThreatClass = request.POST.get('threatSource')
+        dangerScope = request.POST.get('dangerScope')
         try:
             control_effectiveness = int(float(request.POST.get('control_effectiveness', '0')))
         except ValueError:
@@ -512,8 +863,6 @@ def save_or_update_cyberpha(request):
 
         sl_a = request.POST.get('sl_a')
 
-        control_list_str = request.POST.get('controlList')
-        control_list = json.loads(control_list_str)
 
         if outageDuration in ('NaN', ''):
             outageDuration = 0
@@ -630,111 +979,92 @@ def save_or_update_cyberpha(request):
                 control_effectiveness=control_effectiveness,
                 likelihood=likelihood,
                 frequency=frequency,
-                sl_a=sl_a
+                sl_a=sl_a,
+                dangerScope=dangerScope
             )
             snapshot_record.save()
         else:
-            cyberpha_entry, created = tblCyberPHAScenario.objects.update_or_create(
-                CyberPHA=cyberpha_header,
-                Scenario=scenario,
-                ThreatClass=threatclass,
-                defaults={
-                    'ThreatAction': threataction,
-                    'Countermeasures': countermeasures,
-                    'RiskCategory': riskcategory,
-                    'Consequence': consequence,
-                    'impactSafety': impactsafety,
-                    'impactDanger': impactdanger,
-                    'impactProduction': impactproduction,
-                    'impactFinance': impactfinance,
-                    'impactReputation': impactreputation,
-                    'impactEnvironment': impactenvironment,
-                    'impactRegulation': impactregulation,
-                    'impactData': impactdata,
-                    'impactSupply': impactsupply,
-                    'recommendations': recommendations,
-                    'SM': sm,
-                    'MEL': mel,
-                    'RRM': rrm,
-                    'SA': sa,
-                    'MELA': mela,
-                    'RRa': rra,
-                    'UEL': uel,
-                    'uel_threat': uel_threat,
-                    'uel_exposure': uel_exposure,
-                    'uel_vuln': uel_vuln,
-                    'RRU': rru,
-                    'sl': sl,
-                    'Deleted': deleted,
-                    'justifySafety': justifySafety,
-                    'justifyLife': justifyLife,
-                    'justifyProduction': justifyProduction,
-                    'justifyFinancial': justifyFinance,
-                    'justifyReputation': justifyReputation,
-                    'justifyEnvironment': justifyEnvironment,
-                    'justifyRegulation': justifyRegulation,
-                    'justifyData': justifyData,
-                    'justifySupply': justifySupply,
-                    'userID': request.user,
-                    'sle': sle_medium,
-                    'sle_low': sle_low,
-                    'sle_high': sle_high,
-                    'aro': aro,
-                    'ale': ale,
-                    'countermeasureCosts': countermeasureCosts,
-                    'outage': outage,
-                    'outageDuration': outageDuration,
-                    'outageCost': outageCost,
-                    'probability': probability,
-                    'standards': standards,
-                    'risk_register': risk_register_bool,
-                    'sis_outage': sis_outage,
-                    'sis_compromise': sis_compromise,
-                    'safety_hazard': safety_hazard,
-                    'timestamp': timezone.now(),
-                    'risk_open_date': timezone.now(),
-                    'risk_close_date': '2099-01-01',
-                    'control_effectiveness': control_effectiveness,
-                    'likelihood': likelihood,
-                    'frequency': frequency,
-                    'sl_a': sl_a
-                }
-            )
-            scenario_id_value = cyberpha_entry.ID
-            # save the controls
-            for control_item in control_list:
-                control_name = control_item['control']
-                control_score = control_item['score']
-                control_reference = control_item['reference']
-
-                # Check if the control already exists for the given scenario
-                control_instance, created = PHAControlList.objects.get_or_create(
-                    scenarioID_id=scenario_id_value,
-                    # Note: scenarioID_id is the way to reference the ID of a ForeignKey in Django
-                    control=control_name,
-                    reference=control_reference,
-                    defaults={'score': control_score}  # This sets the score if a new instance is created
+            scenario_id = request.POST.get('scenarioID')
+            defaults = {
+                'Scenario': scenario,
+                'ThreatAction': '',
+                'ThreatClass': ThreatClass,
+                'Countermeasures': '',
+                'RiskCategory': riskcategory,
+                'Consequence': consequence,
+                'impactSafety': impactsafety,
+                'impactDanger': impactdanger,
+                'impactProduction': impactproduction,
+                'impactFinance': impactfinance,
+                'impactReputation': impactreputation,
+                'impactEnvironment': impactenvironment,
+                'impactRegulation': impactregulation,
+                'impactData': impactdata,
+                'impactSupply': impactsupply,
+                'recommendations': recommendations,
+                'SM': sm,
+                'MEL': mel,
+                'RRM': rrm,
+                'SA': sa,
+                'MELA': mela,
+                'RRa': rra,
+                'UEL': uel,
+                'uel_threat': uel_threat,
+                'uel_exposure': uel_exposure,
+                'uel_vuln': uel_vuln,
+                'RRU': rru,
+                'sl': sl,
+                'Deleted': deleted,
+                'justifySafety': justifySafety,
+                'justifyLife': justifyLife,
+                'justifyProduction': justifyProduction,
+                'justifyFinancial': justifyFinance,
+                'justifyReputation': justifyReputation,
+                'justifyEnvironment': justifyEnvironment,
+                'justifyRegulation': justifyRegulation,
+                'justifyData': justifyData,
+                'justifySupply': justifySupply,
+                'userID': request.user,
+                'sle': sle_medium,
+                'sle_low': sle_low,
+                'sle_high': sle_high,
+                'aro': aro,
+                'ale': ale,
+                'countermeasureCosts': countermeasureCosts,
+                'outage': outage,
+                'outageDuration': outageDuration,
+                'outageCost': outageCost,
+                'probability': probability,
+                'standards': standards,
+                'risk_register': risk_register_bool,
+                'sis_outage': sis_outage,
+                'sis_compromise': sis_compromise,
+                'safety_hazard': safety_hazard,
+                'timestamp': timezone.now(),
+                'risk_open_date': timezone.now(),
+                'risk_close_date': '2099-01-01',
+                'control_effectiveness': control_effectiveness,
+                'likelihood': 0 if likelihood == '' else likelihood,
+                'frequency': decimal.Decimal('0.0') if frequency == '' else frequency,
+                'sl_a': 0 if sl_a == '' else sl_a,
+                'dangerScope': dangerScope
+            }
+            # If scenario_id is '0', create a new record, otherwise update the existing one
+            if scenario_id == '0':
+                # Set ID to None to create a new record
+                cyberpha_entry = tblCyberPHAScenario.objects.create(CyberPHA=cyberpha_header, **defaults)
+            else:
+                # Convert scenario_id to an integer and update the existing record
+                cyberpha_entry, created = tblCyberPHAScenario.objects.update_or_create(
+                    defaults=defaults,
+                    CyberPHA=cyberpha_header,
+                    ID=int(scenario_id)  # Assumes scenario_id is always a valid integer
                 )
 
-                # If the control instance already exists, just update the score
-                if not created:
-                    control_instance.score = control_score
-                    control_instance.save()
-            # write to the audit log
-            action = "created" if created else "updated"
-
-            # Create a new auditlog instance
-            audit_entry = auditlog(
-                userID=request.user.id,
-                timestamp=timezone.now(),
-                user_action=f"{action} CyberPHA: {cyberphaid}",
-                user_ipaddress=get_client_ip(request)  # Assuming you have a function to get the client's IP
-            )
-
-            # Save the auditlog entry
-            audit_entry.save()
+            scenario_id_value = cyberpha_entry.ID
 
             scenarioID = cyberpha_entry.pk
+
             request.session['cyberPHAID'] = cyberphaid  # Set the session variable
 
         # Call the assess_cyberpha function
@@ -803,7 +1133,6 @@ def assess_cyberpha(request, cyberPHAID=None):
     tbl_scenarios = tblScenarios.objects.filter(industry_id=industry_id)
     # tbl_scenarios = tblScenarios.objects.all()
 
-    tbl_consequences = tblConsequence.objects.all()
     # Get custom scenarios for the current user's organization
     custom_scenarios = CustomScenario.objects.filter(organization_id=organization_id)
     # Convert querysets to lists of dictionaries
@@ -811,14 +1140,6 @@ def assess_cyberpha(request, cyberPHAID=None):
     custom_scenarios_list = [{'ID': obj.id, 'Scenario': obj.scenario} for obj in custom_scenarios]
     # Combine these lists
     combined_scenarios = tbl_scenarios_list + custom_scenarios_list
-
-    custom_consequences = CustomConsequence.objects.filter(organization_id=organization_id)
-
-    tbl_consequence_list = [{'ID': obj.ID, 'Consequence': obj.Consequence} for obj in tbl_consequences]
-    custom_consequence_list = [{'ID': obj.id, 'Consequence': obj.Consequence} for obj in custom_consequences]
-    # Combine these lists
-    combined_consequences = tbl_consequence_list + custom_consequence_list
-
     control_objectives = tblControlObjectives.objects.all()
     mitigation_measures = tblMitigationMeasures.objects.all()
     threat_intelligence = tblThreatIntelligence.objects.all().order_by('ThreatDescription')
@@ -858,7 +1179,6 @@ def assess_cyberpha(request, cyberPHAID=None):
         'threatactions': threatactions,
         'clicked_row_facility_name': clicked_row_facility_name,
         'saved_scenarios': saved_scenarios,
-        'consequenceList': combined_consequences,
         'standardslist': standardslist,
         'MitreControlAssessment_results': control_assessments_data,
         'SECURITY_LEVELS': SECURITY_LEVELS

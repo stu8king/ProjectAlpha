@@ -121,9 +121,22 @@ urlpatterns = [
     path('qraw_reports/<int:qraw_id>/', views.qraw_reports, name='qraw_reports'),
     path('get_scenario_report_details/', views.get_scenario_report_details, name='get_scenario_report_details'),
     path('get_qraw_scenario_report_details/', views.get_qraw_scenario_report_details, name='get_qraw_scenario_report_details'),
+    path('list_frameworks/', views.list_frameworks, name='list_frameworks'),
+    path('frameworks/', views.list_frameworks, name='list_frameworks'),
+    path('select_framework/<int:framework_id>/', views.select_framework, name='select_framework'),
+    path('start_assessment/<int:framework_id>/', views.start_assessment, name='start_assessment'),
+    # To start a new assessment
+    path('assessment_questions/<int:framework_id>/', views.assessment_questions, name='assessment_questions'),
+    path('fetch-updated-assessments/', views.fetch_updated_assessments, name='fetch_updated_assessments'),
 
+    path('save_assessment/<int:framework_id>/', views.save_assessment, name='save_assessment'),
+    path('edit_assessment/<int:assessment_id>/', views.edit_assessment, name='edit_assessment'),
     path('create/', views.setup_org, name='setup_org'),
     path('edit/<int:pk>/', views.edit_org, name='edit_org'),
+    path('update_assessment_name/', views.update_assessment_name, name='update_assessment_name'),
+    path('upload_questionnaire/', views.upload_questionnaire, name='upload_questionnaire'),
+    path('assessment_report_view//<int:assessment_id>/', views.assessment_report_view, name='assessment_report_view'),
+    path('analyze_scenario/', views.analyze_scenario, name='analyze_scenario'),
 
 ]
 

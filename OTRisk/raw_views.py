@@ -491,6 +491,7 @@ def map_score_to_text(score):
 
 @login_required
 def qraw(request):
+
     # check the organization that the user belong to
     org_id = get_user_organization_id(request)
     saved_worksheet_id = None
@@ -511,7 +512,10 @@ def qraw(request):
         edit_mode_value = request.POST.get('edit_mode', 0)
         edit_mode = 1 if edit_mode_value == '' else int(edit_mode_value)
 
-        if edit_mode == 0:
+        hdnRawID_value = request.POST.get('hdnRawID', ['0'])[0]  # Take the first value if list, default to '0'
+        hdnRawID = int(hdnRawID_value)
+
+        if edit_mode == 0 or hdnRawID == 0:
             if not is_duplicate:
                 # adding new records
                 revenue_str = ensure_non_empty(request.POST.get('txtRevenue'))
@@ -535,11 +539,13 @@ def qraw(request):
                     WalkdownID=0,
                     StatusFlag="Open",
                     RADate=date.today(),
+                    deleted=0
                 )
                 ra_worksheet.save()
                 saved_worksheet_id = ra_worksheet.ID
 
         elif edit_mode == 1:
+
             ra_worksheet_id = int(request.POST.get('hdnRawID'))
             ra_worksheet = RAWorksheet.objects.get(ID=ra_worksheet_id)
             ra_worksheet.RATitle = request.POST.get('txtTitle')
@@ -737,21 +743,19 @@ def openai_assess_risk(request):
         event_cost_estimate_message = {
             "role": "user",
             "content": (
-                f"Provide a US dollar estimate for the following scenario in the format: lowest|highest|median."
-                f"- Nature of incident: {scenario}."
+                f"Provide a US dollar estimate for a {scenario} in a {facility_type}. Provide figures as lowest|highest|median. Consider the following details"
                 f"- Revenue of the organization: {revenue}."
                 f"- Industry or sector: {industry}. "
-                f"- type of business premises: {facility_type}."
                 f"- Impact on operations rated as : {production_impact} out of 10."
                 f" - Production outage: {outage}."
-                f" - Length of production outage: {outageLength} hours. If there is an outage then calculate an hourly rate based on the annual revenue of {revenue}."
+                f" - Length of production outage: {outageLength} hours."
                 f"- impact on safety rated as: {safety_impact} out of 10."
                 f"- impact on supply chain rated as: {supply_impact} out of 10."
                 f"- impact on costs rated as: {financial_impact} out of 10."
                 f"- impact on data and intellectual property rated as: {data_impact} out of 10."
                 f"- impact on the organization's reputation rated as {reputation_impact} out of 10."
                 f"Insurance coverage: ${insurance}. If the estimates exceed the insurance deductable amount then deduct the insurance coverage amount from the estimates otherwise ignore the insurance amounts. "
-                f"Provide three event costs, that represent the DIRECT costs and expenses of the incident, as a spread of values: an estimate of the lowest cost, the highest amount or worst-case-scenario, and the most likely cost. Do not over-estimate the costs - most cybersecurity incidents do not cost millions of dollars - those that do are the exception."
+                f"Provide three event costs, that represent the DIRECT costs and expenses of the incident, as a spread of values: an estimate of the lowest cost, the highest amount or worst-case-scenario, and the most likely cost. VERY IMPORTANT INSTRUCTION: Do not over-estimate the costs - most cybersecurity incidents do not cost millions of dollars - those that do are the exception."
                 f"Give the answer in the format lowest|highest|median using | as the character to indicate the delimiter between the values."
                 f"Provide only the dollar amount values in your response without any narrative or explanation because the response from this query will be used in a calculation."
             )
@@ -799,7 +803,7 @@ def openai_assess_risk(request):
                 "content": dict(
                     prompt=(
                         "Based on the provided risk factors, generate a concise bullet point list of the most relevant OT (operational technology) and ICS (industrial control system) Cybersecurity controls necessary to mitigate the risks:\n"
-                        "Controls should be focused on mitigating risks most relevant to OT Cybersecurity."
+                        "Controls should be technical and focused on mitigating risks most relevant to OT Cybersecurity."
                     ),
                     factors=risk_factors,
                     additional_request={
@@ -1271,6 +1275,7 @@ def create_or_update_raw_scenario(request):
         else:
             new_scenario = RAWorksheetScenario(**scenario_data)
             new_scenario.save()
+            scenario_id = new_scenario.ID
 
         for control_item in control_list:
             control_name = control_item['control']

@@ -132,7 +132,9 @@
         <li class="nav-item">
           <a class="nav-link" style="font-size: 12px;" href="{% url 'OTRisk:risk_register' %}" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Risk Register</a>
         </li>
-
+        <li class="nav-item">
+          <a class="nav-link" style="font-size: 12px;" href="{% url 'OTRisk:list_frameworks' %}" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Assessments</a>
+        </li>
         <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="font-size: 12px;">
                 <i class="bi bi-diagram-3"></i> Admin
@@ -142,6 +144,7 @@
                     <li><a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:setup_org' %}">Defaults</a></li>
                   <li><a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:add_consequence' %}">Consequence Manager</a></li>
                   <li><a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:admin_users' %}">Admin Users</a></li>
+              <li><a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:upload_questionnaire' %}">Upload Questionnaires</a></li>
                   {% if user.is_staff %}
                     <!-- Links visible only to superusers -->
                     <li><a class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:user_admin' %}">User Administration</a></li>
@@ -485,14 +488,20 @@
                     </tbody>
                 </table>
                     <script type="text/javascript">
-                $(document).ready( function () {
-                $('#phaTable').DataTable({
-                "paging": true,
-                "lengthChange": false,
-                "searching": false,
-                "pageLength": 10
-                });
-                });
+                       $(document).ready( function () {
+                            if ( $.fn.dataTable.isDataTable('#phaTable') ) {
+                                // If table is already a DataTable, destroy it first
+                                $('#phaTable').DataTable().destroy();
+                            }
+                            // Now, reinitialize the DataTable
+                            $('#phaTable').DataTable({
+                                "paging": true,
+                                "lengthChange": false,
+                                "searching": false,
+                                "pageLength": 10
+                            });
+                        });
+
                 </script>
                 </div>
             </div>
@@ -725,11 +734,7 @@ $(document).ready( function () {
         "pageLength": 5
     });
 } );
-$(document).ready( function () {
-    $('#phaTable').DataTable({
-        "pageLength": 5
-    });
-} );
+
 
 function getAssessment(id) {
     // Your code here
@@ -740,176 +745,6 @@ function getPHA(id) {
     console.log(id);
 }
 
-
-function createChart(containerId, data, field) {
-    let margin = {top: 20, right: 20, bottom: 110, left: 40},
-        width = 300 - margin.left - margin.right,
-        height = 250 - margin.top - margin.bottom;
-
-    // set the ranges
-    let x = d3.scaleBand()
-              .range([0, width])
-              .padding(0.1);
-    let y = d3.scaleLinear()
-              .range([height, 0]);
-
-    let svg = d3.select(containerId).append("svg")
-        .attr("width", width + margin.left + margin.right)
-        .attr("height", height + margin.top + margin.bottom)
-        .append("g")
-        .attr("transform",
-              "translate(" + margin.left + "," + margin.top + ")");
-
-    // Scale the range of the data in the domains
-    x.domain(data.map(function(d) { return d[field]; }));
-    y.domain([0, d3.max(data, function(d) { return d.count; })]);
-
-    // append the rectangles for the bar chart
-    svg.selectAll(".bar")
-        .data(data)
-        .enter().append("rect")
-        .attr("fill", "steelblue")
-        .attr("class", "bar")
-        .attr("x", function(d) { return x(d[field]); })
-        .attr("width", x.bandwidth())
-        .attr("y", function(d) { return y(d.count); })
-        .attr("height", function(d) { return height - y(d.count); });
-
-    // add the x Axis
-    svg.append("g")
-        .attr("transform", "translate(0," + height + ")")
-        .call(d3.axisBottom(x))
-        .selectAll("text")
-        .style("text-anchor", "end")
-        .attr("dx", "-.8em")
-        .attr("dy", ".15em")
-        .attr("transform", "rotate(-90)");
-
-    // add the y Axis
-    svg.append("g")
-        .call(d3.axisLeft(y));
-}
-
-//let recordsByBusinessUnitType = {{ records_by_business_unit_type|safe }};
-let recordsByStatusFlag = {{ records_by_status_flag|safe }};
-let recordsByRiskStatus = {{ scenario_risk_status|safe }};
-createChart("#assessmentStatus", recordsByStatusFlag, 'StatusFlag');
-createChart("#riskStatus", recordsByRiskStatus, 'RiskStatus');
-
-function createDoughnutChart(containerId, data, colorAttribute) {
-    try {
-        let width = 400,
-            height = 400,
-            margin = 10;
-
-        let radius = Math.min(width, height) / 2 - margin;
-
-        let svg = d3.select(containerId)
-            .append("svg")
-            .attr("width", width)
-            .attr("height", height)
-            .append("g")
-            .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
-
-        let color = d3.scaleLinear()
-            .domain([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
-            .range(["green", "#88cc00", "#aaff00", "#ccff00", "#ffff00", "#ffcc00", "#ffaa00", "#ff8800", "#ff4400", "red"]);
-
-
-        let pie = d3.pie()
-            .sort(null)
-            .value(function (d) {
-                return d.count;
-            });
-
-        let data_ready = pie(data);
-
-        let arcGenerator = d3.arc()
-            .innerRadius(radius * 0.5)  // This is the size of the hole in the middle
-            .outerRadius(radius * 0.8);
-
-        svg
-            .selectAll('mySlices')
-            .data(data_ready)
-            .enter()
-            .append('path')
-            .attr('d', arcGenerator)
-            .attr('fill', function (d) {
-                return color(d.data[colorAttribute]);
-            })
-            .attr("stroke", "white")
-            .style("stroke-width", "2px")
-            .style("opacity", 0.7);
-
-        svg
-            .selectAll('mySlices')
-            .data(data_ready)
-            .enter()
-            .append('text')
-            .text(function (d) {
-                return d.data.count;
-            })
-            .attr("transform", function (d) {
-                return "translate(" + arcGenerator.centroid(d) + ")";
-            })
-            .style("text-anchor", "middle")
-            .style("font-size", 17);
-
-        // Append a group for the text to the SVG
-        let textGroup = svg.append("g")
-            .attr("transform", "translate(0,0)");
-
-        // Append text to the group
-        textGroup.append("text")
-            .attr("text-anchor", "middle")
-            .attr("dominant-baseline", "middle")
-            .style("font-size", "12px")
-            .text("Green: low risk | Red: high risk");
-    } catch (error) {
-        console.error("An error occurred while creating the doughnut chart: ", error);
-    }
-}
-
-let doughnutData = {{ doughnut_data|safe }};
-let dangerData = {{ life_scores_list|safe }};
-let environmentData = {{ environment_scores_list|safe }};
-let financeData = {{ financial_scores_list|safe }};
-let productionData = {{ production_scores_list|safe }};
-let reputationData = {{ reputation_scores_list|safe }};
-let regulationData = {{ regulatory_scores_list|safe }};
-let dataData = {{ data_scores_list|safe }};
-let supplyData = {{ supply_scores_list|safe }};
-let phaSafetyData = {{ pha_safety_scores_list|safe }};
-let phaDangerData = {{ pha_danger_scores_list|safe  }};
-let phaEnvironmentData = {{ pha_environment_scores_list|safe  }};
-let phaFinanceData = {{ pha_finance_scores_list|safe }};
-let phaProductionData = {{ pha_production_scores_list|safe }};
-let phaReputationData = {{ pha_reputation_scores_list|safe }};
-let phaRegulationData = {{ pha_regulation_scores_list|safe }};
-let phaDataData = {{ pha_data_scores_list|safe }};
-let phaSupplyData = {{ pha_supply_scores_list|safe }};
-
-createDoughnutChart("#safetyChart", doughnutData, 'SafetyScore');
-createDoughnutChart("#dangerChart", dangerData, 'lifeScore');
-createDoughnutChart("#environmentChart", environmentData, 'environmentScore');
-createDoughnutChart("#financeChart", financeData, 'FinancialScore');
-createDoughnutChart("#productionChart", productionData, 'productionScore');
-createDoughnutChart("#reputationChart", reputationData, 'ReputationScore');
-createDoughnutChart("#regulationChart", regulationData, 'regulatoryScore');
-createDoughnutChart("#dataChart", dataData, 'DataScore');
-createDoughnutChart("#supplyChart", supplyData, 'SupplyChainScore');
-
-
-
-createDoughnutChart("#phasafetyChart", phaSafetyData, 'impactSafety');
-createDoughnutChart("#phadangerChart", phaDangerData, 'impactDanger');
-createDoughnutChart("#phaenvironmentChart", phaEnvironmentData, 'impactEnvironment');
-createDoughnutChart("#phafinanceChart", phaFinanceData, 'impactFinance');
-createDoughnutChart("#phaproductionChart", phaProductionData, 'impactProduction');
-createDoughnutChart("#phareputationChart", phaReputationData, 'impactReputation');
-createDoughnutChart("#pharegulationChart", phaRegulationData, 'impactRegulation');
-createDoughnutChart("#phadataChart", phaDataData, 'impactData');
-createDoughnutChart("#phasupplyChart", phaSupplyData, 'impactSupply');
 
     $(document).ready(function() {
         $('#dataTable').DataTable({

@@ -6,9 +6,6 @@
     <link rel="icon" href="{% static 'images/iota - white 1.png' %}" type="image/x-icon">
 
 
-    <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css">
-
     <!-- Bootstrap Select CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.1/css/bootstrap-select.min.css">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -19,42 +16,47 @@
     <!-- jQuery -->
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-    <!-- Bootstrap JS -->
-    <script src="{% static 'bootstrap/dist/js/bootstrap.bundle.min.js' %}"></script>
-
-    <script src="{% static 'anychart/dist/js/anychart-bundle.min.js' %}"></script>
-    <script src="{% static 'anychart/dist/js/anychart-heatmap.min.js' %}"></script>
-    <script src="{% static 'anychart/dist/js/anychart-sunburst.min.js' %}"></script>
-    <script src="{% static 'anychart/dist/js/anychart-pie.min.js' %}"></script>
         <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.25/css/jquery.dataTables.css">
     <script type="text/javascript" charset="utf8" src="https://code.jquery.com/jquery-3.5.1.js"></script>
     <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.js"></script>
 
 
+
+
+
+
+
      {% load django_bootstrap5 %}
      {% bootstrap_css %}
      {% bootstrap_javascript %}
+    <script src="https://cdn.anychart.com/releases/8.10.0/js/anychart-bundle.min.js"></script>
     <style>
-        .no-gap {
-            padding-left: 2px;
-            padding-right: 2px;
-            margin-bottom: 2px;
+        #pieChart, #barChart {
+            width: 600px;
+            height: 400px;
+            margin: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .print-button {
+            margin: 20px;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
         }
 
-        #sunburstcontainer {
-        width: 100%;
-        height: 100%;
-        border: 1px solid #ccc; /* border color */
-        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1); /* shadow effect */
-        border-radius: 4px; /* rounded corners (optional) */
-    }
-        .doughnut_container {
-        width: 100%;
-        height: 100%;
-        border: 1px solid #ccc; /* border color */
-        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1); /* shadow effect */
-        border-radius: 4px; /* rounded corners (optional) */
-    }
 
        .navbar-scroll .nav-link,
         .navbar-scroll .navbar-toggler-icon,
@@ -86,6 +88,7 @@
 
             .col-md-2 {
         place-items: center;
+        background-color: lightgrey;
     }
 
      .small-font {
@@ -105,16 +108,45 @@
         font-weight: lighter;
     }
 
+        .border-container {
+        display: flex;
+        flex-direction: column;
+        padding: 20px;
+        gap: 20px; /* Creates space between the two sections */
+    }
+
+        @media print {
+            .navbar {
+            display: none;
+        }
+            .no-print {
+                display: none;
+            }
+            .print-scale {
+            transform: scale(0.75);
+            transform-origin: top left;
+            }
+            /* Container scaling */
+            .print-container {
+                transform: scale(0.5);
+                transform-origin: top left;
+                width: 200%; /* Adjust width to compensate for scaling */
+            }
+
+            /* Manage page breaks */
+            .page-break {
+                page-break-before: always;
+            }
+        }
     </style>
 </head>
-<body>
-
-
-
+<script>
+         anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
+</script>
 <nav class="navbar navbar-expand-lg navbar-scroll shadow-0 border-bottom border-dark rounded">
   <div class="container-fluid d-flex justify-content-between">
    <a class="navbar-brand" href="{% url 'OTRisk:dashboardhome' %}"><img src="{% static 'images/iota - white 1.png' %}" style="height: 140px; width: 140px" class="navbar-logo" alt="">   </a>
-      <h6 class="my-auto text-center flex-grow-1">Dashboard</h6>
+      <h6 class="my-auto text-center flex-grow-1">Assessment Report</h6>
 
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
       <ul class="navbar-nav ms-auto">
@@ -143,6 +175,7 @@
                     <li><a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:setup_org' %}">Defaults</a></li>
                   <li><a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:add_consequence' %}">Consequence Manager</a></li>
                   <li><a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:admin_users' %}">Admin Users</a></li>
+              <li><a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:list_frameworks' %}">List Frameworks</a></li>
                   {% if user.is_staff %}
                     <!-- Links visible only to superusers -->
                     <li><a class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:user_admin' %}">User Administration</a></li>
@@ -168,86 +201,97 @@
   </div>
 
 </nav>
-<div class="row" style="height: 10px">
-    <div class="col"></div>
-</div>
-<div class="row">
-    <div class="col-md-4"></div>
-    <div class="col-md-4 text-center">Default Settings for {{ user.userprofile.organization.name }}</div>
-    <div class="col-md-4"></div>
-</div>
+<body>
+   <div class="container mt-5">
+    <h4 class="mb-4">{{ self_assessment.framework.name }} Assessment Report  ({{ self_assessment.name }})</h4>
 
-<div class="row" style="height: 10px">
-    <div class="col"></div>
-</div>
-<div class="row">
-    <div class="col-md-1"></div>
-    <div class="col-md-4"></div>
-    <div class="col-md-2 text-center" style="align-items: center">
-
-        <form method="post" class="form-horizontal">
-            {% csrf_token %}
-            {% for field in form %}
-                <div class="form-group">
-                    <label for="{{ field.id_for_label }}" class="control-label">{{ field.label }}</label>
-                    <div>
-                        {{ field }}  <!-- The form control classes are already added in the Python code -->
-                        {% if field.help_text %}
-                            <p class="help-block">{{ field.help_text }}</p>
-                        {% endif %}
-                    </div>
-                </div>
-            {% endfor %}
-            <div class="form-group">
-                <div>
-                    <input type="submit" value="Submit" class="btn btn-primary">
-                </div>
-            </div>
-        </form>
-
-
-
-
+    <div class="row">
+        <div class="col-lg-6 mb-4">
+            <h3 class="h4">Response Distribution</h3>
+            <div id="pieChart" class="chart-container print-scale"></div>
+        </div>
+        <div class="col-lg-6 mb-4">
+            <h3 class="h4">Category Analysis</h3>
+            <div id="barChart" class="chart-container print-scale page-break"></div>
+        </div>
     </div>
-    <div class="col-md-4"></div>
 
-    <div class="col-md-1"></div>
+    <div class="row">
+        <div class="col-lg-6 mb-4">
+            <h3 class="h4">Questions Answered No</h3>
+            <table class="table table-hover print-scale">
+                <thead>
+                    <tr>
+                        <th>Question</th>
+                        <th>Category</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for answer in no_answers %}
+                        <tr>
+                            <td>{{ answer.question.text }}</td>
+                            <td>{{ answer.question.category }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
 
+        <div class="col-lg-6 mb-4">
+            <h3 class="h4">Questions Answered Yes</h3>
+            <table class="table table-hover print-scale">
+                <thead>
+                    <tr>
+                        <th>Question</th>
+                        <th>Category</th>
+                        <th>Effectiveness %</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for answer in yes_answers %}
+                        <tr>
+                            <td>{{ answer.question.text }}</td>
+                            <td>{{ answer.question.category }}</td>
+                            <td>{{ answer.effectiveness }}%</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <button class="btn btn-primary no-print" onclick="window.print()">Print Report</button>
 </div>
 
- <script type="text/javascript">
-    document.addEventListener('DOMContentLoaded', function() {
-        // Function to format numbers as currency
-        function formatCurrency(value) {
-            return parseFloat(value).toLocaleString('en-US', {
-                style: 'currency',
-                currency: 'USD',
-                minimumFractionDigits: 2
-            });
-        }
+    <script>
+        anychart.onDocumentReady(function () {
+            // Pie Chart for Yes/No answers
+            var pieData = anychart.data.set([
+                ['Yes', {{ pie_data.Yes }}],
+                ['No', {{ pie_data.No }}]
+            ]);
+            var pieChart = anychart.pie(pieData);
+            var credits = pieChart.credits();
+            credits.enabled(false);
+            pieChart.tooltip(false)
+            pieChart.title('Yes/No Responses');
+            pieChart.container('pieChart');
+            pieChart.draw();
 
-        // Format fields on load
-        document.querySelectorAll('input[type="text"][pattern="^\\d+(\\.?\\d{2})?$"]').forEach(function(input) {
-            var value = input.value;
-            if(value) input.value = formatCurrency(value);
+            // Bar Chart for categories
+            var barData = anychart.data.set([
+                {% for category, percentage in bar_data.items %}
+                    ['{{ category }}', {{ percentage }}],
+                {% endfor %}
+            ]);
+            var barChart = anychart.bar(barData);
+            var bccredits = barChart.credits();
+            bccredits.enabled(false);
+            barChart.tooltip(false)
+            barChart.title('Category-wise Yes Response Percentage');
+            barChart.container('barChart');
+            barChart.draw();
         });
-
-        // Format fields before submitting form
-        document.querySelector('form').addEventListener('submit', function() {
-            document.querySelectorAll('input[type="text"][pattern="^\\d+(\\.?\\d{2})?$"]').forEach(function(input) {
-                var value = input.value.replace(/[^0-9.-]+/g,"");
-                input.value = value; // Convert back to plain number for submission
-            });
-        });
-
-        // Reformat on field blur
-        document.querySelectorAll('input[type="text"][pattern="^\\d+(\\.?\\d{2})?$"]').forEach(function(input) {
-            input.addEventListener('blur', function(e) {
-                var value = e.target.value.replace(/[^0-9.-]+/g,"");
-                e.target.value = formatCurrency(value);
-            });
-        });
-    });
-</script>
+    </script>
 </body>
 </html>

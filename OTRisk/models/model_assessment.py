@@ -9,6 +9,7 @@ class AssessmentFramework(models.Model):
     name = models.CharField(max_length=255)
     description = models.TextField()
     version = models.CharField(max_length=50)
+    owner_organization = models.IntegerField()
     # Further fields to describe the framework
 
 
@@ -17,13 +18,14 @@ class AssessmentQuestion(models.Model):
     text = models.TextField()
     guidance = models.TextField(null=True, blank=True)
     section_reference = models.CharField(max_length=255)  # Field to reference the section of the framework
+    category = models.TextField(null=True, blank=True)
 
     # Additional fields and methods as necessary
 
 
 class AssessmentAnswer(models.Model):
     question = models.ForeignKey(AssessmentQuestion, on_delete=models.CASCADE)
-    response = models.BooleanField()  # True for 'Yes', False for 'No'
+    response = models.BooleanField(null=True)  # True for 'Yes', False for 'No'
     effectiveness = models.IntegerField(null=True,
                                         blank=True)  # Percentage of effectiveness, applicable if response is True
     weighting = models.IntegerField(default=1, validators=[MinValueValidator(1),
@@ -41,6 +43,10 @@ class SelfAssessment(models.Model):
     date_created = models.DateTimeField(auto_now_add=True)
     date_modified = models.DateTimeField(auto_now=True)
     answers = models.ManyToManyField(AssessmentAnswer)
+    name = models.CharField(max_length=20, null=True)
+    score_number = models.IntegerField(default=0)
+    score_percent = models.IntegerField(default=0)
+    score_effective = models.IntegerField(default=0)
 
     # Relationships to other models in the application
     cyber_pha_header = models.ForeignKey(tblCyberPHAHeader, null=True, blank=True, on_delete=models.SET_NULL)

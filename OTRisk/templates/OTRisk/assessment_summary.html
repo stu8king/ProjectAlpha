@@ -1,0 +1,29 @@
+<!-- assessment_summary.html -->
+<h1>Assessment Summary</h1>
+
+<h2>Assessment Details</h2>
+<p><strong>User:</strong> {{ self_assessment.user.username }}</p>
+<p><strong>Date Created:</strong> {{ self_assessment.date_created }}</p>
+<p><strong>Framework:</strong> {{ self_assessment.framework.name }}</p>
+
+<h2>Questions and Responses</h2>
+<table>
+  <tr>
+    <th>Question</th>
+    <th>Response</th>
+    <th>Effectiveness</th>
+    <th>Weighting</th>
+  </tr>
+  {% for answer in answers %}
+  <tr>
+    <td>{{ answer.question.text }}</td>
+    <td>{{ answer.response|yesno:"Yes,No" }}</td>
+    <td>{{ answer.effectiveness }}</td>
+    <td>{{ answer.weighting }}</td>
+  </tr>
+  {% endfor %}
+</table>
+
+<h2>Assessment Scores</h2>
+<p><strong>Total Score:</strong> {{ total_score }}</p>
+<p><strong>Effectiveness:</strong> {{ effectiveness }}%</p>

@@ -6,6 +6,7 @@ from OTRisk.models.Model_CyberPHA import tblIndustry, tblCyberPHAHeader, tblZone
     cyberpha_safety, SECURITY_LEVELS
 from OTRisk.models.raw import MitreICSMitigations, RAActions
 from OTRisk.models.questionnairemodel import FacilityType
+from OTRisk.models.model_assessment import SelfAssessment, AssessmentFramework
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, get_object_or_404, redirect
 from django.utils import timezone
@@ -16,7 +17,7 @@ from django.http import JsonResponse
 from django.core.exceptions import ObjectDoesNotExist
 import openai
 import re
-from django.db.models import Avg, Sum, F, Count, Subquery, OuterRef, Case, When, Value, IntegerField
+from django.db.models import Avg, Sum, F, Count, Subquery, OuterRef, Case, When, Value, IntegerField, Q
 import concurrent.futures
 import os
 import math
@@ -79,6 +80,7 @@ def iotaphamanager(request, record_id=None):
         pha_header.Date = request.POST.get('txtStartDate')
         pha_header.EmployeesOnSite = request.POST.get('txtEmployees')
         pha_header.shift_model = request.POST.get('shift_model')
+        pha_header.assessment = request.POST.get('assessment_id')
         try:
             # Attempt to convert the POST value to an integer.
             pha_header.pha_score = int(request.POST.get('hdn_pha_score', 0))
@@ -125,7 +127,13 @@ def iotaphamanager(request, record_id=None):
         scenario_count=Count('tblcyberphascenario'),
         ra_action_count=Coalesce(Subquery(ra_actions_subquery, output_field=IntegerField()), Value(0))
     )
-
+    # get the list of assessments
+    # 0 means a global assessment that's built in for all customer
+    # any other value is a customer specific assessment so should only be visible for the customer where their id matches
+    user_organization_id = request.session.get('user_organization', 0)  # Default to 0 if not in session
+    assessments = SelfAssessment.objects.filter(
+        Q(organization_id=user_organization_id)
+    )
     industries = tblIndustry.objects.all().order_by('Industry')
     facilities = FacilityType.objects.all().order_by('FacilityType')
     zones = tblZones.objects.all().order_by('PlantZone')
@@ -143,8 +151,8 @@ def iotaphamanager(request, record_id=None):
         'SHIFT_MODELS': tblCyberPHAHeader.SHIFT_MODELS,
         'annual_revenue_str': annual_revenue_str,
         'selected_record_id': record_id,
-        'SECURITY_LEVELS': SECURITY_LEVELS
-
+        'SECURITY_LEVELS': SECURITY_LEVELS,
+        'assessments': assessments
     })
 
 
@@ -176,12 +184,16 @@ def get_headerrecord(request):
         'cyber_insurance': headerrecord.cyber_insurance,
         'annual_revenue': headerrecord.annual_revenue,
         'pha_score': headerrecord.pha_score,
-        'sl_t': headerrecord.sl_t
+        'sl_t': headerrecord.sl_t,
+        'assessment_id': headerrecord.assessment
     }
 
     control_assessments = MitreControlAssessment.objects.filter(cyberPHA=headerrecord)
-    control_effectiveness = math.ceil(calculate_effectiveness(record_id))
-
+    # control_effectiveness = math.ceil(calculate_effectiveness(record_id))
+    try:
+        control_effectiveness = SelfAssessment.objects.get(id=headerrecord.assessment).score_effective
+    except SelfAssessment.DoesNotExist:
+        control_effectiveness = 0
     # Create a list of dictionaries for control assessments
     control_assessments_data = []
     for assessment in control_assessments:
@@ -200,24 +212,6 @@ def get_headerrecord(request):
     }
 
     return JsonResponse(response_data)
-
-
-def get_response(user_message):
-    message = [
-        {
-            "role": "system",
-            "content": "You are an expert and experienced process and safety engineer conducting a cybersecurity risk analysis for a cyberPHA (where P=Process, H=Hazards, A=Analysis) scenario related to industrial automation and control systems."
-        },
-        user_message
-    ]
-
-    response = openai.ChatCompletion.create(
-        model="gpt-4",
-        messages=message,
-        temperature=0.1,
-        max_tokens=800
-    )
-    return response['choices'][0]['message']['content']
 
 
 @login_required()
@@ -503,7 +497,12 @@ def getSingleScenario(request):
         'control_effectiveness': scenario.control_effectiveness,
         'likelihood': scenario.likelihood,
         'frequency': scenario.frequency,
-        'sl_a': scenario.sl_a
+        'sl_a': scenario.sl_a,
+        'dangerScope': scenario.dangerScope,
+        'prodOutage': scenario.outage,
+        'prodOutageDuration': scenario.outageDuration,
+        'prodOutageCost': scenario.outageCost,
+        'ai_bia_score': scenario.ai_bia_score
     }
     # Retrieve the related PHAControlList records
     control_list = []
@@ -522,7 +521,6 @@ def getSingleScenario(request):
 
     # Add has_controls to the scenario_dict
     scenario_dict['has_controls'] = has_controls
-
     # Return the scenario as a JSON response
     return JsonResponse(scenario_dict)
 
@@ -632,6 +630,24 @@ def scenario_analysis_estimates_only(request):
         })
 
 
+def get_response(user_message):
+    message = [
+        {
+            "role": "system",
+            "content": "You are an expert and experienced process and safety engineer conducting a cybersecurity risk analysis for a cyberPHA (where P=Process, H=Hazards, A=Analysis) scenario related to industrial automation and control systems."
+        },
+        user_message
+    ]
+
+    response = openai.ChatCompletion.create(
+        model="gpt-4-1106-preview",
+        messages=message,
+        temperature=0.1,
+        max_tokens=250
+    )
+    return response['choices'][0]['message']['content']
+
+
 @login_required
 def scenario_analysis(request):
     if request.method == 'GET':
@@ -660,12 +676,9 @@ def scenario_analysis(request):
         # get the effectiveness of controls for the given cyberPHA
         control_effectiveness = calculate_effectiveness(cyberPHAID)
 
-        def common_content_prefix():
-            return f"In the {industry} industry, at a {facility_type} in {country}, given the scenario {scenario} with consequences {consequences}, the threat source is {threatSource} performing actions.  Business impact scores (out of 10) are: safety: {safetyimpact}, life: {lifeimpact}, production: {productionimpact}, reputation: {reputationimpact}, environment: {environmentimpact}, regulatory: {regulatoryimpact}, data: {dataimpact}, and supply: {supplyimpact}. The unmitigated risk likelihood without controls is rated as {uel}/10."
-
         openai.api_key = os.environ.get('OPENAI_API_KEY')
         # Define the common part of the user message
-        common_content = f"Given the scenario {scenario} with consequences {consequences} affecting a {facility_type} in the {industry} industry in {country}, the threat source {threatSource} performing actions. The business impact assessment is as follows,  scores are of 10 where 10 represents maximum impact, impact on safety: {safetyimpact}, danger to life: {lifeimpact}, production and operations: {productionimpact}, company reputation: {reputationimpact}, environmental impact: {environmentimpact}, impact of regulatory consequences: {regulatoryimpact}, supply chain impact: {supplyimpact}  data and intellectual property: {dataimpact}. The effectiveness of current controls has been assessed as: Severity of incident mitigated: {severitymitigated}, risk exposure to the scenario mitigated {mitigatedexposure}, and overall residual risk {residualrisk}. The amount of unmitigated rate without control is assumed to be {uel}"
+        common_content = f"A cybersecurity incident of {scenario} with consequences {consequences} affecting a {facility_type} in the {industry} industry in {country}. Business impact assessment scores are estimated by employees and may not be accurate:  impact on safety: {safetyimpact}, danger to life: {lifeimpact}, production and operations: {productionimpact}, company reputation: {reputationimpact}, environmental impact: {environmentimpact}, impact of regulatory consequences: {regulatoryimpact}, supply chain impact: {supplyimpact}  data and intellectual property: {dataimpact}. The effectiveness of current controls has been assessed as: Severity of incident mitigated: {severitymitigated}, risk exposure to the scenario mitigated {mitigatedexposure},  overall residual risk {residualrisk}. The amount of unmitigated rate without control is assumed to be {uel}"
 
         # Define the refined user messages
         user_messages = [
@@ -676,7 +689,7 @@ def scenario_analysis(request):
             },
             {
                 "role": "user",
-                "content": f"Given the detailed context that follows, give an assessment of the residual cybersecurity risk risk after all new recommended controls have been implemented. Based on this, provide a residual risk rating from the following options: Very Low, Low, Low/Medium, Medium, Medium/High, High, Very High. Context: {common_content_prefix()}, where it is emphasized that new controls have significantly reduced vulnerabilities and threats. The expected outcome is a much lower risk than before. Provide ONLY one of the given risk ratings without any additional text or explanations."
+                "content": f"Given the detailed context that follows, give an assessment of the residual cybersecurity risk risk after all new recommended controls have been implemented. Based on this, provide a residual risk rating from the following options: Very Low, Low, Low/Medium, Medium, Medium/High, High, Very High. Context: {common_content}, where it is emphasized that new controls have significantly reduced vulnerabilities and threats. The expected outcome is a much lower risk than before. Provide ONLY one of the given risk ratings without any additional text or explanations."
             },
 
             {
@@ -686,15 +699,15 @@ def scenario_analysis(request):
 
             {
                 "role": "user",
-                "content": f"Using the {standards} standard and the following context, concisely provide up to 10 key recommendations and their reference section in {standards} in 200 words or less for a CyberPHA. Context: {common_content_prefix()}. Each recommendation should be formatted as follows: 'X (where 'X' is the recommendation number). Recommendation text (academic citation to reference within {standards}). No preamble or commentary"
+                "content": f" {common_content}. With this information and analysis of publicly reported cybersecurity incidents, provide ONLY the estimated probability (as a whole number percentage) of a successful targeted attack given that the assessed effectiveness of current cybersecurity controls is {control_effectiveness}% . Answer with a number followed by a percentage sign (e.g., nn%). Do NOT include any other words, sentences, or explanations."
             },
             {
                 "role": "user",
-                "content": f"Given the context: {common_content} and analysis of publicly reported cybersecurity incidents, provide ONLY the estimated probability (as a whole number percentage) of a successful targeted attack given that the assessed effectiveness of current cybersecurity controls is {control_effectiveness}% . Answer with a number followed by a percentage sign (e.g., nn%). Do NOT include any other words, sentences, or explanations."
+                "content": f" {common_content} . WIth this information and news reports of publicly reported cybersecurity incidents, provide ONLY the estimated frequency of a successful targeted attack of the scenario {scenario} where a successful targeted attack means that it succeeds in causing {consequences} at the {facility_type}. Your answer should be given as an integer that represents the number of times per year to expect such a scenario. If the estimated frequency is less than once per year then provide a decimal to indicate the frequency per year. Do NOT include any other words, sentences, or explanations."
             },
             {
                 "role": "user",
-                "content": f"Given the context: {common_content} and news reports of publicly reported cybersecurity incidents, provide ONLY the estimated frequency of a successful targeted attack of the scenario {scenario} where a successful targeted attack means that it succeeds in causing {consequences} at the {facility_type}. Your answer should be given as an integer that represents the number of times per year to expect such a scenario. If the estimated frequency is less than once per year then provide a decimal to indicate the frequency per year. Do NOT include any other words, sentences, or explanations."
+                "content": f"{common_content}. With this information and news reports of publicly reported cybersecurity incidents, provide a score from 0 to 100 of the overall business impact of scenario {scenario} where a successful targeted attack means that it succeeds in causing {consequences} at the {facility_type}. A score of 1 would mean minimal business impact while a score of 100 would indicate catastrophic business impact without the ability to continue. Provide a pragmatic estimate of where the score for this current scenario would be. Your answer should be given as an integer. Do NOT include any other words, sentences, or explanations."
             }
 
         ]
@@ -715,18 +728,16 @@ def scenario_analysis(request):
             # Collect the results in the order the futures were submitted
             responses = [future.result() for future in futures]
 
-        r_list = parse_recommendations((responses[3]))
 
         # Return the responses as variables
         return JsonResponse({
             'likelihood': responses[0],
             'adjustedRR': responses[1],
             'costs': responses[2],
-            'recommendations': responses[3],
-            'probability': responses[4],
-            'frequency': responses[5],
-            'control_effectiveness': control_effectiveness,
-            'r_list': r_list
+            'probability': responses[3],
+            'frequency': responses[4],
+            'biaScore': responses[5],
+            'control_effectiveness': control_effectiveness
         })
 
 
@@ -890,3 +901,44 @@ def generate_ppt(request):
             'status': 'error',
             'error': 'Invalid request method'
         })
+
+
+@login_required
+def analyze_scenario(request):
+    openai_api_key = os.environ.get('OPENAI_API_KEY')
+    openai.api_key = openai_api_key
+
+    if request.method == 'POST':
+        scenario = request.POST.get('scenario')
+        pha_id = request.POST.get('phaID')
+
+        try:
+            cyber_pha = tblCyberPHAHeader.objects.get(ID=pha_id)
+        except tblCyberPHAHeader.DoesNotExist:
+            return JsonResponse({'error': 'PHA record not found'}, status=404)
+
+        facility_type = cyber_pha.FacilityType
+        industry = cyber_pha.Industry
+
+        # Construct a prompt for GPT-4
+        system_message = f"Given a cybersecurity scenario at a {facility_type} in the {industry} industry, described as: {scenario}, concisely describe in 30 words in a bullet point list of a maximum of 3 of the most likely direct consequences of the given scenario . Assume the role of an expert OT Cybersecurity risk advisor. Additional instruction: output ONLY the bullet points with no text either before or after the bullet points"
+        user_message = scenario
+
+        # Query OpenAI API
+        response = openai.ChatCompletion.create(
+            model="gpt-4",
+            messages=[
+                {"role": "system", "content": system_message},
+                {"role": "user", "content": user_message}
+            ],
+            max_tokens=100,
+            temperature=0.1
+        )
+
+        # Extract the text from the response
+        # The structure of the response for ChatCompletion might differ, adjust accordingly
+        consequence = response['choices'][0]['message']['content']
+
+        return JsonResponse({'consequence': consequence})
+
+    return JsonResponse({'error': 'Invalid request'}, status=400)
