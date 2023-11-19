@@ -121,10 +121,16 @@ class ChangePasswordForm(forms.Form):
             raise forms.ValidationError("Passwords do not match!")
 
 
+class UserProfileForm_(forms.ModelForm):
+    class Meta:
+        model = UserProfile
+        fields = ['must_change_password']
+
+
 class UserProfileForm(forms.ModelForm):
     class Meta:
         model = UserProfile
-        fields = '__all__'
+        fields = ['organization', 'must_change_password']
 
 
 class UserForm(forms.ModelForm):

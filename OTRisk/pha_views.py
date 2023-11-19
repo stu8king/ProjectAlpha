@@ -127,6 +127,8 @@ def iotaphamanager(request, record_id=None):
         scenario_count=Count('tblcyberphascenario'),
         ra_action_count=Coalesce(Subquery(ra_actions_subquery, output_field=IntegerField()), Value(0))
     )
+    first_record = pha_header_records.first()
+    first_record_id = first_record.ID if first_record else 0
     # get the list of assessments
     # 0 means a global assessment that's built in for all customer
     # any other value is a customer specific assessment so should only be visible for the customer where their id matches
@@ -150,7 +152,7 @@ def iotaphamanager(request, record_id=None):
         'mitigations': mitigations,
         'SHIFT_MODELS': tblCyberPHAHeader.SHIFT_MODELS,
         'annual_revenue_str': annual_revenue_str,
-        'selected_record_id': record_id,
+        'selected_record_id': first_record_id,
         'SECURITY_LEVELS': SECURITY_LEVELS,
         'assessments': assessments
     })
@@ -459,6 +461,11 @@ def getSingleScenario(request):
         'justifyFinancial': scenario.justifyFinancial,
         'justifyReputation': scenario.justifyReputation,
         'justifyEnvironment': scenario.justifyEnvironment,
+        'env_contaminant': scenario.env_contaminant,
+        'env_ecosystem': scenario.env_ecosystem,
+        'env_contamination': scenario.env_contamination,
+        'env_population': scenario.env_population,
+        'env_wildlife': scenario.env_wildlife,
         'justifyRegulation': scenario.justifyRegulation,
         'justifyData': scenario.justifyData,
         'UEL': scenario.UEL,
@@ -479,10 +486,12 @@ def getSingleScenario(request):
         'sle': scenario.sle,
         'sle_low': scenario.sle_low,
         'sle_high': scenario.sle_high,
+        'ale_median': scenario.ale_median,
+        'ale_low': scenario.ale_low,
+        'ale_high': scenario.ale_high,
         'ale': scenario.ale,
         'countermeasureCosts': scenario.countermeasureCosts,
         'control_recommendations': scenario.control_recommendations,
-        'standards': scenario.standards,
         'probability': scenario.probability,
         'risk_register': scenario.risk_register,
         'safety_hazard': scenario.safety_hazard,
@@ -727,7 +736,6 @@ def scenario_analysis(request):
             futures = [executor.submit(get_response, msg) for msg in user_messages]
             # Collect the results in the order the futures were submitted
             responses = [future.result() for future in futures]
-
 
         # Return the responses as variables
         return JsonResponse({

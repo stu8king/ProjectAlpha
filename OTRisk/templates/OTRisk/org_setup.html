@@ -22,14 +22,10 @@
     <!-- Bootstrap JS -->
     <script src="{% static 'bootstrap/dist/js/bootstrap.bundle.min.js' %}"></script>
 
-    <script src="{% static 'anychart/dist/js/anychart-bundle.min.js' %}"></script>
-    <script src="{% static 'anychart/dist/js/anychart-heatmap.min.js' %}"></script>
-    <script src="{% static 'anychart/dist/js/anychart-sunburst.min.js' %}"></script>
-    <script src="{% static 'anychart/dist/js/anychart-pie.min.js' %}"></script>
         <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.25/css/jquery.dataTables.css">
     <script type="text/javascript" charset="utf8" src="https://code.jquery.com/jquery-3.5.1.js"></script>
     <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.js"></script>
-
+<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
 
      {% load django_bootstrap5 %}
      {% bootstrap_css %}
@@ -139,9 +135,7 @@
                 <i class="bi bi-diagram-3"></i> Admin
               </a>
               <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                  <li><a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:add_scenario' %}">Scenario Manager</a></li>
                     <li><a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:setup_org' %}">Defaults</a></li>
-                  <li><a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:add_consequence' %}">Consequence Manager</a></li>
                   <li><a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:admin_users' %}">Admin Users</a></li>
                   {% if user.is_staff %}
                     <!-- Links visible only to superusers -->
@@ -200,7 +194,25 @@
             {% endfor %}
             <div class="form-group">
                 <div>
-                    <input type="submit" value="Submit" class="btn btn-primary">
+                    <input type="button" value="Submit" class="btn btn-primary" id="submitBtn">
+                    <script>
+                    document.getElementById('submitBtn').addEventListener('click', function(e) {
+                        e.preventDefault();
+                        swal({
+                            title: "Are you sure?",
+                            text: "Do you want to proceed with making changes?",
+                            icon: "warning",
+                            buttons: true,
+                            dangerMode: true,
+                        })
+                        .then((willSubmit) => {
+                            if (willSubmit) {
+                                document.querySelector('form').submit();
+                            }
+                        });
+                    });
+                    </script>
+
                 </div>
             </div>
         </form>

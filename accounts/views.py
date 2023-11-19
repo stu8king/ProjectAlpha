@@ -701,5 +701,5 @@ def get_organization_details(request):
         'subscription_end': org.subscription_end,
         'user_count': user_count
     }
-    print(data)
+
     return data

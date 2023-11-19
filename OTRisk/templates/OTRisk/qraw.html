@@ -436,8 +436,7 @@ color: white !important;
                 <i class="bi bi-diagram-3"></i> Admin
               </a>
               <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                  <li><a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:add_scenario' %}">Scenario Manager</a></li>
-                  <li><a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:add_consequence' %}">Consequence Manager</a></li>
+
                   <li><a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:admin_users' %}">Admin Users</a></li>
                   {% if user.is_staff %}
                     <!-- Links visible only to superusers -->
@@ -3386,7 +3385,7 @@ color: white !important;
         <label for="contaminantType_2">Type of Contaminants:</label>
         <select id="contaminantType_2" name="contaminantType_2" class="form-control mb-3">
           <option value="">-- Select Contaminant Type --</option>
-          <!-- Populate with actual contaminant types -->
+            <option value="None">None</option>
           <option value="Chemical">Chemical</option>
           <option value="Biological">Biological</option>
           <option value="Radiological">Radiological</option>
@@ -3397,9 +3396,8 @@ color: white !important;
         <label for="affectedEcosystem_2">Affected Ecosystem:</label>
         <select id="affectedEcosystem_2" name="affectedEcosystem_2" class="form-control mb-3">
           <option value="">-- Select Ecosystem --</option>
-          <!-- Populate with different ecosystem types -->
+            <option value="None">None</option>
           <option value="Aquatic">Aquatic</option>
-          <option value="Terrestrial">Terrestrial</option>
           <option value="Urban">Urban</option>
           <option value="Agricultural">Agricultural</option>
         </select>
@@ -3408,6 +3406,7 @@ color: white !important;
         <label for="contaminationExtent_2">Extent of Contamination:</label>
         <select id="contaminationExtent_2" name="contaminationExtent_2" class="form-control mb-3">
           <option value="">-- Select Extent --</option>
+            <option value="N/A">N/A</option>
           <option value="Localised">Localised</option>
           <option value="WideArea">Wide Area</option>
         </select>
@@ -3416,6 +3415,7 @@ color: white !important;
         <label for="effectOnPopulation_2">Effect on Local Residential Population:</label>
         <select id="effectOnPopulation_2" name="effectOnPopulation_2" class="form-control mb-3">
           <option value="">-- Select Effect --</option>
+            <option value="None">None</option>
           <option value="Harmless">Harmless</option>
           <option value="Harmful">Harmful</option>
           <option value="Deadly">Deadly</option>
@@ -3425,6 +3425,7 @@ color: white !important;
         <label for="effectOnWildlife_2">Effect on Local Wildlife:</label>
         <select id="effectOnWildlife_2" name="effectOnWildlife_2" class="form-control mb-3">
           <option value="">-- Select Effect --</option>
+            <option value="N/A">N/A</option>
           <option value="Harmless">Harmless</option>
           <option value="Harmful">Harmful</option>
           <option value="Deadly">Deadly</option>

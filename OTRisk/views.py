@@ -182,6 +182,7 @@ def upload_questionnaire(request):
 
     return render(request, 'upload_questionnaire.html', {'form': form})
 
+
 @login_required
 def fetch_updated_assessments(request):
     assessments = SelfAssessment.objects.all()
@@ -213,6 +214,7 @@ def update_assessment_name(request):
         return JsonResponse({'status': 'success', 'message': 'Name updated successfully'})
     return JsonResponse({'status': 'error', 'message': 'Invalid request'})
 
+
 @login_required
 def list_frameworks(request):
     frameworks = AssessmentFramework.objects.all()
@@ -227,7 +229,7 @@ def list_frameworks(request):
 @login_required
 def edit_assessment(request, assessment_id):
     # Retrieve the existing SelfAssessment or redirect if not found
-    self_assessment = get_object_or_404(SelfAssessment, pk=assessment_id, user=request.user)
+    self_assessment = get_object_or_404(SelfAssessment, pk=assessment_id, user=request.user, organization_id=get_user_organization_id(request))
     framework = self_assessment.framework  # Get the associated framework
     questions = AssessmentQuestion.objects.filter(framework=self_assessment.framework)
 
@@ -395,9 +397,16 @@ def save_assessment(request, framework_id):
 def select_framework(request, framework_id):
     # Get the selected framework or return 404 if not found
     framework = get_object_or_404(AssessmentFramework, pk=framework_id)
+    # Get the organization associated with the current user
+    user_profile = UserProfile.objects.get(user=request.user)
+    organization = user_profile.organization_id
 
-    # Create a new SelfAssessment for this framework and the current user
-    self_assessment = SelfAssessment.objects.create(user=request.user, framework=framework)
+    # Create a new SelfAssessment for this framework, the current user, and the organization
+    self_assessment = SelfAssessment.objects.create(
+        user=request.user,
+        framework=framework,
+        organization_id=organization
+    )
 
     # Redirect to the assessment questions page for the new SelfAssessment
     return redirect('OTRisk:assessment_questions', framework_id=framework_id)
@@ -566,9 +575,9 @@ def generate_password(length=12):
 
 
 def send_password_email(user_email, password):
-    subject = 'Your New Password'
-    message = f'Hello, here is your new password: {password}. Please change it upon first login.'
-    from_email = 'your_email@example.com'  # Replace with your email
+    subject = 'iOTa Temporary Password'
+    message = f'Thank you for creating an account on. Here is your temporary password: {password}   - You will be required to change it upon first login. After setting a password, the first time you log in you will be required to set up two-factor authentication using an Authenticator app.'
+    from_email = 'admin@iotarisk.com'  # Replace with your email
     recipient_list = [user_email]
     send_mail(subject, message, from_email, recipient_list)
 
@@ -602,30 +611,29 @@ def delete_user(request, user_id):
 
 @login_required
 def admin_users(request):
+
     current_user_profile = UserProfile.objects.get(user=request.user)
     organization = current_user_profile.organization
     user_profiles = UserProfile.objects.filter(organization=organization)
+    user_form = UserForm(request.POST or None)
+    profile_form = UserProfileForm(request.POST or None)
 
     if request.method == 'POST':
         user_form = UserForm(request.POST)
-        profile_form = UserProfileForm(request.POST)
+        organization_id = request.POST.get('organization')  # Retrieve the selected organization ID from the form
 
-        if user_form.is_valid() and profile_form.is_valid():
+        if user_form.is_valid():
             password = generate_password()
 
             # First, save the User model
             user = user_form.save(commit=False)
             user.set_password(password)  # Set the password correctly
             user.last_login = None  # Set last_login to Non
+            user.is_active = True
             user.save()
 
-            # Now, save the UserProfile model
-            # Get the organization of the currently logged-in user
-            current_user_profile = UserProfile.objects.get(user=request.user)
-            organization = current_user_profile.organization
-
-            # Create a UserProfile for the new user with the organization
-            UserProfile.objects.create(user=user, organization=organization)
+            # Save the UserProfile model
+            UserProfile.objects.create(user=user, organization_id=organization_id)
 
             send_password_email(user.email, password)
             # Redirect to a success page or wherever you want
@@ -829,12 +837,20 @@ def save_or_update_cyberpha(request):
         justifyFinance = request.POST.get('justifyFinance')
         justifyReputation = request.POST.get('justifyReputation')
         justifyEnvironment = request.POST.get('justifyEnvironment')
+        env_contaminant = request.POST.get('env_contaminant')
+        env_ecosystem = request.POST.get('env_ecosystem')
+        env_contamination = request.POST.get('env_contamination')
+        env_population = request.POST.get('env_population')
+        env_wildlife = request.POST.get('env_wildlife')
         justifyRegulation = request.POST.get('justifyRegulation')
         justifyData = request.POST.get('dataRegulation')
         justifySupply = request.POST.get('justifySupply')
         sle_median_string = request.POST.get('sle_median')
         sle_low_string = request.POST.get('sle_low')
         sle_high_string = request.POST.get('sle_high')
+        ale_median_string = request.POST.get('ale_median')
+        ale_low_string = request.POST.get('ale_low')
+        ale_high_string = request.POST.get('ale_high')
         aro = request.POST.get('aro')
         ale = request.POST.get('ale')
         outage = request.POST.get('outage')
@@ -843,7 +859,6 @@ def save_or_update_cyberpha(request):
         outageDuration = request.POST.get('outageDuration')
         outageCost = request.POST.get('outageCost')
         probability = request.POST.get('probability')
-        standards = request.POST.get('standards')
         risk_register_str = request.POST.get('risk_register')
         risk_register_bool = risk_register_str.lower() == "true"
         sis_outage_str = request.POST.get('sis_outage')
@@ -856,13 +871,17 @@ def save_or_update_cyberpha(request):
         snapshot = request.POST.get('snapshot')
         ThreatClass = request.POST.get('threatSource')
         dangerScope = request.POST.get('dangerScope')
+        ai_bia_score = request.POST.get('ai_bia_score')
+        if ai_bia_score in ('NaN', ''):
+            ai_bia_score = 0
+        else:
+            ai_bia_score = ai_bia_score
         try:
             control_effectiveness = int(float(request.POST.get('control_effectiveness', '0')))
         except ValueError:
             control_effectiveness = 0
 
         sl_a = request.POST.get('sl_a')
-
 
         if outageDuration in ('NaN', ''):
             outageDuration = 0
@@ -905,6 +924,34 @@ def save_or_update_cyberpha(request):
             except ValueError:
                 # Handle the error appropriately, e.g., set a default value or log the error
                 sle_high = 0
+
+        ale_medium = 0
+        ale_low = 0
+        ale_high = 0
+        # Check if sle_string is not None and not 'NaN'
+        if ale_low_string and ale_low_string != 'NaN':
+            try:
+                # Remove dollar signs, commas, and decimal portion, then convert to integer
+                ale_low = int(float(ale_low_string.replace('$', '').replace(',', '')))
+            except ValueError:
+                # Handle the error appropriately, e.g., set a default value or log the error
+                ale_low = 0
+
+        if ale_median_string and ale_median_string != 'NaN':
+            try:
+                # Remove dollar signs, commas, and decimal portion, then convert to integer
+                ale_medium = int(float(ale_median_string.replace('$', '').replace(',', '')))
+            except ValueError:
+                # Handle the error appropriately, e.g., set a default value or log the error
+                ale_medium = 0
+
+        if ale_high_string and ale_high_string != 'NaN':
+            try:
+                # Remove dollar signs, commas, and decimal portion, then convert to integer
+                ale_high = int(float(ale_high_string.replace('$', '').replace(',', '')))
+            except ValueError:
+                # Handle the error appropriately, e.g., set a default value or log the error
+                ale_high = 0
 
         deleted = 0
         org_id = get_user_organization_id(request)
@@ -949,7 +996,12 @@ def save_or_update_cyberpha(request):
                 justifyProduction='',
                 justifyFinancial='',
                 justifyReputation='',
-                justifyEnvironment='',
+                justifyEnvironment=justifyEnvironment,
+                env_contaminant=env_contaminant,
+                env_ecosystem=env_ecosystem,
+                env_contamination=env_contamination,
+                env_population=env_population,
+                env_wildlife=env_wildlife,
                 justifyRegulation='',
                 justifyData='',
                 justifySupply='',
@@ -957,6 +1009,9 @@ def save_or_update_cyberpha(request):
                 sle=sle_medium,
                 sle_low=sle_low,
                 sle_high=sle_high,
+                ale_median=ale_medium,
+                ale_low=ale_low,
+                ale_high=ale_high,
                 aro=aro,
                 ale=ale,
                 countermeasureCosts=countermeasureCosts,
@@ -964,7 +1019,6 @@ def save_or_update_cyberpha(request):
                 outageDuration=0,
                 outageCost=0,
                 probability=probability,
-                standards=standards,
                 risk_register=risk_register_bool,
                 sis_outage=sis_outage,
                 sis_compromise=sis_compromise,
@@ -981,6 +1035,7 @@ def save_or_update_cyberpha(request):
                 frequency=frequency,
                 sl_a=sl_a,
                 dangerScope=dangerScope
+
             )
             snapshot_record.save()
         else:
@@ -1021,6 +1076,11 @@ def save_or_update_cyberpha(request):
                 'justifyFinancial': justifyFinance,
                 'justifyReputation': justifyReputation,
                 'justifyEnvironment': justifyEnvironment,
+                'env_contaminant': env_contaminant,
+                'env_ecosystem': env_ecosystem,
+                'env_contamination': env_contamination,
+                'env_population': env_population,
+                'env_wildlife': env_wildlife,
                 'justifyRegulation': justifyRegulation,
                 'justifyData': justifyData,
                 'justifySupply': justifySupply,
@@ -1028,6 +1088,9 @@ def save_or_update_cyberpha(request):
                 'sle': sle_medium,
                 'sle_low': sle_low,
                 'sle_high': sle_high,
+                'ale_median': ale_medium,
+                'ale_low': ale_low,
+                'ale_high': ale_high,
                 'aro': aro,
                 'ale': ale,
                 'countermeasureCosts': countermeasureCosts,
@@ -1035,7 +1098,6 @@ def save_or_update_cyberpha(request):
                 'outageDuration': outageDuration,
                 'outageCost': outageCost,
                 'probability': probability,
-                'standards': standards,
                 'risk_register': risk_register_bool,
                 'sis_outage': sis_outage,
                 'sis_compromise': sis_compromise,
@@ -1047,8 +1109,11 @@ def save_or_update_cyberpha(request):
                 'likelihood': 0 if likelihood == '' else likelihood,
                 'frequency': decimal.Decimal('0.0') if frequency == '' else frequency,
                 'sl_a': 0 if sl_a == '' else sl_a,
-                'dangerScope': dangerScope
+                'dangerScope': dangerScope,
+                'ai_bia_score': 0 if ai_bia_score is None else ai_bia_score
+
             }
+
             # If scenario_id is '0', create a new record, otherwise update the existing one
             if scenario_id == '0':
                 # Set ID to None to create a new record

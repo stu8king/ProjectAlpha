@@ -4,31 +4,32 @@
 <html>
 <head>
 
-    <title>iOTa</title>
-    <link rel="icon" href="{% static 'images/iota - white 1.png' %}" type="image/x-icon">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<title>iOTa</title>
+<link rel="icon" href="{% static 'images/iota - white 1.png' %}" type="image/x-icon">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.1/font/bootstrap-icons.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.3/css/jquery.dataTables.css">
-    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.js"></script>
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-    <script src="https://cdn.anychart.com/releases/8.10.0/js/anychart-bundle.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.1/font/bootstrap-icons.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.3/css/jquery.dataTables.css">
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script src="https://cdn.anychart.com/releases/8.10.0/js/anychart-bundle.min.js"></script>
 <script src="https://cdn.anychart.com/releases/8.11.1/js/anychart-circular-gauge.min.js" type="text/javascript"></script>
-    <script src="https://cdn.anychart.com/releases/8.11.1/js/anychart-linear-gauge.min.js"></script>
+<script src="https://cdn.anychart.com/releases/8.11.1/js/anychart-linear-gauge.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"/> <!-- FontAwesome CDN -->
 
-    <script src="{% static 'OTRisk/assesscyberpha.js' %}"></script>
-    {% load django_bootstrap5 %}
-    {% bootstrap_css %}
-    {% bootstrap_javascript %}
+<script src="{% static 'OTRisk/assesscyberpha.js' %}"></script>
+{% load django_bootstrap5 %}
+{% bootstrap_css %}
+{% bootstrap_javascript %}
 
 
-    <style>
+<style>
 .range-slider {
   position: relative;
   width: 100%;
@@ -483,6 +484,7 @@
     border-radius: 10px;
     padding: 10px;
     width: 50%;
+    display: flex;
     position: fixed;
     right: 10px;
     top: 10px;
@@ -496,6 +498,7 @@
     height: 0;
     overflow: hidden;
     padding: 0;
+    width: 20%;
 }
 
 /* Inner content styling */
@@ -516,6 +519,7 @@
     transition: background-color 0.3s;
 }
 
+
 .floating-container button:hover {
     background-color: #0056b3; /* Darken button on hover */
 }
@@ -530,38 +534,120 @@
     overflow: hidden; /* Hide the content when minimized */
 }
 
+.elegant-card {
+    background-color: #f8f9fa; /* Light grey background */
+    border-radius: 10px; /* Rounded corners */
+    border: none; /* Remove default border */
+}
+
+.card-body {
+    padding: 15px; /* Spacing inside the card */
+}
+
+.label-title {
+    display: block;
+    font-size: 16px;
+    color: #343a40; /* Dark grey color for labels */
+    margin-bottom: 5px; /* Space below the label */
+    font-weight: 600; /* Slightly bold labels */
+}
+
+.elegant-input {
+    font-size: 20px;
+    color: #0a53be; /* Your existing blue color */
+    border-radius: 5px; /* Rounded corners for input */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Subtle shadow for depth */
+    border: 1px solid #ced4da; /* Light grey border */
+}
+
+.elegant-input::placeholder {
+    color: #6c757d; /* Placeholder text color */
+}
+
+.elegant-input:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(10, 83, 190, 0.25); /* Blue glow when focused */
+}
+
+.custom-modal .modal-content {
+    background-color: darkgray;
+    color: white;
+    font-family: 'Roboto', sans-serif;
+}
+
+.custom-modal .modal-header {
+    border-bottom: 1px solid #4b5d67;
+    background-color: #2a3b48; /* Header background */
+}
+
+.custom-modal .modal-title {
+    font-weight: bold;
+}
+
+.custom-modal .btn-close-icon {
+    background: url('icon-path') no-repeat; /* Custom close icon */
+    border: none;
+}
+
+.custom-modal .form-control {
+    background-color: #ffffff;
+    border: 1px solid #4b5d67;
+    color: black;
+    margin-bottom: 15px; /* Spacing */
+}
+
+.custom-modal .form-control:focus {
+    border-color: #6c7d8b;
+    outline: none;
+}
+
+.custom-modal .btn-modal-close {
+    background-color: #6c7d8b;
+    color: darkgray;
+    border: none;
+    border-radius: 4px;
+    padding: 10px 20px;
+    margin-top: 20px;
+    transition: background-color 0.3s ease;
+}
+
+.custom-modal .btn-modal-close:hover {
+    background-color: #5a6b7c;
+}
 
     </style>
-    <script>
-    // Initialize sliders when the page loads
-    window.onload = function() {
-    initSlider("range_safety", "safetyrange");
-    initSlider("range_life", "liferange");
-    initSlider("range_production", "productionrange");
-    initSlider("range_finance", "financerange");
-    initSlider("range_reputation", "reputationrange");
-    initSlider("range_environment", "environmentrange");
-    initSlider("range_regulatory", "regulatoryrange");
-    initSlider("range_data", "datarange");
-    initSlider("range_supply", "supplyrange");
-    initSlider('uel_range','range_uel');
-    initSlider('rru_range','range_rru');
-    initSlider('SMrange','range_SM');
-    initSlider('MELrange','range_MEL');
-    initSlider('RRMrange','range_RRM');
 
-    initSlider('uel_threat','threatLabel');
-    initSlider('uel_vuln','vulnerabilityLabel');
-    initSlider('uel_exposure','exposureLabel');
+<script>
+// Initialize sliders when the page loads
+window.onload = function() {
+initSlider("range_safety", "safetyrange");
+initSlider("range_life", "liferange");
+initSlider("range_production", "productionrange");
+initSlider("range_finance", "financerange");
+initSlider("range_reputation", "reputationrange");
+initSlider("range_environment", "environmentrange");
+initSlider("range_regulatory", "regulatoryrange");
+initSlider("range_data", "datarange");
+initSlider("range_supply", "supplyrange");
+initSlider('uel_range','range_uel');
+initSlider('rru_range','range_rru');
+initSlider('SMrange','range_SM');
+initSlider('MELrange','range_MEL');
+initSlider('RRMrange','range_RRM');
+
+initSlider('uel_threat','threatLabel');
+initSlider('uel_vuln','vulnerabilityLabel');
+initSlider('uel_exposure','exposureLabel');
 
 
-    sessionStorage.setItem("ls", "0");
-    };
+sessionStorage.setItem("ls", "0");
+};
 
-    $(function () {
-      $('[data-bs-toggle="tooltip"]').tooltip()
-    })
-    </script>
+$(function () {
+  $('[data-bs-toggle="tooltip"]').tooltip()
+})
+</script>
+
 </head>
 <body>
 <script>
@@ -595,8 +681,6 @@
                 <i class="bi bi-diagram-3"></i> Admin
               </a>
               <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                  <li><a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:add_scenario' %}">Scenario Manager</a></li>
-                  <li><a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:add_consequence' %}">Consequence Manager</a></li>
                   <li><a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:admin_users' %}">Admin Users</a></li>
                   {% if user.is_staff %}
                     <!-- Links visible only to superusers -->
@@ -1278,40 +1362,7 @@
             </div>
             </div>
         </div>
-    <div class="row">
-        <div class=col-md-6>
-            <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                <div class="card-body">
-                        <label class="form-label" for="selStandards">Standards</label>
-                        <select class="form-control" name="selStandards" id="selStandards" title="Select which standards to align with for recommendations">
-                        <option value="">-- Select Standard --</option>
-                        {% for standardslist in standardslist %}
-                            <option value="{{ standardslist.standard }}">{{ standardslist.standard}}</option>
-                        {% endfor %}
-                        </select>
-                        <br>
-                        <button id="risk-assessment-btn" type="button" class="form-control btn-dark" style="background-color: dodgerblue; color: white">Assess Scenario</button><br>
-                            <div id="loadingSpinner" class="spinner-border" role="status" style="display: none;">
-                                <span class="visually-hidden">Loading...</span>
-                            </div>
-                            <script>
-                             // AJAX function call on button click
-                            $(document).ready(function () {
-                                $("#risk-assessment-btn").click(function () {
-                                    // Call the function to assess the risk
-                                    assessScenario();
-                                });
-                            });
-                            </script>
-                <input type="hidden" id="has_controls" name="has_controls" value=0>
-                </div>
-            </div>
-        </div>
-        <div class=col-md-6>
 
-
-        </div>
-    </div>
 
     </div>
      <div class="col-md-1" style="background-color: white"></div>
@@ -1342,12 +1393,17 @@
 
     <div class="floating-container" id="floatingContainer">
         <div class="controls">
-        <button id="minimizeBtn">Minimize</button>
-        <button id="maximizeBtn" style="display: none;">Maximize</button>
+        <button id="minimizeBtn" type="button">Hide KPIs</button>
+        <button id="maximizeBtn" style="display: none;" type="button">Show KPIs</button>
         </div>
         <div class="content" id="content">
         <div class="col-md-12" style="border: 1px solid #ccc; box-shadow: 0 4px 8px rgba(0,0,0,0.1); padding: 20px; background-color: darkslategrey">
         <div class="row" style="height:5px"></div>
+            <div class="col-md-12" style="padding: 5px; background-color: darkslategrey; display: flex; justify-content: center; align-items: center; color: white; height: 30px;">
+                <div>
+                    <h6>Scenario KPIs</h6>
+                </div>
+            </div>
             <div class="row d-flex h-30">
                 <div class="col-lg-2 col-md-3 col-sm-4 flex-fill d-flex">
                     <div class="card mb-3 shadow-sm w-100">
@@ -1363,6 +1419,8 @@
                     <div class="card-body">
                         <label for="txtBIAScore" class="small-font">BIA Score</label>
                             <div id="gaugeBIAContainer" style="width: 100%; "></div>
+                        <input type="hidden" id="hdn_bia_score" name="hdn_bia_score">
+
                     </div>
                     </div>
                 </div>
@@ -1405,45 +1463,91 @@
                     </div>
                 </div>
                 <div class="col-lg-2 col-md-2 col-sm-4 flex-fill d-flex">
-                    <div class="card mb-3 shadow-sm w-100">
+                    <div class="card mb-3 shadow-sm w-100 elegant-card">
                         <div class="card-body">
-                            <label for="txtEventCosts_low" class="small-font">SLE Low (Best Case)</label>
-                            <input type="text" id="txtEventCosts_low" name="txtEventCosts_low" class="form-control text-center" style="font-size: 20px; color: #0a53be" readonly>
+                            <label for="txtEventCosts_low" class="label-title">SLE Low</label>
+                            <input type="text" id="txtEventCosts_low" name="txtEventCosts_low" class="form-control text-center elegant-input" readonly>
+
+                            <label for="txt_ale_low" class="label-title">ALE Low</label>
+                            <input type="text" id="txt_ale_low" name="txt_ale_low" class="form-control text-center elegant-input" readonly>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="col-lg-2 col-md-2 col-sm-4 flex-fill d-flex">
+                    <div class="card mb-3 shadow-sm w-100 elegant-card">
+                        <div class="card-body">
+                            <label for="txtEventCosts" class="label-title">SLE Medium</label>
+                            <input type="text" id="txtEventCosts" name="txtEventCosts" class="form-control text-center elegant-input" style="font-size: 20px; color: #0a53be" readonly>
+                            <label for="txt_ale_low" class="label-title">ALE Medium</label>
+                            <input type="text" id="txt_ale_median" name="txt_ale_median" class="form-control text-center elegant-input" style="font-size: 20px; color: #0a53be" readonly>
                         </div>
                     </div>
                 </div>
                 <div class="col-lg-2 col-md-2 col-sm-4 flex-fill d-flex">
-                    <div class="card mb-3 shadow-sm w-100">
+                    <div class="card mb-3 shadow-sm w-100 elegant-card">
                         <div class="card-body">
-                            <label for="txtEventCosts" class="small-font">SLE Medium (Expected Case)</label>
-                            <input type="text" id="txtEventCosts" name="txtEventCosts" class="form-control text-center" style="font-size: 20px; color: #0a53be" readonly>
+                            <label for="txtEventCosts_high" class="label-title">SLE High</label>
+                            <input type="text" id="txtEventCosts_high" name="txtEventCosts_high" class="form-control text-center elegant-input" style="font-size: 20px; color: #0a53be" readonly>
+                            <label for="txt_ale_high" class="label-title">ALE High</label>
+                            <input type="text" id="txt_ale_high" name="txt_ale_high" class="form-control text-center elegant-input" style="font-size: 20px; color: #0a53be" readonly>
                         </div>
                     </div>
                 </div>
-                <div class="col-lg-2 col-md-2 col-sm-4 flex-fill d-flex">
-                    <div class="card mb-3 shadow-sm w-100">
-                        <div class="card-body">
-                            <label for="txtEventCosts_high" class="small-font">SLE High (Worst Case)</label>
-                            <input type="text" id="txtEventCosts_high" name="txtEventCosts_high" class="form-control text-center" style="font-size: 20px; color: #0a53be" readonly>
-                        </div>
-                    </div>
-                </div>
+            </div>
+            <div class="row d-flex h-30">
+                <button id="risk-assessment-btn" type="button" class="form-control btn-dark" style="background-color: dodgerblue; color: white">
+                    Re-assess KPIs <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none;" id="loadingSpinner"></span></button><br>
+
+                            <script>
+                             // AJAX function call on button click
+                            $(document).ready(function () {
+                                $("#risk-assessment-btn").click(function () {
+                                    // Call the function to assess the risk
+                                    assessScenario();
+                                });
+                            });
+                            </script>
             </div>
 
         </div>
         </div>
 </div>
-
+<input type="text" id="frequency" name="frequency" class="form-control text-center" style="font-size: 20px; color: #0a53be; visibility: hidden"  readonly>
 <script>
+
+    document.addEventListener('DOMContentLoaded', (event) => {
+    // minimizeFloatingContainer();
+});
+
+function minimizeFloatingContainer() {
+    var floatingContainer = document.getElementById('floatingContainer');
+    var content = document.getElementById('content');
+    var minimizeBtn = document.getElementById('minimizeBtn');
+    var maximizeBtn = document.getElementById('maximizeBtn');
+
+    // Apply minimized class and adjust width
+    floatingContainer.classList.add('minimized');
+    floatingContainer.style.width = '20%';
+
+    // Hide content and minimize button, show maximize button
+    content.style.display = 'none';
+    minimizeBtn.style.display = 'none';
+    maximizeBtn.style.display = 'block';
+}
+
 document.getElementById('minimizeBtn').addEventListener('click', function() {
     document.getElementById('content').style.display = 'none';
     this.style.display = 'none';
     document.getElementById('maximizeBtn').style.display = 'block';
+    floatingContainer.style.width = '20%';
 });
 
 document.getElementById('maximizeBtn').addEventListener('click', function() {
     document.getElementById('content').style.display = 'block';
     this.style.display = 'none';
+    floatingContainer.style.width = '50%';
     document.getElementById('minimizeBtn').style.display = 'block';
 });
 
@@ -1879,7 +1983,12 @@ makeDraggable(document.getElementById("floatingContainer"));
                   const justifyFinance = document.getElementById('txtfinanceJustify').value
                   const justifyReputation = document.getElementById('txtreputationJustify').value
                   const justifyEnvironment = document.getElementById('txtenvironmentJustify').value
-                  const justifyRegulation = document.getElementById('txtregulatoryJustify').value
+                  const env_contaminant = document.getElementById('env_contaminant').value
+                  const env_ecosystem = document.getElementById('env_ecosystem').value
+                  const env_contamination = document.getElementById('env_contamination').value
+                  const env_population = document.getElementById('env_population').value
+                  const env_wildlife = document.getElementById('env_wildlife').value
+                    const justifyRegulation = document.getElementById('txtregulatoryJustify').value
                   const justifySupply = document.getElementById('txtsupplyJustify').value
                   const dataRegulation = document.getElementById('txtdataJustify').value
                   //const sle =  document.getElementById('hdn_sle').value
@@ -1887,11 +1996,15 @@ makeDraggable(document.getElementById("floatingContainer"));
                   let ale = parseInt(aleValue.replace(/[^0-9]/g, ''), 10);
                   const probability = document.getElementById('txtProbability').value;
                   const control_effectiveness = document.getElementById('hdn_control_effectiveness').value;
+                  const bia_score = document.getElementById('hdn_bia_score').value;
                   const sle_low = document.getElementById('txtEventCosts_low').value;
                   const sle_high = document.getElementById('txtEventCosts_high').value;
                   const sle_median = document.getElementById('txtEventCosts').value;
+                  const ale_low = document.getElementById('txt_ale_low').value;
+                  const ale_high = document.getElementById('txt_ale_high').value;
+                  const ale_median = document.getElementById('txt_ale_median').value;
                   const frequency = document.getElementById('frequency').value;
-                  const standards = document.getElementById('selStandards').value;
+                  //const standards = document.getElementById('selStandards').value;
                   const aro = document.getElementById('aro').value;
                   const risk_register = document.getElementById('risk_register').checked;
                   const sis_outage = document.getElementById('sisOutageYes').checked;
@@ -1931,6 +2044,11 @@ makeDraggable(document.getElementById("floatingContainer"));
                   formData.append('financial', financial);
                   formData.append('reputation', reputation);
                   formData.append('environment', environment);
+                  formData.append('env_contaminant', env_contaminant);
+                  formData.append('env_ecosystem', env_ecosystem);
+                  formData.append('env_contamination', env_contamination);
+                  formData.append('env_population', env_population);
+                  formData.append('env_wildlife', env_wildlife);
                   formData.append('regulatory', regulatory);
                   formData.append('data', data);
                   formData.append('supply', supply);
@@ -1961,6 +2079,9 @@ makeDraggable(document.getElementById("floatingContainer"));
                   formData.append('sle_low', sle_low);
                   formData.append('sle_median', sle_median);
                   formData.append('sle_high', sle_high);
+                  formData.append('ale_low', ale_low);
+                  formData.append('ale_median', ale_median);
+                  formData.append('ale_high', ale_high);
                   formData.append('frequency', frequency);
                   formData.append('ale', ale);
                   formData.append('outage', outage);
@@ -1968,10 +2089,11 @@ makeDraggable(document.getElementById("floatingContainer"));
                   formData.append('outageCost', outageCost);
                   formData.append('probability', probability);
                   formData.append('control_effectiveness', control_effectiveness);
-                  formData.append('standards', standards);
+                  //formData.append('standards', standards);
                   formData.append('risk_register', risk_register);
                   formData.append('likelihood', likelihood);
-                  formData.append('sl_a', sl_a);
+                  formData.append('sl_a', sl_a)
+                  formData.append('ai_bia_score', bia_score);
                     // Check if snapshot should be created
                   let snapshot = 0
                   const riskSnapshotCheckbox = document.getElementById('risk_snapshot');
@@ -1987,7 +2109,7 @@ makeDraggable(document.getElementById("floatingContainer"));
           }
     </script>
 
-<div class="modal fade" id="safetyModal" tabindex="-1" aria-labelledby="safetyModal" aria-hidden="true">
+<div class="modal fade custom-modal" id="safetyModal" tabindex="-1" aria-labelledby="safetyModal" aria-hidden="true">
   <div class="modal-dialog modal-xl">
     <div class="modal-content">
       <div class="modal-header">
@@ -2042,7 +2164,7 @@ makeDraggable(document.getElementById("floatingContainer"));
   </div>
 </div>
 
-<div class="modal fade" id="lifeModal" tabindex="-1" aria-labelledby="lifeModal" aria-hidden="true">
+<div class="modal fade custom-modal" id="lifeModal" tabindex="-1" aria-labelledby="lifeModal" aria-hidden="true">
   <div class="modal-dialog modal-xl">
     <div class="modal-content">
       <div class="modal-header">
@@ -2068,7 +2190,7 @@ makeDraggable(document.getElementById("floatingContainer"));
 
 
 
-<div class="modal fade" id="productionModal" tabindex="-1" aria-labelledby="productionModal" aria-hidden="true">
+<div class="modal fade custom-modal" id="productionModal" tabindex="-1" aria-labelledby="productionModal" aria-hidden="true">
   <div class="modal-dialog modal-xl">
     <div class="modal-content">
       <div class="modal-header">
@@ -2119,7 +2241,7 @@ makeDraggable(document.getElementById("floatingContainer"));
   }
 </script>
 
-<div class="modal fade" id="financeModal" tabindex="-1" aria-labelledby="financeModal" aria-hidden="true">
+<div class="modal fade custom-modal" id="financeModal" tabindex="-1" aria-labelledby="financeModal" aria-hidden="true">
   <div class="modal-dialog modal-xl">
     <div class="modal-content">
       <div class="modal-header">
@@ -2135,7 +2257,7 @@ makeDraggable(document.getElementById("floatingContainer"));
     </div>
   </div>
 </div>
-<div class="modal fade" id="reputationModal" tabindex="-1" aria-labelledby="reputationModal" aria-hidden="true">
+<div class="modal fade custom-modal" id="reputationModal" tabindex="-1" aria-labelledby="reputationModal" aria-hidden="true">
   <div class="modal-dialog modal-xl">
     <div class="modal-content">
       <div class="modal-header">
@@ -2149,21 +2271,69 @@ makeDraggable(document.getElementById("floatingContainer"));
     </div>
   </div>
 </div>
-<div class="modal fade" id="environmentModal" tabindex="-1" aria-labelledby="environmentModal" aria-hidden="true">
-  <div class="modal-dialog modal-xl">
-    <div class="modal-content">
+
+<div class="modal fade custom-modal" id="environmentModal" tabindex="-1" aria-labelledby="environmentModal" aria-hidden="true" >
+  <div class="modal-dialog modal-xl" >
+    <div class="modal-content" style="background-color: darkgray; ">
       <div class="modal-header">
         <h5 class="modal-title" id="environmentModal_Label">Justification for Environment Impact Rating</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
         <textarea id="txtenvironmentJustify" name="txtenvironmentJustify" class="form-control" rows="3" style="resize: none"></textarea>
+                <!-- Dropdown for the type of contaminants -->
+        <label for="env_contaminant">Type of Contaminants:</label>
+        <select id="env_contaminant" name="env_contaminant" class="form-control mb-3">
+          <option value="">-- Select Contaminant Type --</option>
+          <option value="N/A">N/A</option>
+          <option value="Chemical">Chemical</option>
+          <option value="Biological">Biological</option>
+          <option value="Radiological">Radiological</option>
+          <option value="Physical">Physical</option>
+        </select>
+          <!-- Dropdown for the affected ecosystem -->
+        <label for="env_ecosystem">Affected Ecosystem:</label>
+        <select id="env_ecosystem" name="env_ecosystem" class="form-control mb-3">
+          <option value="">-- Select Ecosystem --</option>
+          <option value="N/A">N/A</option>
+          <option value="Aquatic">Aquatic</option>
+          <option value="Urban">Urban</option>
+          <option value="Agricultural">Agricultural</option>
+        </select>
+          <!-- Dropdown for the extent of the contamination -->
+        <label for="env_contamination">Extent of Contamination:</label>
+        <select id="env_contamination" name="env_contamination" class="form-control mb-3">
+          <option value="">-- Select Extent --</option>
+            <option value="N/A">N/A</option>
+          <option value="Localised">Localised</option>
+          <option value="WideArea">Wide Area</option>
+        </select>
+          <!-- Dropdown for effect on local residential population -->
+        <label for="env_population">Effect on Local Residential Population:</label>
+        <select id="env_population" name="env_population" class="form-control mb-3">
+          <option value="">-- Select Effect --</option>
+            <option value="N/A">N/A</option>
+          <option value="Harmless">Harmless</option>
+          <option value="Harmful">Harmful</option>
+          <option value="Deadly">Deadly</option>
+        </select>
+
+        <!-- Dropdown for effect on local wildlife -->
+        <label for="env_wildlife">Effect on Local Wildlife:</label>
+        <select id="env_wildlife" name="env_wildlife" class="form-control mb-3">
+            <option value="">-- Select Effect --</option>
+            <option value="N/A">N/A</option>
+            <option value="Harmless">Harmless</option>
+            <option value="Harmful">Harmful</option>
+            <option value="Deadly">Deadly</option>
+        </select>
         <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
 </div>
-<div class="modal fade" id="regulatoryModal" tabindex="-1" aria-labelledby="regulatoryModal" aria-hidden="true">
+
+<div class="modal fade custom-modal" id="regulatoryModal" tabindex="-1" aria-labelledby="regulatoryModal" aria-hidden="true">
   <div class="modal-dialog modal-xl">
     <div class="modal-content">
       <div class="modal-header">
@@ -2177,7 +2347,7 @@ makeDraggable(document.getElementById("floatingContainer"));
     </div>
   </div>
 </div>
-<div class="modal fade" id="dataModal" tabindex="-1" aria-labelledby="dataModal" aria-hidden="true">
+<div class="modal fade custom-modal" id="dataModal" tabindex="-1" aria-labelledby="dataModal" aria-hidden="true">
   <div class="modal-dialog modal-xl">
     <div class="modal-content">
       <div class="modal-header">
@@ -2192,7 +2362,7 @@ makeDraggable(document.getElementById("floatingContainer"));
   </div>
 </div>
 
-<div class="modal fade" id="supplyModal" tabindex="-1" aria-labelledby="supplyModal" aria-hidden="true">
+<div class="modal fade custom-modal" id="supplyModal" tabindex="-1" aria-labelledby="supplyModal" aria-hidden="true">
   <div class="modal-dialog modal-xl">
     <div class="modal-content">
       <div class="modal-header">
@@ -2208,7 +2378,7 @@ makeDraggable(document.getElementById("floatingContainer"));
 </div>
 
 
-<div class="modal fade" id="uelModal" tabindex="-1" aria-labelledby="uelModal" aria-hidden="true">
+<div class="modal fade custom-modal" id="uelModal" tabindex="-1" aria-labelledby="uelModal" aria-hidden="true">
   <div class="modal-dialog modal-xl">
     <div class="modal-content">
       <div class="modal-header">
@@ -2253,7 +2423,7 @@ makeDraggable(document.getElementById("floatingContainer"));
     </div>
   </div>
 </div>
-    <div class="modal fade" id="rruModal" tabindex="-1" aria-labelledby="rruModal" aria-hidden="true">
+    <div class="modal fade custom-modal" id="rruModal" tabindex="-1" aria-labelledby="rruModal" aria-hidden="true">
   <div class="modal-dialog modal-xl">
     <div class="modal-content">
       <div class="modal-header">
@@ -2983,7 +3153,7 @@ $(document).ready(function() {
             let mela = document.getElementById('MELarange').value;
             let industry = sessionStorage.getItem('sessionIndustry')
             let facilityType = sessionStorage.getItem('sessionFacilityType')
-            let standards = document.getElementById('selStandards').value;
+            // let standards = document.getElementById('selStandards').value;
             let country = document.getElementById('hdnCountry').value;
             let uel = document.getElementById('uel_range').value;
 
@@ -3009,7 +3179,6 @@ $(document).ready(function() {
                     sm: sm,
                     mel: mel,
                     rrm: sa,
-                    standards: standards,
                     supply: supply,
                     country: country,
                     uel: uel,
@@ -3018,9 +3187,10 @@ $(document).ready(function() {
                     sl_a: sl_a
                 },
                 success: function (response) {
+                    $('#loadingSpinner').hide();
                    //document.getElementById('SArange').value = response.adjustedSeverity;
                    //document.getElementById('MELarange').value = response.adjustedExposure;
-                   document.getElementById('txtRRa').value = response.adjustedRR
+                   document.getElementById('txtRRa').value = response.adjustedRR;
                    document.getElementById('hdnLikelihood').value = response.likelihood;
                    document.getElementById('txtLikelihood').value = response.likelihood +'%';
                    // document.getElementById('txtScenarioAnalysis').value = response.recommendations;
@@ -3032,22 +3202,52 @@ $(document).ready(function() {
                     document.getElementById('txtEventCosts').value = sle_medium;
                     document.getElementById('txtEventCosts_low').value = sle_low;
                     document.getElementById('txtEventCosts_high').value = sle_high;
-                    document.getElementById('frequency').value = response.frequency;
 
+                    document.getElementById('frequency').value = response.frequency;
                     document.getElementById('txtProbability').value = response.probability;
 
                     document.getElementById('hdn_control_effectiveness').value = response.control_effectiveness;
+                    document.getElementById('hdn_bia_score').value = response.biaScore;
+
+                    let ale_low = parseFloat(costsArray[0]) * parseFloat(response.frequency);
+
+                    // Format ALE as currency
+                    let formatter = new Intl.NumberFormat('en-US', {
+                        style: 'currency',
+                        currency: 'USD',
+                        minimumFractionDigits: 0, // No decimal places
+                        maximumFractionDigits: 0  // No decimal places
+                    });
+
+                    let formattedAleLow = formatter.format(ale_low);
+
+
+                    let ale_median = parseFloat(costsArray[1]) * parseFloat(response.frequency);
+
+                    let formattedAleMedian = formatter.format(ale_median);
+
+
+                    let ale_high = parseFloat(costsArray[2]) * parseFloat(response.frequency);
+
+                    let formattedAleHigh = formatter.format(ale_high);
+
+                    // Set the formatted value
+                    document.getElementById('txt_ale_high').value = formattedAleHigh;
+                    document.getElementById('txt_ale_median').value = formattedAleMedian;
+                    document.getElementById('txt_ale_low').value = formattedAleLow;
 
                     var controlEffectivenessPercentage = response.control_effectiveness;
                     clearContainer('gaugeProbContainer');
                     clearContainer('gaugeContainer');
                     clearContainer('gaugeLikelihoodContainer');
                     clearContainer('gaugeResidualRisk');
+                     clearContainer('gaugeFrequency');
+                     clearContainer('gaugeBIAContainer');
 
                     createEffectivenessGauge(controlEffectivenessPercentage);
                     createProbGauge(response.probability);
                     createBIAGauge(response.biaScore);
-
+                    createFrequencyGauge(response.frequency);
                     createLikelihoodGauge(response.likelihood);
                     // Define the text values based on the percentage range
                     var textValue = "";
@@ -3070,12 +3270,12 @@ $(document).ready(function() {
 
                     createResidualRiskGauge(response.adjustedRR);
 
-                     $('#loadingSpinner').hide();
+
 
                 },
                 error: function (xhr, status, error) {
                     // Handle any errors that occur during the AJAX call
-                    console.error(error);
+
                     $('#loadingSpinner').hide();
                 },
             });
@@ -3537,9 +3737,14 @@ function resetformcontrols() {
       document.getElementById('txtProbability').value = '';
       document.getElementById('control_effectiveness').value = '';
       document.getElementById('hdn_control_effectiveness').value = '';
+      document.getElementById('hdn_bia_score').value = '';
+
       document.getElementById('txtEventCosts_low').value = '';
       document.getElementById('txtEventCosts').value = '';
       document.getElementById('txtEventCosts_high').value = '';
+      document.getElementById('txt_ale_low').value = '';
+      document.getElementById('txt_ale_median').value = '';
+      document.getElementById('txt_ale_high').value = '';
       document.getElementById('frequency').value = '';
       document.getElementById('txtResidualRisk').value = '';
       document.getElementById('has_controls').value = 0;
@@ -3580,7 +3785,7 @@ function resetformcontrols() {
         $('#txtScenario').val(data.Scenario);
         $('#txtConsequence').val(data.Consequence);
         $('#threat-intelligence').val(data.ThreatClass);
-        $('#selStandards').val(data.standards);
+        //$('#selStandards').val(data.standards);
 
 
          $('#risk-category').val(data.RiskCategory);
@@ -3590,6 +3795,14 @@ function resetformcontrols() {
          $('#range_finance').val(data.impactFinance);
          $('#range_reputation').val(data.impactReputation);
          $('#range_environment').val(data.impactEnvironment);
+
+         $('#env_contaminant').val(data.env_contaminant);
+         $('#env_ecosystem').val(data.env_ecosystem);
+         $('#env_contamination').val(data.env_contamination);
+         $('#env_population').val(data.env_population);
+         $('#env_wildlife').val(data.env_wildlife);
+
+
          $('#range_regulation').val(data.impactRegulation);
          $('#range_data').val(data.impactData);
          // $('#selStandards').val(data.RiskCategory);
@@ -3623,10 +3836,20 @@ function resetformcontrols() {
         let costs_high = parseFloat(data.sle_high); // Assuming response.costs is a string representation of a number
         let formattedCosts_high = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(costs_high);
         document.getElementById('txtEventCosts_high').value= formattedCosts_high;
+        let ale_costs_high = parseFloat(data.ale_high); // Assuming response.costs is a string representation of a number
+        let ale_formattedCosts_high = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(ale_costs_high);
+        document.getElementById('txt_ale_high').value= ale_formattedCosts_high;
+        let ale_costs_low = parseFloat(data.ale_low); // Assuming response.costs is a string representation of a number
+        let ale_formattedCosts_low = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(ale_costs_low);
+        document.getElementById('txt_ale_low').value= ale_formattedCosts_low;
+        let ale_costs_median = parseFloat(data.ale_median); // Assuming response.costs is a string representation of a number
+        let ale_formattedCosts_median = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(ale_costs_median);
+        document.getElementById('txt_ale_median').value= ale_formattedCosts_median;
 
         document.getElementById('txtResidualRisk').value= data.RRa;
         document.getElementById('txtProbability').value= data.probability;
         document.getElementById('hdn_control_effectiveness').value= data.control_effectiveness;
+         document.getElementById('hdn_bia_score').value= data.ai_bia_score;
         // Define the text values based on the percentage range
                     var textValue = "";
                     if (data.control_effectiveness < 25) {
@@ -3654,8 +3877,8 @@ function resetformcontrols() {
          createResidualRiskGauge(data.RRa);
          createFrequencyGauge(data.frequency);
 
-                    // Set the value of the 'control_effectiveness' text control
-                    document.getElementById('control_effectiveness').value = textValue;
+        // Set the value of the 'control_effectiveness' text control
+        document.getElementById('control_effectiveness').value = textValue;
         document.getElementById('hdnScenario').value = scenarioId;
 
          $('#txtRRa').val(data.RRa);
