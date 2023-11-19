@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
-
+from django.core.validators import MinValueValidator, MaxValueValidator
 import OTRisk.models.model_assessment
 from accounts.models import Organization
 from OTRisk.models.raw import MitreICSMitigations
@@ -49,6 +49,69 @@ class OrganizationDefaults(models.Model):
     employees = models.IntegerField(
         null=True,
         blank=True
+    )
+    impact_weight_safety = models.IntegerField(
+        default=1,
+        validators=[
+            MinValueValidator(1),
+            MaxValueValidator(5)
+        ]
+    )
+    impact_weight_danger = models.IntegerField(
+        default=1,
+        validators=[
+            MinValueValidator(1),
+            MaxValueValidator(5)
+        ]
+    )
+    impact_weight_environment = models.IntegerField(
+        default=1,
+        validators=[
+            MinValueValidator(1),
+            MaxValueValidator(5)
+        ]
+    )
+    impact_weight_production = models.IntegerField(
+        default=1,
+        validators=[
+            MinValueValidator(1),
+            MaxValueValidator(5)
+        ]
+    )
+    impact_weight_finance = models.IntegerField(
+        default=1,
+        validators=[
+            MinValueValidator(1),
+            MaxValueValidator(5)
+        ]
+    )
+    impact_weight_reputation = models.IntegerField(
+        default=1,
+        validators=[
+            MinValueValidator(1),
+            MaxValueValidator(5)
+        ]
+    )
+    impact_weight_regulation = models.IntegerField(
+        default=1,
+        validators=[
+            MinValueValidator(1),
+            MaxValueValidator(5)
+        ]
+    )
+    impact_weight_data = models.IntegerField(
+        default=1,
+        validators=[
+            MinValueValidator(1),
+            MaxValueValidator(5)
+        ]
+    )
+    impact_weight_supply = models.IntegerField(
+        default=1,
+        validators=[
+            MinValueValidator(1),
+            MaxValueValidator(5)
+        ]
     )
 
     def __str__(self):
@@ -209,6 +272,8 @@ class tblCyberPHAHeader(models.Model):
     pha_score = models.IntegerField()
     sl_t = models.PositiveSmallIntegerField(choices=SECURITY_LEVELS, default=0)
     assessment = models.IntegerField(null=True, blank=True)
+    bia_scenarios = models.IntegerField(null=True, blank=True)  # overall bia score based on all scenarios
+    risk_scenarios = models.IntegerField(null=True, blank=True)  # overall cyberPHA risk score based on all scenarios
 
     class Meta:
         db_table = 'tblCyberPHAHeader'

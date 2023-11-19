@@ -66,6 +66,64 @@ import chardet
 app_name = 'OTRisk'
 
 
+###########################
+###########################
+# function to update the total BIA score from all scenarios associated with a given cyberPHAID
+def update_bia_scenarios(cyber_pha_id, user):
+    # Fetch the CyberPHAHeader record
+    try:
+        cyber_pha_header = tblCyberPHAHeader.objects.get(ID=cyber_pha_id)
+    except tblCyberPHAHeader.DoesNotExist:
+        # Handle the case where the record does not exist
+        return
+
+    # Fetch the organization defaults for the user's organization
+    try:
+        user_profile = UserProfile.objects.get(user=user)
+        organization_defaults = OrganizationDefaults.objects.get(organization=user_profile.organization)
+    except (UserProfile.DoesNotExist, OrganizationDefaults.DoesNotExist):
+        # Handle cases where UserProfile or OrganizationDefaults does not exist
+        return
+
+    # Extract the impact weightings from OrganizationDefaults
+    impact_fields_weightings = {
+        'impactSafety': organization_defaults.impact_weight_safety,
+        'impactDanger': organization_defaults.impact_weight_danger,
+        'impactEnvironment': organization_defaults.impact_weight_environment,
+        'impactProduction': organization_defaults.impact_weight_production,
+        'impactFinance': organization_defaults.impact_weight_finance,
+        'impactReputation': organization_defaults.impact_weight_reputation,
+        'impactRegulation': organization_defaults.impact_weight_regulation,
+        'impactData': organization_defaults.impact_weight_data,
+        'impactSupply': organization_defaults.impact_weight_supply
+    }
+
+    # Calculate the weighted sum of each impact field
+    weighted_impacts = {
+        field: Avg(field) * weight
+        for field, weight in impact_fields_weightings.items()
+    }
+
+    # Aggregate the weighted sums from related scenarios
+    weighted_averages = tblCyberPHAScenario.objects.filter(
+        CyberPHA=cyber_pha_header,
+        Deleted=0  # Assuming you only want to include non-deleted scenarios
+    ).aggregate(**weighted_impacts)
+
+    # Calculate the total of all weightings
+    total_weighting = sum(impact_fields_weightings.values())
+
+    # Calculate the overall weighted average impact score
+    total_weighted_avg_score = sum(weighted_averages.values()) / total_weighting
+
+    # Update the bia_scenarios field in the CyberPHAHeader record
+    cyber_pha_header.bia_scenarios = total_weighted_avg_score
+    cyber_pha_header.save()
+
+
+###########################
+###########################
+
 # Assessment framework Code
 #########################
 @login_required
@@ -229,7 +287,8 @@ def list_frameworks(request):
 @login_required
 def edit_assessment(request, assessment_id):
     # Retrieve the existing SelfAssessment or redirect if not found
-    self_assessment = get_object_or_404(SelfAssessment, pk=assessment_id, user=request.user, organization_id=get_user_organization_id(request))
+    self_assessment = get_object_or_404(SelfAssessment, pk=assessment_id, user=request.user,
+                                        organization_id=get_user_organization_id(request))
     framework = self_assessment.framework  # Get the associated framework
     questions = AssessmentQuestion.objects.filter(framework=self_assessment.framework)
 
@@ -611,7 +670,6 @@ def delete_user(request, user_id):
 
 @login_required
 def admin_users(request):
-
     current_user_profile = UserProfile.objects.get(user=request.user)
     organization = current_user_profile.organization
     user_profiles = UserProfile.objects.filter(organization=organization)
@@ -1132,6 +1190,8 @@ def save_or_update_cyberpha(request):
 
             request.session['cyberPHAID'] = cyberphaid  # Set the session variable
 
+            # lastly, update the overall BIA score for the cyberpha
+            update_bia_scenarios(cyberphaid, request.user)
         # Call the assess_cyberpha function
         return assess_cyberpha(request, cyberPHAID=cyberphaid)
 

@@ -110,7 +110,7 @@
 <nav class="navbar navbar-expand-lg navbar-scroll shadow-0 border-bottom border-dark rounded">
   <div class="container-fluid d-flex justify-content-between">
    <a class="navbar-brand" href="{% url 'OTRisk:dashboardhome' %}"><img src="{% static 'images/iota - white 1.png' %}" style="height: 140px; width: 140px" class="navbar-logo" alt="">   </a>
-      <h6 class="my-auto text-center flex-grow-1">Dashboard</h6>
+      <h6 class="my-auto text-center flex-grow-1">Defaults</h6>
 
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
       <ul class="navbar-nav ms-auto">
@@ -165,67 +165,56 @@
 <div class="row" style="height: 10px">
     <div class="col"></div>
 </div>
-<div class="row">
-    <div class="col-md-4"></div>
-    <div class="col-md-4 text-center">Default Settings for {{ user.userprofile.organization.name }}</div>
-    <div class="col-md-4"></div>
-</div>
-
-<div class="row" style="height: 10px">
-    <div class="col"></div>
-</div>
-<div class="row">
-    <div class="col-md-1"></div>
-    <div class="col-md-4"></div>
-    <div class="col-md-2 text-center" style="align-items: center">
-
-        <form method="post" class="form-horizontal">
-            {% csrf_token %}
-            {% for field in form %}
-                <div class="form-group">
-                    <label for="{{ field.id_for_label }}" class="control-label">{{ field.label }}</label>
-                    <div>
-                        {{ field }}  <!-- The form control classes are already added in the Python code -->
-                        {% if field.help_text %}
-                            <p class="help-block">{{ field.help_text }}</p>
-                        {% endif %}
-                    </div>
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Default Settings for {{ user.userprofile.organization.name }}</h4>
                 </div>
-            {% endfor %}
-            <div class="form-group">
-                <div>
-                    <input type="button" value="Submit" class="btn btn-primary" id="submitBtn">
-                    <script>
-                    document.getElementById('submitBtn').addEventListener('click', function(e) {
-                        e.preventDefault();
-                        swal({
-                            title: "Are you sure?",
-                            text: "Do you want to proceed with making changes?",
-                            icon: "warning",
-                            buttons: true,
-                            dangerMode: true,
-                        })
-                        .then((willSubmit) => {
-                            if (willSubmit) {
-                                document.querySelector('form').submit();
-                            }
-                        });
-                    });
-                    </script>
-
+                <div class="card-body">
+                    <form method="post" class="form-horizontal">
+                        {% csrf_token %}
+                        {% for field in form %}
+                            <div class="form-group row mb-3">
+                                <label for="{{ field.id_for_label }}" class="col-sm-4 col-form-label">{{ field.label }}</label>
+                                <div class="col-sm-8">
+                                    {{ field }}
+                                    {% if field.help_text %}
+                                        <small class="form-text text-muted">{{ field.help_text }}</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                        <div class="form-group row">
+                            <div class="col-sm-12 text-center">
+                                <button type="button" class="btn btn-primary" id="submitBtn">Submit</button>
+                            </div>
+                        </div>
+                    </form>
                 </div>
             </div>
-        </form>
-
-
-
-
+        </div>
     </div>
-    <div class="col-md-4"></div>
-
-    <div class="col-md-1"></div>
-
 </div>
+
+ <script>
+document.getElementById('submitBtn').addEventListener('click', function(e) {
+    e.preventDefault();
+    swal({
+        title: "Are you sure?",
+        text: "Do you want to proceed with making changes?",
+        icon: "warning",
+        buttons: true,
+        dangerMode: true,
+        })
+        .then((willSubmit) => {
+        if (willSubmit) {
+            document.querySelector('form').submit();
+        }
+    });
+});
+</script>
 
  <script type="text/javascript">
     document.addEventListener('DOMContentLoaded', function() {

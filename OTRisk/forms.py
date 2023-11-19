@@ -67,6 +67,87 @@ class OrganizationDefaultsForm(forms.ModelForm):
         empty_label="Select Industry",
         widget=forms.Select(attrs={'class': 'form-control'})
     )
+    impact_weight_safety = forms.IntegerField(
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control',
+            'min': 1,
+            'max': 5,
+            'type': 'number'
+        }),
+        required=True
+    )
+    impact_weight_danger = forms.IntegerField(
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control',
+            'min': 1,
+            'max': 5,
+            'type': 'number'
+        }),
+        required=True
+    )
+    impact_weight_data = forms.IntegerField(
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control',
+            'min': 1,
+            'max': 5,
+            'type': 'number'
+        }),
+        required=True
+    )
+    impact_weight_environment = forms.IntegerField(
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control',
+            'min': 1,
+            'max': 5,
+            'type': 'number'
+        }),
+        required=True
+    )
+    impact_weight_finance = forms.IntegerField(
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control',
+            'min': 1,
+            'max': 5,
+            'type': 'number'
+        }),
+        required=True
+    )
+    impact_weight_production = forms.IntegerField(
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control',
+            'min': 1,
+            'max': 5,
+            'type': 'number'
+        }),
+        required=True
+    )
+    impact_weight_regulation = forms.IntegerField(
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control',
+            'min': 1,
+            'max': 5,
+            'type': 'number'
+        }),
+        required=True
+    )
+    impact_weight_reputation = forms.IntegerField(
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control',
+            'min': 1,
+            'max': 5,
+            'type': 'number'
+        }),
+        required=True
+    )
+    impact_weight_supply = forms.IntegerField(
+        widget=forms.NumberInput(attrs={
+            'class': 'form-control',
+            'min': 1,
+            'max': 5,
+            'type': 'number'
+        }),
+        required=True
+    )
 
     def __init__(self, *args, **kwargs):
         super(OrganizationDefaultsForm, self).__init__(*args, **kwargs)

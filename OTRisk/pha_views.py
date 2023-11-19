@@ -81,6 +81,7 @@ def iotaphamanager(request, record_id=None):
         pha_header.EmployeesOnSite = request.POST.get('txtEmployees')
         pha_header.shift_model = request.POST.get('shift_model')
         pha_header.assessment = request.POST.get('assessment_id')
+
         try:
             # Attempt to convert the POST value to an integer.
             pha_header.pha_score = int(request.POST.get('hdn_pha_score', 0))
@@ -659,6 +660,7 @@ def get_response(user_message):
 
 @login_required
 def scenario_analysis(request):
+
     if request.method == 'GET':
         industry = request.GET.get('industry')
         facility_type = request.GET.get('facility_type')
@@ -666,8 +668,11 @@ def scenario_analysis(request):
         consequences = request.GET.get('consequence')
         threatSource = request.GET.get('threatsource')
         safetyimpact = request.GET.get('safety')
+        safety_hazard = request.GET.get('safety_hazard')
         lifeimpact = request.GET.get('life')
         productionimpact = request.GET.get('production')
+        production_outage = request.GET.get('production_outage')
+        production_outage_length = request.GET.get('production_outage_length')
         reputationimpact = request.GET.get('reputation')
         environmentimpact = request.GET.get('environment')
         regulatoryimpact = request.GET.get('regulatory')
@@ -676,18 +681,33 @@ def scenario_analysis(request):
         severitymitigated = request.GET.get('sm')
         mitigatedexposure = request.GET.get('mel')
         residualrisk = request.GET.get('rrm')
-        standards = request.GET.get('standards')
         country = request.GET.get('country')
         uel = request.GET.get('uel')
         financial = request.GET.get('financial')
         cyberPHAID = request.GET.get('cpha')
 
         # get the effectiveness of controls for the given cyberPHA
-        control_effectiveness = calculate_effectiveness(cyberPHAID)
+        try:
+            cyber_pha_header = tblCyberPHAHeader.objects.get(ID=cyberPHAID)
+
+            # Get the assessment id from the tblCyberPHAHeader instance
+            assessment_id = cyber_pha_header.assessment
+
+            # Retrieve the corresponding SelfAssessment instance using the assessment_id
+            if assessment_id is not None:
+                self_assessment = SelfAssessment.objects.get(id=assessment_id)
+                control_effectiveness = self_assessment.score_effective
+            else:
+                # Handle the case where assessment_id is None
+                control_effectiveness = 0  # Default value
+
+        except tblCyberPHAHeader.DoesNotExist:
+            # Handle the case where tblCyberPHAHeader with the given ID does not exist
+            control_effectiveness = 0
 
         openai.api_key = os.environ.get('OPENAI_API_KEY')
         # Define the common part of the user message
-        common_content = f"A cybersecurity incident of {scenario} with consequences {consequences} affecting a {facility_type} in the {industry} industry in {country}. Business impact assessment scores are estimated by employees and may not be accurate:  impact on safety: {safetyimpact}, danger to life: {lifeimpact}, production and operations: {productionimpact}, company reputation: {reputationimpact}, environmental impact: {environmentimpact}, impact of regulatory consequences: {regulatoryimpact}, supply chain impact: {supplyimpact}  data and intellectual property: {dataimpact}. The effectiveness of current controls has been assessed as: Severity of incident mitigated: {severitymitigated}, risk exposure to the scenario mitigated {mitigatedexposure},  overall residual risk {residualrisk}. The amount of unmitigated rate without control is assumed to be {uel}"
+        common_content = f"A cybersecurity incident of {scenario} with consequences {consequences} affecting a {facility_type} in the {industry} industry in {country}. Business impact assessment scores are estimated by employees and may not be accurate:  impact on safety: {safetyimpact}, danger to life: {lifeimpact}, production and operations: {productionimpact} (production outage: {production_outage}: length of production outage {production_outage_length} hours), company reputation: {reputationimpact}, environmental impact: {environmentimpact}, impact of regulatory consequences: {regulatoryimpact}, supply chain impact: {supplyimpact}  data and intellectual property: {dataimpact}. The effectiveness of current cybersecurity controls has been assessed and judged to be {control_effectiveness}% (if 0 then control effectiveness has not been assessed) : Severity of incident mitigated: {severitymitigated}, risk exposure to the scenario mitigated {mitigatedexposure},  overall residual risk {residualrisk}. The amount of unmitigated rate without control is assumed to be {uel}"
 
         # Define the refined user messages
         user_messages = [
@@ -698,7 +718,7 @@ def scenario_analysis(request):
             },
             {
                 "role": "user",
-                "content": f"Given the detailed context that follows, give an assessment of the residual cybersecurity risk risk after all new recommended controls have been implemented. Based on this, provide a residual risk rating from the following options: Very Low, Low, Low/Medium, Medium, Medium/High, High, Very High. Context: {common_content}, where it is emphasized that new controls have significantly reduced vulnerabilities and threats. The expected outcome is a much lower risk than before. Provide ONLY one of the given risk ratings without any additional text or explanations."
+                "content": f"Given the detailed context that follows, give an assessment of the residual cybersecurity risk risk after all new recommended controls have been implemented and are assumed to be at least 75% effective. Based on this, provide a residual risk rating from the following options: Very Low, Low, Low/Medium, Medium, Medium/High, High, Very High. Context: {common_content}.  Provide ONLY one of the given risk ratings without any additional text or explanations."
             },
 
             {

@@ -3156,6 +3156,9 @@ $(document).ready(function() {
             // let standards = document.getElementById('selStandards').value;
             let country = document.getElementById('hdnCountry').value;
             let uel = document.getElementById('uel_range').value;
+            let safety_hazard = document.getElementById('hazardNature').value;
+            let production_outage = document.getElementById('outageYes').value;
+            let production_outage_length = document.getElementById('outageDuration').value;
 
 
             // Make the AJAX call to the Django view using the determined URL
@@ -3184,7 +3187,10 @@ $(document).ready(function() {
                     uel: uel,
                     financial: financial,
                     cpha: cpha,
-                    sl_a: sl_a
+                    sl_a: sl_a,
+                    safety_hazard: safety_hazard,
+                    production_outage: production_outage,
+                    production_outage_length: production_outage_length,
                 },
                 success: function (response) {
                     $('#loadingSpinner').hide();

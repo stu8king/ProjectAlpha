@@ -391,6 +391,7 @@ function drawControlGauge(score) {
                 <th>Zone</th>
                 <th>Leader</th>
                 <th>Date</th>
+                <th>BIA</th>
                 <th>Scenarios</th>
                 <th>Actions</th>
                 <th></th>
@@ -408,6 +409,31 @@ function drawControlGauge(score) {
                     <td>{{ pha_header_records.AssessmentZone }}</td>
                     <td>{{ pha_header_records.PHALeader }}</td>
                     <td>{{ pha_header_records.AssessmentStartDate|date:"m/d/Y" }}</td>
+
+                     <td style="background-color:
+                {% if pha_header_records.bia_scenarios == None %}
+                    white  <!-- Default color for null or None values -->
+                {% elif pha_header_records.bia_scenarios == 0 or pha_header_records.bia_scenarios == 1 or pha_header_records.bia_scenarios == 2 %}
+                    green
+                {% elif pha_header_records.bia_scenarios == 3 %}
+                    olive
+                {% elif pha_header_records.bia_scenarios == 4 or pha_header_records.bia_scenarios == 5 %}
+                    yellow
+                {% elif pha_header_records.bia_scenarios == 6 or pha_header_records.bia_scenarios == 7 %}
+                    orange
+                {% elif pha_header_records.bia_scenarios == 8 or pha_header_records.bia_scenarios == 9 %}
+                    red
+                {% elif pha_header_records.bia_scenarios == 10 %}
+                    scarlet
+                {% else %}
+                    white
+                {% endif %}
+            ">
+                {{ pha_header_records.bia_scenarios|default_if_none:"N/A" }}  <!-- Display "N/A" if bia_scenarios is None -->
+            </td>
+
+
+
                     <td>{{ pha_header_records.scenario_count }}</td>
                      <td>
                         {% if pha_header_records.ra_action_count > 0 %}
