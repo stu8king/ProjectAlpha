@@ -386,6 +386,12 @@ class tblCyberPHAScenario(models.Model):
     justifyFinancial = models.TextField()
     justifyReputation = models.TextField()
     justifyEnvironment = models.TextField()
+    env_contaminant = models.TextField(null=True)
+    env_ecosystem = models.TextField(null=True)
+    env_contamination = models.TextField(null=True)
+    env_population = models.TextField(null=True)
+    env_wildlife = models.TextField(null=True)
+
     justifyRegulation = models.TextField()
     justifyData = models.TextField()
     justifySupply = models.TextField()
@@ -429,6 +435,9 @@ class tblCyberPHAScenario(models.Model):
     sl_a = models.PositiveSmallIntegerField(choices=SECURITY_LEVELS, default=0)
     dangerScope = models.TextField()
     ai_bia_score = models.IntegerField()
+    ale_low = models.IntegerField()
+    ale_high = models.IntegerField()
+    ale_median = models.IntegerField()
 
     class Meta:
         db_table = 'tblCyberPHAScenario'
@@ -585,6 +594,11 @@ class CyberPHAScenario_snapshot(models.Model):
     justifyFinancial = models.TextField()
     justifyReputation = models.TextField()
     justifyEnvironment = models.TextField()
+    env_contaminant = models.TextField(null=True)
+    env_ecosystem = models.TextField(null=True)
+    env_contamination = models.TextField(null=True)
+    env_population = models.TextField(null=True)
+    env_wildlife = models.TextField(null=True)
     justifyRegulation = models.TextField()
     justifyData = models.TextField()
     justifySupply = models.TextField()
@@ -628,6 +642,10 @@ class CyberPHAScenario_snapshot(models.Model):
     likelihood = models.IntegerField()
     frequency = models.DecimalField(max_digits=4, decimal_places=1)
     sl_a = models.PositiveSmallIntegerField(choices=SECURITY_LEVELS, default=0)
+    ale_low = models.IntegerField()
+    ale_high = models.IntegerField()
+    ale_median = models.IntegerField()
+    dangerScope = models.TextField()
 
 
 class Audit(models.Model):
