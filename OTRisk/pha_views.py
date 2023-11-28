@@ -44,6 +44,7 @@ def iotaphamanager(request, record_id=None):
     pha_header = None
     new_record_id = None  # Initialize new_record_id to None
     annual_revenue_str = "$0"
+
     if request.method == 'POST':
         title = request.POST.get('txtTitle')
         facility_name = request.POST.get('txtFacility')
@@ -723,7 +724,7 @@ def scenario_analysis(request):
 
             {
                 "role": "user",
-                "content": f"Given the context: {common_content}, estimate the DIRECT COSTS of a single loss event (SLE) in US dollars for the {facility_type} for the scenario: {scenario}. Guidelines: Give three estimates best case, worst case, and most likely case. Output as integers in the format low|medium|high where | is the delimiter between the three integer values. Your estimates should be realistic and specific to the scenario. Consider only the relevant Direct costs which can include all or some of the following depending on the incident: incident response, remediation, legal fees, notification costs, regulatory fines, compensations, and increased insurance premiums. In the business impact analysis the evaluation of financial impact for the given scenario is rated as {financial}/10 by the business. Your response should be a single positive integer for each of the three values in the order low|medium|high without any additional text or commentary."
+                "content": f"Given the context: {common_content}, estimate the DIRECT COSTS of a single loss event (SLE) in US dollars for the {facility_type} for the scenario: {scenario}. Guidelines: Give three estimates best case, worst case, and most likely case. Output as integers in the format low|medium|high where | is the delimiter between the three integer values. Your estimates should be realistic and specific to the scenario. Consider only the relevant Direct costs which can include all or some of the following depending on the incident: incident response, remediation, legal fees, notification costs, regulatory fines, compensations, and increased insurance premiums. In the business impact analysis the evaluation of financial impact for the given scenario is rated as {financial}/10 by the business. IMPORTANT INSTRUCTION: Your response must be a single positive integer for each of the three values in the order low|medium|high without any additional text or commentary."
             },
 
             {

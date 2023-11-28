@@ -227,7 +227,7 @@ def dashboardhome(request):
     # total_scenario_cost = scenarios.aggregate(sum_scenarioCost=Sum('scenarioCost'))['sum_scenarioCost']
 
     try:
-        if total_sle >= 1000000:
+        if total_sle >= 1000:
             formatted_sle = "${:.2f}M".format(total_sle / 1000000)
         elif total_scenario_cost >= 1000:
             formatted_sle = "${:.2f}K".format(total_sle / 1000)

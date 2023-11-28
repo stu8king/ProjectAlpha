@@ -277,7 +277,7 @@ def update_assessment_name(request):
 def list_frameworks(request):
     frameworks = AssessmentFramework.objects.all()
     # Retrieve the assessments completed by the user
-    completed_assessments = SelfAssessment.objects.filter(user=request.user)
+    completed_assessments = SelfAssessment.objects.filter(organization_id=get_user_organization_id(request))
     return render(request, 'list_frameworks.html', {
         'frameworks': frameworks,
         'completed_assessments': completed_assessments
@@ -339,7 +339,7 @@ def edit_assessment(request, assessment_id):
         if total_questions > 0:
             self_assessment.score_percent = int((yes_count / total_questions) * 100)
             self_assessment.score_effective = int(
-                (total_effectiveness / (yes_count * 100)) * 100) if yes_count > 0 else 0
+                (total_effectiveness / (total_questions * 100)) * 100)
         else:
             self_assessment.score_percent = 0
             self_assessment.score_effective = 0
@@ -353,10 +353,12 @@ def edit_assessment(request, assessment_id):
         answer = existing_answers.get(question.id)
         # Initialize form data based on the existing answer if it exists
         form_data = {
-            'response': answer.response if answer else False,
             'effectiveness': answer.effectiveness if answer and answer.response else 0,
             'weighting': answer.weighting if answer else 1,
         }
+        if answer is not None:
+            form_data['response'] = answer.response
+
         form = EditAssessmentAnswerForm(initial=form_data, question_id=question.id)
         answer_forms.append((question, form))
 
@@ -857,6 +859,7 @@ def scenarioreport(request):
 
 @login_required()
 def save_or_update_cyberpha(request):
+
     if request.method == 'POST':
         # Get the form data
         cyberphaid = request.POST.get('cyberpha')
