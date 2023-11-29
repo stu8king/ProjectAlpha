@@ -243,9 +243,11 @@ class RAActions(models.Model):
 
 class SecurityControls(models.Model):
     ID = models.AutoField(primary_key=True)
+    reference = models.TextField(null=True)
     Control = models.CharField(max_length=50)
-    ControlTypeDescription = models.CharField(max_length=255)
+    ControlDescription = models.CharField(max_length=255)
     ControlCategory = models.CharField(max_length=25)
+    framework = models.CharField(max_length=25, null=True)
 
     class Meta:
         db_table = 'tblControls'
