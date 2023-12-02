@@ -274,6 +274,8 @@ class tblCyberPHAHeader(models.Model):
     assessment = models.IntegerField(null=True, blank=True)
     bia_scenarios = models.IntegerField(null=True, blank=True)  # overall bia score based on all scenarios
     risk_scenarios = models.IntegerField(null=True, blank=True)  # overall cyberPHA risk score based on all scenarios
+    coho = models.IntegerField(default=0)  # facility cost per operating hour
+    npm = models.IntegerField(default=0)  # net profit margin
 
     class Meta:
         db_table = 'tblCyberPHAHeader'

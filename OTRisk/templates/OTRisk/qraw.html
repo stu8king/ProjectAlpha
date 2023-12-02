@@ -338,7 +338,7 @@ color: white !important;
       </script>
 <body>
 <script>
-    //disable all controls and reset local session variable when form loads
+
     document.addEventListener('DOMContentLoaded', function() {
         sessionStorage.setItem('editMode', '0');
         sessionStorage.setItem('scenario1id', '');
@@ -352,59 +352,7 @@ color: white !important;
         setRiskAssessmentRefreshNotRequired(3)
         setRiskAssessmentRefreshNotRequired(4)
         setRiskAssessmentRefreshNotRequired(5)
-        document.getElementById("txtTitle").setAttribute('disabled', true);
-        document.getElementById("txtLeader").setAttribute('disabled', true);
-        document.getElementById("txtBU").setAttribute('disabled', true);
-        document.getElementById("selectIndustry").setAttribute('disabled', true);
-        document.getElementById("selectFacility").setAttribute('disabled', true);
-        document.getElementById("selectTrigger").setAttribute('disabled', true);
-        document.getElementById("selectStatus").setAttribute('disabled', true);
-        document.getElementById("txtRevenue").setAttribute('disabled', true);
-        document.getElementById("txtInsurance").setAttribute('disabled', true);
-        document.getElementById("txtDeductable").setAttribute('disabled', true);
-        document.getElementById("txtScenarioDescription_1").setAttribute('disabled', true);
-        document.getElementById("txtScenarioDescription_2").setAttribute('disabled', true);
-        document.getElementById("txtScenarioDescription_3").setAttribute('disabled', true);
-        document.getElementById("txtScenarioDescription_4").setAttribute('disabled', true);
-        document.getElementById("txtScenarioDescription_5").setAttribute('disabled', true);
-        document.getElementById("selectThreat_1").setAttribute('disabled', true);
-        document.getElementById("selectThreat_2").setAttribute('disabled', true);
-        document.getElementById("selectThreat_3").setAttribute('disabled', true);
-        document.getElementById("selectThreat_4").setAttribute('disabled', true);
-        document.getElementById("selectThreat_5").setAttribute('disabled', true);
-        document.getElementById("selectTactics_1").setAttribute('disabled', true);
-        document.getElementById("selectTactics_2").setAttribute('disabled', true);
-        document.getElementById("selectTactics_3").setAttribute('disabled', true);
-        document.getElementById("selectTactics_4").setAttribute('disabled', true);
-        document.getElementById("selectTactics_5").setAttribute('disabled', true);
-        document.getElementById("id_impact_1").setAttribute('disabled', true);
-        document.getElementById("id_impact_2").setAttribute('disabled', true);
-        document.getElementById("id_impact_3").setAttribute('disabled', true);
-        document.getElementById("id_impact_4").setAttribute('disabled', true);
-        document.getElementById("id_impact_5").setAttribute('disabled', true);
-
-        document.getElementById("txtAssets_1").setAttribute('disabled', true);
-        document.getElementById("txtAssets_2").setAttribute('disabled', true);
-        document.getElementById("txtAssets_3").setAttribute('disabled', true);
-        document.getElementById("txtAssets_4").setAttribute('disabled', true);
-        document.getElementById("txtAssets_5").setAttribute('disabled', true);
-        document.getElementById("selectOutage_1").setAttribute('disabled', true);
-        document.getElementById("selectOutage_2").setAttribute('disabled', true);
-        document.getElementById("selectOutage_3").setAttribute('disabled', true);
-        document.getElementById("selectOutage_4").setAttribute('disabled', true);
-        document.getElementById("selectOutage_5").setAttribute('disabled', true);
-        document.getElementById("outage_1").setAttribute('disabled', true);
-        document.getElementById("outage_2").setAttribute('disabled', true);
-        document.getElementById("outage_3").setAttribute('disabled', true);
-        document.getElementById("outage_4").setAttribute('disabled', true);
-        document.getElementById("outage_5").setAttribute('disabled', true);
-         $('#saveBtn').prop('disabled', true);
-         $('#actionBtn').prop('disabled', true);
-         $('#editBtn').prop('disabled', true);
-         $('#editBtn').prop('disabled', true);
-
-
-    });
+});
 
 </script>
 
@@ -449,7 +397,7 @@ color: white !important;
         </li>
         <li class="nav-item">
             <a class="nav-link" href="{% url 'accounts:profile' %}" style="font-size: 12px;">
-                <i class="bi bi-person-fill"></i> {{ user.first_name }} {{ user.last_name }} | {{ user.userprofile.organization.name }}
+                <i class="bi bi-person-fill"></i> {{ user.first_name }} {{ user.last_name }} | | {{ user.userprofile.organization.name }}
             </a>
         </li>
 
@@ -466,6 +414,7 @@ color: white !important;
 
 <form name="frmRAW" id="frmRAW" method="POST" action="{% url 'OTRisk:qraw' %}">
 {% csrf_token %}
+<input type="hidden" id="orgid" name="orgid" value="{{ user.userprofile.organization.id }}">
 <div id="notificationMessage" class="notification-message" style="display: none;"></div>
 
 <div class="row">
@@ -474,7 +423,7 @@ color: white !important;
     <div class="col-md-10 bg-light">
 
         <table id="rawtable" class="table table-striped table-bordered" style="font-size: 10px">
-        <thead>
+        <thead style="background-color: #2c2c2c; color: white">
             <tr>
                 <th></th>
                 <th>Title</th>
@@ -528,6 +477,7 @@ color: white !important;
 
             // Add 'highlighted' class to the clicked row
             $(this).addClass('highlighted');
+
             });
         });
 
@@ -546,7 +496,7 @@ color: white !important;
 <div class="row">
     <div class="col-md-1 bg-white"></div>
     <div class="col-md-1" ></div>
-    <div class="col-md-2" ><button class="form-control" id="addNewBtn" type="button"   data-bs-toggle="tooltip" data-bs-placement="top" title="Click this button to clear the form and enter and begin a new risk assessment"><i class="bi bi-folder-plus"></i> New</button></div>
+    <div class="col-md-2" ><button class="form-control" id="addNewBtn" type="button"   data-bs-toggle="tooltip" data-bs-placement="top" title="Click this button to clear the form and enter and begin a new risk assessment" onclick="handleAddNewClick()"><i class="bi bi-folder-plus"></i> New</button></div>
     <div class="col-md-2" ><button class="form-control" id="editBtn" type="button" data-bs-toggle="tooltip" data-bs-placement="top" title="Click this button to edit the current risk assessment and scenarios"><i class="bi bi-pencil-square"></i> Edit</button></div>
     <div class="col-md-2" ><button class="form-control" type="submit" id="saveBtn" data-bs-toggle="tooltip" data-bs-placement="top" title="Click this button to save the risk assessment and scenarios" onclick="return checkRiskAssessmentRefreshVariables();" ><i class="bi bi-download"></i> Save</button></div>
     <div class="col-md-2" >
@@ -565,33 +515,80 @@ color: white !important;
                 }
             }
 
-            // Start of reset controls when the new button is clicked
-            document.addEventListener('DOMContentLoaded', function() {
-              var enableButton = document.getElementById('addNewBtn');
-
-              enableButton.addEventListener('click', function() {
+            function handleAddNewClick() {
                 // Enable buttons and set session storage
                 $('#saveBtn, #actionBtn').prop('disabled', false);
                 ['editMode', 'addNew', 'rawid'].forEach(key => sessionStorage.setItem(key, key === 'editMode' ? '0' : '1'));
-
+                enableAllControls();
                 // Reset input fields and enable them
                 var inputFields = [
-                  "txtTitle", "txtRevenue", "txtInsurance", "txtDeductable",
-                  "txtLeader", "txtBU", "selectIndustry", "selectFacility",
-                  "selectTrigger", "selectStatus"
+                "txtTitle", "txtRevenue", "txtInsurance", "txtDeductable",
+                "txtLeader", "txtBU", "selectIndustry", "selectFacility",
+                "selectTrigger", "selectStatus"
                 ];
                 inputFields.forEach(resetAndEnableField);
 
                 // Reset scenario tabs
-                for(let i = 1; i <= 5; i++) {
-                  resetScenarioTab(i);
+                for (let i = 1; i <= 5; i++) {
+                resetScenarioTab(i);
                 }
                 document.getElementById("hdnRawID").value = 0;
                 // Click the first scenario tab to reset it to default
                 document.getElementById("scenario1-tab").click();
+                var organizationId = document.getElementById('orgid').value;
+
+                fetch(`/OTRisk/get-organization-defaults/${organizationId}/`)
+                .then(response => response.json())
+                .then(data => {
+                var revenue = data.annual_revenue || 0;
+                        var formattedRevenue = formatCurrency(revenue);
+
+                        var insurance = data.cyber_insurance || 0;
+                        var formattedInsurance = formatCurrency(insurance);
+
+                        var deductable = data.insurance_deductible || 0;
+                        var formattedDeductable = formatCurrency(deductable);
+
+                        // Update txtRevenue field with formatted annual_revenue
+                        document.getElementById('txtRevenue').value = formattedRevenue;
+                        document.getElementById('txtInsurance').value = formattedInsurance;
+                        document.getElementById('txtDeductable').value = formattedDeductable;
+                        document.getElementById('selectIndustry').value = data.industry;
+                         let industrySelect = document.getElementById('selectIndustry');
+                        industrySelect.value = data.industry; // Set the value
+
+                        // Trigger a change event
+                        if ('createEvent' in document) {
+                            var evt = document.createEvent('HTMLEvents');
+                            evt.initEvent('change', false, true);
+                            industrySelect.dispatchEvent(evt);
+                        } else {
+                            industrySelect.fireEvent('onchange');
+                        }
+                })
+                .catch(error => console.error('Error fetching organization defaults:', error));
+
                 document.getElementById("txtTitle").focus();
-              });
+            }
+
+            document.addEventListener('DOMContentLoaded', function() {
+            var enableButton = document.getElementById('addNewBtn');
+            enableButton.addEventListener('click', handleAddNewClick);
             });
+
+
+
+
+
+            // Function to format number as currency
+            function formatCurrency(number) {
+                return new Intl.NumberFormat('en-US', {
+                    style: 'currency',
+                    currency: 'USD',  // Update the currency code as needed
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0
+                }).format(number);
+            }
 
             function resetAndEnableField(fieldId) {
               var field = document.getElementById(fieldId);
@@ -645,61 +642,10 @@ color: white !important;
                 sessionStorage.setItem('editMode', '1');
                 sessionStorage.setItem('addNew', '0');
                 document.getElementById("edit_mode").value="1";
-                document.getElementById("txtTitle").disabled = false;
-                document.getElementById("txtRevenue").disabled = false;
-                document.getElementById("txtInsurance").disabled = false;
-                document.getElementById("txtDeductable").disabled = false;
-                document.getElementById("txtLeader").disabled = false;
-                document.getElementById("txtBU").disabled = false;
-                document.getElementById("selectIndustry").disabled = false;
-                document.getElementById("selectFacility").disabled = false;
-                document.getElementById("selectTrigger").disabled = false;
-                document.getElementById("selectStatus").disabled = false;
-
-                document.getElementById("scenario2-tab").click();
-                document.getElementById("txtScenarioDescription_2").disabled = false;
-                document.getElementById("selectThreat_2").disabled = false;
-                document.getElementById("selectTactics_2").disabled = false;
-                document.getElementById("id_impact_2").disabled = false;
-                 document.getElementById("txtAssets_2").disabled = false;
-                 document.getElementById("selectOutage_2").disabled = false;
-                 document.getElementById("outage_2").disabled = false;
-
-                document.getElementById("scenario3-tab").click();
-                document.getElementById("txtScenarioDescription_3").disabled = false;
-                document.getElementById("selectThreat_3").disabled = false;
-                document.getElementById("selectTactics_3").disabled = false;
-                document.getElementById("id_impact_3").disabled = false;
-                document.getElementById("txtAssets_3").disabled = false;
-                 document.getElementById("selectOutage_3").disabled = false;
-                 document.getElementById("outage_3").disabled = false;
-
-                document.getElementById("scenario4-tab").click();
-                document.getElementById("selectThreat_4").disabled = false;
-                document.getElementById("selectTactics_4").disabled = false;
-                document.getElementById("id_impact_4").disabled = false;
-                document.getElementById("txtAssets_4").disabled = false;
-                document.getElementById("txtScenarioDescription_4").disabled = false;
-                 document.getElementById("selectOutage_4").disabled = false;
-                 document.getElementById("outage_4").disabled = false;
-
-                document.getElementById("scenario5-tab").click();
-                document.getElementById("selectThreat_5").disabled = false;
-                document.getElementById("selectTactics_5").disabled = false;
-                document.getElementById("id_impact_5").disabled = false;
-                document.getElementById("txtAssets_5").disabled = false;
-                document.getElementById("txtScenarioDescription_5").disabled = false;
-                 document.getElementById("selectOutage_5").disabled = false;
-                 document.getElementById("outage_5").disabled = false;
+                enableAllControls();
 
                 document.getElementById("scenario1-tab").click();
-                document.getElementById("selectTactics_1").disabled = false;
-                document.getElementById("id_impact_1").disabled = false;
-                document.getElementById("txtAssets_1").disabled = false;
-                document.getElementById("txtScenarioDescription_1").disabled = false;
-                document.getElementById("selectThreat_1").disabled = false;
-                 document.getElementById("selectOutage_1").disabled = false;
-                 document.getElementById("outage_1").disabled = false;
+
                });
             });
 
@@ -4782,13 +4728,14 @@ function checkEditModeAndExecute(buttonId, spinnerId) {
 
 
     document.addEventListener('DOMContentLoaded', function() {
+
       var rangeVuln2 = document.getElementById('range_vuln_2');
       var txtVuln2Container = document.getElementById('txtVuln_2_container');
       var txtVuln2 = document.getElementById('txtVuln_2');
       // var closeTxtVuln2 = document.getElementById('closeTxtVuln_2');
 
       rangeVuln2.addEventListener('click', function() {
-        txtVuln2Container.style.display = 'block';
+        //txtVuln2Container.style.display = 'block';
       });
 
       //closeTxtVuln2.addEventListener('click', function() {
@@ -4848,7 +4795,9 @@ $(document).ready(function() {
 //following code to load raw data and scenarios from the clicked raw record in the table
 $(document).ready(function() {
     $('#rawtable').on('click', 'tbody tr', function() {
-        clearValues();
+
+        handleAddNewClick();
+        // clearValues();
          if (sessionStorage.getItem('scenario1id') === null) {
             sessionStorage.setItem('scenario1id', '');
         }
@@ -5440,7 +5389,7 @@ $(document).ready(function() {
                             });
                             initializeControlScore_1();
                         }
-
+                        disableAllControls();
 
                          //now load the action items table
                      } else {
@@ -5798,6 +5747,7 @@ function checkRiskAssessmentRefreshVariables() {
             return false; // This will prevent the form submission
         }
     }
+
     return true; // This will allow the form to be submitted
 }
 
@@ -5887,6 +5837,7 @@ function save_scenario(buttonId) {
                 alert('Error saving scenario: ' + error.responseJSON.error);
             }
         });
+        disableAllControls();
     }
 
 function showNotification(message, isError = false) {
@@ -5918,12 +5869,52 @@ function setSliderColor(slider) {
     slider.style.setProperty("--thumb-color", color);  // Set the color variable
 }
 
+$(document).ready(function() {
+    $('#rawtable').on('click', 'tbody tr.selectable-row', function() {
+        // Remove 'highlighted' class from all other rows
+        $('tr.selectable-row').removeClass('highlighted');
 
+        // Add 'highlighted' class to the clicked row
+        $(this).addClass('highlighted');
+    });
+
+    // Trigger click on the first row of the table
+    $('#rawtable tbody tr.selectable-row:first').click();
+});
+
+
+
+    function disableAllControls() {
+        // Disable all input, textarea, select, and button elements
+
+        var elements = document.querySelectorAll('input:not([type="hidden"]), textarea, select, button');
+        elements.forEach(function(element) {
+            element.disabled = true;
+        });
+        document.getElementById('addNewBtn').disabled = false;
+        document.getElementById('editBtn').disabled = false;
+    }
+
+    function enableAllControls() {
+        // Disable all input, textarea, select, and button elements
+        var elements = document.querySelectorAll('input, textarea, select, button');
+        elements.forEach(function(element) {
+            element.disabled = false;
+        });
+
+    }
+    // Call the function when the page loads
+    window.onload = disableAllControls;
 </script>
+
+
+
+
  <textarea id="lblriskSummary_1" name="lblriskSummary_1" class="form-control" readonly style="resize: none; visibility: hidden" rows="15" > </textarea>
 <textarea id="lblriskSummary_2" name="lblriskSummary_2" class="form-control" readonly style="resize: none; visibility: hidden" rows="15" > </textarea>
 <textarea id="lblriskSummary_3" name="lblriskSummary_3" class="form-control" readonly style="resize: none; visibility: hidden" rows="15" > </textarea>
 <textarea id="lblriskSummary_4" name="lblriskSummary_4" class="form-control" readonly style="resize: none; visibility: hidden" rows="15" > </textarea>
 <textarea id="lblriskSummary_5" name="lblriskSummary_5" class="form-control" readonly style="resize: none; visibility: hidden" rows="15" > </textarea>
+
 </body>
 </html>

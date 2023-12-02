@@ -137,7 +137,7 @@ urlpatterns = [
     path('upload_questionnaire/', views.upload_questionnaire, name='upload_questionnaire'),
     path('assessment_report_view//<int:assessment_id>/', views.assessment_report_view, name='assessment_report_view'),
     path('analyze_scenario/', views.analyze_scenario, name='analyze_scenario'),
-
+    path('get-organization-defaults/<int:organization_id>/', views.get_organization_defaults, name='get_organization_defaults'),
 ]
 
 if settings.DEBUG:

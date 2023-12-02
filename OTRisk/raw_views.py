@@ -7,7 +7,7 @@ from OTRisk.models.raw import RAWorksheet, RAWorksheetScenario, RAActions, Mitre
     RawControlList
 from django.contrib.auth.decorators import login_required
 from OTRisk.models.questionnairemodel import FacilityType
-from OTRisk.models.Model_CyberPHA import tblIndustry, tblThreatSources, auditlog, tblScenarios, tblCyberPHAHeader
+from OTRisk.models.Model_CyberPHA import tblIndustry, tblThreatSources, auditlog, tblScenarios, tblCyberPHAHeader, OrganizationDefaults
 from OTRisk.models.Model_Mitre import MitreICSTactics
 from accounts.models import Organization
 from django.shortcuts import render
@@ -495,6 +495,14 @@ def qraw(request):
     # check the organization that the user belong to
     org_id = get_user_organization_id(request)
     saved_worksheet_id = None
+    # get organization defaults
+    try:
+        # Assuming org_id is already defined
+        org_defaults = OrganizationDefaults.objects.get(organization_id=org_id)
+        industry_id = org_defaults.industry_id  # Access the industry_id field
+    except OrganizationDefaults.DoesNotExist:
+        # Handle the case where no OrganizationDefaults is found for the given org_id
+        industry_id = None
 
     if request.method == 'POST':
 
@@ -516,14 +524,21 @@ def qraw(request):
         hdnRawID = int(hdnRawID_value)
 
         if edit_mode == 0 or hdnRawID == 0:
+
             if not is_duplicate:
                 # adding new records
                 revenue_str = ensure_non_empty(request.POST.get('txtRevenue'))
-                revenue_int = int(revenue_str.replace(',', ''))
+                revenue_cleaned = revenue_str.replace(',', '').replace('$', '')
+                revenue_int = int(revenue_cleaned)
+
                 insurance_str = ensure_non_empty(request.POST.get('txtInsurance'))
-                insurance_int = int(insurance_str.replace(',', ''))
+                insurance_cleaned = insurance_str.replace(',', '').replace('$', '')
+                insurance_int = int(insurance_cleaned)
+
                 deductable_str = ensure_non_empty(request.POST.get('txtDeductable'))
-                deductable_int = int(deductable_str.replace(',', ''))
+                deductable_cleaned = deductable_str.replace(',', '').replace('$', '')
+                deductable_int = int(deductable_cleaned)
+
                 ra_worksheet = RAWorksheet(
                     RATitle=request.POST.get('txtTitle'),
                     BusinessUnit=request.POST.get('txtBU'),
@@ -589,7 +604,8 @@ def qraw(request):
     threatsources = tblThreatSources.objects.all().order_by('ThreatSource')
     mitreTactics = MitreICSTactics.objects.all().order_by('tactic')
     mitreMitigations = MitreICSMitigations.objects.all().order_by('id')
-    scenarios = tblScenarios.objects.all().order_by('Scenario')
+
+    scenarios = tblScenarios.objects.filter(industry_id=industry_id).order_by('Scenario')
     scenario_form = RAWorksheetScenarioForm()
 
     user_ip = request.META.get('REMOTE_ADDR', '')
@@ -605,7 +621,8 @@ def qraw(request):
                    'mitreMitigations': mitreMitigations,
                    'scenarios': scenarios,
                    'scenario_form': scenario_form,
-                   'saved_worksheet_id': saved_worksheet_id})
+                   'saved_worksheet_id': saved_worksheet_id,
+                   'org_defaults': org_defaults})
 
 
 class GetTechniquesView(View):

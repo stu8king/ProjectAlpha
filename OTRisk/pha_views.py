@@ -4,6 +4,7 @@ from django.forms import model_to_dict
 from OTRisk.models.Model_CyberPHA import tblIndustry, tblCyberPHAHeader, tblZones, tblStandards, \
     tblCyberPHAScenario, vulnerability_analysis, tblAssetType, tblMitigationMeasures, MitreControlAssessment, \
     cyberpha_safety, SECURITY_LEVELS
+from OTRisk.models.raw import SecurityControls
 from OTRisk.models.raw import MitreICSMitigations, RAActions
 from OTRisk.models.questionnairemodel import FacilityType
 from OTRisk.models.model_assessment import SelfAssessment, AssessmentFramework
@@ -661,7 +662,6 @@ def get_response(user_message):
 
 @login_required
 def scenario_analysis(request):
-
     if request.method == 'GET':
         industry = request.GET.get('industry')
         facility_type = request.GET.get('facility_type')
@@ -758,6 +758,8 @@ def scenario_analysis(request):
             # Collect the results in the order the futures were submitted
             responses = [future.result() for future in futures]
 
+        # recommended_controls = get_recommended_controls(scenario, threatSource)
+
         # Return the responses as variables
         return JsonResponse({
             'likelihood': responses[0],
@@ -768,6 +770,36 @@ def scenario_analysis(request):
             'biaScore': responses[5],
             'control_effectiveness': control_effectiveness
         })
+
+
+def prepare_controls_summary():
+    controls = SecurityControls.objects.filter(framework='ISA 62443-2-1')
+    summary = ""
+    for control in controls:
+        summary += f"Control: {control.Control}"
+    return summary
+
+
+def get_recommended_controls(scenario, threat_source):
+    # Prepare the summary of controls
+    controls_summary = prepare_controls_summary()
+
+    # Construct the prompt for OpenAI
+    prompt = f"Given these controls from the ISA 62443-2-1 standard:\n{controls_summary}\nWhat are the top 5 controls that would be most applicable for a scenario involving '{scenario}' with a threat source of '{threat_source}'? "
+
+    # Make a call to OpenAI API
+    try:
+        response = openai.Completion.create(
+            engine="text-davinci-002",  # Or the appropriate engine you are using
+            prompt=prompt,
+            max_tokens=250,  # Adjust as needed
+            temperature=0.7  # Adjust for creativity level
+        )
+        return response.choices[0].text.strip()
+    except Exception as e:
+        # Handle exceptions (e.g., API errors)
+        print(f"Error: {e}")
+        return None
 
 
 def parse_recommendations(recommendations_str):
@@ -948,9 +980,16 @@ def analyze_scenario(request):
 
         facility_type = cyber_pha.FacilityType
         industry = cyber_pha.Industry
+        zone = cyber_pha.AssessmentZone
+        unit = cyber_pha.AssessmentUnit
+        address = cyber_pha.facilityAddress
+        country = cyber_pha.country
+        devices = cyber_pha.otherSummary
 
         # Construct a prompt for GPT-4
-        system_message = f"Given a cybersecurity scenario at a {facility_type} in the {industry} industry, described as: {scenario}, concisely describe in 30 words in a bullet point list of a maximum of 3 of the most likely direct consequences of the given scenario . Assume the role of an expert OT Cybersecurity risk advisor. Additional instruction: output ONLY the bullet points with no text either before or after the bullet points"
+        system_message = f"""
+        Given a cybersecurity scenario at a {facility_type} in the {industry} industry, located at {address} in {country}, specifically in the {zone} zone and the {unit} unit, described as: {scenario}. Considering the likely presence of these OT devices: {devices}, concisely describe in 50 words in a bullet point list of a maximum of 5 of the most likely direct consequences of the given scenario. The direct consequences should be specific to the facility and the mentioned details. Assume the role of an expert OT Cybersecurity risk advisor. Additional instruction: output ONLY the bullet points with no text either before or after the bullet points.
+        """
         user_message = scenario
 
         # Query OpenAI API

@@ -66,6 +66,39 @@ import chardet
 app_name = 'OTRisk'
 
 
+def get_organization_defaults(request, organization_id):
+    # Ensure this view handles only GET requests
+    if request.method == 'GET':
+        # Retrieve the OrganizationDefaults record
+        org_defaults = get_object_or_404(OrganizationDefaults, organization_id=organization_id)
+        industry_name = tblIndustry.objects.get(id=org_defaults.industry_id).Industry if org_defaults.industry else None
+        # Prepare the data to send back
+        data = {
+            'industry': industry_name,
+            'language': org_defaults.language,
+            'annual_revenue': org_defaults.annual_revenue,
+            'cyber_insurance': org_defaults.cyber_insurance,
+            'insurance_deductible': org_defaults.insurance_deductible,
+            'employees': org_defaults.employees,
+            'impact_weight_safety': org_defaults.impact_weight_safety,
+            'impact_weight_danger': org_defaults.impact_weight_danger,
+            'impact_weight_environment': org_defaults.impact_weight_environment,
+            'impact_weight_production': org_defaults.impact_weight_production,
+            'impact_weight_finance': org_defaults.impact_weight_finance,
+            'impact_weight_reputation': org_defaults.impact_weight_reputation,
+            'impact_weight_regulation': org_defaults.impact_weight_regulation,
+            'impact_weight_data': org_defaults.impact_weight_data,
+            'impact_weight_supply': org_defaults.impact_weight_supply
+        }
+
+        # Return the data as JSON
+        return JsonResponse(data)
+
+    # Handle non-GET requests
+    else:
+        return JsonResponse({'error': 'GET request required'}, status=400)
+
+
 ###########################
 ###########################
 # function to update the total BIA score from all scenarios associated with a given cyberPHAID
@@ -859,7 +892,6 @@ def scenarioreport(request):
 
 @login_required()
 def save_or_update_cyberpha(request):
-
     if request.method == 'POST':
         # Get the form data
         cyberphaid = request.POST.get('cyberpha')
