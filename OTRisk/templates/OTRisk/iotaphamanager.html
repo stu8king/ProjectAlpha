@@ -38,6 +38,35 @@
      {% bootstrap_javascript %}
 
 <style>
+.table th {
+    background-color: #007bff; /* Example color - a shade of blue */
+    color: white;             /* White text color for contrast */
+    text-align: center;       /* Center-align the text */
+    padding: 10px;            /* Add more padding for spacing */
+    font-weight: bold;        /* Make the text bold */
+    border-bottom: 2px solid #0056b3; /* A darker border at the bottom for depth */
+    text-transform: uppercase; /* Uppercase letters for a more professional look */
+}
+
+
+.table td {
+padding: 12px; /* More padding for table cells */
+border-bottom: 1px solid #dee2e6;
+}
+.btn-custom {
+    border-radius: 5px;
+    transition: background-color 0.3s, box-shadow 0.3s;
+}
+
+.btn-custom:hover {
+    background-color: #e0e0e0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+}
+
+.navbar-scroll {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
 .notification-message {
     position: fixed; /* or absolute */
     top: 20px; /* Distance from top */
@@ -66,7 +95,7 @@ to {
 
 
 body {
-    font-size: 12px;
+    font-size: 14px;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
      background-color: #f4f7fa;
     color: #333;
@@ -234,6 +263,9 @@ fetch('https://restcountries.com/v3.1/all')
         document.getElementById("txtPhysical").setAttribute('disabled', true);
         document.getElementById("txtOther").setAttribute('disabled', true);
         document.getElementById("txtCompliance").setAttribute('disabled', true);
+        document.getElementById("threatSummary").setAttribute('disabled', true);
+        document.getElementById("insightSummary").setAttribute('disabled', true);
+        document.getElementById("strategySummary").setAttribute('disabled', true);
          $('#risk-assessment-btn').prop('disabled', true);
          $('#btnformSubmit').prop('disabled', true);
          $('#scenarioButton').prop('disabled', true);
@@ -380,10 +412,10 @@ function drawControlGauge(score) {
     <div class="col-md-1 bg-white"></div>
     <div class="col-md-10 bg-white">
         <label for="headertable" class="form-label">Select a record in the table to view and edit the CyberPHA</label>
-        <table id="headertable" class="table table-striped table-bordered small-font compact">
+        <table id="headertable" class="table small-font compact">
         <thead style="background-color: #2c2c2c; color: white">
             <tr>
-                <th>ID</th>
+                <th class="th">ID</th>
                 <th>Title</th>
                 <th>Site</th>
                 <th>Type</th>
@@ -515,6 +547,9 @@ function drawControlGauge(score) {
                         $('#txtPhysical').val(data.headerrecord.physicalsummary);
                         $('#txtOther').val(data.headerrecord.othersummary);
                         $('#txtCompliance').val(data.headerrecord.compliancesummary);
+                        $('#threatSummary').val(data.headerrecord.threatSummary);
+                        $('#insightSummary').val(data.headerrecord.insightSummary);
+                        $('#strategySummary').val(data.headerrecord.strategySummary);
                         $('#txtAddress').val(data.headerrecord.address);
                         $('#countrySelector').val(data.headerrecord.country).trigger('change');
                         $('#shift_model').val(data.headerrecord.shift_model);
@@ -523,7 +558,8 @@ function drawControlGauge(score) {
                         $('#cyber_insurance').val(data.headerrecord.cyber_insurance);
                         $('#cyber_insurance').val(data.headerrecord.cyber_insurance).trigger('change');
                         $('#hdn_pha_score').val(data.headerrecord.pha_score);
-
+                        $('#npm').val(data.headerrecord.npm);
+                        $('#coho').val(formatAsCurrency(data.headerrecord.coho));
                         drawGauge(data.headerrecord.pha_score);
 
                         drawControlGauge(data.control_effectiveness);
@@ -535,7 +571,7 @@ function drawControlGauge(score) {
                         var pha_score = data.headerrecord.pha_score;
 
                         // Enable the controls
-                        $('#txtTitle, #txtLeader, #txtUnit, #txtStartDate, #txtAddress, #txtFacility, #txtLeaderEmail, #txtEndDate, #txtSafetySummary, #txtChemical, #txtPhysical, #txtOther, #txtCompliance, #selFacilityType, #assessment_id, #cyber_insurance, #shift_model, #annual_revenue, #txtEmployees, #selIndustry, #selZone, #selSL, #countrySelector, #btnformSubmit,  #risk-assessment-btn, #scenarioButton, #generatePPT').prop('disabled', false);
+                        $('#txtTitle, #txtLeader, #txtUnit, #txtStartDate, #txtAddress, #txtFacility, #txtLeaderEmail, #txtEndDate, #txtSafetySummary, #txtChemical, #txtPhysical, #txtOther, #txtCompliance, #strategySummary, #insightSummary, #threatSummary, #selFacilityType, #assessment_id, #cyber_insurance, #shift_model, #annual_revenue, #txtEmployees, #selIndustry, #selZone, #selSL, #countrySelector, #btnformSubmit,  #risk-assessment-btn, #scenarioButton, #generatePPT').prop('disabled', false);
                         $('#btnformSubmit').prop('disabled', false);
                         $('#scenarioButton').prop('disabled', false);
 
@@ -596,13 +632,13 @@ function drawControlGauge(score) {
         $(document).ready(function() {
             $('#resetButton').on('click', function() {
                 // Reset textboxes and textareas
-                $('#txtTitle, #txtLeader, #txtUnit, #txtStartDate, #txtAddress, #txtFacility, #txtLeaderEmail, #txtEndDate, #txtSafetySummary, #txtChemical, #txtPhysical, #txtEmployees, #annual_revenue, #cyber_insurance, #shift_model, #txtOther, #txtCompliance').val('');
+                $('#txtTitle, #txtLeader, #txtUnit, #txtStartDate, #txtAddress, #txtFacility, #txtLeaderEmail, #txtEndDate, #txtSafetySummary, #txtChemical, #txtPhysical, #txtEmployees, #annual_revenue, #cyber_insurance, #shift_model, #txtOther, #txtCompliance, #strategySummary, #insightSummary, #threatSummary').val('');
 
                 // Reset select dropdowns
                 $('#selIndustry, #selFacilityType, #assessment_id, #selZone, #selSL').prop('selectedIndex', 0);
 
                 // Enable the controls
-                $('#txtTitle, #txtLeader, #txtUnit, #txtStartDate, #txtAddress, #txtFacility, #txtLeaderEmail, #txtEndDate, #txtSafetySummary, #txtChemical, #txtPhysical, #txtOther, #txtCompliance, #selFacilityType, #selIndustry, #selZone, #selSL, #shift_model, #txtEmployees, #annual_revenue, #cyber_insurance, #countrySelector, #btnformSubmit, #risk-assessment-btn').prop('disabled', false);
+                $('#txtTitle, #txtLeader, #txtUnit, #txtStartDate, #txtAddress, #txtFacility, #txtLeaderEmail, #txtEndDate, #txtSafetySummary, #txtChemical, #txtPhysical, #txtOther, #txtCompliance, #strategySummary, #insightSummary, #threatSummary, #selFacilityType, #selIndustry, #selZone, #selSL, #shift_model, #txtEmployees, #annual_revenue, #cyber_insurance, #countrySelector, #btnformSubmit, #risk-assessment-btn').prop('disabled', false);
                 $('#btnformSubmit').prop('disabled', false);
 
                 //reset session variables
@@ -699,7 +735,9 @@ function drawControlGauge(score) {
         </select>
     </div>
 </div>
-    <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+<div class="row">
+    <div class="col-md-4">
+        <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
             <div class="card-body">
                 <label for="annual_revenue">Facility Annual Revenue</label>
                 <input type="text" class="form-control currency-input" name="annual_revenue" id="annual_revenue" value="{{ annual_revenue_str|default:'0' }}" oninput="checkMaxValue(this)" required>
@@ -731,6 +769,42 @@ function drawControlGauge(score) {
 
             </div>
         </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card mb-3 shadow-sm">
+            <div class="card-body">
+                <label for="coho">Operating Cost/Hour</label>
+                <input type="text" class="form-control currency-input" name="coho" id="coho" value="{{ coho_str|default:'0' }}" oninput="checkMaxValue(this)" required>
+                <script>
+                    document.addEventListener("DOMContentLoaded", function() {
+                        const currencyInput = document.getElementById('coho');
+
+                        currencyInput.addEventListener('input', function(e) {
+                            // Strip any non-digit characters
+                            let value = e.target.value.replace(/\D/g, '');
+
+                            // Convert the number to a currency format
+                            e.target.value = parseInt(value).toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 });
+                        });
+                    });
+
+
+                </script>
+
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card mb-3 shadow-sm">
+            <div class="card-body">
+                <label for="npm">Facility NPM (%)</label>
+                <input type="number" class="form-control" name="npm" id="npm" value="{{ npm|default:'0' }}" min="0" max="100">
+
+
+            </div>
+        </div>
+    </div>
+</div>
         <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
             <div class="card-body">
                 <label for="txtStartDate">Start Date</label><input type="date" class="form-control" name="txtStartDate" id="txtStartDate"  value="{{ current_pha_header.AssessmentStartDate }}" required>
@@ -916,7 +990,16 @@ function drawControlGauge(score) {
                 <a class="nav-link" id="other-tab" data-toggle="tab" href="#other" role="tab" aria-controls="other" aria-selected="false"><i class="bi bi-pc-display-horizontal"></i> OT Assets</a>
             </li>
             <li class="nav-item" role="presentation">
-                <a class="nav-link" id="other-tab" data-toggle="tab" href="#compliance" role="tab" aria-controls="other" aria-selected="false"><i class="bi bi-pc-display-horizontal"></i> Compliance</a>
+                <a class="nav-link" id="other-tab" data-toggle="tab" href="#compliance" role="tab" aria-controls="other" aria-selected="false"><i class="bi bi-card-checklist"></i> Compliance</a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link" id="other-tab" data-toggle="tab" href="#threats" role="tab" aria-controls="other" aria-selected="false"><i class="bi bi-exclamation-circle"></i> Threats</a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link" id="other-tab" data-toggle="tab" href="#insights" role="tab" aria-controls="other" aria-selected="false"><i class="bi bi-binoculars"></i> Insight</a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link" id="other-tab" data-toggle="tab" href="#strategy" role="tab" aria-controls="other" aria-selected="false"><i class="bi bi-send-check"></i> Strategy</a>
             </li>
         </ul>
 
@@ -926,26 +1009,36 @@ function drawControlGauge(score) {
                 <label for="txtSafetySummary">Safety Summary:</label>
 
 
-                <textarea rows="20" name="txtSafetySummary" id="txtSafetySummary" class="form-control" style="resize: none; background-color: lightgrey ;" readonly>{{ current_pha_header.safetySummary }}</textarea>
+                <textarea rows="25" name="txtSafetySummary" id="txtSafetySummary" class="form-control" style="resize: none; background-color: white; border-width: 0px" readonly>{{ current_pha_header.safetySummary }}</textarea>
             </div>
             <div class="tab-pane" id="chemical" role="tabpanel" aria-labelledby="chemical-tab">
                 <label for="txtChemical">Chemical Storage:</label>
-                <textarea rows="20" name="txtChemical" id="txtChemical" class="form-control" style="resize: none; background-color: lightgrey;" readonly>{{ current_pha_header.chemicalSummary }}</textarea>
+                <textarea rows="25" name="txtChemical" id="txtChemical" class="form-control" style="resize: none; background-color: white; border-width: 0px" readonly>{{ current_pha_header.chemicalSummary }}</textarea>
             </div>
             <div class="tab-pane" id="physical" role="tabpanel" aria-labelledby="physical-tab">
                 <label for="txtPhysical">Physical Security:</label>
-                <textarea rows="20" name="txtPhysical" id="txtPhysical" class="form-control" style="resize: none; background-color: lightgrey;" readonly>{{ current_pha_header.physicalSummary }}</textarea>
+                <textarea rows="25" name="txtPhysical" id="txtPhysical" class="form-control" style="resize: none; background-color: white; border-width: 0px" readonly>{{ current_pha_header.physicalSummary }}</textarea>
             </div>
             <div class="tab-pane" id="other" role="tabpanel" aria-labelledby="other-tab">
                 <label for="txtOther">OT Assets:</label>
-                <textarea rows="25" name="txtOther" id="txtOther" class="form-control" style="resize: none; background-color: lightgrey;" readonly>{{ current_pha_header.otherSummary }}</textarea>
+                <textarea rows="25" name="txtOther" id="txtOther" class="form-control" style="resize: none; background-color: white; border-width: 0px" readonly>{{ current_pha_header.otherSummary }}</textarea>
             </div>
             <div class="tab-pane" id="compliance" role="tabpanel" aria-labelledby="other-tab">
                 <label for="txtCompliance">Compliance:</label>
-                <textarea rows="20" name="txtCompliance" id="txtCompliance" class="form-control" style="resize: none; background-color: lightgrey;" readonly>{{ current_pha_header.complianceSummary }}</textarea>
+                <textarea rows="25" name="txtCompliance" id="txtCompliance" class="form-control" style="resize: none; background-color: white; border-width: 0px" readonly>{{ current_pha_header.complianceSummary }}</textarea>
             </div>
-
-
+            <div class="tab-pane" id="threats" role="tabpanel" aria-labelledby="other-tab">
+                <label for="threatSummary">Threats and Vulnerabilities:</label>
+                <textarea rows="25" name="threatSummary" id="threatSummary" class="form-control" style="resize: none; background-color: white; border-width: 0px" readonly>{{ current_pha_header.threatSummary }}</textarea>
+            </div>
+            <div class="tab-pane" id="insights" role="tabpanel" aria-labelledby="other-tab">
+                <label for="insightSummary">Insights:</label>
+                <textarea rows="25" name="insightSummary" id="insightSummary" class="form-control" style="resize: none; background-color: white; border-width: 0px" readonly>{{ current_pha_header.insightSummary }}</textarea>
+            </div>
+            <div class="tab-pane" id="strategy" role="tabpanel" aria-labelledby="other-tab">
+                <label for="strategySummary">Defense Strategies:</label>
+                <textarea rows="25" name="strategySummary" id="strategySummary" class="form-control" style="resize: none; background-color: white; border-width: 0px" readonly>{{ current_pha_header.strategySummary }}</textarea>
+            </div>
         </div>
     </div>
 </div>
@@ -967,6 +1060,9 @@ $("#generatePPT").click(function(e) {
             txtPhysical: $("#txtPhysical").val(),
             txtOther: $("#txtOther").val(),
             txtCompliance: $("#txtCompliance").val(),
+            threatSummary: $("#threatSummary").val(),
+            insightSummary: $("#insightSummary").val(),
+            strategySummary: $("#strategySummary").val(),
             csrfmiddlewaretoken: $('input[name=csrfmiddlewaretoken]').val() // Ensure CSRF token is sent with POST request
         },
         dataType: "json",
@@ -1051,6 +1147,9 @@ $(document).ready(function() {
                     document.getElementById('txtPhysical').value = response.physical_security_summary;
                     document.getElementById('txtOther').value = response.other_summary;
                     document.getElementById('txtCompliance').value = response.compliance_summary;
+                    document.getElementById('threatSummary').value = response.threatSummary;
+                    document.getElementById('strategySummary').value = response.strategySummary;
+                    document.getElementById('insightSummary').value = response.insightSummary;
                     document.getElementById('hdn_pha_score').value = response.pha_score;
 
 

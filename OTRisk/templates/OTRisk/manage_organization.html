@@ -51,33 +51,7 @@
 {% endblock %}
 
 {% block content %}
-<script>
-fetch('https://restcountries.com/v3.1/all')
-    .then(response => response.json())
-    .then(data => {
-        // Sort the countries alphabetically
-        data.sort((a, b) => a.name.common.localeCompare(b.name.common));
 
-        // Add a blank option as the default
-        $('#addCountrySelector').append(new Option('', ''));
-
-        // Populate the dropdown
-        data.forEach(country => {
-            const countryName = country.name.common;
-            $('#addCountrySelector').append(new Option(countryName, countryName));
-        });
-    })
-    .then(() => {
-        $('#addCountrySelector').select2({
-            placeholder: "Select a country", // This will display the placeholder text
-            allowClear: true // This allows users to clear the selected value
-        });
-    })
-    .catch(error => {
-        console.error("There was an error fetching the country list:", error);
-    });
-
-</script>
 <div class="row">
     <div class="col-md-2" style="background-color: white"></div>
     <div class="col-md-10"><h2></h2></div>

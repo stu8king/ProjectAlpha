@@ -1,5 +1,6 @@
 import json
 
+from django.conf import settings
 from django.db import models
 from django.contrib.auth.models import User
 from django.contrib.auth.models import AbstractUser
@@ -95,6 +96,10 @@ class Organization(models.Model):
     subscription_start = models.DateField(null=True, blank=True)
     subscription_end = models.DateField(null=True, blank=True)
     max_users = models.IntegerField(default=1, null=False)
+    create_date = models.DateTimeField(auto_now_add=True)
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+                                   related_name='organization_creators')
+    last_updated = models.DateTimeField(auto_now=True)
 
     class Meta:
         db_table = 'organization'
@@ -107,6 +112,20 @@ class Organization(models.Model):
         if self.subscription_status and self.subscription_end:
             return self.subscription_end > timezone.now().date()
         return False
+
+class OrganizationHistory(models.Model):
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE)
+    action = models.CharField(max_length=50)  # e.g., 'Created', 'Updated'
+    changed_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    change_date = models.DateTimeField(default=timezone.now)
+    change_description = models.TextField()
+
+    class Meta:
+        db_table = 'organization_history'
+        managed = True
+
+    def __str__(self):
+        return f"{self.organization.name} - {self.action} - {self.change_date}"
 
 
 class UserProfile(models.Model):

@@ -62,7 +62,6 @@ urlpatterns = [
     path('facility_risk_profile', views.facility_risk_profile, name='facility_risk_profile'),
     path('get_headerrecord', views.get_headerrecord, name='get_headerrecord'),
     path('scenario_analysis',views.scenario_analysis, name='scenario_analysis'),
-    path('scenario_analysis_estimates_only',views.scenario_analysis_estimates_only, name='scenario_analysis_estimates'),
     path('phascenarioreport',views.phascenarioreport, name='phascenarioreport'),
     path('getSingleScenario/', views.getSingleScenario, name='getSingleScenario'),
     path('check_vulnerabilities/', views.check_vulnerabilities, name='check_vulnerabilities'),
@@ -138,6 +137,9 @@ urlpatterns = [
     path('assessment_report_view//<int:assessment_id>/', views.assessment_report_view, name='assessment_report_view'),
     path('analyze_scenario/', views.analyze_scenario, name='analyze_scenario'),
     path('get-organization-defaults/<int:organization_id>/', views.get_organization_defaults, name='get_organization_defaults'),
+    path('delete_snapshot/<int:snapshot_id>/<int:scenario_id>/', views.delete_snapshot, name='delete_snapshot'),
+    path('organization/form/', views.organization_form_view, name='organization_form'),
+
 ]
 
 if settings.DEBUG:

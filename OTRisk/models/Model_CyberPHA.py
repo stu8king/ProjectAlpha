@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator, MaxValueValidator
+from django.db.models import URLField
+
 import OTRisk.models.model_assessment
 from accounts.models import Organization
 from OTRisk.models.raw import MitreICSMitigations
@@ -276,6 +278,9 @@ class tblCyberPHAHeader(models.Model):
     risk_scenarios = models.IntegerField(null=True, blank=True)  # overall cyberPHA risk score based on all scenarios
     coho = models.IntegerField(default=0)  # facility cost per operating hour
     npm = models.IntegerField(default=0)  # net profit margin
+    threatSummary = models.TextField(default="No Summary Saved", null=True)
+    insightSummary = models.TextField(default="No Summary Saved", null=True)
+    strategySummary = models.TextField(default="No Summary Saved", null=True)
 
     class Meta:
         db_table = 'tblCyberPHAHeader'
@@ -505,6 +510,11 @@ class tblCyberPHAScenario(models.Model):
     ale_low = models.IntegerField()
     ale_high = models.IntegerField()
     ale_median = models.IntegerField()
+    exposed_system = models.BooleanField(
+        default=False)  # flag set by the user to define if the scenario relates to publicly exposed systems
+    weak_credentials = models.BooleanField(
+        default=False)  # flag set by the user to define if the scenario has systems that are configured with weak or default credentials
+    compliance_map = models.TextField(default="No Compliance Map Saved", null=True)
 
     class Meta:
         db_table = 'tblCyberPHAScenario'
@@ -519,6 +529,19 @@ class tblCyberPHAScenario(models.Model):
     @classmethod
     def set_current_user(cls, user):
         cls._current_user = user
+
+
+class scenario_compliance(models.Model):
+    # Foreign key to tblCyberPHAScenario.ID (no need to specify db_column='ID')
+    scenario = models.ForeignKey(tblCyberPHAScenario, on_delete=models.CASCADE)
+
+    # Other fields
+    compliance_issue = models.CharField(max_length=200)
+    regulation = models.CharField(max_length=100)
+    url = models.URLField(max_length=200)  # Use URLField for URLs
+
+    def __str__(self):
+        return f"{self.scenario.Scenario} - {self.regulation}"
 
 
 class vulnerability_analysis(models.Model):
@@ -713,6 +736,11 @@ class CyberPHAScenario_snapshot(models.Model):
     ale_high = models.IntegerField()
     ale_median = models.IntegerField()
     dangerScope = models.TextField()
+    exposed_system = models.BooleanField(
+        default=False)  # flag set by the user to define if the scenario relates to publicly exposed systems
+    weak_credentials = models.BooleanField(
+        default=False)  # flag set by the user to define if the scenario has systems that are configured with weak or default credentials
+    compliance_map = models.TextField(default="No Compliance Map Saved", null=True)
 
 
 class Audit(models.Model):
@@ -763,3 +791,18 @@ class PHAControlList(models.Model):
 
     def __str__(self):
         return self.control
+
+
+from django.db import models
+
+
+class ScenarioConsequences(models.Model):
+    scenario = models.ForeignKey(tblCyberPHAScenario, on_delete=models.CASCADE, db_column='Scenario')
+    consequence_text = models.CharField(max_length=1000)
+    is_validated = models.BooleanField(default=False)
+
+    class Meta:
+        db_table = 'scenario_consequences'
+
+    def __str__(self):
+        return f"Consequence for {self.scenario.Scenario}: {self.consequence_text}"

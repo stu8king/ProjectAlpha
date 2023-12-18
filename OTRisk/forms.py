@@ -13,6 +13,31 @@ from accounts.models import UserProfile, Organization
 from django.contrib.auth.password_validation import validate_password
 
 
+class CyberSecurityScenarioForm(forms.Form):
+    txtScenario = forms.CharField(
+        widget=forms.Textarea(attrs={
+            'class': 'form-control',
+            'rows': '8',
+            'placeholder': 'Enter a detailed cybersecurity scenario...',
+            'style': 'resize: none; border: 3px #97979A; border-radius: 10px; box-shadow: inset 3px 3px 8px rgba(0, 0, 0, 0.5); padding: 20px; background-color: white',
+            'spellcheck': 'true'
+        }),
+        required=True
+    )
+
+    def clean_txtScenario(self):
+        data = self.cleaned_data['txtScenario']
+        # Add your validation logic here (e.g., checking for minimum word count, specific keywords)
+        return data
+
+
+class OrganizationForm(forms.ModelForm):
+    class Meta:
+        model = Organization
+        fields = '__all__'
+        exclude = ('subscription_type',)
+
+
 class QuestionnaireUploadForm(forms.Form):
     file = forms.FileField()
 
@@ -200,12 +225,6 @@ class ChangePasswordForm(forms.Form):
         cleaned_data = super().clean()
         if cleaned_data.get('password1') != cleaned_data.get('password2'):
             raise forms.ValidationError("Passwords do not match!")
-
-
-class UserProfileForm_(forms.ModelForm):
-    class Meta:
-        model = UserProfile
-        fields = ['must_change_password']
 
 
 class UserProfileForm(forms.ModelForm):

@@ -440,6 +440,15 @@ body {
                                             <li class="nav-item">
                                                 <a class="nav-link" id="other-tab" data-toggle="tab" href="#other" role="tab" aria-controls="other" aria-selected="false">OT</a>
                                             </li> <!-- OT controls summary -->
+                                            <li class="nav-item">
+                                                <a class="nav-link" id="threats-tab" data-toggle="tab" href="#threats" role="tab" aria-controls="threats" aria-selected="false">Threats</a>
+                                            </li>
+                                            <li class="nav-item">
+                                                <a class="nav-link" id="insight-tab" data-toggle="tab" href="#insight" role="tab" aria-controls="insight" aria-selected="false">Insight</a>
+                                            </li>
+                                            <li class="nav-item">
+                                                <a class="nav-link" id="strategy-tab" data-toggle="tab" href="#strategy" role="tab" aria-controls="strategy" aria-selected="false">Strategy</a>
+                                            </li>
                                         </ul>
 
                                         <!-- Tab panes -->
@@ -459,7 +468,15 @@ body {
                                         <div class="tab-pane text-left" id="other" role="tabpanel" aria-labelledby="other-tab">
                                             <div class="col scrollable-content">{{ other_summary_html|safe }}</div>
                                         </div>
-
+                                        <div class="tab-pane text-left" id="threats" role="tabpanel" aria-labelledby="threats-tab">
+                                            <div class="col scrollable-content">{{ threat_summary_html|safe }}</div>
+                                        </div>
+                                        <div class="tab-pane text-left" id="insight" role="tabpanel" aria-labelledby="insight-tab">
+                                            <div class="col scrollable-content">{{ insight_summary_html|safe }}</div>
+                                        </div>
+                                         <div class="tab-pane text-left" id="strategy" role="tabpanel" aria-labelledby="strategy-tab">
+                                            <div class="col scrollable-content">{{ strategy_summary_html|safe }}</div>
+                                        </div>
                                         </div>
                                     </div> <!-- facility profile -->
                                 </div>
@@ -789,7 +806,18 @@ body {
 });
 
     function writeScenarioData(data) {
-    document.getElementById('lblConsequence').textContent = data.Consequence;
+    var consequencesLabel = document.getElementById('lblConsequence');
+        consequencesLabel.innerHTML = ''; // Clear existing content
+
+        if (data.Consequences && data.Consequences.length > 0) {
+            data.Consequences.forEach(function(consequence) {
+                // Append each consequence to the label
+                consequencesLabel.innerHTML += consequence.consequence_text + '<br>';
+            });
+        } else {
+            // Handle the case where there are no consequences
+            consequencesLabel.innerHTML = 'No consequences available.';
+        }
     // document.getElementById('recommendations').value = data.recommendations;
         document.getElementById('standards').textContent = data.standards;
     document.getElementById('sle_low').textContent = data.sle_low;

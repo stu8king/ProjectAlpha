@@ -194,6 +194,8 @@ class RAWorksheetScenario(models.Model):
     bia_supply_outbound = models.BooleanField(default=False)
     bia_supply_prodimpact = models.CharField(max_length=6, default='Low')
     bia_supply_security = models.CharField(max_length=6, default='Low')
+    exposed_system = models.BooleanField(default=False)
+    weak_credentials = models.BooleanField(default=False)
 
     class Meta:
         db_table = 'tblRAWorksheetScenario'

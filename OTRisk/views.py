@@ -5,6 +5,7 @@ from django.contrib.auth.models import User
 from django.core.serializers import serialize
 from django.forms import formset_factory, modelformset_factory
 from django.shortcuts import get_object_or_404
+from django.template.loader import render_to_string
 from django.utils.crypto import get_random_string
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
@@ -27,11 +28,12 @@ from OTRisk.models.Model_CyberPHA import tblCyberPHAHeader, tblRiskCategories, \
     tblControlObjectives, \
     tblThreatIntelligence, tblMitigationMeasures, tblScenarios, tblSafeguards, tblThreatSources, tblThreatActions, \
     tblNodes, tblUnits, tblZones, tblCyberPHAScenario, tblIndustry, auditlog, tblStandards, MitreControlAssessment, \
-    CyberPHAScenario_snapshot, Audit, PHAControlList, SECURITY_LEVELS, OrganizationDefaults
+    CyberPHAScenario_snapshot, Audit, PHAControlList, SECURITY_LEVELS, OrganizationDefaults, scenario_compliance, \
+    ScenarioConsequences
 from django.shortcuts import render, redirect
 from .dashboard_views import get_user_organization_id
 from django.contrib.auth.decorators import login_required
-from .forms import LoginForm, OrganizationDefaultsForm
+from .forms import LoginForm, OrganizationDefaultsForm, CyberSecurityScenarioForm
 from datetime import date, datetime
 import json
 import openai, math
@@ -43,27 +45,66 @@ from .raw_views import qraw, openai_assess_risk, GetTechniquesView, raw_action, 
 from .dashboard_views import dashboardhome
 from .pha_views import iotaphamanager, facility_risk_profile, get_headerrecord, scenario_analysis, phascenarioreport, \
     getSingleScenario, pha_report, scenario_vulnerability, add_vulnerability, get_asset_types, calculate_effectiveness, \
-    generate_ppt, scenario_analysis_estimates_only, analyze_scenario
+    generate_ppt, analyze_scenario
 from .report_views import pha_reports, get_scenario_report_details, qraw_reports, get_qraw_scenario_report_details
 from .forms import CustomScenarioForm, CustomConsequenceForm, OrganizationAdmin
 from .models.Model_Scenario import CustomScenario, CustomConsequence
-from accounts.models import Organization
+from accounts.models import Organization, OrganizationHistory
 from accounts.models import UserProfile
 from .forms import UserForm, UserProfileForm, ChangePasswordForm
 import secrets
 import string
-from django.core.mail import send_mail
+from django.core.mail import send_mail, EmailMultiAlternatives
 from django.contrib.auth.decorators import user_passes_test
 from django.db import connection, transaction
 from django.urls import reverse
 from OTRisk.forms import SQLQueryForm, ControlAssessmentForm, AssessmentFrameworkForm, NewAssessmentAnswerForm, \
-    EditAssessmentAnswerForm, QuestionnaireUploadForm
+    EditAssessmentAnswerForm, QuestionnaireUploadForm, OrganizationForm
 from .models.model_assessment import AssessmentFramework, AssessmentQuestion, SelfAssessment, AssessmentAnswer
 import csv
 from django.contrib import messages
 import chardet
 
 app_name = 'OTRisk'
+
+
+# Add Organization View
+@login_required
+def organization_form_view(request):
+
+    organizations = Organization.objects.all()
+    selected_org = request.GET.get('org_id', None)
+
+    if request.method == 'POST':
+        if selected_org:
+            organization = Organization.objects.get(id=selected_org)
+            form = OrganizationForm(request.POST, instance=organization)
+        else:
+            form = OrganizationForm(request.POST)
+            form.instance.created_by = request.user
+
+        if form.is_valid():
+            organization = form.save()
+            # Record the action in OrganizationHistory
+            action = "Created" if not selected_org else "Updated"
+            change_description = ", ".join(
+                [f"{key}: {value}" for key, value in request.POST.items() if key != 'csrfmiddlewaretoken'])
+            OrganizationHistory.objects.create(
+                organization=organization,
+                action=action,
+                changed_by=request.user,
+                change_description=change_description
+            )
+            return redirect('OTRisk:organization_form')
+    else:
+        form = OrganizationForm(instance=Organization.objects.get(id=selected_org) if selected_org else None)
+
+    return render(request, 'OTRisk/org_form.html', {'form': form, 'organizations': organizations, 'selected_org': selected_org})
+
+
+def load_organizations(request):
+    organizations = Organization.objects.all()
+    return JsonResponse(list(organizations.values('id', 'name')), safe=False)
 
 
 def get_organization_defaults(request, organization_id):
@@ -276,7 +317,7 @@ def upload_questionnaire(request):
 
 @login_required
 def fetch_updated_assessments(request):
-    assessments = SelfAssessment.objects.all()
+    assessments = SelfAssessment.objects.filter(organization_id=get_user_organization_id(request))
     data = []
 
     for assessment in assessments:
@@ -663,17 +704,26 @@ def change_password(request, user_id):
 
 
 def generate_password(length=12):
-    alphabet = string.ascii_letters + string.digits + string.punctuation
+    alphabet = string.ascii_letters + string.digits
     password = ''.join(secrets.choice(alphabet) for i in range(length))
     return password
 
 
 def send_password_email(user_email, password):
-    subject = 'iOTa Temporary Password'
-    message = f'Thank you for creating an account on. Here is your temporary password: {password}   - You will be required to change it upon first login. After setting a password, the first time you log in you will be required to set up two-factor authentication using an Authenticator app.'
+    subject = 'Welcome to iOTa. Your Temporary Password'
+    message = f'Thank you for creating an account on. Your userid is {user_email}. Your temporary password is: {password}   - You will be required to change it upon first login. After setting a password, the first time you log in you will be required to set up two-factor authentication using an Authenticator app (you will need to download and install an authenticator app from the App Store if you do not already have one).  '
     from_email = 'admin@iotarisk.com'  # Replace with your email
     recipient_list = [user_email]
-    send_mail(subject, message, from_email, recipient_list)
+    context = {
+        'password': password,
+        'logo_url': 'https://www.iotarisk.com/staticfiles/images/iota%20-%20white%201.png',
+        'login_url': 'https://www.iotarisk.com'
+    }
+    html_content = render_to_string('OTRisk/welcome_email.html', context)
+
+    msg = EmailMultiAlternatives(subject, html_content, from_email, recipient_list)
+    msg.attach_alternative(html_content, "text/html")
+    msg.send()
 
 
 @login_required
@@ -897,6 +947,14 @@ def save_or_update_cyberpha(request):
         cyberphaid = request.POST.get('cyberpha')
         cyberpha_header = tblCyberPHAHeader.objects.get(pk=cyberphaid)
         scenario = request.POST.get('scenario')
+
+        # Convert 'exposed_system' to a boolean value
+        exposed_system_value = request.POST.get('exposed_system', 'off')
+        exposed_system = exposed_system_value.lower() == 'true'
+
+        weak_credentials_value = request.POST.get('weak_credentials', 'off')
+        weak_credentials = weak_credentials_value.lower() == 'true'
+
         threatclass = request.POST.get('threatSource')
         threataction = request.POST.get('threatAction')
         countermeasures = request.POST.get('mitigationMeasures')
@@ -962,6 +1020,7 @@ def save_or_update_cyberpha(request):
         likelihood = request.POST.get('likelihood')
         frequency = request.POST.get('frequency')
         snapshot = request.POST.get('snapshot')
+        compliance_map = request.POST.get('compliance_map')
         ThreatClass = request.POST.get('threatSource')
         dangerScope = request.POST.get('dangerScope')
         ai_bia_score = request.POST.get('ai_bia_score')
@@ -1048,6 +1107,7 @@ def save_or_update_cyberpha(request):
 
         deleted = 0
         org_id = get_user_organization_id(request)
+
         if snapshot == '1':
             scenario_id_value = int(request.POST.get('scenarioID'))
             scenario_instance = tblCyberPHAScenario.objects.get(pk=scenario_id_value)
@@ -1056,6 +1116,8 @@ def save_or_update_cyberpha(request):
                 CyberPHA=cyberphaid,
                 ScenarioID=scenario_id_value,
                 Scenario=scenario,
+                exposed_system=exposed_system,
+                weak_credentials=weak_credentials,
                 ThreatClass=threatclass,
                 ThreatAction=' ',
                 Countermeasures=' ',
@@ -1127,7 +1189,8 @@ def save_or_update_cyberpha(request):
                 likelihood=likelihood,
                 frequency=frequency,
                 sl_a=sl_a,
-                dangerScope=dangerScope
+                dangerScope=dangerScope,
+                compliance_map=compliance_map
 
             )
             snapshot_record.save()
@@ -1135,11 +1198,13 @@ def save_or_update_cyberpha(request):
             scenario_id = request.POST.get('scenarioID')
             defaults = {
                 'Scenario': scenario,
+                'exposed_system': exposed_system,
+                'weak_credentials': weak_credentials,
                 'ThreatAction': '',
                 'ThreatClass': ThreatClass,
                 'Countermeasures': '',
                 'RiskCategory': riskcategory,
-                'Consequence': consequence,
+                'Consequence': '',
                 'impactSafety': impactsafety,
                 'impactDanger': impactdanger,
                 'impactProduction': impactproduction,
@@ -1203,7 +1268,8 @@ def save_or_update_cyberpha(request):
                 'frequency': decimal.Decimal('0.0') if frequency == '' else frequency,
                 'sl_a': 0 if sl_a == '' else sl_a,
                 'dangerScope': dangerScope,
-                'ai_bia_score': 0 if ai_bia_score is None else ai_bia_score
+                'ai_bia_score': 0 if ai_bia_score is None else ai_bia_score,
+                'compliance_map': compliance_map,
 
             }
 
@@ -1211,6 +1277,7 @@ def save_or_update_cyberpha(request):
             if scenario_id == '0':
                 # Set ID to None to create a new record
                 cyberpha_entry = tblCyberPHAScenario.objects.create(CyberPHA=cyberpha_header, **defaults)
+                scenario_instance = cyberpha_entry
             else:
                 # Convert scenario_id to an integer and update the existing record
                 cyberpha_entry, created = tblCyberPHAScenario.objects.update_or_create(
@@ -1218,7 +1285,19 @@ def save_or_update_cyberpha(request):
                     CyberPHA=cyberpha_header,
                     ID=int(scenario_id)  # Assumes scenario_id is always a valid integer
                 )
+                scenario_instance = cyberpha_entry
 
+
+            # Retrieve validated consequences from the request
+            validated_consequences = request.POST.getlist('validated_consequences')
+            # Process each validated consequence
+            for consequence_text in validated_consequences:
+                # Create or update the consequence in ScenarioConsequences model
+                ScenarioConsequences.objects.update_or_create(
+                    scenario=scenario_instance,
+                    consequence_text=consequence_text,
+                    defaults={'is_validated': True}
+                )
             scenario_id_value = cyberpha_entry.ID
 
             scenarioID = cyberpha_entry.pk
@@ -1307,7 +1386,7 @@ def assess_cyberpha(request, cyberPHAID=None):
     safeguards = tblSafeguards.objects.order_by('Safeguard').values('Safeguard').distinct()
     threatsources = tblThreatSources.objects.all().order_by('ThreatSource')
     threatactions = tblThreatActions.objects.all().order_by('ThreatAction')
-    consequenceList = tblConsequence.objects.all().order_by('Consequence')
+    # consequenceList = tblConsequence.objects.all().order_by('Consequence')
     standardslist = tblStandards.objects.all().order_by('standard')
 
     control_objectives = [json.loads(obj.ControlObjective) for obj in control_objectives]
@@ -1327,6 +1406,8 @@ def assess_cyberpha(request, cyberPHAID=None):
     saved_scenarios = tblCyberPHAScenario.objects.filter(CyberPHA=active_cyberpha, Deleted=0)
     MitreControlAssessment_results = MitreControlAssessment.objects.filter(cyberPHA_id=active_cyberpha)
     control_assessments_data = serializers.serialize('json', MitreControlAssessment_results)
+    scenario_form = CyberSecurityScenarioForm(request.POST)
+
     return render(request, 'OTRisk/phascenariomgr.html', {
         'scenarios': combined_scenarios,
         'control_objectives': control_objectives,
@@ -1341,7 +1422,8 @@ def assess_cyberpha(request, cyberPHAID=None):
         'saved_scenarios': saved_scenarios,
         'standardslist': standardslist,
         'MitreControlAssessment_results': control_assessments_data,
-        'SECURITY_LEVELS': SECURITY_LEVELS
+        'SECURITY_LEVELS': SECURITY_LEVELS,
+        'scenario_form': scenario_form
     })
 
 
@@ -2191,7 +2273,8 @@ def risk_register(request):
         'sle_high',
         'business_impact_analysis_score',  # Include the computed score in the returned data
         'business_impact_analysis_code',  # Include the computed code in the returned data
-        'snapshots'
+        'snapshots',
+        'CyberPHA__ID'
     )
 
     bia_data_with_id = [
@@ -2340,6 +2423,18 @@ def get_weightings_from_openai(facility_type, industry):
     }
 
     return weightings
+
+
+@login_required
+def delete_snapshot(request, snapshot_id, scenario_id):
+    if request.method == 'POST':
+        snapshot = get_object_or_404(CyberPHAScenario_snapshot, ID=snapshot_id)
+        snapshot.delete()
+
+        # Redirect to view_snapshots after deletion
+        return redirect('OTRisk:view_snapshots', scenario=scenario_id)
+    else:
+        return HttpResponse(status=405)  # Method Not Allowed
 
 
 @login_required()

@@ -198,23 +198,41 @@
     </div>
 </div>
 
- <script>
+<script>
 document.getElementById('submitBtn').addEventListener('click', function(e) {
     e.preventDefault();
+
+    // Function to reformat currency values to plain numbers
+    function reformatCurrencyFields() {
+        var currencyFields = ['id_annual_revenue', 'id_cyber_insurance', 'id_insurance_deductible'];
+        currencyFields.forEach(function(fieldId) {
+            var field = document.getElementById(fieldId);
+            if (field && field.value) {
+                // Remove non-numeric characters except the decimal point
+                var numericValue = field.value.replace(/[^0-9.]/g, '');
+                field.value = numericValue;
+            }
+        });
+    }
+
+    // Call the reformat function before submitting
+    reformatCurrencyFields();
+
     swal({
         title: "Are you sure?",
         text: "Do you want to proceed with making changes?",
         icon: "warning",
         buttons: true,
         dangerMode: true,
-        })
-        .then((willSubmit) => {
+    })
+    .then((willSubmit) => {
         if (willSubmit) {
             document.querySelector('form').submit();
         }
     });
 });
 </script>
+
 
  <script type="text/javascript">
     document.addEventListener('DOMContentLoaded', function() {
@@ -249,6 +267,20 @@ document.getElementById('submitBtn').addEventListener('click', function(e) {
             });
         });
     });
+
+    function formatCurrency() {
+    var currencyFields = ['id_annual_revenue', 'id_cyber_insurance', 'id_insurance_deductible'];
+    currencyFields.forEach(function(fieldId) {
+        var field = document.getElementById(fieldId);
+        if (field && field.value) {
+            field.value = parseFloat(field.value).toLocaleString('en-US', {
+                style: 'currency',
+                currency: 'USD',
+            });
+        }
+    });
+}
+window.onload = formatCurrency;
 </script>
 </body>
 </html>

@@ -5,7 +5,7 @@ from django.forms import IntegerField
 from django.shortcuts import get_object_or_404
 from django.core import serializers
 from OTRisk.models.Model_CyberPHA import tblCyberPHAHeader, tblCyberPHAScenario, vulnerability_analysis, \
-    MitreControlAssessment
+    MitreControlAssessment, ScenarioConsequences
 from OTRisk.models.raw import RAWorksheet, RAWorksheetScenario
 from OTRisk.models.raw import RAActions
 from .pha_views import calculate_effectiveness, get_overall_control_effectiveness_score
@@ -35,6 +35,13 @@ def get_pha_records(cyber_pha_header_id):
     compliance_summary_html = ''.join(f'<p>{item.strip()}</p>' for item in compliance_summary_list if item)
     physical_summary_list = cyber_pha_header.physicalSummary.split('\n')
     physical_summary_html = ''.join(f'<p>{item.strip()}</p>' for item in physical_summary_list if item)
+
+    insight_summary_list = cyber_pha_header.insightSummary.split('\n')
+    insight_summary_html = ''.join(f'<p>{item.strip()}</p>' for item in insight_summary_list if item)
+    strategy_summary_list = cyber_pha_header.strategySummary.split('\n')
+    strategy_summary_html = ''.join(f'<p>{item.strip()}</p>' for item in strategy_summary_list if item)
+    threat_summary_list = cyber_pha_header.threatSummary.split('\n')
+    threat_summary_html = ''.join(f'<p>{item.strip()}</p>' for item in threat_summary_list if item)
 
     # Retrieve related records from tblCyberPHAScenario
     cyber_pha_scenarios = tblCyberPHAScenario.objects.filter(CyberPHA=cyber_pha_header)
@@ -102,6 +109,9 @@ def get_pha_records(cyber_pha_header_id):
         'chemical_summary_html': chemical_summary_html,
         'physical_summary_html': physical_summary_html,
         'other_summary_html': other_summary_html,
+        'insight_summary_html': insight_summary_html,
+        'strategy_summary_html': strategy_summary_html,
+        'threat_summary_html': threat_summary_html,
         'overall_control_effectiveness': overall_control_effectiveness,
         'overall_likelihood': overall_likelihood
     }
@@ -146,6 +156,10 @@ def get_scenario_report_details(request):
     residual_likelihood = probability_value / 100.0  # Convert percentage to a fraction
 
     scenario_likelihood = categorize_likelihood((inherent_likelihood * residual_likelihood) * 100)
+    # Retrieve related consequences
+    consequences = ScenarioConsequences.objects.filter(scenario=scenario)
+    consequences_list = [{'consequence_text': consequence.consequence_text, 'is_validated': consequence.is_validated}
+                         for consequence in consequences]
 
     data = {
         'impactSafety': scenario.impactSafety,
@@ -174,7 +188,8 @@ def get_scenario_report_details(request):
         'residual_risk': scenario.RRa,
         'control_effectiveness': control_effectiveness,
         'scenario_likelihood': scenario_likelihood,
-        'controls': list(controls)
+        'controls': list(controls),
+        'Consequences': consequences_list,
     }
     return JsonResponse(data)
 

@@ -3,7 +3,7 @@ from django.forms import model_to_dict
 
 from OTRisk.models.Model_CyberPHA import tblIndustry, tblCyberPHAHeader, tblZones, tblStandards, \
     tblCyberPHAScenario, vulnerability_analysis, tblAssetType, tblMitigationMeasures, MitreControlAssessment, \
-    cyberpha_safety, SECURITY_LEVELS
+    cyberpha_safety, SECURITY_LEVELS, ScenarioConsequences
 from OTRisk.models.raw import SecurityControls
 from OTRisk.models.raw import MitreICSMitigations, RAActions
 from OTRisk.models.questionnairemodel import FacilityType
@@ -45,6 +45,7 @@ def iotaphamanager(request, record_id=None):
     pha_header = None
     new_record_id = None  # Initialize new_record_id to None
     annual_revenue_str = "$0"
+    coho_str = "$0"
 
     if request.method == 'POST':
         title = request.POST.get('txtTitle')
@@ -68,8 +69,12 @@ def iotaphamanager(request, record_id=None):
         pha_header.FacilityName = request.POST.get('txtFacility')
         pha_header.Industry = request.POST.get('selIndustry')
         pha_header.FacilityType = request.POST.get('selFacilityType')
+
         pha_header.AssessmentUnit = request.POST.get('txtUnit')
-        pha_header.AssessmentZone = request.POST.get('selZone')
+
+        selZone_value = request.POST.get('selZone')
+        pha_header.AssessmentZone = selZone_value if selZone_value else "None"
+
         pha_header.AssessmentStartDate = request.POST.get('txtStartDate')
         pha_header.AssessmentEndDate = request.POST.get('txtEndDate')
         pha_header.facilityAddress = request.POST.get('txtAddress')
@@ -77,13 +82,21 @@ def iotaphamanager(request, record_id=None):
         pha_header.chemicalSummary = request.POST.get('txtChemical')
         pha_header.physicalSummary = request.POST.get('txtPhysical')
         pha_header.otherSummary = request.POST.get('txtOther')
+        pha_header.threatSummary = request.POST.get('threatSummary')
+        pha_header.insightSummary = request.POST.get('insightSummary')
+        pha_header.strategySummary = request.POST.get('strategySummary')
         pha_header.complianceSummary = request.POST.get('txtCompliance')
         pha_header.country = request.POST.get('countrySelector')
         pha_header.Date = request.POST.get('txtStartDate')
         pha_header.EmployeesOnSite = request.POST.get('txtEmployees')
         pha_header.shift_model = request.POST.get('shift_model')
-        pha_header.assessment = request.POST.get('assessment_id')
+        try:
+            assessment_id = int(request.POST.get('assessment_id')) if request.POST.get('assessment_id') else None
+        except ValueError:
+            assessment_id = None
+        pha_header.assessment = assessment_id
 
+        pha_header.npm = request.POST.get('npm')
         try:
             # Attempt to convert the POST value to an integer.
             pha_header.pha_score = int(request.POST.get('hdn_pha_score', 0))
@@ -98,18 +111,23 @@ def iotaphamanager(request, record_id=None):
         pha_header.Deleted = 0
 
         annual_revenue_str = request.POST.get('annual_revenue', '')
-
+        coho_str = request.POST.get('coho', '')
         # Strip out $ and , characters
         cleaned_annual_revenue_str = ''.join(filter(str.isdigit, annual_revenue_str))
+        cleaned_coho_str = ''.join(filter(str.isdigit, coho_str))
 
         # Convert the cleaned string to an integer
         try:
             annual_revenue_int = int(cleaned_annual_revenue_str)
         except ValueError:  # Handle cases where the input might still not be a valid integer
             annual_revenue_int = 0  # Or handle this situation differently if needed
-
+        try:
+            coho_int = int(cleaned_coho_str)
+        except ValueError:  # Handle cases where the input might still not be a valid integer
+            coho_int = 0  # Or handle this situation differently if needed
         # Save to your model
         pha_header.annual_revenue = annual_revenue_int
+        pha_header.coho = coho_int
 
         cyber_insurance_value = request.POST.get('cyber_insurance')
         pha_header.cyber_insurance = False if cyber_insurance_value is None else bool(cyber_insurance_value)
@@ -130,8 +148,11 @@ def iotaphamanager(request, record_id=None):
         scenario_count=Count('tblcyberphascenario'),
         ra_action_count=Coalesce(Subquery(ra_actions_subquery, output_field=IntegerField()), Value(0))
     )
-    first_record = pha_header_records.first()
-    first_record_id = first_record.ID if first_record else 0
+    if record_id is not None:
+        first_record_id = record_id
+    else:
+        first_record = pha_header_records.first()
+        first_record_id = first_record.ID if first_record else 0
     # get the list of assessments
     # 0 means a global assessment that's built in for all customer
     # any other value is a customer specific assessment so should only be visible for the customer where their id matches
@@ -155,6 +176,7 @@ def iotaphamanager(request, record_id=None):
         'mitigations': mitigations,
         'SHIFT_MODELS': tblCyberPHAHeader.SHIFT_MODELS,
         'annual_revenue_str': annual_revenue_str,
+        'coho_str': coho_str,
         'selected_record_id': first_record_id,
         'SECURITY_LEVELS': SECURITY_LEVELS,
         'assessments': assessments
@@ -183,6 +205,9 @@ def get_headerrecord(request):
         'physicalsummary': headerrecord.physicalSummary,
         'othersummary': headerrecord.otherSummary,
         'compliancesummary': headerrecord.complianceSummary,
+        'threatSummary': headerrecord.threatSummary,
+        'insightSummary': headerrecord.insightSummary,
+        'strategySummary': headerrecord.strategySummary,
         'country': headerrecord.country,
         'shift_model': headerrecord.shift_model,
         'EmployeesOnSite': headerrecord.EmployeesOnSite,
@@ -190,7 +215,9 @@ def get_headerrecord(request):
         'annual_revenue': headerrecord.annual_revenue,
         'pha_score': headerrecord.pha_score,
         'sl_t': headerrecord.sl_t,
-        'assessment_id': headerrecord.assessment
+        'assessment_id': headerrecord.assessment,
+        'coho': headerrecord.coho,
+        'npm': headerrecord.npm
     }
 
     control_assessments = MitreControlAssessment.objects.filter(cyberPHA=headerrecord)
@@ -219,6 +246,70 @@ def get_headerrecord(request):
     return JsonResponse(response_data)
 
 
+def extract_section(text, title):
+    """
+    Extracts a section from the provided text using the given title.
+    """
+    start = text.find(title)
+    if start == -1:
+        return ''
+    start += len(title)
+    end = text.find('**', start)
+    return text[start:end].strip() if end != -1 else text[start:].strip()
+
+
+def process_section(section_text):
+    # Split the section into individual bullet points
+    bullet_points = section_text.split('\n')
+
+    # Add a line space between each bullet point
+    processed_text = '\n\n'.join(bullet_point.strip() for bullet_point in bullet_points if bullet_point.strip())
+
+    return processed_text
+
+
+def facility_threat_profile(facility, facility_type, country, industry, safety_summary, chemical_summary,
+                            physical_security_summary, other_summary, compliance_summary):
+    openai_api_key = os.environ.get('OPENAI_API_KEY')
+    openai.api_key = openai_api_key
+
+    # Constructing a more specific context with format instructions
+    context = (
+        f"You are providing value-add analysis for an OT cybersecurity assessment. Analyze the {facility} which is a {facility_type} in {country}, operating within the {industry} industry. "
+        f"Use the following summaries to generate a report: Safety Hazards - {safety_summary}, "
+        f"Chemical Hazards - {chemical_summary}, Physical Security Challenges - {physical_security_summary}, "
+        f"OT Devices - {other_summary}, and Compliance Requirements - {compliance_summary}. The analysis should offer insights that are in depth and specific to the facility. ")
+
+    prompt = (f"{context} Provide a detailed analysis formatted into three distinct sections. "
+              f"Start each section with its title in bold: '**Cybersecurity Threats and Vulnerabilities**', "
+              f"'**Predictive Insights**', and '**Proactive Defense Strategies**'. "
+              f"Follow each title with a numbered list of points."
+              f"Focus solely on these aspects without additional narrative or contextual information.")
+
+    # API call using chat model endpoint
+    response = openai.ChatCompletion.create(
+        model="gpt-4",
+        messages=[
+            {"role": "system",
+             "content": "You are a model trained to provide concise and informative responses in a specific format."},
+            {"role": "user", "content": prompt}
+        ],
+        temperature=0.5,
+        max_tokens=800
+    )
+
+    # Extracting the threat profile correctly from the response
+    message = response['choices'][0]['message']
+    full_response = message['content'] if message and 'content' in message else ''
+
+    # Split the response into three parts
+    threatSummary = process_section(extract_section(full_response, '**Cybersecurity Threats and Vulnerabilities**'))
+    insightSummary = process_section(extract_section(full_response, '**Predictive Insights**'))
+    strategySummary = process_section(extract_section(full_response, '**Proactive Defense Strategies**'))
+
+    return threatSummary, insightSummary, strategySummary
+
+
 @login_required()
 def facility_risk_profile(request):
     if request.method == 'GET':
@@ -245,10 +336,10 @@ def facility_risk_profile(request):
 
         openai_api_key = os.environ.get('OPENAI_API_KEY')
         openai.api_key = openai_api_key
-        context = f"You are an expert in risk assessment for industrial facilities. For the {facility} {facility_type} at {address}, {country} in the {Industry} industry, with {employees} employees working a {shift_model} shift model,"
+        context = f"You are an expert in industrial risk management and engineering processes. For the {facility} {facility_type} at {address}, {country} in the {Industry} industry, with {employees} employees working a {shift_model} shift model,"
 
         prompts = [
-            f"{context}, provide a concise bullet-point list of the likely personnel safety hazards present. Limit the response to a maximum of 100 words, or less. EXTRA INSTRUCTIONS: Do not give commentary or extra information. List only the specific hazard relevant to the facility. Add a line space between each bullet point.  If {language} is not en then give the response in the language {language} with the english directly underneath",
+            f"{context}, provide a concise bullet-point list of the likely safety hazards present. Limit the response to a maximum of 100 words, or less. EXTRA INSTRUCTIONS: Do not give commentary or extra information. List only the specific hazard relevant to the facility. Add a line space between each bullet point.  If {language} is not en then give the response in the language {language} with the english directly underneath",
             f"{context}, provide a concise bullet point list of the likely chemicals stored or used and their hazards given the {facility_type}. Limit the response to a maximum of 100 words, or less. EXTRA INSTRUCTIONS: Only list the chemical - no additional information. Add a line space between each bullet point.  If {language} is not en then give the response in the language {language} with the english directly underneath",
             f"{context}, provide a concise bullet-point list of the most likely Physical security challenges. Limit the response to a maximum of 100 words, or less. EXTRA INSTRUCTION: Add a line space between each bullet point.  If {language} is not en then give the response in the language {language} with the english directly underneath",
             # f"For the {facility} {facility_type} at {address}, {country} in the {Industry} industry, provide a concise bullet point list of other localized risks that are likely to be identified for a {facility_type} at {address}. Limit the response to a maximum of 100 words, or less. Add a line space between each bullet point"
@@ -286,14 +377,25 @@ def facility_risk_profile(request):
         compliance_summary = responses[4]['choices'][0]['message']['content'].strip()
         pha_score = responses[5]['choices'][0]['message']['content'].strip()
 
-        # Return the individual parts as variables
+        # Call to facility_threat_profile
+        threatSummary, insightSummary, strategySummary = facility_threat_profile(facility, facility_type, country,
+                                                                                 Industry, safety_summary,
+                                                                                 chemical_summary,
+                                                                                 physical_security_summary,
+                                                                                 other_summary,
+                                                                                 compliance_summary)
+
+        # Return the individual parts as variables in JsonResponse
         return JsonResponse({
-            'safety_summary': safety_summary.strip(),
-            'chemical_summary': chemical_summary.strip(),
-            'physical_security_summary': physical_security_summary.strip(),
-            'other_summary': other_summary.strip(),
+            'safety_summary': safety_summary,
+            'chemical_summary': chemical_summary,
+            'physical_security_summary': physical_security_summary,
+            'other_summary': other_summary,
             'compliance_summary': compliance_summary,
-            'pha_score': pha_score
+            'pha_score': pha_score,
+            'threatSummary': threatSummary,
+            'insightSummary': insightSummary,
+            'strategySummary': strategySummary
         })
 
 
@@ -514,7 +616,10 @@ def getSingleScenario(request):
         'prodOutage': scenario.outage,
         'prodOutageDuration': scenario.outageDuration,
         'prodOutageCost': scenario.outageCost,
-        'ai_bia_score': scenario.ai_bia_score
+        'ai_bia_score': scenario.ai_bia_score,
+        'exposed_system': scenario.exposed_system,
+        'weak_credentials': scenario.weak_credentials,
+        'compliance_map': scenario.compliance_map
     }
     # Retrieve the related PHAControlList records
     control_list = []
@@ -533,6 +638,11 @@ def getSingleScenario(request):
 
     # Add has_controls to the scenario_dict
     scenario_dict['has_controls'] = has_controls
+    # Retrieve related consequences
+    consequences = ScenarioConsequences.objects.filter(scenario=scenario)
+    consequences_list = [{'consequence_text': consequence.consequence_text, 'is_validated': consequence.is_validated}
+                         for consequence in consequences]
+    scenario_dict['Consequences'] = consequences_list
     # Return the scenario as a JSON response
     return JsonResponse(scenario_dict)
 
@@ -563,85 +673,6 @@ def calculate_effectiveness(cyberPHA_value):
     return overall_effectiveness
 
 
-@login_required
-def scenario_analysis_estimates_only(request):
-    if request.method == 'GET':
-        industry = request.GET.get('industry')
-        facility_type = request.GET.get('facility_type')
-        scenario = request.GET.get('scenario')
-        consequences = request.GET.get('consequence')
-        threatSource = request.GET.get('threatsource')
-        safetyimpact = request.GET.get('safety')
-        lifeimpact = request.GET.get('life')
-        productionimpact = request.GET.get('production')
-        reputationimpact = request.GET.get('reputation')
-        environmentimpact = request.GET.get('environment')
-        regulatoryimpact = request.GET.get('regulatory')
-        dataimpact = request.GET.get('data')
-        supplyimpact = request.GET.get('supply')
-        severitymitigated = request.GET.get('sm')
-        mitigatedexposure = request.GET.get('mel')
-        residualrisk = request.GET.get('rrm')
-        country = request.GET.get('country')
-        uel = request.GET.get('uel')
-        financial = request.GET.get('financial')
-        cyberPHAID = request.GET.get('cpha')
-
-        # get the effectiveness of controls for the given cyberPHA
-        control_effectiveness = calculate_effectiveness(cyberPHAID)
-
-        def common_content_prefix():
-            return f"In the {industry} industry, at a {facility_type} in {country}, given the scenario {scenario} with consequences {consequences}, the threat source is {threatSource} performing actions.  Business impact scores (out of 10) are: safety: {safetyimpact}, life: {lifeimpact}, production: {productionimpact}, reputation: {reputationimpact}, environment: {environmentimpact}, regulatory: {regulatoryimpact}, data: {dataimpact}, and supply: {supplyimpact}. The unmitigated risk likelihood without controls is rated as {uel}/10."
-
-        openai.api_key = os.environ.get('OPENAI_API_KEY')
-        # Define the common part of the user message
-        common_content = f"Given the scenario {scenario} with consequences {consequences} affecting a {facility_type} in the {industry} industry in {country}, the threat source {threatSource} performing actions. The business impact assessment is as follows,  scores are of 10 where 10 represents maximum impact, impact on safety: {safetyimpact}, danger to life: {lifeimpact}, production and operations: {productionimpact}, company reputation: {reputationimpact}, environmental impact: {environmentimpact}, impact of regulatory consequences: {regulatoryimpact}, supply chain impact: {supplyimpact}  data and intellectual property: {dataimpact}. The effectiveness of current controls has been assessed as: Severity of incident mitigated: {severitymitigated}, risk exposure to the scenario mitigated {mitigatedexposure}, and overall residual risk {residualrisk}. The amount of unmitigated rate without control is assumed to be {uel}"
-
-        # Define the refined user messages
-        user_messages = [
-
-            {
-                "role": "user",
-                "content": f"Given the context: {common_content} and analysis of publicly reported cybersecurity incidents, in the context of an OT Cybersecurity Risk Assessment provide ONLY the estimated likelihood (as a whole number percentage) of a targeted attack based on the specific scenario of {scenario}. Answer with a whole number. Do NOT include any other words, sentences, or explanations."
-            },
-            {
-                "role": "user",
-                "content": f"Given the detailed context that follows, give an assessment of the residual cybersecurity risk risk after all new recommended controls have been implemented. Based on this, provide a residual risk rating from the following options: Very Low, Low, Low/Medium, Medium, Medium/High, High, Very High. Context: {common_content_prefix()}, where it is emphasized that new controls have significantly reduced vulnerabilities and threats. The expected outcome is a much lower risk than before. Provide ONLY one of the given risk ratings without any additional text or explanations."
-            },
-
-            {
-                "role": "user",
-                "content": f"Given the context: {common_content}, estimate the DIRECT COSTS of a single loss event (SLE) in US dollars for the {facility_type} for the scenario: {scenario}. Guidelines: Give three estimates best case, worst case, and most likely case. Output as integers in the format low|medium|high where | is the delimiter between the three integer values. Your estimates should be realistic and specific to the scenario. Consider only the relevant Direct costs which can include all or some of the following depending on the incident: incident response, remediation, legal fees, notification costs, regulatory fines, compensations, and increased insurance premiums. In the business impact analysis the evaluation of financial impact for the given scenario is rated as {financial}/10 by the business. Your response should be a single positive integer for each of the three values in the order low|medium|high without any additional text or commentary."
-            },
-
-            {
-                "role": "user",
-                "content": f"Given the context: {common_content} and analysis of publicly reported cybersecurity incidents, provide ONLY the estimated probability (as a whole number percentage) of a successful targeted attack given that the assessed effectiveness of current cybersecurity controls is {control_effectiveness}% . Answer with a number followed by a percentage sign (e.g., nn%). Do NOT include any other words, sentences, or explanations."
-            },
-            {
-                "role": "user",
-                "content": f"Given the context: {common_content} and news reports of publicly reported cybersecurity incidents, provide ONLY the estimated frequency of a successful targeted attack of the scenario {scenario} where a successful targeted attack means that it succeeds in causing {consequences} at the {facility_type}. Your answer should be given as an integer that represents the number of times per year to expect such a scenario. If the estimated frequency is less than once per year then provide a decimal to indicate the frequency per year. Do NOT include any other words, sentences, or explanations."
-            }
-
-        ]
-
-        # Use ThreadPoolExecutor to parallelize the API calls
-        with concurrent.futures.ThreadPoolExecutor() as executor:
-            # Submit all the tasks and get a list of futures
-            futures = [executor.submit(get_response, msg) for msg in user_messages]
-            # Collect the results in the order the futures were submitted
-            responses = [future.result() for future in futures]
-
-        # Return the responses as variables
-        return JsonResponse({
-            'likelihood': responses[0],
-            'adjustedRR': responses[1],
-            'costs': responses[2],
-            'probability': responses[3],
-            'frequency': responses[4]
-        })
-
-
 def get_response(user_message):
     message = [
         {
@@ -655,9 +686,22 @@ def get_response(user_message):
         model="gpt-4-1106-preview",
         messages=message,
         temperature=0.1,
-        max_tokens=250
+        max_tokens=600
     )
     return response['choices'][0]['message']['content']
+
+
+def compliance_map_data(common_content):
+    user_message = {
+        "role": "user",
+        "content": f"{common_content}. Based on the provided information, map the current OT security posture to a maximum of 10 of the MOST RELEVANT AND IMPORTANT industry regulatory compliance regulations for this organization in the given country. Use '||' to separate each item and '>' to separate parts within an item. Example format: <Concise Compliance Concern, maximum 30 words> > <Compliance Reference> > <Internet URL>|. Ensure each item is returned in a format that can be easily parsed for display in an HTML table. Output only the line items with NO additional text, header, intro, or narrative."
+    }
+
+    try:
+        response = get_response(user_message)
+        return response
+    except Exception as e:
+        return f"Error: {str(e)}"
 
 
 @login_required
@@ -666,7 +710,6 @@ def scenario_analysis(request):
         industry = request.GET.get('industry')
         facility_type = request.GET.get('facility_type')
         scenario = request.GET.get('scenario')
-        consequences = request.GET.get('consequence')
         threatSource = request.GET.get('threatsource')
         safetyimpact = request.GET.get('safety')
         safety_hazard = request.GET.get('safety_hazard')
@@ -686,6 +729,13 @@ def scenario_analysis(request):
         uel = request.GET.get('uel')
         financial = request.GET.get('financial')
         cyberPHAID = request.GET.get('cpha')
+        exposed_system = request.GET.get('exposed_system')
+        weak_credentials = request.GET.get('weak_credentials')
+        # Retrieve the string of validated consequences
+        validated_consequences_str = request.GET.get('validated_consequences', '')
+
+        # Split the string into a list, using semicolon as the separator
+        validated_consequences_list = validated_consequences_str.split(';')
 
         # get the effectiveness of controls for the given cyberPHA
         try:
@@ -706,25 +756,35 @@ def scenario_analysis(request):
             # Handle the case where tblCyberPHAHeader with the given ID does not exist
             control_effectiveness = 0
 
+        # get the compliance summary for the cyberpha
+        compliance = cyber_pha_header.complianceSummary
+
+        # get relevant financial data
+        # net profit margin
+        net_profit_margin = cyber_pha_header.npm
+        # cost per operating hour
+        cost_op_hour = cyber_pha_header.coho
+        annual_revenue = cyber_pha_header.annual_revenue
+
         openai.api_key = os.environ.get('OPENAI_API_KEY')
         # Define the common part of the user message
-        common_content = f"A cybersecurity incident of {scenario} with consequences {consequences} affecting a {facility_type} in the {industry} industry in {country}. Business impact assessment scores are estimated by employees and may not be accurate:  impact on safety: {safetyimpact}, danger to life: {lifeimpact}, production and operations: {productionimpact} (production outage: {production_outage}: length of production outage {production_outage_length} hours), company reputation: {reputationimpact}, environmental impact: {environmentimpact}, impact of regulatory consequences: {regulatoryimpact}, supply chain impact: {supplyimpact}  data and intellectual property: {dataimpact}. The effectiveness of current cybersecurity controls has been assessed and judged to be {control_effectiveness}% (if 0 then control effectiveness has not been assessed) : Severity of incident mitigated: {severitymitigated}, risk exposure to the scenario mitigated {mitigatedexposure},  overall residual risk {residualrisk}. The amount of unmitigated rate without control is assumed to be {uel}"
+        common_content = f"As an expert in cybersecurity risk and an expert in engineering systems, analyse a specific OT Cybersecurity Risk Scenario for a {facility_type} in the {industry} industry in {country}:  {scenario}. (IMPORTANT CONTEXT: Systems in scope for the scenario are exposed to the Internet with a public IP address: {exposed_system}. Systems in scope for the scenario have weak or default credentials: {weak_credentials}).  Business impact scores range from 0 (no impact) to 10 (greatest impact): safety: {safetyimpact}, life danger: {lifeimpact}, production: {productionimpact} (production outage: {production_outage}: length of production outage {production_outage_length} hours), company reputation: {reputationimpact}, environmental impact: {environmentimpact}, regulatory: {regulatoryimpact}, supply chain : {supplyimpact}  data and intellectual property: {dataimpact}. Cybersecurity controls are {control_effectiveness}% effective (if 0 then control effectiveness has not been assessed) : Mitigated severity with current controls: {severitymitigated}, risk exposure to the scenario mitigated {mitigatedexposure},   residual risk {residualrisk}. The amount of unmitigated rate without controls is: {uel}"
 
         # Define the refined user messages
         user_messages = [
 
             {
                 "role": "user",
-                "content": f"Given the context: {common_content} and analysis of publicly reported cybersecurity incidents, in the context of an OT Cybersecurity Risk Assessment provide ONLY the estimated likelihood (as a whole number percentage) of a targeted attack based on the specific scenario of {scenario}. Answer with a whole number. Do NOT include any other words, sentences, or explanations."
+                "content": f" {common_content} . Consider publicly reported cybersecurity incidents over the time scale from 2 years ago to the current day , in the context of this OT Cybersecurity Risk Assessment provide ONLY the estimated likelihood (as a whole number percentage) of the given scenario. Answer with a whole number. Do NOT include any other words, sentences, or explanations."
             },
             {
                 "role": "user",
-                "content": f"Given the detailed context that follows, give an assessment of the residual cybersecurity risk risk after all new recommended controls have been implemented and are assumed to be at least 75% effective. Based on this, provide a residual risk rating from the following options: Very Low, Low, Low/Medium, Medium, Medium/High, High, Very High. Context: {common_content}.  Provide ONLY one of the given risk ratings without any additional text or explanations."
+                "content": f"{common_content}. Assess the cybersecurity residual risk after all recommended controls have been implemented and are assumed to be at least 75% effective and give an estimated residual risk rating from the following options: Very Low, Low, Low/Medium, Medium, Medium/High, High, Very High.  Provide ONLY one of the given risk ratings without any additional text or explanations."
             },
 
             {
                 "role": "user",
-                "content": f"Given the context: {common_content}, estimate the DIRECT COSTS of a single loss event (SLE) in US dollars for the {facility_type} for the scenario: {scenario}. Guidelines: Give three estimates best case, worst case, and most likely case. Output as integers in the format low|medium|high where | is the delimiter between the three integer values. Your estimates should be realistic and specific to the scenario. Consider only the relevant Direct costs which can include all or some of the following depending on the incident: incident response, remediation, legal fees, notification costs, regulatory fines, compensations, and increased insurance premiums. In the business impact analysis the evaluation of financial impact for the given scenario is rated as {financial}/10 by the business. IMPORTANT INSTRUCTION: Your response must be a single positive integer for each of the three values in the order low|medium|high without any additional text or commentary."
+                "content": f"{common_content}.  Consequences of the scenario are: {validated_consequences_list}. Read and comply with all instructions that follow. Provide an estimate of the DIRECT COSTS of a single loss event (SLE) in US dollars. Provide three cost estimates: best case, worst case, and most likely case. Output these estimates as integers in the specific format: 'low|medium|high', where '|' is the delimiter. Ensure that your estimates are realistic and tailored to the scenario, focusing solely on relevant Direct costs such as incident response, remediation, legal fees, notification costs, regulatory fines, compensations, and increased insurance premiums. The financial impact for this scenario is rated as {financial}/10 in the business impact analysis. IMPORTANT: Respond with only three positive integers, representing the low, medium, and high estimates, in the exact order and format specified: 'low|medium|high'. Do not include any additional text, explanations, or commentary."
             },
 
             {
@@ -733,13 +793,13 @@ def scenario_analysis(request):
             },
             {
                 "role": "user",
-                "content": f" {common_content} . WIth this information and news reports of publicly reported cybersecurity incidents, provide ONLY the estimated frequency of a successful targeted attack of the scenario {scenario} where a successful targeted attack means that it succeeds in causing {consequences} at the {facility_type}. Your answer should be given as an integer that represents the number of times per year to expect such a scenario. If the estimated frequency is less than once per year then provide a decimal to indicate the frequency per year. Do NOT include any other words, sentences, or explanations."
+                "content": f"{common_content}. Based on the scenario described, provide an estimate of the annual Threat Event Frequency (TEF) as defined by the Open FAIR Body of Knowledge. TEF is the probable frequency, within a given timeframe, that a threat agent will act against an asset. It reflects the number of attempts by a threat actor to cause harm, regardless of whether these attempts are successful. Your response should reflect an integer or a decimal value representing the estimated number of times per year such a threat event is expected to occur. IMPORTANT: Respond only with the frequency value as an integer or a decimal, without including any additional words, sentences, or explanations. This value should strictly represent the estimated annual occurrence rate of the threat event as per the given scenario."
+
             },
             {
                 "role": "user",
-                "content": f"{common_content}. With this information and news reports of publicly reported cybersecurity incidents, provide a score from 0 to 100 of the overall business impact of scenario {scenario} where a successful targeted attack means that it succeeds in causing {consequences} at the {facility_type}. A score of 1 would mean minimal business impact while a score of 100 would indicate catastrophic business impact without the ability to continue. Provide a pragmatic estimate of where the score for this current scenario would be. Your answer should be given as an integer. Do NOT include any other words, sentences, or explanations."
+                "content": f"{common_content}. Estimate a business impact score from 0 to 100. Consequences of the scenario are given as follows: {validated_consequences_list}. A score of 1 would mean minimal business impact while a score of 100 would indicate catastrophic business impact without the ability to continue operations. Your answer should be given as an integer. Do NOT include any other words, sentences, or explanations."
             }
-
         ]
 
         def get_response_safe(user_message):
@@ -751,15 +811,18 @@ def scenario_analysis(request):
         # Initialize an empty list to store the responses
         responses = []
 
-        # Use ThreadPoolExecutor to parallelize the API calls
+        # Use ThreadPoolExecutor to parallelize the first five API calls
         with concurrent.futures.ThreadPoolExecutor() as executor:
             # Submit all the tasks and get a list of futures
             futures = [executor.submit(get_response, msg) for msg in user_messages]
             # Collect the results in the order the futures were submitted
             responses = [future.result() for future in futures]
 
-        # recommended_controls = get_recommended_controls(scenario, threatSource)
-
+        # Now handle the compliance mapping separately
+        compliance_data = compliance_map_data(common_content)
+        responses.append(compliance_data)
+        print(responses[2])
+        print(compliance_data)
         # Return the responses as variables
         return JsonResponse({
             'likelihood': responses[0],
@@ -768,7 +831,8 @@ def scenario_analysis(request):
             'probability': responses[3],
             'frequency': responses[4],
             'biaScore': responses[5],
-            'control_effectiveness': control_effectiveness
+            'control_effectiveness': control_effectiveness,
+            'scenario_compliance_data': responses[6]
         })
 
 
@@ -971,42 +1035,78 @@ def analyze_scenario(request):
 
     if request.method == 'POST':
         scenario = request.POST.get('scenario')
-        pha_id = request.POST.get('phaID')
+        # validate the scenario doesn't contain vulgar terms using the OpenAPI moderator
+        if is_inappropriate(scenario):
+            consequence_text = 'Scenario contains inappropriate terms'
+            return JsonResponse({'consequence_text': consequence_text}, status=400)
 
-        try:
-            cyber_pha = tblCyberPHAHeader.objects.get(ID=pha_id)
-        except tblCyberPHAHeader.DoesNotExist:
-            return JsonResponse({'error': 'PHA record not found'}, status=404)
-
-        facility_type = cyber_pha.FacilityType
-        industry = cyber_pha.Industry
-        zone = cyber_pha.AssessmentZone
-        unit = cyber_pha.AssessmentUnit
-        address = cyber_pha.facilityAddress
-        country = cyber_pha.country
-        devices = cyber_pha.otherSummary
-
-        # Construct a prompt for GPT-4
-        system_message = f"""
-        Given a cybersecurity scenario at a {facility_type} in the {industry} industry, located at {address} in {country}, specifically in the {zone} zone and the {unit} unit, described as: {scenario}. Considering the likely presence of these OT devices: {devices}, concisely describe in 50 words in a bullet point list of a maximum of 5 of the most likely direct consequences of the given scenario. The direct consequences should be specific to the facility and the mentioned details. Assume the role of an expert OT Cybersecurity risk advisor. Additional instruction: output ONLY the bullet points with no text either before or after the bullet points.
+        validation_prompt = f"""
+        Evaluate if the following text represents a coherent and plausible cybersecurity scenario, or OT incident scenario, or industrial incident scenario: '{scenario}'. Respond yes if valid, no if invalid.
         """
-        user_message = scenario
 
-        # Query OpenAI API
-        response = openai.ChatCompletion.create(
+        validation_response = openai.ChatCompletion.create(
             model="gpt-4",
             messages=[
-                {"role": "system", "content": system_message},
-                {"role": "user", "content": user_message}
+                {"role": "system", "content": validation_prompt}
             ],
-            max_tokens=100,
-            temperature=0.1
+            max_tokens=50,
+            temperature=0.7
         )
 
-        # Extract the text from the response
-        # The structure of the response for ChatCompletion might differ, adjust accordingly
-        consequence = response['choices'][0]['message']['content']
+        if "yes" in validation_response['choices'][0]['message']['content'].lower():
 
-        return JsonResponse({'consequence': consequence})
+            pha_id = request.POST.get('phaID')
+
+            try:
+                cyber_pha = tblCyberPHAHeader.objects.get(ID=pha_id)
+            except tblCyberPHAHeader.DoesNotExist:
+                return JsonResponse({'error': 'PHA record not found'}, status=404)
+
+            facility_type = cyber_pha.FacilityType
+            industry = cyber_pha.Industry
+            zone = cyber_pha.AssessmentZone
+            unit = cyber_pha.AssessmentUnit
+            address = cyber_pha.facilityAddress
+            country = cyber_pha.country
+            devices = cyber_pha.otherSummary
+
+            # Construct a prompt for GPT-4
+            system_message = f"""
+            Given a cybersecurity scenario at a {facility_type} in the {industry} industry, located at {address} in {country}, specifically in the {zone} zone and the {unit} unit, described as: {scenario}. Considering the likely presence of these OT devices: {devices}, concisely describe in 50 words in a list format (separated by semicolons) of a maximum of 5 of the most likely direct consequences of the given scenario. The direct consequences should be specific to the facility and the mentioned details. Assume the role of an expert OT Cybersecurity risk advisor. Additional instruction: output ONLY the list items with no text either before or after the list items.
+            """
+            user_message = scenario
+
+            # Query OpenAI API
+            response = openai.ChatCompletion.create(
+                model="gpt-4",
+                messages=[
+                    {"role": "system", "content": system_message},
+                    {"role": "user", "content": user_message}
+                ],
+                max_tokens=100,
+                temperature=0.1
+            )
+
+            # Extract and process the text from the response
+            consequence_text = response['choices'][0]['message']['content']
+            consequence_list = consequence_text.split(';')  # Splitting based on the chosen delimiter
+        else:
+            return JsonResponse({'consequence': [], 'error': 'Not a valid scenario'}, status=400)
+        return JsonResponse({'consequence': consequence_list})
 
     return JsonResponse({'error': 'Invalid request'}, status=400)
+
+
+def is_inappropriate(text):
+    openai_api_key = os.environ.get('OPENAI_API_KEY')
+    openai.api_key = openai_api_key
+
+    try:
+        response = openai.Moderation.create(
+            input=text,
+            model="text-moderation-latest"
+        )
+        # Check the 'flagged' field in the results
+        return any(result['flagged'] for result in response['results'])
+    except Exception as e:
+        return False  # or handle error appropriately

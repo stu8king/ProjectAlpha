@@ -314,6 +314,66 @@ color: white !important;
 
     font-size: 10px;
 }
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 34px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider1 {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+
+.slider1:before {
+  position: absolute;
+  content: "";
+  height: 26px;
+  width: 26px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+
+input:checked + .slider1 {
+  background-color: #2196F3;
+}
+
+input:focus + .slider1 {
+  box-shadow: 0 0 1px #2196F3;
+}
+
+input:checked + .slider1:before {
+  -webkit-transform: translateX(26px);
+  -ms-transform: translateX(26px);
+  transform: translateX(26px);
+}
+
+/* Rounded sliders */
+.slider1.round {
+  border-radius: 34px;
+}
+
+.slider1.round:before {
+  border-radius: 50%;
+}
     </style>
 
 
@@ -426,9 +486,10 @@ color: white !important;
         <thead style="background-color: #2c2c2c; color: white">
             <tr>
                 <th></th>
-                <th>Title</th>
+                <th width="20%">Title</th>
                 <th>Status</th>
                 <th>BIA</th>
+                <th>Risk</th>
                 <th>Trigger</th>
                 <th>Facility Type</th>
                 <th>Industry</th>
@@ -458,7 +519,16 @@ color: white !important;
                         {% endif %}
                         {{ raws.bia_text }}
                     </td>
-
+                    <td>
+                        {% if raws.risk_text == 'Low' or raws.risk_text == 'Low/Medium' %}
+                            <span class="green-circle"></span>
+                        {% elif raws.risk_text == 'Medium' or raws.risk_text == 'Medium/High' %}
+                            <span class="orange-circle"></span>
+                        {% elif raws.risk_text == 'High' or raws.risk_text == 'Very High' %}
+                            <span class="red-circle"></span>
+                        {% endif %}
+                        {{ raws.risk_text }}
+                    </td>
                     <td>{{ raws.RATrigger }}</td>
                     <td>{{ raws.BusinessUnitType }}</td>
                     <td>{{ raws.industry }}</td>
@@ -494,13 +564,17 @@ color: white !important;
     <div class="col-md-1 bg-white"></div>
 </div> <!-- white stripe -->
 <div class="row">
-    <div class="col-md-1 bg-white"></div>
-    <div class="col-md-1" ></div>
-    <div class="col-md-2" ><button class="form-control" id="addNewBtn" type="button"   data-bs-toggle="tooltip" data-bs-placement="top" title="Click this button to clear the form and enter and begin a new risk assessment" onclick="handleAddNewClick()"><i class="bi bi-folder-plus"></i> New</button></div>
-    <div class="col-md-2" ><button class="form-control" id="editBtn" type="button" data-bs-toggle="tooltip" data-bs-placement="top" title="Click this button to edit the current risk assessment and scenarios"><i class="bi bi-pencil-square"></i> Edit</button></div>
-    <div class="col-md-2" ><button class="form-control" type="submit" id="saveBtn" data-bs-toggle="tooltip" data-bs-placement="top" title="Click this button to save the risk assessment and scenarios" onclick="return checkRiskAssessmentRefreshVariables();" ><i class="bi bi-download"></i> Save</button></div>
+    <div class="col-md-3 bg-white"></div>
+
     <div class="col-md-2" >
-    <button class="form-control" type="button" id="actionBtn" onclick="showRAActionsModal()"><i class="bi bi-subtract"></i> Action</button>
+            <button class="form-control" id="addNewBtn" type="button"   data-bs-toggle="tooltip" data-bs-placement="top" title="Click this button to clear the form and enter and begin a new risk assessment" onclick="handleAddNewClick(1)"><i class="bi bi-folder-plus"></i> New</button>
+    </div>
+    <div class="col-md-2" >
+            <button class="form-control" id="editBtn" type="button" data-bs-toggle="tooltip" data-bs-placement="top" title="Click this button to edit the current risk assessment and scenarios"><i class="bi bi-pencil-square"></i> Edit</button>
+    </div>
+
+    <div class="col-md-2" >
+        <button class="form-control" type="button" id="actionBtn" onclick="showRAActionsModal()"><i class="bi bi-subtract"></i> Action</button>
     </div>
 
         <!-- clear and reset scenario tabs -->
@@ -515,7 +589,7 @@ color: white !important;
                 }
             }
 
-            function handleAddNewClick() {
+            function handleAddNewClick(default_code) {
                 // Enable buttons and set session storage
                 $('#saveBtn, #actionBtn').prop('disabled', false);
                 ['editMode', 'addNew', 'rawid'].forEach(key => sessionStorage.setItem(key, key === 'editMode' ? '0' : '1'));
@@ -537,43 +611,44 @@ color: white !important;
                 document.getElementById("scenario1-tab").click();
                 var organizationId = document.getElementById('orgid').value;
 
-                fetch(`/OTRisk/get-organization-defaults/${organizationId}/`)
-                .then(response => response.json())
-                .then(data => {
-                var revenue = data.annual_revenue || 0;
-                        var formattedRevenue = formatCurrency(revenue);
+                if (default_code==1) {
+                    fetch(`/OTRisk/get-organization-defaults/${organizationId}/`)
+                        .then(response => response.json())
+                        .then(data => {
+                            var revenue = data.annual_revenue || 0;
+                            var formattedRevenue = formatCurrency(revenue);
 
-                        var insurance = data.cyber_insurance || 0;
-                        var formattedInsurance = formatCurrency(insurance);
+                            var insurance = data.cyber_insurance || 0;
+                            var formattedInsurance = formatCurrency(insurance);
 
-                        var deductable = data.insurance_deductible || 0;
-                        var formattedDeductable = formatCurrency(deductable);
+                            var deductable = data.insurance_deductible || 0;
+                            var formattedDeductable = formatCurrency(deductable);
 
-                        // Update txtRevenue field with formatted annual_revenue
-                        document.getElementById('txtRevenue').value = formattedRevenue;
-                        document.getElementById('txtInsurance').value = formattedInsurance;
-                        document.getElementById('txtDeductable').value = formattedDeductable;
-                        document.getElementById('selectIndustry').value = data.industry;
-                         let industrySelect = document.getElementById('selectIndustry');
-                        industrySelect.value = data.industry; // Set the value
+                            // Update txtRevenue field with formatted annual_revenue
+                            document.getElementById('txtRevenue').value = formattedRevenue;
+                            document.getElementById('txtInsurance').value = formattedInsurance;
+                            document.getElementById('txtDeductable').value = formattedDeductable;
+                            document.getElementById('selectIndustry').value = data.industry;
+                            let industrySelect = document.getElementById('selectIndustry');
+                            industrySelect.value = data.industry; // Set the value
 
-                        // Trigger a change event
-                        if ('createEvent' in document) {
-                            var evt = document.createEvent('HTMLEvents');
-                            evt.initEvent('change', false, true);
-                            industrySelect.dispatchEvent(evt);
-                        } else {
-                            industrySelect.fireEvent('onchange');
-                        }
-                })
-                .catch(error => console.error('Error fetching organization defaults:', error));
-
+                            // Trigger a change event
+                            if ('createEvent' in document) {
+                                var evt = document.createEvent('HTMLEvents');
+                                evt.initEvent('change', false, true);
+                                industrySelect.dispatchEvent(evt);
+                            } else {
+                                industrySelect.fireEvent('onchange');
+                            }
+                        })
+                        .catch(error => console.error('Error fetching organization defaults:', error));
+                }
                 document.getElementById("txtTitle").focus();
             }
 
             document.addEventListener('DOMContentLoaded', function() {
             var enableButton = document.getElementById('addNewBtn');
-            enableButton.addEventListener('click', handleAddNewClick);
+            enableButton.addEventListener('click', handleAddNewClick(0));
             });
 
 
@@ -650,8 +725,8 @@ color: white !important;
             });
 
         </script>
-    <div class="col-md-1" ></div>
-    <div class="col-md-1 bg-white"></div>
+
+    <div class="col-md-3 bg-white"></div>
 
 </div>
 <div class="row">
@@ -673,7 +748,7 @@ color: white !important;
             <div class="col-md-4">
                 <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                     <div class="card-body">
-                        <label for="txtTitle" >Organization Name/Title</label>
+                        <label for="txtTitle" >Risk Assessment Title</label>
                         <input type="text" class="form-control" name="txtTitle" id="txtTitle" required/>
                     </div>
                 </div>
@@ -784,27 +859,27 @@ color: white !important;
                         <br>
                         <label for="txtDeductable"><i class="bi bi-calculator"></i> Insurance Deductable Amount</label>
                         <script>
-                 $(document).ready(function() {
-                    $("#txtDeductable").on("input", function() {
-                        // Remove any non-digit characters
-                        var val = $(this).val().replace(/[^0-9]/g, '');
+                         $(document).ready(function() {
+                            $("#txtDeductable").on("input", function() {
+                                // Remove any non-digit characters
+                                var val = $(this).val().replace(/[^0-9]/g, '');
 
-                        // Convert to whole number currency format
-                        var currencyVal = parseInt(val, 10).toLocaleString('en-US');
+                                // Convert to whole number currency format
+                                var currencyVal = parseInt(val, 10).toLocaleString('en-US');
 
-                        // Set the formatted value
-                        $(this).val(currencyVal);
-                    });
-                });
-                 </script>
+                                // Set the formatted value
+                                $(this).val(currencyVal);
+                            });
+                        });
+                         </script>
                         <input type="text" class="form-control" name="txtDeductable" id="txtDeductable" >
                     </div>
              </div>
-             <!-- <div class="card mb-3 shadow-sm">
+             <div class="card mb-3 shadow-sm">
                     <div class="card-body">
-                        <a id="generateReportLink" href="#">Generate Report</a>
+                        <button class="form-control" type="submit" id="saveBtn" data-bs-toggle="tooltip" data-bs-placement="top" title="Click this button to save the risk assessment header information." onclick="return checkRiskAssessmentRefreshVariables();" ><i class="bi bi-download"></i> Save Header</button>
                     </div>
-                </div> -->
+                </div>
 
                 <br>
             </div>
@@ -860,6 +935,26 @@ color: white !important;
                     <textarea class="form-control small-font" name="txtScenarioDescription_1" id="txtScenarioDescription_1" rows="3" style="resize: none; word-wrap: normal" onchange="setRiskAssessmentRefreshRequired(1)"></textarea>
                 </div>
               </div>
+                <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-control border-0 small-font"><h6>Internet Exposed IP Address</h6></label>
+                        <label class="switch">
+                          <input type="checkbox" id="exposed_system_1" name="exposed_system_1">
+                          <span class="slider1 round"></span>
+                        </label>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-control border-0 small-font"><h6>Default/Weak Credentials</h6></label>
+                        <label class="switch">
+                          <input type="checkbox" id="weak_credentials_1" name="weak_credentials_1">
+                          <span class="slider1 round"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
             <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                 <div class="card-body">
                     <div class="row">
@@ -872,7 +967,7 @@ color: white !important;
                               </select>
                         </div>
                         <div class="col-md-6">
-                            <label for="outage_1" class="form-control border-0 small-font">Outage Length (in hours):</label>
+                            <label for="outage_1" class="form-control border-0 small-font switch-label">Outage Length (in hours):</label>
                             <input type="number" id="outage_1" name="outage_1" min="0" max="100" class="form-control">
                         </div>
                     </div>
@@ -889,9 +984,11 @@ color: white !important;
                   </select>
                 </div>
               </div>
+
+
               <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                 <div class="card-body">
-                  <label for="selectTactics_1" class="form-control border-0 small-font">Threat Tactics (Mitre)</label>
+                  <label for="selectTactics_1" class="form-control border-0 switch-label">Threat Tactics (Mitre)</label>
                   <select id="selectTactics_1" name="selectTactics_1" class="form-control small-font">
                     <option value="">-- Select Threat Tactics --</option>
                     {% for mitreTactics in mitreTactics %}
@@ -902,7 +999,7 @@ color: white !important;
               </div>
               <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                 <div class="card-body">
-                    <label for="id_impact_1" class="form-control border-0 small-font">Impact</label>
+                    <label for="id_impact_1" class="form-control border-0 small-font switch-label">Impact</label>
                     <select id="id_impact_1" name="impact" class="form-control small-font">
                         <option value="">-- Select Impact --</option>
                         {% for value, display in scenario_form.fields.impact.choices %}
@@ -1198,6 +1295,26 @@ color: white !important;
                             <textarea class="form-control small-font" name="txtScenarioDescription_2" id="txtScenarioDescription_2" rows="3" style="resize: none; word-wrap: normal" onchange="setRiskAssessmentRefreshRequired(2)"></textarea>
                         </div>
                     </div>
+                <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-control border-0 small-font"><h6>Internet Exposed IP Address</h6></label>
+                        <label class="switch">
+                          <input type="checkbox" id="exposed_system_2" name="exposed_system_2">
+                          <span class="slider1 round"></span>
+                        </label>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-control border-0 small-font"><h6>Default/Weak Credentials</h6></label>
+                        <label class="switch">
+                          <input type="checkbox" id="weak_credentials_2" name="weak_credentials_2">
+                          <span class="slider1 round"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                         <div class="card-body">
                             <div class="row">
@@ -1538,6 +1655,26 @@ color: white !important;
                           <textarea class="form-control small-font" name="txtScenarioDescription_3" id="txtScenarioDescription_3" rows="3" style="resize: none; word-wrap: normal" onchange="setRiskAssessmentRefreshRequired(3)"></textarea>
                     </div>
                 </div>
+          <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-control border-0 small-font"><h6>Internet Exposed IP Address</h6></label>
+                        <label class="switch">
+                          <input type="checkbox" id="exposed_system_3" name="exposed_system_3">
+                          <span class="slider1 round"></span>
+                        </label>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-control border-0 small-font"><h6>Default/Weak Credentials</h6></label>
+                        <label class="switch">
+                          <input type="checkbox" id="weak_credentials_3" name="weak_credentials_3">
+                          <span class="slider1 round"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
               <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                     <div class="card-body">
                         <div class="row">
@@ -1875,6 +2012,26 @@ color: white !important;
                       <textarea class="form-control small-font" name="txtScenarioDescription_4" id="txtScenarioDescription_4" rows="3" style="resize: none; word-wrap: normal" onchange="setRiskAssessmentRefreshRequired(4)"></textarea>
                 </div>
               </div>
+          <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-control border-0 small-font"><h6>Internet Exposed IP Address</h6></label>
+                        <label class="switch">
+                          <input type="checkbox" id="exposed_system_4" name="exposed_system_4">
+                          <span class="slider1 round"></span>
+                        </label>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-control border-0 small-font"><h6>Default/Weak Credentials</h6></label>
+                        <label class="switch">
+                          <input type="checkbox" id="weak_credentials_4" name="weak_credentials_4">
+                          <span class="slider1 round"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
               <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                     <div class="card-body">
                         <div class="row">
@@ -2208,6 +2365,26 @@ color: white !important;
                   <label for="txtScenarioDescription_5" class="form-control border-0 align-text-bottom small-font cursor-pointer" data-bs-toggle="modal" data-bs-target="#scenarioModal"><i class="bi bi-mouse2"></i> Scenario Description (click for table)</label>
 
                   <textarea class="form-control small-font" name="txtScenarioDescription_5" id="txtScenarioDescription_5" rows="3" style="resize: none; word-wrap: normal" onchange="setRiskAssessmentRefreshRequired(5)"></textarea>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-control border-0 small-font"><h6>Internet Exposed IP Address</h6></label>
+                        <label class="switch">
+                          <input type="checkbox" id="exposed_system_5" name="exposed_system_5">
+                          <span class="slider1 round"></span>
+                        </label>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="form-control border-0 small-font"><h6>Default/Weak Credentials</h6></label>
+                        <label class="switch">
+                          <input type="checkbox" id="weak_credentials_5" name="weak_credentials_5">
+                          <span class="slider1 round"></span>
+                        </label>
+                    </div>
                 </div>
             </div>
             <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
@@ -4583,6 +4760,8 @@ function checkEditModeAndExecute(buttonId, spinnerId) {
             var insurance = document.getElementById('txtInsurance').value;
             var deductable = document.getElementById('txtDeductable').value;
             var outage = document.getElementById('selectOutage_' + buttonNumber).value;
+            var exposed_system = document.getElementById('exposed_system_' + buttonNumber).checked;
+            var weak_credentials = document.getElementById('weak_credentials_' + buttonNumber).checked;
             var outageLength = document.getElementById('outage_' + buttonNumber).value;
             var controlScore = document.getElementById('control_score_' + buttonNumber).value;
 
@@ -4615,7 +4794,9 @@ function checkEditModeAndExecute(buttonId, spinnerId) {
                     outage: outage,
                     outageLength: outageLength,
                     impact: impact,
-                    controlScore: controlScore
+                    controlScore: controlScore,
+                    weak_credentials: weak_credentials,
+                    exposed_system: exposed_system,
                  },
                 success: function (response) {
 
@@ -4796,7 +4977,7 @@ $(document).ready(function() {
 $(document).ready(function() {
     $('#rawtable').on('click', 'tbody tr', function() {
 
-        handleAddNewClick();
+        handleAddNewClick(0);
         // clearValues();
          if (sessionStorage.getItem('scenario1id') === null) {
             sessionStorage.setItem('scenario1id', '');
@@ -4832,11 +5013,11 @@ $(document).ready(function() {
 
         // Get the data from the clicked row
         var title = $(this).find('td:eq(1)').text();
-        var businessUnit = $(this).find('td:eq(7)').text();
-        var leader = $(this).find('td:eq(8)').text();
-        var facility = $(this).find('td:eq(5)').text();
-        var industry = $(this).find('td:eq(6)').text();
-        var trigger = $(this).find('td:eq(4)').text();
+        var businessUnit = $(this).find('td:eq(8)').text();
+        var leader = $(this).find('td:eq(9)').text();
+        var facility = $(this).find('td:eq(6)').text();
+        var industry = $(this).find('td:eq(7)').text();
+        var trigger = $(this).find('td:eq(5)').text();
         var status = $(this).find('td:eq(2)').text();
         var insurance = $(this).data('insurance');
         var revenue = $(this).data('revenue');
@@ -4907,6 +5088,8 @@ $(document).ready(function() {
                     document.getElementById("id_impact_2").value = scenarios[1].fields.impact;
                     document.getElementById("selectOutage_2").value = scenarios[1].fields.outage;
                     document.getElementById("outage_2").value = scenarios[1].fields.outageLength;
+                    document.getElementById('exposed_system_2').checked = scenarios[1].fields.exposed_system;
+                    document.getElementById('weak_credentials_2').checked = scenarios[1].fields.weak_credentials;
 
                     document.getElementById("lblriskScore_2").value = scenarios[1].fields.RiskScore;
                     setSliderColor(document.getElementById("lblriskScore_2"));
@@ -5010,6 +5193,9 @@ $(document).ready(function() {
                       document.getElementById("id_impact_3").value = scenarios[2].fields.impact;
                       document.getElementById("selectOutage_3").value = scenarios[2].fields.outage;
                       document.getElementById("outage_3").value = scenarios[2].fields.outageLength;
+                      document.getElementById('exposed_system_3').checked = scenarios[2].fields.exposed_system;
+                        document.getElementById('weak_credentials_3').checked = scenarios[2].fields.weak_credentials;
+
 
                       document.getElementById("lblriskScore_3").value = scenarios[2].fields.RiskScore;
                      document.getElementById("lblriskRating_3").value = scenarios[2].fields.RiskStatus;
@@ -5106,6 +5292,8 @@ $(document).ready(function() {
                       document.getElementById("id_impact_4").value = scenarios[3].fields.impact;
                       document.getElementById("selectOutage_4").value = scenarios[3].fields.outage;
                       document.getElementById("outage_4").value = scenarios[3].fields.outageLength;
+                      document.getElementById('exposed_system_4').checked = scenarios[3].fields.exposed_system;
+                      document.getElementById('weak_credentials_4').checked = scenarios[3].fields.weak_credentials;
 
                       document.getElementById("lblriskScore_4").value = scenarios[3].fields.RiskScore;
                      document.getElementById("lblriskRating_4").value = scenarios[3].fields.RiskStatus;
@@ -5202,6 +5390,8 @@ $(document).ready(function() {
                       document.getElementById("id_impact_5").value = scenarios[4].fields.impact;
                       document.getElementById("selectOutage_5").value = scenarios[4].fields.outage;
                       document.getElementById("outage_5").value = scenarios[4].fields.outageLength;
+                      document.getElementById('exposed_system_5').checked = scenarios[4].fields.exposed_system;
+                      document.getElementById('weak_credentials_5').checked = scenarios[4].fields.weak_credentials;
 
                       document.getElementById("lblriskScore_5").value = scenarios[4].fields.RiskScore;
                       document.getElementById("lblriskRating_5").value = scenarios[4].fields.RiskStatus;
@@ -5297,6 +5487,8 @@ $(document).ready(function() {
                          document.getElementById("selectTactics_1").value = scenarios[0].fields.threatTactic;
                          document.getElementById("id_impact_1").value = scenarios[0].fields.impact;
                          document.getElementById("selectOutage_1").value = scenarios[0].fields.outage;
+                         document.getElementById('exposed_system_1').checked = scenarios[0].fields.exposed_system;
+                         document.getElementById('weak_credentials_1').checked = scenarios[0].fields.weak_credentials;
                          document.getElementById("outage_1").value = scenarios[0].fields.outageLength;
                          document.getElementById("lblriskScore_1").value = scenarios[0].fields.RiskScore;
                          setSliderColor(document.getElementById("lblriskScore_1"));
@@ -5550,6 +5742,8 @@ function initFrequencySlider(sliderId, outputId) {
       document.getElementById("lblriskCost_2").value = '';
       document.getElementById("lblriskSummary_2").value = '';
       document.getElementById("selectOutage_2").value = '';
+      document.getElementById('exposed_system_2').checked = false;
+      document.getElementById('weak_credentials_2').checked = false;
       document.getElementById("outage_2").value = 0;
       document.getElementById("control_score_2").value = '0';
         var tableBody = document.querySelector('#risk_summary_controls_table_2 tbody');
@@ -5593,6 +5787,8 @@ function initFrequencySlider(sliderId, outputId) {
       document.getElementById("lblriskCost_3").value = '';
       document.getElementById("lblriskSummary_3").value = '';
       document.getElementById("selectOutage_3").value = '';
+      document.getElementById('exposed_system_3').checked = false;
+      document.getElementById('weak_credentials_3').checked = false;
       document.getElementById("outage_3").value = 0;
       document.getElementById("control_score_3").value = '0';
         var tableBody = document.querySelector('#risk_summary_controls_table_3 tbody');
@@ -5636,6 +5832,8 @@ function initFrequencySlider(sliderId, outputId) {
       document.getElementById("lblriskCost_4").value = '';
       document.getElementById("lblriskSummary_4").value = '';
       document.getElementById("selectOutage_4").value = '';
+      document.getElementById('exposed_system_4').checked = false;
+      document.getElementById('weak_credentials_4').checked = false;
       document.getElementById("outage_4").value = 0;
       document.getElementById("control_score_4").value = '0';
         var tableBody = document.querySelector('#risk_summary_controls_table_4 tbody');
@@ -5652,6 +5850,8 @@ function initFrequencySlider(sliderId, outputId) {
       document.getElementById("selectTactics_5").value = '';
         document.getElementById("id_impact_5").value = '';
       document.getElementById("selectOutage_5").value = '';
+      document.getElementById('exposed_system_5').checked = false;
+      document.getElementById('weak_credentials_5').checked = false;
       document.getElementById("outage_5").value = 0;
 
       initSlider('range_safety_5', 'safetyrange_5')
@@ -5692,6 +5892,8 @@ function initFrequencySlider(sliderId, outputId) {
       document.getElementById("txtScenarioDescription_1").value = '';
       document.getElementById("selectThreat_1").value = '';
       document.getElementById("selectOutage_1").value = '';
+      document.getElementById('exposed_system_1').checked = false;
+      document.getElementById('weak_credentials_1').checked = false;
       document.getElementById("outage_1").value = '';
       document.getElementById("selectTactics_1").value = '';
       document.getElementById("id_impact_1").value = '';
@@ -5790,6 +5992,8 @@ function save_scenario(buttonId) {
             'justifyData': $('#txtdataJustify_' + buttonId).val(),
             'justifySupply': $('#txtsupplyJustify_' + buttonId).val(),
             'outage': $('#selectOutage_' + buttonId).val(),
+            'weak_credentials': $('#weak_credentials_' + buttonId).prop('checked'),
+            'exposed_system': $('#exposed_system_' + buttonId).prop('checked'),
             'outageLength': $('#outage_' + buttonId).val(),
             'threatSource': $('#selectThreat_' + buttonId).val(),
             'residual_risk': $('#residual_risk_' + buttonId).val(),

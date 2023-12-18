@@ -7,7 +7,8 @@ from OTRisk.models.raw import RAWorksheet, RAWorksheetScenario, RAActions, Mitre
     RawControlList
 from django.contrib.auth.decorators import login_required
 from OTRisk.models.questionnairemodel import FacilityType
-from OTRisk.models.Model_CyberPHA import tblIndustry, tblThreatSources, auditlog, tblScenarios, tblCyberPHAHeader, OrganizationDefaults
+from OTRisk.models.Model_CyberPHA import tblIndustry, tblThreatSources, auditlog, tblScenarios, tblCyberPHAHeader, \
+    OrganizationDefaults
 from OTRisk.models.Model_Mitre import MitreICSTactics
 from accounts.models import Organization
 from django.shortcuts import render
@@ -431,18 +432,64 @@ def reports_pha(request):
 
 
 def calculate_business_impact_score(ra_worksheet_id):
-    # Define the weights for each field
-    field_weights = {
-        'ReputationScore': 1,
-        'SafetyScore': 2,
-        'lifeScore': 2,
-        'FinancialScore': 1,
-        'DataScore': 1,
-        'SupplyChainScore': 1,
-        'productionScore': 1,
-        'environmentScore': 1,
-        'regulatoryScore': 1,
-    }
+    try:
+        # Retrieve the RAWorksheet with the given ID
+        ra_worksheet = RAWorksheet.objects.get(ID=ra_worksheet_id)
+        organization = ra_worksheet.organization_id
+        org_defaults = OrganizationDefaults.objects.get(organization=organization)
+
+        # Define the weights for each field
+        field_weights = {
+            'ReputationScore': org_defaults.impact_weight_reputation,
+            'SafetyScore': org_defaults.impact_weight_safety,
+            'lifeScore': org_defaults.impact_weight_danger,
+            'FinancialScore': org_defaults.impact_weight_finance,
+            'DataScore': org_defaults.impact_weight_data,
+            'SupplyChainScore': org_defaults.impact_weight_supply,
+            'productionScore': org_defaults.impact_weight_production,
+            'environmentScore': org_defaults.impact_weight_environment,
+            'regulatoryScore': org_defaults.impact_weight_regulation,
+        }
+
+        # Retrieve all associated RAWorksheetScenario instances for this RAWorksheet
+        scenarios = RAWorksheetScenario.objects.filter(RAWorksheetID=ra_worksheet)
+
+        # Initialize variables for total weighted score
+        total_weighted_score = 0
+        total_scenarios = 0
+
+        # Calculate the total weighted score for each scenario
+        for scenario in scenarios:
+            scenario_weighted_score = 0
+            for field, weight in field_weights.items():
+                # Get the value of the field from the scenario
+                field_value = getattr(scenario, field, 0)
+                # Convert it to a numeric score (assuming it's an integer out of 10)
+                numeric_score = int(field_value)
+                # Add the weighted score to the scenario weighted score
+                scenario_weighted_score += numeric_score * weight
+
+            # Add the scenario weighted score to the total weighted score
+            total_weighted_score += scenario_weighted_score
+            total_scenarios += 1
+
+        # Calculate the average weighted score per scenario
+        if total_scenarios > 0:
+            average_weighted_score_per_scenario = total_weighted_score / total_scenarios
+        else:
+            return 0
+
+        # Normalize the average weighted score out of 100
+        max_weighted_score = 10 * sum(field_weights.values())
+        normalized_total_score = (average_weighted_score_per_scenario / max_weighted_score) * 100
+
+        return normalized_total_score
+
+    except RAWorksheet.DoesNotExist:
+        return None
+
+
+def calculate_total_risk_score(ra_worksheet_id):
 
     try:
         # Retrieve the RAWorksheet with the given ID
@@ -451,24 +498,25 @@ def calculate_business_impact_score(ra_worksheet_id):
         # Retrieve all associated RAWorksheetScenario instances for this RAWorksheet
         scenarios = RAWorksheetScenario.objects.filter(RAWorksheetID=ra_worksheet)
 
-        # Initialize a total score
-        total_score = 0
+        # Initialize variables for total risk score and scenario count
+        total_risk_score = 0
+        scenario_count = 0
 
-        # Calculate the total score based on weighted fields for each scenario
+        # Sum the risk score of each scenario and count the scenarios
         for scenario in scenarios:
-            scenario_score = 0
-            for field, weight in field_weights.items():
-                # Get the value of the field from the scenario
-                field_value = getattr(scenario, field)
-                # Convert it to a numeric score (assuming it's an integer out of 10)
-                numeric_score = int(field_value)
-                # Add the weighted score to the scenario score
-                scenario_score += numeric_score * weight
+            total_risk_score += getattr(scenario, 'RiskScore', 0)
+            scenario_count += 1
 
-            # Add the scenario score to the total score
-            total_score += scenario_score
+        # Calculate the average risk score
+        if scenario_count > 0:
+            average_risk_score = total_risk_score / scenario_count
+        else:
+            return 0
 
-        return total_score
+        # Ensure the average risk score does not exceed 10
+        total_risk_score = min(average_risk_score, 10)
+
+        return total_risk_score
 
     except RAWorksheet.DoesNotExist:
         return None
@@ -489,9 +537,23 @@ def map_score_to_text(score):
         return 'Very High'
 
 
+def map_riskscore_to_text(score):
+    if score < 2:
+        return 'Low'
+    elif score < 4:
+        return 'Low/Medium'
+    elif score < 6:
+        return 'Medium'
+    elif score < 8:
+        return 'Medium/High'
+    elif score < 9:
+        return 'High'
+    else:
+        return 'Very High'
+
+
 @login_required
 def qraw(request):
-
     # check the organization that the user belong to
     org_id = get_user_organization_id(request)
     saved_worksheet_id = None
@@ -584,20 +646,23 @@ def qraw(request):
 
         # Calculate the business impact score for the current RAWorksheet
         business_impact_score = calculate_business_impact_score(worksheet_id)
+        total_risk_score = calculate_total_risk_score(worksheet_id)
 
         # Add the business_impact_score to the raw object as a new attribute
         raw.business_impact_score = business_impact_score
+        raw.total_risk_score = total_risk_score
 
         # Loop through the raws queryset and calculate business impact scores
     for raw in raws:
         # Assuming the business impact score is stored in the 'business_impact_score' attribute
         business_impact_score = raw.business_impact_score
-
+        total_risk_score = raw.total_risk_score
         # Map the numeric score to the corresponding text value
         bia_text = map_score_to_text(business_impact_score)
-
+        risk_text = map_riskscore_to_text(total_risk_score)
         # Add the 'bia_text' field to the raw object
         raw.bia_text = bia_text
+        raw.risk_text = risk_text
 
     facilities = FacilityType.objects.all().order_by('FacilityType')
     industries = tblIndustry.objects.all().order_by('Industry')
@@ -665,6 +730,8 @@ def openai_assess_risk(request):
         deductable = parse_currency(request.GET.get('deductable'))
         outage = request.GET.get('outage')
         outageLength = request.GET.get('outageLength')
+        exposed_system = request.GET.get('exposed_system')
+        weak_credentials = request.GET.get('weak_credentials')
 
         if outageLength and outageLength.isdigit():
             outageLength = int(outageLength)
@@ -699,7 +766,7 @@ def openai_assess_risk(request):
 
         system_message = {
             "role": "system",
-            "content": f"As a cybersecurity risk assessment professional, make a risk assessment in relation to {scenario} in a {facility_type} within the {industry} industry. The level of vulnerability has been rated as {vulnerability}. The annual revenue for the business is {revenue}. They have cyber insurance cover to the value of {insurance} and the cyber insurance deductible is {deductable}. {content}"
+            "content": f"You are an OT Cybersecurity Risk expert and an expert in industrial system engineering. Make a risk assessment for {scenario} in a {facility_type} in the {industry} industry. Vulnerability has been rated as {vulnerability}. Annual revenue for the business is {revenue}. Cyber insurance cover to the value of {insurance} and the cyber insurance deductible is {deductable}. {content}"
         }
 
         def query_openai(user_message_content):
@@ -736,10 +803,11 @@ def openai_assess_risk(request):
         risk_rating_message = {
             "role": "user",
             "content": (
-                f"Given the information about a cybersecurity incident scenario: Threat source - {threat_source}, Threat tactic - {threat_tactic}, vulnerability exposure rating -{vulnerability}/10"
+                f"Threat source - {threat_source}, Threat tactic - {threat_tactic}, vulnerability exposure rating -{vulnerability}/10, "
                 f"Safety impact - {safety_impact}/10, Life impact - {life_impact}/10, Production impact - {production_impact}/10, "
                 f"Financial impact - {financial_impact}/10, Environmental impact - {environment_impact}/10, Regulatory impact - {regulatory_impact}/10, "
-                f"Reputation impact - {reputation_impact}/10, Data impact - {data_impact}/10, Supply Chain - {supply_impact}, Scenario - {scenario}, Facility type - {facility_type}, Industry - {industry}, "
+                f"Reputation impact - {reputation_impact}/10, Data impact - {data_impact}/10, Supply Chain Impact- {supply_impact}/10, "
+                f"Weak credentials: {weak_credentials}, Internet exposed IP address: {exposed_system}."
                 f"Provide a rating for the risk from one of the following possible responses: Low, Low/Medium, Medium, Medium/High, or High. The response must be only the single response with no additional text or explanation. The user must only see the final response without any other detail  ")
         }
 
@@ -760,19 +828,19 @@ def openai_assess_risk(request):
         event_cost_estimate_message = {
             "role": "user",
             "content": (
-                f"Provide a US dollar estimate for a {scenario} in a {facility_type}. Provide figures as lowest|highest|median. Consider the following details"
-                f"- Revenue of the organization: {revenue}."
-                f"- Industry or sector: {industry}. "
-                f"- Impact on operations rated as : {production_impact} out of 10."
+                f" Estimate the DIRECT COSTS of a single loss event (SLE) in US dollars for the scenario: {scenario}. Provide figures as lowest|highest|median. Business impact assessment as follows:"
+                f"- Operations impact : {production_impact} out of 10."
                 f" - Production outage: {outage}."
                 f" - Length of production outage: {outageLength} hours."
-                f"- impact on safety rated as: {safety_impact} out of 10."
-                f"- impact on supply chain rated as: {supply_impact} out of 10."
-                f"- impact on costs rated as: {financial_impact} out of 10."
-                f"- impact on data and intellectual property rated as: {data_impact} out of 10."
-                f"- impact on the organization's reputation rated as {reputation_impact} out of 10."
-                f"Insurance coverage: ${insurance}. If the estimates exceed the insurance deductable amount then deduct the insurance coverage amount from the estimates otherwise ignore the insurance amounts. "
-                f"Provide three event costs, that represent the DIRECT costs and expenses of the incident, as a spread of values: an estimate of the lowest cost, the highest amount or worst-case-scenario, and the most likely cost. VERY IMPORTANT INSTRUCTION: Do not over-estimate the costs - most cybersecurity incidents do not cost millions of dollars - those that do are the exception."
+                f"- Safety impact: {safety_impact} out of 10."
+                f"- Supply Chain Impact: {supply_impact} out of 10."
+                f"- Financial Impact: {financial_impact} out of 10."
+                f"- Data Impact: {data_impact} out of 10."
+                f"- Reputation Impact: {reputation_impact} out of 10."
+                f"- Regulatory Impact: {regulatory_impact} out of 10."
+                f"- Danger to life Impact: {life_impact} out of 10."
+                f"If the estimates exceed the insurance deductable amount then deduct the insurance coverage amount from the estimates otherwise ignore the insurance amounts. "
+                f"Guidelines: Give three estimates best case, worst case, and most likely case. Output as integers in the format low|medium|high where | is the delimiter between the three integer values. Your estimates should be realistic and specific to the scenario. Consider only the relevant Direct costs which can include all or some of the following depending on the incident: incident response, remediation, legal fees, notification costs, regulatory fines, compensations, and increased insurance premiums."
                 f"Give the answer in the format lowest|highest|median using | as the character to indicate the delimiter between the values."
                 f"Provide only the dollar amount values in your response without any narrative or explanation because the response from this query will be used in a calculation."
             )
@@ -819,20 +887,43 @@ def openai_assess_risk(request):
                 "role": "user",
                 "content": dict(
                     prompt=(
-                        "Based on the provided risk factors, generate a concise bullet point list of the most relevant OT (operational technology) and ICS (industrial control system) Cybersecurity controls necessary to mitigate the risks:\n"
-                        "Controls should be technical and focused on mitigating risks most relevant to OT Cybersecurity."
+                        f"From the scenario {scenario} and following variables: Weak Credentials: {weak_credentials}, Internet exposed IP address {exposed_system}, threat source {threat_source}, threat tactics {threat_tactic} make a concise bullet point list of the most relevant and OT (operational technology) and ICS (industrial control system) technical and physical controls and configurations necessary to mitigate or avoid the risks:\n"
+                        f"Controls should be technical and focused on mitigating risks most relevant to OT Cybersecurity. If a specific device, PLC, software, or equipment is named in the scenario, give controls specific to the device, PLC, software, or equipment. Controls must be pragmatic, practical and realistic to implement at a {facility_type}, should align to NIST 800-82 standards and/or vendor published controls for the specific device, plc, software, or equipment. Each control should be accompanied with the cited reference code for the related control in the standards or vendor material"
                     ),
-                    factors=risk_factors,
                     additional_request={
                         "formatting": f"Place line breaks between lines. No more than 10 words per bullet point. No extra commentary or explanation. Give the response in language {language}"
                     }
                 )
             }
+
             risk_summary = query_openai(risk_summary_message['content'])
 
-        risk_rating = query_openai(risk_rating_message['content'])
+        ###############################
+        # risk rating
+        system_content = system_message['content'] if isinstance(system_message['content'], str) else ""
+        risk_rating_content = risk_rating_message['content'] if isinstance(
+            risk_rating_message['content'], str) else ""
+
+        combined_message = system_content + ' ' + risk_rating_content
+
+        risk_rating = query_openai(combined_message)
+        ###############################
+        ###############################
+
         risk_score = query_openai(risk_score_message['content'])
-        event_cost_estimate = query_openai(event_cost_estimate_message['content'])
+
+        ###############################
+        # event costs
+        system_content = system_message['content'] if isinstance(system_message['content'], str) else ""
+        event_cost_content = event_cost_estimate_message['content'] if isinstance(
+            event_cost_estimate_message['content'], str) else ""
+
+        combined_message = system_content + ' ' + event_cost_content
+
+        event_cost_estimate = query_openai(combined_message)
+        ###############################
+        ###############################
+
         # risk_summary = query_openai(risk_summary_message['content'])
         risk_summary_array = parse_risk_summary(risk_summary) if risk_summary != 'x' else []
         values = event_cost_estimate.split('|')
@@ -1206,7 +1297,6 @@ def checkbox_to_boolean(value):
 
 
 def create_or_update_raw_scenario(request):
-
     if request.method == 'POST':
         raw_id = int(request.POST.get('rawID'))  # Assuming rawID is the ID of RAWorksheet
 
@@ -1226,10 +1316,17 @@ def create_or_update_raw_scenario(request):
 
         bia_sis_outage_bool = request.POST.get('bia_sis_outage') == 'yes'
         bia_sis_compromise_bool = request.POST.get('bia_sis_compromise') == 'yes'
+        exposed_system_value = request.POST.get('exposed_system', 'off')
+        exposed_system = exposed_system_value.lower() == 'true'
+
+        weak_credentials_value = request.POST.get('weak_credentials', 'off')
+        weak_credentials = weak_credentials_value.lower() == 'true'
 
         scenario_data = {
             'RAWorksheetID': raw_worksheet,
             'ScenarioDescription': request.POST.get('ScenarioDescription'),
+            'weak_credentials': weak_credentials,
+            'exposed_system': exposed_system,
             'RiskScore': request.POST.get('RiskScore'),
             'VulnScore': request.POST.get('VulnScore'),
             'ReputationScore': request.POST.get('ReputationScore'),
@@ -1294,22 +1391,20 @@ def create_or_update_raw_scenario(request):
             new_scenario.save()
             scenario_id = new_scenario.ID
 
+        # Delete all existing controls for the given scenario
+        RawControlList.objects.filter(scenarioID_id=scenario_id).delete()
+
+        # Add new controls from the control_list
         for control_item in control_list:
             control_name = control_item['control']
             control_score = control_item['score']
 
-            # Check if the control already exists for the given scenario
-            control_instance, created = RawControlList.objects.get_or_create(
+            # Create a new control instance
+            RawControlList.objects.create(
                 scenarioID_id=scenario_id,
-                # Note: scenarioID_id is the way to reference the ID of a ForeignKey in Django
                 control=control_name,
-                defaults={'score': control_score}  # This sets the score if a new instance is created
+                score=control_score
             )
-
-            # If the control instance already exists, just update the score
-            if not created:
-                control_instance.score = control_score
-                control_instance.save()
 
         return JsonResponse({'message': 'Scenario created/updated successfully'}, status=200)
 
