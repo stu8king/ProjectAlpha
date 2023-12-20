@@ -132,6 +132,7 @@ class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE)
     must_change_password = models.BooleanField(default=True)
+    abuse_flag = models.BooleanField(default=False)
 
     class Meta:
         db_table = 'userprofile'

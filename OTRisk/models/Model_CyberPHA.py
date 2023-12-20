@@ -8,6 +8,16 @@ from accounts.models import Organization
 from OTRisk.models.raw import MitreICSMitigations
 
 
+class user_scenario_audit(models.Model):
+    # model that records the text entered into the scenario text box
+    scenario_text = models.TextField()
+    entered_at = models.DateTimeField(auto_now_add=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    organization_id = models.PositiveIntegerField()
+    ip_address = models.GenericIPAddressField()
+    session_id = models.CharField(max_length=256)
+
+
 class OrganizationDefaults(models.Model):
     LANGUAGE_CHOICES = [
         ('en', 'English'),
@@ -515,6 +525,7 @@ class tblCyberPHAScenario(models.Model):
     weak_credentials = models.BooleanField(
         default=False)  # flag set by the user to define if the scenario has systems that are configured with weak or default credentials
     compliance_map = models.TextField(default="No Compliance Map Saved", null=True)
+    attack_tree_text = models.TextField(null=True)
 
     class Meta:
         db_table = 'tblCyberPHAScenario'
@@ -741,6 +752,7 @@ class CyberPHAScenario_snapshot(models.Model):
     weak_credentials = models.BooleanField(
         default=False)  # flag set by the user to define if the scenario has systems that are configured with weak or default credentials
     compliance_map = models.TextField(default="No Compliance Map Saved", null=True)
+    attack_tree_text = models.TextField(null=True)
 
 
 class Audit(models.Model):

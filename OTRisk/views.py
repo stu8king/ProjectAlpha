@@ -1024,6 +1024,7 @@ def save_or_update_cyberpha(request):
         ThreatClass = request.POST.get('threatSource')
         dangerScope = request.POST.get('dangerScope')
         ai_bia_score = request.POST.get('ai_bia_score')
+        attack_tree_text = request.POST.get('attack_tree_text')
         if ai_bia_score in ('NaN', ''):
             ai_bia_score = 0
         else:
@@ -1190,7 +1191,8 @@ def save_or_update_cyberpha(request):
                 frequency=frequency,
                 sl_a=sl_a,
                 dangerScope=dangerScope,
-                compliance_map=compliance_map
+                compliance_map=compliance_map,
+                attack_tree_text=attack_tree_text
 
             )
             snapshot_record.save()
@@ -1270,6 +1272,7 @@ def save_or_update_cyberpha(request):
                 'dangerScope': dangerScope,
                 'ai_bia_score': 0 if ai_bia_score is None else ai_bia_score,
                 'compliance_map': compliance_map,
+                'attack_tree_text': attack_tree_text
 
             }
 
@@ -1286,7 +1289,6 @@ def save_or_update_cyberpha(request):
                     ID=int(scenario_id)  # Assumes scenario_id is always a valid integer
                 )
                 scenario_instance = cyberpha_entry
-
 
             # Retrieve validated consequences from the request
             validated_consequences = request.POST.getlist('validated_consequences')
@@ -1369,16 +1371,16 @@ def assess_cyberpha(request, cyberPHAID=None):
     industry_id = tblIndustry.objects.get(Industry=pha_record.Industry).id
 
     # scenarios = tblScenarios.objects.all()
-    tbl_scenarios = tblScenarios.objects.filter(industry_id=industry_id)
+    # tbl_scenarios = tblScenarios.objects.filter(industry_id=industry_id)
     # tbl_scenarios = tblScenarios.objects.all()
 
     # Get custom scenarios for the current user's organization
     custom_scenarios = CustomScenario.objects.filter(organization_id=organization_id)
     # Convert querysets to lists of dictionaries
-    tbl_scenarios_list = [{'ID': obj.ID, 'Scenario': obj.Scenario} for obj in tbl_scenarios]
-    custom_scenarios_list = [{'ID': obj.id, 'Scenario': obj.scenario} for obj in custom_scenarios]
+    # tbl_scenarios_list = [{'ID': obj.ID, 'Scenario': obj.Scenario} for obj in tbl_scenarios]
+    # custom_scenarios_list = [{'ID': obj.id, 'Scenario': obj.scenario} for obj in custom_scenarios]
     # Combine these lists
-    combined_scenarios = tbl_scenarios_list + custom_scenarios_list
+    # combined_scenarios = tbl_scenarios_list + custom_scenarios_list
     control_objectives = tblControlObjectives.objects.all()
     mitigation_measures = tblMitigationMeasures.objects.all()
     threat_intelligence = tblThreatIntelligence.objects.all().order_by('ThreatDescription')
@@ -1409,7 +1411,7 @@ def assess_cyberpha(request, cyberPHAID=None):
     scenario_form = CyberSecurityScenarioForm(request.POST)
 
     return render(request, 'OTRisk/phascenariomgr.html', {
-        'scenarios': combined_scenarios,
+        # 'scenarios': combined_scenarios,
         'control_objectives': control_objectives,
         'mitigation_measures': mitigation_measures,
         'threat_intelligence': threat_intelligence,

@@ -1,9 +1,11 @@
+import json
+
 from django.db.models.functions import Coalesce
 from django.forms import model_to_dict
 
 from OTRisk.models.Model_CyberPHA import tblIndustry, tblCyberPHAHeader, tblZones, tblStandards, \
     tblCyberPHAScenario, vulnerability_analysis, tblAssetType, tblMitigationMeasures, MitreControlAssessment, \
-    cyberpha_safety, SECURITY_LEVELS, ScenarioConsequences
+    cyberpha_safety, SECURITY_LEVELS, ScenarioConsequences, user_scenario_audit
 from OTRisk.models.raw import SecurityControls
 from OTRisk.models.raw import MitreICSMitigations, RAActions
 from OTRisk.models.questionnairemodel import FacilityType
@@ -25,6 +27,8 @@ import math
 
 from ProjectAlpha import settings
 from ProjectAlpha.settings import BASE_DIR
+from accounts.models import UserProfile
+from accounts.views import get_client_ip
 from .dashboard_views import get_user_organization_id
 from django.contrib.auth.models import User
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -619,7 +623,8 @@ def getSingleScenario(request):
         'ai_bia_score': scenario.ai_bia_score,
         'exposed_system': scenario.exposed_system,
         'weak_credentials': scenario.weak_credentials,
-        'compliance_map': scenario.compliance_map
+        'compliance_map': scenario.compliance_map,
+        'attack_tree_text': scenario.attack_tree_text
     }
     # Retrieve the related PHAControlList records
     control_list = []
@@ -821,8 +826,7 @@ def scenario_analysis(request):
         # Now handle the compliance mapping separately
         compliance_data = compliance_map_data(common_content)
         responses.append(compliance_data)
-        print(responses[2])
-        print(compliance_data)
+
         # Return the responses as variables
         return JsonResponse({
             'likelihood': responses[0],
@@ -1028,6 +1032,21 @@ def generate_ppt(request):
         })
 
 
+def reformat_attack_tree(data):
+    # Recursive function to adjust the format
+    def adjust_node_format(node):
+        new_node = {'name': node['Node']}
+        if 'Children' in node and node['Children']:
+            new_node['children'] = [adjust_node_format(child) for child in node['Children']]
+        return new_node
+
+    formatted_tree = {'name': data['Attack'], 'children': []}
+    for node in data['Nodes']:
+        formatted_tree['children'].append(adjust_node_format(node))
+
+    return formatted_tree
+
+
 @login_required
 def analyze_scenario(request):
     openai_api_key = os.environ.get('OPENAI_API_KEY')
@@ -1035,6 +1054,21 @@ def analyze_scenario(request):
 
     if request.method == 'POST':
         scenario = request.POST.get('scenario')
+        # Fetch the organization_id from the user's profile
+        try:
+            user_profile = UserProfile.objects.get(user=request.user)
+            organization_id = user_profile.organization.id
+        except UserProfile.DoesNotExist:
+            organization_id = None  # Or handle the lack of a profile as you see fit
+
+        # Create a record in user_scenario_audit
+        user_scenario_audit.objects.create(
+            scenario_text=scenario,
+            user=request.user,
+            organization_id=organization_id,
+            ip_address=get_client_ip(request),
+            session_id=request.session.session_key
+        )
         # validate the scenario doesn't contain vulgar terms using the OpenAPI moderator
         if is_inappropriate(scenario):
             consequence_text = 'Scenario contains inappropriate terms'
@@ -1090,9 +1124,36 @@ def analyze_scenario(request):
             # Extract and process the text from the response
             consequence_text = response['choices'][0]['message']['content']
             consequence_list = consequence_text.split(';')  # Splitting based on the chosen delimiter
-        else:
-            return JsonResponse({'consequence': [], 'error': 'Not a valid scenario'}, status=400)
-        return JsonResponse({'consequence': consequence_list})
+
+            attack_tree_system_message = f"""
+                Generate a hierarchical structure of a potential attack tree for the given cybersecurity scenario in a machine-readable JSON format. The structure should use 'name' for node labels and 'children' for nested nodes. Each node should represent a step or method in the attack, formatted as: {{'name': 'Node Name', 'children': [{{...}}]}}. EXTRA INSTRUCTION: Output MUST be in JSON format with no additional characters outside of the JSON structure.
+            """
+
+            # Query OpenAI API for the attack tree
+            attack_tree_response = openai.ChatCompletion.create(
+                model="gpt-4",
+                messages=[
+                    {"role": "system", "content": attack_tree_system_message},
+                    {"role": "user", "content": user_message}
+                ],
+                max_tokens=800,
+                temperature=0.3
+            )
+
+            # Process the response for attack tree
+            attack_tree_raw = attack_tree_response['choices'][0]['message']['content']
+
+            try:
+                # Parse the raw JSON string into a Python dictionary
+                attack_tree_json = json.loads(attack_tree_raw)
+            except json.JSONDecodeError:
+                attack_tree_json = {"error": "Invalid JSON format from AI response"}
+
+            return JsonResponse({'consequence': consequence_list, 'attack_tree': attack_tree_json})
+
+
+    else:
+            return JsonResponse({'consequence': [], 'attack_tree': {}, 'error': 'Not a valid scenario'}, status=400)
 
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
