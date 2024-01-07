@@ -130,6 +130,9 @@
         <li class="nav-item">
           <a class="nav-link" style="font-size: 12px;" href="{% url 'OTRisk:iotaphamanager' %}"><i class="bi bi-journal-text"></i> CyberPHA</a>
         </li>
+      <li class="nav-item">
+          <a class="nav-link" style="font-size: 12px;" href="{% url 'OTRisk:scenario_sim' %}"><i class="bi bi-journal-text"></i> Scenario Creator</a>
+        </li>
           <li class="nav-item">
           <a class="nav-link" style="font-size: 12px;" href="{% url 'OTRisk:ra_actions_view_default' %}" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Actions</a>
         </li>
@@ -730,7 +733,80 @@
     <div class="col-md-1 "  style="background-color: white"></div>
 </div>
 </div>
+<div class="row">
 
+    <div class="col-md-1"></div>
+
+        <div class="col">
+            CyberPHA Group Assignments
+        </div>
+
+    <div class="col-md-1"></div>
+</div>
+<div class="row">
+
+    <div class="col-md-1"></div>
+{% for group in groups_with_cyberphas %}
+    <div class="col-md-2">
+    <div class="card border-primary mb-3">
+        <div class="card-header bg-primary text-white">
+            {{ group.group_name }}
+        </div>
+        <div class="card-body text-primary">
+            <ul class="list-group list-group-flush">
+                {% for cyberpha in group.cyberphas %}
+                    <li class="list-group-item">{{ cyberpha.facility_name }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    </div>
+{% empty %}
+    <p>No groups found.</p>
+{% endfor %}
+<div class="col-md-1"></div>
+</div>
+
+<br>
+
+<div class="row" style="height:400px">
+    <div class="col-md-1 "  style="background-color: white"></div>
+    <div class="col-md-10">
+<div class="card-body">
+    <label for="auditLogTable" class="form-label">Audit Logs</label>
+    <table id="auditLogTable" class="table">
+        <thead class="thead-dark">
+            <tr>
+                <th>ID</th>
+                <th>User</th>
+                <th>Timestamp</th>
+                <th>User Action</th>
+                <th>User IP Address</th>
+                <!-- Add more columns as needed -->
+            </tr>
+        </thead>
+        <tbody>
+            {% for log in last_100_logs %}
+            <tr>
+                <td>{{ log.id }}</td>
+                <td>{{ log.user }}</td>
+                <td>{{ log.timestamp }}</td>
+                <td>{{ log.user_action }}</td>
+                <td>{{ log.user_ipaddress }}</td>
+                <!-- Add more data cells as needed -->
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5">No audit logs found</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+    </div>
+    <div class="col-md-1 "  style="background-color: white"></div>
+</div>
 
 <script>
 

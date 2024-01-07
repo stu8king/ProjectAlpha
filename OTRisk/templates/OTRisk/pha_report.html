@@ -3,6 +3,7 @@
 <html>
 <head>
     <title>iOTa</title>
+    <script src="https://d3js.org/d3.v6.min.js"></script>
     <link rel="icon" href="{% static 'images/iota - white 1.png' %}" type="image/x-icon">
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css">
@@ -632,6 +633,8 @@ body {
                     generateRadarChart(data);
                     generateLineChart(data);
                     writeScenarioData(data);
+                    let attack_tree_str = JSON.parse(data.attack_tree_text);
+                    drawAttackTree(attack_tree_str);
                 },
                 error: function(error) {
                     console.error("Error fetching scenario data:", error);
@@ -730,19 +733,12 @@ body {
         </div>
         <div class="row">
             <div class="col-md-1"></div>
-            <!--
-            <div class="col-md-5">
-                <label for="recommendations">Recommendations: </label><label id="standards"></label><textarea id="recommendations" class="form-control" style="resize: none;" rows="8"></textarea>
-            </div>
-            -->
-            <div class="col-md-6">
-                <b>Recommended Controls</b> (Using <label id="standards"></label>)
 
-                <div id="controls"></div>
+            <div class="col-md-9">
+
+                <div id="attack_tree"></div>
             </div> <!-- recommended controls -->
-            <div class="col-md-3">
 
-            </div>
             <div class="col-md-2"></div>
 
         </div>
@@ -819,43 +815,11 @@ body {
             consequencesLabel.innerHTML = 'No consequences available.';
         }
     // document.getElementById('recommendations').value = data.recommendations;
-        document.getElementById('standards').textContent = data.standards;
     document.getElementById('sle_low').textContent = data.sle_low;
     document.getElementById('sle').textContent = data.sle;
     document.getElementById('sle_high').textContent = data.sle_high;
     document.getElementById('RRa').textContent = data.residual_risk;
     document.getElementById('scenario_likelihood').textContent = data.scenario_likelihood;
-    // Get the controls container
-    var controlsContainer = document.getElementById('controls');
-
-    // Clear any existing controls
-    controlsContainer.innerHTML = '';
-
-    // Loop through the controls and add them to the container
-    data.controls.forEach(function(control) {
-        // Create a new div for the control
-        var controlDiv = document.createElement('div');
-        controlDiv.className = 'control-item';
-
-        // Add the control name
-        var controlText = document.createElement('p');
-        controlText.textContent = control.control +  control.reference;
-        controlDiv.appendChild(controlText);
-
-        // Add the slider
-        var slider = document.createElement('input');
-        slider.type = 'range';
-        slider.min = '0';
-        slider.max = '100';
-        slider.value = control.score;
-        slider.className = 'control-slider';
-        slider.disabled = true;
-        controlDiv.appendChild(slider);
-        setSliderColor(slider)
-
-        // Append the control div to the container
-        controlsContainer.appendChild(controlDiv);
-    });
 
 }
 
@@ -947,6 +911,91 @@ function generateLineChart(data) {
     });
 }
 
+
+ function drawAttackTree(data) {
+
+    var container = document.getElementById('attack_tree');
+    var containerWidth = container.clientWidth;
+    var svgWidth = containerWidth * 0.9; // SVG width is 90% of the container width
+    var margin = { top: 20, right: 50, bottom: 20, left: 300 };
+    var width = svgWidth - margin.left - margin.right; // Adjusted tree width
+    var height = 500; // Adjust as needed
+
+    d3.select(container).selectAll("svg").remove();
+
+    var svg = d3.select(container).append("svg")
+        .attr("width", "100%") // Make SVG responsive
+        .attr("viewBox", "0 0 " + svgWidth + " " + height)
+        .attr("height", height)
+        .style("display", "block")
+        .style("margin", "auto") // Center the SVG in the container
+        .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    var i = 0,
+        duration = 750,
+        root;
+
+    var treemap = d3.tree().size([height, width - margin.left - margin.right]);
+
+    root = d3.hierarchy(data, function(d) { return d.children; });
+    root.x0 = height / 2;
+    root.y0 = 0;
+
+    update(root);
+
+    function update(source) {
+
+        var treeData = treemap(root);
+
+        var nodes = treeData.descendants(),
+            links = treeData.descendants().slice(1);
+
+        nodes.forEach(function(d) { d.y = d.depth * 180 });
+
+        var node = svg.selectAll('g.node')
+            .data(nodes, function(d) { return d.id || (d.id = ++i); });
+
+        var nodeEnter = node.enter().append('g')
+            .attr('class', 'node')
+            .attr("transform", function(d) {
+                return "translate(" + d.y + "," + d.x + ")";
+            });
+
+        nodeEnter.append('circle')
+            .attr('r', 5)
+            .style("fill", "#1f77b4"); // Changed fill color
+
+        nodeEnter.append('text')
+            .style("fill", "darkgray") // Changed text color
+            .style("font-size", "14px") // Increased font size
+            .style("font-weight", "bold") // Bold text
+            .attr("dy", ".35em")
+            .attr("x", function(d) {
+                return d.children ? -13 : 13;
+            })
+            .attr("text-anchor", function(d) {
+                return d.children ? "end" : "start";
+            })
+            .text(function(d) { return d.data.name; });
+
+        var link = svg.selectAll('path.link')
+            .data(links, function(d) { return d.id; });
+
+        link.enter().insert('path', "g")
+            .attr("class", "link")
+            .style("stroke", "#aaa") // Changed stroke color
+            .style("stroke-width", 1.5) // Increased stroke width
+            .attr("stroke-opacity", 0.6) // Adjusted opacity
+            .attr('d', function(d) {
+                return "M" + d.y + "," + d.x
+                    + "C" + (d.y + d.parent.y) / 2 + "," + d.x
+                    + " " + (d.y + d.parent.y) / 2 + "," + d.parent.x
+                    + " " + d.parent.y + "," + d.parent.x;
+            });
+    }
+
+}
 </script>
 
 

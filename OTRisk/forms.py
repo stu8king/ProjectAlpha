@@ -4,7 +4,7 @@ from django.forms import BaseModelFormSet, modelformset_factory
 from OTRisk.models.RiskScenario import RiskScenario
 from OTRisk.models.Model_CyberPHA import vulnerability_analysis, tblAssetType, tblMitigationMeasures, \
     OrganizationDefaults, tblIndustry, tblCyberPHAHeader
-from .models.raw import RAWorksheet, RAActions, MitreICSMitigations, RAWorksheetScenario
+from .models.raw import RAWorksheet, RAActions, MitreICSMitigations, RAWorksheetScenario, MitreICSTechniques
 from .models.Model_Scenario import CustomScenario, CustomConsequence
 from .models.model_assessment import AssessmentFramework, AssessmentAnswer
 import accounts
@@ -21,6 +21,17 @@ class CyberSecurityScenarioForm(forms.Form):
             'placeholder': 'Enter a detailed cybersecurity scenario...',
             'style': 'resize: none; border: 3px #97979A; border-radius: 10px; box-shadow: inset 3px 3px 8px rgba(0, 0, 0, 0.5); padding: 20px; background-color: white',
             'spellcheck': 'true'
+        }),
+        required=True
+    )
+    txtConsequences = forms.CharField(
+        widget=forms.Textarea(attrs={
+            'class': 'form-control',
+            'rows': '8',
+            'placeholder': 'Scenario Consequences...',
+            'style': 'resize: none; border: 3px #97979A; border-radius: 10px; box-shadow: inset 3px 3px 8px rgba(0, 0, 0, 0.5); padding: 20px; background-color: white',
+            'spellcheck': 'true',
+            'readonly': 'true'
         }),
         required=True
     )
@@ -228,9 +239,15 @@ class ChangePasswordForm(forms.Form):
 
 
 class UserProfileForm(forms.ModelForm):
+    jobtitle = forms.CharField(
+        widget=forms.TextInput(attrs={'class': 'form-control'}),  # Applying Bootstrap class
+        max_length=100,
+        required=False  # Set to True if this field is required
+    )
+
     class Meta:
         model = UserProfile
-        fields = ['organization', 'must_change_password']
+        fields = ['organization', 'must_change_password', 'jobtitle', 'role_moderator', 'role_readonly']
 
 
 class UserForm(forms.ModelForm):
@@ -353,3 +370,68 @@ class OrganizationAdmin(forms.ModelForm):
             'subscription_end': forms.DateInput(attrs={'type': 'date'})
         }
         exclude = ['subscription_type']
+
+
+class scenario_sim(forms.Form):
+    # Other fields as before...
+    industry = forms.ModelChoiceField(
+        queryset=tblIndustry.objects.all().order_by('Industry'),
+        label='Industry/Sector',
+        to_field_name='Industry'
+    )
+    incident_type = forms.ModelChoiceField(
+        queryset=MitreICSTechniques.objects.all().order_by('SourceName'),
+        label='Type of Incident',
+        to_field_name='SourceName'
+    )
+    company_name = forms.CharField(label='Company Name', max_length=100)
+
+    company_size = forms.IntegerField(label='Number of Employees')
+    annual_revenue = forms.DecimalField(label='Annual Revenue')
+    location = forms.CharField(label='Geographic Location', max_length=100)
+    contact_info = forms.EmailField(label='Contact Email')
+    scenario_description = forms.CharField(
+        label='Scenario Description',
+        widget=forms.Textarea
+    )
+    incident_date = forms.DateField(label='Date of Incident')
+    incident_duration = forms.DurationField(label='Duration of Incident')
+    it_infrastructure = forms.CharField(
+        label='IT Infrastructure Details',
+        widget=forms.Textarea
+    )
+    systems_affected = forms.CharField(
+        label='Types of Systems Affected',
+        widget=forms.Textarea
+    )
+    security_measures = forms.CharField(
+        label='Security Measures in Place',
+        widget=forms.Textarea
+    )
+    security_software = forms.CharField(
+        label='Security Software/Tools in Use',
+        widget=forms.Textarea
+    )
+    immediate_impact = forms.CharField(
+        label='Immediate Impact of Incident',
+        widget=forms.Textarea
+    )
+    direct_costs = forms.DecimalField(label='Known Direct Costs')
+    customer_data_affected = forms.CharField(
+        label='Customer Data Affected',
+        widget=forms.Textarea
+    )
+    employee_data_affected = forms.CharField(
+        label='Employee Data Affected',
+        widget=forms.Textarea
+    )
+    response_steps = forms.CharField(
+        label='Response Steps Taken',
+        widget=forms.Textarea
+    )
+    recovery_time = forms.DurationField(label='Time to Identify and Contain')
+    system_status = forms.CharField(label='Current Status of Systems', max_length=100)
+    external_assistance = forms.CharField(
+        label='External Assistance Sought',
+        widget=forms.Textarea
+    )

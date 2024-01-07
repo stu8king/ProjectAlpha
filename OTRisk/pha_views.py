@@ -1,11 +1,15 @@
 import json
-
+from django.db.models import CharField
 from django.db.models.functions import Coalesce
-from django.forms import model_to_dict
+from django.forms import model_to_dict, CharField
+from django.utils.dateparse import parse_datetime
+from django.core.serializers import serialize
+from django.views.decorators.http import require_POST
 
 from OTRisk.models.Model_CyberPHA import tblIndustry, tblCyberPHAHeader, tblZones, tblStandards, \
     tblCyberPHAScenario, vulnerability_analysis, tblAssetType, tblMitigationMeasures, MitreControlAssessment, \
-    cyberpha_safety, SECURITY_LEVELS, ScenarioConsequences, user_scenario_audit
+    cyberpha_safety, SECURITY_LEVELS, ScenarioConsequences, user_scenario_audit, auditlog, CyberPHAModerators, \
+    WorkflowStatus, APIKey, CyberPHA_Group
 from OTRisk.models.raw import SecurityControls
 from OTRisk.models.raw import MitreICSMitigations, RAActions
 from OTRisk.models.questionnairemodel import FacilityType
@@ -14,7 +18,7 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, get_object_or_404, redirect
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
-from datetime import date, time
+from datetime import date, time, datetime
 from django.views import View
 from django.http import JsonResponse
 from django.core.exceptions import ObjectDoesNotExist
@@ -44,14 +48,25 @@ from pptx import Presentation
 from pptx.util import Inches, Pt
 
 
+def get_api_key(service_name):
+    try:
+        key_record = APIKey.objects.get(service_name=service_name)
+        return key_record.key
+    except ObjectDoesNotExist:
+        # Handle the case where the key is not found
+        return None
+
+
 @login_required
 def iotaphamanager(request, record_id=None):
+
     pha_header = None
     new_record_id = None  # Initialize new_record_id to None
     annual_revenue_str = "$0"
     coho_str = "$0"
 
     if request.method == 'POST':
+        is_new_record = False  # Initialize flag
         title = request.POST.get('txtTitle')
         facility_name = request.POST.get('txtFacility')
         # Check for duplicate record
@@ -65,6 +80,7 @@ def iotaphamanager(request, record_id=None):
             if duplicate_record:
                 return redirect('OTRisk:iotaphamanager')
             # Create a new record
+            is_new_record = True
             pha_header = tblCyberPHAHeader()
 
         pha_header.title = request.POST.get('txtTitle')
@@ -139,8 +155,42 @@ def iotaphamanager(request, record_id=None):
         pha_header.UserID = request.user.id
         pha_header.save()
 
+        if is_new_record:
+            pha_header.set_workflow_status('Started')
+        # Save Workflow Status
+        selected_workflow_status = request.POST.get('workflow_selector')
+        if selected_workflow_status:
+            pha_header.set_workflow_status(selected_workflow_status)
+        # First, remove existing moderators for this PHA record
+        CyberPHAModerators.objects.filter(pha_header=pha_header).delete()
+        # Get the list of selected moderator IDs from the form
+        selected_moderators_ids = request.POST.getlist('moderator')
+        # Get the target date from the form
+
+        target_date_str = request.POST.get('targetDate', None)
+        if target_date_str:
+            try:
+                # Create a naive datetime object from the string
+                naive_datetime = datetime.strptime(target_date_str, '%m/%d/%Y')
+                # Make it timezone aware
+                target_date = timezone.make_aware(naive_datetime, timezone.get_default_timezone())
+            except ValueError:
+                target_date = None
+        else:
+            target_date = None
+
+        # Create new associations
+        for moderator_id in selected_moderators_ids:
+            moderator = User.objects.get(id=moderator_id)
+            CyberPHAModerators.objects.create(pha_header=pha_header, moderator=moderator, target_date=target_date)
+
         new_record_id = pha_header.ID
 
+        write_to_audit(
+            request.user,
+            f'Saved cyberPHA header data for {pha_header.title}',
+            get_client_ip(request)
+        )
     organization_id_from_session = request.session.get('user_organization')
 
     users_in_organization = User.objects.filter(userprofile__organization__id=organization_id_from_session)
@@ -148,10 +198,21 @@ def iotaphamanager(request, record_id=None):
     ra_actions_subquery = RAActions.objects.filter(phaID=OuterRef('ID')).values('phaID').annotate(
         action_count=Count('ID')).values('action_count')
 
-    pha_header_records = tblCyberPHAHeader.objects.filter(UserID__in=users_in_organization, Deleted=0).annotate(
+    # Subquery to get the latest workflow status for each tblCyberPHAHeader record
+    latest_status_subquery = WorkflowStatus.objects.filter(
+        cyber_pha_header=OuterRef('pk')
+    ).order_by('-timestamp').values('status')[:1]
+
+    # Annotate the pha_header_records queryset with the latest workflow status
+    pha_header_records = tblCyberPHAHeader.objects.filter(
+        UserID__in=users_in_organization,
+        Deleted=0
+    ).annotate(
         scenario_count=Count('tblcyberphascenario'),
-        ra_action_count=Coalesce(Subquery(ra_actions_subquery, output_field=IntegerField()), Value(0))
+        ra_action_count=Coalesce(Subquery(ra_actions_subquery, output_field=IntegerField()), Value(0)),
+        latest_workflow_status=Subquery(latest_status_subquery)
     )
+
     if record_id is not None:
         first_record_id = record_id
     else:
@@ -160,6 +221,7 @@ def iotaphamanager(request, record_id=None):
     # get the list of assessments
     # 0 means a global assessment that's built in for all customer
     # any other value is a customer specific assessment so should only be visible for the customer where their id matches
+    current_user_profile = UserProfile.objects.get(user=request.user)
     user_organization_id = request.session.get('user_organization', 0)  # Default to 0 if not in session
     assessments = SelfAssessment.objects.filter(
         Q(organization_id=user_organization_id)
@@ -169,6 +231,20 @@ def iotaphamanager(request, record_id=None):
     zones = tblZones.objects.all().order_by('PlantZone')
     standardslist = tblStandards.objects.all().order_by('standard')
     mitigations = MitreICSMitigations.objects.all()
+    anychart_key = get_api_key('anychart')
+    moderators_in_organization = UserProfile.objects.filter(
+        organization_id=user_organization_id,
+        role_moderator=True
+    )
+
+    # Retrieve current workflow status for the pha_header
+    current_workflow_status = "Started"  # Default status
+
+    if pha_header:
+        latest_status = pha_header.workflow_statuses.last()
+        if latest_status:
+            current_workflow_status = latest_status.status
+
     return render(request, 'iotaphamanager.html', {
         'pha_header_records': pha_header_records,
         'industries': industries,
@@ -183,13 +259,29 @@ def iotaphamanager(request, record_id=None):
         'coho_str': coho_str,
         'selected_record_id': first_record_id,
         'SECURITY_LEVELS': SECURITY_LEVELS,
-        'assessments': assessments
+        'assessments': assessments,
+        'moderators': moderators_in_organization,
+        'current_workflow_status': current_workflow_status,
+        'workflow_status_choices': WorkflowStatus.STATUS_CHOICES,
+        'anychart_key': anychart_key,
+        'group_types': CyberPHA_Group.GROUP_TYPES,
+
     })
 
 
 def get_headerrecord(request):
     record_id = request.GET.get('record_id')
     headerrecord = get_object_or_404(tblCyberPHAHeader, ID=record_id)
+    # Retrieve the latest workflow status for this header record
+    latest_status = headerrecord.workflow_statuses.last()
+    current_workflow_status = latest_status.status if latest_status else "Started"
+    # Get current group assignments
+    current_groups = headerrecord.groups.all()
+    current_groups_data = serialize('json', current_groups)
+
+    # Serialize all_groups
+    all_groups = CyberPHA_Group.objects.all()
+    all_groups_data = serialize('json', all_groups)
 
     # create a dictionary with the record data
     headerrecord_data = {
@@ -221,9 +313,37 @@ def get_headerrecord(request):
         'sl_t': headerrecord.sl_t,
         'assessment_id': headerrecord.assessment,
         'coho': headerrecord.coho,
-        'npm': headerrecord.npm
+        'npm': headerrecord.npm,
+        'current_workflow_status': current_workflow_status,
+        'current_groups': current_groups_data,
+        'all_groups': all_groups_data,
+        'group_types': CyberPHA_Group.GROUP_TYPES,
     }
 
+    # Query for moderators associated with this header record
+    moderators = CyberPHAModerators.objects.filter(pha_header=headerrecord)
+    moderator_ids = [moderator.moderator.id for moderator in moderators]
+
+    moderators_data = [
+        {'id': moderator.moderator.id, 'name': f"{moderator.moderator.first_name} {moderator.moderator.last_name}"}
+        for moderator in moderators
+    ]
+
+    # Retrieve all users from the current organization who are moderators
+    organization_moderators = User.objects.filter(
+        userprofile__organization_id=get_user_organization_id(request),
+        userprofile__role_moderator=True
+    )
+    organization_moderators_data = [
+        {'id': user.id, 'name': f"{user.first_name} {user.last_name}"}
+        for user in organization_moderators
+    ]
+    # Log the user activity
+    write_to_audit(
+        request.user,
+        f'Viewed cyberPHA: {headerrecord.title}',
+        get_client_ip(request)
+    )
     control_assessments = MitreControlAssessment.objects.filter(cyberPHA=headerrecord)
     # control_effectiveness = math.ceil(calculate_effectiveness(record_id))
     try:
@@ -244,7 +364,11 @@ def get_headerrecord(request):
     response_data = {
         'headerrecord': headerrecord_data,
         'control_assessments': control_assessments_data,
-        'control_effectiveness': control_effectiveness
+        'control_effectiveness': control_effectiveness,
+        'organization_moderators': organization_moderators_data,  # All moderators in the organization
+        'current_moderators': moderators_data,  # Moderators for the specific header record
+        'moderator_ids': moderator_ids  # IDs of Moderators for the specific header record
+
     }
 
     return JsonResponse(response_data)
@@ -274,7 +398,7 @@ def process_section(section_text):
 
 def facility_threat_profile(facility, facility_type, country, industry, safety_summary, chemical_summary,
                             physical_security_summary, other_summary, compliance_summary):
-    openai_api_key = os.environ.get('OPENAI_API_KEY')
+    openai_api_key = get_api_key('openai')
     openai.api_key = openai_api_key
 
     # Constructing a more specific context with format instructions
@@ -328,6 +452,12 @@ def facility_risk_profile(request):
 
         language = request.session.get('organization_defaults', {}).get('language', 'en')  # 'en' is the default value
 
+        # Log the user activity
+        write_to_audit(
+            request.user,
+            f'Generated a cyberPHA risk profile for: {facility}',
+            get_client_ip(request)
+        )
         # Check if Industry or facility_type are empty or None
         if not Industry or not facility_type:
             error_msg = "Missing industry or facility type. Complete all fields to get an accurate assessment"
@@ -338,7 +468,8 @@ def facility_risk_profile(request):
                 'other_summary': error_msg
             })
 
-        openai_api_key = os.environ.get('OPENAI_API_KEY')
+        openai_api_key = get_api_key('openai')
+        # openai_api_key = os.environ.get('OPENAI_API_KEY')
         openai.api_key = openai_api_key
         context = f"You are an expert in industrial risk management and engineering processes. For the {facility} {facility_type} at {address}, {country} in the {Industry} industry, with {employees} employees working a {shift_model} shift model,"
 
@@ -537,12 +668,30 @@ def phascenarioreport(request):
 def getSingleScenario(request):
     # Get the ID from the GET parameters
     scenario_id = request.GET.get('id')
+    current_user = request.user
 
     # Try to retrieve the scenario with the given ID
     try:
         scenario = tblCyberPHAScenario.objects.get(ID=scenario_id)
     except ObjectDoesNotExist:
         return JsonResponse({'error': 'Scenario not found'}, status=404)
+        # Check if the current user is the owner, moderator, read-only, or has full access
+
+    if scenario.userID == current_user:
+        user_role = 'Scenario Owner'
+    else:
+        try:
+            user_profile = UserProfile.objects.get(user=current_user)
+            if user_profile.role_moderator:
+                user_role = 'Scenario Moderator'
+            elif user_profile.role_readonly:
+                user_role = 'Read Only'
+            elif user_profile.organization == scenario.CyberPHA.organization:
+                user_role = 'Scenario Editor'
+            else:
+                return JsonResponse({'error': 'Access denied'}, status=403)
+        except UserProfile.DoesNotExist:
+            return JsonResponse({'error': 'User profile not found'}, status=404)
 
     # Convert the scenario to a dictionary
     scenario_dict = {
@@ -624,7 +773,9 @@ def getSingleScenario(request):
         'exposed_system': scenario.exposed_system,
         'weak_credentials': scenario.weak_credentials,
         'compliance_map': scenario.compliance_map,
-        'attack_tree_text': scenario.attack_tree_text
+        'attack_tree_text': scenario.attack_tree_text,
+        'scenario_status': scenario.scenario_status,
+        'user_role': user_role
     }
     # Retrieve the related PHAControlList records
     control_list = []
@@ -711,6 +862,8 @@ def compliance_map_data(common_content):
 
 @login_required
 def scenario_analysis(request):
+    # Log the user activity
+
     if request.method == 'GET':
         industry = request.GET.get('industry')
         facility_type = request.GET.get('facility_type')
@@ -771,10 +924,15 @@ def scenario_analysis(request):
         cost_op_hour = cyber_pha_header.coho
         annual_revenue = cyber_pha_header.annual_revenue
 
-        openai.api_key = os.environ.get('OPENAI_API_KEY')
+        openai.api_key = get_api_key('openai')
         # Define the common part of the user message
         common_content = f"As an expert in cybersecurity risk and an expert in engineering systems, analyse a specific OT Cybersecurity Risk Scenario for a {facility_type} in the {industry} industry in {country}:  {scenario}. (IMPORTANT CONTEXT: Systems in scope for the scenario are exposed to the Internet with a public IP address: {exposed_system}. Systems in scope for the scenario have weak or default credentials: {weak_credentials}).  Business impact scores range from 0 (no impact) to 10 (greatest impact): safety: {safetyimpact}, life danger: {lifeimpact}, production: {productionimpact} (production outage: {production_outage}: length of production outage {production_outage_length} hours), company reputation: {reputationimpact}, environmental impact: {environmentimpact}, regulatory: {regulatoryimpact}, supply chain : {supplyimpact}  data and intellectual property: {dataimpact}. Cybersecurity controls are {control_effectiveness}% effective (if 0 then control effectiveness has not been assessed) : Mitigated severity with current controls: {severitymitigated}, risk exposure to the scenario mitigated {mitigatedexposure},   residual risk {residualrisk}. The amount of unmitigated rate without controls is: {uel}"
 
+        write_to_audit(
+            request.user,
+            f'Executed a scenario analysis for {cyber_pha_header.title} and scenario: {scenario}',
+            get_client_ip(request)
+        )
         # Define the refined user messages
         user_messages = [
 
@@ -1049,11 +1207,12 @@ def reformat_attack_tree(data):
 
 @login_required
 def analyze_scenario(request):
-    openai_api_key = os.environ.get('OPENAI_API_KEY')
+    openai_api_key = get_api_key('openai')
     openai.api_key = openai_api_key
 
     if request.method == 'POST':
         scenario = request.POST.get('scenario')
+        attack_tree_drawn = request.POST.get('attackTreeDrawn') == 'true'
         # Fetch the organization_id from the user's profile
         try:
             user_profile = UserProfile.objects.get(user=request.user)
@@ -1125,41 +1284,69 @@ def analyze_scenario(request):
             consequence_text = response['choices'][0]['message']['content']
             consequence_list = consequence_text.split(';')  # Splitting based on the chosen delimiter
 
-            attack_tree_system_message = f"""
-                Generate a hierarchical structure of a potential attack tree for the given cybersecurity scenario in a machine-readable JSON format. The structure should use 'name' for node labels and 'children' for nested nodes. Each node should represent a step or method in the attack, formatted as: {{'name': 'Node Name', 'children': [{{...}}]}}. EXTRA INSTRUCTION: Output MUST be in JSON format with no additional characters outside of the JSON structure.
-            """
+            attack_tree_json = {}
 
-            # Query OpenAI API for the attack tree
-            attack_tree_response = openai.ChatCompletion.create(
-                model="gpt-4",
-                messages=[
-                    {"role": "system", "content": attack_tree_system_message},
-                    {"role": "user", "content": user_message}
-                ],
-                max_tokens=800,
-                temperature=0.3
-            )
+            if not attack_tree_drawn:
+                attack_tree_system_message = f"""
+                    Generate a hierarchical structure of a potential attack tree for the given cybersecurity scenario in a machine-readable JSON format. The structure should use 'name' for node labels and 'children' for nested nodes. Each node should represent a step or method in the attack, formatted as: {{'name': 'Node Name', 'children': [{{...}}]}}. EXTRA INSTRUCTION: Output MUST be in JSON format with no additional characters outside of the JSON structure.
+                """
 
-            # Process the response for attack tree
-            attack_tree_raw = attack_tree_response['choices'][0]['message']['content']
+                # Query OpenAI API for the attack tree
+                attack_tree_response = openai.ChatCompletion.create(
+                    model="gpt-4",
+                    messages=[
+                        {"role": "system", "content": attack_tree_system_message},
+                        {"role": "user", "content": user_message}
+                    ],
+                    max_tokens=800,
+                    temperature=0.3
+                )
 
-            try:
-                # Parse the raw JSON string into a Python dictionary
-                attack_tree_json = json.loads(attack_tree_raw)
-            except json.JSONDecodeError:
-                attack_tree_json = {"error": "Invalid JSON format from AI response"}
+                # Process the response for attack tree
+                attack_tree_raw = attack_tree_response['choices'][0]['message']['content']
+
+                try:
+                    # Parse the raw JSON string into a Python dictionary
+                    attack_tree_json = json.loads(attack_tree_raw)
+                except json.JSONDecodeError:
+                    attack_tree_json = {"error": "Invalid JSON format from AI response"}
 
             return JsonResponse({'consequence': consequence_list, 'attack_tree': attack_tree_json})
 
 
     else:
-            return JsonResponse({'consequence': [], 'attack_tree': {}, 'error': 'Not a valid scenario'}, status=400)
+        return JsonResponse({'consequence': [], 'attack_tree': {}, 'error': 'Not a valid scenario'}, status=400)
 
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
+def generate_attack_tree(user_message):
+    attack_tree_system_message = f"""
+        Generate a hierarchical structure of a potential attack tree for the given cybersecurity scenario in a machine-readable JSON format. The structure should use 'name' for node labels and 'children' for nested nodes. Each node should represent a step or method in the attack, formatted as: {{'name': 'Node Name', 'children': [{{...}}]}}. EXTRA INSTRUCTION: Output MUST be in JSON format with no additional characters outside of the JSON structure.
+    """
+
+    # Query OpenAI API for the attack tree
+    attack_tree_response = openai.ChatCompletion.create(
+        model="gpt-4",
+        messages=[
+            {"role": "system", "content": attack_tree_system_message},
+            {"role": "user", "content": user_message}
+        ],
+        max_tokens=800,
+        temperature=0.3
+    )
+
+    # Process the response for attack tree
+    attack_tree_raw = attack_tree_response['choices'][0]['message']['content']
+
+    try:
+        # Parse the raw JSON string into a Python dictionary
+        return json.loads(attack_tree_raw)
+    except json.JSONDecodeError:
+        return {"error": "Invalid JSON format from AI response"}
+
 
 def is_inappropriate(text):
-    openai_api_key = os.environ.get('OPENAI_API_KEY')
+    openai_api_key = get_api_key('openai')
     openai.api_key = openai_api_key
 
     try:
@@ -1171,3 +1358,68 @@ def is_inappropriate(text):
         return any(result['flagged'] for result in response['results'])
     except Exception as e:
         return False  # or handle error appropriately
+
+
+def write_to_audit(user_id, user_action, user_ip):
+    try:
+        user_profile = UserProfile.objects.get(user=user_id)
+
+        audit_log = auditlog(
+            user=user_id,
+            timestamp=timezone.now(),
+            user_action=user_action,
+            user_ipaddress=user_ip,
+            user_profile=user_profile
+        )
+        audit_log.save()
+    except UserProfile.DoesNotExist:
+        # Handle the case where UserProfile does not exist for the user
+        pass
+
+
+@csrf_exempt
+@require_POST
+def assign_cyberpha_to_group(request):
+    cyberpha_id = request.POST.get('cyberpha_id')
+    existing_group_id = request.POST.get('existing_group_id')
+    new_group_name = request.POST.get('new_group_name')
+    new_group_type = request.POST.get('new_group_type')
+
+    try:
+        cyberpha = tblCyberPHAHeader.objects.get(pk=cyberpha_id)
+
+        if existing_group_id:
+            group = CyberPHA_Group.objects.get(pk=existing_group_id)
+            # Check if the group is already assigned
+            if group not in cyberpha.groups.all():
+                cyberpha.groups.add(group)
+            else:
+                return JsonResponse({'status': 'error', 'message': 'CyberPHA is already assigned to this group.'})
+
+        elif new_group_name and new_group_type:
+            # Check if group with the same name and type already exists
+            group, created = CyberPHA_Group.objects.get_or_create(name=new_group_name, group_type=new_group_type)
+            if not created:
+                return JsonResponse({'status': 'error', 'message': 'Group with this name and type already exists.'})
+            cyberpha.groups.add(group)
+
+        return JsonResponse({'status': 'success'})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)})
+
+
+def fetch_groups(request):
+
+    cyberpha_id = request.GET.get('cyberpha_id')
+    cyberpha = tblCyberPHAHeader.objects.get(pk=cyberpha_id)
+    groups = cyberpha.groups.all()
+
+    group_data = [{'name': group.name, 'id': group.id} for group in groups]
+    return JsonResponse({'groups': group_data})
+
+
+def fetch_all_groups(request):
+
+    groups = CyberPHA_Group.objects.all()
+    group_data = [{'name': group.name, 'id': group.id} for group in groups]
+    return JsonResponse({'groups': group_data})

@@ -1,10 +1,11 @@
+from django.conf import settings
 from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db.models import URLField
 
 import OTRisk.models.model_assessment
-from accounts.models import Organization
+from accounts.models import Organization, UserProfile
 from OTRisk.models.raw import MitreICSMitigations
 
 
@@ -140,10 +141,16 @@ class tblStandards(models.Model):
 
 class auditlog(models.Model):
     id = models.AutoField(primary_key=True)
-    userID = models.IntegerField()
-    timestamp = models.DateTimeField()
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    timestamp = models.DateTimeField(auto_now_add=True)
     user_action = models.CharField(max_length=100)
     user_ipaddress = models.CharField(max_length=20)
+    # Add a foreign key to UserProfile to access organization information
+    user_profile = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
+
+    @property
+    def organization_id(self):
+        return self.user_profile.organization_id
 
     class Meta:
         db_table = 'tblAuditLog'
@@ -234,6 +241,21 @@ SECURITY_LEVELS = [
 ]
 
 
+class CyberPHA_Group(models.Model):
+    GROUP_TYPES = [
+        ('Industry', 'Industry'),
+        ('Facility_type', 'Facility Type'),
+        ('Country', 'Country'),
+        ('Organization', 'Organization'),
+    ]
+
+    name = models.CharField(max_length=100)
+    group_type = models.CharField(max_length=50, choices=GROUP_TYPES)
+
+    def __str__(self):
+        return f"{self.name} ({self.group_type})"
+
+
 class tblCyberPHAHeader(models.Model):
     ID = models.AutoField(primary_key=True)
     PHALeader = models.CharField(max_length=30)
@@ -291,12 +313,46 @@ class tblCyberPHAHeader(models.Model):
     threatSummary = models.TextField(default="No Summary Saved", null=True)
     insightSummary = models.TextField(default="No Summary Saved", null=True)
     strategySummary = models.TextField(default="No Summary Saved", null=True)
+    groups = models.ManyToManyField(CyberPHA_Group, blank=True)
+
+    def set_workflow_status(self, status):
+        WorkflowStatus.objects.create(cyber_pha_header=self, status=status)
 
     class Meta:
         db_table = 'tblCyberPHAHeader'
 
     def __str__(self):
         return self.FacilityName
+
+
+class WorkflowStatus(models.Model):
+    STATUS_CHOICES = [
+        ('Started', 'Started'),
+        ('In Progress', 'In Progress'),
+        ('Waiting for Moderation', 'Waiting for Moderation'),
+        ('Complete', 'Complete'),
+    ]
+
+    cyber_pha_header = models.ForeignKey('tblCyberPHAHeader', on_delete=models.CASCADE,
+                                         related_name='workflow_statuses')
+    status = models.CharField(max_length=30, choices=STATUS_CHOICES)
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.cyber_pha_header.FacilityName} - {self.status}"
+
+
+class CyberPHAModerators(models.Model):
+    pha_header = models.ForeignKey(tblCyberPHAHeader, on_delete=models.CASCADE, related_name='moderators')
+    moderator = models.ForeignKey(User, on_delete=models.CASCADE)
+    target_date = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = 'cyberpha_moderators'
+        unique_together = ('pha_header', 'moderator')  # Ensure each moderator is unique per PHA header
+
+    def __str__(self):
+        return f"{self.moderator.username} for {self.pha_header.FacilityName} ({self.pha_header.ID})"
 
 
 class cyberpha_safety(models.Model):
@@ -509,7 +565,13 @@ class tblCyberPHAScenario(models.Model):
         ('Open', 'Open'),
         ('Closed', 'Closed')
     ]
-    risk_status = models.CharField(max_length=50, choices=RISK_STATUSES)
+    risk_status = models.CharField(max_length=6, choices=RISK_STATUSES)
+    SCENARIO_STATUSES = [
+        ('Draft', 'Draft'),  # status is draft until all moderators have finished moderation
+        ('Final', 'Final'),
+        ('Started', 'Started')
+    ]
+    scenario_status = models.CharField(max_length=7, choices=SCENARIO_STATUSES)
     risk_open_date = models.DateField()
     risk_close_date = models.DateField()
     control_effectiveness = models.IntegerField()
@@ -540,6 +602,27 @@ class tblCyberPHAScenario(models.Model):
     @classmethod
     def set_current_user(cls, user):
         cls._current_user = user
+
+
+class ScenarioModeration(models.Model):
+    scenario = models.ForeignKey(tblCyberPHAScenario, on_delete=models.CASCADE)
+    moderator = models.ForeignKey(User, on_delete=models.CASCADE)
+    impactSafety = models.IntegerField()
+    impactDanger = models.IntegerField()
+    impactProduction = models.IntegerField()
+    impactFinance = models.IntegerField()
+    impactReputation = models.IntegerField()
+    impactEnvironment = models.IntegerField()
+    impactRegulation = models.IntegerField()
+    impactData = models.IntegerField()
+    impactSupply = models.IntegerField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('scenario', 'moderator')  # Ensure one entry per moderator per scenario
+
+    def __str__(self):
+        return f"Moderation for {self.scenario.Scenario} by {self.moderator.username}"
 
 
 class scenario_compliance(models.Model):
@@ -818,3 +901,37 @@ class ScenarioConsequences(models.Model):
 
     def __str__(self):
         return f"Consequence for {self.scenario.Scenario}: {self.consequence_text}"
+
+
+class APIKey(models.Model):
+    service_name = models.CharField(max_length=100, unique=True)
+    key = models.TextField()
+
+    def __str__(self):
+        return self.service_name
+
+
+class ScenarioBuilder(models.Model):
+    # User who created the scenario
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    # Name assigned to the scenario by the user
+    scenario_name = models.CharField(max_length=255)
+
+    # JSON field to store the scenario data
+    scenario_data = models.JSONField()
+
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    # Soft deletion flag
+    is_deleted = models.BooleanField(default=False)
+
+    @property
+    def organization_id(self):
+        """Get the organization ID from the user's profile."""
+        return self.user.userprofile.organization_id
+
+    def __str__(self):
+        return self.scenario_name

@@ -1,3 +1,4 @@
+from django.contrib.auth.decorators import login_required
 from django.db.models import Count, Avg, F, ExpressionWrapper, FloatField, Value, CharField, Func, Sum
 from django.db.models.functions import Cast, Substr, Length, math
 from math import ceil
@@ -8,7 +9,7 @@ from OTRisk.models.Model_CyberPHA import tblCyberPHAHeader, tblCyberPHAScenario,
     MitreControlAssessment, ScenarioConsequences
 from OTRisk.models.raw import RAWorksheet, RAWorksheetScenario
 from OTRisk.models.raw import RAActions
-from .pha_views import calculate_effectiveness, get_overall_control_effectiveness_score
+from .pha_views import calculate_effectiveness, get_overall_control_effectiveness_score, get_api_key
 
 from django.shortcuts import render
 
@@ -22,6 +23,7 @@ def pha_reports(request, cyber_pha_header_id):
 
 
 def get_pha_records(cyber_pha_header_id):
+
     # Retrieve the main record from tblCyberPHAHeader
     cyber_pha_header = get_object_or_404(tblCyberPHAHeader, ID=cyber_pha_header_id)
 
@@ -136,7 +138,7 @@ def format_currency(value):
         return "${:.2f}".format(value)
 
 
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseForbidden
 
 
 def get_scenario_report_details(request):
@@ -160,7 +162,7 @@ def get_scenario_report_details(request):
     consequences = ScenarioConsequences.objects.filter(scenario=scenario)
     consequences_list = [{'consequence_text': consequence.consequence_text, 'is_validated': consequence.is_validated}
                          for consequence in consequences]
-
+    attack_tree_text = scenario.attack_tree_text
     data = {
         'impactSafety': scenario.impactSafety,
         'impactDanger': scenario.impactDanger,
@@ -190,6 +192,7 @@ def get_scenario_report_details(request):
         'scenario_likelihood': scenario_likelihood,
         'controls': list(controls),
         'Consequences': consequences_list,
+        'attack_tree_text': attack_tree_text
     }
     return JsonResponse(data)
 
@@ -207,7 +210,12 @@ def categorize_likelihood(likelihood_percentage):
         return "High"
 
 
+@login_required
 def qraw_reports(request, qraw_id):
+    referrer = request.META.get('HTTP_REFERER')
+
+    if not referrer or 'qraw' not in referrer:
+        return HttpResponseForbidden()
     # Get the related records using the function we defined earlier
     context = get_qraw_records(qraw_id)
 
@@ -259,12 +267,12 @@ def get_qraw_records(qraw_id):
 
     # Normalize the scores to be out of 10
     normalized_scores = {
-        'overall_vulnerability_score': overall_scores['avg_vulnerability'] ,
-        'overall_threat_score': overall_scores['avg_threat'] ,
-        'overall_inherent_risk_score': overall_scores['avg_inherent_risk'] ,
+        'overall_vulnerability_score': overall_scores['avg_vulnerability'],
+        'overall_threat_score': overall_scores['avg_threat'],
+        'overall_inherent_risk_score': overall_scores['avg_inherent_risk'],
         'overall_residual_risk_score': overall_scores['avg_residual_risk']
     }
-
+    anychart_key = get_api_key('anychart')
     return {
         'risk_category_summary': risk_category_summary,
         'qraw_header': qraw_header,
@@ -274,12 +282,13 @@ def get_qraw_records(qraw_id):
         'total_cost_impact_low': total_cost_impact_low,
         'total_cost_impact_high': total_cost_impact_high,
         'qraw_scenarios': qraw_scenarios,
+        'anychart_key': anychart_key,
         **normalized_scores
     }
 
 
 def get_qraw_scenario_report_details(request):
-    scenario_id = request.GET.get('id')
+    scenario_id = request.GET.get('id');
 
     scenario = RAWorksheetScenario.objects.get(ID=scenario_id)
     # Retrieve associated controls for the scenario
@@ -312,7 +321,8 @@ def get_qraw_scenario_report_details(request):
         'vulnerability_score': scenario.VulnScore,
         'threat_score': scenario.ThreatScore,
         'threat_source': scenario.threatSource,
-        'controls': list(controls)
+        'controls': list(controls),
+        'consequences': scenario.raw_consequences,
 
     }
     return JsonResponse(data)

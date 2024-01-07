@@ -236,7 +236,7 @@ body {
     </style>
 </head>
 <body>
-<script>anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");</script>
+<script>anychart.licenseKey("{{ anychart_key }}");</script>
 <nav class="navbar navbar-expand-lg navbar-scroll shadow-0 border-bottom border-dark rounded">
   <div class="container-fluid d-flex justify-content-between">
    <a class="navbar-brand" href="{% url 'OTRisk:dashboardhome' %}"><img src="{% static 'images/iota - white 1.png' %}" style="height: 140px; width: 140px" class="navbar-logo" alt="">   </a>
@@ -295,14 +295,14 @@ body {
 
 <div class="row">
     <div class="col-md-1"></div>
-    <div class="col-md-10" id="pha_header">
+        <div class="col-md-10" id="pha_header">
         <div class="row">
             <div class="col-md-12">
                 <p>
-                    <H4 style="color: #0a53be; display: inline-block;">{{ qraw_header.RATitle }}</H4>
-                    <h6 style="display: inline-block; color: #0a53be"> Risk Assessment (QRAW)</h6>
+                <H4 style="color: #0a53be; display: inline-block;">{{ qraw_header.RATitle }}</H4>
+                <h6 style="display: inline-block; color: #0a53be"> Risk Assessment (QRAW)</h6>
             </div>
-         </div>
+        </div>
         <div class="row"  style="font-size: 10px">
             <div class="col" style="font-size: 12px">
                  Facility Type: {{ qraw_header.BusinessUnitType }}<br>
@@ -407,6 +407,10 @@ body {
             <div class="col-md-1"></div>
 
             <div class="col-md-4">
+                <b>Scenario Consequences</b>
+                <div id="scenario_consequences" style="font-size: larger"></div>
+                <br><br>
+
                 <b>Recommended Controls</b>
 
                 <div id="controls"></div>
@@ -605,6 +609,24 @@ anychart.onDocumentReady(function() {
         document.getElementById('sle_low').textContent = data.event_cost_low;
         document.getElementById('sle').textContent = data.event_cost_median;
         document.getElementById('sle_high').textContent = data.event_cost_high;
+        var consequencesText = data.consequences;
+
+        // Split the text into an array of bullet points
+        // Assuming each bullet point starts with '-'
+        var bulletPoints = consequencesText.split('-').filter(function(point) {
+            return point.trim() !== '';  // Filter out any empty strings resulting from the split
+        });
+
+        // Create an HTML list item for each bullet point
+        var formattedHtml = bulletPoints.map(function(point) {
+            return '<li>' + point.trim() + '</li>';  // Trim whitespace and add <li> tags
+        }).join('');  // Join all list items into a single string
+
+        // Wrap the list items in a <ul> tag
+        formattedHtml = '<ul>' + formattedHtml + '</ul>';
+
+        // Set the formatted HTML as the content of the scenario_consequences element
+        document.getElementById('scenario_consequences').innerHTML = formattedHtml;
 
 
     // Get the controls container

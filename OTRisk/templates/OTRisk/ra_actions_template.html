@@ -479,14 +479,13 @@
         });
 
         // Add click event to each action row
-        document.querySelectorAll('.action-row').forEach(row => {
-            row.addEventListener('click', function() {
-                const actionId = this.getAttribute('data-id');
-                sessionStorage.setItem('selectedActionId', actionId);
-                document.getElementById('actionId').value = actionId;
-                document.getElementById('actionForm').submit();
-            });
+        $('#dataTable').on('click', '.action-row', function() {
+        const actionId = this.getAttribute('data-id');
+        sessionStorage.setItem('selectedActionId', actionId);
+        document.getElementById('actionId').value = actionId;
+        document.getElementById('actionForm').submit();
         });
+
 
 
         $('#actionBtn').on('click', function() {

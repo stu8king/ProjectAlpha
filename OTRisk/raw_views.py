@@ -8,9 +8,9 @@ from OTRisk.models.raw import RAWorksheet, RAWorksheetScenario, RAActions, Mitre
 from django.contrib.auth.decorators import login_required
 from OTRisk.models.questionnairemodel import FacilityType
 from OTRisk.models.Model_CyberPHA import tblIndustry, tblThreatSources, auditlog, tblScenarios, tblCyberPHAHeader, \
-    OrganizationDefaults
+    OrganizationDefaults, user_scenario_audit
 from OTRisk.models.Model_Mitre import MitreICSTactics
-from accounts.models import Organization
+from accounts.models import Organization, UserProfile
 from django.shortcuts import render
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
@@ -25,6 +25,9 @@ from django.core import serializers
 from django.template.loader import get_template
 from django.conf import settings
 import tempfile
+
+from accounts.views import get_client_ip
+from OTRisk.pha_views import get_api_key, is_inappropriate
 from .forms import RAActionsForm
 from xhtml2pdf import pisa
 import json
@@ -39,7 +42,7 @@ from .forms import RAWorksheetScenarioForm
 class UpdateRAAction(View):
     def put(self, request, *args, **kwargs):
         # try:
-
+        print(request.body)
         data = json.loads(request.body.decode('utf-8'))
         action_id = data.get('action_id')
         action_due_date = data.get('actionDueDate')
@@ -97,7 +100,6 @@ def ra_actions_view(request, qraw_id=None, pha_id=None):
             try:
                 selected_action = RAActions.objects.get(ID=action_id)
 
-                # Check RAWorksheetID and retrieve RATitle
                 # Check RAWorksheetID and retrieve RATitle
                 if selected_action.RAWorksheetID_id != 0:
                     ra_worksheet = RAWorksheet.objects.get(ID=selected_action.RAWorksheetID_id)
@@ -409,6 +411,9 @@ def ensure_non_null(value):
 
 @login_required()
 def reports(request):
+    referrer = request.META.get('HTTP_REFERER')
+    if not referrer or 'expected_referrer_path' not in referrer:
+        return HttpResponseForbidden()
     org_id = get_user_organization_id(request)
     qraw_reports = RAWorksheet.objects.filter(organization_id=org_id)
     organization_id_from_session = request.session.get('user_organization')
@@ -490,7 +495,6 @@ def calculate_business_impact_score(ra_worksheet_id):
 
 
 def calculate_total_risk_score(ra_worksheet_id):
-
     try:
         # Retrieve the RAWorksheet with the given ID
         ra_worksheet = RAWorksheet.objects.get(ID=ra_worksheet_id)
@@ -670,12 +674,8 @@ def qraw(request):
     mitreTactics = MitreICSTactics.objects.all().order_by('tactic')
     mitreMitigations = MitreICSMitigations.objects.all().order_by('id')
 
-    scenarios = tblScenarios.objects.filter(industry_id=industry_id).order_by('Scenario')
+    # scenarios = tblScenarios.objects.filter(industry_id=industry_id).order_by('Scenario')
     scenario_form = RAWorksheetScenarioForm()
-
-    user_ip = request.META.get('REMOTE_ADDR', '')
-    user_action = "qraw"
-    write_to_audit(request.user.id, user_action, user_ip)
 
     return render(request, 'qraw.html',
                   {'raws': raws,
@@ -684,7 +684,7 @@ def qraw(request):
                    'threatsources': threatsources,
                    'mitreTactics': mitreTactics,
                    'mitreMitigations': mitreMitigations,
-                   'scenarios': scenarios,
+                   # 'scenarios': scenarios,
                    'scenario_form': scenario_form,
                    'saved_worksheet_id': saved_worksheet_id,
                    'org_defaults': org_defaults})
@@ -706,7 +706,7 @@ class GetTechniquesView(View):
 def openai_assess_risk(request):
     language = request.session.get('organization_defaults', {}).get('language', 'en')  # 'en' is the default value
     if request.method == 'GET':
-        openai.api_key = os.environ.get('OPENAI_API_KEY')
+        openai.api_key = get_api_key('openai')
 
         # Extracting the input variables from the request
         safety_impact = int(request.GET.get('safety_impact'))
@@ -732,6 +732,7 @@ def openai_assess_risk(request):
         outageLength = request.GET.get('outageLength')
         exposed_system = request.GET.get('exposed_system')
         weak_credentials = request.GET.get('weak_credentials')
+        consequences = request.GET.get('consequences')
 
         if outageLength and outageLength.isdigit():
             outageLength = int(outageLength)
@@ -808,6 +809,7 @@ def openai_assess_risk(request):
                 f"Financial impact - {financial_impact}/10, Environmental impact - {environment_impact}/10, Regulatory impact - {regulatory_impact}/10, "
                 f"Reputation impact - {reputation_impact}/10, Data impact - {data_impact}/10, Supply Chain Impact- {supply_impact}/10, "
                 f"Weak credentials: {weak_credentials}, Internet exposed IP address: {exposed_system}."
+                f"The probable consequences of the scenario are: {consequences}."
                 f"Provide a rating for the risk from one of the following possible responses: Low, Low/Medium, Medium, Medium/High, or High. The response must be only the single response with no additional text or explanation. The user must only see the final response without any other detail  ")
         }
 
@@ -946,8 +948,20 @@ def parse_risk_summary(risk_summary):
 
 
 def write_to_audit(user_id, user_action, user_ip):
-    auditlog_entry = auditlog(userID=user_id, timestamp=timezone.now(), user_action=user_action, user_ipaddress=user_ip)
-    auditlog_entry.save()
+    try:
+        user_profile = UserProfile.objects.get(user=user_id)
+
+        audit_log = auditlog(
+            user=user_id,
+            timestamp=timezone.now(),
+            user_action=user_action,
+            user_ipaddress=user_ip,
+            user_profile=user_profile
+        )
+        audit_log.save()
+    except UserProfile.DoesNotExist:
+        # Handle the case where UserProfile does not exist for the user
+        pass
 
 
 def raw_action(request):
@@ -1249,7 +1263,7 @@ def moderate_content(content):
     OPENAI_MODERATION_ENDPOINT = "https://api.openai.com/v1/moderations"
 
     # Your OpenAI API key
-    OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')
+    OPENAI_API_KEY = get_api_key('openai')
 
     content_context = "In the context of a cybersecurity risk assessment: " + content
 
@@ -1378,6 +1392,7 @@ def create_or_update_raw_scenario(request):
 
             'bia_supply_prodimpact': request.POST.get('bia_supply_prodimpact'),
             'bia_supply_security': checkbox_to_boolean(request.POST.get('bia_supply_security', False)),
+            'raw_consequences': request.POST.get('raw_consequences'),
         }
 
         # Check if scenario_id is provided to determine if it's an update or create
@@ -1410,3 +1425,303 @@ def create_or_update_raw_scenario(request):
 
     # Handle other HTTP methods or return an error if needed
     return JsonResponse({'error': 'Invalid request method'}, status=400)
+
+
+def analyze_raw_scenario(request):
+    openai_api_key = get_api_key('openai')
+    openai.api_key = openai_api_key
+
+    if request.method == 'POST':
+        scenario = request.POST.get('scenario')
+        # Fetch the organization_id from the user's profile
+        try:
+            user_profile = UserProfile.objects.get(user=request.user)
+            organization_id = user_profile.organization.id
+        except UserProfile.DoesNotExist:
+            organization_id = None  # Or handle the lack of a profile as you see fit
+
+        # Create a record in user_scenario_audit
+        user_scenario_audit.objects.create(
+            scenario_text=scenario,
+            user=request.user,
+            organization_id=organization_id,
+            ip_address=get_client_ip(request),
+            session_id=request.session.session_key
+        )
+        # validate the scenario doesn't contain vulgar terms using the OpenAPI moderator
+        if is_inappropriate(scenario):
+            consequence_text = 'Scenario contains inappropriate terms'
+            return JsonResponse({'consequence_text': consequence_text}, status=400)
+
+        validation_prompt = f"""
+        Evaluate if the following text represents a coherent and plausible cybersecurity scenario, or OT incident scenario, or industrial incident scenario: '{scenario}'. Respond yes if valid, no if invalid.
+        """
+
+        validation_response = openai.ChatCompletion.create(
+            model="gpt-4",
+            messages=[
+                {"role": "system", "content": validation_prompt}
+            ],
+            max_tokens=50,
+            temperature=0.7
+        )
+
+        if "yes" in validation_response['choices'][0]['message']['content'].lower():
+
+            raw_id = request.POST.get('rawID')
+
+            try:
+                raw = RAWorksheet.objects.get(ID=raw_id)
+            except RAWorksheet.DoesNotExist:
+                return JsonResponse({'error': 'Risk assessment worksheet record not found'}, status=404)
+
+            facility_type = RAWorksheet.BusinessUnitType
+            industry = RAWorksheet.industry
+
+            # Construct a prompt for GPT-4
+            system_message = f"""
+            Given a cybersecurity scenario at a {facility_type} in the {industry} industry described as: {scenario}. Concisely describe in 50 words in a bulleted ist format of a maximum of 5 of the most likely direct consequences of the given scenario. The direct consequences should be specific to the facility and the mentioned details. Assume the role of an expert OT Cybersecurity risk advisor. Additional instruction: output ONLY the list items with no text either before or after the list items.
+            """
+            user_message = scenario
+
+            # Query OpenAI API
+            response = openai.ChatCompletion.create(
+                model="gpt-4",
+                messages=[
+                    {"role": "system", "content": system_message},
+                    {"role": "user", "content": user_message}
+                ],
+                max_tokens=100,
+                temperature=0.1
+            )
+
+            # Extract and process the text from the response
+            consequence_text = response['choices'][0]['message']['content']
+            # consequence_list = consequence_text.split(';')  # Splitting based on the chosen delimiter
+
+            return JsonResponse({'consequence': consequence_text})
+
+
+    else:
+        return JsonResponse({'consequence': [], 'error': 'Not a valid scenario'}, status=400)
+
+    return JsonResponse({'error': 'Invalid request'}, status=400)
+
+
+def analyze_sim_scenario(request):
+    openai_api_key = get_api_key('openai')
+    openai.api_key = openai_api_key
+
+    if request.method == 'POST':
+        scenario = request.POST.get('scenario')
+        # Fetch the organization_id from the user's profile
+        try:
+            user_profile = UserProfile.objects.get(user=request.user)
+            organization_id = user_profile.organization.id
+        except UserProfile.DoesNotExist:
+            organization_id = None  # Or handle the lack of a profile as you see fit
+
+        # Create a record in user_scenario_audit
+        user_scenario_audit.objects.create(
+            scenario_text=scenario,
+            user=request.user,
+            organization_id=organization_id,
+            ip_address=get_client_ip(request),
+            session_id=request.session.session_key
+        )
+        # validate the scenario doesn't contain vulgar terms using the OpenAPI moderator
+        if is_inappropriate(scenario):
+            consequence_text = 'Scenario contains inappropriate terms'
+            return JsonResponse({'consequence_text': consequence_text}, status=400)
+
+        validation_prompt = f"""
+        Evaluate if the following text represents a coherent and plausible cybersecurity scenario, or OT incident scenario, or industrial incident scenario: '{scenario}'. Respond yes if valid, no if invalid.
+        """
+
+        validation_response = openai.ChatCompletion.create(
+            model="gpt-4",
+            messages=[
+                {"role": "system", "content": validation_prompt}
+            ],
+            max_tokens=50,
+            temperature=0.7
+        )
+
+        if "yes" in validation_response['choices'][0]['message']['content'].lower():
+
+            facility_type = request.POST.get('facility_type')
+            industry = request.POST.get('industry')
+
+            system_message = f"""
+                Analyze the following cybersecurity scenario at a {facility_type} in the {industry} industry: '{scenario}'. For each factor listed below, provide a score out of 10 for impact severity and a brief narrative. Format your response with clear delimiters as follows: 'Factor: [Factor Name] | Score: X/10 | Narrative: [Explanation]'.
+
+                Factors:
+                - Safety
+                - Danger-to-life
+                - Environmental consequences
+                - Supply chain
+                - Data
+                - Operations
+                - Financials
+                - Reputation
+                - Regulations
+
+                Ensure that the scores and narratives are specific to the facility and scenario described. Use '|' as a delimiter between different sections of your response for each factor.
+            """
+
+            # Query OpenAI API
+            response = openai.ChatCompletion.create(
+                model="gpt-4",
+                messages=[
+                    {"role": "system", "content": system_message}
+                ],
+                max_tokens=500,
+                temperature=0.1
+            )
+
+            # Process the response
+            consequence_text = response['choices'][0]['message']['content']
+            # Parse the response into a structured format
+            parsed_consequences = parse_consequences(consequence_text)
+
+            return JsonResponse({'consequence': parsed_consequences})
+
+        else:
+            return JsonResponse({'consequence': [], 'error': 'Not a valid scenario'}, status=400)
+
+    return JsonResponse({'error': 'Invalid request'}, status=400)
+
+
+def parse_consequences(text):
+    # Split the text into segments for each factor
+    segments = text.split('Factor: ')
+    results = []
+
+    for segment in segments[1:]:  # Skip the first split as it will be empty
+        parts = segment.split(' | ')
+        if len(parts) >= 3:
+            factor = parts[0].strip()
+            score = parts[1].replace('Score: ', '').strip()
+            narrative = parts[2].replace('Narrative: ', '').strip()
+            results.append({'factor': factor, 'score': score, 'narrative': narrative})
+
+    return results
+
+
+def extract_score_and_narrative(text, factor):
+    # Adjust the regex pattern to match the new response format with delimiters
+    # Using re.IGNORECASE to make the regex case-insensitive
+    pattern = re.compile(rf"{factor}\s*:\s*\|\s*Score\s*:\s*(\d+\/10)\s*\|\s*Narrative\s*:\s*([^|]+)", re.IGNORECASE)
+    match = pattern.search(text)
+    if match:
+        score = match.group(1)
+        narrative = match.group(2).strip()
+    else:
+        score = "0/10"  # Default score if not found
+        narrative = "Narrative not available"  # Default narrative if not found
+    return score, narrative
+
+
+def generate_sim_attack_tree(request):
+    openai_api_key = get_api_key('openai')
+    openai.api_key = openai_api_key
+    scenario = request.POST.get('scenario')
+    attack_tree_system_message = f"""
+        Generate a hierarchical structure of a potential attack tree for the given cybersecurity scenario in a machine-readable JSON format. The structure should use 'name' for node labels and 'children' for nested nodes. Each node should represent a step or method in the attack, formatted as: {{'name': 'Node Name', 'children': [{{...}}]}}. EXTRA INSTRUCTION: Output MUST be in JSON format with no additional characters outside of the JSON structure.
+    """
+
+    # Query OpenAI API for the attack tree
+    attack_tree_response = openai.ChatCompletion.create(
+        model="gpt-4",
+        messages=[
+            {"role": "system", "content": attack_tree_system_message},
+            {"role": "user", "content": scenario}
+        ],
+        max_tokens=800,
+        temperature=0.3
+    )
+
+    # Process the response for attack tree
+    attack_tree_raw = attack_tree_response['choices'][0]['message']['content']
+
+    try:
+        # Parse the raw JSON string into a Python dictionary
+        attack_tree_data = json.loads(attack_tree_raw)
+
+        return JsonResponse(attack_tree_data)
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "Invalid JSON format from AI response"}, status=400)
+
+
+def analyze_sim_consequences(request):
+    if request.method == 'POST':
+        scenario = request.POST.get('scenario')
+        facility_type = request.POST.get('facility_type')
+        industry = request.POST.get('industry')
+        # Additional inputs for cost estimation
+        organization_size = request.POST.get('organization_size', '').strip()
+        asset_value = request.POST.get('asset_value', '').strip()
+        operational_impact = request.POST.get('operational_impact', '').strip()
+        security_measures = request.POST.get('security_measures', '').strip()
+        regulatory_environment = request.POST.get('regulatory_environment', '').strip()
+
+        # Construct the system message for consequences
+        consequence_message = f"""
+            You are an OT Cybersecurity incident scenario simulator. Given a cybersecurity scenario at a {facility_type} in the {industry} industry described as: '{scenario}'. Concisely describe in 50 words in a bulleted list format of a maximum of 5 of the most likely direct consequences of the given scenario.
+        """
+
+        # Construct the system message for cost estimation
+        cost_estimation_message = f"""
+            As an insurance underwriter, estimate the potential financial impact of a cybersecurity incident for a {facility_type} in the {industry} industry. The estimate should be based on current understandings, previously reported incidents, and real-world events. Provide the best case, worst case, and most likely case cost estimates. Provide only the numerical values, without any additional explanation or narrative. Scenario details: '{scenario}'.
+            - Organization Size: {organization_size}
+            - Value of Affected Assets: {asset_value}
+            - Operational Impact: {operational_impact}
+            - Security Measures: {security_measures}
+            - Regulatory Environment: {regulatory_environment}
+            Provide the estimates as US dollar values as follows:
+            Best Case Cost: [value] 
+            Worst Case Cost: [value] 
+            Most Likely Case Cost: [value] 
+        """
+
+        # Query OpenAI API for consequences
+        openai_api_key = get_api_key('openai')
+        openai.api_key = openai_api_key
+        consequence_response = openai.ChatCompletion.create(
+            model="gpt-4",
+            messages=[
+                {"role": "system", "content": consequence_message}
+            ],
+            max_tokens=500,
+            temperature=0.1
+        )
+        consequence_text = consequence_response['choices'][0]['message']['content']
+
+        # Query OpenAI API for cost estimation
+        cost_response = openai.ChatCompletion.create(
+            model="gpt-4",
+            messages=[
+                {"role": "system", "content": cost_estimation_message}
+            ],
+            max_tokens=500,
+            temperature=0.1
+        )
+        cost_estimation_text = cost_response['choices'][0]['message']['content']
+        print(cost_estimation_text)
+        # Corrected parsing logic to extract full numerical values including commas
+        best_case_cost = re.search(r'Best Case Cost: \$([\d,]+)', cost_estimation_text)
+        worst_case_cost = re.search(r'Worst Case Cost: \$([\d,]+)', cost_estimation_text)
+        most_likely_case_cost = re.search(r'Most Likely Case Cost: \$([\d,]+)', cost_estimation_text)
+
+        best_case_cost = best_case_cost.group(1) if best_case_cost else "Not available"
+        worst_case_cost = worst_case_cost.group(1) if worst_case_cost else "Not available"
+        most_likely_case_cost = most_likely_case_cost.group(1) if most_likely_case_cost else "Not available"
+
+        return JsonResponse({
+            'best_case_cost': best_case_cost,
+            'worst_case_cost': worst_case_cost,
+            'most_likely_case_cost': most_likely_case_cost,
+            'consequence': consequence_text
+        })
+    else:
+        return JsonResponse({'error': 'Invalid request'}, status=400)

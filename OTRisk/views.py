@@ -2,6 +2,7 @@ import decimal
 import os
 
 from django.contrib.auth.models import User
+from django.core.exceptions import ObjectDoesNotExist
 from django.core.serializers import serialize
 from django.forms import formset_factory, modelformset_factory
 from django.shortcuts import get_object_or_404
@@ -10,6 +11,8 @@ from django.utils.crypto import get_random_string
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 from django.db.models import Subquery, OuterRef, Count, IntegerField, Case, When, Value, Prefetch
+
+import OTRisk.forms
 from OTRisk.models.RiskScenario import RiskScenario, tblScenarioRecommendations
 from OTRisk.models.Model_Scenario import tblConsequence
 from OTRisk.models.questionnairemodel import Questionnaire, FacilityType
@@ -29,11 +32,11 @@ from OTRisk.models.Model_CyberPHA import tblCyberPHAHeader, tblRiskCategories, \
     tblThreatIntelligence, tblMitigationMeasures, tblScenarios, tblSafeguards, tblThreatSources, tblThreatActions, \
     tblNodes, tblUnits, tblZones, tblCyberPHAScenario, tblIndustry, auditlog, tblStandards, MitreControlAssessment, \
     CyberPHAScenario_snapshot, Audit, PHAControlList, SECURITY_LEVELS, OrganizationDefaults, scenario_compliance, \
-    ScenarioConsequences
+    ScenarioConsequences, APIKey
 from django.shortcuts import render, redirect
 from .dashboard_views import get_user_organization_id
 from django.contrib.auth.decorators import login_required
-from .forms import LoginForm, OrganizationDefaultsForm, CyberSecurityScenarioForm
+from .forms import LoginForm, OrganizationDefaultsForm, CyberSecurityScenarioForm, scenario_sim
 from datetime import date, datetime
 import json
 import openai, math
@@ -41,11 +44,11 @@ import requests, re
 from xml.etree import ElementTree as ET
 from .raw_views import qraw, openai_assess_risk, GetTechniquesView, raw_action, check_vulnerabilities, rawreport, \
     raw_from_walkdown, save_ra_action, get_rawactions, ra_actions_view, UpdateRAAction, reports, reports_pha, \
-    create_or_update_raw_scenario
+    create_or_update_raw_scenario, analyze_raw_scenario, analyze_sim_scenario, generate_sim_attack_tree, analyze_sim_consequences
 from .dashboard_views import dashboardhome
 from .pha_views import iotaphamanager, facility_risk_profile, get_headerrecord, scenario_analysis, phascenarioreport, \
     getSingleScenario, pha_report, scenario_vulnerability, add_vulnerability, get_asset_types, calculate_effectiveness, \
-    generate_ppt, analyze_scenario
+    generate_ppt, analyze_scenario, assign_cyberpha_to_group, fetch_groups, fetch_all_groups
 from .report_views import pha_reports, get_scenario_report_details, qraw_reports, get_qraw_scenario_report_details
 from .forms import CustomScenarioForm, CustomConsequenceForm, OrganizationAdmin
 from .models.Model_Scenario import CustomScenario, CustomConsequence
@@ -71,7 +74,6 @@ app_name = 'OTRisk'
 # Add Organization View
 @login_required
 def organization_form_view(request):
-
     organizations = Organization.objects.all()
     selected_org = request.GET.get('org_id', None)
 
@@ -99,7 +101,8 @@ def organization_form_view(request):
     else:
         form = OrganizationForm(instance=Organization.objects.get(id=selected_org) if selected_org else None)
 
-    return render(request, 'OTRisk/org_form.html', {'form': form, 'organizations': organizations, 'selected_org': selected_org})
+    return render(request, 'OTRisk/org_form.html',
+                  {'form': form, 'organizations': organizations, 'selected_org': selected_org})
 
 
 def load_organizations(request):
@@ -740,6 +743,20 @@ def disable_user(request, user_id):
         return JsonResponse({'success': False, 'error': 'User not found.'})
 
 
+def enable_user(request, user_id):
+    print(request.POST)
+    try:
+        user_to_enable = User.objects.get(pk=user_id)
+        if user_to_enable != request.user:
+            user_to_enable.is_active = True
+            user_to_enable.save()
+            return JsonResponse({'success': True})
+        else:
+            return JsonResponse({'success': False, 'error': 'Cannot disable yourself.'})
+    except User.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'User not found.'})
+
+
 @login_required
 def delete_user(request, user_id):
     try:
@@ -757,13 +774,35 @@ def delete_user(request, user_id):
 def admin_users(request):
     current_user_profile = UserProfile.objects.get(user=request.user)
     organization = current_user_profile.organization
+
+    # Calculate the number of available licenses
+    total_users = UserProfile.objects.filter(organization=organization).count()
+    max_users = organization.max_users
+    available_licenses = max_users - total_users
+
+    # Check if the user is a staff member
+    is_staff_user = request.user.is_staff
+
+    if is_staff_user:
+        # Staff user can view and edit all user profiles
+        user_profiles = UserProfile.objects.all()
+    else:
+        # Non-staff users can only view and edit user profiles in their organization
+        user_profiles = UserProfile.objects.filter(organization=organization)
+
     user_profiles = UserProfile.objects.filter(organization=organization)
+
     user_form = UserForm(request.POST or None)
     profile_form = UserProfileForm(request.POST or None)
 
     if request.method == 'POST':
         user_form = UserForm(request.POST)
-        organization_id = request.POST.get('organization')  # Retrieve the selected organization ID from the form
+        profile_data = request.POST.copy()
+        if not request.user.is_staff:
+            # If the user is not staff, add the current user's organization to the form data
+            profile_data['organization'] = current_user_profile.organization.id
+
+        profile_form = UserProfileForm(profile_data)
 
         if user_form.is_valid():
             password = generate_password()
@@ -772,15 +811,23 @@ def admin_users(request):
             user = user_form.save(commit=False)
             user.set_password(password)  # Set the password correctly
             user.last_login = None  # Set last_login to Non
+            user.is_superuser = user_form.cleaned_data.get('is_superuser', False)
             user.is_active = True
             user.save()
 
-            # Save the UserProfile model
-            UserProfile.objects.create(user=user, organization_id=organization_id)
+            if profile_form.is_valid():
+                # Now save the UserProfile model
+                user_profile = profile_form.save(commit=False)
+                user_profile.user = user
+                user_profile.save()
 
-            send_password_email(user.email, password)
-            # Redirect to a success page or wherever you want
-            return redirect('/OTRisk/admin_users')
+                send_password_email(user.email, password)
+                # Redirect to a success page or wherever you want
+                return redirect('/OTRisk/admin_users')
+            else:
+                pass
+        else:
+            pass
 
     else:
         user_form = UserForm()
@@ -790,7 +837,8 @@ def admin_users(request):
         user_profiles = UserProfile.objects.filter(organization=organization)
 
     return render(request, 'admin_users.html',
-                  {'user_form': user_form, 'profile_form': profile_form, 'user_profiles': user_profiles})
+                  {'user_form': user_form, 'profile_form': profile_form, 'user_profiles': user_profiles,
+                   'is_staff_user': is_staff_user, 'available_licenses': available_licenses})
 
 
 def add_or_update_consequence(request, consequence_id=None):
@@ -943,6 +991,7 @@ def scenarioreport(request):
 @login_required()
 def save_or_update_cyberpha(request):
     if request.method == 'POST':
+
         # Get the form data
         cyberphaid = request.POST.get('cyberpha')
         cyberpha_header = tblCyberPHAHeader.objects.get(pk=cyberphaid)
@@ -1025,6 +1074,7 @@ def save_or_update_cyberpha(request):
         dangerScope = request.POST.get('dangerScope')
         ai_bia_score = request.POST.get('ai_bia_score')
         attack_tree_text = request.POST.get('attack_tree_text')
+        scenario_status = request.POST.get('scenario_status')
         if ai_bia_score in ('NaN', ''):
             ai_bia_score = 0
         else:
@@ -1123,7 +1173,7 @@ def save_or_update_cyberpha(request):
                 ThreatAction=' ',
                 Countermeasures=' ',
                 RiskCategory=riskcategory,
-                Consequence=consequence,
+                Consequence='',
                 impactSafety=impactsafety,
                 impactDanger=impactdanger,
                 impactProduction=impactproduction,
@@ -1272,7 +1322,8 @@ def save_or_update_cyberpha(request):
                 'dangerScope': dangerScope,
                 'ai_bia_score': 0 if ai_bia_score is None else ai_bia_score,
                 'compliance_map': compliance_map,
-                'attack_tree_text': attack_tree_text
+                'attack_tree_text': attack_tree_text,
+                'scenario_status': scenario_status
 
             }
 
@@ -1289,6 +1340,8 @@ def save_or_update_cyberpha(request):
                     ID=int(scenario_id)  # Assumes scenario_id is always a valid integer
                 )
                 scenario_instance = cyberpha_entry
+            # Delete existing records in ScenarioConsequences for the given scenario
+            ScenarioConsequences.objects.filter(scenario=scenario_instance).delete()
 
             # Retrieve validated consequences from the request
             validated_consequences = request.POST.getlist('validated_consequences')
@@ -1308,6 +1361,14 @@ def save_or_update_cyberpha(request):
 
             # lastly, update the overall BIA score for the cyberpha
             update_bia_scenarios(cyberphaid, request.user)
+
+            # Log the user activity
+            write_to_audit(
+                request.user,
+                f'Updated cyberPHA: {cyberpha_header}. Saved scenario: {scenario}',
+                get_client_ip(request)
+            )
+
         # Call the assess_cyberpha function
         return assess_cyberpha(request, cyberPHAID=cyberphaid)
 
@@ -1368,7 +1429,7 @@ def assess_cyberpha(request, cyberPHAID=None):
         # For instance, you can log out the user or raise a 404 error.
         pass
 
-    industry_id = tblIndustry.objects.get(Industry=pha_record.Industry).id
+    # industry_id = tblIndustry.objects.get(Industry=pha_record.Industry).id
 
     # scenarios = tblScenarios.objects.all()
     # tbl_scenarios = tblScenarios.objects.filter(industry_id=industry_id)
@@ -1390,6 +1451,7 @@ def assess_cyberpha(request, cyberPHAID=None):
     threatactions = tblThreatActions.objects.all().order_by('ThreatAction')
     # consequenceList = tblConsequence.objects.all().order_by('Consequence')
     standardslist = tblStandards.objects.all().order_by('standard')
+    scenario_status = tblCyberPHAScenario.SCENARIO_STATUSES
 
     control_objectives = [json.loads(obj.ControlObjective) for obj in control_objectives]
     active_cyberpha_id = request.GET.get('active_cyberpha')
@@ -1425,7 +1487,8 @@ def assess_cyberpha(request, cyberPHAID=None):
         'standardslist': standardslist,
         'MitreControlAssessment_results': control_assessments_data,
         'SECURITY_LEVELS': SECURITY_LEVELS,
-        'scenario_form': scenario_form
+        'scenario_form': scenario_form,
+        'scenario_status': scenario_status
     })
 
 
@@ -2161,8 +2224,20 @@ def walkthrough_questionnaire_details(request, questionnaire_id):
 
 
 def write_to_audit(user_id, user_action, user_ip):
-    auditlog_entry = auditlog(userID=user_id, timestamp=timezone.now(), user_action=user_action, user_ipaddress=user_ip)
-    auditlog_entry.save()
+    try:
+        user_profile = UserProfile.objects.get(user=user_id)
+
+        audit_log = auditlog(
+            user=user_id,
+            timestamp=timezone.now(),
+            user_action=user_action,
+            user_ipaddress=user_ip,
+            user_profile=user_profile
+        )
+        audit_log.save()
+    except UserProfile.DoesNotExist:
+        # Handle the case where UserProfile does not exist for the user
+        pass
 
 
 def get_mitigations(request):
@@ -2518,7 +2593,7 @@ def write_audit_record(user, organization_id, ip_address, session_id, user_actio
     audit_record.save()
 
 
-@login_required()
+@login_required
 def read_audit_records(user):
     return Audit.objects.filter(organization_id=user.userprofile.organization_id)
 
@@ -2553,3 +2628,86 @@ def get_cve_details(request):
         return JsonResponse({"error": "CVE not found or an error occurred"})
 
     return JsonResponse({"error": "Invalid request method"})
+
+
+def scenario_sim(request):  # Changed the function name
+    scenario_form = CyberSecurityScenarioForm(request.POST)
+    industries = tblIndustry.objects.all().order_by('Industry')
+    facilities = FacilityType.objects.all().order_by('FacilityType')
+    threatsources = tblThreatSources.objects.all().order_by('ThreatSource')
+    return render(request, 'OTRisk/scenario_sim.html',
+                  {'scenario_form': scenario_form, 'industries': industries, 'facilities': facilities})
+
+
+def get_api_key(service_name):
+    try:
+        key_record = APIKey.objects.get(service_name=service_name)
+        return key_record.key
+    except ObjectDoesNotExist:
+        # Handle the case where the key is not found
+        return None
+
+
+@login_required
+def update_user_phone_number(request):
+    if request.method == 'POST':
+        user_id = request.POST.get('userId')
+        new_phone_number = request.POST.get('newPhoneNumber')
+
+        # Update the user profile
+        user_profile = UserProfile.objects.get(user_id=user_id)
+        user_profile.phone_number = new_phone_number
+        user_profile.save()
+
+        return JsonResponse({'status': 'success'})
+    else:
+        return JsonResponse({'status': 'failed'}, status=400)
+
+
+def generate_scenario_description(request):
+    if request.method == 'POST':
+        # Extracting form data
+        attacker = request.POST.get('attacker', '').strip()
+        attack_vector = request.POST.get('attackVector', '').strip()
+        target_component = request.POST.get('targetComponent', '').strip()
+        attack_effect = request.POST.get('attackEffect', '').strip()
+        target_system = request.POST.get('targetSystem', '').strip()
+        impact = request.POST.get('impact', '').strip()
+        motivation = request.POST.get('motivation', '').strip()
+        severity = request.POST.get('severity', '').strip()
+        detection_response = request.POST.get('detectionResponse', '').strip()
+        preventive_measures = request.POST.get('preventiveMeasures', '').strip()
+
+        prompt = (
+            "You are an OT cybersecurity risk analyst writing scenarios for a cybersecurity insurance underwriter. Using only the following inputs, you are to construct and generate a brief, concise, and realistic scenario. Consider that an attack tree will be created from the scenario. You output MUST be less than 150 words with no additional narrative or commentary.  \n\n"
+            f"- Attacker: {attacker}\n"
+            f"- Attack Vector: {attack_vector}\n"
+            f"- Target Component: {target_component}\n"
+            f"- Effect of Attack: {attack_effect}\n"
+            f"- Target System/Network: {target_system}\n"
+            f"- Potential Impact: {impact}\n"
+            f"- Attacker's Motivation: {motivation}\n\n"
+        )
+
+        # Setting OpenAI API key
+        openai.api_key = get_api_key('openai')
+
+        # Querying the OpenAI API
+        response = openai.ChatCompletion.create(
+            model="gpt-4",
+            messages=[
+                {"role": "system", "content": prompt}
+            ],
+            max_tokens=150,
+            temperature=0.5
+        )
+        # Extracting the generated scenario
+        # The response structure is different for chat completions, so adjust accordingly
+        if response.choices and response.choices[0].message:
+            scenario_description = response.choices[0].message['content'].strip()
+        else:
+            scenario_description = "No scenario generated."
+
+        return JsonResponse({'scenario_description': scenario_description})
+    else:
+        return JsonResponse({'error': 'Invalid request'}, status=400)

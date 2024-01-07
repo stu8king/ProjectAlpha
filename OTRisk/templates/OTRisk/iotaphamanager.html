@@ -204,7 +204,7 @@ body {
 <body style="background-color: white">
 <script>
 
-anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
+anychart.licenseKey("{{ anychart_key }}");
 
 
 sessionStorage.setItem('activeCyberPHA','');
@@ -421,10 +421,11 @@ function drawControlGauge(score) {
                 <th>Type</th>
                 <th>Unit</th>
                 <th>Zone</th>
-                <th>Leader</th>
+                <th>Owner</th>
                 <th>Date</th>
                 <th>BIA</th>
                 <th>Scenarios</th>
+                <th>Status</th>
                 <th>Actions</th>
                 <th></th>
                 <!-- Add more <th> elements for each field in the RAWorksheet model -->
@@ -443,31 +444,32 @@ function drawControlGauge(score) {
                     <td>{{ pha_header_records.AssessmentStartDate|date:"m/d/Y" }}</td>
 
                      <td style="background-color:
-                {% if pha_header_records.bia_scenarios == None %}
-                    white  <!-- Default color for null or None values -->
-                {% elif pha_header_records.bia_scenarios == 0 or pha_header_records.bia_scenarios == 1 or pha_header_records.bia_scenarios == 2 %}
-                    green
-                {% elif pha_header_records.bia_scenarios == 3 %}
-                    olive
-                {% elif pha_header_records.bia_scenarios == 4 or pha_header_records.bia_scenarios == 5 %}
-                    yellow
-                {% elif pha_header_records.bia_scenarios == 6 or pha_header_records.bia_scenarios == 7 %}
-                    orange
-                {% elif pha_header_records.bia_scenarios == 8 or pha_header_records.bia_scenarios == 9 %}
-                    red
-                {% elif pha_header_records.bia_scenarios == 10 %}
-                    scarlet
-                {% else %}
-                    white
-                {% endif %}
-            ">
+                        {% if pha_header_records.bia_scenarios == None %}
+                            white  <!-- Default color for null or None values -->
+                        {% elif pha_header_records.bia_scenarios == 0 or pha_header_records.bia_scenarios == 1 or pha_header_records.bia_scenarios == 2 %}
+                            green
+                        {% elif pha_header_records.bia_scenarios == 3 %}
+                            olive
+                        {% elif pha_header_records.bia_scenarios == 4 or pha_header_records.bia_scenarios == 5 %}
+                            yellow
+                        {% elif pha_header_records.bia_scenarios == 6 or pha_header_records.bia_scenarios == 7 %}
+                            orange
+                        {% elif pha_header_records.bia_scenarios == 8 or pha_header_records.bia_scenarios == 9 %}
+                            red
+                        {% elif pha_header_records.bia_scenarios == 10 %}
+                            scarlet
+                        {% else %}
+                            white
+                        {% endif %}
+                ; text-align: center">
                 {{ pha_header_records.bia_scenarios|default_if_none:"N/A" }}  <!-- Display "N/A" if bia_scenarios is None -->
             </td>
 
 
 
-                    <td>{{ pha_header_records.scenario_count }}</td>
-                     <td>
+                    <td style="text-align: center">{{ pha_header_records.scenario_count }}</td>
+                    <td>{{ pha_header_records.latest_workflow_status }}</td>
+                     <td style="text-align: center">
                         {% if pha_header_records.ra_action_count > 0 %}
                             <a href="{% url 'OTRisk:ra_actions_view_pha' pha_id=pha_header_records.ID %}">{{ pha_header_records.ra_action_count }}</a>
 
@@ -574,10 +576,88 @@ function drawControlGauge(score) {
                         $('#txtTitle, #txtLeader, #txtUnit, #txtStartDate, #txtAddress, #txtFacility, #txtLeaderEmail, #txtEndDate, #txtSafetySummary, #txtChemical, #txtPhysical, #txtOther, #txtCompliance, #strategySummary, #insightSummary, #threatSummary, #selFacilityType, #assessment_id, #cyber_insurance, #shift_model, #annual_revenue, #txtEmployees, #selIndustry, #selZone, #selSL, #countrySelector, #btnformSubmit,  #risk-assessment-btn, #scenarioButton, #generatePPT').prop('disabled', false);
                         $('#btnformSubmit').prop('disabled', false);
                         $('#scenarioButton').prop('disabled', false);
+                        // Set the workflow status dropdown
+                        // Ensure the current workflow status matches the format of the dropdown options
+                        var currentWorkflowStatus = data.headerrecord.current_workflow_status;
+
+                        var workflowSelector = $('#workflow_selector');
+
+                        // Check if the current workflow status exists in the options
+                        if (workflowSelector.find("option[value='" + currentWorkflowStatus + "']").length > 0) {
+                            workflowSelector.val(currentWorkflowStatus).trigger('change');
+                        } else {
+                            // If the status doesn't exist, select the default placeholder
+                            workflowSelector.val('').trigger('change');
+                        }
+
+                        if (currentWorkflowStatus == 'Complete'){
+
+                            lockControls();
+                        } else { unlockControls(); }
 
                         $('#generatePPT').prop('disabled', false);
+                        populateModeratorsTable(data.organization_moderators, data.moderator_ids);
+                         // Populate current group assignments
+                        console.log(data.all_groups);
+                        populateCurrentGroups(data.headerrecord.current_groups);
+
+                        // Populate all available groups in the dropdown (for the modal)
+                        populateAllGroupsDropdown(data.all_groups);
+                        updateGroupAssignmentsDisplay(recordId);
+                        updateGroupList();
+
 
                     }
+                });
+            }
+            // Function to populate current groups
+            function populateCurrentGroups(groups) {
+                var currentGroupsDiv = $('#currentGroupsDiv');
+                currentGroupsDiv.empty(); // Clear existing content
+
+                // Check if 'groups' is an array and has elements
+                if (Array.isArray(groups) && groups.length > 0) {
+                    groups.forEach(function(group) {
+                        currentGroupsDiv.append($('<p>').text(group.name));
+                    });
+                } else {
+                    // Handle non-array or empty 'groups'
+                    currentGroupsDiv.append($('<p>').text('No groups assigned.'));
+                }
+            }
+
+
+
+            function populateAllGroupsDropdown(groups) {
+                var allGroupsSelect = $('#existing_group'); // ID of the select element in the modal
+                allGroupsSelect.empty(); // Clear existing options
+
+                allGroupsSelect.append($('<option>', {
+                    value: '',
+                    text: 'Select a Group'
+                }));
+
+                if (groups && groups.length > 0) {
+                    groups.forEach(function(group) {
+                        allGroupsSelect.append($('<option>', {
+                            value: group.id,
+                            text: group.name
+                        }));
+                    });
+                }
+            }
+
+            function populateModeratorsTable(moderators, moderatorIds) {
+                var tbody = $('#moderatorModal tbody');
+                tbody.empty(); // Clear existing rows
+
+                moderators.forEach(function(moderator) {
+                    var checked = moderatorIds.includes(moderator.id) ? 'checked' : '';
+                    var row = '<tr>' +
+                              '<td>' + moderator.name + '</td>' +
+                              '<td><input type="checkbox" name="moderator" value="' + moderator.id + '" ' + checked + '></td>' +
+                              '</tr>';
+                    tbody.append(row);
                 });
             }
 
@@ -618,7 +698,7 @@ function drawControlGauge(score) {
         .then((willSave) => {
             if (willSave) {
                 // User confirmed, continue with the form submission
-                document.forms['frmRAW'].submit(); // Replace 'yourFormName' with your form's name or ID
+                document.forms['frmRAW'].submit();
 
             } else {
                 // User canceled the action
@@ -696,12 +776,12 @@ function drawControlGauge(score) {
     <div class="col-md-3 bg-white">
         <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
             <div class="card-body">
-                <label for="txtTitle">Title</label><input type="text" class="form-control" name="txtTitle" id="txtTitle" value="{{ current_pha_header.title }}" maxlength="100" style="font-size: 16px; font-weight: bold; background-color: #f3dc47" required>
+                <label for="txtTitle">Title</label><input type="text" class="form-control" name="txtTitle" id="txtTitle" value="{{ current_pha_header.title }}" maxlength="100" style="font-size: 16px; font-weight: bold;" required>
             </div>
         </div>
         <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
             <div class="card-body">
-                <label for="txtLeader">Leader</label><input type="text" class="form-control" name="txtLeader" id="txtLeader" value="{{ current_pha_header.PHALeader }}" maxlength="100"  required>
+                <label for="txtLeader">CyberPHA Owner</label><input type="text" class="form-control" name="txtLeader" id="txtLeader" value="{{ current_pha_header.PHALeader }}" maxlength="100"  required>
             </div>
         </div>
         <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
@@ -935,12 +1015,202 @@ function drawControlGauge(score) {
             </div>
         </div>
 
+        <div class="card mb-3 shadow-sm">
+            <div class="card-body">
+                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#moderatorModal">
+                    Select CyberPHA Moderators
+                </button>
+            </div>
+        </div>
+
+
         <script>
             $(document).ready(function() {
                 $("#assessment-select").selectmenu().selectmenu("menuWidget").addClass("overflow");
             });
         </script>
 
+        <div class="card mb-3 shadow-sm">
+    <div class="card-body">
+        <label for="workflow_selector">Workflow Status</label>
+        <select class="form-control" id="workflow_selector" name="workflow_selector">
+            <option value="">Select a Status</option>
+            {% for status, status_display in workflow_status_choices %}
+                <option value="{{ status }}"
+                        {% if current_workflow_status == status %} selected {% endif %}>
+                    {{ status_display }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+        <div class="card-body">
+        Current Group Assignments:
+        <div id="currentGroupsDiv">
+    <!-- Current groups will be populated here by the fetchHeaderRecord function -->
+</div>
+       <!-- Button to Open the Modal -->
+<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#assignGroupModal">
+    Assign to Group
+</button>
+
+<!-- The Modal -->
+<div class="modal" id="assignGroupModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <!-- Modal Header -->
+            <div class="modal-header">
+                <h4 class="modal-title">Assign to Group</h4>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="modal-body">
+                <form id="group-assignment-form">
+                    <!-- Existing Groups -->
+                    <div class="form-group">
+                        <label for="existing_group">Existing Group:</label>
+                        <select class="form-control" id="existing_group" name="existing_group">
+                            <option value="">Select a Group</option>
+                            {% for group in all_groups %}
+                                <option value="{{ group.id }}">{{ group.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <!-- New Group -->
+                    <div class="form-group">
+                        <label for="new_group_name">New Group Name:</label>
+                        <input type="text" class="form-control" id="new_group_name" name="new_group_name">
+                    </div>
+                    <div class="form-group">
+                    <label for="new_group_type">New Group Type:</label>
+                    <select class="form-control" id="new_group_type" name="new_group_type">
+                        {% for type_value, type_name in group_types %}
+                            <option value="{{ type_value }}">{{ type_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                    <!-- Hidden Field for CyberPHA ID -->
+                    <input type="hidden" name="cyberpha_id" value="{{ current_pha_header.ID }}">
+                    <!-- Submit Button -->
+                    <button type="button" id="assign-group-btn"  class="btn btn-primary">Assign</button>
+                </form>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+    </div>
+
+
+</div>
+<script>
+$(document).ready(function() {
+    $('#assign-group-btn').on('click', function() {
+
+        var cyberphaId = sessionStorage.getItem('activeCyberPHA'); // Retrieve from session storage
+        var existingGroupId = $('#existing_group').val();
+        var newGroupName = $('#new_group_name').val();
+        var newGroupType = $('#new_group_type').val();
+
+        $.ajax({
+            type: 'POST',
+            url: '/OTRisk/assign_cyberpha_to_group/', // URL to Django view for assignment
+            data: {
+                'csrfmiddlewaretoken': $('input[name=csrfmiddlewaretoken]').val(),
+                'cyberpha_id': cyberphaId,
+                'existing_group_id': existingGroupId,
+                'new_group_name': newGroupName,
+                'new_group_type': newGroupType
+            },
+            success: function(response) {
+                // Handle success
+
+                updateGroupAssignmentsDisplay(cyberphaId); // Function to refresh group assignments on the page
+                updateGroupList();
+                $('#assignGroupModal').modal('hide');
+            },
+            error: function(error) {
+                // Handle error
+                console.error('Error:', error);
+            }
+        });
+    });
+});
+
+function updateGroupAssignmentsDisplay(cyberphaId) {
+    $.ajax({
+        type: 'GET',
+        url: '/OTRisk/fetch_groups/', // URL to a Django view that returns group assignments
+        data: { 'cyberpha_id': cyberphaId },
+        success: function(response) {
+            // Assuming 'response' contains an array of group names or objects
+            var currentGroupsDiv = $('#currentGroupsDiv');
+            currentGroupsDiv.empty();
+
+            if (response.groups && response.groups.length > 0) {
+                response.groups.forEach(function(group) {
+                    // Assuming 'group' contains a property 'name'
+                    currentGroupsDiv.append($('<p>').text(group.name));
+                });
+            } else {
+                currentGroupsDiv.append($('<p>').text('No groups assigned.'));
+            }
+        },
+        error: function(error) {
+            console.error('Error fetching group assignments:', error);
+        }
+    });
+}
+
+function updateGroupList() {
+    $.ajax({
+        type: 'GET',
+        url: '/OTRisk/fetch_all_groups/', // URL to Django view
+        success: function(response) {
+            var existingGroupSelect = $('#existing_group');
+            existingGroupSelect.empty();
+
+            existingGroupSelect.append($('<option>', {
+                value: '',
+                text: 'Select a Group'
+            }));
+
+            response.groups.forEach(function(group) {
+                existingGroupSelect.append($('<option>', {
+                    value: group.id,
+                    text: group.name
+                }));
+            });
+        },
+        error: function(error) {
+            console.error('Error fetching groups:', error);
+        }
+    });
+}
+
+
+document.addEventListener('DOMContentLoaded', function() {
+    var workflowSelector = document.getElementById('workflow_selector');
+    workflowSelector.addEventListener('change', function() {
+        if (this.value === 'Complete') {
+            swal({
+                title: 'CyberPHA Completed?',
+                text: "Once you save the status of this record as 'Complete', you will not be able to make further changes.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, I understand'
+            });
+        }
+    });
+});
+
+updateGroupList();
+</script>
 
     </div>
 
@@ -1208,6 +1478,50 @@ $(document).ready(function() {
         <div class="col-md-1 " style="background-color: white;"></div>
     </div> <!-- dark grey stripe with submit/reset buttons-->
 
+<!-- Modal -->
+<div class="modal fade" id="moderatorModal" tabindex="-1" role="dialog" aria-labelledby="moderatorModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="moderatorModalLabel">Select CyberPHA Moderators</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+    <form id="moderatorsForm">
+        <div class="form-group">
+                        <label for="targetDate">Target Completion Date:</label>
+                        <input type="text" class="form-control" id="targetDate" name="targetDate" placeholder="mm/dd/yy">
+                        <script>
+                        $( function() {
+                            $( "#targetDate" ).datepicker({
+                                dateFormat: "mm/dd/yy"
+                            });
+                        });
+                        </script>
+
+                    </div>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Select</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Moderators will be populated dynamically by JavaScript -->
+            </tbody>
+        </table>
+    </form>
+</div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <!-- Add more buttons if needed -->
+            </div>
+        </div>
+    </div>
+</div>
 
 
 </form>
@@ -1293,11 +1607,25 @@ $(document).ready(function() {
 
     </script>
 </div>
+</div>
+<script>
+function lockControls() {
+        // Disable all input, select, and button elements
+        document.querySelectorAll('input, select, button').forEach(function(el) {
+            // Exclude elements inside the 'headertable' table
+            if (!el.closest('#headertable')) {
+                el.disabled = true;
+            }
+        });
+    }
+function unlockControls() {
+        // Disable all input, select, and button elements
+        document.querySelectorAll('input, select, button').forEach(function(el) {
 
+            el.disabled = false;
+        })
+    }
+</script>
 
-
-
-
-        </div>
 </body>
 </html>

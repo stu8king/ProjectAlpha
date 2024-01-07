@@ -1,11 +1,13 @@
 from collections import defaultdict
 
 from django.shortcuts import render
+from django.core.serializers import serialize
 from django.template.loader import render_to_string
 from django.utils.html import mark_safe
 from OTRisk.models.raw import RAWorksheet, RAWorksheetScenario, RAActions
 from django.contrib.auth.decorators import login_required
-from OTRisk.models.Model_CyberPHA import tblCyberPHAHeader, tblCyberPHAScenario, OrganizationDefaults
+from OTRisk.models.Model_CyberPHA import tblCyberPHAHeader, tblCyberPHAScenario, OrganizationDefaults, auditlog, \
+    CyberPHAModerators, CyberPHA_Group
 from django.db.models import Count, Sum
 from django.db.models import Avg
 from accounts.models import Organization, UserProfile
@@ -275,6 +277,39 @@ def dashboardhome(request):
                                                                                            'FacilityType')
     sunburst_processed_data = process_data(sunburst_data)
 
+    # Query the last 100 audit logs for this organization
+    last_100_logs = auditlog.objects.filter(
+        user_profile__organization_id=user_organization_id
+    ).order_by('-timestamp')[:100]
+
+    # get the moderation tasks for the current user
+    moderation_tasks = CyberPHAModerators.objects.filter(moderator=request.user)
+    moderation_details = []
+
+    for task in moderation_tasks:
+        # Get the related CyberPHAHeader
+        pha_header = task.pha_header
+
+        # Count the number of draft scenarios for this CyberPHA
+        draft_scenario_count = tblCyberPHAScenario.objects.filter(
+            CyberPHA=pha_header, scenario_status='Draft'
+        ).count()
+
+        # Add the details to the list
+        moderation_details.append({
+            'cyberpha_title': pha_header.title,
+            'target_date': task.target_date,
+            'draft_scenario_count': draft_scenario_count
+        })
+
+    groups_with_cyberphas = []
+    for group in CyberPHA_Group.objects.all():
+        cyberphas = group.tblcyberphaheader_set.filter(UserID__in=organization_users)
+        groups_with_cyberphas.append({
+            'group_name': group.name,
+            'cyberphas': [{'facility_name': cyberpha.FacilityName} for cyberpha in cyberphas]
+        })
+
     context = {
         'records_by_business_unit_type': list(records_by_business_unit_type),
         'records_by_status_flag': list(records_by_status_flag),
@@ -300,7 +335,10 @@ def dashboardhome(request):
         'pha_bia_summary': pha_bia_summary,
         'pha_risk_summary': pha_risk_summary,
         'scenarios': scenarios,
-        'phas': phas
+        'phas': phas,
+        'last_100_logs': last_100_logs,
+        'moderation_tasks': moderation_details,
+        'groups_with_cyberphas':groups_with_cyberphas
     }
 
     return render(request, 'dashboard.html', context)
@@ -440,3 +478,12 @@ def map_score_to_text(score):
         return 'High'
     else:
         return 'Very High'
+
+
+def get_current_user_organization_id(user):
+    try:
+        user_profile = UserProfile.objects.get(user=user)
+        return user_profile.organization_id
+    except UserProfile.DoesNotExist:
+        # Return None or handle it as per your application's requirement
+        return None

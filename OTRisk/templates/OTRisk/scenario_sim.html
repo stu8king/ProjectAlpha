@@ -1,0 +1,799 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Cyber Risk Assessment Form</title>
+    <link rel="stylesheet" type="text/css" href="{%  static 'css/phascenariomgr.css' %}">
+
+<link rel="icon" href="{% static 'images/iota - white 1.png' %}" type="image/x-icon">
+<!-- FontAwesome CDN -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"/>
+
+<!-- Bootstrap CSS -->
+<link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+
+<!-- jQuery (Full version, required for Bootstrap and jQuery UI) -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- jQuery UI -->
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+<link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+
+<!-- Popper.js (Required for Bootstrap) -->
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+
+<!-- Bootstrap JS -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+<!-- DataTables -->
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.3/css/jquery.dataTables.css">
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.js"></script>
+
+<!-- Select2 -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<!-- SweetAlert -->
+<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+
+<!-- D3.js -->
+<script src="https://d3js.org/d3.v6.min.js"></script>
+
+<!-- AnyChart -->
+<script src="https://cdn.anychart.com/releases/8.10.0/js/anychart-bundle.min.js"></script>
+<script src="https://cdn.anychart.com/releases/8.11.1/js/anychart-circular-gauge.min.js" type="text/javascript"></script>
+<script src="https://cdn.anychart.com/releases/8.11.1/js/anychart-linear-gauge.min.js"></script>
+
+<!-- Custom JS -->
+<script src="{% static 'OTRisk/assesscyberpha.js' %}"></script>
+
+<!-- Bootstrap Icons -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.1/font/bootstrap-icons.css" rel="stylesheet">
+
+{% load django_bootstrap5 %}
+{% bootstrap_css %}
+{% bootstrap_javascript %}
+
+    <style>
+/* Modal styles */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 9999;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgb(0,0,0);
+  background-color: rgba(0,0,0,0.4);
+  padding-top: 60px;
+}
+
+.modal-content {
+  background-color: #fefefe;
+  margin: 5% auto;
+  padding: 20px;
+  border: 1px solid #888;
+  width: 80%;
+  box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
+}
+
+.close {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+  color: black;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+/* Add more styles for form elements as needed */
+</style>
+</head>
+<body>
+<script>
+
+anychart.licenseKey("{{ anychart_key }}");
+
+
+
+fetch('https://restcountries.com/v3.1/all')
+    .then(response => response.json())
+    .then(data => {
+        // Sort the countries alphabetically
+        data.sort((a, b) => a.name.common.localeCompare(b.name.common));
+
+        // Add a blank option as the default
+        $('#countrySelector').append(new Option('', ''));
+
+        // Populate the dropdown
+        data.forEach(country => {
+            const countryName = country.name.common;
+            $('#countrySelector').append(new Option(countryName, countryName));
+        });
+    })
+    .then(() => {
+        $('#countrySelector').select2({
+            placeholder: "Select a country", // This will display the placeholder text
+            allowClear: true // This allows users to clear the selected value
+        });
+    })
+    .catch(error => {
+        console.error("There was an error fetching the country list:", error);
+    });
+</script>
+<nav class="navbar navbar-expand-lg navbar-scroll shadow-0 border-bottom border-dark rounded">
+  <div class="container-fluid d-flex justify-content-between">
+   <a class="navbar-brand" href="{% url 'OTRisk:dashboardhome' %}"><img src="{% static 'images/iota - white 1.png' %}" style="height: 140px; width: 140px" class="navbar-logo" alt="">   </a>
+      <h6 class="my-auto text-center flex-grow-1">Scenario Simulator</h6>
+        <div id="menu_dock"></div>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ms-auto">
+
+        <li class="nav-item">
+          <a class="nav-link"  style="font-size: 12px;" href="{% url 'OTRisk:qraw' %}"><i class="bi bi-journal-text"></i> Risk Assessment</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" style="font-size: 12px;" href="{% url 'OTRisk:iotaphamanager' %}"><i class="bi bi-journal-text"></i> CyberPHA</a>
+        </li>
+          <li class="nav-item">
+          <a class="nav-link" style="font-size: 12px;" href="{% url 'OTRisk:ra_actions_view_default' %}" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Actions</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" style="font-size: 12px;" href="{% url 'OTRisk:risk_register' %}" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Risk Register</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" style="font-size: 12px;" href="{% url 'OTRisk:list_frameworks' %}" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Assessments</a>
+        </li>
+        <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="font-size: 12px;">
+                <i class="bi bi-diagram-3"></i> Admin
+              </a>
+              <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                  <li><a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:admin_users' %}">Admin Users</a></li>
+                  {% if user.is_staff %}
+                    <!-- Links visible only to superusers -->
+                    <li><a class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:user_admin' %}">User Administration</a></li>
+                      <li><a class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:execute_sql' %}">Execute SQL</a></li>
+                    {% endif %}
+
+              </ul>
+
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="{% url 'accounts:profile' %}" style="font-size: 12px;">
+                <i class="bi bi-person-fill"></i> {{ user.first_name }} {{ user.last_name }} | {{ user.userprofile.organization.name }}
+            </a>
+        </li>
+
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'logout' %}">
+                <i class="bi bi-box-arrow-right"></i> Logout
+            </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+</nav>
+
+<br>
+
+
+<div class="row">
+    <div class="col-md-3"></div>
+    <div class="col-md-6">
+        <div class="form-group">
+            <!-- Existing Industry and Facility Type dropdowns -->
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="card mb-3 shadow-sm">
+                        <div class="card-body">
+                            <label for="selIndustry">Industry</label>
+                            <select class="form-control" name="selIndustry" id="selIndustry">
+                                <option value=""> -- Select Industry -- </option>
+                                {% for industry in industries %}
+                                <option value="{{ industry.Industry }}"
+                                        {% if current_pha_header.Industry == industry.Industry %}selected{% endif %}>
+                                    {{ industry.Industry }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card mb-3 shadow-sm">
+                        <div class="card-body">
+                            <label for="selFacilityType">Facility Type</label>
+                            <select class="form-control" name="selFacilityType" id="selFacilityType">
+                                <option value=""> -- Select Facility Type -- </option>
+                                {% for facilities in facilities %}
+                                    <option value="{{ facilities.FacilityType }}"
+                                    {% if current_pha_header.FacilityType == facilities.FacilityType %}selected{% endif %}>
+                                    {{  facilities.FacilityType }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card mb-3 shadow-sm">
+                        <div class="card-body">
+                            <label for="countrySelector">Country</label>
+                            <select class="form-control" id="countrySelector" name="countrySelector" ></select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- New row for additional controls -->
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="card mb-3 shadow-sm">
+                        <div class="card-body">
+                            <label for="selOrganizationSize">Organization Size</label>
+                            <select class="form-control" id="selOrganizationSize" name="selOrganizationSize">
+                                <option value=""> -- Select Organization Size -- </option>
+                                <option value="Small, 50-200 employees">Small, 50-200 employees</option>
+                                <option value="Medium-sized, 200-1000 employees">Medium-sized, 200-1000 employees</option>
+                                <option value="Large, over 1000 employees">Large, over 1000 employees</option>
+                                <option value="Multinational corporation">Multinational corporation</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card mb-3 shadow-sm">
+                        <div class="card-body">
+                            <label for="txtAssetValue">Asset Value</label>
+                            <input type="text" class="form-control" id="txtAssetValue" name="txtAssetValue" placeholder="Enter asset value">
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card mb-3 shadow-sm">
+                        <div class="card-body">
+                            <label for="selOperationalImpact">Operational Impact</label>
+                            <select class="form-control" id="selOperationalImpact" name="selOperationalImpact">
+                                <option value=""> -- Select Operational Impact -- </option>
+                                <option value="High impact">High impact</option>
+                                <option value="Moderate impact">Moderate impact</option>
+                                <option value="Low impact">Low impact</option>
+                                <option value="Significant disruption">Significant disruption</option>
+                                <option value="Negligible impact">Negligible impact</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Second new row for the last two controls, center-aligned -->
+            <div class="row justify-content-center">
+                <div class="col-md-4">
+                    <div class="card mb-3 shadow-sm">
+                        <div class="card-body">
+                            <label for="txtSecurityMeasures">Security Measures</label>
+                            <input type="text" class="form-control" id="txtSecurityMeasures" name="txtSecurityMeasures" placeholder="Describe security measures">
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card mb-3 shadow-sm">
+                        <div class="card-body">
+                            <label for="txtRegulatoryEnvironment">Regulatory Environment</label>
+                            <input type="text" class="form-control" id="txtRegulatoryEnvironment" name="txtRegulatoryEnvironment" placeholder="Enter regulatory environment">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3"></div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        // Initialize Select2 for all dropdowns
+        $('#selIndustry').select2();
+        $('#selFacilityType').select2();
+        $('#selOrganizationSize').select2();
+        $('#selOperationalImpact').select2();
+        // Add more initialization if needed
+    });
+</script>
+
+<br>
+
+<div class="row">
+    <div class="col-md-1"></div>
+    <div class="col-md-10">
+        <div class ="row" style="border: 1px solid #000000; box-shadow: 0 4px 8px rgba(0,0,0,0.1); padding: 20px; background-color: lightgrey">
+            <div class="col-md-1 d-flex justify-content-center align-items-center"></div>
+            <div class="col-md-4">
+
+                <label for="txtScenario" class="d-flex align-items-center clickable-label" data-bs-toggle="modal" data-bs-target="#scenarioBuilderModal" data-modal-id="scenarioBuilderModal" ><img src="{% static 'images/scenario.png' %}" alt="" class="align-bottom" style="max-height: 2rem; margin-left: 5px;"> &nbsp;Scenario Builder</label>
+
+                <div class="form-group">
+                    <textarea id="txtScenario" class='form-control' rows=8 placeholder='Enter a detailed cybersecurity scenario or click the link above to use the scenario builder...' style="resize: none; border: 3px #97979A; border-radius: 10px; box-shadow: inset 3px 3px 8px rgba(0, 0, 0, 0.5); padding: 20px; background-color: white"></textarea>
+                </div>
+                <div id="suggestions"></div>
+                <script>
+
+// Ensure DOM is fully loaded before executing the script
+document.addEventListener('DOMContentLoaded', function() {
+var txtScenarioElement = document.getElementById('id_txtScenario');
+if (txtScenarioElement) {
+    txtScenarioElement.addEventListener('input', function() {
+        provideSuggestions(this.value);
+    });
+}
+
+function provideSuggestions(inputText) {
+    var lowerCaseInputText = inputText.toLowerCase(); // Convert input text to lower case
+    var suggestionsDiv = document.getElementById('suggestions');
+    suggestionsDiv.innerHTML = ""; // Clear current suggestions
+
+    // Function to add suggestion messages
+    function addSuggestion(message) {
+        suggestionsDiv.innerHTML += "<p>" + message + "</p>";
+    }
+
+    // Check for various keywords and add suggestions
+    if (lowerCaseInputText.includes("malware")) {
+        addSuggestion("Consider describing the type of malware and its impact on the device.");
+    }
+    if (lowerCaseInputText.includes("plc")) {
+        addSuggestion("Include the vendor and name of the PLC if known.");
+    }
+    if (lowerCaseInputText.includes("erp")) {
+        addSuggestion("Include the name and version of the ERP system.");
+    }
+    if (lowerCaseInputText.includes("scada")) {
+        addSuggestion("Include the name and version of the SCADA system if known.");
+    }
+    if (lowerCaseInputText.includes("temperature")) {
+        addSuggestion("Include relevant temperature ranges or tolerances.");
+    }
+    if (lowerCaseInputText.includes("pressure")) {
+        addSuggestion("Include relevant pressure tolerances and ranges.");
+    }
+    if (lowerCaseInputText.includes("software")) {
+        addSuggestion("Include name and version of software if known.");
+    }
+    if (lowerCaseInputText.includes("windows")) {
+        addSuggestion("Include the version of Windows.");
+    }
+    if (lowerCaseInputText.includes("unix")) {
+        addSuggestion("Include the version of Unix.");
+    }
+    if (lowerCaseInputText.includes("sensor")) {
+        addSuggestion("Include the type of sensor and the parameters that it monitors.");
+    }
+    if (lowerCaseInputText.includes("protocol")) {
+        addSuggestion("Include information aboput the protocol used and the endpoints that are connected.");
+    }
+}
+
+
+});
+
+</script>
+            </div>
+            <div class="col-md-2 d-flex justify-content-center align-items-center flex-column">
+                <button id="analyzeScenarioBtn" class="btn btn-primary mb-2" type="button">Build Scenario >></button>
+                <div id="spinnerContainer" style="display: none;">
+                    <div class="spinner-border" role="status">
+                        <span class="sr-only">Loading...</span>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="col-md-4 border-right">
+                <label for="consequenceTable">Consequences</label>
+                <div class="form-group">
+                    <label for="txtConsequences"></label><textarea id="txtConsequences" class='form-control' rows=8 placeholder='' style="resize: none; border: 3px #97979A; border-radius: 10px; box-shadow: inset 3px 3px 8px rgba(0, 0, 0, 0.5); padding: 20px; background-color: white"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-1" style="background-color: white">
+
+        </div>
+    </div> <!-- scenario list table -->
+</div>
+<br>
+<div class="row">
+    <div class="col-md-4"></div>
+    <div class="col-md-4">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card mb-3 shadow-sm">
+                    <div class="card-body">
+                        <label for="txtBestCase">Best Case</label>
+                        <input type="text" id="txtBestCase">
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card mb-3 shadow-sm">
+                <div class="card-body">
+                    <label for="txtMostLikelyCase">Most Likely Case</label>
+                    <input type="text" id="txtMostLikelyCase">
+                </div>
+            </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card mb-3 shadow-sm">
+                <div class="card-body">
+                    <label for="txtWorstCase">Worst Case</label>
+                    <input type="text" id="txtWorstCase">
+                </div>
+            </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4"></div>
+
+</div>
+
+
+
+
+
+
+<div class="row">
+    <div class="col-md-1"></div>
+    <div class="col-md-10">
+        <span id="table_scenario"></span>
+    </div>
+    <div class="col-md-1"></div>
+</div>
+<div class="row">
+    <div class="col-md-1"></div>
+    <div class="col-md-10">
+        <div id="attack_tree" style="width:100%"></div>
+    </div>
+    <div class="col-md-1"></div>
+</div>
+<input type="hidden" id="hdnAT" name="hdnAT">
+
+<!-- Modal -->
+<div class="modal fade" id="scenarioBuilderModal" tabindex="-1" role="dialog" aria-labelledby="scenarioBuilderModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="scenarioBuilderModalLabel">OT Cybersecurity Scenario Builder</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+
+      </div>
+      <div class="modal-body">
+        <form id="scenarioForm">
+          <div class="form-group">
+            <label for="attacker">Attacker/Bad Actor:</label>
+            <input type="text" class="form-control" id="attacker" name="attacker">
+          </div>
+          <div class="form-group">
+            <label for="attackVector">Attack Vector:</label>
+            <input type="text" class="form-control" id="attackVector" name="attackVector">
+          </div>
+          <div class="form-group">
+            <label for="targetComponent">Target Component/Device:</label>
+            <input type="text" class="form-control" id="targetComponent" name="targetComponent">
+          </div>
+          <div class="form-group">
+            <label for="attackEffect">Effect of Attack:</label>
+            <input type="text" class="form-control" id="attackEffect" name="attackEffect">
+          </div>
+          <div class="form-group">
+            <label for="targetSystem">Target System/Network:</label>
+            <input type="text" class="form-control" id="targetSystem" name="targetSystem">
+          </div>
+          <div class="form-group">
+            <label for="impact">Potential Impact:</label>
+            <input type="text" class="form-control" id="impact" name="impact">
+          </div>
+          <div class="form-group">
+            <label for="motivation">Attack Motivation:</label>
+            <input type="text" class="form-control" id="motivation" name="motivation">
+          </div>
+
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn btn-primary" id="submitScenario">Submit</button>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+
+ <script>
+
+    document.getElementById('analyzeScenarioBtn').addEventListener('click', function() {
+    var scenarioText = document.getElementById('txtScenario').value;
+    let facility_type = document.getElementById('selFacilityType').value;
+    let industry = document.getElementById('selIndustry').value;
+    let organization_size = document.getElementById('selOrganizationSize').value;
+    let asset_value = document.getElementById('txtAssetValue').value;
+    let operational_impact = document.getElementById('selOperationalImpact').value;
+    let security_measures = document.getElementById('txtSecurityMeasures').value;
+    let regulatory_environment = document.getElementById('txtRegulatoryEnvironment').value;
+
+    var button = this;
+    var spinnerContainer = document.getElementById('spinnerContainer');
+    button.disabled = true;
+    spinnerContainer.style.display = 'block'; // Show the spinner
+
+    // AJAX call to analyze_sim_scenario
+    $.ajax({
+        url: "{% url 'OTRisk:analyze_sim_scenario' %}",
+        type: 'POST',
+        data: {
+            'scenario': scenarioText,
+            'industry': industry,
+            'facility_type': facility_type,
+            'csrfmiddlewaretoken': '{{ csrf_token }}'
+        },
+        success: function(response) {
+            if (response.consequence && response.consequence.length > 0) {
+                var tableContainer = document.getElementById('table_scenario');
+                var table = document.getElementById('consequencesTable');
+                if (!table) {
+                    table = document.createElement('table');
+                    table.id = 'consequencesTable';
+                    table.className = 'display dataTable';
+                } else {
+                    $('#consequencesTable').DataTable().clear().destroy();
+                    table.innerHTML = '';
+                }
+
+                var thead = document.createElement('thead');
+                var headerRow = document.createElement('tr');
+                ['Factor', 'Score', 'Narrative'].forEach(function(header) {
+                    var th = document.createElement('th');
+                    th.textContent = header;
+                    headerRow.appendChild(th);
+                });
+                thead.appendChild(headerRow);
+                table.appendChild(thead);
+
+                var tbody = document.createElement('tbody');
+                response.consequence.forEach(function(item) {
+                    var row = document.createElement('tr');
+                    Object.values(item).forEach(function(text) {
+                        var td = document.createElement('td');
+                        td.textContent = text;
+                        row.appendChild(td);
+                    });
+                    tbody.appendChild(row);
+                });
+                table.appendChild(tbody);
+                tableContainer.appendChild(table);
+
+                $(table).DataTable();
+            } else {
+                document.getElementById('table_scenario').innerHTML = '<p>No analysis available.</p>';
+            }
+        },
+        error: function(xhr, status, error) {
+            spinnerContainer.style.display = 'none';
+            button.disabled = false;
+            alert('Error: ' + error);
+        }
+    });
+
+    // AJAX call to generate_sim_attack_tree
+    $.ajax({
+        url: "{% url 'OTRisk:generate_sim_attack_tree' %}",
+        type: 'POST',
+        data: {
+            'scenario': scenarioText,
+            'csrfmiddlewaretoken': '{{ csrf_token }}'
+        },
+        success: function(attackTreeResponse) {
+            if (attackTreeResponse && !attackTreeResponse.error) {
+                document.getElementById('hdnAT').value = attackTreeResponse;
+                drawAttackTree(attackTreeResponse);
+            } else {
+                console.error('Attack tree data not available or invalid response');
+            }
+        },
+        error: function(xhr, status, error) {
+            console.error('Error fetching attack tree:', error);
+        }
+    });
+
+    // AJAX call to analyze_sim_consequences
+    $.ajax({
+        url: "{% url 'OTRisk:analyze_sim_consequences' %}",
+        type: 'POST',
+        data: {
+            'scenario': scenarioText,
+            'industry': industry,
+            'facility_type': facility_type,
+            'organization_size': organization_size,
+            'asset_value': asset_value,
+            'operational_impact': operational_impact,
+            'security_measures': security_measures,
+            'regulatory_environment': regulatory_environment,
+            'csrfmiddlewaretoken': '{{ csrf_token }}'
+        },
+        success: function(consequenceResponse) {
+            spinnerContainer.style.display = 'none'; // Hide the spinner
+            button.disabled = false;
+
+            if (consequenceResponse.consequence && consequenceResponse.consequence.trim()) {
+                document.getElementById('txtConsequences').value = consequenceResponse.consequence;
+            } else {
+                document.getElementById('txtConsequences').value = 'No consequence analysis available.';
+            }
+            document.getElementById('txtBestCase').value = consequenceResponse.best_case_cost;
+            document.getElementById('txtMostLikelyCase').value = consequenceResponse.most_likely_case_cost;
+            document.getElementById('txtWorstCase').value = consequenceResponse.worst_case_cost;
+        },
+        error: function(xhr, status, error) {
+            spinnerContainer.style.display = 'none'; // Hide the spinner
+            button.disabled = false;
+            console.error('Error fetching consequence analysis:', error);
+        }
+    });
+
+    button.disabled = false;
+});
+
+
+        function drawAttackTree(data) {
+                    var container = document.getElementById('attack_tree');
+                    var containerWidth = container.clientWidth;
+                    var svgWidth = containerWidth * 0.8; // SVG width is 80% of the container width
+                    var margin = { top: 20, right: 120, bottom: 20, left: 280 };
+                    var width = svgWidth - margin.left - margin.right; // Adjusted tree width
+                    var height = 600; // Adjust as needed
+
+                    d3.select(container).selectAll("svg").remove();
+
+                    var svg = d3.select(container).append("svg")
+                        .attr("width", "100%") // Make SVG responsive
+                        .attr("viewBox", "0 0 " + svgWidth + " " + height)
+                        .attr("height", height)
+                        .style("display", "block")
+                        .style("margin", "auto") // Center the SVG in the container
+                        .append("g")
+                        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+                    var i = 0,
+                        duration = 750,
+                        root;
+
+                    var treemap = d3.tree()
+                            .size([height, width - margin.left - margin.right])
+                            .separation(function(a, b) {
+                        return (a.parent == b.parent ? 1 : 2);
+                    });
+
+                    root = d3.hierarchy(data, function(d) { return d.children; });
+                    root.x0 = height / 2;
+                    root.y0 = 0;
+
+                    update(root);
+
+                    function update(source) {
+
+                        var treeData = treemap(root);
+
+                        var nodes = treeData.descendants(),
+                            links = treeData.descendants().slice(1);
+
+                        nodes.forEach(function(d) { d.y = d.depth * 180 });
+
+                        var node = svg.selectAll('g.node')
+                            .data(nodes, function(d) { return d.id || (d.id = ++i); });
+
+                        var nodeEnter = node.enter().append('g')
+                            .attr('class', 'node')
+                            .attr("transform", function(d) {
+                                return "translate(" + d.y + "," + d.x + ")";
+                            });
+
+                        nodeEnter.append('circle')
+                            .attr('r', 10)
+                            .style("fill", "#1f77b4"); // Changed fill color
+
+                        nodeEnter.append('text')
+                            .style("fill", "darkgray") // Changed text color
+                            .style("font-size", "14px") // Increased font size
+                            .style("font-weight", "bold") // Bold text
+                            .attr("transform", "rotate(-10)")
+                            .attr("dy", ".35em")
+                            .attr("x", function(d) {
+                                return d.children ? -13 - this.getComputedTextLength() : 13;
+                            })
+                            .attr("text-anchor", function(d) {
+                                return d.children ? "end" : "start";
+                            })
+                            .text(function(d) { return d.data.name; });
+
+                        var link = svg.selectAll('path.link')
+                            .data(links, function(d) { return d.id; });
+
+                        link.enter().insert('path', "g")
+                            .attr("class", "link")
+                            .style("stroke", "#aaa") // Changed stroke color
+                            .style("stroke-width", 1.5) // Increased stroke width
+                            .attr("stroke-opacity", 0.6) // Adjusted opacity
+                            .attr('d', function(d) {
+                                return "M" + d.y + "," + d.x
+                                    + "C" + (d.y + d.parent.y) / 2 + "," + d.x
+                                    + " " + (d.y + d.parent.y) / 2 + "," + d.parent.x
+                                    + " " + d.parent.y + "," + d.parent.x;
+                            });
+                    }
+                    var attackTreeDiv = document.getElementById('attack_tree');
+                    attackTreeDiv.style.display = 'block'; // Changed to display the tree
+                    sessionStorage.setItem('attackTreeDrawn', 'true');
+                    var attackTreeDiv = document.getElementById('attack_tree');
+
+                }
+$(document).ready(function() {
+document.addEventListener('DOMContentLoaded', (event) => {
+    var btn = document.getElementById('myBtn');
+    if (btn) {
+        btn.onclick = function() {
+            var modal = document.getElementById('scenarioBuilderModal');
+            if (modal) {
+                modal.style.display = "block";
+            } else {
+                console.error("Modal element not found");
+            }
+        };
+    } else {
+        console.error("Button element not found");
+    }
+});
+});
+
+
+        document.getElementById('submitScenario').addEventListener('click', function() {
+           var formData = {
+                'attacker' : document.getElementById('attacker').value,
+                'attackVector' : document.getElementById('attackVector').value,
+                'targetComponent' : document.getElementById('targetComponent').value,
+                'attackEffect' : document.getElementById('attackEffect').value,
+                'targetSystem' : document.getElementById('targetSystem').value,
+                'impact' : document.getElementById('impact').value,
+                'motivation' : document.getElementById('motivation').value,
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+           };
+
+    $.ajax({
+        url: "{% url 'OTRisk:generate_scenario_description' %}",
+        type: 'POST',
+        data: formData,
+        success: function(response) {
+            if (response.scenario_description) {
+                document.getElementById('txtScenario').value = response.scenario_description;
+            } else {
+                document.getElementById('txtScenario').value = 'No scenario description available.';
+            }
+            $('#scenarioBuilderModal').modal('hide');
+        },
+        error: function(xhr, status, error) {
+            console.error('Error generating scenario:', error);
+        }
+    });
+});
+
+        </script>
+</body>
+</html>

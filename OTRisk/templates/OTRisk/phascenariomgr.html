@@ -35,9 +35,6 @@
 {% bootstrap_css %}
 {% bootstrap_javascript %}
 
-
-
-
 <script>
 // Initialize sliders when the page loads
 window.onload = function() {
@@ -60,7 +57,7 @@ initSlider('uel_threat','threatLabel');
 initSlider('uel_vuln','vulnerabilityLabel');
 initSlider('uel_exposure','exposureLabel');
 
-
+sessionStorage.setItem('attackTreeDrawn', 'false');
 sessionStorage.setItem("ls", "0");
 };
 
@@ -163,6 +160,7 @@ $(function () {
 
 </script>
         <h6>Risk weightings set to <span id="facilityName2" class="text-decoration-underline text-body-emphasis" data-bs-toggle="tooltip" data-bs-placement="top" title="If the incorrect industry is displayed, return to the 'CyberPHA Manager' screen and select the 'Edit' button for this assessment from the table. Select the correct industry in the Assessment Setup form and save the record before re-selecting it to return to this screen"></span> industry</h6>
+        <h6> <span id="user_role" class="text-decoration-underline text-body-emphasis"></span></h6>
 
 
     </figure>
@@ -491,12 +489,13 @@ $(function () {
                 </button>
                 <script>
                 function drawAttackTree(data) {
+
                     var container = document.getElementById('attack_tree');
                     var containerWidth = container.clientWidth;
                     var svgWidth = containerWidth * 0.8; // SVG width is 80% of the container width
-                    var margin = { top: 20, right: 120, bottom: 20, left: 210 };
+                    var margin = { top: 20, right: 120, bottom: 20, left: 280 };
                     var width = svgWidth - margin.left - margin.right; // Adjusted tree width
-                    var height = 800; // Adjust as needed
+                    var height = 600; // Adjust as needed
 
                     d3.select(container).selectAll("svg").remove();
 
@@ -513,7 +512,11 @@ $(function () {
                         duration = 750,
                         root;
 
-                    var treemap = d3.tree().size([height, width - margin.left - margin.right]);
+                    var treemap = d3.tree()
+                            .size([height, width - margin.left - margin.right])
+                            .separation(function(a, b) {
+                        return (a.parent == b.parent ? 1 : 2);
+                    });
 
                     root = d3.hierarchy(data, function(d) { return d.children; });
                     root.x0 = height / 2;
@@ -547,9 +550,10 @@ $(function () {
                             .style("fill", "darkgray") // Changed text color
                             .style("font-size", "14px") // Increased font size
                             .style("font-weight", "bold") // Bold text
+                            .attr("transform", "rotate(-10)")
                             .attr("dy", ".35em")
                             .attr("x", function(d) {
-                                return d.children ? -13 : 13;
+                                return d.children ? -13 - this.getComputedTextLength() : 13;
                             })
                             .attr("text-anchor", function(d) {
                                 return d.children ? "end" : "start";
@@ -573,18 +577,20 @@ $(function () {
                     }
                     var attackTreeDiv = document.getElementById('attack_tree');
                     attackTreeDiv.style.display = 'block'; // Changed to display the tree
-
+                    sessionStorage.setItem('attackTreeDrawn', 'true');
                     var attackTreeDiv = document.getElementById('attack_tree')
                     attackTreeDiv.style.display = 'none';
 
                     document.getElementById('viewAttackTreeBtn').style.display = 'block';
-                    document.getElementById('exportAttackTreeBtn').style.display = 'block';
+                   // document.getElementById('exportAttackTreeBtn').style.display = 'block';
+                    //document.getElementById('closeAttackTreeBtn').style.display = 'block';
                 }
 
 
                 document.getElementById('analyzeScenarioBtn').addEventListener('click', function() {
                 var scenarioText = document.getElementById('id_txtScenario').value;
                 var phaID = document.getElementById('hdnphaID').value;
+                var attackTreeDrawn = sessionStorage.getItem('attackTreeDrawn');
                 var button = this;
                 var spinner = document.getElementById('loadingSpinner2');
                 spinner.style.display = 'inline-block';
@@ -596,6 +602,7 @@ $(function () {
                     data: {
                         'scenario': scenarioText,
                         'phaID': phaID,
+                        'attackTreeDrawn': attackTreeDrawn, // this variable is set to indicate that an attack tree is already drawn for this scenario so another one wont be processed
                         'csrfmiddlewaretoken': '{{ csrf_token }}'
                     },
                     success: function(response) {
@@ -613,9 +620,12 @@ $(function () {
                             cell1.innerHTML = item;
                             cell2.innerHTML = '<input type="checkbox" id="validate' + index + '">';
                         });
-                        document.getElementById('attack_tree_text').value = JSON.stringify(response.attack_tree);
 
-                        drawAttackTree(response.attack_tree);
+                        if (sessionStorage.getItem('attackTreeDrawn') === 'false') {
+                            document.getElementById('attack_tree_text').value = JSON.stringify(response.attack_tree);
+
+                            drawAttackTree(response.attack_tree);
+                        }
 
 
                     },
@@ -696,12 +706,19 @@ $(function () {
         <div class="row">
             <div class="col-md-12 justify-content-center align-items-center">
                 <!-- Button to View Attack Tree -->
-                <button id="viewAttackTreeBtn" class="btn btn-primary" style="display: none">View Attack Tree</button>
-                <button id="closeAttackTreeBtn" class="btn btn-secondary" style="display: none;">Close Attack Tree</button>
+                <div class="row">
+                    <div class="col-md-2">
+                    <button id="viewAttackTreeBtn" type="button" class="btn btn-link-like" style="display: none">View Attack Tree</button>
+                    </div>
+                    <div class="col-md-2">
+                    <button id="closeAttackTreeBtn" type="button" class="btn btn-link-like" style="display: none;">Close Attack Tree</button>
+                    </div>
+                    <div class="col-md-8"></div>
+                </div>
 
                 <div id="attack_tree" style="width:100%"></div>
 
-                <button id="exportAttackTreeBtn" class="btn btn-primary" style="display: none">Export as Image</button>
+                <button id="exportAttackTreeBtn" type="button" class="btn btn-primary" style="display: none">Export as Image</button>
                     <script>
                     // Existing drawAttackTree function
                     // ...
@@ -711,22 +728,25 @@ $(function () {
                         var attackTreeDiv = document.getElementById('attack_tree');
                         var viewBtn = document.getElementById('viewAttackTreeBtn');
                         var closeBtn = document.getElementById('closeAttackTreeBtn');
+                        var printBtn = document.getElementById('exportAttackTreeBtn');
 
                         if (attackTreeDiv.style.display === 'none') {
                             attackTreeDiv.style.display = 'block';
                             viewBtn.style.display = 'none';
                             closeBtn.style.display = 'inline-block';
+                            printBtn.style.display = 'inline-block';
                         } else {
                             attackTreeDiv.style.display = 'none';
                             viewBtn.style.display = 'inline-block';
                             closeBtn.style.display = 'none';
+                            printBtn.style.display = 'none';
                         }
                     }
 
                     // Event listeners for the buttons
                     document.getElementById('viewAttackTreeBtn').addEventListener('click', toggleAttackTree);
                     document.getElementById('closeAttackTreeBtn').addEventListener('click', toggleAttackTree);
-                     document.getElementById('exportAttackTreeBtn').addEventListener('click', exportAsImage); // Attach export function
+                    document.getElementById('exportAttackTreeBtn').addEventListener('click', exportAsImage); // Attach export function
 
                     function exportAsImage() {
                         // converts the attack tree to a png file
@@ -748,6 +768,9 @@ $(function () {
 
                         img.onload = function() {
                             // Draw the image onto the canvas
+                            context.fillStyle = "#ffffff";  // Set fill style to white color
+                            context.fillRect(0, 0, canvas.width, canvas.height);  // Fill the canvas with white
+
                             context.drawImage(img, 0, 0);
 
                             // Convert canvas to an image and download it
@@ -913,7 +936,23 @@ $(function () {
                 </div>
             </div>
         </div>
+            <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+        <div class="card-body">
+            <div id="scenarioStatus">
+                <label for="scenarioStatusSelect" class="form-label">Scenario Status</label>
+                <select class="form-select" id="scenarioStatusSelect" name="scenario_status">
+                    <option value="0">---Select Scenario Status---</option>
+                    {% for status, status_display in scenario_status %}
+                    <option value="{{ status }}">{{ status_display }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
     </div>
+
+    </div>
+
+
 
     <div class="col-md-5 risk-assessment-container" style="border: 1px solid #000000; box-shadow: 0 4px 8px rgba(0,0,0,0.1); padding: 20px; background-color: lightgrey" >
     <p></p>
@@ -1715,6 +1754,7 @@ makeDraggable(document.getElementById("floatingContainer"));
                   const outage = outageSelector.value === "yes" ? "yes" : "no";
                   const compliance_map = document.getElementById('compliance_map').value;
                   const attack_tree_text = document.getElementById('attack_tree_text').value;
+                  const scenario_status = document.getElementById('scenarioStatusSelect').value;
 
                   // If outage is "yes", get the values for outageDuration and outageCost
                   let outageDuration = 0;
@@ -1814,6 +1854,7 @@ makeDraggable(document.getElementById("floatingContainer"));
                   formData.append('ai_bia_score', bia_score);
                   formData.append('compliance_map', compliance_map);
                   formData.append('attack_tree_text', attack_tree_text);
+                  formData.append('scenario_status', scenario_status);
                     // Check if snapshot should be created
                   let snapshot = 0
                   const riskSnapshotCheckbox = document.getElementById('risk_snapshot');
@@ -2511,55 +2552,55 @@ $(document).ready(function() {
                             <div class="row justify-content-center">
                                 <div class="col-md-4">
                                     <label for="safetyMitigation">Safety: <span id="safetyMitigationValue"></span></label>
-                                    <input type="range" class="form-control custom-range" id="safetyMitigation" name="safetyMitigation" min="0" max="100" value="50">
+                                    <input type="range" class="form-control custom-range" id="safetyMitigation" name="safetyMitigation" min="0" max="100" value="0">
                                 </div>
                                 <div class="col-md-4">
                                     <label for="lifeMitigation">Life: <span id="lifeMitigationValue"></span></label>
-                                    <input type="range" class="form-control custom-range" id="lifeMitigation" name="lifeMitigation" min="0" max="100" value="50">
+                                    <input type="range" class="form-control custom-range" id="lifeMitigation" name="lifeMitigation" min="0" max="100" value="0">
                                 </div>
                                 <div class="col-md-4">
                                     <label for="productionMitigation">Production: <span id="productionMitigationValue"></span></label>
-                                    <input type="range" class="form-control custom-range" id="productionMitigation" name="productionMitigation" min="0" max="100" value="50">
+                                    <input type="range" class="form-control custom-range" id="productionMitigation" name="productionMitigation" min="0" max="100" value="0">
                                 </div>
                             </div>
                             <div class="row justify-content-center mt-4">
                                 <div class="col-md-4">
                                     <label for="financeMitigation">Finance: <span id="financeMitigationValue"></span></label>
-                                    <input type="range" class="form-control custom-range" id="financeMitigation" name="financeMitigation" min="0" max="100" value="50">
+                                    <input type="range" class="form-control custom-range" id="financeMitigation" name="financeMitigation" min="0" max="100" value="0">
                                 </div>
 
                                 <div class="col-md-4">
                                     <label for="reputationMitigation">Reputation: <span id="reputationMitigationValue"></span></label>
-                                    <input type="range" class="form-control custom-range" id="reputationMitigation" name="reputationMitigation" min="0" max="100" value="50">
+                                    <input type="range" class="form-control custom-range" id="reputationMitigation" name="reputationMitigation" min="0" max="100" value="0">
                                 </div>
                                 <div class="col-md-4">
                                     <label for="environmentMitigation">Environment: <span id="environmentMitigationValue"></span></label>
-                                    <input type="range" class="form-control custom-range" id="environmentMitigation" name="environmentMitigation" min="0" max="100" value="50">
+                                    <input type="range" class="form-control custom-range" id="environmentMitigation" name="environmentMitigation" min="0" max="100" value="0">
                                 </div>
                             </div>
                             <div class="row justify-content-center mt-4">
                                 <div class="col-md-4">
                                     <label for="regulationMitigation">Regulation: <span id="regulationMitigationValue"></span></label>
-                                    <input type="range" class="form-control custom-range" id="regulationMitigation" name="regulationMitigation" min="0" max="100" value="50">
+                                    <input type="range" class="form-control custom-range" id="regulationMitigation" name="regulationMitigation" min="0" max="100" value="0">
                                 </div>
                                 <div class="col-md-4">
                                     <label for="dataMitigation">Data: <span id="dataMitigationValue"></span></label>
-                                    <input type="range" class="form-control custom-range" id="dataMitigation" name="dataMitigation" min="0" max="100" value="50">
+                                    <input type="range" class="form-control custom-range" id="dataMitigation" name="dataMitigation" min="0" max="100" value="0">
                                 </div>
 
                                 <div class="col-md-4">
                                     <label for="supplyMitigation">Supply: <span id="supplyMitigationValue"></span></label>
-                                    <input type="range" class="form-control custom-range" id="supplyMitigation" name="supplyMitigation" min="0" max="100" value="50">
+                                    <input type="range" class="form-control custom-range" id="supplyMitigation" name="supplyMitigation" min="0" max="100" value="0">
                                 </div>
                             </div>
                             <div class="row justify-content-center mt-4">
                                 <div class="col-md-4">
                                     <label for="threatMitigation">Threat: <span id="threatMitigationValue"></span></label>
-                                    <input type="range" class="form-control custom-range" id="threatMitigation" name="threatMitigation" min="0" max="100" value="50">
+                                    <input type="range" class="form-control custom-range" id="threatMitigation" name="threatMitigation" min="0" max="100" value="0">
                                 </div>
                                 <div class="col-md-4">
                                     <label for="vulnerabilityMitigation">Vulnerability: <span id="vulnerabilityMitigationValue"></span></label>
-                                    <input type="range" class="form-control custom-range" id="vulnerabilityMitigation" name="vulnerabilityMitigation" min="0" max="100" value="50">
+                                    <input type="range" class="form-control custom-range" id="vulnerabilityMitigation" name="vulnerabilityMitigation" min="0" max="100" value="0">
                                 </div>
                             </div>
                             <script>
@@ -3519,6 +3560,10 @@ function resetformcontrols() {
   }).then((isConfirmed) => {
     if (isConfirmed) {
       // Reset form fields here
+      sessionStorage.setItem('attackTreeDrawn', 'false');
+      document.getElementById('viewAttackTreeBtn').style.display = 'none';
+      document.getElementById('exportAttackTreeBtn').style.display = 'none';
+      document.getElementById('closeAttackTreeBtn').style.display = 'none';
       document.getElementById('id_txtScenario').value = '';
       document.getElementById('exposed_system').checked = false;
       document.getElementById('weak_credentials').checked = false;
@@ -3590,7 +3635,6 @@ function resetformcontrols() {
       sessionStorage.setItem('ls', '0');
       sessionStorage.setItem('sid', 0);
 
-
       try {
         clearVulnerabilityTable();
       } catch (error) {
@@ -3602,10 +3646,18 @@ function resetformcontrols() {
 
 
  function fillScenario(scenarioId) {
-     sessionStorage.setItem('sid', scenarioId);
+    sessionStorage.setItem('sid', scenarioId);
 
+    sessionStorage.setItem('attackTreeDrawn', 'false');
+    document.getElementById('viewAttackTreeBtn').style.display = 'none';
+    document.getElementById('exportAttackTreeBtn').style.display = 'none';
+    document.getElementById('closeAttackTreeBtn').style.display = 'none';
+
+    var container = document.getElementById('attack_tree');
+    container.innerHTML = '';
     // Send a GET request to the getSingleScenario view
     $.get("{% url 'OTRisk:getSingleScenario' %}", { id: scenarioId }, function(data) {
+
          if (data.risk_register === true) {
             sessionStorage.setItem("ls", "1");
             $('#risk_register').prop('checked', true);
@@ -3625,12 +3677,13 @@ function resetformcontrols() {
 
 
          $('#risk-category').val(data.RiskCategory);
+         $('#risk-category').val(data.RiskCategory);
          $('#range_safety').val(data.impactSafety);
          $('#range_life').val(data.impactDanger);
          $('#range_production').val(data.impactProduction);
          $('#range_finance').val(data.impactFinance);
          $('#range_reputation').val(data.impactReputation);
-         $('#range_environment').val(data.impactEnvironment);
+         $('#scenarioStatusSelect').val(data.scenario_status);
 
          $('#env_contaminant').val(data.env_contaminant);
          $('#env_ecosystem').val(data.env_ecosystem);
@@ -3657,7 +3710,7 @@ function resetformcontrols() {
         $('#rru_range').val(data.RRU);
         $('#frequency').val(data.frequency);
         $('#has_controls').val(data.has_controls);
-
+        document.getElementById('user_role').textContent = data.user_role;
 
         $('#sle').val(data.sle);
 
@@ -3825,11 +3878,23 @@ function resetformcontrols() {
         $('#outageCost').val(data.prodOutageCost);
 
         loadVulnerabilityTable(scenarioId);
-
+        if (data.user_role === 'Scenario Moderator') {
+            disableScenarioControls();
+        }
          });
 
     }
 
+    function disableScenarioControls() {
+    // Disable all input, textarea, button, and select elements except those specified
+    $('input, textarea, button, select').not('#scenarioStatusSelect, button[onclick="processFormData()"]').prop('disabled', true);
+
+    // Additionally, hide or disable other elements as needed
+    // For example, to hide specific buttons:
+    // $('#someButtonId').hide();
+    // Or to disable specific buttons:
+    // $('#someButtonId').prop('disabled', true);
+}
 function updaterSliderColor(slider) {
     let value = parseInt(slider.value);
     let max = parseInt(slider.max);

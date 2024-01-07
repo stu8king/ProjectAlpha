@@ -11,7 +11,8 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.models import User
 from django.contrib.sessions.models import Session
-from django.db.models import Q
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
+from django.db.models import Q, F
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse
@@ -19,10 +20,11 @@ from django.utils import timezone
 from django.core.mail import send_mail
 import string
 import random
-
+import phonenumbers
 from django.views.decorators.csrf import csrf_exempt
 
 from accounts.models import UserProfile, SubscriptionType, Organization, LoginAttempt, ActiveUserSession
+from OTRisk.models.Model_CyberPHA import auditlog, APIKey
 from .forms import CustomUserCreationForm, PasswordChangeForm, SetPasswordForm, \
     SubscriptionForm
 from django.contrib.auth.tokens import default_token_generator
@@ -43,8 +45,39 @@ import pyotp
 import qrcode
 from django.core.mail import send_mail
 from django import forms
+from twilio.rest import Client
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
+
+
+def send_verification_code_bak(phone_number):
+    twilio_sid = get_api_key('twilliosid')
+    twilio_token = get_api_key('twilliotoken')
+    twilio_number = get_api_key('twillionumber')
+    messaging_service_sid = get_api_key('twillio_message_sid')
+    code = random.randint(100000, 999999)  # Generate a 6-digit code
+    client = Client(twilio_sid, twilio_token)
+    message = client.messages.create(
+        body=f"Your AnzenOT verification code is: {code}",
+        messaging_service_sid=messaging_service_sid,
+        from_=twilio_number,
+        to=phone_number
+    )
+    return code
+
+
+def send_verification_code(phone_number):
+    twilio_sid = get_api_key('twilliosid')
+    twilio_token = get_api_key('twilliotoken')
+    verify_service_sid = get_api_key('twilio_verify_service_sid')  # Your Twilio Verify Service SID
+
+    client = Client(twilio_sid, twilio_token)
+    verification = client.verify \
+        .services(verify_service_sid) \
+        .verifications \
+        .create(to=phone_number, channel='sms')  # 'sms' can be replaced with 'call' or other supported channels
+
+    return verification.sid  # Optionally return verification SID for tracking
 
 
 def two_factor_setup(request):
@@ -57,14 +90,59 @@ def two_factor_setup(request):
             key = TOTPDevice.objects.create(user=request.user, name='default', confirmed=False)
             # Send key to user's phone
             # ...
-            return redirect('two_factor_verify')
+            return redirect('accounts/two_factor_verify')
     else:
         form = TwoFactorSetupForm()
     return render(request, 'accounts/two_factor_setup.html', {'form': form})
 
 
-@csrf_exempt
+# views.py
+
+from twilio.rest import Client
+
+
 def two_factor_verify(request):
+    if request.method == 'POST':
+        form = TwoFactorVerifyForm(request.POST)
+        if form.is_valid():
+            token = form.cleaned_data['token']
+            phone_number = request.user.userprofile.phone_number
+
+            # Twilio setup
+            twilio_sid = get_api_key('twilliosid')
+            twilio_token = get_api_key('twilliotoken')
+            verify_service_sid = get_api_key('twilio_verify_service_sid')
+
+            client = Client(twilio_sid, twilio_token)
+
+            # Verify the token
+            try:
+                verification_check = client.verify \
+                    .services(verify_service_sid) \
+                    .verification_checks \
+                    .create(to=phone_number, code=token)
+
+                if verification_check.status == "approved":
+                    # Token is valid
+                    messages.success(request, "2FA verification successful!")
+                    return redirect('OTRisk:dashboardhome')
+                else:
+                    # Token is invalid
+                    messages.error(request, "Invalid token. Please try again.")
+            except Exception as e:
+                messages.error(request, f"Error during verification: {e}")
+
+        else:
+            messages.error(request, "Invalid form submission.")
+
+    else:
+        form = TwoFactorVerifyForm()
+
+    return render(request, 'accounts/verify_2fa.html', {'form': form})
+
+
+@csrf_exempt
+def two_factor_verify_bak(request):
     if request.method == 'POST':
 
         form = TwoFactorVerifyForm(request.POST)
@@ -76,6 +154,8 @@ def two_factor_verify(request):
                 user = User.objects.get(email=request.user)
 
                 device = TOTPDevice.objects.get(user=user.id)
+
+                write_to_audit(user, 'Verify 2FA', get_client_ip(request))
 
                 if device.verify_token(token):
 
@@ -267,6 +347,41 @@ def setup_2fa(request):
     if not request.user.is_authenticated:
         return redirect('accounts:login')
 
+    if request.method == 'POST':
+        form = TwoFactorSetupForm(request.POST)
+        if form.is_valid():
+            phone_number = form.cleaned_data['phone_number']
+
+            # Validate the phone number format
+            try:
+                parsed_number = phonenumbers.parse(phone_number)
+                if not phonenumbers.is_valid_number(parsed_number):
+                    raise ValidationError("Invalid phone number format")
+
+                phone_number = phonenumbers.format_number(parsed_number, phonenumbers.PhoneNumberFormat.E164)
+
+                # Send verification code to the user's phone
+                code = send_verification_code(phone_number)
+                request.session['verification_code'] = code
+                request.session['phone_number'] = phone_number
+                return redirect('accounts:two_factor_verify')
+            except phonenumbers.NumberParseException:
+                form.add_error('phone_number', 'Invalid phone number format')
+            except ValidationError as e:
+                form.add_error('phone_number', str(e))
+            except Exception as e:
+                messages.error(request, f"Error sending verification code: {e}")
+
+    else:
+        form = TwoFactorSetupForm()
+
+    return render(request, 'accounts/setup_2fa.html', {'form': form})
+
+
+def setup_2fa_bak(request):
+    if not request.user.is_authenticated:
+        return redirect('accounts:login')
+
     # Check if the user already has a TOTPDevice set up and confirmed
     if TOTPDevice.objects.filter(user=request.user, confirmed=True).exists():
         messages.info(request, "2FA is already set up for your account.")
@@ -342,28 +457,39 @@ def verify_2fa(request):
 
 @csrf_exempt
 def login_view(request):
+    MAX_ATTEMPTS = 5
     if request.method == 'POST':
         form = AuthenticationForm(request, data=request.POST)
-        ip = get_client_ip(request)
-
+        ip = get_client_ip(request)  # Assuming get_client_ip is a function you have defined
+        username = request.POST.get('username')
         if form.is_valid():
             user = form.get_user()
             login(request, user)
             user_profile = UserProfile.objects.get(user=user)
+            write_to_audit(user, 'Logged in', ip)  # Assuming write_to_audit is a function you have defined
+            user_profile.failed_login_attempts = 0
+            user_profile.save()
             if user_profile.must_change_password:
                 request.session['user_id_for_password_change'] = user.id
                 return redirect('accounts:password_change', user_id=user.id)
 
             # Check if the user has 2FA set up and confirmed
-            if TOTPDevice.objects.filter(user=user, confirmed=True).exists():
-                # Store the user's ID in the session for 2FA verification
-                request.session['pre_2fa_user_id'] = user.id
-                # Redirect to 2FA verification
-                return redirect('accounts:two_factor_verify')
+            if user_profile.two_factor_confirmed:
+                try:
+                    # Send 2FA code via SMS
+                    verification_sid = send_verification_code(user_profile.phone_number)
+                    # Store the verification SID in the session for tracking (optional)
+                    ### request.session['verification_sid'] = verification_sid
+                    ### code = send_verification_code(user_profile.phone_number)
+                    #### request.session['verification_code'] = code
+                    return redirect('accounts:two_factor_verify')
+                except Exception as e:
+                    messages.error(request, f"Error sending verification code: {e}")
+                    # Log the error
+                    write_to_audit(user, f'Error sending verification code: {e}', ip)
             else:
                 # If the user hasn't set up 2FA, redirect them to the setup page
                 return redirect('accounts:setup_2fa')
-
         else:
             messages.error(request, 'Invalid login credentials.')
             # Record failed login attempt
@@ -372,57 +498,24 @@ def login_view(request):
                 was_successful=False,
                 reason="Invalid credentials"
             )
+            write_to_audit(None, 'Failed login - Invalid credentials', ip)
 
-    else:
-        form = AuthenticationForm()
-    return render(request, 'accounts/home.html', {'form': form})
-
-
-def login_view_bak(request):
-    if request.method == 'POST':
-        form = AuthenticationForm(request, data=request.POST)
-        ip = get_client_ip(request)
-
-        if form.is_valid():
-            user = form.get_user()
-
-            login(request, user)
-            # Add a new record to ActiveUserSession
-            ## ActiveUserSession.objects.create(user=user, session_key=request.session.session_key)
-
-            # Record successful login attempt
-            LoginAttempt.objects.create(
-                user=user,
-                ip_address=ip,
-                was_successful=True
-            )
-
-            # Set organization details in session
             try:
-                user_profile = UserProfile.objects.get(user=user)
-                organization_name = user_profile.organization.name
-                request.session['organization_id'] = user_profile.organization.id
-                request.session['organization_name'] = organization_name
-                if user_profile.must_change_password:
-                    return redirect('accounts:password_change')
+                user_profile = UserProfile.objects.get(user__username=username)
+                user_profile.failed_login_attempts += 1
+                user_profile.save()
 
-                return redirect('OTRisk:dashboardhome')
+                # Check if failed attempts exceed max limit
+                if user_profile.failed_login_attempts >= MAX_ATTEMPTS:
+                    user_profile.user.is_active = False
+                    user_profile.user.save()
+                    messages.error(request, 'Your account has been locked due to too many failed login attempts.')
             except UserProfile.DoesNotExist:
-                messages.error(request, 'UserProfile does not exist for this user.')
-                return redirect('accounts:login')
-
-        else:
-            messages.error(request, 'Invalid login credentials.')
-
-            # Record failed login attempt
-            LoginAttempt.objects.create(
-                ip_address=ip,
-                was_successful=False,
-                reason="Invalid credentials"
-            )
-
+                # Handle case where the user profile does not exist
+                pass
     else:
         form = AuthenticationForm()
+
     return render(request, 'accounts/home.html', {'form': form})
 
 
@@ -703,3 +796,29 @@ def get_organization_details(request):
     }
 
     return data
+
+
+def write_to_audit(user_id, user_action, user_ip):
+    try:
+        user_profile = UserProfile.objects.get(user=user_id)
+
+        audit_log = auditlog(
+            user=user_id,
+            timestamp=timezone.now(),
+            user_action=user_action,
+            user_ipaddress=user_ip,
+            user_profile=user_profile
+        )
+        audit_log.save()
+    except UserProfile.DoesNotExist:
+        # Handle the case where UserProfile does not exist for the user
+        pass
+
+
+def get_api_key(service_name):
+    try:
+        key_record = APIKey.objects.get(service_name=service_name)
+        return key_record.key
+    except ObjectDoesNotExist:
+        # Handle the case where the key is not found
+        return None

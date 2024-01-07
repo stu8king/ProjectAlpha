@@ -5,8 +5,9 @@
 <head>
 <title>iOTa</title>
     <link rel="icon" href="{% static 'images/iota - white 1.png' %}" type="image/x-icon">
+    <link rel="stylesheet" type="text/css" href="{%  static 'css/qraw.css' %}">
 <!-- Bootstrap CSS -->
-<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css">
+
 
 <!-- Bootstrap Select CSS -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.1/css/bootstrap-select.min.css">
@@ -39,343 +40,6 @@
  {% bootstrap_javascript %}
 
  <title>Risk Assessment Worksheet</title>
-
-  <style>
-      .notification-message {
-    position: fixed; /* or absolute */
-    top: 20px; /* Distance from top */
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 1000; /* Ensure it's above other elements */
-    display: none;
-    padding: 10px 20px;
-    background-color: #4CAF50; /* Green for success */
-    color: white;
-    border-radius: 5px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    animation: fadeOut 5s ease 3s forwards; /* fades out after 3 seconds, total 5s animation */
-}
-
-.notification-message.error {
-    background-color: #f44336; /* Red for error */
-}
-
-@keyframes fadeOut {
-    to {
-        opacity: 0;
-        visibility: hidden;
-    }
-}
-
-/* Apply a border, padding, and shadow to the modal */
-.modal-content {
-    border: 2px solid black; /* Solid black border */
-    border-radius: 5px; /* Slightly rounded corners for a modern look */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
-    font-family: 'Arial', sans-serif; /* Modern font */
-}
-
-/* Style the modal header to stand out */
-.modal-header {
-    background-color: #f8f9fa; /* Light background for the header */
-    border-bottom: 1px solid #dee2e6; /* Separation line */
-}
-
-/* Style the title */
-.modal-title {
-    color: #333; /* Dark text for contrast */
-    font-weight: bold;
-}
-
-/* Style the buttons for better visual appeal */
-.btn-close, .btn-secondary {
-    border-color: #333; /* Matching border color */
-}
-
-/* Style the labels and inputs for a cleaner look */
-.modal-body label {
-    display: block; /* Ensure labels are on their own line */
-    margin-bottom: .5rem; /* Spacing below labels */
-    color: #495057; /* Slightly darker text for readability */
-    font-weight: bold; /* Make labels bold */
-}
-
-.modal-body .form-control {
-    margin-bottom: 1rem; /* Spacing below inputs */
-    border: 1px solid #ced4da; /* Matching border for inputs */
-}
-
-/* Style the textarea */
-textarea.form-control {
-    height: auto; /* Adjust height based on content */
-}
-
-/* Enhance radio buttons and select dropdown for better UX */
-.form-check-input {
-    margin-right: .5rem; /* Space between radio button and label */
-}
-
-select.form-control {
-    appearance: none; /* Remove default styling */
-    background-position: right .75rem center; /* Position for custom arrow */
-    background-repeat: no-repeat;
-    padding-right: 2.25rem; /* Make space for custom arrow */
-}
-
-/* Add padding to the modal body for better spacing */
-.modal-body {
-    padding: 20px;
-}
-
-
-.risk-slider {
-    appearance: none;
-    width: 100%;
-    height: 15px;
-    border-radius: 5px;
-    background: #d3d3d3;
-    outline: none;
-    opacity: 0.7;
-    transition: opacity .2s;
-
-}
-
-.risk-slider::-webkit-slider-thumb {
-    appearance: none;
-    width: 40px;
-    height: 15px;
-    border-radius: 3px;
-    background: green;
-    cursor: pointer;
-    transition: background .2s;
-     background: var(--thumb-color, grey);  // default to green if --thumb-color is not set
-}
-
-.risk-slider::-moz-range-thumb {
-    width: 40px;
-    height: 15px;
-    border-radius: 3px;
-    background: green;
-    cursor: pointer;
-    transition: background .2s;
-    background: var(--thumb-color, grey);  // default to green if --thumb-color is not set
-}
-
-    .slider {
-        -webkit-appearance: none;
-        width: 100%;
-        height: 15px;
-        background: linear-gradient(to right, green, yellow, red);
-        outline: none;
-        border: 3px solid rgba(77, 127, 192, 0.75);
-        border-radius: 4px;
-    }
-
-    .slider::-webkit-slider-thumb {
-        -webkit-appearance: none;
-        appearance: none;
-        width: 15px;
-        height: 40px;
-        background: rgba(77, 127, 192, 0.75);
-        cursor: pointer;
-        border: 3px solid rgba(77, 127, 192, 0.75);
-        border-radius: 4px;
-    }
-
-    .slider::-moz-range-thumb {
-        width: 20px;
-        height: 60px;
-        background: #000;
-        cursor: pointer;
-        border: 5px solid lawngreen;
-        border-radius: 4px;
-    }
-
-    /* for Firefox track */
-    .slider::-moz-range-track {
-        background: linear-gradient(to right, green, yellow, red);
-    }
-.highlighted {
-background-color: #f3dc47 !important;
-color: white !important;
-}
-
-   .selectable-row:hover {
-    cursor: pointer;
-    background-color: #f5f5f5;  /* Optional: to give a slight background change on hover */
-}
-
-      .green-circle {
-    display: inline-block;
-    width: 12px;
-    height: 12px;
-    background-color: green;
-    border-radius: 50%;
-    margin-right: 5px;
-}
-
-.orange-circle {
-    display: inline-block;
-    width: 12px;
-    height: 12px;
-    background-color: orange;
-    border-radius: 50%;
-    margin-right: 5px;
-}
-
-.red-circle {
-    display: inline-block;
-    width: 12px;
-    height: 12px;
-    background-color: red;
-    border-radius: 50%;
-    margin-right: 5px;
-}
-
-    .small-font {
-        font-size: 0.8rem; /* adjust as needed */
-   }
-
-    .navbar-scroll .nav-link,
-    .navbar-scroll .navbar-toggler-icon,
-    .navbar-scroll .navbar-brand {
-      color: #000000;
-    }
-
-    /* Color of the navbar BEFORE scroll */
-    .navbar-scroll {
-      background-color: #FFFFFF;
-        text-decoration-color: #000000;
-    }
-
-
-    /* Color of the links AFTER scroll */
-    .navbar-scrolled .nav-link,
-    .navbar-scrolled .navbar-toggler-icon,
-    .navbar-scroll .navbar-brand {
-      color: #262626;
-    }
-
-    .navbar-logo {
-    position: absolute;
-    top: 5px; /* Adjust this as needed */
-    left: 5; /* Adjust this as needed */
-    height: 100px; /* Adjust this as needed */
-    z-index: 10;
-}
-
-    #rawtable tbody tr:hover {
-        background-color: #f5f5f5; /* Change this to the color you want */
-    }
-
-
-        .tab-content {
-          border: 1px solid #dee2e6;
-          border-top: transparent;
-          padding: 15px;
-        }
-
-        .tab-content .tab-pane {
-          background-color: #FFF;
-          color: #0080FF;
-          min-height: 300px;
-          height: auto;
-        }
-
-.custom-bg {
-    background-color: lightgrey;
-
-
-}
-.form-label {
-    border: none;
-    background-color: transparent;
-    outline: none;
-    cursor: default;
-    font-weight: normal;
-    color: black;
-    padding: 0;
-    margin: 0;
-}
-
-.nav-tabs .nav-link.active {
-    font-weight: bold;
-}
-
-#rawtable tbody tr:hover {
-            cursor: pointer;
-        }
-
-.cursor-pointer {
-    cursor: pointer;
-}
-
-.body {
-
-    font-size: 10px;
-}
-
-.switch {
-  position: relative;
-  display: inline-block;
-  width: 60px;
-  height: 34px;
-}
-
-.switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-
-.slider1 {
-  position: absolute;
-  cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: #ccc;
-  -webkit-transition: .4s;
-  transition: .4s;
-}
-
-.slider1:before {
-  position: absolute;
-  content: "";
-  height: 26px;
-  width: 26px;
-  left: 4px;
-  bottom: 4px;
-  background-color: white;
-  -webkit-transition: .4s;
-  transition: .4s;
-}
-
-input:checked + .slider1 {
-  background-color: #2196F3;
-}
-
-input:focus + .slider1 {
-  box-shadow: 0 0 1px #2196F3;
-}
-
-input:checked + .slider1:before {
-  -webkit-transform: translateX(26px);
-  -ms-transform: translateX(26px);
-  transform: translateX(26px);
-}
-
-/* Rounded sliders */
-.slider1.round {
-  border-radius: 34px;
-}
-
-.slider1.round:before {
-  border-radius: 50%;
-}
-    </style>
-
 
 </head>
     <!-- Initialize sliders when the page loads -->
@@ -743,25 +407,28 @@ input:checked + .slider1:before {
 <div class="row">
     <div class="col-md-1 bg-white"></div>
 
-    <div class="col-md-10 border border-dark shadow small-font">
+    <div class="col-md-10 border shadow small-font">
+        <div class="row">
+            <div class="col" style="height:10px"></div>
+        </div>
         <div class="row">
             <div class="col-md-4">
                 <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                     <div class="card-body">
                         <label for="txtTitle" >Risk Assessment Title</label>
-                        <input type="text" class="form-control" name="txtTitle" id="txtTitle" required/>
+                        <input type="text" class="form-control" name="txtTitle" id="txtTitle" placeholder="Enter a title for this risk assessment" maxlength="50" required/>
                     </div>
                 </div>
                 <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                     <div class="card-body">
                         <label for="txtBU">Business Unit</label>
-                        <input type="text" class="form-control" name="txtBU" id="txtBU" required>
+                        <input type="text" class="form-control" name="txtBU" id="txtBU" placeholder="Enter a name for the business unit or facility for this risk assessment" maxlength="50" required>
                     </div>
                 </div>
                 <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                     <div class="card-body">
                         <label for="txtLeader">Assessment Leader</label>
-                        <input type="text" class="form-control" name="txtLeader" id="txtLeader" required>
+                        <input type="text" class="form-control" name="txtLeader" id="txtLeader" placeholder="Enter the name of the person leading this risk assessment" maxlength="50" required>
                     </div>
                 </div>
                 <br>
@@ -898,7 +565,9 @@ input:checked + .slider1:before {
    </div>
     <div class="col-md-1 bg-white"></div>
 </div> <!-- white stripe -->
-
+<div class="row">
+            <div class="col" style="height:10px"></div>
+        </div>
 <div class="row">
     <div class="col-md-1 bg-white"></div>
 
@@ -921,22 +590,66 @@ input:checked + .slider1:before {
             <a class="nav-link " id="scenario5-tab" data-bs-toggle="tab" href="#scenario5" style="background-color: #007849; color: #ffffff;">Scenario 5</a>
         </li>
     </ul>
+    <script type="text/javascript">
+    document.addEventListener('DOMContentLoaded', function() {
+        // Attach event listener to each nav-link
+        document.querySelectorAll('.nav-link').forEach(function(tab) {
+            tab.addEventListener('show.bs.tab', function(event) {
+                // Get the background color of the clicked tab
+                var bgColor = event.target.style.backgroundColor;
+
+                // Set the background color of tab-content
+                document.querySelector('.tab-content').style.backgroundColor = bgColor;
+            });
+        });
+    });
+</script>
 
 
       <div class="tab-content">
-        <div class="tab-pane active" id="scenario1">
+        <div class="tab-pane active" id="scenario1" >
             <div class="row">
             <div class="col-md-4 small-font">
                <!-- tab 1 left column -->
                 <input type="hidden" name="hdnScenarioID_1" id="hdnScenarioID_1">
-              <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                <div class="card-body">
-                    <label for="txtScenarioDescription_1" class="form-control border-0 align-text-bottom small-font cursor-pointer" data-bs-toggle="modal" data-bs-target="#scenarioModal"><i class="bi bi-mouse2"></i> Scenario Description (click for table)</label>
-                    <textarea class="form-control small-font" name="txtScenarioDescription_1" id="txtScenarioDescription_1" rows="3" style="resize: none; word-wrap: normal" onchange="setRiskAssessmentRefreshRequired(1)"></textarea>
-                </div>
+                <div class="card mb-3 shadow-sm">
+                    <div class="card-body">
+                        <div class="spinner-container" style="position: relative;">
+                            <label for="txtScenarioDescription_1" class="form-control border-0 align-text-bottom small-font cursor-pointer" ><i class="bi bi-mouse2"></i> Scenario Description</label>
+                            <textarea class="form-control small-font" name="txtScenarioDescription_1" id="txtScenarioDescription_1" rows="3" style="resize: none; word-wrap: normal" placeholder="Enter a concise and descriptive scenario" onchange="setRiskAssessmentRefreshRequired(1)" onblur="analyze_Scenario(1)"></textarea>
+                            <div class="educational-resources">
+                                <a href="#" class="link-to-resource" data-bs-toggle="modal" data-bs-target="#scenarioModal">Cybersecurity Scenario Guidelines</a>
+                            </div>
+                            <div class="spinner-overlay_1" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255, 255, 255, 0.7); display: none; justify-content: center; align-items: center;">
+                                <div class="spinner-border" role="status">
+                                    <span class="sr-only">Analyzing...</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="lock_scenario_1" onchange="toggleLockScenario()">
+                            <label class="form-check-label" for="lock_scenario_1">
+                                Lock Scenario
+                            </label>
+                        </div>
+
+                        <label for="txtScenarioAnalysis_1" class="small-font" style="visibility: hidden">Recommendations will align with selected standards:</label>
+                        <textarea id="txtScenarioAnalysis_1" name="txtScenarioAnalysis_1" class="form-control small-font"  rows="5" style="resize: none; word-wrap: normal" readonly></textarea>
+
+                        <script>
+                        function toggleLockScenario() {
+                            var checkbox = document.getElementById('lock_scenario_1');
+                            var textarea = document.getElementById('txtScenarioDescription_1');
+                            textarea.readOnly = checkbox.checked; // Set textarea readonly based on checkbox
+                        }
+                        </script>
+                    </div>
+
               </div>
                 <div class="row">
-                <div class="col-md-6">
+                    <div class="col-md-1"></div>
+                <div class="col-md-5">
                     <div class="form-group">
                         <label class="form-control border-0 small-font"><h6>Internet Exposed IP Address</h6></label>
                         <label class="switch">
@@ -945,7 +658,7 @@ input:checked + .slider1:before {
                         </label>
                     </div>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-5">
                     <div class="form-group">
                         <label class="form-control border-0 small-font"><h6>Default/Weak Credentials</h6></label>
                         <label class="switch">
@@ -954,7 +667,9 @@ input:checked + .slider1:before {
                         </label>
                     </div>
                 </div>
+                <div class="col-md-1"></div>
             </div>
+            <br>
             <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                 <div class="card-body">
                     <div class="row">
@@ -1017,6 +732,7 @@ input:checked + .slider1:before {
               </div>
                 </div>
             <div class="col-md-4 small-font">
+                <br>
                 <h5>Business Impact Analysis</h5>
                 Click the icons to add additional detail
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
@@ -1171,7 +887,7 @@ input:checked + .slider1:before {
 
             </div>
             <div class="col-md-4 small-font">
-                <!-- Risk Assessment Button -->
+                <br>
                 <button id="risk-assessment-btn_1" type="button" class="btn btn-primary" style="background-color: #e24e42"   onclick="checkEditModeAndExecute(this.id, 'loadingSpinner1')">
                     <i class="bi bi-play-fill mr-2"></i>Execute Risk Assessment
                 </button>
@@ -1289,14 +1005,43 @@ input:checked + .slider1:before {
                 <div class="col-md-4 small-font">
                 <!-- tab 1 left column -->
                     <input type="hidden" name="hdnScenarioID_2" id="hdnScenarioID_2">
-                    <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                    <div class="card mb-3 shadow-sm">
                         <div class="card-body">
-                            <label for="txtScenarioDescription_2" class="form-control border-0 align-text-bottom small-font cursor-pointer" data-bs-toggle="modal" data-bs-target="#scenarioModal"><i class="bi bi-mouse2"></i> Scenario Description (click for table)</label>
-                            <textarea class="form-control small-font" name="txtScenarioDescription_2" id="txtScenarioDescription_2" rows="3" style="resize: none; word-wrap: normal" onchange="setRiskAssessmentRefreshRequired(2)"></textarea>
+                            <div class="spinner-container" style="position: relative;">
+                            <label for="txtScenarioDescription_2" class="form-control border-0 align-text-bottom small-font cursor-pointer" ><i class="bi bi-mouse2"></i> Scenario Description</label>
+                            <textarea class="form-control small-font" name="txtScenarioDescription_2" id="txtScenarioDescription_2" rows="3" style="resize: none; word-wrap: normal" onchange="setRiskAssessmentRefreshRequired(2)" onblur="analyze_Scenario(2)"></textarea>
+                            <div class="educational-resources">
+                                <a href="#" class="link-to-resource" data-bs-toggle="modal" data-bs-target="#scenarioModal">Cybersecurity Scenario Guidelines</a>
+                            </div>
+                                <div class="spinner-overlay_2" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255, 255, 255, 0.7); display: none; justify-content: center; align-items: center;">
+                                <div class="spinner-border" role="status">
+                                  <span class="sr-only">Analyzing...</span>
+                              </div>
+                          </div>
                         </div>
-                    </div>
+                         <div class="form-check">
+                              <input class="form-check-input" type="checkbox" id="lock_scenario_2" onchange="toggleLockScenario_2()">
+                              <label class="form-check-label" for="lock_scenario_2">
+                                  Lock Scenario
+                              </label>
+                          </div>
+                            <label for="txtScenarioAnalysis_2" class="small-font" style="visibility: hidden">Recommendations will align with selected standards:</label>
+          <textarea id="txtScenarioAnalysis_2" name="txtScenarioAnalysis_2" class="form-control small-font"  rows="5" style="resize: none; word-wrap: normal" readonly></textarea>
+
+          <script>
+          function toggleLockScenario_2() {
+              var checkbox = document.getElementById('lock_scenario_2');
+              var textarea = document.getElementById('txtScenarioDescription_2');
+              textarea.readOnly = checkbox.checked; // Set textarea readonly based on checkbox
+          }
+          </script>
+      </div>
+
+</div>
+
                 <div class="row">
-                <div class="col-md-6">
+                    <div class="col-md-1"></div>
+                <div class="col-md-5">
                     <div class="form-group">
                         <label class="form-control border-0 small-font"><h6>Internet Exposed IP Address</h6></label>
                         <label class="switch">
@@ -1305,7 +1050,7 @@ input:checked + .slider1:before {
                         </label>
                     </div>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-5">
                     <div class="form-group">
                         <label class="form-control border-0 small-font"><h6>Default/Weak Credentials</h6></label>
                         <label class="switch">
@@ -1314,7 +1059,9 @@ input:checked + .slider1:before {
                         </label>
                     </div>
                 </div>
+                    <div class="col-md-1"></div>
             </div>
+                <br>
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                         <div class="card-body">
                             <div class="row">
@@ -1374,7 +1121,7 @@ input:checked + .slider1:before {
                     </div>
           </div>
             <div class="col-md-4 small-font">
-
+                <br>
                 <h5>Business Impact Analysis</h5>
                 Click the icons to add additional detail
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
@@ -1527,7 +1274,7 @@ input:checked + .slider1:before {
            </div>
 
             <div class="col-md-4 small-font">
-                <!-- Risk Assessment Button -->
+                <br>
                 <button id="risk-assessment-btn_2" type="button" class="btn btn-primary" style="background-color: #e98000" onclick="checkEditModeAndExecute(this.id, 'loadingSpinner2')">
                     <i class="bi bi-play-fill mr-2"></i>Execute Risk Assessment
                 </button>
@@ -1651,12 +1398,41 @@ input:checked + .slider1:before {
                 <input type="hidden" name="hdnScenarioID_3" id="hdnScenarioID_3">
                 <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                     <div class="card-body">
-                          <label for="txtScenarioDescription_3" class="form-control border-0 align-text-bottom small-font cursor-pointer" data-bs-toggle="modal" data-bs-target="#scenarioModal"><i class="bi bi-mouse2"></i> Scenario Description (click for table)</label>
-                          <textarea class="form-control small-font" name="txtScenarioDescription_3" id="txtScenarioDescription_3" rows="3" style="resize: none; word-wrap: normal" onchange="setRiskAssessmentRefreshRequired(3)"></textarea>
-                    </div>
-                </div>
-          <div class="row">
-                <div class="col-md-6">
+                        <div class="spinner-container" style="position: relative;">
+                          <textarea class="form-control small-font" name="txtScenarioDescription_3" id="txtScenarioDescription_3" rows="3" style="resize: none; word-wrap: normal" placeholder="Enter a concise and descriptive scenario" onchange="setRiskAssessmentRefreshRequired(1)" onblur="analyze_Scenario(3)"></textarea>
+                          <div class="educational-resources">
+                            <a href="#" class="link-to-resource" data-bs-toggle="modal" data-bs-target="#scenarioModal">Cybersecurity Scenario Guidelines</a>
+                        </div>
+                            <div class="spinner-overlay_3" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255, 255, 255, 0.7); display: none; justify-content: center; align-items: center;">
+                              <div class="spinner-border" role="status">
+                                  <span class="sr-only">Analyzing...</span>
+                              </div>
+                          </div>
+                      </div>
+
+          <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="lock_scenario_3" onchange="toggleLockScenario_3()">
+              <label class="form-check-label" for="lock_scenario_3">
+                  Lock Scenario
+              </label>
+          </div>
+
+          <label for="txtScenarioAnalysis_3" class="small-font" style="visibility: hidden">Recommendations will align with selected standards:</label>
+          <textarea id="txtScenarioAnalysis_3" name="txtScenarioAnalysis_3" class="form-control small-font"  rows="5" style="resize: none; word-wrap: normal" readonly></textarea>
+
+          <script>
+          function toggleLockScenario_3() {
+              var checkbox = document.getElementById('lock_scenario_3');
+              var textarea = document.getElementById('txtScenarioDescription_3');
+              textarea.readOnly = checkbox.checked; // Set textarea readonly based on checkbox
+          }
+          </script>
+      </div>
+
+</div>
+  <div class="row">
+      <div class="col-md-1"></div>
+                <div class="col-md-5">
                     <div class="form-group">
                         <label class="form-control border-0 small-font"><h6>Internet Exposed IP Address</h6></label>
                         <label class="switch">
@@ -1665,7 +1441,7 @@ input:checked + .slider1:before {
                         </label>
                     </div>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-5">
                     <div class="form-group">
                         <label class="form-control border-0 small-font"><h6>Default/Weak Credentials</h6></label>
                         <label class="switch">
@@ -1674,7 +1450,9 @@ input:checked + .slider1:before {
                         </label>
                     </div>
                 </div>
+      <div class="col-md-1"></div>
             </div>
+          <br>
               <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                     <div class="card-body">
                         <div class="row">
@@ -1734,7 +1512,7 @@ input:checked + .slider1:before {
                 </div>
             </div>
             <div class="col-md-4 small-font">
-
+                <br>
                 <h5>Business Impact Analysis</h5>
                 Click the icons to add additional detail
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
@@ -1888,7 +1666,7 @@ input:checked + .slider1:before {
 
             </div>
             <div class="col-md-4 small-font">
-                <!-- Risk Assessment Button -->
+                <br>
                 <button id="risk-assessment-btn_3" type="button" class="btn btn-primary" style="background-color: #eb6e80" onclick="checkEditModeAndExecute(this.id, 'loadingSpinner3')">
                     <i class="bi bi-play-fill mr-2"></i>Execute Risk Assessment
                 </button>
@@ -2008,12 +1786,41 @@ input:checked + .slider1:before {
                 <input type="hidden" name="hdnScenarioID_4" id="hdnScenarioID_4">
               <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                 <div class="card-body">
-                      <label for="txtScenarioDescription_4" class="form-control border-0 align-text-bottom small-font cursor-pointer" data-bs-toggle="modal" data-bs-target="#scenarioModal"><i class="bi bi-mouse2"></i> Scenario Description (click for table)</label>
-                      <textarea class="form-control small-font" name="txtScenarioDescription_4" id="txtScenarioDescription_4" rows="3" style="resize: none; word-wrap: normal" onchange="setRiskAssessmentRefreshRequired(4)"></textarea>
-                </div>
+                                <div class="spinner-container" style="position: relative;">
+              <textarea class="form-control small-font" name="txtScenarioDescription_4" id="txtScenarioDescription_4" rows="3" style="resize: none; word-wrap: normal" placeholder="Enter a concise and descriptive scenario" onchange="setRiskAssessmentRefreshRequired(1)" onblur="analyze_Scenario(4)"></textarea>
+              <div class="educational-resources">
+                <a href="#" class="link-to-resource" data-bs-toggle="modal" data-bs-target="#scenarioModal">Cybersecurity Scenario Guidelines</a>
+            </div>
+                                    <div class="spinner-overlay_4" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255, 255, 255, 0.7); display: none; justify-content: center; align-items: center;">
+                  <div class="spinner-border" role="status">
+                      <span class="sr-only">Analyzing...</span>
+                  </div>
               </div>
-          <div class="row">
-                <div class="col-md-6">
+          </div>
+
+          <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="lock_scenario_4" onchange="toggleLockScenario_4()">
+              <label class="form-check-label" for="lock_scenario_4">
+                  Lock Scenario
+              </label>
+          </div>
+
+          <label for="txtScenarioAnalysis_4" class="small-font" style="visibility: hidden">Recommendations will align with selected standards:</label>
+          <textarea id="txtScenarioAnalysis_4" name="txtScenarioAnalysis_4" class="form-control small-font"  rows="5" style="resize: none; word-wrap: normal" readonly></textarea>
+
+          <script>
+          function toggleLockScenario_4() {
+              var checkbox = document.getElementById('lock_scenario_4');
+              var textarea = document.getElementById('txtScenarioDescription_4');
+              textarea.readOnly = checkbox.checked; // Set textarea readonly based on checkbox
+          }
+          </script>
+      </div>
+
+</div>
+  <div class="row">
+      <div class="col-md-1"></div>
+                <div class="col-md-5">
                     <div class="form-group">
                         <label class="form-control border-0 small-font"><h6>Internet Exposed IP Address</h6></label>
                         <label class="switch">
@@ -2022,7 +1829,7 @@ input:checked + .slider1:before {
                         </label>
                     </div>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-5">
                     <div class="form-group">
                         <label class="form-control border-0 small-font"><h6>Default/Weak Credentials</h6></label>
                         <label class="switch">
@@ -2031,7 +1838,9 @@ input:checked + .slider1:before {
                         </label>
                     </div>
                 </div>
+      <div class="col-md-1"></div>
             </div>
+          <br>
               <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                     <div class="card-body">
                         <div class="row">
@@ -2092,6 +1901,7 @@ input:checked + .slider1:before {
 
           </div>
             <div class="col-md-4 small-font">
+                <br>
                <h5>Business Impact Analysis</h5>
                 Click the icons to add additional detail
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
@@ -2244,7 +2054,7 @@ input:checked + .slider1:before {
 
             </div>
             <div class="col-md-4 small-font">
-                <!-- Risk Assessment Button -->
+                <br>
                 <button id="risk-assessment-btn_4" type="button" class="btn btn-primary" style="background-color: #008f95" onclick="checkEditModeAndExecute(this.id, 'loadingSpinner4')">
                     <i class="bi bi-play-fill mr-2"></i>Execute Risk Assessment
                 </button>
@@ -2362,13 +2172,41 @@ input:checked + .slider1:before {
             <input type="hidden" name="hdnScenarioID_5" id="hdnScenarioID_5">
             <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                 <div class="card-body">
-                  <label for="txtScenarioDescription_5" class="form-control border-0 align-text-bottom small-font cursor-pointer" data-bs-toggle="modal" data-bs-target="#scenarioModal"><i class="bi bi-mouse2"></i> Scenario Description (click for table)</label>
-
-                  <textarea class="form-control small-font" name="txtScenarioDescription_5" id="txtScenarioDescription_5" rows="3" style="resize: none; word-wrap: normal" onchange="setRiskAssessmentRefreshRequired(5)"></textarea>
-                </div>
+                            <div class="spinner-container" style="position: relative;">
+              <textarea class="form-control small-font" name="txtScenarioDescription_5" id="txtScenarioDescription_5" rows="3" style="resize: none; word-wrap: normal" placeholder="Enter a concise and descriptive scenario" onchange="setRiskAssessmentRefreshRequired(1)" onblur="analyze_Scenario(5)"></textarea>
+              <div class="educational-resources">
+                <a href="#" class="link-to-resource" data-bs-toggle="modal" data-bs-target="#scenarioModal">Cybersecurity Scenario Guidelines</a>
             </div>
-            <div class="row">
-                <div class="col-md-6">
+                                <div class="spinner-overlay_5" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255, 255, 255, 0.7); display: none; justify-content: center; align-items: center;">
+                  <div class="spinner-border" role="status">
+                      <span class="sr-only">Analyzing...</span>
+                  </div>
+              </div>
+          </div>
+
+          <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="lock_scenario_5" onchange="toggleLockScenario_5()">
+              <label class="form-check-label" for="lock_scenario_5">
+                  Lock Scenario
+              </label>
+          </div>
+
+          <label for="txtScenarioAnalysis_5" class="small-font" style="visibility: hidden">Recommendations will align with selected standards:</label>
+          <textarea id="txtScenarioAnalysis_5" name="txtScenarioAnalysis_5" class="form-control small-font"  rows="5" style="resize: none; word-wrap: normal" readonly></textarea>
+
+          <script>
+          function toggleLockScenario_5() {
+              var checkbox = document.getElementById('lock_scenario_5');
+              var textarea = document.getElementById('txtScenarioDescription_5');
+              textarea.readOnly = checkbox.checked;
+          }
+          </script>
+      </div>
+
+</div>
+  <div class="row">
+                  <div class="col-md-1"></div>
+                <div class="col-md-5">
                     <div class="form-group">
                         <label class="form-control border-0 small-font"><h6>Internet Exposed IP Address</h6></label>
                         <label class="switch">
@@ -2377,7 +2215,7 @@ input:checked + .slider1:before {
                         </label>
                     </div>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-5">
                     <div class="form-group">
                         <label class="form-control border-0 small-font"><h6>Default/Weak Credentials</h6></label>
                         <label class="switch">
@@ -2386,7 +2224,10 @@ input:checked + .slider1:before {
                         </label>
                     </div>
                 </div>
+
+            <div class="col-md-1"></div>
             </div>
+            <br>
             <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                 <div class="card-body">
                     <div class="row">
@@ -2447,7 +2288,7 @@ input:checked + .slider1:before {
 
           </div>
             <div class="col-md-4 small-font">
-
+                <br>
                 <h5>Business Impact Analysis</h5>
                 Click the icons to add additional detail
                     <!--slider for safety rating -->
@@ -2600,7 +2441,7 @@ input:checked + .slider1:before {
 
             </div>
             <div class="col-md-4 small-font">
-                <!-- Risk Assessment Button -->
+                <br>
                 <button id="risk-assessment-btn_5" type="button" class="btn btn-primary" style="background-color: #007849" onclick="checkEditModeAndExecute(this.id, 'loadingSpinner5')">
                     <i class="bi bi-play-fill mr-2"></i>Execute Risk Assessment
                 </button>
@@ -2762,76 +2603,7 @@ input:checked + .slider1:before {
 
 <!--modal forms -->
 
-<div class="modal fade" id="scenarioModal" tabindex="-1" aria-labelledby="scenarioModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-xl">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="scenarioModalLabel">Select Scenario</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <div class="table-wrap border border-warning rounded p-3" style="border: 3px #97979A; border-radius: 10px; box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5);  padding: 20px; background-color: white;">
-            <table id="scenarioList" class="table table-hover table-bordered small small-font overflow-auto" style="width: 100%; background-color: white">
-                <thead>
-                    <tr>
-                        <th>Scenario</th>
-                    </tr>
-                </thead>
-                <tbody id="scenarioListBody">
-                    {% for scenario in scenarios %}
-                    <tr onclick="selectScenario(this)">
-                        <td>{{ scenario.Scenario }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        <script>
-            $(document).ready(function() {
-                $('#scenarioList').DataTable();
-            });
-        </script>
 
-      </div>
-    </div>
-  </div>
-</div>
-<script>
-    function selectScenario(row) {
-    // Get the scenario text from the clicked row
-    var scenarioText = $(row).find('td').text();
-
-    // Determine the active tab
-    var activeTab = $('.nav-tabs .active').attr('id');
-
-    // Determine the corresponding textarea based on the active tab
-    var textareaId;
-    switch (activeTab) {
-        case 'scenario1-tab':
-            textareaId = 'txtScenarioDescription_1';
-            break;
-        case 'scenario2-tab':
-            textareaId = 'txtScenarioDescription_2';
-            break;
-        case 'scenario3-tab':
-            textareaId = 'txtScenarioDescription_3';
-            break;
-        case 'scenario4-tab':
-            textareaId = 'txtScenarioDescription_4';
-            break;
-        case 'scenario5-tab':
-            textareaId = 'txtScenarioDescription_5';
-            break;
-    }
-
-    // Populate the corresponding textarea
-    $('#' + textareaId).val(scenarioText);
-
-    // Close the modal
-    $('#scenarioModal').modal('hide');
-}
-
-</script>
 
 <!-- safety ratings -->
 <div class="modal fade" id="safetyModal_1" tabindex="-1" aria-labelledby="safetyModal_1_Label" aria-hidden="true">
@@ -2839,7 +2611,7 @@ input:checked + .slider1:before {
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="safetyModal_1_Label">Justification for Scenario 1 Safety Rating</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close modal-button" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
 
@@ -2886,7 +2658,7 @@ input:checked + .slider1:before {
         <label for="txtsafetyJustify_1">Justification:</label>
         <textarea id="txtsafetyJustify_1" name="txtsafetyJustify_1" class="form-control mb-3" rows="3" style="resize: none"></textarea>
 
-        <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-secondary mt-3 modal-button" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
@@ -2896,7 +2668,7 @@ input:checked + .slider1:before {
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="safetyModal_2_Label">Justification for Scenario 2 Safety Rating</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close modal-button" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
 
@@ -2940,7 +2712,7 @@ input:checked + .slider1:before {
         <label for="txtsafetyJustify_2">Justification:</label>
         <textarea id="txtsafetyJustify_2" name="txtsafetyJustify_2" class="form-control mb-3" rows="3" style="resize: none"></textarea>
 
-        <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-secondary mt-3 modal-button" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
@@ -2950,7 +2722,7 @@ input:checked + .slider1:before {
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="safetyModal_3_Label">Justification for Scenario 3 Safety Rating</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close modal-button" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
 
@@ -2994,7 +2766,7 @@ input:checked + .slider1:before {
         <label for="txtsafetyJustify_3">Justification:</label>
         <textarea id="txtsafetyJustify_3" name="txtsafetyJustify_3" class="form-control mb-3" rows="3" style="resize: none"></textarea>
 
-        <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-secondary mt-3 modal-button" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
@@ -3004,7 +2776,7 @@ input:checked + .slider1:before {
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="safetyModal_4_Label">Justification for Scenario 4 Safety Rating</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close modal-button" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
 
@@ -3048,7 +2820,7 @@ input:checked + .slider1:before {
         <label for="txtsafetyJustify_4">Justification:</label>
         <textarea id="txtsafetyJustify_4" name="txtsafetyJustify_4" class="form-control mb-3" rows="3" style="resize: none"></textarea>
 
-        <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-secondary mt-3 modal-button" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
@@ -3058,7 +2830,7 @@ input:checked + .slider1:before {
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="safetyModal_5_Label">Justification for Scenario 5 Safety Rating</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close modal-button" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
 
@@ -3102,7 +2874,7 @@ input:checked + .slider1:before {
         <label for="txtsafetyJustify_5">Justification:</label>
         <textarea id="txtsafetyJustify_5" name="txtsafetyJustify_5" class="form-control mb-3" rows="3" style="resize: none"></textarea>
 
-        <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-secondary mt-3 modal-button" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
@@ -3116,7 +2888,7 @@ input:checked + .slider1:before {
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="lifeModal_1_Label">Justification for Scenario 1 Danger-to-Life Rating</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close modal-button" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
         <textarea id="txtlifeJustify_1" name="txtlifeJustify_1" class="form-control" rows="3" style="resize: none"></textarea>
@@ -3127,7 +2899,7 @@ input:checked + .slider1:before {
           <option value="External">External</option>
           <option value="Both">Both</option>
         </select>
-        <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-secondary mt-3 modal-button" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
@@ -3137,7 +2909,7 @@ input:checked + .slider1:before {
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="lifeModal_2_Label">Justification for Scenario 2 Danger-to-Life Rating</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close modal-button" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
         <textarea id="txtlifeJustify_2" name="txtlifeJustify_2" class="form-control" rows="3" style="resize: none"></textarea>
@@ -3148,7 +2920,7 @@ input:checked + .slider1:before {
           <option value="External">External</option>
           <option value="Both">Both</option>
         </select>
-        <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-secondary mt-3 modal-button" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
@@ -3158,7 +2930,7 @@ input:checked + .slider1:before {
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="lifeModal_3_Label">Justification for Scenario 3 Danger-to-Life Rating</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close modal-button" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
         <textarea id="txtlifeJustify_3" name="txtlifeJustify_3" class="form-control" rows="3" style="resize: none"></textarea>
@@ -3169,7 +2941,7 @@ input:checked + .slider1:before {
           <option value="External">External</option>
           <option value="Both">Both</option>
         </select>
-        <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-secondary mt-3 modal-button" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
@@ -3179,7 +2951,7 @@ input:checked + .slider1:before {
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="lifeModal_4_Label">Justification for Scenario 4 Danger-to-Life Rating</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close modal-button" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
         <textarea id="txtlifeJustify_4" name="txtlifeJustify_4" class="form-control" rows="3" style="resize: none"></textarea>
@@ -3190,7 +2962,7 @@ input:checked + .slider1:before {
           <option value="External">External</option>
           <option value="Both">Both</option>
         </select>
-        <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-secondary mt-3 modal-button" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
@@ -3200,7 +2972,7 @@ input:checked + .slider1:before {
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="lifeModal_5_Label">Justification for Scenario 5 Danger-to-Life Rating</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close modal-button" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
         <textarea id="txtlifeJustify_5" name="txtlifeJustify_5" class="form-control" rows="3" style="resize: none"></textarea>
@@ -3211,7 +2983,7 @@ input:checked + .slider1:before {
           <option value="External">External</option>
           <option value="Both">Both</option>
         </select>
-        <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-secondary mt-3 modal-button" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
@@ -3222,11 +2994,11 @@ input:checked + .slider1:before {
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="productionModal_1_Label">Justification for Scenario 1 Production Rating</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close modal-button" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
         <textarea id="txtproductionJustify_1" name="txtproductionJustify_1" class="form-control" rows="3" style="resize: none"></textarea>
-        <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-secondary mt-3 modal-button" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
@@ -3236,11 +3008,11 @@ input:checked + .slider1:before {
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="productionModal_2_Label">Justification for Scenario 2 Production Rating</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close modal-button" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
         <textarea id="txtproductionJustify_2" name="txtproductionJustify_2" class="form-control" rows="3" style="resize: none"></textarea>
-        <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-secondary mt-3 modal-button" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
@@ -3250,11 +3022,11 @@ input:checked + .slider1:before {
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="productionModal_3_Label">Justification for Scenario 3 Production Rating</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close modal-button" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
         <textarea id="txtproductionJustify_3" name="txtproductionJustify_3" class="form-control" rows="3" style="resize: none"></textarea>
-        <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-secondary mt-3 modal-button" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
@@ -3264,11 +3036,11 @@ input:checked + .slider1:before {
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="productionModal_4_Label">Justification for Scenario 4 Production Rating</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close modal-button" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
         <textarea id="txtproductionJustify_4" name="txtproductionJustify_4" class="form-control" rows="3" style="resize: none"></textarea>
-        <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-secondary mt-3 modal-button" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
@@ -3278,11 +3050,11 @@ input:checked + .slider1:before {
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="productionModal_5_Label">Justification for Scenario 5 Production Rating</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close modal-button" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
         <textarea id="txtproductionJustify_5" name="txtproductionJustify_5" class="form-control" rows="3" style="resize: none"></textarea>
-        <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-secondary mt-3 modal-button" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
@@ -3293,11 +3065,11 @@ input:checked + .slider1:before {
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="financeModal_1_Label">Justification for Scenario 1 Finance Rating</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close modal-button" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
         <textarea id="txtfinanceJustify_1" name="txtfinanceJustify_1" class="form-control" rows="3" style="resize: none"></textarea>
-        <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-secondary mt-3 modal-button" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
@@ -3307,11 +3079,11 @@ input:checked + .slider1:before {
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="financeModal_2_Label">Justification for Scenario 2 Finance Rating</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close modal-button" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
         <textarea id="txtfinanceJustify_2" name="txtfinanceJustify_2" class="form-control" rows="3" style="resize: none"></textarea>
-        <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-secondary mt-3 modal-button" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
@@ -3321,11 +3093,11 @@ input:checked + .slider1:before {
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="financeModal_3_Label">Justification for Scenario 3 Finance Rating</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close modal-button" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
         <textarea id="txtfinanceJustify_3" name="txtfinanceJustify_3" class="form-control" rows="3" style="resize: none"></textarea>
-        <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-secondary mt-3 modal-button" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
@@ -3335,11 +3107,11 @@ input:checked + .slider1:before {
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="financeModal_4_Label">Justification for Scenario 4 Finance Rating</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close modal-button" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
         <textarea id="txtfinanceJustify_4" name="txtfinanceJustify_4" class="form-control" rows="3" style="resize: none"></textarea>
-        <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-secondary mt-3 modal-button" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
@@ -3349,11 +3121,11 @@ input:checked + .slider1:before {
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="financeModal_5_Label">Justification for Scenario 5 Finance Rating</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close modal-button" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
         <textarea id="txtfinanceJustify_5" name="txtfinanceJustify_5" class="form-control" rows="3" style="resize: none"></textarea>
-        <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-secondary mt-3 modal-button" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
@@ -3364,11 +3136,11 @@ input:checked + .slider1:before {
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="reputationModal_1_Label">Justification for Scenario 1 Reputation Rating</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close modal-button" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
         <textarea id="txtreputationJustify_1" name="txtreputationJustify_1" class="form-control" rows="3" style="resize: none"></textarea>
-        <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-secondary mt-3 modal-button" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
@@ -3378,11 +3150,11 @@ input:checked + .slider1:before {
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="reputationModal_2_Label">Justification for Scenario 2 Reputation Rating</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close modal-button" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
         <textarea id="txtreputationJustify_2" name="txtreputationJustify_2" class="form-control" rows="3" style="resize: none"></textarea>
-        <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-secondary mt-3 modal-button" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
@@ -3392,11 +3164,11 @@ input:checked + .slider1:before {
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="reputationModal_3_Label">Justification for Scenario 3 Reputation Rating</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close modal-button" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
         <textarea id="txtreputationJustify_3" name="txtreputationJustify_3" class="form-control" rows="3" style="resize: none"></textarea>
-        <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-secondary mt-3 modal-button" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
@@ -3406,11 +3178,11 @@ input:checked + .slider1:before {
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="reputationModal_4_Label">Justification for Scenario 4 Reputation Rating</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close modal-button" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
         <textarea id="txtreputationJustify_4" name="txtreputationJustify_4" class="form-control" rows="3" style="resize: none"></textarea>
-        <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-secondary mt-3 modal-button" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
@@ -3420,11 +3192,11 @@ input:checked + .slider1:before {
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="reputationModal_5_Label">Justification for Scenario 5 Reputation Rating</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close modal-button" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
         <textarea id="txtreputationJustify_5" name="txtreputationJustify_5" class="form-control" rows="3" style="resize: none"></textarea>
-        <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-secondary mt-3 modal-button" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
@@ -3435,7 +3207,7 @@ input:checked + .slider1:before {
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="environmentModal_1_Label">Justification for Scenario 1 Environment Rating</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close modal-button" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
         <!-- Dropdown for the type of contaminants -->
@@ -3490,7 +3262,7 @@ input:checked + .slider1:before {
         <label for="txtenvironmentJustify_1">Justification:</label>
         <textarea id="txtenvironmentJustify_1" name="txtenvironmentJustify_1" class="form-control mb-3" rows="3" style="resize: none"></textarea>
 
-        <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-secondary mt-3 modal-button" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
@@ -3501,7 +3273,7 @@ input:checked + .slider1:before {
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="environmentModal_2_Label">Justification for Scenario 2 Environment Rating</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close modal-button" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
         <!-- Dropdown for the type of contaminants -->
@@ -3558,7 +3330,7 @@ input:checked + .slider1:before {
         <label for="txtenvironmentJustify_2">Justification:</label>
         <textarea id="txtenvironmentJustify_2" name="txtenvironmentJustify_2" class="form-control mb-3" rows="3" style="resize: none"></textarea>
 
-        <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-secondary mt-3 modal-button" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
@@ -3568,7 +3340,7 @@ input:checked + .slider1:before {
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="environmentModal_3_Label">Justification for Scenario 3 Environment Rating</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close modal-button" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
         <!-- Dropdown for the type of contaminants -->
@@ -3623,7 +3395,7 @@ input:checked + .slider1:before {
         <label for="txtenvironmentJustify_3">Justification:</label>
         <textarea id="txtenvironmentJustify_3" name="txtenvironmentJustify_3" class="form-control mb-3" rows="3" style="resize: none"></textarea>
 
-        <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-secondary mt-3 modal-button" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
@@ -3633,7 +3405,7 @@ input:checked + .slider1:before {
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="environmentModal_4_Label">Justification for Scenario4 Environment Rating</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close modal-button" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
         <!-- Dropdown for the type of contaminants -->
@@ -3688,7 +3460,7 @@ input:checked + .slider1:before {
         <label for="txtenvironmentJustify_4">Justification:</label>
         <textarea id="txtenvironmentJustify_4" name="txtenvironmentJustify_4" class="form-control mb-3" rows="3" style="resize: none"></textarea>
 
-        <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-secondary mt-3 modal-button" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
@@ -3699,7 +3471,7 @@ input:checked + .slider1:before {
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="environmentModal_5_Label">Justification for Scenario 5 Environment Rating</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close modal-button" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
         <!-- Dropdown for the type of contaminants -->
@@ -3754,7 +3526,7 @@ input:checked + .slider1:before {
         <label for="txtenvironmentJustify_5">Justification:</label>
         <textarea id="txtenvironmentJustify_5" name="txtenvironmentJustify_5" class="form-control mb-3" rows="3" style="resize: none"></textarea>
 
-        <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-secondary mt-3 modal-button" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
@@ -3766,11 +3538,11 @@ input:checked + .slider1:before {
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="regulationModal_1_Label">Justification for Scenario 1 Regulation Rating</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close modal-button" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
         <textarea id="txtregulationJustify_1" name="txtregulationJustify_1" class="form-control" rows="3" style="resize: none"></textarea>
-        <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-secondary mt-3 modal-button" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
@@ -3780,11 +3552,11 @@ input:checked + .slider1:before {
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="regulationModal_2_Label">Justification for Scenario 2 Regulation Rating</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close modal-button" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
         <textarea id="txtregulationJustify_2" name="txtregulationJustify_2" class="form-control" rows="3" style="resize: none"></textarea>
-        <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-secondary mt-3 modal-button" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
@@ -3794,11 +3566,11 @@ input:checked + .slider1:before {
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="regulationModal_3_Label">Justification for Scenario 3 Regulation Rating</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close modal-button" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
         <textarea id="txtregulationJustify_3" name="txtregulationJustify_3" class="form-control" rows="3" style="resize: none"></textarea>
-        <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-secondary mt-3 modal-button" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
@@ -3808,11 +3580,11 @@ input:checked + .slider1:before {
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="regulationModal_4_Label">Justification for Scenario 4 Regulation Rating</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close modal-button" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
         <textarea id="txtregulationJustify_4" name="txtregulationJustify_4" class="form-control" rows="3" style="resize: none"></textarea>
-        <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-secondary mt-3 modal-button" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
@@ -3822,11 +3594,11 @@ input:checked + .slider1:before {
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="regulationModal_5_Label">Justification for Scenario 5 Regulation Rating</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close modal-button" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
         <textarea id="txtregulationJustify_5" name="txtregulationJustify_5" class="form-control" rows="3" style="resize: none"></textarea>
-        <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-secondary mt-3 modal-button" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
@@ -3839,7 +3611,7 @@ input:checked + .slider1:before {
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="dataModal_1_Label">Justification for Scenario 1 Data Rating</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close modal-button" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
         <div class="modal-body">
         <label for="txtdataJustify_1" class="form-label">Justification for Data Rating:</label>
@@ -3880,7 +3652,7 @@ input:checked + .slider1:before {
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="dataModal_2_Label">Justification for Scenario 2 Data Rating</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close modal-button" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
         <div class="modal-body">
         <label for="txtdataJustify_2" class="form-label">Justification for Data Rating:</label>
@@ -3921,7 +3693,7 @@ input:checked + .slider1:before {
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="dataModal_3_Label">Justification for Scenario 3 Data Rating</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close modal-button" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
         <div class="modal-body">
         <label for="txtdataJustify_3" class="form-label">Justification for Data Rating:</label>
@@ -3962,7 +3734,7 @@ input:checked + .slider1:before {
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="dataModal_4_Label">Justification for Scenario 4 Data Rating</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close modal-button" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
         <div class="modal-body">
         <label for="txtdataJustify_4" class="form-label">Justification for Data Rating:</label>
@@ -4003,7 +3775,7 @@ input:checked + .slider1:before {
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="dataModal_5_Label">Justification for Scenario 5 Data Rating</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close modal-button" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
         <div class="modal-body">
         <label for="txtdataJustify_5" class="form-label">Justification for Data Rating:</label>
@@ -4046,7 +3818,7 @@ input:checked + .slider1:before {
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="supplyModal_1_Label">Justification for Scenario 1 Supply Chain Rating</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close modal-button" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
                 <div class="modal-body">
                 <!-- Textarea for justification -->
@@ -4094,7 +3866,7 @@ input:checked + .slider1:before {
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="supplyModal_2_Label">Justification for Scenario 2 Supply Chain Rating</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close modal-button" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
                 <div class="modal-body">
                 <!-- Textarea for justification -->
@@ -4142,7 +3914,7 @@ input:checked + .slider1:before {
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="supplyModal_3_Label">Justification for Scenario 3 Supply Chain Rating</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close modal-button" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
                 <div class="modal-body">
                 <!-- Textarea for justification -->
@@ -4190,7 +3962,7 @@ input:checked + .slider1:before {
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="supplyModal_4_Label">Justification for Scenario 4 Supply Chain Rating</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close modal-button" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
                 <div class="modal-body">
                 <!-- Textarea for justification -->
@@ -4238,7 +4010,7 @@ input:checked + .slider1:before {
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="supplyModal_5_Label">Justification for Scenario 5 Supply Chain Rating</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close modal-button" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
                 <div class="modal-body">
                 <!-- Textarea for justification -->
@@ -4290,11 +4062,11 @@ input:checked + .slider1:before {
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="vulnModal_1_Label">Justification for Scenario 1 Vulnerability Rating</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close modal-button" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
         <textarea id="txtvulnJustify_1" name="txtvulnJustify_1" class="form-control" rows="3" style="resize: none"></textarea>
-        <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-secondary mt-3 modal-button" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
@@ -4304,11 +4076,11 @@ input:checked + .slider1:before {
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="vulnModal_2_Label">Justification for Scenario 2 Vulnerability Rating</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close modal-button" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
         <textarea id="txtvulnJustify_2" name="txtvulnJustify_2" class="form-control" rows="3" style="resize: none"></textarea>
-        <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-secondary mt-3 modal-button" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
@@ -4318,11 +4090,11 @@ input:checked + .slider1:before {
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="vulnModal_3_Label">Justification for Scenario 3 Vulnerability Rating</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close modal-button" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
         <textarea id="txtvulnJustify_3" name="txtvulnJustify_3" class="form-control" rows="3" style="resize: none"></textarea>
-        <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-secondary mt-3 modal-button" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
@@ -4332,11 +4104,11 @@ input:checked + .slider1:before {
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="vulnModal_4_Label">Justification for Scenario 4 Vulnerability Rating</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close modal-button" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
         <textarea id="txtvulnJustify_4" name="txtvulnJustify_4" class="form-control" rows="3" style="resize: none"></textarea>
-        <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-secondary mt-3 modal-button" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
@@ -4346,11 +4118,11 @@ input:checked + .slider1:before {
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="vulnModal_5_Label">Justification for Scenario 5 Vulnerability Rating</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <button type="button" class="btn-close modal-button" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
         <textarea id="txtvulnJustify_5" name="txtvulnJustify_5" class="form-control" rows="3" style="resize: none"></textarea>
-        <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-secondary mt-3 modal-button" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
   </div>
@@ -4365,8 +4137,8 @@ input:checked + .slider1:before {
   <div class="modal-dialog modal-xl">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="RAActionsModalLabel">Mitigate Risk:</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <h5 class="modal-title" id="RAActionsModalLabel" style="color: white">Action:</h5>
+        <button type="button" class="btn-close modal-button" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
         <div class="modal-body">
             <form id="raActionsForm">
@@ -4416,7 +4188,7 @@ input:checked + .slider1:before {
                                 <div class="card-body">
                                     <label for="actionEffort" class="form-label">Effort Level:</label>
                                     <Select class="form-control" id="actionEffort" name="actionEffort">
-                                            <option value="">-- Select Costs --</option>
+                                            <option value="">-- Select Effort --</option>
                                             <option value="Low">Low</option>
                                             <option value="Medium">Medium</option>
                                             <option value="High">High</option>
@@ -4432,7 +4204,7 @@ input:checked + .slider1:before {
                                 <div class="card-body">
                                     <label for="actionDifficulty" class="form-label">Difficulty Level</label>
                                     <Select class="form-control" id="actionDifficulty" name="actionDifficulty">
-                                            <option value="">-- Select Costs --</option>
+                                            <option value="">-- Select Difficulty --</option>
                                             <option value="Low">Low</option>
                                             <option value="Medium">Medium</option>
                                             <option value="High">High</option>
@@ -4471,7 +4243,7 @@ input:checked + .slider1:before {
                                 <div class="card-body">
                                     <label for="actionAffinity" class="form-label">Risk Mitigation</label>
                                     <Select class="form-control" id="actionAffinity" name="actionAffinity">
-                                            <option value="">-- Select Costs --</option>
+                                            <option value="">-- Select Level --</option>
                                             <option value="Low">Low</option>
                                             <option value="Medium">Medium</option>
                                             <option value="High">High</option>
@@ -4536,9 +4308,91 @@ input:checked + .slider1:before {
                 <div class="mb-3">
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                         <div class="card-body">
-                            <label for="actionAssets" class="form-label">Action Assets</label>
-                            <textarea id="actionAssets" name="actionAssets" class="form-control" rows="3" style="resize: none"></textarea>
+                            <div class="row justify-content-center">
+                                <div class="col-md-12">
+                                <p class="justify-content-center">Expected Risk Mitigation from Action</p>
+                                </div>
+                            </div>
+                            <div class="row justify-content-center">
+                                <div class="col-md-4">
+                                    <label for="safetyMitigation">Safety: <span id="safetyMitigationValue"></span></label>
+                                    <input type="range" class="form-control custom-range" id="safetyMitigation" name="safetyMitigation" min="0" max="100" value="0">
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="lifeMitigation">Life: <span id="lifeMitigationValue"></span></label>
+                                    <input type="range" class="form-control custom-range" id="lifeMitigation" name="lifeMitigation" min="0" max="100" value="0">
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="productionMitigation">Production: <span id="productionMitigationValue"></span></label>
+                                    <input type="range" class="form-control custom-range" id="productionMitigation" name="productionMitigation" min="0" max="100" value="0">
+                                </div>
+                            </div>
+                            <div class="row justify-content-center mt-4">
+                                <div class="col-md-4">
+                                    <label for="financeMitigation">Finance: <span id="financeMitigationValue"></span></label>
+                                    <input type="range" class="form-control custom-range" id="financeMitigation" name="financeMitigation" min="0" max="100" value="0">
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label for="reputationMitigation">Reputation: <span id="reputationMitigationValue"></span></label>
+                                    <input type="range" class="form-control custom-range" id="reputationMitigation" name="reputationMitigation" min="0" max="100" value="0">
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="environmentMitigation">Environment: <span id="environmentMitigationValue"></span></label>
+                                    <input type="range" class="form-control custom-range" id="environmentMitigation" name="environmentMitigation" min="0" max="100" value="0">
+                                </div>
+                            </div>
+                            <div class="row justify-content-center mt-4">
+                                <div class="col-md-4">
+                                    <label for="regulationMitigation">Regulation: <span id="regulationMitigationValue"></span></label>
+                                    <input type="range" class="form-control custom-range" id="regulationMitigation" name="regulationMitigation" min="0" max="100" value="0">
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="dataMitigation">Data: <span id="dataMitigationValue"></span></label>
+                                    <input type="range" class="form-control custom-range" id="dataMitigation" name="dataMitigation" min="0" max="100" value="0">
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label for="supplyMitigation">Supply: <span id="supplyMitigationValue"></span></label>
+                                    <input type="range" class="form-control custom-range" id="supplyMitigation" name="supplyMitigation" min="0" max="100" value="0">
+                                </div>
+                            </div>
+                            <div class="row justify-content-center mt-4">
+                                <div class="col-md-4">
+                                    <label for="threatMitigation">Threat: <span id="threatMitigationValue"></span></label>
+                                    <input type="range" class="form-control custom-range" id="threatMitigation" name="threatMitigation" min="0" max="100" value="0">
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="vulnerabilityMitigation">Vulnerability: <span id="vulnerabilityMitigationValue"></span></label>
+                                    <input type="range" class="form-control custom-range" id="vulnerabilityMitigation" name="vulnerabilityMitigation" min="0" max="100" value="0">
+                                </div>
+                            </div>
+                            <script>
+                            document.addEventListener('DOMContentLoaded', (event) => {
+                              // This function updates the span displaying the value of the slider
+                              function updateSliderValue(slider) {
+                                const valueDisplayId = slider.id + 'Value';
+                                const valueDisplay = document.getElementById(valueDisplayId);
+                                if (valueDisplay) {
+                                  valueDisplay.textContent = slider.value + '%'; // Add the '%' symbol
+                                } else {
+                                  // console.error('No element found with id:', valueDisplayId);
+                                }
+                              }
+
+                              // Get all range inputs on the form
+                              const sliders = document.querySelectorAll('input[type="range"]');
+
+                              // Initialize the display values and add event listeners to each slider
+                              sliders.forEach(slider => {
+                                updateSliderValue(slider); // Initialize the display value
+                                slider.addEventListener('input', () => updateSliderValue(slider));
+                              });
+                            });
+
+                            </script>
                         </div>
+
                     </div>
                 </div>
 
@@ -4650,7 +4504,6 @@ input:checked + .slider1:before {
 <script>
 
 
-
 function checkEditModeAndExecute(buttonId, spinnerId) {
     // Assuming you're using JavaScript to get the session variable
     let editMode = sessionStorage.getItem('editMode');
@@ -4688,14 +4541,7 @@ function checkEditModeAndExecute(buttonId, spinnerId) {
             }
         });
     }
-</script>
 
-
-
-
-
-
-<script>
 
         // Function to assign value with error handling
         function assignValueWithValidation(targetId, value) {
@@ -4764,6 +4610,7 @@ function checkEditModeAndExecute(buttonId, spinnerId) {
             var weak_credentials = document.getElementById('weak_credentials_' + buttonNumber).checked;
             var outageLength = document.getElementById('outage_' + buttonNumber).value;
             var controlScore = document.getElementById('control_score_' + buttonNumber).value;
+            var consequences = document.getElementById('txtScenarioAnalysis_' + buttonNumber).value;
 
             // Make the AJAX call to the Django view using a separate endpoint for risk assessment
             $.ajax({
@@ -4797,6 +4644,7 @@ function checkEditModeAndExecute(buttonId, spinnerId) {
                     controlScore: controlScore,
                     weak_credentials: weak_credentials,
                     exposed_system: exposed_system,
+                    consequences: consequences,
                  },
                 success: function (response) {
 
@@ -5083,6 +4931,7 @@ $(document).ready(function() {
                     document.getElementById("hdnScenarioID_2").value = scenarios[1].pk;
                     sessionStorage.setItem('scenario2id',scenarios[1].pk);
                     document.getElementById("txtScenarioDescription_2").value = scenarios[1].fields.ScenarioDescription;
+                    document.getElementById("txtScenarioAnalysis_2").value = scenarios[1].fields.raw_consequences;
                     document.getElementById("selectThreat_2").value = scenarios[1].fields.threatSource;
                     document.getElementById("selectTactics_2").value = scenarios[1].fields.threatTactic;
                     document.getElementById("id_impact_2").value = scenarios[1].fields.impact;
@@ -5188,6 +5037,7 @@ $(document).ready(function() {
                       document.getElementById("hdnScenarioID_3").value = scenarios[2].pk;
                       sessionStorage.setItem('scenario3id',scenarios[2].pk);
                       document.getElementById("txtScenarioDescription_3").value = scenarios[2].fields.ScenarioDescription;
+                      document.getElementById("txtScenarioAnalysis_3").value = scenarios[2].fields.raw_consequences;
                       document.getElementById("selectThreat_3").value = scenarios[2].fields.threatSource;
                       document.getElementById("selectTactics_3").value = scenarios[2].fields.threatTactic;
                       document.getElementById("id_impact_3").value = scenarios[2].fields.impact;
@@ -5287,6 +5137,7 @@ $(document).ready(function() {
                       document.getElementById("hdnScenarioID_4").value = scenarios[3].pk;
                       sessionStorage.setItem('scenario4id',scenarios[3].pk);
                       document.getElementById("txtScenarioDescription_4").value = scenarios[3].fields.ScenarioDescription;
+                      document.getElementById("txtScenarioAnalysis_4").value = scenarios[3].fields.raw_consequences;
                       document.getElementById("selectThreat_4").value = scenarios[3].fields.threatSource;
                       document.getElementById("selectTactics_4").value = scenarios[3].fields.threatTactic;
                       document.getElementById("id_impact_4").value = scenarios[3].fields.impact;
@@ -5385,6 +5236,7 @@ $(document).ready(function() {
                       document.getElementById("hdnScenarioID_5").value = scenarios[4].pk;
                       sessionStorage.setItem('scenario5id',scenarios[4].pk);
                       document.getElementById("txtScenarioDescription_5").value = scenarios[4].fields.ScenarioDescription;
+                      document.getElementById("txtScenarioAnalysis_5").value = scenarios[4].fields.raw_consequences;
                       document.getElementById("selectThreat_5").value = scenarios[4].fields.threatSource;
                       document.getElementById("selectTactics_5").value = scenarios[4].fields.threatTactic;
                       document.getElementById("id_impact_5").value = scenarios[4].fields.impact;
@@ -5483,6 +5335,7 @@ $(document).ready(function() {
                          document.getElementById("hdnScenarioID_1").value = scenarios[0].pk;
                          sessionStorage.setItem('scenario1id', scenarios[0].pk);
                          document.getElementById("txtScenarioDescription_1").value = scenarios[0].fields.ScenarioDescription;
+                         document.getElementById("txtScenarioAnalysis_1").value = scenarios[0].fields.raw_consequences;
                          document.getElementById("selectThreat_1").value = scenarios[0].fields.threatSource;
                          document.getElementById("selectTactics_1").value = scenarios[0].fields.threatTactic;
                          document.getElementById("id_impact_1").value = scenarios[0].fields.impact;
@@ -5711,6 +5564,7 @@ function initFrequencySlider(sliderId, outputId) {
       document.getElementById("scenario2-tab").click();
       document.getElementById("hdnScenarioID_2").value = '';
       document.getElementById("txtScenarioDescription_2").value = '';
+      document.getElementById("txtScenarioAnalysis_2").value = '';
       document.getElementById("selectThreat_2").value = '';
       document.getElementById("selectTactics_2").value = '';
         document.getElementById("id_impact_2").value = '';
@@ -5756,6 +5610,7 @@ function initFrequencySlider(sliderId, outputId) {
       document.getElementById("scenario3-tab").click();
       document.getElementById("hdnScenarioID_3").value = 0;
       document.getElementById("txtScenarioDescription_3").value = '';
+      document.getElementById("txtScenarioAnalysis_3").value = '';
       document.getElementById("selectThreat_3").value = '';
       document.getElementById("selectTactics_3").value = '';
         document.getElementById("id_impact_3").value = '';
@@ -5801,6 +5656,7 @@ function initFrequencySlider(sliderId, outputId) {
       document.getElementById("scenario4-tab").click();
       document.getElementById("hdnScenarioID_4").value = 0;
       document.getElementById("txtScenarioDescription_4").value = '';
+      document.getElementById("txtScenarioAnalysis_4").value = '';
       document.getElementById("selectThreat_4").value = '';
       document.getElementById("selectTactics_4").value = '';
         document.getElementById("id_impact_4").value = '';
@@ -5846,6 +5702,7 @@ function initFrequencySlider(sliderId, outputId) {
       document.getElementById("scenario5-tab").click();
       document.getElementById("hdnScenarioID_5").value = '';
       document.getElementById("txtScenarioDescription_5").value = '';
+      document.getElementById("txtScenarioAnalysis_5").value = '';
       document.getElementById("selectThreat_5").value = '';
       document.getElementById("selectTactics_5").value = '';
         document.getElementById("id_impact_5").value = '';
@@ -5890,6 +5747,7 @@ function initFrequencySlider(sliderId, outputId) {
       document.getElementById("scenario1-tab").click();
       document.getElementById("hdnScenarioID_1").value = '';
       document.getElementById("txtScenarioDescription_1").value = '';
+      document.getElementById("txtScenarioAnalysis_1").value = '';
       document.getElementById("selectThreat_1").value = '';
       document.getElementById("selectOutage_1").value = '';
       document.getElementById('exposed_system_1').checked = false;
@@ -6013,6 +5871,7 @@ function save_scenario(buttonId) {
             'bia_supply_inbound': $('#inboundSupplyAffected_' + buttonId).val(),
             'bia_supply_prodimpact': $('#productionImpact_' + buttonId).val(),
             'bia_supply_security': $('#supplyChainSecurityImpact_' + buttonId).val(),
+            'raw_consequences': $('#txtScenarioAnalysis_' + buttonId).val(),
         };
         // Extract controls and their scores from the table
         var controlList = [];
@@ -6091,7 +5950,7 @@ $(document).ready(function() {
     function disableAllControls() {
         // Disable all input, textarea, select, and button elements
 
-        var elements = document.querySelectorAll('input:not([type="hidden"]), textarea, select, button');
+        var elements = document.querySelectorAll('input:not([type="hidden"]), textarea, select, button:not(.modal-button)');
         elements.forEach(function(element) {
             element.disabled = true;
         });
@@ -6109,16 +5968,95 @@ $(document).ready(function() {
     }
     // Call the function when the page loads
     window.onload = disableAllControls;
+
+
+function analyze_Scenario(scenario) {
+    var spinner = document.querySelector('.spinner-overlay_' + scenario);
+    spinner.style.display = 'flex'; // Show spinner
+    var scenarioText = document.getElementById('txtScenarioDescription_' + scenario).value;
+    var rawID = sessionStorage.getItem('rawid');
+
+    $.ajax({
+        url: "{% url 'OTRisk:analyze_raw_scenario' %}",
+        type: 'POST',
+        data: {
+            'scenario': scenarioText,
+            'rawID': rawID,
+            'csrfmiddlewaretoken': '{{ csrf_token }}'
+        },
+        success: function(response) {
+            var analyzeTextarea = document.getElementById('txtScenarioAnalysis_' + scenario);
+            // Check if 'consequence' exists in the response and is not empty
+            if (response.consequence && response.consequence.trim()) {
+                analyzeTextarea.value = response.consequence;
+            } else {
+                // Handle scenarios where 'consequence' is empty or not in response
+                analyzeTextarea.value = 'No analysis available.';
+            }
+            spinner.style.display = 'none'; // Hide spinner
+        },
+        error: function(xhr, status, error) {
+            console.error("Error in analyzing scenario: ", status, error);
+            spinner.style.display = 'none'; // Hide spinner
+        }
+    });
+}
+
 </script>
-
-
-
 
  <textarea id="lblriskSummary_1" name="lblriskSummary_1" class="form-control" readonly style="resize: none; visibility: hidden" rows="15" > </textarea>
 <textarea id="lblriskSummary_2" name="lblriskSummary_2" class="form-control" readonly style="resize: none; visibility: hidden" rows="15" > </textarea>
 <textarea id="lblriskSummary_3" name="lblriskSummary_3" class="form-control" readonly style="resize: none; visibility: hidden" rows="15" > </textarea>
 <textarea id="lblriskSummary_4" name="lblriskSummary_4" class="form-control" readonly style="resize: none; visibility: hidden" rows="15" > </textarea>
 <textarea id="lblriskSummary_5" name="lblriskSummary_5" class="form-control" readonly style="resize: none; visibility: hidden" rows="15" > </textarea>
+<div id="scenarioModal" class="modal fade" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Definition of a Well-Constructed Scenario</h5>
+                <button type="button" class="btn-close modal-button" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+    <p>A well-constructed scenario, especially in the context of cybersecurity for industrial systems, is a concise yet detailed narrative that outlines a potential event or situation. It includes:</p>
+    <ul>
+        <li><strong>Specificity:</strong> Precise description of the industrial device or system, its operational context, and specific cybersecurity threats or vulnerabilities.</li>
+        <li><strong>Contextual Relevance:</strong> Set within a well-defined operational environment, outlining relevant factors like network connectivity, system architecture, or third-party integrations.</li>
+        <li><strong>Problem Definition:</strong> Clear description of the cybersecurity challenge or threat, including potential cyber attacks or specific vulnerabilities.</li>
+    </ul>
+    <h3>Examples:</h3>
+    <ol>
+        <li><strong>Phishing Attack in a Power Plant:</strong> An operator at a nuclear power plant receives an email that appears to be from the plant’s IT department, asking them to click on a link to update their password credentials.</li>
+        <li><strong>Malware in Manufacturing:</strong> A manufacturing facility’s network is breached when an employee unknowingly installs software from an unverified source, which claims to be a new tool for inventory management.</li>
+        <li><strong>ERP System Vulnerability in Pharmaceutical Industry:</strong> A routine security audit reveals an unpatched vulnerability in the ERP software used by a pharmaceutical company, potentially exposing the system to unauthorized access.</li>
+    </ol>
+</div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary modal-button" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+var link = document.getElementById("link-to-resource");
+var modal = new bootstrap.Modal(document.getElementById("scenarioModal"), {});
+
+// Check if elements exist
+if (link && modal) {
+// When the user clicks the link, open the modal
+link.addEventListener('click', function() {
+modal.show();
+});
+}
+});
+
+$(document).ready(function() {
+    $('#scenarioList').DataTable();
+});
+
+
+</script>
 
 </body>
 </html>

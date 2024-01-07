@@ -16,15 +16,14 @@ class Verify2FAForm(forms.Form):
 
 
 class TwoFactorSetupForm(forms.Form):
-    phone_number = forms.CharField(required=True, label="Phone Number")
+    phone_number = forms.CharField(widget=forms.TextInput(attrs={'id': 'phone_number', 'type': 'tel'}))
 
+
+# forms.py
 
 class TwoFactorVerifyForm(forms.Form):
-    token = forms.CharField(
-        required=True,
-        label="Token",
-        widget=forms.PasswordInput()
-    )
+    token = forms.CharField(required=True, label="Verification Code", max_length=6)
+
 
 
 class PasswordResetRequestForm(forms.Form):

@@ -93,6 +93,7 @@ urlpatterns = [
     path('OTRisk/consequence/add/<int:consequence_id>/', views.add_or_update_consequence, name='edit_consequence'),
     path('admin_users/', views.admin_users, name='admin_users'),
     path('disable_user/<int:user_id>/', views.disable_user, name='disable_user'),
+    path('enable_user/<int:user_id>/', views.enable_user, name='enable_user'),
     path('delete_user/<int:user_id>/', views.delete_user, name='delete_user'),
     path('reports', views.reports, name='reports'),
     path('reports_pha', views.reports_pha, name='reports_pha'),
@@ -139,8 +140,20 @@ urlpatterns = [
     path('get-organization-defaults/<int:organization_id>/', views.get_organization_defaults, name='get_organization_defaults'),
     path('delete_snapshot/<int:snapshot_id>/<int:scenario_id>/', views.delete_snapshot, name='delete_snapshot'),
     path('organization/form/', views.organization_form_view, name='organization_form'),
-
+    path('scenario_sim/', views.scenario_sim, name='scenario_sim'),
+    path('update_user_phone_number/', views.update_user_phone_number, name='update_user_phone_number'),
+    path('analyze_raw_scenario/', views.analyze_raw_scenario, name='analyze_raw_scenario'),
+    path('analyze_sim_scenario/', views.analyze_sim_scenario, name='analyze_sim_scenario'),
+    path('assign_cyberpha_to_group/', views.assign_cyberpha_to_group, name='assign_cyberpha_to_group'),
+    path('fetch_groups/', views.fetch_groups, name='fetch_groups'),
+    path('fetch_all_groups/', views.fetch_all_groups, name='fetch_all_groups'),
+    path('generate_sim_attack_tree/', views.generate_sim_attack_tree, name='generate_sim_attack_tree'),
+    path('generate_scenario_description/', views.generate_scenario_description, name='generate_scenario_description'),
+    path('analyze_sim_consequences/', views.analyze_sim_consequences, name='analyze_sim_consequences'),
 ]
+
+
+
 
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

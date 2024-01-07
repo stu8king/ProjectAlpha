@@ -133,11 +133,19 @@ class UserProfile(models.Model):
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE)
     must_change_password = models.BooleanField(default=True)
     abuse_flag = models.BooleanField(default=False)
+    jobtitle = models.CharField(max_length=100, default='')
+    role_moderator = models.BooleanField(default=False)
+    role_readonly = models.BooleanField(default=False)
+    phone_number = models.CharField(max_length=15, blank=True, null=True)
+    two_factor_confirmed = models.BooleanField(default=False)
+    failed_login_attempts = models.IntegerField(null=True, default=0)
 
     class Meta:
         db_table = 'userprofile'
         managed = True
 
+    def __str__(self):
+        return self.user.username
 
 class FailedLoginAttempt(models.Model):
     username = models.CharField(max_length=255)
