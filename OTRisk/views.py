@@ -32,7 +32,7 @@ from OTRisk.models.Model_CyberPHA import tblCyberPHAHeader, tblRiskCategories, \
     tblThreatIntelligence, tblMitigationMeasures, tblScenarios, tblSafeguards, tblThreatSources, tblThreatActions, \
     tblNodes, tblUnits, tblZones, tblCyberPHAScenario, tblIndustry, auditlog, tblStandards, MitreControlAssessment, \
     CyberPHAScenario_snapshot, Audit, PHAControlList, SECURITY_LEVELS, OrganizationDefaults, scenario_compliance, \
-    ScenarioConsequences, APIKey
+    ScenarioConsequences, APIKey, ScenarioBuilder
 from django.shortcuts import render, redirect
 from .dashboard_views import get_user_organization_id
 from django.contrib.auth.decorators import login_required
@@ -44,11 +44,12 @@ import requests, re
 from xml.etree import ElementTree as ET
 from .raw_views import qraw, openai_assess_risk, GetTechniquesView, raw_action, check_vulnerabilities, rawreport, \
     raw_from_walkdown, save_ra_action, get_rawactions, ra_actions_view, UpdateRAAction, reports, reports_pha, \
-    create_or_update_raw_scenario, analyze_raw_scenario, analyze_sim_scenario, generate_sim_attack_tree, analyze_sim_consequences
+    create_or_update_raw_scenario, analyze_raw_scenario, analyze_sim_scenario, generate_sim_attack_tree, \
+    analyze_sim_consequences
 from .dashboard_views import dashboardhome
 from .pha_views import iotaphamanager, facility_risk_profile, get_headerrecord, scenario_analysis, phascenarioreport, \
     getSingleScenario, pha_report, scenario_vulnerability, add_vulnerability, get_asset_types, calculate_effectiveness, \
-    generate_ppt, analyze_scenario, assign_cyberpha_to_group, fetch_groups, fetch_all_groups
+    generate_ppt, analyze_scenario, assign_cyberpha_to_group, fetch_groups, fetch_all_groups, retrieve_scenario_builder
 from .report_views import pha_reports, get_scenario_report_details, qraw_reports, get_qraw_scenario_report_details
 from .forms import CustomScenarioForm, CustomConsequenceForm, OrganizationAdmin
 from .models.Model_Scenario import CustomScenario, CustomConsequence
@@ -2711,3 +2712,53 @@ def generate_scenario_description(request):
         return JsonResponse({'scenario_description': scenario_description})
     else:
         return JsonResponse({'error': 'Invalid request'}, status=400)
+
+
+def save_scenario_builder(request):
+    print(request.POST)
+    if request.method == 'POST':
+        user = request.user
+        data = request.POST
+
+        # Reconstruct tableData from individual key-value pairs
+        tableData = []
+        for i in range(9):  # Assuming there are 9 factors
+            factor_key = f'tableData[{i}][factor]'
+            score_key = f'tableData[{i}][score]'
+            narrative_key = f'tableData[{i}][narrative]'
+            if factor_key in data and score_key in data and narrative_key in data:
+                tableData.append({
+                    'factor': data[factor_key],
+                    'score': data[score_key],
+                    'narrative': data[narrative_key]
+                })
+
+        scenario = ScenarioBuilder(
+            user=user,
+            scenario_name=data.get('name'),
+            scenario_data=json.dumps({
+                'scenario': data.get('scenario'),
+                'attackTree': data.get('attackTree'),
+                'consequences': data.get('consequences'),
+                'tableData': tableData,  # Updated line
+                'costs': {
+                    'bestCase': data.get('bestCaseCost'),
+                    'mostLikelyCase': data.get('mostLikelyCaseCost'),
+                    'worstCase': data.get('worstCaseCost')
+                }
+            })
+        )
+        scenario.save()
+        return JsonResponse({'status': 'success'})
+    else:
+        return JsonResponse({'error': 'Invalid request'}, status=400)
+
+
+# Django view to fetch saved scenarios
+def get_saved_scenario_builders(request):
+    if request.method == 'GET':
+        user = request.user
+        scenarios = ScenarioBuilder.objects.filter(user=user).values('id','scenario_name', 'created_at')
+
+        return JsonResponse(list(scenarios), safe=False)
+    return JsonResponse({'error': 'Invalid request'}, status=400)

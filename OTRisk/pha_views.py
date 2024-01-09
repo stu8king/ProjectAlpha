@@ -9,7 +9,7 @@ from django.views.decorators.http import require_POST
 from OTRisk.models.Model_CyberPHA import tblIndustry, tblCyberPHAHeader, tblZones, tblStandards, \
     tblCyberPHAScenario, vulnerability_analysis, tblAssetType, tblMitigationMeasures, MitreControlAssessment, \
     cyberpha_safety, SECURITY_LEVELS, ScenarioConsequences, user_scenario_audit, auditlog, CyberPHAModerators, \
-    WorkflowStatus, APIKey, CyberPHA_Group
+    WorkflowStatus, APIKey, CyberPHA_Group, ScenarioBuilder
 from OTRisk.models.raw import SecurityControls
 from OTRisk.models.raw import MitreICSMitigations, RAActions
 from OTRisk.models.questionnairemodel import FacilityType
@@ -59,7 +59,6 @@ def get_api_key(service_name):
 
 @login_required
 def iotaphamanager(request, record_id=None):
-
     pha_header = None
     new_record_id = None  # Initialize new_record_id to None
     annual_revenue_str = "$0"
@@ -1319,6 +1318,7 @@ def analyze_scenario(request):
 
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
+
 def generate_attack_tree(user_message):
     attack_tree_system_message = f"""
         Generate a hierarchical structure of a potential attack tree for the given cybersecurity scenario in a machine-readable JSON format. The structure should use 'name' for node labels and 'children' for nested nodes. Each node should represent a step or method in the attack, formatted as: {{'name': 'Node Name', 'children': [{{...}}]}}. EXTRA INSTRUCTION: Output MUST be in JSON format with no additional characters outside of the JSON structure.
@@ -1409,7 +1409,6 @@ def assign_cyberpha_to_group(request):
 
 
 def fetch_groups(request):
-
     cyberpha_id = request.GET.get('cyberpha_id')
     cyberpha = tblCyberPHAHeader.objects.get(pk=cyberpha_id)
     groups = cyberpha.groups.all()
@@ -1419,7 +1418,49 @@ def fetch_groups(request):
 
 
 def fetch_all_groups(request):
-
     groups = CyberPHA_Group.objects.all()
     group_data = [{'name': group.name, 'id': group.id} for group in groups]
     return JsonResponse({'groups': group_data})
+
+
+from django.http import JsonResponse
+import json
+
+
+def retrieve_scenario_builder(request, scenario_id):
+    try:
+        # Retrieve the scenario from the database
+        scenario = ScenarioBuilder.objects.get(id=scenario_id)
+
+        # Parse the stored JSON data
+        scenario_data = json.loads(scenario.scenario_data)
+
+        # Extract elements from the scenario data
+        attack_tree_data = scenario_data.get('attackTree')
+        scenario_description = scenario_data.get('scenario')
+        consequences = scenario_data.get('consequences', '').split("-")
+        table_data = scenario_data.get('tableData')
+        costs = scenario_data.get('costs')
+
+        # Prepare factors data
+        factors = {}
+        for item in table_data:
+            factor = item.get('factor')
+            score = int(item.get('score').split('/')[0])  # Extract score as integer
+            narrative = item.get('narrative')
+            factors[factor] = {'score': score, 'narrative': narrative}
+
+
+        # Return the extracted data
+        return JsonResponse({
+            'attack_tree_data': attack_tree_data,
+            'scenario_description': scenario_description,
+            'consequences': consequences,
+            'factors': factors,
+            'costs': costs
+        })
+
+    except ScenarioBuilder.DoesNotExist:
+        return JsonResponse({'error': 'Scenario not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)

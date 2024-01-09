@@ -199,6 +199,54 @@ body {
     vertical-align: middle;
     height: 1em; /* This will make the image the same height as the text */
 }
+
+/* Custom Dialog Styles */
+#assessmentDialog .modal-dialog {
+    max-width: 800px; /* Adjust the width of the dialog */
+}
+
+#assessmentDialog .modal-content {
+    border-radius: 5px; /* Rounded corners for the modal */
+}
+
+#assessmentDialog .modal-header {
+    background-color: #f3f3f3; /* Light grey header */
+    border-bottom: 1px solid #ddd; /* Separator line */
+}
+
+#assessmentDialog .modal-title {
+    color: #333; /* Dark text for the title */
+}
+
+#assessmentDialog .modal-body {
+    background-color: #fff; /* White background for the body */
+}
+
+#assessmentDialog .table {
+    margin-bottom: 0; /* Remove margin for the table */
+}
+
+#assessmentDialog .table th {
+    background-color: #e9ecef; /* Light grey background for table headers */
+    color: #333; /* Dark text for headers */
+    border-top: none; /* Remove top border */
+}
+
+#assessmentDialog .table td {
+    color: #555; /* Slightly darker text for table data */
+}
+
+#assessmentDialog .table tr.selectable-row:hover {
+    cursor: pointer;
+    background-color: #f0f0f0; /* Light grey background on hover */
+}
+
+#assessmentDialog .btn-close {
+    color: #333; /* Dark color for close button */
+}
+
+/* Additional styling can be added as needed */
+
 </style>
 </head>
 <body style="background-color: white">
@@ -362,6 +410,9 @@ function drawControlGauge(score) {
         </li>
         <li class="nav-item">
           <a class="nav-link" style="font-size: 12px;" href="{% url 'OTRisk:iotaphamanager' %}"><i class="bi bi-journal-text"></i> CyberPHA</a>
+        </li>
+      <li class="nav-item">
+          <a class="nav-link" style="font-size: 12px;" href="{% url 'OTRisk:scenario_sim' %}"><i class="bi bi-bricks"></i> Scenario Builder</a>
         </li>
           <li class="nav-item">
           <a class="nav-link" style="font-size: 12px;" href="{% url 'OTRisk:ra_actions_view_default' %}" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Actions</a>
@@ -1552,6 +1603,34 @@ $(document).ready(function() {
   </div>
 </div>
 
+<div class="modal fade" id="assessmentDialog" tabindex="-1" aria-labelledby="assessmentDialogLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="assessmentDialogLabel">Select an Assessment</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for pha_header_records in pha_header_records %}
+                            <tr class="selectable-row" data-id="{{ pha_header_records.ID }}">
+                                <td>{{ pha_header_records.title }}</td>
+                                <td>{{ pha_header_records.latest_workflow_status }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
 
 <script>
 // Define the csrfSafeMethod function to check if a HTTP method is safe from CSRF protection

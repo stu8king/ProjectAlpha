@@ -85,6 +85,9 @@ $(function () {
         <li class="nav-item">
           <a class="nav-link" style="font-size: 12px;" href="{% url 'OTRisk:iotaphamanager' %}"><i class="bi bi-journal-text"></i> CyberPHA</a>
         </li>
+      <li class="nav-item">
+          <a class="nav-link" style="font-size: 12px;" href="{% url 'OTRisk:scenario_sim' %}"><i class="bi bi-bricks"></i> Scenario Builder</a>
+        </li>
           <li class="nav-item">
           <a class="nav-link" style="font-size: 12px;" href="{% url 'OTRisk:ra_actions_view_default' %}" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Actions</a>
         </li>
@@ -369,8 +372,8 @@ $(function () {
 
 <!-- put the buttons in here -->
 <div class="row small-font" >
-    <div class="col-md-1" style="background-color: white"></div>
-    <div class="col-md-2" ></div>
+    <div class="col-md-2" style="background-color: white"></div>
+
     <div class="col-md-2" > <button type="button" id="addScenarioBtn" class="form-control" onclick="resetformcontrols()" ><i class="bi bi-folder-plus"></i> New Scenario</button></div>
     <div class="col-md-2" ><button type="button" class="form-control" data-bs-toggle="modal"  onclick="processFormData()"><i class="bi bi-box-arrow-down"></i> Save Scenario</button></div>
     <div class="col-md-2" >
@@ -389,8 +392,8 @@ $(function () {
         </script>
     </div>
 
-    <div class="col-md-2" ></div>
-    <div class="col-md-1" style="background-color: white"></div>
+    <div class="col-md-2" ><button type="button" class="form-control" data-bs-toggle="modal"  data-bs-target="#scenarioSelectModal"><i class="bi bi-box-arrow-down"></i> Load Scenario</button></div>
+    <div class="col-md-2" style="background-color: white"></div>
 </div>
 
 <br>
@@ -2736,6 +2739,141 @@ $(document).ready(function() {
     </div>
   </div>
 </div>
+
+<!-- Modal -->
+<div class="modal fade" id="scenarioSelectModal" tabindex="-1" aria-labelledby="scenarioSelectModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="scenarioSelectModalLabel">Select a Scenario</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="file-explorer">
+          <ul id="scenarioList" class="list-group">
+            <!-- Scenario items will be populated here -->
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+    // Function to populate the scenario list in the modal
+function populateScenarioList() {
+  $.ajax({
+    url: '/OTRisk/get_saved_scenario_builders',
+    type: 'GET',
+    success: function(response) {
+      var scenarioList = $('#scenarioList');
+      scenarioList.empty();
+
+      response.forEach(function(scenario) {
+        var listItem = $(`
+          <li class="list-group-item list-group-item-action" data-id="${scenario.id}">
+            <span class="file-icon"><i class="fas fa-file-alt"></i></span>
+            <span class="file-name">${scenario.scenario_name}</span>
+          </li>
+        `);
+        listItem.on('click', function() {
+          retrieveScenario($(this).data('id'));
+          $('#scenarioSelectModal').modal('hide');
+        });
+        scenarioList.append(listItem);
+      });
+    },
+    error: function(error) {
+      console.error('Error fetching scenarios:', error);
+    }
+  });
+}
+
+
+
+// Function to retrieve and display a selected scenario
+function retrieveScenario(scenarioId) {
+  clearScenario();
+  $.ajax({
+    url: '/OTRisk/retrieve_scenario_builder/' + scenarioId,
+    type: 'GET',
+    success: function(response) {
+        clearScenario();
+      $('#id_txtScenario').val(response.scenario_description);
+      $('#attack_tree_text').val(response.attack_tree_data);
+
+        // Check if data.attack_tree_text is defined, not null, and not an empty string
+        if (response.attack_tree_data && response.attack_tree_data.trim() !== '') {
+
+            var jsonStringFromDatabase = response.attack_tree_data;
+            var jsonObject = JSON.parse(jsonStringFromDatabase);
+            drawAttackTree(jsonObject);
+        }
+
+
+      if (response.factors['Environmental consequences']) {
+        $('#range_environment').val(response.factors['Environmental consequences'].score);
+        $('#txtenvironmentJustify').val(response.factors['Environmental consequences'].narrative);
+      }
+       if (response.factors['Data']) {
+        $('#range_data').val(response.factors['Data'].score);
+        $('#txtdataJustify').val(response.factors['Data'].narrative);
+      }
+      if (response.factors['Danger-to-life']) {
+        $('#range_life').val(response.factors['Danger-to-life'].score);
+        $('#txtlifeJustify').val(response.factors['Danger-to-life'].narrative);
+      }
+      if (response.factors['Financials']) {
+        $('#range_finance').val(response.factors['Financials'].score);
+        $('#txtfinanceJustify').val(response.factors['Financials'].narrative);
+      }
+      if (response.factors['Operations']) {
+        $('#range_production').val(response.factors['Operations'].score);
+        $('#txtproductionJustify').val(response.factors['Operations'].narrative);
+      }
+      if (response.factors['Regulations']) {
+        $('#range_regulatory').val(response.factors['Regulations'].score);
+        $('#txtregulatoryJustify').val(response.factors['Regulations'].narrative);
+      }
+      if (response.factors['Reputation']) {
+        $('#range_reputation').val(response.factors['Reputation'].score);
+        $('#txtreputationJustify').val(response.factors['Reputation'].narrative);
+      }
+      if (response.factors['Safety']) {
+        $('#range_safety').val(response.factors['Safety'].score);
+        $('#txtsafetyJustify').val(response.factors['Safety'].narrative);
+      }
+      if (response.factors['Supply chain']) {
+        $('#range_supply').val(response.factors['Supply chain'].score);
+        $('#txtsupplyJustify').val(response.factors['Supply chain'].narrative);
+      }
+
+       // Populate the consequences table
+      var tableBody = $('#consequenceTable tbody');
+      tableBody.empty(); // Clear existing rows
+
+      response.consequences.forEach(function(consequence) {
+        if (consequence.trim() !== '') {
+          var row = `<tr><td>${consequence}</td><td><input type="checkbox" checked></td></tr>`;
+          tableBody.append(row);
+        }
+      });
+
+    },
+    error: function(error) {
+      console.error('Error retrieving scenario:', error);
+    }
+  });
+}
+
+// Call populateScenarioList when the modal is about to be shown
+$('#scenarioSelectModal').on('show.bs.modal', function (e) {
+  populateScenarioList();
+});
+
+</script>
+
+
 <script>
     function getCookie(name) {
         let value = "; " + document.cookie;
@@ -3644,6 +3782,88 @@ function resetformcontrols() {
   });
 }
 
+function clearScenario(){
+         sessionStorage.setItem('attackTreeDrawn', 'false');
+      document.getElementById('viewAttackTreeBtn').style.display = 'none';
+      document.getElementById('exportAttackTreeBtn').style.display = 'none';
+      document.getElementById('closeAttackTreeBtn').style.display = 'none';
+      document.getElementById('id_txtScenario').value = '';
+      document.getElementById('exposed_system').checked = false;
+      document.getElementById('weak_credentials').checked = false;
+      // document.getElementById('txtConsequence').value = '';
+      document.getElementById('threat-intelligence').value = '';
+      document.getElementById('risk-category').value = '';
+      document.getElementById('range_safety').value = 0;
+      document.getElementById('range_life').value = 0;
+      document.getElementById('range_production').value = 0;
+      document.getElementById('range_finance').value = 0;
+      document.getElementById('range_reputation').value = 0;
+      document.getElementById('range_environment').value = 0;
+      document.getElementById('range_regulatory').value = 0;
+      document.getElementById('range_data').value = 0;
+      document.getElementById('range_supply').value = 0;
+      document.getElementById('SMrange').value = 0;
+      document.getElementById('MELrange').value = 0;
+      document.getElementById('RRMrange').value = 0;
+      document.getElementById('selSL').value = 0;
+      document.getElementById('SArange').value = 0;
+      document.getElementById('MELarange').value = 0;
+      document.getElementById('txtsafetyJustify').value = '';
+      document.getElementById('hazardNature').value = '';
+      document.getElementById('dangerScope').value = '';
+      document.getElementById('sisOutageYes').checked = false;
+      document.getElementById('sisOutageNo').checked = true;
+      document.getElementById('sisIntegrityYes').checked = false;
+      document.getElementById('sisIntegrityNo').checked = true;
+      document.getElementById('txtlifeJustify').value = '';
+      document.getElementById('txtproductionJustify').value = '';
+      document.getElementById('txtfinanceJustify').value = '';
+      document.getElementById('txtreputationJustify').value = '';
+      document.getElementById('txtenvironmentJustify').value = '';
+      document.getElementById('txtregulatoryJustify').value = '';
+      document.getElementById('txtdataJustify').value = '';
+      document.getElementById('SMrange').value = 0;
+      document.getElementById('MELrange').value = 0;
+      document.getElementById('RRMrange').value = 0;
+      document.getElementById('SArange').value = 0;
+      document.getElementById('MELarange').value = 0;
+      document.getElementById('txtScenarioAnalysis').value = 0;
+      document.getElementById('txtLikelihood').value = 0;
+      document.getElementById('hdnLikelihood').value = 0;
+      document.getElementById('txtRRa').value = 0;
+      document.getElementById('txtProbability').value = '';
+      document.getElementById('control_effectiveness').value = '';
+      document.getElementById('hdn_control_effectiveness').value = '';
+      document.getElementById('hdn_bia_score').value = '';
+
+      document.getElementById('txtEventCosts_low').value = '';
+      document.getElementById('txtEventCosts').value = '';
+      document.getElementById('txtEventCosts_high').value = '';
+      document.getElementById('txt_ale_low').value = '';
+      document.getElementById('txt_ale_median').value = '';
+      document.getElementById('txt_ale_high').value = '';
+      document.getElementById('frequency').value = '';
+      document.getElementById('txtResidualRisk').value = '';
+      document.getElementById('risk_register').checked = false;
+        var tableBody = $('#consequenceTable tbody');
+        tableBody.empty(); // Clear existing rows
+      // document.getElementById('has_controls').value = 0;
+        clearContainer('gaugeProbContainer');
+        clearContainer('gaugeContainer');
+        clearContainer('gaugeLikelihoodContainer');
+        clearContainer('gaugeResidualRisk');
+        clearContainer('gaugeFrequency');
+        clearContainer('gaugeBIAContainer');
+
+      sessionStorage.setItem('ls', '0');
+      sessionStorage.setItem('sid', 0);
+
+      try {
+        clearVulnerabilityTable();
+      } catch (error) {
+        console.error('Error clearing vulnerability table:', error);
+      }
+}
 
  function fillScenario(scenarioId) {
     sessionStorage.setItem('sid', scenarioId);
@@ -4014,9 +4234,6 @@ modal.show();
 }
 });
 
-$(document).ready(function() {
-    $('#scenarioList').DataTable();
-});
 
 
 </script>

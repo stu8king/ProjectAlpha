@@ -86,20 +86,35 @@
 			</section>
 			<!-- End banner Area -->
 
-     <div class="row">
-        <div class="col-md-5"></div>
-        <div class="col-md-2">
+<!-- setup_2fa.html -->
+
+<div class="row">
+    <div class="col-md-5"></div>
+    <div class="col-md-2">
         <form method="post" class="text-center">
             <h2>Set up 2FA</h2>
-            <p>Scan the QR code below with your 2FA app:</p>
-            <img src="{{ qr_code_url }}" alt="QR Code">
-            <p>After scanning, go to the verification page to complete the setup.</p>
-            <a href="{{ verify_2fa }}">Click here after scanning to verify</a>
+            <p>Access to iOTa is protected using two-factor authentication. An SMS will be sent to your mobile device containing a code. Enter your phone number here to opt-in and receive an iOTa verification codes:</p>
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn btn-primary">Send Verification Code</button>
         </form>
     </div>
-
     <div class="col-md-5"></div>
 </div>
+
+<!-- Include intl-tel-input CSS and JS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput.min.js"></script>
+
+<script>
+    var input = document.querySelector("#phone_number");
+    window.intlTelInput(input, {
+        // Any additional options you want to set
+        initialCountry: "us",
+        preferredCountries: ['us', 'ca', 'gb'],
+        utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/utils.js"
+    });
+</script>
 
 
 

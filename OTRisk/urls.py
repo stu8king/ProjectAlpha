@@ -150,10 +150,10 @@ urlpatterns = [
     path('generate_sim_attack_tree/', views.generate_sim_attack_tree, name='generate_sim_attack_tree'),
     path('generate_scenario_description/', views.generate_scenario_description, name='generate_scenario_description'),
     path('analyze_sim_consequences/', views.analyze_sim_consequences, name='analyze_sim_consequences'),
+    path('save_scenario_builder/', views.save_scenario_builder, name='save_scenario_builder'),
+    path('get_saved_scenario_builders/', views.get_saved_scenario_builders, name='get_saved_scenario_builders'),
+    path('retrieve_scenario_builder/<int:scenario_id>/', views.retrieve_scenario_builder, name='retrieve_scenario_builder'),
 ]
-
-
-
 
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

@@ -97,7 +97,7 @@
 /* Add more styles for form elements as needed */
 </style>
 </head>
-<body>
+<body >
 <script>
 
 anychart.licenseKey("{{ anychart_key }}");
@@ -132,7 +132,7 @@ fetch('https://restcountries.com/v3.1/all')
 <nav class="navbar navbar-expand-lg navbar-scroll shadow-0 border-bottom border-dark rounded">
   <div class="container-fluid d-flex justify-content-between">
    <a class="navbar-brand" href="{% url 'OTRisk:dashboardhome' %}"><img src="{% static 'images/iota - white 1.png' %}" style="height: 140px; width: 140px" class="navbar-logo" alt="">   </a>
-      <h6 class="my-auto text-center flex-grow-1">Scenario Simulator</h6>
+      <h6 class="my-auto text-center flex-grow-1">Scenario Builder</h6>
         <div id="menu_dock"></div>
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
       <ul class="navbar-nav ms-auto">
@@ -250,11 +250,17 @@ fetch('https://restcountries.com/v3.1/all')
                         </div>
                     </div>
                 </div>
-                <div class="col-md-4">
+               <div class="col-md-4">
                     <div class="card mb-3 shadow-sm">
                         <div class="card-body">
-                            <label for="txtAssetValue">Asset Value</label>
-                            <input type="text" class="form-control" id="txtAssetValue" name="txtAssetValue" placeholder="Enter asset value">
+                            <label for="selAssetValue">Asset Value</label>
+                            <select class="form-control" id="selAssetValue" name="selAssetValue">
+                                <option value=""> -- Select Asset Value -- </option>
+                                <option value="Low Value">Low Value</option>
+                                <option value="Medium Value">Medium Value</option>
+                                <option value="High Value">High Value</option>
+                                <option value="Very High Value">Very High Value</option>
+                            </select>
                         </div>
                     </div>
                 </div>
@@ -277,19 +283,33 @@ fetch('https://restcountries.com/v3.1/all')
 
             <!-- Second new row for the last two controls, center-aligned -->
             <div class="row justify-content-center">
-                <div class="col-md-4">
-                    <div class="card mb-3 shadow-sm">
-                        <div class="card-body">
-                            <label for="txtSecurityMeasures">Security Measures</label>
-                            <input type="text" class="form-control" id="txtSecurityMeasures" name="txtSecurityMeasures" placeholder="Describe security measures">
+                   <div class="col-md-4">
+                        <div class="card mb-3 shadow-sm">
+                            <div class="card-body">
+                                <label for="selSecurityMeasures">Security Measures</label>
+                                <select class="form-control" id="selSecurityMeasures" name="selSecurityMeasures">
+                                    <option value=""> -- Select Security Measures -- </option>
+                                    <option value="Basic Security Measures">Basic Security Measures</option>
+                                    <option value="Enhanced Security Measures">Enhanced Security Measures</option>
+                                    <option value="Comprehensive Security Measures">Comprehensive Security Measures</option>
+                                    <option value="Industry-Specific Security Measures">Industry-Specific Security Measures</option>
+                                    <option value="Custom Security Measures">Custom Security Measures</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div class="col-md-4">
+                    <div class="col-md-4">
                     <div class="card mb-3 shadow-sm">
                         <div class="card-body">
-                            <label for="txtRegulatoryEnvironment">Regulatory Environment</label>
-                            <input type="text" class="form-control" id="txtRegulatoryEnvironment" name="txtRegulatoryEnvironment" placeholder="Enter regulatory environment">
+                            <label for="selRegulatoryEnvironment">Regulatory Environment</label>
+                            <select class="form-control" id="selRegulatoryEnvironment" name="selRegulatoryEnvironment">
+                                <option value=""> -- Select Regulatory Environment -- </option>
+                                <option value="Strict Regulation">Strict Regulation</option>
+                                <option value="Moderate Regulation">Moderate Regulation</option>
+                                <option value="Minimal Regulation">Minimal Regulation</option>
+                                <option value="International Standards Compliance">International Standards Compliance</option>
+                                <option value="Self-Regulated">Self-Regulated</option>
+                            </select>
                         </div>
                     </div>
                 </div>
@@ -315,8 +335,8 @@ fetch('https://restcountries.com/v3.1/all')
 <div class="row">
     <div class="col-md-1"></div>
     <div class="col-md-10">
-        <div class ="row" style="border: 1px solid #000000; box-shadow: 0 4px 8px rgba(0,0,0,0.1); padding: 20px; background-color: lightgrey">
-            <div class="col-md-1 d-flex justify-content-center align-items-center"></div>
+        <div class ="row form-group" style="border: 1px solid #000000; box-shadow: 0 4px 8px rgba(0,0,0,0.1); padding: 20px;" >
+
             <div class="col-md-4">
 
                 <label for="txtScenario" class="d-flex align-items-center clickable-label" data-bs-toggle="modal" data-bs-target="#scenarioBuilderModal" data-modal-id="scenarioBuilderModal" ><img src="{% static 'images/scenario.png' %}" alt="" class="align-bottom" style="max-height: 2rem; margin-left: 5px;"> &nbsp;Scenario Builder</label>
@@ -387,7 +407,18 @@ function provideSuggestions(inputText) {
 
 </script>
             </div>
-            <div class="col-md-2 d-flex justify-content-center align-items-center flex-column">
+            <div class="col-md-1 d-flex justify-content-center align-items-center flex-column">
+                    <button id="saveScenarioBtn" class="btn btn-primary">Save Scenario</button>
+    <script>
+        document.getElementById('saveScenarioBtn').addEventListener('click', function() {
+        var scenarioName = prompt("Please enter a name for this scenario:");
+        if (scenarioName) {
+            saveScenario(scenarioName);
+        }
+    });
+
+    </script>
+<br>
                 <button id="analyzeScenarioBtn" class="btn btn-primary mb-2" type="button">Build Scenario >></button>
                 <div id="spinnerContainer" style="display: none;">
                     <div class="spinner-border" role="status">
@@ -400,68 +431,49 @@ function provideSuggestions(inputText) {
             <div class="col-md-4 border-right">
                 <label for="consequenceTable">Consequences</label>
                 <div class="form-group">
-                    <label for="txtConsequences"></label><textarea id="txtConsequences" class='form-control' rows=8 placeholder='' style="resize: none; border: 3px #97979A; border-radius: 10px; box-shadow: inset 3px 3px 8px rgba(0, 0, 0, 0.5); padding: 20px; background-color: white"></textarea>
+                    <label for="txtConsequences"></label>
+                    <textarea id="txtConsequences" class='form-control' rows=8 placeholder='' style="resize: none; border: 3px #97979A; border-radius: 10px; box-shadow: inset 3px 3px 8px rgba(0, 0, 0, 0.5); padding: 20px; background-color: white"></textarea>
+                </div>
+            </div>
+
+            <div class="col-md-2 d-flex justify-content-center align-items-center flex-column">
+                <div class="form-group">
+                 <div class="card mb-3 shadow-sm">
+                    <div class="card-body">
+                        <label for="txtBestCase">Best Case</label>
+                        <input type="text" id="txtBestCase" class="form-control" style="border: 3px #97979A; border-radius: 10px; box-shadow: inset 3px 3px 8px rgba(0, 0, 0, 0.5); padding: 20px; ">
+                    </div>
+                 <div class="card mb-3 shadow-sm">
+                    <div class="card-body">
+                        <label for="txtMostLikelyCase">Most Likely Case</label>
+                        <input type="text" id="txtMostLikelyCase" class="form-control" style="border: 3px #97979A; border-radius: 10px; box-shadow: inset 3px 3px 8px rgba(0, 0, 0, 0.5); padding: 20px; ">
+                    </div>
+                </div>
+                <div class="card mb-3 shadow-sm">
+                    <div class="card-body">
+                        <label for="txtWorstCase">Worst Case</label>
+                        <input type="text" id="txtWorstCase" class="form-control" style="border: 3px #97979A; border-radius: 10px; box-shadow: inset 3px 3px 8px rgba(0, 0, 0, 0.5); padding: 20px; ">
+                    </div>
+                </div>
+                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="col-md-1" style="background-color: white">
-
-        </div>
     </div> <!-- scenario list table -->
 </div>
 <br>
-<div class="row">
-    <div class="col-md-4"></div>
-    <div class="col-md-4">
-        <div class="row">
-            <div class="col-md-4">
-                <div class="card mb-3 shadow-sm">
-                    <div class="card-body">
-                        <label for="txtBestCase">Best Case</label>
-                        <input type="text" id="txtBestCase">
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card mb-3 shadow-sm">
-                <div class="card-body">
-                    <label for="txtMostLikelyCase">Most Likely Case</label>
-                    <input type="text" id="txtMostLikelyCase">
-                </div>
-            </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card mb-3 shadow-sm">
-                <div class="card-body">
-                    <label for="txtWorstCase">Worst Case</label>
-                    <input type="text" id="txtWorstCase">
-                </div>
-            </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4"></div>
-
-</div>
-
-
-
-
-
 
 <div class="row">
     <div class="col-md-1"></div>
-    <div class="col-md-10">
+    <div class="col-md-5">
         <span id="table_scenario"></span>
     </div>
     <div class="col-md-1"></div>
 </div>
 <div class="row">
     <div class="col-md-1"></div>
-    <div class="col-md-10">
-        <div id="attack_tree" style="width:100%"></div>
-    </div>
+
     <div class="col-md-1"></div>
 </div>
 <input type="hidden" id="hdnAT" name="hdnAT">
@@ -525,10 +537,10 @@ function provideSuggestions(inputText) {
     let facility_type = document.getElementById('selFacilityType').value;
     let industry = document.getElementById('selIndustry').value;
     let organization_size = document.getElementById('selOrganizationSize').value;
-    let asset_value = document.getElementById('txtAssetValue').value;
+    let asset_value = document.getElementById('selAssetValue').value;
     let operational_impact = document.getElementById('selOperationalImpact').value;
-    let security_measures = document.getElementById('txtSecurityMeasures').value;
-    let regulatory_environment = document.getElementById('txtRegulatoryEnvironment').value;
+    let security_measures = document.getElementById('selSecurityMeasures').value;
+    let regulatory_environment = document.getElementById('selRegulatoryEnvironment').value;
 
     var button = this;
     var spinnerContainer = document.getElementById('spinnerContainer');
@@ -603,7 +615,8 @@ function provideSuggestions(inputText) {
         },
         success: function(attackTreeResponse) {
             if (attackTreeResponse && !attackTreeResponse.error) {
-                document.getElementById('hdnAT').value = attackTreeResponse;
+                var attackTreeJson = JSON.stringify(attackTreeResponse);
+                document.getElementById('hdnAT').value = attackTreeJson;
                 drawAttackTree(attackTreeResponse);
             } else {
                 console.error('Attack tree data not available or invalid response');
@@ -793,6 +806,68 @@ document.addEventListener('DOMContentLoaded', (event) => {
         }
     });
 });
+
+function saveScenario(scenarioName) {
+    var scenarioData = {
+    name: scenarioName,
+    scenario: document.getElementById('txtScenario').value,
+    attackTree: document.getElementById('hdnAT').value,
+    consequences: document.getElementById('txtConsequences').value,
+    tableData: extractTableData(), // Add this line
+    bestCaseCost: document.getElementById('txtBestCase').value,
+    mostLikelyCaseCost: document.getElementById('txtMostLikelyCase').value,
+    worstCaseCost: document.getElementById('txtWorstCase').value
+    };
+
+    $.ajax({
+    url: "{% url 'OTRisk:save_scenario_builder' %}",
+    type: 'POST',
+    data: scenarioData,
+    headers: {
+        'X-CSRFToken': getCsrfToken()  // Include CSRF token
+    },
+    success: function(response) {
+        alert('Scenario saved successfully');
+    },
+    error: function(xhr, status, error) {
+        console.error('Error saving scenario:', error);
+    }
+    });
+}
+
+function extractTableData() {
+    var tableData = [];
+    $('#consequencesTable tbody tr').each(function() {
+        var row = $(this).find('td').map(function() {
+            return $(this).text();
+        }).get();
+        if (row.length > 0) {
+            tableData.push({
+                factor: row[0],
+                score: row[1],
+                narrative: row[2]
+            });
+        }
+    });
+    return tableData;
+}
+
+function getCsrfToken() {
+    var name = 'csrftoken';
+    var cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = jQuery.trim(cookies[i]);
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
 
         </script>
 </body>
