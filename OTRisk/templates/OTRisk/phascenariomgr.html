@@ -4,10 +4,10 @@
 <html>
 <head>
 
-<title>iOTa</title>
+<title>AnzenOT - GRC for OT</title>
 <link rel="stylesheet" type="text/css" href="{%  static 'css/phascenariomgr.css' %}">
 
-<link rel="icon" href="{% static 'images/iota - white 1.png' %}" type="image/x-icon">
+<link rel="icon" href="{% static 'images/AnzenOTIconBlack.png' %}" type="image/x-icon">
 <script src="https://d3js.org/d3.v6.min.js"></script>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -65,107 +65,160 @@ $(function () {
   $('[data-bs-toggle="tooltip"]').tooltip()
 })
 </script>
+<style>
+    .form-group {
+    border: 1px solid #464748; /* Border color */
+    box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.5); /* Outer shadow */
+    background-color: #5E6266; /* Lighter shade of #464748 */
+    padding: 15px; /* Optional: for internal spacing */
+}
+.navbar {
+    background-color: #464748;
+    border-bottom: 1px solid #000;
+    height: 50px; /* Fixed height */
+    position: relative;
+}
 
+.owl-logo {
+    height: 60px; /* Set a fixed height for the image */
+    width: auto; /* Maintain aspect ratio */
+    position: relative;
+    top: 50%; /* Center vertically in the navbar */
+    transform: translateY(-30%); /* Adjust vertical position */
+    margin-bottom: -20px; /* Negative margin to overlap */
+}
+
+.navbar-brand, .nav-link {
+    color: #d3d1cd !important; /* White text for clear visibility on initial view */
+}
+
+.menu-item {
+    border-right: 1px solid #4B6B6B; /* Subtle line between items */
+    font-size: 14px; /* Adjust font size */
+}
+
+.menu-item:last-child {
+    border-right: none; /* Remove border for the last item */
+}
+
+.menu-item:hover, .dropdown-item:hover {
+    background-color: #3A5F5F; /* Slightly lighter grey on hover */
+    color: #E0E0E0; /* Light grey text on hover */
+}
+
+.nav-link:hover, .dropdown-item {
+    color: #E0E0E0; /* Light grey text on hover */
+}
+
+.dropdown-menu {
+    background-color: #464748; /* Dark Slate Grey */
+    border: none;
+}
+
+.dropdown-item {
+    color: #FFFFFF; /* White text for clear visibility */
+}
+
+.dropdown-item:hover {
+    background-color: #3A5F5F; /* Slightly lighter grey on hover */
+    color: #E0E0E0;
+}
+</style>
 </head>
-<body>
+<body style="background-color: #464748">
 <script>
     anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
 </script>
-<nav class="navbar navbar-expand-lg navbar-scroll shadow-0 border-bottom border-dark rounded">
-  <div class="container-fluid d-flex justify-content-between">
-   <a class="navbar-brand" href="{% url 'OTRisk:dashboardhome' %}"><img src="{% static 'images/iota - white 1.png' %}" style="height: 140px; width: 140px" class="navbar-logo" alt="">   </a>
-      <h6 class="my-auto text-center flex-grow-1">CyberPHA</h6>
-        <div id="menu_dock"></div>
-    <div class="collapse navbar-collapse" id="navbarSupportedContent">
-      <ul class="navbar-nav ms-auto">
 
-        <li class="nav-item">
-          <a class="nav-link"  style="font-size: 12px;" href="{% url 'OTRisk:qraw' %}"><i class="bi bi-journal-text"></i> Risk Assessment</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" style="font-size: 12px;" href="{% url 'OTRisk:iotaphamanager' %}"><i class="bi bi-journal-text"></i> CyberPHA</a>
-        </li>
-      <li class="nav-item">
-          <a class="nav-link" style="font-size: 12px;" href="{% url 'OTRisk:scenario_sim' %}"><i class="bi bi-bricks"></i> Scenario Builder</a>
-        </li>
-          <li class="nav-item">
-          <a class="nav-link" style="font-size: 12px;" href="{% url 'OTRisk:ra_actions_view_default' %}" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Actions</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" style="font-size: 12px;" href="{% url 'OTRisk:risk_register' %}" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Risk Register</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" style="font-size: 12px;" href="{% url 'OTRisk:list_frameworks' %}" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Assessments</a>
-        </li>
-        <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="font-size: 12px;">
-                <i class="bi bi-diagram-3"></i> Admin
-              </a>
-              <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                  <li><a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:admin_users' %}">Admin Users</a></li>
-                  {% if user.is_staff %}
-                    <!-- Links visible only to superusers -->
-                    <li><a class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:user_admin' %}">User Administration</a></li>
-                      <li><a class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:execute_sql' %}">Execute SQL</a></li>
-                    {% endif %}
-
-              </ul>
-
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" href="{% url 'accounts:profile' %}" style="font-size: 12px;">
-                <i class="bi bi-person-fill"></i> {{ user.first_name }} {{ user.last_name }} | {{ user.userprofile.organization.name }}
-            </a>
-        </li>
-
-          <li class="nav-item">
-            <a class="nav-link" href="{% url 'logout' %}">
-                <i class="bi bi-box-arrow-right"></i> Logout
-            </a>
-        </li>
-      </ul>
+<nav class="navbar navbar-expand-lg navbar-scroll shadow-0 border-bottom rounded">
+    <div class="container-fluid d-flex justify-content-between">
+        <a class="navbar-brand" href="{% url 'OTRisk:dashboardhome' %}">
+            &nbsp; &nbsp; &nbsp; &nbsp;
+            <img src="{% static 'images/anzen_owl.png' %}" class="owl-logo" style="width: 18%; height: 18%">
+        </a>
+        <h6 class="my-auto text-center flex-grow-1 navbar-brand"><img src="{% static 'images/anzen_noowl.png' %}" style="width: 15%; height: 15%" alt=""> Scenario Manager</h6>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item menu-item">
+                    <a class="nav-link" href="{% url 'OTRisk:qraw' %}"><i class="bi bi-calculator"></i> QRAW</a>
+                </li>
+                <li class="nav-item menu-item">
+                    <a class="nav-link" href="{% url 'OTRisk:iotaphamanager' %}"><i class="bi bi-journal-text"></i> CyberPHA</a>
+                </li>
+                <li class="nav-item menu-item">
+                    <a class="nav-link" href="{% url 'OTRisk:scenario_sim' %}"><i class="bi bi-bricks"></i> Scenario Builder</a>
+                </li>
+                <li class="nav-item menu-item">
+                    <a class="nav-link" href="{% url 'OTRisk:ra_actions_view_default' %}"><i class="bi-file-earmark-easel"></i> Actions</a>
+                </li>
+                <li class="nav-item menu-item">
+                    <a class="nav-link" href="{% url 'OTRisk:risk_register' %}"><i class="bi-file-earmark-easel"></i> Risk Register</a>
+                </li>
+                <li class="nav-item menu-item">
+                    <a class="nav-link" href="{% url 'OTRisk:list_frameworks' %}"><i class="bi-file-earmark-easel"></i> Assessments</a>
+                </li>
+    <li class="nav-item dropdown menu-item">
+    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+    <i class="bi bi-diagram-3"></i> Admin
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+    <li><a class="dropdown-item" href="{% url 'OTRisk:admin_users' %}">Admin Users</a></li>
+    {% if user.is_staff %}
+    <li><a class="dropdown-item" href="{% url 'OTRisk:user_admin' %}">User Administration</a></li>
+    <li><a class="dropdown-item" href="{% url 'OTRisk:execute_sql' %}">Execute SQL</a></li>
+    {% endif %}
+    </ul>
+    </li>
+    <li class="nav-item menu-item">
+    <a class="nav-link" href="{% url 'accounts:profile' %}">
+    <i class="bi bi-person-fill"></i> {{ user.first_name }} {{ user.last_name }} | {{ user.userprofile.organization.name }}
+    </a>
+    </li>
+    <li class="nav-item menu-item">
+    <a class="nav-link" href="{% url 'logout' %}">
+    <i class="bi bi-box-arrow-right"></i> Logout
+    </a>
+    </li>
+    </ul>
     </div>
-  </div>
-
-</nav>
+    </div>
+    </nav>
 
 <form id="cyberpha-form">
 {% csrf_token %}
 <div id="notificationMessage" class="notification-message" style="display: none;"></div>
-<div class="row" style="height: 10px; padding-top: 20px; background-color: white">
-    <div class="col-md-1" style="background-color: white"></div>
+<div class="row" style="height: 10px; padding-top: 20px;">
+    <div class="col-md-1" ></div>
     <div class="col-md-10 " ></div>
-    <div class="col-md-1 " style="background-color: white"></div>
-</div> <!-- dark grey stripe -->
+    <div class="col-md-1 " ></div>
+</div>
 
 
-<div class="row">
-    <div class="col-md-1" style="background-color: white"></div>
-    <div class="col-md-10 sticky-top-container" style="background-color: white">
+<div class="row" style="background-color: #464748">
+    <div class="col-md-1" ></div>
+    <div class="col-md-10 sticky-top-container" style="background-color: #464748">
     <figure class="text-center">
 
     <h5>
-    <a href="#" id="cyberPHALink">CyberPHA Scenario Analysis - <span id="facilityName"></span></a>
-</h5>
+    <a href="#" id="cyberPHALink" style="color:white">CyberPHA Scenario Analysis - <span id="facilityName"></span></a>
+    </h5>
 
-<script>
-    $(document).ready(function() {
-    // Get the activeCyberPHA value from the session storage
-    let activeCyberPHA = sessionStorage.getItem('activeCyberPHA');
+    <script>
+        $(document).ready(function() {
+        // Get the activeCyberPHA value from the session storage
+        let activeCyberPHA = sessionStorage.getItem('activeCyberPHA');
 
-    if (activeCyberPHA) {
-        let linkUrl = `/OTRisk/iotaphamanager/${activeCyberPHA}/`;  // Modify the URL path as needed
-        $('#cyberPHALink').attr('href', linkUrl);
-    } else {
-        window.location.href = "{% url 'OTRisk:iotaphamanager' %}";
-    }
-});
+        if (activeCyberPHA) {
+            let linkUrl = `/OTRisk/iotaphamanager/${activeCyberPHA}/`;  // Modify the URL path as needed
+            $('#cyberPHALink').attr('href', linkUrl);
+        } else {
+            window.location.href = "{% url 'OTRisk:iotaphamanager' %}";
+        }
+    });
 
-</script>
-        <h6>Risk weightings set to <span id="facilityName2" class="text-decoration-underline text-body-emphasis" data-bs-toggle="tooltip" data-bs-placement="top" title="If the incorrect industry is displayed, return to the 'CyberPHA Manager' screen and select the 'Edit' button for this assessment from the table. Select the correct industry in the Assessment Setup form and save the record before re-selecting it to return to this screen"></span> industry</h6>
+    </script>
+    <h6>Risk weightings set to <span id="facilityName2" class="text-decoration-underline text-body-emphasis" data-bs-toggle="tooltip" data-bs-placement="top" title="If the incorrect industry is displayed, return to the 'CyberPHA Manager' screen and select the 'Edit' button for this assessment from the table. Select the correct industry in the Assessment Setup form and save the record before re-selecting it to return to this screen"></span> industry</h6>
         <h6> <span id="user_role" class="text-decoration-underline text-body-emphasis"></span></h6>
-
-
     </figure>
     <script>
 
@@ -175,238 +228,246 @@ $(function () {
 
      </script>
     </div>
-    <div class="col-md-1" style="background-color: white"></div>
+    <div class="col-md-1" ></div>
 </div>
 
 
 <div class="row" style="height: 300px">
-    <div class="col-md-1" style="background-color: white; display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%;">
-    <div>Saved Scenarios</div>
-        <div><h2><i class="bi bi-arrow-right"></i></h2></div>
+    <div class="col-md-1" style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%;">
     </div>
+    <div class="col-md-10" style="background-color: #464748">
+        <div class="form-group" style="background-color: #464748">
+            <div class="row" style="background-color: #464748">
+            <div class="col-md-12 " style="padding: 20px; background-color: #464748">
+                <div class="table-wrap rounded-3" style="border: 3px #97979A; border-radius: 10px; box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5); height: 250px">
+                    <table id="userscenarioList" class="table table-hover table-bordered small small-font overflow-auto compact" >
+                        <thead>
+                            <tr>
+                                <th rowspan="2" >ID</th>
+                                <th rowspan="2" style="width: 40%">Scenario</th>
+                                <th colspan="9">Impact Assessment Scores (Max = 10)</th>
+                                <th rowspan="2">Threat</th>
+                                <th rowspan="2">Risk</th>
+                                <th rowspan="2"></th>
+                            </tr>
+                            <tr>
+                                <th>Sfty</th>
+                                <th>Dgr</th>
+                                <th>Env</th>
+                                <th>Sup</th>
+                                <th>Fin</th>
+                                <th>Ops</th>
+                                <th>Data</th>
+                                <th>Regs</th>
+                                <th>Rep</th>
+                            </tr>
+                        </thead>
 
-    <div class="col-md-10 " style="background-color: white; padding: 20px">
-        <div class="table-wrap rounded-3" style="border: 3px #97979A; border-radius: 10px; box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5);  padding: 20px; background-color: white; height: 250px">
-            <table id="userscenarioList" class="table table-hover table-bordered small small-font overflow-auto compact" style="background-color: white;">
-                <thead>
-                    <tr>
-                        <th rowspan="2" >ID</th>
-                        <th rowspan="2" style="width: 40%">Scenario</th>
-                        <th colspan="9">Impact Assessment Scores (Max = 10)</th>
-                        <th rowspan="2">Threat</th>
-                        <th rowspan="2">Risk</th>
-                        <th rowspan="2"></th>
-                    </tr>
-                    <tr>
-                        <th>Sfty</th>
-                        <th>Dgr</th>
-                        <th>Env</th>
-                        <th>Sup</th>
-                        <th>Fin</th>
-                        <th>Ops</th>
-                        <th>Data</th>
-                        <th>Regs</th>
-                        <th>Rep</th>
-                    </tr>
-                </thead>
+                        <tbody id="userscenarioListBody" style="font-size: 10px">
+                          {% for saved_scenarios in saved_scenarios %}
+                          <tr onclick="fillScenario({{ saved_scenarios.ID}}); highlightRow(this);">
+                            <td>{{ saved_scenarios.ID }}</td>
+                            <td>{{ saved_scenarios.Scenario }}</td>
+                            <td>
+                                {% if saved_scenarios.impactSafety < 4 %}
+                                    <span class="green-circle"></span>
+                                {% elif saved_scenarios.impactSafety >= 4 and saved_scenarios.impactSafety < 8 %}
+                                    <span class="orange-circle"></span>
+                                {% elif saved_scenarios.impactSafety >= 8 %}
+                                    <span class="red-circle"></span>
+                                {% endif %}
+                                {{ saved_scenarios.impactSafety }}
+                            </td>
 
-                <tbody id="userscenarioListBody" style="font-size: 10px">
-                  {% for saved_scenarios in saved_scenarios %}
-                  <tr onclick="fillScenario({{ saved_scenarios.ID}}); highlightRow(this);">
-                    <td>{{ saved_scenarios.ID }}</td>
-                    <td>{{ saved_scenarios.Scenario }}</td>
-                    <td>
-                        {% if saved_scenarios.impactSafety < 4 %}
-                            <span class="green-circle"></span>
-                        {% elif saved_scenarios.impactSafety >= 4 and saved_scenarios.impactSafety < 8 %}
-                            <span class="orange-circle"></span>
-                        {% elif saved_scenarios.impactSafety >= 8 %}
-                            <span class="red-circle"></span>
-                        {% endif %}
-                        {{ saved_scenarios.impactSafety }}
-                    </td>
+                            <td>
+                                {% if saved_scenarios.impactDanger < 4 %}
+                                    <span class="green-circle"></span>
+                                {% elif saved_scenarios.impactDanger  >= 4 and saved_scenarios.impactDanger  < 8 %}
+                                    <span class="orange-circle"></span>
+                                {% elif saved_scenarios.impactDanger  >= 8 %}
+                                    <span class="red-circle"></span>
+                                {% endif %}
+                                {{ saved_scenarios.impactDanger  }}
+                            </td>
+                            <td>
+                                {% if saved_scenarios.impactEnvironment < 4 %}
+                                    <span class="green-circle"></span>
+                                {% elif saved_scenarios.impactEnvironment  >= 4 and saved_scenarios.impactEnvironment  < 8 %}
+                                    <span class="orange-circle"></span>
+                                {% elif saved_scenarios.impactEnvironment  >= 8 %}
+                                    <span class="red-circle"></span>
+                                {% endif %}
+                                {{ saved_scenarios.impactEnvironment  }}
+                            </td>
+                          <td>
+                              {% if saved_scenarios.impactSupply < 4 %}
+                                  <span class="green-circle"></span>
+                              {% elif saved_scenarios.impactSupply >= 4 and saved_scenarios.impactSupply < 8 %}
+                                  <span class="orange-circle"></span>
+                              {% elif saved_scenarios.impactSupply >= 8 %}
+                                  <span class="red-circle"></span>
+                              {% endif %}
+                              {{ saved_scenarios.impactSupply }}
+                          </td>
 
-                    <td>
-                        {% if saved_scenarios.impactDanger < 4 %}
-                            <span class="green-circle"></span>
-                        {% elif saved_scenarios.impactDanger  >= 4 and saved_scenarios.impactDanger  < 8 %}
-                            <span class="orange-circle"></span>
-                        {% elif saved_scenarios.impactDanger  >= 8 %}
-                            <span class="red-circle"></span>
-                        {% endif %}
-                        {{ saved_scenarios.impactDanger  }}
-                    </td>
-                    <td>
-                        {% if saved_scenarios.impactEnvironment < 4 %}
-                            <span class="green-circle"></span>
-                        {% elif saved_scenarios.impactEnvironment  >= 4 and saved_scenarios.impactEnvironment  < 8 %}
-                            <span class="orange-circle"></span>
-                        {% elif saved_scenarios.impactEnvironment  >= 8 %}
-                            <span class="red-circle"></span>
-                        {% endif %}
-                        {{ saved_scenarios.impactEnvironment  }}
-                    </td>
-                  <td>
-                      {% if saved_scenarios.impactSupply < 4 %}
-                          <span class="green-circle"></span>
-                      {% elif saved_scenarios.impactSupply >= 4 and saved_scenarios.impactSupply < 8 %}
-                          <span class="orange-circle"></span>
-                      {% elif saved_scenarios.impactSupply >= 8 %}
-                          <span class="red-circle"></span>
-                      {% endif %}
-                      {{ saved_scenarios.impactSupply }}
-                  </td>
-
-                    <td>
-                        {% if saved_scenarios.impactFinance < 4 %}
-                            <span class="green-circle"></span>
-                        {% elif saved_scenarios.impactFinance >= 4 and saved_scenarios.impactFinance < 8 %}
-                            <span class="orange-circle"></span>
-                        {% elif saved_scenarios.impactFinance >= 8 %}
-                            <span class="red-circle"></span>
-                        {% endif %}
-                        {{ saved_scenarios.impactFinance }}
-                    </td>
-                    <td>
-                        {% if saved_scenarios.impactProduction < 4 %}
-                            <span class="green-circle"></span>
-                        {% elif saved_scenarios.impactProduction >= 4 and saved_scenarios.impactProduction < 8 %}
-                            <span class="orange-circle"></span>
-                        {% elif saved_scenarios.impactProduction >= 8 %}
-                            <span class="red-circle"></span>
-                        {% endif %}
-                        {{ saved_scenarios.impactProduction }}
-                    </td>
-                    <td>
-                        {% if saved_scenarios.impactData < 4 %}
-                            <span class="green-circle"></span>
-                        {% elif saved_scenarios.impactData >= 4 and saved_scenarios.impactData < 8 %}
-                            <span class="orange-circle"></span>
-                        {% elif saved_scenarios.impactData >= 8 %}
-                            <span class="red-circle"></span>
-                        {% endif %}
-                        {{ saved_scenarios.impactData }}
-                    </td>
-                    <td>
-                        {% if saved_scenarios.impactRegulation < 4 %}
-                            <span class="green-circle"></span>
-                        {% elif saved_scenarios.impactRegulation >= 4 and saved_scenarios.impactRegulation < 8 %}
-                            <span class="orange-circle"></span>
-                        {% elif saved_scenarios.impactRegulation >= 8 %}
-                            <span class="red-circle"></span>
-                        {% endif %}
-                        {{ saved_scenarios.impactRegulation }}
-                    </td>
-                    <td>
-                        {% if saved_scenarios.impactReputation < 4 %}
-                            <span class="green-circle"></span>
-                        {% elif saved_scenarios.impactReputation >= 4 and saved_scenarios.impactReputation < 8 %}
-                            <span class="orange-circle"></span>
-                        {% elif saved_scenarios.impactReputation >= 8 %}
-                            <span class="red-circle"></span>
-                        {% endif %}
-                        {{ saved_scenarios.impactReputation }}
-                    </td>
+                            <td>
+                                {% if saved_scenarios.impactFinance < 4 %}
+                                    <span class="green-circle"></span>
+                                {% elif saved_scenarios.impactFinance >= 4 and saved_scenarios.impactFinance < 8 %}
+                                    <span class="orange-circle"></span>
+                                {% elif saved_scenarios.impactFinance >= 8 %}
+                                    <span class="red-circle"></span>
+                                {% endif %}
+                                {{ saved_scenarios.impactFinance }}
+                            </td>
+                            <td>
+                                {% if saved_scenarios.impactProduction < 4 %}
+                                    <span class="green-circle"></span>
+                                {% elif saved_scenarios.impactProduction >= 4 and saved_scenarios.impactProduction < 8 %}
+                                    <span class="orange-circle"></span>
+                                {% elif saved_scenarios.impactProduction >= 8 %}
+                                    <span class="red-circle"></span>
+                                {% endif %}
+                                {{ saved_scenarios.impactProduction }}
+                            </td>
+                            <td>
+                                {% if saved_scenarios.impactData < 4 %}
+                                    <span class="green-circle"></span>
+                                {% elif saved_scenarios.impactData >= 4 and saved_scenarios.impactData < 8 %}
+                                    <span class="orange-circle"></span>
+                                {% elif saved_scenarios.impactData >= 8 %}
+                                    <span class="red-circle"></span>
+                                {% endif %}
+                                {{ saved_scenarios.impactData }}
+                            </td>
+                            <td>
+                                {% if saved_scenarios.impactRegulation < 4 %}
+                                    <span class="green-circle"></span>
+                                {% elif saved_scenarios.impactRegulation >= 4 and saved_scenarios.impactRegulation < 8 %}
+                                    <span class="orange-circle"></span>
+                                {% elif saved_scenarios.impactRegulation >= 8 %}
+                                    <span class="red-circle"></span>
+                                {% endif %}
+                                {{ saved_scenarios.impactRegulation }}
+                            </td>
+                            <td>
+                                {% if saved_scenarios.impactReputation < 4 %}
+                                    <span class="green-circle"></span>
+                                {% elif saved_scenarios.impactReputation >= 4 and saved_scenarios.impactReputation < 8 %}
+                                    <span class="orange-circle"></span>
+                                {% elif saved_scenarios.impactReputation >= 8 %}
+                                    <span class="red-circle"></span>
+                                {% endif %}
+                                {{ saved_scenarios.impactReputation }}
+                            </td>
 
 
-                    <td>{{ saved_scenarios.ThreatClass }}</td>
-                    <td>{{ saved_scenarios.RiskCategory }}</td>
-                    <td>
-                        <a href="{% url 'OTRisk:deletescenario' saved_scenarios.ID saved_scenarios.CyberPHA.ID %}"
-                           class="btn btn-danger"
-                           onclick="return checkDeleteCondition();">Del</a>
+                            <td>{{ saved_scenarios.ThreatClass }}</td>
+                            <td>{{ saved_scenarios.RiskCategory }}</td>
+                            <td>
+                                <a href="{% url 'OTRisk:deletescenario' saved_scenarios.ID saved_scenarios.CyberPHA.ID %}"
+                                   class="btn btn-danger"
+                                   onclick="return checkDeleteCondition();">Del</a>
 
-                        <script>
-                            function checkDeleteCondition() {
-                                var lsValue = sessionStorage.getItem("ls");
-                                if (lsValue === "1") {
-                                    swal("iOTa Scenario Manager", "Changes cannot be made to this scenario because it has been added to the risk register");
-                                    return false; // Prevent the default action (i.e., following the link)
-                                }
-                                return confirm('Are you sure you want to delete this record? (Note that if you proceed, the record will be virtually deleted and can be recovered if necessary)');
-                            }
-                        </script>
-                    </td>
-                  </tr>
-                  {% endfor %}
-                </tbody>
-              </table>
-                <script>
-                // Function to handle row click and highlighting
-                function highlightRow(row) {
-                    // Remove highlighting from any previously clicked row
-                    $("#userscenarioListBody tr").removeClass('highlighted');
-                    // Add highlighting to the current clicked row
-                    $(row).addClass('highlighted');
-                }
+                                <script>
+                                    function checkDeleteCondition() {
+                                        var lsValue = sessionStorage.getItem("ls");
+                                        if (lsValue === "1") {
+                                            swal("iOTa Scenario Manager", "Changes cannot be made to this scenario because it has been added to the risk register");
+                                            return false; // Prevent the default action (i.e., following the link)
+                                        }
+                                        return confirm('Are you sure you want to delete this record? (Note that if you proceed, the record will be virtually deleted and can be recovered if necessary)');
+                                    }
+                                </script>
+                            </td>
+                          </tr>
+                          {% endfor %}
+                        </tbody>
+                      </table>
+                    <script>
+                        // Function to handle row click and highlighting
+                        function highlightRow(row) {
+                            // Remove highlighting from any previously clicked row
+                            $("#userscenarioListBody tr").removeClass('highlighted');
+                            // Add highlighting to the current clicked row
+                            $(row).addClass('highlighted');
+                        }
 
-                    // Function to load the vulnerability table component
-                    function loadVulnerabilityTable(scenarioId) {
-                        // Load the vulnerability table into the specified div container
-                        $('#vulnerabilityTableContainer').load('/OTRisk/scenario_vulnerability/' + scenarioId + '/', function () {
-                            // Initialize select2 for the asset_type field
-                            $('.select2').select2();
+                            // Function to load the vulnerability table component
+                            function loadVulnerabilityTable(scenarioId) {
+                                // Load the vulnerability table into the specified div container
+                                $('#vulnerabilityTableContainer').load('/OTRisk/scenario_vulnerability/' + scenarioId + '/', function () {
+                                    // Initialize select2 for the asset_type field
+                                    $('.select2').select2();
 
-                            // Handle form submission asynchronously (if needed)
-                            $('#vulnerability-form').on('submit', function (e) {
-                                e.preventDefault();
-                                $.ajax({
-                                    type: 'POST',
-                                    url: $(this).attr('action'),
-                                    data: $(this).serialize(),
-                                    success: function () {
-                                        // Refresh the table
-                                        loadVulnerabilityTable(scenarioId);
-                                    },
+                                    // Handle form submission asynchronously (if needed)
+                                    $('#vulnerability-form').on('submit', function (e) {
+                                        e.preventDefault();
+                                        $.ajax({
+                                            type: 'POST',
+                                            url: $(this).attr('action'),
+                                            data: $(this).serialize(),
+                                            success: function () {
+                                                // Refresh the table
+                                                loadVulnerabilityTable(scenarioId);
+                                            },
+                                        });
+                                    });
                                 });
-                            });
-                        });
-                    }
-            </script>
-
+                            }
+                    </script>
+                 </div>
+            </div>
+            </div>
         </div>
     </div>
-    <div class="col-md-1" style="background-color: white"></div>
+    <div class="col-md-1" ></div>
 </div> <!-- list of user entered scenarios -->
+<br><br>
 
 
 <!-- put the buttons in here -->
 <div class="row small-font" >
-    <div class="col-md-2" style="background-color: white"></div>
+    <div class="col-md-2"></div>
+    <div class="col-md-8">
+        <div class="form-group">
+            <div class="row">
+            <div class="col-md-3" > <button type="button" id="addScenarioBtn" class="form-control" onclick="resetformcontrols()" ><i class="bi bi-folder-plus"></i> New Scenario</button></div>
+            <div class="col-md-3" ><button type="button" class="form-control" data-bs-toggle="modal"  onclick="processFormData()"><i class="bi bi-box-arrow-down"></i> Save Scenario</button></div>
+            <div class="col-md-3" >
+                <button class="form-control" type="button" id="actionBtn" onclick="showRAActionsModal()" ><i class="bi bi-person-plus"></i> Add Action</button>
 
-    <div class="col-md-2" > <button type="button" id="addScenarioBtn" class="form-control" onclick="resetformcontrols()" ><i class="bi bi-folder-plus"></i> New Scenario</button></div>
-    <div class="col-md-2" ><button type="button" class="form-control" data-bs-toggle="modal"  onclick="processFormData()"><i class="bi bi-box-arrow-down"></i> Save Scenario</button></div>
-    <div class="col-md-2" >
-        <button class="form-control" type="button" id="actionBtn" onclick="showRAActionsModal()" ><i class="bi bi-person-plus"></i> Add Action</button>
+                <script>
+                    function showRAActionsModal() {
+                        var phaid = sessionStorage.getItem('activeCyberPHA');  // Get the value from session storage
 
-        <script>
-            function showRAActionsModal() {
-                var phaid = sessionStorage.getItem('activeCyberPHA');  // Get the value from session storage
+                        if (phaid === null || phaid === "") {
+                            alert("Please select a CyberPHA assessment from the table first before creating an action item.");
+                        } else {
+                            $('#RAActionsModal').modal('show');  // Show the modal if rawid has a value
+                        }
+                    }
+                </script>
+            </div>
 
-                if (phaid === null || phaid === "") {
-                    alert("Please select a CyberPHA assessment from the table first before creating an action item.");
-                } else {
-                    $('#RAActionsModal').modal('show');  // Show the modal if rawid has a value
-                }
-            }
-        </script>
+            <div class="col-md-3" ><button type="button" class="form-control" data-bs-toggle="modal"  data-bs-target="#scenarioSelectModal"><i class="bi bi-box-arrow-down"></i> Load Scenario</button></div>
+            </div>
+        </div>
     </div>
-
-    <div class="col-md-2" ><button type="button" class="form-control" data-bs-toggle="modal"  data-bs-target="#scenarioSelectModal"><i class="bi bi-box-arrow-down"></i> Load Scenario</button></div>
-    <div class="col-md-2" style="background-color: white"></div>
+    <div class="col-md-2" ></div>
 </div>
 
 <br>
 
 <div class="row small-font">
-    <div class="col-md-1" style="background-color: white; display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%;">
-        <div style="text-align: center;">Enter a scenario to analyse</div>
-        <div><h2><i class="bi bi-arrow-right"></i></h2></div>
+    <div class="col-md-1" style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%;">
+
     </div>
 
     <div class="col-md-10">
-        <div class="row" style="background-color: white">
+        <div class="row">
         </div>
+        <div class="form-group">
         <div class ="row" style="border: 1px solid #000000; box-shadow: 0 4px 8px rgba(0,0,0,0.1); padding: 20px; background-color: lightgrey">
             <div class="col-md-1 d-flex justify-content-center align-items-center"></div>
             <div class="col-md-3">
@@ -706,7 +767,9 @@ $(function () {
             <div class="col-md-1 d-flex justify-content-center align-items-center"></div>
             <div class="col-md-1" style="background-color: white"></div>
         </div> <!-- scenario list table -->
-        <div class="row">
+        </div>
+        <div class="form-group">
+            <div class="row">
             <div class="col-md-12 justify-content-center align-items-center">
                 <!-- Button to View Attack Tree -->
                 <div class="row">
@@ -799,19 +862,9 @@ $(function () {
         </script>
 
     </div>
+        </div>
 </div>
 
-
-
-
-
-
-
-<div class="row" style="height: 10px">
-    <div class="col-md-1" style="background-color: white"></div>
-    <div class="col-md-10 " style="background-color: white; height: 10px"></div>
-    <div class="col-md-1 " style="background-color: white"></div>
-</div> <!-- white stripe -->
 
 
 <div class="row" id="toggleRow">
@@ -821,14 +874,16 @@ $(function () {
         </button>
 
 
-    <div class="col-md-1" style="background-color: white; display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%;">
-        <div style="text-align: center;"><br><br>Business Impact Assessment</div>
-        <div><h2><i class="bi bi-arrow-right"></i></h2></div>
-    </div>
-    <div class="col-md-5" style="border: 1px solid #000000; box-shadow: 0 4px 8px rgba(0,0,0,0.1); padding: 20px; background-color: lightgrey">
-        <p></p>
-        <h5 style="display: inline;">Impact Analysis</h5> <span>(click labels to add descriptions)</span>
+    <div class="col-md-1" style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%;">
 
+    </div>
+    <div class="col-md-5">
+        <div class="form-group">
+            <div class="row">
+                <div class="col-md-12" >
+        <p></p>
+        <h5 style="display: inline; color: white">Impact Analysis</h5> <span style="color:white">(click labels to add descriptions)</span>
+        <br>
          <!--slider for safety rating -->
         <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
             <div class="card-body">
@@ -954,10 +1009,15 @@ $(function () {
     </div>
 
     </div>
+            </div>
+        </div>
+    </div>
 
+    <div class="col-md-5">
+        <div class="form-group">
+            <div class="row">
 
-
-    <div class="col-md-5 risk-assessment-container" style="border: 1px solid #000000; box-shadow: 0 4px 8px rgba(0,0,0,0.1); padding: 20px; background-color: lightgrey" >
+            <div class="col-md-12 risk-assessment-container"  >
     <p></p>
          <div class="risk-section unmitigated-risk">
         <h5>Assessment - Unmitigated Risk</h5>
@@ -1069,12 +1129,46 @@ $(function () {
 
 
     </div>
-     <div class="col-md-1" style="background-color: white"></div>
+            </div>
+        </div>
+    </div>
+
+     <div class="col-md-1"></div>
 </div>
-<br>
+<br><br>
+<div class="row small-font" >
+            <div class="col-md-1"></div>
+            <div class="col-md-2" ></div>
+
+    <div class="col-md-6">
+    <div class="form-group">
+        <div class="row">
+            <div class="col-md-4" > <button type="button" id="addScenarioBtn" class="form-control" onclick="resetformcontrols()" ><i class="bi bi-folder-plus"></i> New Scenario</button></div>
+            <div class="col-md-4" ><button type="button" class="form-control" data-bs-toggle="modal"  onclick="processFormData()"><i class="bi bi-box-arrow-down"></i> Save Scenario</button></div>
+            <div class="col-md-4" >
+            <button class="form-control" type="button" id="actionBtn" onclick="showRAActionsModal()" ><i class="bi bi-person-plus"></i> Add Action</button>
+
+            <script>
+                function showRAActionsModal() {
+                    var phaid = sessionStorage.getItem('activeCyberPHA');  // Get the value from session storage
+
+                    if (phaid === null || phaid === "") {
+                        alert("Please select a CyberPHA assessment from the table first before creating an action item.");
+                    } else {
+                        $('#RAActionsModal').modal('show');  // Show the modal if rawid has a value
+                    }
+                }
+            </script>
+            </div>
+        </div>
+    </div>
+    </div>
+            <div class="col-md-2" ></div>
+            <div class="col-md-1"></div>
+        </div> <!-- form control buttons -->
 <!-- vulnerability assessment table -->
-<div class="row" >
-    <div class="col-md-1" style="background-color: white; display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%;">
+<div class="row" style="visibility: hidden">
+    <div class="col-md-1" style="justify-content: center; align-items: center; height: 100%;">
         <div style="text-align: center;">Vulnerabilities</div>
         <div><h2><i class="bi bi-arrow-right"></i></h2></div>
     </div>
@@ -1085,13 +1179,9 @@ $(function () {
             </div>
         </div>
     </div>
+    <div class="col-md-1"></div>
 </div>
 
-<div class="row" style="height: 10px">
-    <div class="col-md-1" style="background-color: white"></div>
-    <div class="col-md-10 " style="background-color: white; height: 10px"></div>
-    <div class="col-md-1 " style="background-color: white"></div>
-</div> <!-- dark grey stripe -->
 
 
     <div class="floating-container" id="floatingContainer">
@@ -1169,10 +1259,10 @@ $(function () {
                     <div class="card mb-3 shadow-sm w-100 elegant-card">
                         <div class="card-body">
                             <label for="txtEventCosts_low" class="label-title">SLE Low</label>
-                            <input type="text" id="txtEventCosts_low" name="txtEventCosts_low" class="form-control text-center elegant-input" readonly>
+                            <input type="text" id="txtEventCosts_low" name="txtEventCosts_low" class="form-control text-center elegant-input" style="font-size: 20px; color: #0a53be" readonly>
 
                             <label for="txt_ale_low" class="label-title">ALE Low</label>
-                            <input type="text" id="txt_ale_low" name="txt_ale_low" class="form-control text-center elegant-input" readonly>
+                            <input type="text" id="txt_ale_low" name="txt_ale_low" class="form-control text-center elegant-input"  style="font-size: 20px; color: #0a53be" readonly>
                         </div>
                     </div>
                 </div>
@@ -1340,30 +1430,7 @@ makeDraggable(document.getElementById("floatingContainer"));
     <div class="col"></div>
 </div>
 
-<div class="row small-font" >
-            <div class="col-md-1" style="background-color: white"></div>
-            <div class="col-md-2" ></div>
-            <div class="col-md-2" > <button type="button" id="addScenarioBtn" class="form-control" onclick="resetformcontrols()" ><i class="bi bi-folder-plus"></i> New Scenario</button></div>
-            <div class="col-md-2" ><button type="button" class="form-control" data-bs-toggle="modal"  onclick="processFormData()"><i class="bi bi-box-arrow-down"></i> Save Scenario</button></div>
-            <div class="col-md-2" >
-            <button class="form-control" type="button" id="actionBtn" onclick="showRAActionsModal()" ><i class="bi bi-person-plus"></i> Add Action</button>
 
-            <script>
-                function showRAActionsModal() {
-                    var phaid = sessionStorage.getItem('activeCyberPHA');  // Get the value from session storage
-
-                    if (phaid === null || phaid === "") {
-                        alert("Please select a CyberPHA assessment from the table first before creating an action item.");
-                    } else {
-                        $('#RAActionsModal').modal('show');  // Show the modal if rawid has a value
-                    }
-                }
-            </script>
-            </div>
-
-            <div class="col-md-2" ></div>
-            <div class="col-md-1" style="background-color: white"></div>
-        </div> <!-- form control buttons -->
 
 
 

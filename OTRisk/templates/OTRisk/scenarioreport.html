@@ -44,30 +44,67 @@
 </head>
 <body>
 
-<nav class="navbar navbar-expand-lg navbar-light bg-light">
-  <div class="container-fluid">
-    <a class="navbar-brand" href="#">ARAFOT</a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarNav">
-      <ul class="navbar-nav">
-        <li class="nav-item">
-          <a class="nav-link active" aria-current="page" href="{% url 'OTRisk:risk_assessment' %}">Risk Assessment Worksheet</a>
+<nav class="navbar navbar-expand-lg navbar-scroll shadow-0 border-bottom rounded">
+    <div class="container-fluid d-flex justify-content-between">
+        <a class="navbar-brand" href="{% url 'OTRisk:dashboardhome' %}">
+            &nbsp; &nbsp; &nbsp; &nbsp;
+            <img src="{% static 'images/anzen_owl.png' %}" class="owl-logo" style="width: 18%; height: 18%">
+        </a>
+        <h6 class="my-auto text-center flex-grow-1 navbar-brand"><img src="{% static 'images/anzen_noowl.png' %}" style="width: 15%; height: 15%"> Dashboard</h6>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item menu-item">
+                    <a class="nav-link" href="{% url 'OTRisk:qraw' %}"><i class="bi bi-calculator"></i> QRAW</a>
+                </li>
+                <li class="nav-item menu-item">
+                    <a class="nav-link" href="{% url 'OTRisk:iotaphamanager' %}"><i class="bi bi-journal-text"></i> CyberPHA</a>
+                </li>
+                <li class="nav-item menu-item">
+                    <a class="nav-link" href="{% url 'OTRisk:scenario_sim' %}"><i class="bi bi-bricks"></i> Scenario Builder</a>
+                </li>
+                <li class="nav-item menu-item">
+                    <a class="nav-link" href="{% url 'OTRisk:ra_actions_view_default' %}"><i class="bi-file-earmark-easel"></i> Actions</a>
+                </li>
+                <li class="nav-item menu-item">
+                    <a class="nav-link" href="{% url 'OTRisk:risk_register' %}"><i class="bi-file-earmark-easel"></i> Risk Register</a>
+                </li>
+                <li class="nav-item menu-item">
+                    <a class="nav-link" href="{% url 'OTRisk:list_frameworks' %}"><i class="bi-file-earmark-easel"></i> Assessments</a>
+                </li>
+    <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="bi bi-diagram-3"></i> Admin
+              </a>
+              <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+
+                    <li><a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:setup_org' %}">Set Defaults</a></li>
+                  <li><a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:admin_users' %}">Admin Users</a></li>
+              <li><a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:upload_questionnaire' %}">Upload Questionnaires</a></li>
+                  {% if user.is_staff %}
+                    <!-- Links visible only to superusers -->
+                    <li><a class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:user_admin' %}">User Administration</a></li>
+                      <li><a class="dropdown-item"  style="font-size: 12px;" href="{% url 'OTRisk:organization_form' %}">Manage Organizations</a></li>
+
+                      <li><a class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:execute_sql' %}">Execute SQL</a></li>
+                    {% endif %}
+
+              </ul>
+
         </li>
-        <li class="nav-item">
-          <a class="nav-link" href="{% url 'OTRisk:cyber_pha_manager' %}">CyberPHA Manager</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="{% url 'OTRisk:site_walkdown' %}">Site Walkdown</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="{% url 'OTRisk:walkdown' %}" tabindex="-1" >New Walkdown</a>
-        </li>
-      </ul>
+    <li class="nav-item menu-item">
+    <a class="nav-link" href="{% url 'accounts:profile' %}">
+    <i class="bi bi-person-fill"></i> {{ user.first_name }} {{ user.last_name }} | {{ user.userprofile.organization.name }}
+    </a>
+    </li>
+    <li class="nav-item menu-item">
+    <a class="nav-link" href="{% url 'logout' %}">
+    <i class="bi bi-box-arrow-right"></i> Logout
+    </a>
+    </li>
+    </ul>
     </div>
-  </div>
-</nav>
+    </div>
+    </nav>
 <div class="row">
     <div class="col col-mb-4 text-center"><h4>
         OT Cyber Risk Assessment for {{ scenarioheader.FacilityName}}<br>

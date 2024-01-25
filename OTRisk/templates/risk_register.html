@@ -5,8 +5,8 @@
 <html>
 <head>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    <title>iOTa</title>
-    <link rel="icon" href="{% static 'images/iota - white 1.png' %}" type="image/x-icon">
+    <title>AnzenOT - GRC for OT</title>
+    <link rel="icon" href="{% static 'images/AnzenOTIconBlack.png' %}" type="image/x-icon">
     <!-- Load jQuery (only one version) -->
 <html>
 <head>
@@ -53,32 +53,63 @@
         font-size: 0.8rem; /* adjust as needed */
    }
 
-    .navbar-scroll .nav-link,
-    .navbar-scroll .navbar-toggler-icon,
-    .navbar-scroll .navbar-brand {
-      color: #000000;
-    }
 
-    /* Color of the navbar BEFORE scroll */
-    .navbar-scroll {
-      background-color: #FFFFFF;
-        text-decoration-color: #000000;
-    }
+    .form-group {
+    border: 1px solid #464748; /* Border color */
+    box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.5); /* Outer shadow */
+    background-color: #5E6266; /* Lighter shade of #464748 */
+    padding: 15px; /* Optional: for internal spacing */
+}
+.navbar {
+    background-color: #464748;
+    border-bottom: 1px solid #000;
+    height: 50px; /* Fixed height */
+    position: relative;
+}
 
+.owl-logo {
+    height: 60px; /* Set a fixed height for the image */
+    width: auto; /* Maintain aspect ratio */
+    position: relative;
+    top: 50%; /* Center vertically in the navbar */
+    transform: translateY(-30%); /* Adjust vertical position */
+    margin-bottom: -20px; /* Negative margin to overlap */
+}
 
-    /* Color of the links AFTER scroll */
-    .navbar-scrolled .nav-link,
-    .navbar-scrolled .navbar-toggler-icon,
-    .navbar-scroll .navbar-brand {
-      color: #262626;
-    }
+.navbar-brand, .nav-link {
+    color: #d3d1cd !important; /* White text for clear visibility on initial view */
+}
 
-    .navbar-logo {
-    position: absolute;
-    top: 5px; /* Adjust this as needed */
-    left: 5; /* Adjust this as needed */
-    height: 100px; /* Adjust this as needed */
-    z-index: 10;
+.menu-item {
+    border-right: 1px solid #4B6B6B; /* Subtle line between items */
+    font-size: 14px; /* Adjust font size */
+}
+
+.menu-item:last-child {
+    border-right: none; /* Remove border for the last item */
+}
+
+.menu-item:hover, .dropdown-item:hover {
+    background-color: #3A5F5F; /* Slightly lighter grey on hover */
+    color: #E0E0E0; /* Light grey text on hover */
+}
+
+.nav-link:hover, .dropdown-item {
+    color: #E0E0E0; /* Light grey text on hover */
+}
+
+.dropdown-menu {
+    background-color: #464748; /* Dark Slate Grey */
+    border: none;
+}
+
+.dropdown-item {
+    color: #FFFFFF; /* White text for clear visibility */
+}
+
+.dropdown-item:hover {
+    background-color: #3A5F5F; /* Slightly lighter grey on hover */
+    color: #E0E0E0;
 }
         .table-wrap {
           height: 200px;
@@ -121,70 +152,76 @@
 
 
 </head>
-<body>
+<body style="background-color: #464748">
 <script>anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");</script>
 
-<nav class="navbar navbar-expand-lg navbar-scroll shadow-0 border-bottom border-dark rounded">
-  <div class="container-fluid d-flex justify-content-between">
-   <a class="navbar-brand" href="{% url 'OTRisk:dashboardhome' %}"><img src="{% static 'images/iota - white 1.png' %}" style="height: 140px; width: 140px" class="navbar-logo" alt="">   </a>
-      <h4 class="my-auto text-center flex-grow-1">Risk Register</h4>
-
-    <div class="collapse navbar-collapse" id="navbarSupportedContent">
-      <ul class="navbar-nav ms-auto">
-
-        <li class="nav-item">
-          <a class="nav-link"  style="font-size: 12px;" href="{% url 'OTRisk:qraw' %}"><i class="bi bi-journal-text"></i> Risk Assessment</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" style="font-size: 12px;" href="{% url 'OTRisk:iotaphamanager' %}"><i class="bi bi-journal-text"></i> CyberPHA</a>
-        </li>
-      <li class="nav-item">
-          <a class="nav-link" style="font-size: 12px;" href="{% url 'OTRisk:scenario_sim' %}"><i class="bi bi-bricks"></i> Scenario Builder</a>
-        </li>
-          <li class="nav-item">
-          <a class="nav-link" style="font-size: 12px;" href="{% url 'OTRisk:ra_actions_view_default' %}" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Actions</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" style="font-size: 12px;" href="{% url 'OTRisk:risk_register' %}" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Risk Register</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" style="font-size: 12px;" href="{% url 'OTRisk:list_frameworks' %}" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Assessments</a>
-        </li>
-        <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="font-size: 12px;">
+<nav class="navbar navbar-expand-lg navbar-scroll shadow-0 border-bottom rounded">
+    <div class="container-fluid d-flex justify-content-between">
+        <a class="navbar-brand" href="{% url 'OTRisk:dashboardhome' %}">
+            &nbsp; &nbsp; &nbsp; &nbsp;
+            <img src="{% static 'images/anzen_owl.png' %}" class="owl-logo" style="width: 18%; height: 18%">
+        </a>
+        <h6 class="my-auto text-center flex-grow-1 navbar-brand"><img src="{% static 'images/anzen_noowl.png' %}" style="width: 15%; height: 15%"> Risk Register</h6>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item menu-item">
+                    <a class="nav-link" href="{% url 'OTRisk:qraw' %}"><i class="bi bi-calculator"></i> QRAW</a>
+                </li>
+                <li class="nav-item menu-item">
+                    <a class="nav-link" href="{% url 'OTRisk:iotaphamanager' %}"><i class="bi bi-journal-text"></i> CyberPHA</a>
+                </li>
+                <li class="nav-item menu-item">
+                    <a class="nav-link" href="{% url 'OTRisk:scenario_sim' %}"><i class="bi bi-bricks"></i> Scenario Builder</a>
+                </li>
+                <li class="nav-item menu-item">
+                    <a class="nav-link" href="{% url 'OTRisk:ra_actions_view_default' %}"><i class="bi-file-earmark-easel"></i> Actions</a>
+                </li>
+                <li class="nav-item menu-item">
+                    <a class="nav-link" href="{% url 'OTRisk:risk_register' %}"><i class="bi-file-earmark-easel"></i> Risk Register</a>
+                </li>
+                <li class="nav-item menu-item">
+                    <a class="nav-link" href="{% url 'OTRisk:list_frameworks' %}"><i class="bi-file-earmark-easel"></i> Assessments</a>
+                </li>
+    <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                 <i class="bi bi-diagram-3"></i> Admin
               </a>
               <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+
+                    <li><a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:setup_org' %}">Set Defaults</a></li>
                   <li><a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:admin_users' %}">Admin Users</a></li>
+              <li><a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:upload_questionnaire' %}">Upload Questionnaires</a></li>
                   {% if user.is_staff %}
                     <!-- Links visible only to superusers -->
                     <li><a class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:user_admin' %}">User Administration</a></li>
+                      <li><a class="dropdown-item"  style="font-size: 12px;" href="{% url 'OTRisk:organization_form' %}">Manage Organizations</a></li>
+
                       <li><a class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:execute_sql' %}">Execute SQL</a></li>
                     {% endif %}
 
               </ul>
 
         </li>
-        <li class="nav-item">
-            <a class="nav-link" href="{% url 'accounts:profile' %}" style="font-size: 12px;">
-                <i class="bi bi-person-fill"></i> {{ user.first_name }} {{ user.last_name }} | {{ user.userprofile.organization.name }}
-            </a>
-        </li>
-
-          <li class="nav-item">
-            <a class="nav-link" href="{% url 'logout' %}">
-                <i class="bi bi-box-arrow-right"></i> Logout
-            </a>
-        </li>
-      </ul>
+    <li class="nav-item menu-item">
+    <a class="nav-link" href="{% url 'accounts:profile' %}">
+    <i class="bi bi-person-fill"></i> {{ user.first_name }} {{ user.last_name }} | {{ user.userprofile.organization.name }}
+    </a>
+    </li>
+    <li class="nav-item menu-item">
+    <a class="nav-link" href="{% url 'logout' %}">
+    <i class="bi bi-box-arrow-right"></i> Logout
+    </a>
+    </li>
+    </ul>
     </div>
-  </div>
+    </div>
+    </nav>
 
-</nav>
 <div class="row">
-<div class="col-md-1 " style="background-color: white"></div>
+<div class="col-md-1 "></div>
 <div class="col-md-6 ">
     <br>
+    <div class="form-group">
     <table class="table table-bordered table-striped compact" id="tbl_risk_register" style="font-size: 10px">
         <thead>
             <tr>
@@ -246,6 +283,7 @@
             {% endfor %}
         </tbody>
     </table>
+    </div>
     <script>
  $(document).ready(function() {
     $("table tbody tr").click(function() {
@@ -274,8 +312,9 @@ $(document).ready(function() {
     </script>
 
 </div> <!-- risk register table -->
-<div class="col-md-5 " style="background-color: white">
-    <div class="row" style="height: 10px"></div>
+<div class="col-md-5 " >
+    <div class="row" style="height: 20px"></div>
+
         <div class="row align-items-center">
             <br>
             <div class="col-md-12 d-flex justify-content-center align-items-end">
@@ -320,55 +359,63 @@ $(document).ready(function() {
             });
             </script>
         </div>   <!-- BIA Score marker chart -->
+        <br>
         <div class="row">
             <div class="col-md-2"></div>
-            <div class="col-md-3">
-                <br><br>
-                <div class="card shadow-lg inner-card">
-                    <div class="card-body">
-                        <div class="row justify-content-center align-items-center" style="font-size: 12px">
-                            Est. Costs (Best Case)
-                        </div>
-                        <div class="row">
-                            <h6 class="card-text text-center">${{ sle_low_sum|intcomma }}</h6>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <br><br>
-                <div class="card shadow-lg inner-card">
-                    <div class="card-body">
-                        <div class="row justify-content-center align-items-center" style="font-size: 12px">
-                            Est. Costs (Likely Case)
-                        </div>
-                        <div class="row">
-                            <h6 class="card-text text-center">${{ sle_sum|intcomma }}</h6>
+            <div class="col-md-8">
+                <div class="form-group">
+                    <div class="row">
+                    <div class="col-md-4">
+                        <br><br>
+                        <div class="card shadow-lg inner-card">
+                            <div class="card-body">
+                                <div class="row justify-content-center align-items-center" style="font-size: 12px">
+                                    Est. Costs (Best Case)
+                                </div>
+                                <div class="row">
+                                    <h6 class="card-text text-center">${{ sle_low_sum|intcomma }}</h6>
+                                </div>
+                            </div>
                         </div>
                     </div>
+                    <div class="col-md-4">
+                        <br><br>
+                        <div class="card shadow-lg inner-card">
+                            <div class="card-body">
+                                <div class="row justify-content-center align-items-center" style="font-size: 12px">
+                                    Est. Costs (Likely Case)
+                                </div>
+                                <div class="row">
+                                    <h6 class="card-text text-center">${{ sle_sum|intcomma }}</h6>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+            <br><br>
+            <div class="card shadow-lg inner-card">
+                <div class="card-body">
+                    <div class="row justify-content-center align-items-center" style="font-size: 12px">
+                       Est. Costs (Worst Case)
+                    </div>
+                    <div class="row">
+                        <h6 class="card-text text-center">${{ sle_high_sum|intcomma }}</h6>
+                    </div>
                 </div>
-            </div>
-            <div class="col-md-3">
-    <br><br>
-    <div class="card shadow-lg inner-card">
-        <div class="card-body">
-            <div class="row justify-content-center align-items-center" style="font-size: 12px">
-               Est. Costs (Worst Case)
-            </div>
-            <div class="row">
-                <h6 class="card-text text-center">${{ sle_high_sum|intcomma }}</h6>
             </div>
         </div>
-    </div>
-</div>
+                        </div>
+                </div>
+            </div>
             <div class="col-md-2"></div>
         </div> <!-- cost boxes -->
+
     <div class="row" style="height: 10px"></div>
 </div>
 
 <div class="row">
-<div class="col-md-1 " style="background-color: white"></div>
-<div class="col-md-10 " style="background-color: white">
+<div class="col-md-1 " ></div>
+<div class="col-md-10 ">
 <div class="card" style="display: none;" id="scenarioDetailsCard">
 <div class="card-header">
 Scenario Details
@@ -512,8 +559,11 @@ Scenario Details
 </form>
 </div>
 <div class="col-md-8">
+
 <div class="row" style="height:50%">
+
 <div class="col-md-6" id="impactChartContainer"></div>
+
 <div class="col-md-6" id="bulletChartContainer"></div>
 </div>
 </div>
@@ -522,7 +572,7 @@ Scenario Details
 </div>
 </div>
 </div>
-<div class="col-md-1 " style="background-color: white"></div>
+<div class="col-md-1 "></div>
 </div>
 
 
@@ -532,7 +582,7 @@ Scenario Details
 <!-- end of header detail -->
 
 <div class="row">
-    <div class="col-md-1 " style="background-color: white"></div>
+    <div class="col-md-1 "></div>
     <div class="col-md-10 " style="background-color: white">
         <div class="card" style="display: none;" id="scenarioDetailsCard">
           <div class="card-header">

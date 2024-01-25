@@ -1672,13 +1672,13 @@ def analyze_sim_consequences(request):
 
         # Construct the system message for cost estimation
         cost_estimation_message = f"""
-            As an insurance underwriter, estimate the potential financial impact of a cybersecurity incident for a {facility_type} in the {industry} industry. The estimate should be based on current understandings, previously reported incidents, and real-world events. Provide the best case, worst case, and most likely case cost estimates. Provide only the numerical values, without any additional explanation or narrative. Scenario details: '{scenario}'.
+            You are a cybersecurity insurance underwriter, estimate the most realistic and likely financial impact of a cybersecurity incident for a {facility_type} in the {industry} industry. The estimate should be based on current understandings, previously reported incidents, and real-world events. Provide the best case, worst case, and most likely case cost estimates in plain numerical format (e.g. 1000000 for one million dollars). Provide only the numerical values, without any additional explanation or narrative. Be pragmatic and do not exaggerate. Scenario details: '{scenario}'.
             - Organization Size: {organization_size}
             - Value of Affected Assets: {asset_value}
             - Operational Impact: {operational_impact}
             - Security Measures: {security_measures}
             - Regulatory Environment: {regulatory_environment}
-            Provide the estimates as US dollar values as follows:
+            Provide the estimates as plain numerical values without any currency symbols or words (e.g., '1000000' for one million dollars):
             Best Case Cost: [value] 
             Worst Case Cost: [value] 
             Most Likely Case Cost: [value] 
@@ -1708,20 +1708,27 @@ def analyze_sim_consequences(request):
         )
         cost_estimation_text = cost_response['choices'][0]['message']['content']
         print(cost_estimation_text)
-        # Corrected parsing logic to extract full numerical values including commas
-        best_case_cost = re.search(r'Best Case Cost: \$([\d,]+)', cost_estimation_text)
-        worst_case_cost = re.search(r'Worst Case Cost: \$([\d,]+)', cost_estimation_text)
-        most_likely_case_cost = re.search(r'Most Likely Case Cost: \$([\d,]+)', cost_estimation_text)
 
-        best_case_cost = best_case_cost.group(1) if best_case_cost else "Not available"
-        worst_case_cost = worst_case_cost.group(1) if worst_case_cost else "Not available"
-        most_likely_case_cost = most_likely_case_cost.group(1) if most_likely_case_cost else "Not available"
+        # Extract numerical values from the response
+        def extract_cost_value(text, label):
+            match = re.search(fr'{label}: (\d+)', text)
+            return match.group(1) if match else "Not available"
+
+        best_case_cost = extract_cost_value(cost_estimation_text, 'Best Case Cost')
+        worst_case_cost = extract_cost_value(cost_estimation_text, 'Worst Case Cost')
+        most_likely_case_cost = extract_cost_value(cost_estimation_text, 'Most Likely Case Cost')
+
+        # Format the cost values as strings with commas
+        best_case_cost = f"${int(best_case_cost):,}" if best_case_cost != "Not available" else best_case_cost
+        worst_case_cost = f"${int(worst_case_cost):,}" if worst_case_cost != "Not available" else worst_case_cost
+        most_likely_case_cost = f"${int(most_likely_case_cost):,}" if most_likely_case_cost != "Not available" else most_likely_case_cost
+
 
         return JsonResponse({
-            'best_case_cost': best_case_cost,
-            'worst_case_cost': worst_case_cost,
-            'most_likely_case_cost': most_likely_case_cost,
-            'consequence': consequence_text
-        })
+                'best_case_cost': best_case_cost,
+                'worst_case_cost': worst_case_cost,
+                'most_likely_case_cost': most_likely_case_cost,
+                'consequence': consequence_text
+            })
     else:
         return JsonResponse({'error': 'Invalid request'}, status=400)

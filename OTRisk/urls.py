@@ -155,6 +155,7 @@ urlpatterns = [
     path('retrieve_scenario_builder/<int:scenario_id>/', views.retrieve_scenario_builder, name='retrieve_scenario_builder'),
 ]
 
+
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

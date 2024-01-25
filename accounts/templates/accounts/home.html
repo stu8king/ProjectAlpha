@@ -8,17 +8,17 @@
     <!-- Favicon-->
     <link rel="shortcut icon" href="{% static 'images/fav.png' %}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <!-- Author Meta -->
-    <meta name="author" content="codepixer">
-    <!-- Meta Description -->
-    <meta name="description" content="">
-    <!-- Meta Keyword -->
-    <meta name="keywords" content="">
+
     <!-- meta character set -->
     <meta charset="UTF-8">
     <!-- Site Title -->
-   <title>iOTa</title>
-    <link rel="icon" href="{% static 'images/iota - white 1.png' %}" type="image/x-icon">
+   <title>AnzenOT - GRC for OT</title>
+
+
+<link rel="icon" href="{% static 'images/AnzenOTIconBlack.png' %}" type="image/x-icon">
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
     <link href="https://fonts.googleapis.com/css?family=Poppins:100,200,400,300,500,600,700" rel="stylesheet">
         <!--
         CSS
@@ -27,95 +27,54 @@
 
         <link rel="stylesheet" href="{% static 'css/font-awesome.min.css' %}">
         <link rel="stylesheet" href="{% static 'css/bootstrap.css' %}">
-        <link rel="stylesheet" href="{% static 'css/magnific-popup.css' %}">
-        <link rel="stylesheet" href="{% static 'css/nice-select.css' %}">
-        <link rel="stylesheet" href="{% static 'css/hexagons.min.css' %}">
-        <link rel="stylesheet" href="{% static 'css/animate.min.css' %}">
-        <link rel="stylesheet" href="{% static 'css/owl.carousel.css' %}">
-        <link rel="stylesheet" href="{% static 'css/main.css' %}">
-
-
 
          {% load django_bootstrap5 %}
         {% bootstrap_css %}
         {% bootstrap_javascript %}
-    <style>
-    /* Custom Stylesheet - custom_stylesheet.css */
+<style>
 
-/* General Modal Styling */
-.modal-content {
-    border-radius: 5px;
+
+.form-group {
+    border: 1px solid #464748; /* Border color */
+    box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.5); /* Outer shadow */
+    background-color: #5E6266; /* Lighter shade of #464748 */
+    padding: 15px; /* Optional: for internal spacing */
+}
+.form-sim .form-control {
+    max-width: 100%; /* Ensures select does not exceed container width */
+    width: auto; /* Optional: Ensures select width is based on content up to max-width */
+}
+.group-container {
+    background: linear-gradient(to bottom right, #464748, #57595b); /* Gradient background */
+    border: 1px solid #666; /* Darker border */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5); /* Box shadow */
+    padding: 25px;
+    margin-bottom: 30px; /* Increased space between containers */
+    border-radius: 10px; /* Rounded corners */
 }
 
-.modal-header {
-    border-bottom: none;
-    padding-bottom: 0;
-}
-
-.modal-title {
-    font-size: 24px;
-    font-weight: 600;
-}
-
-.close {
-    outline: none;
-}
-
-/* Form Styling */
-.login-form .form-group {
+.group-header {
+    color: #d3d1cd; /* Lighter color for contrast */
+    font-weight: bold;
     margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #777; /* Subtle bottom border */
+    font-size: 1.2em; /* Larger font size */
 }
 
-.login-form .form-control {
-    height: 45px;
-    font-size: 16px;
-    border-radius: 4px;
-    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.075);
-    border: 1px solid #ced4da;
+.group-body {
+    color: #e0e0e0; /* Slightly lighter text color */
+    font-family: 'Arial', sans-serif; /* Modern font */
 }
-
-.login-form .btn-primary {
-    background-color: #0056b3;
-    border-color: #004085;
-    color: #fff;
-    font-size: 18px;
-    padding: 10px 0;
-    border-radius: 4px;
-    transition: background-color 0.3s ease;
-}
-
-.login-form .btn-primary:hover {
-    background-color: #004085;
-}
-
-.login-form .btn-primary.btn-block {
-    display: block;
-    width: 100%;
-}
-
-/* Link Styling */
-.login-form a {
-    color: #007bff;
-    text-decoration: none;
-}
-
-.login-form a:hover {
-    text-decoration: underline;
-}
-
-/* Responsive adjustments */
-@media (max-width: 576px) {
-    .modal-dialog {
-        margin: 20px;
-    }
-    .modal-content {
-        padding: 20px;
-    }
+.cube-icon {
+    width: 20px; /* Adjust size as needed */
+    height: 20px; /* Adjust size as needed */
+    margin-right: 10px;
 }
 </style>
     </head>
 
-<body>
+<body style="background-color: #464748">
 <header id="header" id="home">
     <div class="header-top">
         <div class="container">
@@ -125,27 +84,21 @@
                     </ul>
                 </div>
                 <div class="col-lg-6 col-sm-6 col-8 header-top-right no-padding">
-                    <a href="mailto:support@iotarisk.com">support@iotarisk.com</a>
+                    <a href="mailto:support@iotarisk.com" style="color: white">support@iotarisk.com</a>
                 </div>
             </div>
         </div>
     </div>
     <div class="container main-menu">
-        <div class="row align-items-center justify-content-between d-flex">
-          <div id="logo">
-            <a href=""></a><img src="{% static 'images/iota_small_whitebg.png' %} " style="width: 70px"   alt="" title="" /></a>
-          </div>
-          <nav id="nav-menu-container">
-            <ul class="nav-menu">
-              <li class="menu-active"><a href="#">Home</a></li>
-              <li><a href="{% url 'accounts:about' %}">About</a></li>
-              <li><a href="{% url 'accounts:contact' %}">Contact</a></li>
-               <!--<li><a href="{% url 'accounts:subscription_view' %}">Register</a></li>-->
-              <li><a href="#" data-toggle="modal" data-target="#loginModal">Customer Login</a></li>
+        <div class="row">
+            <div class="col-md-4"></div>
+            <div class="col-md-4">
+              <div id="logo">
+                <a href=""></a><img src="{% static 'images/anzensagelogo1.png' %} "   alt="" title="" /></a>
+              </div>
+            <div class="col-md-4"></div>
+        </div>
 
-
-            </ul>
-          </nav><!-- #nav-menu-container -->
         {% if messages %}
         <div class="messages">
             {% for message in messages %}
@@ -158,164 +111,12 @@
         </div>
     </div>
   </header><!-- #header -->
-<!-- start banner Area -->
-<section class="banner-area relative" id="home">
-    <div class="overlay overlay-bg"></div>
-    <div class="container">
-        <div class="row fullscreen d-flex align-items-center justify-content-center">
-            <div class="banner-content col-lg-12 col-md-12">
-
-                <h6 class="text-uppercase">Cybersecurity Risk Management for OT</h6>
-                <h1>
-                    industrial OT assessor - iOTa
-                </h1>
-                <p class="text-white">
-                    Save time and money with dedicated risk assessment tools, integrated with AI and aligned with industry best practices and standards. Includes multi-scenario Cybersecurity Process and Hazards Assessment (PHA) and a multi-scenario risk assessment worksheet. Complete focus on environmental health and safety, with quantifiable event costs and risk ratings produced from real-world machine learning algorithms. Built-in NIST CSF and ISA 62443-2-1 compliance assessments with the capability for user to upload and use their own custom questionnaires
-                </p>
-                <a href="#" class="primary-btn header-btn text-uppercase" data-toggle="modal" data-target="#loginModal">Get Started</a>
-                <br><br>
-                <h6>iOTa is currently in development and will be ready for commercial use by January 2024. Email support@iotarisk.com to join our beta testing program and get a discount on access</h6>
-
-            </div>
-        </div>
-    </div>
-</section>
-<!-- End banner Area -->
-<!-- Start cat Area -->
-<section class="cat-area section-gap" id="feature">
-    <div class="container">
-        <div class="row">
-            <div class="col-lg-4">
-                <div class="single-cat">
-                    <img src="{% static 'images/risk-icon1.png' %}" style="height: 80px" alt="">
-                    <h4 class="mb-20" style="margin-top: 23px;">CyberPHA</h4>
-                    <p>
-                        Multi-scenario process and hazards assessment with AI facilitated qualitative and quantitative risk analysis. Automated generation of mitigation measures aligned with selectable standards, and automated reporting.
-                    </p>
-                </div>
-            </div>
-            <div class="col-lg-4">
-                <div class="single-cat">
-                    <img src="{% static 'images/risk-icon2.png' %}" style="height: 80px" alt="">
-                    <h4 class="mt-40 mb-20">QRAW</h4>
-                    <p>
-                        Conduct rapid risk assessments against multiple scenarios facilitated with a built-in scenario-database and an AI facilitated risk analysis. Attach selected scenarios to a risk register and track progress over time with snapshots
-
-                    </p>
-                </div>
-            </div>
-            <div class="col-lg-4">
-                <div class="single-cat">
-                    <img src="{% static 'images/risk-icon3.png' %}" style="height: 80px" alt="">
-                    <h4 class="mt-40 mb-20">Business Ready</h4>
-                    <p>
-                        Generate PHA profiles that include a safety, chemical, physical security, compliance, and OT system summaries for any given industrial facility. Perform control assessments using the Mitre ATT&CK framework for ICS.
-                    </p>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-<!-- End cat Area -->
-<!-- Start home-about Area -->
-    <section class="home-about-area section-gap" id="about">
-        <div class="container">
-            <div class="row justify-content-center align-items-center">
-                <div class="col-lg-8 col-md-12 home-about-left">
-                    <h6>Built by and for OT Cybersecurity Professionals</h6>
-                    <h1>
-                        Enhance your OT risk assessments <br>
-                        and simplify risk analysis
-                    </h1>
-                    <p class="sub">iOTa has been designed to save time and money in performing complex safety and operational focused risk analysis. </p>
-                    <p class="pb-20">
-                        Organizations that use iOTa benefit from being able to complete, manage, and track OT risk assessments with minimal or no external assistance and guidance. </p>
-                    <p class="pb-20">Complex scenario analysis is performed in seconds by powerful proprietary AI-integrated processes that present data that is ready to be used by an organization's risk management leaders. </p>
-                    <p class="pb-20">Recommended controls are automatically mapped to any common industry or regulatory standard.
-
-                </div>
-                <div class="col-lg-4 col-md-12 home-about-right relative" style="text-align: center;">
-    <div class="image-border-container" style="display: inline-block; border: 2px solid black;">
-        <img src="{% static 'images/screenshot1.png' %}" alt="" style="width:100%; height:100%;">
-    </div>
-    <p style="color: white">Screen grab from a CyberPHA scenario report</p>
-</div>
-
-
-            </div>
-        </div>
-    </section>
-    <!-- End home-about Area -->
-<!-- Start service Area -->
-			<section class="service-area section-gap" id="service">
-				<div class="container">
-					<div class="row justify-content-center">
-						<div class="col-md-12 pb-30 header-text text-center">
-							<h1 class="mb-10">Designed and Developed by Security Professionals</h1>
-							<p>
-								iOTa is developed using an industry standard framework,  delivered as a SaaS solution, and securely hosted on AWS.
-							</p>
-						</div>
-					</div>
-					<div class="row">
-						<div class="col-lg-4">
-							<div class="single-service">
-								<div class="thumb">
-
-
-									<img src="{% static 'images/s1.jpg' %}" alt="">
-								</div>
-								<h4>Secure</h4>
-								<p>
-									Access to iOTa uses two-factor authentication. All access is logged and suspicious attempts to login are blocked.
-								</p>
-							</div>
-						</div>
-						<div class="col-lg-4">
-							<div class="single-service">
-								<div class="thumb">
-                                    <img src="{% static 'images/s2.jpg' %}" alt="">
-								</div>
-								<h4>AI Integration</h4>
-								<p>
-									iOTa has proprietary algorithms that utilize the latest AI integrations to enhance risk assessment, with a specific focus on OT and Industrial Control Systems.
-								</p>
-							</div>
-						</div>
-						<div class="col-lg-4">
-							<div class="single-service">
-								<div class="thumb">
-									<img src="{% static 'images/s3.jpg' %}" alt="">
-								</div>
-								<h4>Safety First</h4>
-                                <p>
-									iOTa risk assessment focus on the principle that safety is the first and foremost priority for industrial facilities. Assessments are based on the PHA process and use much of the same terminology.
-								</p>
-							</div>
-						</div>
-					</div>
-				</div>
-			</section>
-			<!-- End service Area -->
 
 
 
 
 
 
-    <nav class="navbar navbar-expand-lg">
-        <a class="navbar-brand" href="#"></a>
-        <div class="collapse navbar-collapse">
-            <ul class="navbar-nav ml-auto">
-                <li class="nav-item">
-                    <a class="nav-link" href="#" id="login-link">Login</a>
-                </li>
-            </ul>
-        </div>
-    </nav>
-
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
     <script>
         $(document).ready(function() {
             $('#login-link').click(function(e) {
@@ -324,63 +125,48 @@
             });
         });
     </script>
+            <br>
 
-
-
-
-<div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3 class="modal-title" id="loginModalLabel"><i class="bi bi-box-arrow-in-right"></i> Login to iOTa</h3>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body">
-        <div class="login-form">
             <form method="POST" action="{% url 'accounts:login' %}">
                 {% csrf_token %}
-                <div class="form-group">
-                    <label for="username"><i class="bi bi-person-check"></i> Username:</label>
-                    <input type="text" id="username" name="username" class="form-control" required>
-                </div>
-                <div class="form-group">
-                    <label for="password"><i class="bi bi-key"></i> Password:</label>
-                    <input type="password" id="password" name="password" class="form-control" required>
-                </div>
-                <div class="form-group">
-                    <button type="submit" class="btn btn-primary btn-block">Login</button>
-                </div>
-                <div class="form-group text-center">
-                    <a href="{% url 'accounts:password_reset_request' %}">Forgot Password?</a>
-                </div>
+
+                    <div class="row">
+                        <div class="col-md-4"></div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <div class="row">
+                                    <div class="col-md-2"></div>
+                                    <div class="col-md-8">
+                                    <label for="username" style="color: white"><i class="bi bi-person-check"></i> Username:</label>
+                                    <input type="text" id="username" name="username" class="form-control" required>
+
+                                    <label for="password" style="color: white"><i class="bi bi-key"></i> Password:</label>
+                                    <input type="password" id="password" name="password" class="form-control" required>
+                                    <br>
+                                    <button type="submit" class="btn btn-primary btn-block">Login</button>
+
+                                    <a href="{% url 'accounts:password_reset_request' %}" style="color:white">Forgot Password?</a>
+                                        </div>
+                                    <div class="col-md-2"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4"></div>
+                    </div>
             </form>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
+
+            <div class="row">
+                <div class="col-md-4"></div>
+                <div class="col-md-4" style="color: white">
+                    Notice: This system is the property of Anzensage LLC. Use of this system constitutes consent to monitoring. Monitoring may be conducted for the protection against improper or unauthorized use or access.
+
+                </div>
+
+                <div class="col-md-4"></div>
+            </div>
 
 
 
-
-
-        <script src="{% static 'js/vendor/jquery-2.2.4.min.js' %}"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
-        <script src="{% static 'js/vendor/bootstrap.min.js' %}"></script>
-        <script src="{% static 'js/easing.min.js' %}"></script>
-        <script src="{% static 'js/hoverIntent.js' %}"></script>
-        <script src="{% static 'js/superfish.min.js' %}"></script>
-        <script src="{% static 'js/jquery.ajaxchimp.min.js' %}"></script>
-        <script src="{% static 'js/jquery.magnific-popup.min.js' %}"></script>
-        <script src="{% static 'js/owl.carousel.min.js' %}"></script>
-        <script src="{% static 'js/hexagons.min.js' %}"></script>
-        <script src="{% static 'js/jquery.nice-select.min.js' %}"></script>
-        <script src="{% static 'js/jquery.counterup.min.js' %}"></script>
-        <script src="{% static 'js/waypoints.min.js' %}"></script>
-        <script src="{% static 'js/mail-script.js' %}"></script>
-        <script src="{% static 'js/main.js' %}"></script>
 </body>
 
 </html>

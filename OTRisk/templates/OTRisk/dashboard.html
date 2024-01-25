@@ -1,8 +1,8 @@
 {% load static %}
 <!DOCTYPE html>
-<html>
+<html lang="">
 <head>
-    <title>iOTa</title>
+    <title>AnzenOT</title>
     <link rel="icon" href="{% static 'images/iota - white 1.png' %}" type="image/x-icon">
 
 
@@ -26,7 +26,7 @@
     <script src="{% static 'anychart/dist/js/anychart-heatmap.min.js' %}"></script>
     <script src="{% static 'anychart/dist/js/anychart-sunburst.min.js' %}"></script>
     <script src="{% static 'anychart/dist/js/anychart-pie.min.js' %}"></script>
-        <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.25/css/jquery.dataTables.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.25/css/jquery.dataTables.css">
     <script type="text/javascript" charset="utf8" src="https://code.jquery.com/jquery-3.5.1.js"></script>
     <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.js"></script>
 
@@ -35,67 +35,71 @@
      {% bootstrap_css %}
      {% bootstrap_javascript %}
     <style>
-        .no-gap {
-            padding-left: 2px;
-            padding-right: 2px;
-            margin-bottom: 2px;
-        }
 
-        #sunburstcontainer {
+.doughnut_container {
         width: 100%;
         height: 100%;
         border: 1px solid #ccc; /* border color */
-        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1); /* shadow effect */
-        border-radius: 4px; /* rounded corners (optional) */
-    }
-        .doughnut_container {
-        width: 100%;
-        height: 100%;
-        border: 1px solid #ccc; /* border color */
-        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1); /* shadow effect */
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* shadow effect */
         border-radius: 4px; /* rounded corners (optional) */
     }
 
-       .navbar-scroll .nav-link,
-        .navbar-scroll .navbar-toggler-icon,
-        .navbar-scroll .navbar-brand {
-          color: #000000;
-        }
+.navbar {
+    background-color: #464748;
+    border-bottom: 1px solid #000;
+    height: 50px; /* Fixed height */
+    position: relative;
+}
 
-        /* Color of the navbar BEFORE scroll */
-        .navbar-scroll {
-          background-color: #ffffff;
-            text-decoration-color: #000000;
-        }
+.owl-logo {
+    height: 60px; /* Set a fixed height for the image */
+    width: auto; /* Maintain aspect ratio */
+    position: relative;
+    top: 50%; /* Center vertically in the navbar */
+    transform: translateY(-30%); /* Adjust vertical position */
+    margin-bottom: -20px; /* Negative margin to overlap */
+}
 
 
-        /* Color of the links AFTER scroll */
-        .navbar-scrolled .nav-link,
-        .navbar-scrolled .navbar-toggler-icon,
-        .navbar-scroll .navbar-brand {
-          color: #262626;
-        }
+.navbar-brand, .nav-link {
+    color: #d3d1cd; /* White text for clear visibility on initial view */
+}
 
-        .navbar-logo {
-        position: absolute;
-        top: 5px; /* Adjust this as needed */
-        left: 5px; /* Adjust this as needed */
-        height: 100px; /* Adjust this as needed */
-        z-index: 10;
-        }
+.menu-item {
+    border-right: 1px solid #4B6B6B; /* Subtle line between items */
+    font-size: 14px; /* Adjust font size */
+}
 
-            .col-md-2 {
-        place-items: center;
-        background-color: lightgrey;
-    }
+.menu-item:last-child {
+    border-right: none; /* Remove border for the last item */
+}
+
+.menu-item:hover, .dropdown-item:hover {
+    background-color: #3A5F5F; /* Slightly lighter grey on hover */
+    color: #E0E0E0; /* Light grey text on hover */
+}
+
+.nav-link:hover, .dropdown-item {
+    color: #E0E0E0; /* Light grey text on hover */
+}
+
+.dropdown-menu {
+    background-color: #464748; /* Dark Slate Grey */
+    border: none;
+}
+
+.dropdown-item {
+    color: #FFFFFF; /* White text for clear visibility */
+}
+
+.dropdown-item:hover {
+    background-color: #3A5F5F; /* Slightly lighter grey on hover */
+    color: #E0E0E0;}
 
      .small-font {
         font-size: 0.8rem; /* adjust as needed */
    }
 
-         .stat-card {
-        background-color: lightgrey;
-    }
     .inner-card {
         background-color: white;
         border-radius: 10px;
@@ -105,10 +109,85 @@
     .card-title-light {
         font-weight: lighter;
     }
+.form-group {
+    border: 1px solid #464748; /* Border color */
+    box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.5); /* Outer shadow */
+    background-color: #5E6266; /* Lighter shade of #464748 */
+    padding: 15px; /* Optional: for internal spacing */
+}
+.form-sim {
+    max-width: 100%; /* Ensures select does not exceed container width */
+    width: auto; /* Optional: Ensures select width is based on content up to max-width */
+}
+
+
+.custom-table-style th,
+.custom-table-style td {
+    color: white;
+}
+
+.custom-table-style .thead-dark th {
+    background-color: #464748;
+}
+.card-body {
+    background-color: #464748; /* Dark background */
+}
+
+.card-body .custom-table-style th,
+.card-body .custom-table-style td {
+    color: white; /* White text */
+}
+
+.card-body .custom-table-style .thead-dark th {
+    background-color: #464748; /* Dark background for table header */
+}
+.group-container {
+    background: linear-gradient(to bottom right, #464748, #57595b); /* Gradient background */
+    border: 1px solid #666; /* Darker border */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5); /* Box shadow */
+    padding: 15px;
+    margin-bottom: 20px; /* Increased space between containers */
+    border-radius: 5px; /* Rounded corners */
+}
+
+.group-header {
+    color: #d3d1cd; /* Lighter color for contrast */
+    font-weight: bold;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #777; /* Subtle bottom border */
+    font-size: 1.2em; /* Larger font size */
+}
+
+.group-body {
+    color: #e0e0e0; /* Slightly lighter text color */
+    font-family: 'Arial', sans-serif; /* Modern font */
+}
+
+.cyberpha-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+.cyberpha-item:hover {
+    background-color: #3a3c3e; /* Hover effect */
+    border-radius: 3px;
+    padding: 5px;
+}
+.cube-icon {
+    width: 20px; /* Adjust size as needed */
+    height: 20px; /* Adjust size as needed */
+    margin-right: 10px;
+}
+
+.facility-name {
+    font-size: 0.9em;
+}
+
 
     </style>
 </head>
-<body>
+<body style="background-color: #464748">
 <script>
    sessionStorage.clear();
     localStorage.clear();
@@ -116,34 +195,35 @@
 </script>
 
 
-<nav class="navbar navbar-expand-lg navbar-scroll shadow-0 border-bottom border-dark rounded">
-  <div class="container-fluid d-flex justify-content-between">
-   <a class="navbar-brand" href="{% url 'OTRisk:dashboardhome' %}"><img src="{% static 'images/iota - white 1.png' %}" style="height: 140px; width: 140px" class="navbar-logo" alt="">   </a>
-      <h6 class="my-auto text-center flex-grow-1">Dashboard</h6>
-
-    <div class="collapse navbar-collapse" id="navbarSupportedContent">
-      <ul class="navbar-nav ms-auto">
-
-        <li class="nav-item">
-          <a class="nav-link"  style="font-size: 12px;" href="{% url 'OTRisk:qraw' %}"><i class="bi bi-journal-text"></i> Risk Assessment</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" style="font-size: 12px;" href="{% url 'OTRisk:iotaphamanager' %}"><i class="bi bi-journal-text"></i> CyberPHA</a>
-        </li>
-      <li class="nav-item">
-          <a class="nav-link" style="font-size: 12px;" href="{% url 'OTRisk:scenario_sim' %}"><i class="bi bi-bricks"></i>Scenario Builder</a>
-        </li>
-          <li class="nav-item">
-          <a class="nav-link" style="font-size: 12px;" href="{% url 'OTRisk:ra_actions_view_default' %}" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Actions</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" style="font-size: 12px;" href="{% url 'OTRisk:risk_register' %}" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Risk Register</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" style="font-size: 12px;" href="{% url 'OTRisk:list_frameworks' %}" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Assessments</a>
-        </li>
-        <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="font-size: 12px;">
+<nav class="navbar navbar-expand-lg navbar-scroll shadow-0 border-bottom rounded">
+    <div class="container-fluid d-flex justify-content-between">
+        <a class="navbar-brand" href="{% url 'OTRisk:dashboardhome' %}">
+            &nbsp; &nbsp; &nbsp; &nbsp;
+            <img src="{% static 'images/anzen_owl.png' %}" class="owl-logo" style="width: 18%; height: 18%">
+        </a>
+        <h6 class="my-auto text-center flex-grow-1 navbar-brand"><img src="{% static 'images/anzen_noowl.png' %}" style="width: 15%; height: 15%"> Dashboard</h6>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item menu-item">
+                    <a class="nav-link" href="{% url 'OTRisk:qraw' %}"><i class="bi bi-calculator"></i> QRAW</a>
+                </li>
+                <li class="nav-item menu-item">
+                    <a class="nav-link" href="{% url 'OTRisk:iotaphamanager' %}"><i class="bi bi-journal-text"></i> CyberPHA</a>
+                </li>
+                <li class="nav-item menu-item">
+                    <a class="nav-link" href="{% url 'OTRisk:scenario_sim' %}"><i class="bi bi-bricks"></i> Scenario Builder</a>
+                </li>
+                <li class="nav-item menu-item">
+                    <a class="nav-link" href="{% url 'OTRisk:ra_actions_view_default' %}"><i class="bi-file-earmark-easel"></i> Actions</a>
+                </li>
+                <li class="nav-item menu-item">
+                    <a class="nav-link" href="{% url 'OTRisk:risk_register' %}"><i class="bi-file-earmark-easel"></i> Risk Register</a>
+                </li>
+                <li class="nav-item menu-item">
+                    <a class="nav-link" href="{% url 'OTRisk:list_frameworks' %}"><i class="bi-file-earmark-easel"></i> Assessments</a>
+                </li>
+    <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                 <i class="bi bi-diagram-3"></i> Admin
               </a>
               <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
@@ -162,36 +242,35 @@
               </ul>
 
         </li>
-        <li class="nav-item">
-            <a class="nav-link" href="{% url 'accounts:profile' %}" style="font-size: 12px;">
-                <i class="bi bi-person-fill"></i> {{ user.first_name }} {{ user.last_name }} | {{ user.userprofile.organization.name }}
-            </a>
-        </li>
-
-          <li class="nav-item">
-            <a class="nav-link" href="{% url 'logout' %}">
-                <i class="bi bi-box-arrow-right"></i> Logout
-            </a>
-        </li>
-      </ul>
+    <li class="nav-item menu-item">
+    <a class="nav-link" href="{% url 'accounts:profile' %}">
+    <i class="bi bi-person-fill"></i> {{ user.first_name }} {{ user.last_name }} | {{ user.userprofile.organization.name }}
+    </a>
+    </li>
+    <li class="nav-item menu-item">
+    <a class="nav-link" href="{% url 'logout' %}">
+    <i class="bi bi-box-arrow-right"></i> Logout
+    </a>
+    </li>
+    </ul>
     </div>
-  </div>
+    </div>
+    </nav>
 
-</nav>
-
-    <div class="row" style="height: 10px">
-        <div class="col-md-1 " style="background-color: white"></div>
-        <div class="col-md-10 ">
-
-       </div>
-        <div class="col-md-1 "></div>
-    </div> <!-- dark grey stripe -->
+<div class="row" style="height: 10px">
+    <div class="col-md-1 " ></div>
+    <div class="col-md-10 ">
+</div>
+    <div class="col-md-1 "></div>
+</div>
 
 <div class="row" >
-    <div class="col-md-1" style="background-color: white"></div>
+    <div class="col-md-1"></div>
 
     <div class="col-md-5 ">
-        <div id="heatmapContainer" style="width:100%; height:400px;"></div>
+        <div class="form-group form-sim" >
+            <div id="heatmapContainer" style="width:100%; height:400px;"></div>
+        </div>
         <script>
          anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
          anychart.onDocumentReady(function () {
@@ -255,22 +334,29 @@
             updateHeatmapStructure(heatmapDataFromServer);
 
             // Create a chart and set the data
-             var chart = anychart.heatMap(heatmapStructure);
+            var chart = anychart.heatMap(heatmapStructure);
+            chart.background().fill("#464748");
             var credits = chart.credits();
             credits.enabled(false);
              // Disable tooltips
              chart.tooltip(false);
 
              // Set the chart title
-             chart.title("Scenario Residual Risk vs Likelihood Heatmap");
-            chart.labels().fontSize(16);
+             chart.title("Scenario Residual Risk vs Likelihood Heatmap")
+             .title().fontColor("white");
+
+            chart.labels().fontSize(14);
              // Set the x-axis title
-             chart.xAxis().title("Likelihood");
+             chart.xAxis().title("Likelihood")
+                 .title().fontColor("white");
+             chart.xAxis().labels().fontColor("white");
              chart.xAxis().orientation("bottom");
              // Set the y-axis title
-             chart.yAxis().title("Residual Risk");
+             chart.yAxis().title("Residual Risk")
+                .title().fontColor("white");
+             chart.yAxis().labels().fontColor("white");
              chart.yAxis().labels(["Very High", "High", "Medium/High", "Medium", "Low/Medium", "Low"]);
-
+            chart.labels().fontColor("white");
              // Set the container id
              chart.container("heatmapContainer");
 
@@ -280,154 +366,231 @@
 
         </script>
         <br>
-
-
-
-
-        <div class="row" >
-            <div class="col-md-3 ">
-                <div class="card shadow-lg inner-card">
-                    <div class="card-body">
-                        <div class="row">
-                            <h6 class="card-title text-center text-black card-title-light" style="font-size: 12px;">Open Risk Exposure (CyberPHA):</h6>
-
+        <div class="form-group">
+            <div class="row" >
+                <div class="col-md-3 ">
+                    <div class="group-container">
+                        <div class="group-header" >
+                            Open Risk Exposure (CyberPHA)
                         </div>
-                        <div class="row">
-                            <h5 class="card-text text-center text-black">{{ formatted_sle }}</h5>
+                            <div class="group-body">
+                                <img src="{% static 'images/redcube.png' %}" class="cube-icon" alt="Red Cube">  {{ formatted_sle }}
+                            </div>
+                        </div>
+
+                </div>
+                <div class="col-md-3 ">
+
+                    <div class="group-container">
+                        <div class="group-header">
+                             Open Risk Exposure (QRAW)
+                        </div>
+                            <div class="group-body">
+                                <img src="{% static 'images/redcube.png' %}" class="cube-icon" alt="Red Cube"> {{ formatted_scenario_cost }}
+                            </div>
+                        </div>
+
+
+                </div>
+                <div class="col-md-3 ">
+
+                    <div class="group-container">
+                        <div class="group-header">
+                             Open Action Items
+                        </div>
+                            <div class="group-body">
+                                <img src="{% static 'images/redcube.png' %}" class="cube-icon" alt="Red Cube"> {{ ra_actions_records_count }}
                         </div>
                     </div>
+
+
                 </div>
-            </div>
-            <div class="col-md-3 ">
-                <div class="card shadow-lg inner-card">
-                    <div class="card-body">
-                        <div class="row">
-                            <h6 class="card-title text-center text-black card-title-light" style="font-size: 12px;">Open Risk Exposure (QRAW):</h6>
+                <div class="col-md-3 ">
+
+                     <div class="group-container">
+                        <div class="group-header">
+                             Open Risk Assessments
                         </div>
-                        <div class="row">
-                            <h5 class="card-text text-center text-black">{{ formatted_scenario_cost }}</h5>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3 ">
-               <div class="card shadow-lg inner-card">
-                    <div class="card-body">
-                        <div class="row">
-                            <h6 class="card-title text-center text-black card-title-light" style="font-size: 12px;">Open Action Items:</h6>
-                        </div>
-                        <div class="row">
-                            <h5 class="card-text text-center text-black"><a class="nav-link" href="{% url 'OTRisk:ra_actions_view_default' %}" tabindex="-1" >{{ ra_actions_records_count }}</a></h5>
+                            <div class="group-body">
+                                <img src="{% static 'images/redcube.png' %}" class="cube-icon" alt="Red Cube"> {{ open_raws_count }}
                         </div>
                     </div>
+
                 </div>
             </div>
-            <div class="col-md-3 ">
-               <div class="card shadow-lg inner-card">
-                    <div class="card-body">
-                        <div class="row">
-                            <h6 class="card-title text-center text-black card-title-light" style="font-size: 12px;">Open Risk Assessments:</h6>
+            <div class="row" >
+                <div class="col-md-3 ">
+
+                    <div class="group-container">
+                        <div class="group-header">
+                             Total Risk Assessments
                         </div>
-                        <div class="row">
-                            <h5 class="card-text text-center text-black">{{ open_raws_count }}</h5>
+                            <div class="group-body">
+                                <img src="{% static 'images/redcube.png' %}" class="cube-icon" alt="Red Cube"> {{ raw_count }}
                         </div>
                     </div>
+
+                </div>
+                <div class="col-md-3 ">
+
+                    <div class="group-container">
+                        <div class="group-header">
+                             Risk Scenarios
+                        </div>
+                            <div class="group-body">
+                                <img src="{% static 'images/redcube.png' %}" class="cube-icon" alt="Red Cube"> {{ scenarios_count }}
+                        </div>
+                    </div>
+
+
+                </div>
+                <div class="col-md-3 ">
+
+                    <div class="group-container">
+                        <div class="group-header">
+                             Total CyberPHAs
+                        </div>
+                            <div class="group-body">
+                                <img src="{% static 'images/redcube.png' %}" class="cube-icon" alt="Red Cube"> {{ cyberpha_count }}
+                        </div>
+                    </div>
+
+                </div>
+                <div class="col-md-3 ">
+
+                    <div class="group-container">
+                        <div class="group-header">
+                             CyberPHA Scenarios
+                        </div>
+                            <div class="group-body">
+                                <img src="{% static 'images/redcube.png' %}" class="cube-icon" alt="Red Cube"> {{ cyberpha_scenario_count }}
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </div>
-        <div class="row" >
-            <div class="col-md-3 ">
-                <div class="card shadow-lg" style="background-color: white; border-radius: 10px; margin: 10px 10px 20px 10px; height: 70%;">
-            <div class="card-body">
-                <div class="row">
-                   <h6 class="card-title text-center text-black card-title-light" style="font-size: 12px;">Total Risk Assessments:</h6>
+        <br>
+        <div class="form-group">
+            <div class="row" style="height:250px">
+                <div class="col-md-4">
+                   <div id="raw_bia_container" style="width:100%; height:100%;" class="doughnut_container"></div>
                 </div>
-                <div class="row">
-                    <h5 class="card-text text-center text-black">{{ raw_count }}</h5>
+                <div class="col-md-4">
+                    <div id="residual_risk_container" style="width:100%; height:100%;" class="doughnut_container"></div>
                 </div>
-                <div class="row">
-                    <h5 class="text-center"></h5>
-                </div>
-            </div>
-        </div>
-            </div>
-            <div class="col-md-3 ">
-                <div class="card shadow-lg" style="background-color: white; border-radius: 10px; margin: 10px 10px 20px 10px; height: 70%;">
-            <div class="card-body">
-                <div class="row">
-                    <h6 class="card-title text-center text-black card-title-light" style="font-size: 12px;">Risk Scenarios:</h6>
-                </div>
-                <div class="row">
-                    <h5 class="card-text text-center text-black">{{ scenarios_count }}</h5>
-                </div>
-                <div class="row">
-                    <h5 class="text-center"></h5>
+                <div class="col-md-4">
+                    <div id="pha_bia_container" style="width:100%; height:100%;" class="doughnut_container"></div>
                 </div>
             </div>
         </div>
-            </div>
-            <div class="col-md-3 ">
-               <div class="card shadow-lg" style="background-color: white; border-radius: 10px; margin: 10px 10px 20px 10px; height: 70%;">
-            <div class="card-body">
-                <div class="row">
-                    <h6 class="card-title text-center text-black card-title-light" style="font-size: 12px;">Total CyberPHAs:</h6>
-                </div>
-                <div class="row">
-                    <h5 class="card-text text-center text-black">{{ cyberpha_count }}</h5>
-                </div>
-                <div class="row">
-                    <h5 class="text-center"></h5>
-                </div>
-            </div>
-        </div>
-            </div>
-            <div class="col-md-3 ">
-               <div class="card shadow-lg" style="background-color: white; border-radius: 10px; margin: 10px 10px 20px 10px; height: 70%;">
-            <div class="card-body">
-                <div class="row">
-                    <h6 class="card-title text-center text-black card-title-light" style="font-size: 12px;">CyberPHA Scenarios:</h6>
-                </div>
-                <div class="row">
-                    <h5 class="card-text text-center text-black">{{ cyberpha_scenario_count }}</h5>
-                </div>
-                <div class="row">
-                    <h5 class="text-center"></h5>
-                </div>
-            </div>
-        </div>
-            </div>
-        </div>
+
     </div>
     <div class="col-md-5 ">
-        <div id="sunburstcontainer" style="width:100%; height:100%;"></div>
-
-        <script>
-            anychart.onDocumentReady(function() {
-                var data = {{ sunburst_processed_data|safe }};
-                var chart = anychart.sunburst(data, "as-tree");
-                chart.title("Country > Industry > Facility Type");
-
-                chart.labels().fontSize(16);
-
-                // Modifying the label text to display only first 5 letters
-                chart.labels().format(function() {
-                    var label = this.getData("name");
-                    if (label.length > 5) {
-                        return label.substr(0, 5) + "...";  // If you want to add ellipsis for truncated labels
+        <div class="form-group form-sim" >
+            <div class="card shadow flex-fill">
+                <div class="card-body">
+                    <label for="headertable" class="form-label">CyberPHA Assessments</label>
+                    <table id="phaTable" class="table small-font" style="background-color: #464748">
+                    <thead class="thead-dark">
+                        <tr>
+                        <th>ID</th>
+                        <th>Site</th>
+                        <th>Unit</th>
+                        <th>Zone</th>
+                        <th>PHA Score</th>
+                        </tr>
+                    </thead>
+                    <tbody style="background-color: #464748">
+                        {% for pha in phas %}
+                        <tr style="background-color: #464748">
+                        <td style="color: white">{{ pha.ID }}</td>
+                        <td style="color: white"><a href="/OTRisk/iotaphamanager/{{ pha.ID }}/" style="color: white">{{ pha.FacilityName }}</a></td>
+                        <td style="color: white">{{ pha.AssessmentUnit }}</td>
+                        <td style="color: white">{{ pha.AssessmentZone }}</td>
+                         <td>
+                            {% if pha.pha_score <= 16 %}
+                                <div style="background-color: green; border-radius: 20px; text-align: center; color: black">Low</div>
+                            {% elif pha.pha_score <= 33 %}
+                                <div style="background-color: lightgreen; border-radius: 20px; text-align: center; color: black">Low/Medium</div>
+                            {% elif pha.pha_score <= 50 %}
+                                <div style="background-color: yellow; border-radius: 20px; text-align: center; color: black">Medium</div>
+                            {% elif pha.pha_score <= 66 %}
+                                <div style="background-color: orange; border-radius: 20px; text-align: center; color: black">Medium/High</div>
+                            {% elif pha.pha_score <= 83 %}
+                                <div style="background-color: red; border-radius: 20px; text-align: center; color: black">High</div>
+                            {% else %}
+                                <div style="background-color: darkred; border-radius: 20px; text-align: center; color: black">Very High</div>
+                            {% endif %}
+                        </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <script type="text/javascript">
+                $(document).ready(function () {
+                    if ($.fn.dataTable.isDataTable('#phaTable')) {
+                        $('#phaTable').DataTable().destroy();
                     }
-                    return label;
+                    $('#phaTable').DataTable({
+                        "paging": true,
+                        "lengthChange": false,
+                        "searching": false,
+                        "pageLength": 10
+                        // No need for drawCallback here
+                    });
                 });
-                var credits = chart.credits();
-                credits.enabled(false);
-                chart.container("sunburstcontainer");
-                chart.draw();
-            });
-        </script>
+</script>
+
+
+                </div>
+            </div>
+        </div>
+
+<div class="form-group">
+    <div class="row">
+        <div class="col-md-1"></div>
+        <div class="col text-center text-white">
+            CyberPHA Group Assignments<br>
+        </div>
+
+        <div class="col-md-1"></div>
+    </div>
+    <br>
+    <div class="row">
+        {% for group in groups_with_cyberphas %}
+        <div class="col-md-4">
+            <div class="group-container">
+                <div class="group-header">
+                    {{ group.group_name }}
+                </div>
+                <div class="group-body">
+                    {% for cyberpha in group.cyberphas %}
+                        <div class="cyberpha-item">
+                            <img src="{% static 'images/redcube.png' %}" class="cube-icon" alt="Red Cube">
+                            <span class="facility-name">{{ cyberpha.facility_name }}</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% empty %}
+            <p>No groups found.</p>
+        {% endfor %}
+    </div>
+</div>
+<script>
+$(document).ready(function() {
+    $('.group-container').hide().fadeIn(1000);
+});
+</script>
+
 
     </div>
 
     <div class="col-md-1"></div>
 </div>
+
 
 
 
@@ -456,144 +619,10 @@
 <div class="row d-flex" style="height:100%;">
     <div class="col-md-1 " style="background-color: white"></div>
         <div class="col-md-5 d-flex" style="display: flex; flex-direction: column;">
-            <div class="card shadow flex-fill">
-                <div class="card-body">
-                    <label for="headertable" class="form-label">CyberPHA Assessments</label>
-                    <table id="phaTable" class="table">
-                    <thead class="thead-dark">
-                        <tr>
-                        <th>ID</th>
-                        <th>Site</th>
-                        <th>Unit</th>
-                        <th>Zone</th>
-                        <th>PHA Score</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for pha in phas %}
-                        <tr>
-                        <td>{{ pha.ID }}</td>
-                        <td><a href="/OTRisk/iotaphamanager/{{ pha.ID }}/">{{ pha.FacilityName }}</a></td>
-                        <td>{{ pha.AssessmentUnit }}</td>
-                        <td>{{ pha.AssessmentZone }}</td>
-                         <td>
-                            {% if pha.pha_score <= 16 %}
-                                <div style="background-color: green; border-radius: 20px; text-align: center;">Low</div>
-                            {% elif pha.pha_score <= 33 %}
-                                <div style="background-color: lightgreen; border-radius: 20px; text-align: center;">Low/Medium</div>
-                            {% elif pha.pha_score <= 50 %}
-                                <div style="background-color: yellow; border-radius: 20px; text-align: center;">Medium</div>
-                            {% elif pha.pha_score <= 66 %}
-                                <div style="background-color: orange; border-radius: 20px; text-align: center;">Medium/High</div>
-                            {% elif pha.pha_score <= 83 %}
-                                <div style="background-color: red; border-radius: 20px; text-align: center;">High</div>
-                            {% else %}
-                                <div style="background-color: darkred; border-radius: 20px; text-align: center;">Very High</div>
-                            {% endif %}
-                        </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-                    <script type="text/javascript">
-                       $(document).ready( function () {
-                            if ( $.fn.dataTable.isDataTable('#phaTable') ) {
-                                // If table is already a DataTable, destroy it first
-                                $('#phaTable').DataTable().destroy();
-                            }
-                            // Now, reinitialize the DataTable
-                            $('#phaTable').DataTable({
-                                "paging": true,
-                                "lengthChange": false,
-                                "searching": false,
-                                "pageLength": 10
-                            });
-                        });
 
-                </script>
-                </div>
-            </div>
 </div>  <!-- cyberpha assessment table -->
         <div class="col-md-5 d-flex" style="display: flex; flex-direction: column;">
-            <div class="card shadow flex-fill">
-                <div class="card-body">
-                    <label for="headertable" class="form-label">CyberPHA Scenarios</label>
-                    <table id="scenarioTable" class="table">
-                    <thead class="thead-dark">
-                        <tr>
-                        <th>ID</th>
-                        <th>Scenario</th>
-                        <th>Risk</th>
-                        <th>Event Cost (Median)</th>
-                        <th>Risk Register</th>
-                        <th>Residual Risk</th>
-                        <th>Likelihood</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for scenario in scenarios %}
-                        <tr>
-                        <td>{{ scenario.ID }}</td>
-                        <td><i>{{ scenario.Scenario }}</i></td>
-                        <td>{{ scenario.RiskCategory }}</td>
-                        <td class="sle-cell">{{ scenario.sle }}</td>
-                        <td>
-                            {% if scenario.risk_register %}
-                                <img src="{% static 'images/check.png' %}" alt="Check Icon" style="height: 1.5rem">
-                            {% else %}
-                                <img src="{% static 'images/cross.png' %}" alt="Cross Icon" style="height: 1em">
-                            {% endif %}
-                        </td>
 
-
-                        <td>
-                            {% if scenario.RRa == "Low" %}
-                                <div style="background-color: green; border-radius: 20px; text-align: center;">{{ scenario.RRa }}</div>
-                            {% elif scenario.RRa == "Low/Medium" %}
-                                <div style="background-color: lightgreen; border-radius: 20px; text-align: center;">{{ scenario.RRa }}</div>
-                            {% elif scenario.RRa == "Medium" %}
-                                <div style="background-color: yellow; border-radius: 20px; text-align: center;">{{ scenario.RRa }}</div>
-                            {% elif scenario.RRa == "Medium/High" %}
-                                <div style="background-color: orange; border-radius: 20px; text-align: center;">{{ scenario.RRa }}</div>
-                            {% elif scenario.RRa == "High" %}
-                                <div style="background-color: red; border-radius: 20px; text-align: center;">{{ scenario.RRa }}</div>
-                            {% elif scenario.RRa == "Very High" %}
-                                <div style="background-color: darkred; border-radius: 20px; text-align: center;">{{ scenario.RRa }}</div>
-                            {% endif %}
-                        </td>
-                         <td>
-                            {% if scenario.likelihood <= 16 %}
-                                <div style="background-color: green; border-radius: 20px; text-align: center;">Low</div>
-                            {% elif scenario.likelihood <= 33 %}
-                                <div style="background-color: lightgreen; border-radius: 20px; text-align: center;">Low/Medium</div>
-                            {% elif scenario.likelihood <= 50 %}
-                                <div style="background-color: yellow; border-radius: 20px; text-align: center;">Medium</div>
-                            {% elif scenario.likelihood <= 66 %}
-                                <div style="background-color: orange; border-radius: 20px; text-align: center;">Medium/High</div>
-                            {% elif scenario.likelihood <= 83 %}
-                                <div style="background-color: red; border-radius: 20px; text-align: center;">High</div>
-                            {% else %}
-                                <div style="background-color: darkred; border-radius: 20px; text-align: center;">Very High</div>
-                            {% endif %}
-                        </td>
-
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-
-                    <script type="text/javascript">
-                $(document).ready( function () {
-                $('#scenarioTable').DataTable({
-                "paging": true,
-                "lengthChange": false,
-                "searching": false,
-                "pageLength": 10
-                });
-                });
-                </script>
-                </div>
-            </div>
         </div>  <!-- cyberpha scenario table -->
 
     <div class="col-md-1 " style="background-color: white">
@@ -603,13 +632,9 @@
     <div class="col"></div>
 </div>
 
-<div class="row" style="height:400px">
-    <div class="col-md-1 "  style="background-color: white"></div>
-    <div class="col-md-10"  style="background-color: white">
-        <div class="row" style="height:300px">
-            <div class="col-md-4 no-gap">
 
-                <div id="raw_bia_container" style="width:100%; height:100%;" class="doughnut_container"></div>
+
+
                 <script>
                 anychart.onDocumentReady(function() {
                     var pie_data = {{ bia_summary|safe }};
@@ -634,14 +659,15 @@
                         for (let item of chart_data) {
                             chartColors.push(colors[item.x]);
                         }
-
+                        chart.background().fill("#464748");
                         chart.palette(chartColors);
                         chart.labels().format("{%Value}");
                         chart.labels().fontSize(16);
                         chart.title("QRAW BIA Summary");
-                        chart.innerRadius("30%");
+                        chart.innerRadius("40%");
                         var credits = chart.credits();
                         credits.enabled(false);
+                        chart.bounds(0, 0, "100%", "100%");
                         chart.container("raw_bia_container");
                         chart.draw();
                     }
@@ -649,10 +675,6 @@
             </script>
 
 
-            </div>
-            <div class="col-md-4 no-gap">
-
-                <div id="residual_risk_container" style="width:100%; height:100%;" class="doughnut_container"></div>
                 <script>
                     anychart.onDocumentReady(function() {
                         var pie_data = {{ pha_risk_summary|safe }};
@@ -674,7 +696,7 @@
                         for (let item of chart_data) {
                             chartColors.push(colors[item.x]);
                         }
-
+                        chart.background().fill("#464748");
                         chart.palette(chartColors);
                         chart.labels().format("{%Value}");
                          chart.labels().fontSize(16);
@@ -688,10 +710,8 @@
                     });
                 </script>
 
-            </div>
-            <div class="col-md-4 no-gap">
 
-                <div id="pha_bia_container" style="width:100%; height:100%;" class="doughnut_container"></div>
+
                 <script>
                     anychart.onDocumentReady(function() {
                         var pie_data = {{ pha_bia_summary|safe }};
@@ -713,7 +733,7 @@
                         for (let item of chart_data) {
                             chartColors.push(colors[item.x]);
                         }
-
+                        chart.background().fill("#464748");
                         chart.palette(chartColors);
                         chart.labels().format("{%Value}");
                          chart.labels().fontSize(16);
@@ -727,86 +747,12 @@
                     });
                 </script>
 
-            </div>
-        </div>
-    </div>
-    <div class="col-md-1 "  style="background-color: white"></div>
-</div>
-</div>
-<div class="row">
 
-    <div class="col-md-1"></div>
 
-        <div class="col">
-            CyberPHA Group Assignments
-        </div>
 
-    <div class="col-md-1"></div>
-</div>
-<div class="row">
 
-    <div class="col-md-1"></div>
-{% for group in groups_with_cyberphas %}
-    <div class="col-md-2">
-    <div class="card border-primary mb-3">
-        <div class="card-header bg-primary text-white">
-            {{ group.group_name }}
-        </div>
-        <div class="card-body text-primary">
-            <ul class="list-group list-group-flush">
-                {% for cyberpha in group.cyberphas %}
-                    <li class="list-group-item">{{ cyberpha.facility_name }}</li>
-                {% endfor %}
-            </ul>
-        </div>
-    </div>
-    </div>
-{% empty %}
-    <p>No groups found.</p>
-{% endfor %}
-<div class="col-md-1"></div>
-</div>
 
-<br>
 
-<div class="row" style="height:400px">
-    <div class="col-md-1 "  style="background-color: white"></div>
-    <div class="col-md-10">
-<div class="card-body">
-    <label for="auditLogTable" class="form-label">Audit Logs</label>
-    <table id="auditLogTable" class="table">
-        <thead class="thead-dark">
-            <tr>
-                <th>ID</th>
-                <th>User</th>
-                <th>Timestamp</th>
-                <th>User Action</th>
-                <th>User IP Address</th>
-                <!-- Add more columns as needed -->
-            </tr>
-        </thead>
-        <tbody>
-            {% for log in last_100_logs %}
-            <tr>
-                <td>{{ log.id }}</td>
-                <td>{{ log.user }}</td>
-                <td>{{ log.timestamp }}</td>
-                <td>{{ log.user_action }}</td>
-                <td>{{ log.user_ipaddress }}</td>
-                <!-- Add more data cells as needed -->
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="5">No audit logs found</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
-
-    </div>
-    <div class="col-md-1 "  style="background-color: white"></div>
-</div>
 
 <script>
 
@@ -837,6 +783,6 @@ function getPHA(id) {
 
 </script>
 
-
+</div>
 </body>
 </html>

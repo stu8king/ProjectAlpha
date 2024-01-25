@@ -3,13 +3,11 @@
 <!--suppress ALL -->
 <html lang="">
 <head>
-<title>iOTa</title>
+<title>AnzenOT</title>
     <link rel="icon" href="{% static 'images/iota - white 1.png' %}" type="image/x-icon">
     <link rel="stylesheet" type="text/css" href="{%  static 'css/qraw.css' %}">
-<!-- Bootstrap CSS -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
 
-
-<!-- Bootstrap Select CSS -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.1/css/bootstrap-select.min.css">
 
 <!-- Bootstrap Icons -->
@@ -34,11 +32,184 @@
         $('select').selectpicker();
     </script>
 
-
 {% load django_bootstrap5 %}
  {% bootstrap_css %}
  {% bootstrap_javascript %}
+<style>
 
+.navbar {
+    background-color: #464748;
+    border-bottom: 1px solid #000;
+    height: 50px; /* Fixed height */
+    position: relative;
+}
+
+.owl-logo {
+    height: 100px; /* Set a fixed height for the image */
+    width: auto; /* Maintain aspect ratio */
+    position: relative;
+    top: 50%; /* Center vertically in the navbar */
+    transform: translateY(-30%); /* Adjust vertical position */
+    margin-bottom: -20px; /* Negative margin to overlap */
+}
+
+
+.navbar-brand, .nav-link {
+    color: #d3d1cd; /* White text for clear visibility on initial view */
+}
+
+.menu-item {
+    border-right: 1px solid #4B6B6B; /* Subtle line between items */
+    font-size: 14px; /* Adjust font size */
+}
+
+.menu-item:last-child {
+    border-right: none; /* Remove border for the last item */
+}
+
+.menu-item:hover, .dropdown-item:hover {
+    background-color: #3A5F5F; /* Slightly lighter grey on hover */
+    color: #E0E0E0; /* Light grey text on hover */
+}
+
+.nav-link:hover, .dropdown-item {
+    color: #E0E0E0; /* Light grey text on hover */
+}
+.navbar-brand, .nav-link {
+    color: #d3d1cd;
+}
+
+.dropdown-menu {
+    background-color: #464748; /* Dark Slate Grey */
+    border: none;
+}
+
+.dropdown-item {
+    color: #FFFFFF; /* White text for clear visibility */
+}
+
+.dropdown-item:hover {
+    background-color: #3A5F5F; /* Slightly lighter grey on hover */
+    color: #E0E0E0;}
+
+     .small-font {
+        font-size: 0.8rem; /* adjust as needed */
+   }
+
+    .inner-card {
+        background-color: white;
+        border-radius: 10px;
+        margin: 10px 10px 20px 10px;
+        height: 70%;
+    }
+    .card-title-light {
+        font-weight: lighter;
+    }
+.form-group {
+    border: 1px solid #464748; /* Border color */
+    box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.5); /* Outer shadow */
+    background-color: #5E6266; /* Lighter shade of #464748 */
+    padding: 15px; /* Optional: for internal spacing */
+}
+.form-group-white {
+    border: 1px solid #464748; /* Border color */
+    box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.5); /* Outer shadow */
+    background-color: #ffffff; /* Lighter shade of #464748 */
+     padding: 15px; /* Optional: for internal spacing */
+}
+.form-sim {
+    max-width: 100%; /* Ensures select does not exceed container width */
+    width: auto; /* Optional: Ensures select width is based on content up to max-width */
+}
+
+
+.custom-table-style th,
+.custom-table-style td {
+    color: white;
+}
+
+.custom-table-style .thead-dark th {
+    background-color: #464748;
+}
+.card-body {
+    background-color: #464748; /* Dark background */
+}
+.card-body-white {
+    background-color: #ffffff;
+}
+ .custom-table-style th,
+ .custom-table-style td {
+    color: white; /* White text */
+}
+
+.card-body .custom-table-style .thead-dark th {
+    background-color: #464748; /* Dark background for table header */
+}
+.group-container {
+    background-color: #464748; /* Same as page background */
+    border: 1px solid #ccc; /* Border around the container */
+    padding: 10px;
+    margin-bottom: 15px; /* Space between each group container */
+}
+
+.group-header {
+    color: white;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.group-body {
+    color: white;
+}
+
+.cyberpha-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.cube-icon {
+    width: 20px; /* Adjust size as needed */
+    height: 20px; /* Adjust size as needed */
+    margin-right: 10px;
+}
+
+.facility-name {
+    color: white;
+}
+
+.form-group {
+    border: 1px solid #464748; /* Border color */
+    box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.5); /* Outer shadow */
+    background-color: #5E6266; /* Lighter shade of #464748 */
+    padding: 15px; /* Optional: for internal spacing */
+}
+.list-group {
+  display: flex;
+  flex-direction: column;
+  padding-left: 0;
+  margin-bottom: 0;
+}
+.file-explorer {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.file-explorer .list-group-item {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+}
+
+.file-explorer .list-group-item .file-icon {
+  font-size: 24px;
+  margin-right: 10px;
+}
+
+.file-explorer .list-group-item .file-name {
+  flex-grow: 1;
+}
+</style>
  <title>Risk Assessment Worksheet</title>
 
 </head>
@@ -60,7 +231,7 @@
         };
 
       </script>
-<body>
+<body style="background-color: #464748">
 <script>
 
     document.addEventListener('DOMContentLoaded', function() {
@@ -80,73 +251,18 @@
 
 </script>
 
-<nav class="navbar navbar-expand-lg navbar-scroll shadow-0 border-bottom border-dark rounded">
-  <div class="container-fluid d-flex justify-content-between">
-   <a class="navbar-brand" href="{% url 'OTRisk:dashboardhome' %}"><img src="{% static 'images/iota - white 1.png' %}" style="height: 140px; width: 140px" class="navbar-logo" alt="">   </a>
-      <h6 class="my-auto text-center flex-grow-1">Quick Risk Assessment Worksheet (QRAW)</h6>
-
-    <div class="collapse navbar-collapse" id="navbarSupportedContent">
-      <ul class="navbar-nav ms-auto">
-
-        <li class="nav-item">
-          <a class="nav-link"  style="font-size: 12px;" href="{% url 'OTRisk:qraw' %}"><i class="bi bi-journal-text"></i> Risk Assessment</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" style="font-size: 12px;" href="{% url 'OTRisk:iotaphamanager' %}"><i class="bi bi-journal-text"></i> CyberPHA</a>
-        </li>
-          <li class="nav-item">
-          <a class="nav-link" style="font-size: 12px;" href="{% url 'OTRisk:ra_actions_view_default' %}" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Actions</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" style="font-size: 12px;" href="{% url 'OTRisk:risk_register' %}" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Risk Register</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" style="font-size: 12px;" href="{% url 'OTRisk:list_frameworks' %}" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Assessments</a>
-        </li>
-        <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="font-size: 12px;">
-                <i class="bi bi-diagram-3"></i> Admin
-              </a>
-              <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-
-                  <li><a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:admin_users' %}">Admin Users</a></li>
-                  {% if user.is_staff %}
-                    <!-- Links visible only to superusers -->
-                    <li><a class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:user_admin' %}">User Administration</a></li>
-                      <li><a class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:execute_sql' %}">Execute SQL</a></li>
-                    {% endif %}
-
-              </ul>
-
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" href="{% url 'accounts:profile' %}" style="font-size: 12px;">
-                <i class="bi bi-person-fill"></i> {{ user.first_name }} {{ user.last_name }} | | {{ user.userprofile.organization.name }}
-            </a>
-        </li>
-
-          <li class="nav-item">
-            <a class="nav-link" href="{% url 'logout' %}">
-                <i class="bi bi-box-arrow-right"></i> Logout
-            </a>
-        </li>
-      </ul>
-    </div>
-  </div>
-
-</nav>
+{% include 'menu_bar.html' %}
 
 <form name="frmRAW" id="frmRAW" method="POST" action="{% url 'OTRisk:qraw' %}">
 {% csrf_token %}
 <input type="hidden" id="orgid" name="orgid" value="{{ user.userprofile.organization.id }}">
 <div id="notificationMessage" class="notification-message" style="display: none;"></div>
-
+<br>
 <div class="row">
     <div class="col-md-1"></div>
-
-    <div class="col-md-10 bg-light">
-
-        <table id="rawtable" class="table table-striped table-bordered" style="font-size: 10px">
+    <div class="col-md-10">
+    <div class="form-group">
+    <table id="rawtable" class="table table-striped table-bordered" style="font-size: 10px">
         <thead style="background-color: #2c2c2c; color: white">
             <tr>
                 <th></th>
@@ -203,7 +319,8 @@
             {% endfor %}
         </tbody>
         </table>
-        <script>
+    </div>
+    <script>
         $(document).ready(function() {
             $('#rawtable').on('click', 'tbody tr.selectable-row', function() {
             // Remove 'highlighted' class from all other rows
@@ -216,33 +333,36 @@
         });
 
     </script>
-    </div> <!-- table view of existing risk assessments -->
+    </div>
     <div class="col-md-1"></div>
 </div>
 
 <div class="row">
-    <div class="col-md-1 bg-white"></div>
-    <div class="col-md-10 ">
+    <div class="col-md-1"></div>
+    <div class="col-md-10">
      <div class="row" style="height: 10px"></div>
    </div>
-    <div class="col-md-1 bg-white"></div>
-</div> <!-- white stripe -->
+    <div class="col-md-1"></div>
+</div>
+
 <div class="row">
-    <div class="col-md-3 bg-white"></div>
-
-    <div class="col-md-2" >
-            <button class="form-control" id="addNewBtn" type="button"   data-bs-toggle="tooltip" data-bs-placement="top" title="Click this button to clear the form and enter and begin a new risk assessment" onclick="handleAddNewClick(1)"><i class="bi bi-folder-plus"></i> New</button>
+    <div class="col-md-3"></div>
+    <div class="col-md-6">
+        <div class="form-group">
+        <div class="row">
+            <div class="col-md-4" >
+                    <button class="form-control" id="addNewBtn" type="button"   data-bs-toggle="tooltip" data-bs-placement="top" title="Click this button to clear the form and enter and begin a new risk assessment" onclick="handleAddNewClick(1)"><i class="bi bi-folder-plus"></i> New</button>
+            </div>
+            <div class="col-md-4" >
+                    <button class="form-control" id="editBtn" type="button" data-bs-toggle="tooltip" data-bs-placement="top" title="Click this button to edit the current risk assessment and scenarios"><i class="bi bi-pencil-square"></i> Edit</button>
+            </div>
+            <div class="col-md-4" >
+                <button class="form-control" type="button" id="actionBtn" onclick="showRAActionsModal()"><i class="bi bi-subtract"></i> Action</button>
+            </div>
+        </div>
     </div>
-    <div class="col-md-2" >
-            <button class="form-control" id="editBtn" type="button" data-bs-toggle="tooltip" data-bs-placement="top" title="Click this button to edit the current risk assessment and scenarios"><i class="bi bi-pencil-square"></i> Edit</button>
     </div>
-
-    <div class="col-md-2" >
-        <button class="form-control" type="button" id="actionBtn" onclick="showRAActionsModal()"><i class="bi bi-subtract"></i> Action</button>
-    </div>
-
-        <!-- clear and reset scenario tabs -->
-        <script>
+    <script>
             function showRAActionsModal() {
                 var rawid = sessionStorage.getItem('rawid');  // Get the value from session storage
 
@@ -389,45 +509,44 @@
             });
 
         </script>
-
-    <div class="col-md-3 bg-white"></div>
-
+    <div class="col-md-3"></div>
 </div>
+
 <div class="row">
-    <div class="col-md-1 bg-white"></div>
+    <div class="col-md-1"></div>
     <div class="col-md-10 ">
      <div class="row" style="height: 10px"></div>
    </div>
-    <div class="col-md-1 bg-white"></div>
-</div> <!-- white stripe -->
+    <div class="col-md-1"></div>
+</div>
 <input type="hidden" name="edit_mode" id="edit_mode">
 <input type="hidden" name="scenarioCount" id="scenarioCount">
 <input type="hidden" name="hdnRawID" id="hdnRawID">
 
 <div class="row">
-    <div class="col-md-1 bg-white"></div>
-
-    <div class="col-md-10 border shadow small-font">
+    <div class="col-md-1"></div>
+    <div class="col-md-10  shadow small-font">
         <div class="row">
             <div class="col" style="height:10px"></div>
         </div>
+        <div class="form-group">
         <div class="row">
             <div class="col-md-4">
-                <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                <div class="card mb-2 shadow-sm" style="border: 1px solid black;">
                     <div class="card-body">
-                        <label for="txtTitle" >Risk Assessment Title</label>
+                        <label for="txtTitle" style="color: #d3d1cd">Risk Assessment Title</label>
                         <input type="text" class="form-control" name="txtTitle" id="txtTitle" placeholder="Enter a title for this risk assessment" maxlength="50" required/>
                     </div>
                 </div>
-                <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                <div class="card mb-3 shadow-sm" style="border: 1px solid black;"> <!-- Bootstrap card with shadow -->
                     <div class="card-body">
-                        <label for="txtBU">Business Unit</label>
+                        <label for="txtBU" style="color: #d3d1cd">Business Unit</label>
                         <input type="text" class="form-control" name="txtBU" id="txtBU" placeholder="Enter a name for the business unit or facility for this risk assessment" maxlength="50" required>
                     </div>
                 </div>
-                <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                <div class="card mb-3 shadow-sm" style="border: 1px solid black;"> <!-- Bootstrap card with shadow -->
                     <div class="card-body">
-                        <label for="txtLeader">Assessment Leader</label>
+                        <label for="txtLeader" style="color: #d3d1cd">Assessment Leader</label>
                         <input type="text" class="form-control" name="txtLeader" id="txtLeader" placeholder="Enter the name of the person leading this risk assessment" maxlength="50" required>
                     </div>
                 </div>
@@ -435,9 +554,9 @@
             </div>
 
             <div class="col-md-4">
-                <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                <div class="card mb-3 shadow-sm" style="border: 1px solid black;"> <!-- Bootstrap card with shadow -->
                     <div class="card-body">
-                        <label for="selectIndustry">Industry</label>
+                        <label for="selectIndustry" style="color: #d3d1cd">Industry</label>
                         <select id="selectIndustry" name="selectIndustry" class="form-control">
                             <option value="">-- Select Industry --</option>
                             {% for industry in industries %}
@@ -446,9 +565,9 @@
                         </select>
                     </div>
                 </div>
-            <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+            <div class="card mb-3 shadow-sm" style="border: 1px solid black;"> <!-- Bootstrap card with shadow -->
                 <div class="card-body">
-                    <label for="selectFacility">Facility Type</label>
+                    <label for="selectFacility" style="color: #d3d1cd">Facility Type</label>
                     <select id="selectFacility" name="selectFacility" class="form-control">
                         <option value="">-- Select Facility --</option>
                         {% for facility in facilities %}
@@ -457,9 +576,9 @@
                     </select>
                 </div>
             </div>
-            <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+            <div class="card mb-3 shadow-sm" style="border: 1px solid black;"> <!-- Bootstrap card with shadow -->
                 <div class="card-body">
-                    <label for="selectTrigger" >Trigger Event</label>
+                    <label for="selectTrigger" style="color: #d3d1cd">Trigger Event</label>
                     <select id="selectTrigger" name="selectTrigger" class="form-control">
                         <option value="">-- Select Assessment Trigger --</option>
                         <option value="Audit - External">Audit - External</option>
@@ -472,9 +591,9 @@
                     </select>
                 </div>
             </div>
-            <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+            <div class="card mb-3 shadow-sm" style="border: 1px solid black;"> <!-- Bootstrap card with shadow -->
                 <div class="card-body">
-                    <label for="selectStatus" >Status</label>
+                    <label for="selectStatus" style="color: #d3d1cd">Status</label>
                     <select id="selectStatus" name="selectStatus" class="form-control">
                         <option value="">-- Select Status --</option>
                         <option value="Open">Open</option>
@@ -484,9 +603,9 @@
             </div>
             </div>
             <div class="col-md-4">
-             <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+             <div class="card mb-3 shadow-sm" style="border: 1px solid black;"> <!-- Bootstrap card with shadow -->
                     <div class="card-body">
-                        <label for="txtRevenue"><i class="bi bi-currency-exchange"></i> Annual Revenue</label>
+                        <label for="txtRevenue" style="color: #d3d1cd"><i class="bi bi-currency-exchange"></i> Annual Revenue</label>
                         <input type="text" class="form-control" name="txtRevenue" id="txtRevenue" >
                     </div>
                  <script>
@@ -505,9 +624,9 @@
                  </script>
 
              </div>
-             <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+             <div class="card mb-3 shadow-sm" style="border: 1px solid black;"> <!-- Bootstrap card with shadow -->
                     <div class="card-body">
-                        <label for="txtInsurance"><i class="bi bi-cash-coin"></i> Cyber Insurance Cover</label>
+                        <label for="txtInsurance" style="color: #d3d1cd"><i class="bi bi-cash-coin"></i> Cyber Insurance Cover</label>
                         <input type="text" class="form-control" name="txtInsurance" id="txtInsurance" >
                         <script>
                  $(document).ready(function() {
@@ -524,7 +643,7 @@
                 });
                  </script>
                         <br>
-                        <label for="txtDeductable"><i class="bi bi-calculator"></i> Insurance Deductable Amount</label>
+                        <label for="txtDeductable" style="color: #d3d1cd"><i class="bi bi-calculator"></i> Insurance Deductable Amount</label>
                         <script>
                          $(document).ready(function() {
                             $("#txtDeductable").on("input", function() {
@@ -542,7 +661,7 @@
                         <input type="text" class="form-control" name="txtDeductable" id="txtDeductable" >
                     </div>
              </div>
-             <div class="card mb-3 shadow-sm">
+             <div class="card mb-3 shadow-sm" style="border: 1px solid black;">
                     <div class="card-body">
                         <button class="form-control" type="submit" id="saveBtn" data-bs-toggle="tooltip" data-bs-placement="top" title="Click this button to save the risk assessment header information." onclick="return checkRiskAssessmentRefreshVariables();" ><i class="bi bi-download"></i> Save Header</button>
                     </div>
@@ -552,24 +671,25 @@
             </div>
 
     </div>
+        </div>
     <div class="col-md-1"></div>
 </div>
 
-    <div class="col-md-1 bg-white"></div>
+    <div class="col-md-1 "></div>
 </div>
 
 <div class="row">
-    <div class="col-md-1 bg-white"></div>
+    <div class="col-md-1 "></div>
     <div class="col-md-10 ">
-     <div class="row" style="background-color: white; height: 10px"></div>
+     <div class="row" style=" height: 10px"></div>
    </div>
-    <div class="col-md-1 bg-white"></div>
-</div> <!-- white stripe -->
+    <div class="col-md-1 "></div>
+</div>
 <div class="row">
             <div class="col" style="height:10px"></div>
         </div>
 <div class="row">
-    <div class="col-md-1 bg-white"></div>
+    <div class="col-md-1 "></div>
 
     <div class="col-md-10">
     <div class="container-fluid small-font">
@@ -609,17 +729,23 @@
       <div class="tab-content">
         <div class="tab-pane active" id="scenario1" >
             <div class="row">
-            <div class="col-md-4 small-font">
+            <div class="col-md-4 small-font" >
                <!-- tab 1 left column -->
                 <input type="hidden" name="hdnScenarioID_1" id="hdnScenarioID_1">
-                <div class="card mb-3 shadow-sm">
-                    <div class="card-body">
+                <div class="card mb-3 shadow-sm" >
+                    <div class="card-body card-body-white">
                         <div class="spinner-container" style="position: relative;">
-                            <label for="txtScenarioDescription_1" class="form-control border-0 align-text-bottom small-font cursor-pointer" ><i class="bi bi-mouse2"></i> Scenario Description</label>
-                            <textarea class="form-control small-font" name="txtScenarioDescription_1" id="txtScenarioDescription_1" rows="3" style="resize: none; word-wrap: normal" placeholder="Enter a concise and descriptive scenario" onchange="setRiskAssessmentRefreshRequired(1)" onblur="analyze_Scenario(1)"></textarea>
-                            <div class="educational-resources">
-                                <a href="#" class="link-to-resource" data-bs-toggle="modal" data-bs-target="#scenarioModal">Cybersecurity Scenario Guidelines</a>
+                            <!-- start scenario -->
+                            <div class="d-flex align-items-center">
+                                <label for="txtScenarioDescription_1" class="form-control border-0 align-text-bottom small-font cursor-pointer mb-0" style="background-color: transparent;">
+                                    <i class="bi bi-mouse2"></i> Scenario Description
+                                </label>
+                                <button type="button" class="btn btn-link p-0 ms-2" data-bs-toggle="modal" data-bs-target="#scenarioSelectModal" id="btnSelectScenario_1" style="text-decoration: underline; color: blue;">
+                                    <i class="bi bi-box-arrow-down"></i> Load Scenario
+                                </button>
                             </div>
+                            <textarea class="form-control small-font" name="txtScenarioDescription_1" id="txtScenarioDescription_1" rows="3" style="resize: none; word-wrap: normal" placeholder="Enter a concise and descriptive scenario" onchange="setRiskAssessmentRefreshRequired(1)" onblur="analyze_Scenario(1)"></textarea>
+
                             <div class="spinner-overlay_1" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255, 255, 255, 0.7); display: none; justify-content: center; align-items: center;">
                                 <div class="spinner-border" role="status">
                                     <span class="sr-only">Analyzing...</span>
@@ -636,7 +762,7 @@
 
                         <label for="txtScenarioAnalysis_1" class="small-font" style="visibility: hidden">Recommendations will align with selected standards:</label>
                         <textarea id="txtScenarioAnalysis_1" name="txtScenarioAnalysis_1" class="form-control small-font"  rows="5" style="resize: none; word-wrap: normal" readonly></textarea>
-
+                        <! -- end select description -->
                         <script>
                         function toggleLockScenario() {
                             var checkbox = document.getElementById('lock_scenario_1');
@@ -650,7 +776,7 @@
                 <div class="row">
                     <div class="col-md-1"></div>
                 <div class="col-md-5">
-                    <div class="form-group">
+                    <div class="form-group-white">
                         <label class="form-control border-0 small-font"><h6>Internet Exposed IP Address</h6></label>
                         <label class="switch">
                           <input type="checkbox" id="exposed_system_1" name="exposed_system_1">
@@ -659,7 +785,7 @@
                     </div>
                 </div>
                 <div class="col-md-5">
-                    <div class="form-group">
+                    <div class="form-group-white">
                         <label class="form-control border-0 small-font"><h6>Default/Weak Credentials</h6></label>
                         <label class="switch">
                           <input type="checkbox" id="weak_credentials_1" name="weak_credentials_1">
@@ -671,7 +797,7 @@
             </div>
             <br>
             <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                <div class="card-body">
+                <div class="card-body card-body-white">
                     <div class="row">
                         <div class="col-md-6">
                             <label for="selectOutage_1" class="form-control border-0 small-font">Production Outage</label>
@@ -689,7 +815,7 @@
                 </div>
               </div>
               <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                <div class="card-body">
+                <div class="card-body card-body-white">
                   <label for="selectThreat_1" class="form-control border-0 small-font">Threat Source</label>
                   <select id="selectThreat_1" name="selectThreat_1" class="form-control small-font">
                     <option value="">-- Select Threat Source --</option>
@@ -702,7 +828,7 @@
 
 
               <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                <div class="card-body">
+                <div class="card-body card-body-white">
                   <label for="selectTactics_1" class="form-control border-0 switch-label">Threat Tactics (Mitre)</label>
                   <select id="selectTactics_1" name="selectTactics_1" class="form-control small-font">
                     <option value="">-- Select Threat Tactics --</option>
@@ -713,7 +839,7 @@
                 </div>
               </div>
               <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                <div class="card-body">
+                <div class="card-body card-body-white">
                     <label for="id_impact_1" class="form-control border-0 small-font switch-label">Impact</label>
                     <select id="id_impact_1" name="impact" class="form-control small-font">
                         <option value="">-- Select Impact --</option>
@@ -725,7 +851,7 @@
               </div>
 
               <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                <div class="card-body">
+                <div class="card-body card-body-white">
                     <label for="txtAssets_1" class="form-control border-0 align-text-bottom small-font">Asset Name/s:</label>
                     <textarea class="form-control small-font" name="txtAssets_1" id="txtAssets_1" rows="3" style="resize: none; word-wrap: normal" placeholder="Add asset names relevant to the scenario..."></textarea>
                 </div>
@@ -736,7 +862,7 @@
                 <h5>Business Impact Analysis</h5>
                 Click the icons to add additional detail
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                        <div class="card-body">
+                        <div class="card-body card-body-white">
                             <!--slider for safety rating -->
                             <div class="slider-container d-flex align-items-center" >
                                 <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#safetyModal_1" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/safety.png' %}" style="height:2rem"> &nbsp;Safety</label></div>
@@ -750,7 +876,7 @@
                         </div>
                     </div>
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                        <div class="card-body">
+                        <div class="card-body card-body-white">
                             <!--slider for life rating -->
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#lifeModal_1" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/danger.png' %}" style="height:2rem"> &nbsp;Life</label></div>
@@ -763,7 +889,7 @@
                     </div>
 
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                        <div class="card-body">
+                        <div class="card-body card-body-white">
                             <!--slider for production rating -->
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#productionModal_1" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/production.png' %}" style="height:2rem">&nbsp; Production</label></div>
@@ -776,7 +902,7 @@
                     </div>
 
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                        <div class="card-body">
+                        <div class="card-body card-body-white">
                              <!--slider for finance rating -->
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#financeModal_1"  data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/finance.png' %}" style="height:2rem">&nbsp; Financial</label></div>
@@ -788,7 +914,7 @@
                         </div>
                     </div>
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                        <div class="card-body">
+                        <div class="card-body card-body-white">
                             <!--slider for reputation rating -->
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#reputationModal_1"  data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/reputation.png' %}" style="height:2rem"> &nbsp;Reputation</label></div>
@@ -800,7 +926,7 @@
                         </div>
                     </div>
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                        <div class="card-body">
+                        <div class="card-body card-body-white">
                             <!--slider for environment impact rating -->
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#environmentModal_1"  data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/environment.png' %}" style="height:2rem"> &nbsp;Environment</label></div>
@@ -812,7 +938,7 @@
                         </div>
                     </div>
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                        <div class="card-body">
+                        <div class="card-body card-body-white">
                             <!--slider for regulatory impact rating -->
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#regulationModal_1"  data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/regulation.png' %}" style="height:2rem">&nbsp; Regulatory</label></div>
@@ -824,7 +950,7 @@
                         </div>
                     </div>
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                        <div class="card-body">
+                        <div class="card-body card-body-white">
                             <!--slider for data impact rating -->
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#dataModal_1"  data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/data.png' %}" style="height:2rem"> &nbsp;Data/IP</label></div>
@@ -836,7 +962,7 @@
                         </div>
                     </div>
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                        <div class="card-body">
+                        <div class="card-body card-body-white">
                             <!--slider for data impact rating -->
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#supplyModal_1"  data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/supply.png' %}" style="height:2rem"> &nbsp;Supply Chain</label></div>
@@ -849,7 +975,7 @@
                     </div>
                 <h5>Vulnerability and Likelihood Analysis</h5>
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                        <div class="card-body">
+                        <div class="card-body card-body-white">
                             <!--slider for vulnerability rating -->
                             <div class="slider-container d-flex align-items-center" >
                                 <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#vulnModal_1"  data-bs-placement="top" style="cursor: pointer">Vulnerability</label></div>
@@ -861,7 +987,7 @@
                         </div>
                     </div>
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                        <div class="card-body">
+                        <div class="card-body card-body-white">
                             <!--slider for threat rating -->
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the danger to life of the selected scenario">Threat</label></div>
@@ -873,7 +999,7 @@
                         </div>
                     </div>
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                        <div class="card-body">
+                        <div class="card-body card-body-white">
                             <!--slider for frequency-->
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to indicate asset status">Asset Status</label></div>
@@ -897,14 +1023,14 @@
                   <span class="visually-hidden">Loading...</span>
                 </div>
                     <div class="card mb-3 shadow-sm">
-                        <div class="card-body">
+                        <div class="card-body card-body-white">
                             <label class="form-label">Risk Rating: </label>
                             <input type="text" id="lblriskRating_1" name="lblriskRating_1" class="form-control" style="font-size: 14px; color: #0a53be" readonly>
                         </div>
                     </div>
 
                     <div class="card mb-3 shadow-sm">
-                        <div class="card-body">
+                        <div class="card-body card-body-white">
                             <div class="row">
                                 <div class="col">
                                     <label class="form-label" style="font-size: 10px">Est. Incident Costs (Low): </label>
@@ -922,7 +1048,7 @@
                         </div>
                     </div>
                     <div class="card mb-3 shadow-sm">
-                        <div class="card-body">
+                        <div class="card-body card-body-white">
                             <label class="form-label">Recommended Controls: </label>
 
 
@@ -1006,13 +1132,11 @@
                 <!-- tab 1 left column -->
                     <input type="hidden" name="hdnScenarioID_2" id="hdnScenarioID_2">
                     <div class="card mb-3 shadow-sm">
-                        <div class="card-body">
+                        <div class="card-body card-body-white">
                             <div class="spinner-container" style="position: relative;">
                             <label for="txtScenarioDescription_2" class="form-control border-0 align-text-bottom small-font cursor-pointer" ><i class="bi bi-mouse2"></i> Scenario Description</label>
                             <textarea class="form-control small-font" name="txtScenarioDescription_2" id="txtScenarioDescription_2" rows="3" style="resize: none; word-wrap: normal" onchange="setRiskAssessmentRefreshRequired(2)" onblur="analyze_Scenario(2)"></textarea>
-                            <div class="educational-resources">
-                                <a href="#" class="link-to-resource" data-bs-toggle="modal" data-bs-target="#scenarioModal">Cybersecurity Scenario Guidelines</a>
-                            </div>
+
                                 <div class="spinner-overlay_2" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255, 255, 255, 0.7); display: none; justify-content: center; align-items: center;">
                                 <div class="spinner-border" role="status">
                                   <span class="sr-only">Analyzing...</span>
@@ -1042,7 +1166,7 @@
                 <div class="row">
                     <div class="col-md-1"></div>
                 <div class="col-md-5">
-                    <div class="form-group">
+                    <div class="form-group-white">
                         <label class="form-control border-0 small-font"><h6>Internet Exposed IP Address</h6></label>
                         <label class="switch">
                           <input type="checkbox" id="exposed_system_2" name="exposed_system_2">
@@ -1051,7 +1175,7 @@
                     </div>
                 </div>
                 <div class="col-md-5">
-                    <div class="form-group">
+                    <div class="form-group-white">
                         <label class="form-control border-0 small-font"><h6>Default/Weak Credentials</h6></label>
                         <label class="switch">
                           <input type="checkbox" id="weak_credentials_2" name="weak_credentials_2">
@@ -1063,7 +1187,7 @@
             </div>
                 <br>
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                        <div class="card-body">
+                        <div class="card-body card-body-white">
                             <div class="row">
                                 <div class="col-md-6">
                                     <label for="selectOutage_2" class="form-control border-0 small-font">Production Outage</label>
@@ -1081,7 +1205,7 @@
                         </div>
                   </div>
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                        <div class="card-body">
+                        <div class="card-body card-body-white">
                             <label for="selectThreat_2" class="form-control border-0">Threat Source</label>
                             <select id="selectThreat_2" name="selectThreat_2" class="form-control small-font">
                                 <option value="">-- Select Threat Source --</option>
@@ -1092,7 +1216,7 @@
                         </div>
                     </div>
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                        <div class="card-body">
+                        <div class="card-bodycard-body-white">
                             <label for="selectTactics_2" class="form-control border-0">Threat Tactics (Mitre)</label>
                             <select id="selectTactics_2" name="selectTactics_2" class="form-control">
                                 <option value="">-- Select Threat Tactics --</option>
@@ -1103,7 +1227,7 @@
                         </div>
                     </div>
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                    <div class="card-body">
+                    <div class="card-body card-body-white">
                         <label for="id_impact_2" class="form-control border-0 small-font">Impact</label>
                         <select id="id_impact_2" name="impact" class="form-control small-font">
                             <option value="">-- Select Impact --</option>
@@ -1114,7 +1238,7 @@
                     </div>
                   </div>
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                        <div class="card-body">
+                        <div class="card-body card-body-white">
                            <label for="txtAssets_1" class="form-control border-0 align-text-bottom small-font">Asset Name/s</label>
                            <textarea class="form-control small-font" name="txtAssets_2" id="txtAssets_2" rows="3" style="resize: none; word-wrap: normal" placeholder="Add asset names relevant to the scenario..."></textarea>
                         </div>
@@ -1125,7 +1249,7 @@
                 <h5>Business Impact Analysis</h5>
                 Click the icons to add additional detail
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                        <div class="card-body">
+                        <div class="card-body card-body-white">
                             <!--slider for safety rating -->
                             <div class="slider-container d-flex align-items-center" >
                                 <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#safetyModal_2" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/safety.png' %}" style="height:2rem"> &nbsp;Safety</label></div>
@@ -1137,7 +1261,7 @@
                         </div>
                     </div>
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                        <div class="card-body">
+                        <div class="card-body card-body-white">
                             <!--slider for life rating -->
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#lifeModal_2" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/danger.png' %}" style="height:2rem"> &nbsp;Life</label></div>
@@ -1149,7 +1273,7 @@
                         </div>
                     </div>
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                        <div class="card-body">
+                        <div class="card-body card-body-white">
                             <!--slider for Production rating -->
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#productionModal_2" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/production.png' %}" style="height:2rem">&nbsp; Production</label></div>
@@ -1161,7 +1285,7 @@
                         </div>
                     </div>
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                        <div class="card-body">
+                        <div class="card-body card-body-white">
                              <!--slider for finance rating -->
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#financeModal_2" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/finance.png' %}" style="height:2rem">&nbsp; Financial</label></div>
@@ -1174,7 +1298,7 @@
                         </div>
                     </div>
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                        <div class="card-body">
+                        <div class="card-body card-body-white">
                             <!--slider for reputation rating -->
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#reputationModal_2" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/reputation.png' %}" style="height:2rem"> &nbsp;Reputation</label></div>
@@ -1186,7 +1310,7 @@
                         </div>
                     </div>
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                        <div class="card-body">
+                        <div class="card-body card-body-white">
                             <!--slider for environment impact rating -->
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#environmentModal_2" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/environment.png' %}" style="height:2rem"> &nbsp; Environment</label></div>
@@ -1198,7 +1322,7 @@
                         </div>
                     </div>
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                        <div class="card-body">
+                        <div class="card-body card-body-white">
                             <!--slider for regulatory impact rating -->
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#regulationModal_2" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/regulation.png' %}" style="height:2rem">&nbsp; Regulatory</label></div>
@@ -1210,7 +1334,7 @@
                         </div>
                     </div>
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                        <div class="card-body">
+                        <div class="card-body card-body-white">
                             <!--slider for data impact rating -->
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#dataModal_2" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/data.png' %}" style="height:2rem"> &nbsp;Data/IP</label></div>
@@ -1222,7 +1346,7 @@
                         </div>
                     </div>
                 <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                        <div class="card-body">
+                        <div class="card-body card-body-white">
                             <!--slider for data impact rating -->
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#supplyModal_2" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/supply.png' %}" style="height:2rem"> &nbsp;Supply Chain</label></div>
@@ -1235,7 +1359,7 @@
                     </div>
                     <h5>Vulnerability and Likelihood Analysis</h5>
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                        <div class="card-body">
+                        <div class="card-body card-body-white">
                            <!--slider for vulnerability rating -->
                            <div class="slider-container d-flex align-items-center" >
                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#vulnModal_2"  data-bs-placement="top" style="cursor: pointer">Vulnerability</label></div>
@@ -1247,7 +1371,7 @@
                         </div>
                     </div>
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                        <div class="card-body">
+                        <div class="card-body card-body-white">
                            <!--slider for threat rating -->
                            <div class="slider-container d-flex align-items-center">
                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the danger to life of the selected scenario">Threat</label></div>
@@ -1259,7 +1383,7 @@
                         </div>
                     </div>
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                        <div class="card-body">
+                        <div class="card-body card-body-white">
                            <!--slider for frequency-->
                            <div class="slider-container d-flex align-items-center">
                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to indicate asset status">Asset Status</label></div>
@@ -1288,14 +1412,14 @@
                 </div>
 
                     <div class="card mb-3 shadow-sm">
-                        <div class="card-body">
+                        <div class="card-body card-body-white">
                             <label class="form-label">Risk Rating: </label>
                             <input type="text" id="lblriskRating_2" name="lblriskRating_2" class="form-control" readonly>
                         </div>
                     </div>
 
                     <div class="card mb-3 shadow-sm">
-                        <div class="card-body">
+                        <div class="card-body card-body-white">
                             <div class="row">
                                 <div class="col">
                                     <label class="form-label" style="font-size: 10px">Est. Incident Costs (Low): </label>
@@ -1313,7 +1437,7 @@
                         </div>
                     </div>
                     <div class="card mb-3 shadow-sm">
-                        <div class="card-body">
+                        <div class="card-body card-body-white">
                             <label class="form-label">Recommended Controls: </label>
 
 
@@ -1397,12 +1521,10 @@
           <div class="col-md-4 small-font">
                 <input type="hidden" name="hdnScenarioID_3" id="hdnScenarioID_3">
                 <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                    <div class="card-body">
+                    <div class="card-body card-body-white">
                         <div class="spinner-container" style="position: relative;">
                           <textarea class="form-control small-font" name="txtScenarioDescription_3" id="txtScenarioDescription_3" rows="3" style="resize: none; word-wrap: normal" placeholder="Enter a concise and descriptive scenario" onchange="setRiskAssessmentRefreshRequired(1)" onblur="analyze_Scenario(3)"></textarea>
-                          <div class="educational-resources">
-                            <a href="#" class="link-to-resource" data-bs-toggle="modal" data-bs-target="#scenarioModal">Cybersecurity Scenario Guidelines</a>
-                        </div>
+
                             <div class="spinner-overlay_3" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255, 255, 255, 0.7); display: none; justify-content: center; align-items: center;">
                               <div class="spinner-border" role="status">
                                   <span class="sr-only">Analyzing...</span>
@@ -1433,7 +1555,7 @@
   <div class="row">
       <div class="col-md-1"></div>
                 <div class="col-md-5">
-                    <div class="form-group">
+                    <div class="form-group-white">
                         <label class="form-control border-0 small-font"><h6>Internet Exposed IP Address</h6></label>
                         <label class="switch">
                           <input type="checkbox" id="exposed_system_3" name="exposed_system_3">
@@ -1442,7 +1564,7 @@
                     </div>
                 </div>
                 <div class="col-md-5">
-                    <div class="form-group">
+                    <div class="form-group-white">
                         <label class="form-control border-0 small-font"><h6>Default/Weak Credentials</h6></label>
                         <label class="switch">
                           <input type="checkbox" id="weak_credentials_3" name="weak_credentials_3">
@@ -1454,7 +1576,7 @@
             </div>
           <br>
               <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                    <div class="card-body">
+                    <div class="card-body card-body-white">
                         <div class="row">
                             <div class="col-md-6">
                                 <label for="selectOutage_3" class="form-control border-0 small-font">Production Outage</label>
@@ -1472,7 +1594,7 @@
                     </div>
                   </div>
                 <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                    <div class="card-body">
+                    <div class="card-body card-body-white">
                           <label for="selectThreat_3" class="form-control border-0 small-font">Threat Source</label>
                           <select id="selectThreat_3" name="selectThreat_3" class="form-control">
                             <option value="">-- Select Threat Source --</option>
@@ -1483,7 +1605,7 @@
                     </div>
                 </div>
                 <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                    <div class="card-body">
+                    <div class="card-body card-body-white">
                       <label for="selectTactics_3" class="form-control border-0 small-font">Threat Tactics (Mitre)</label>
                       <select id="selectTactics_3" name="selectTactics_3" class="form-control">
                         <option value="">-- Select Threat Tactics --</option>
@@ -1494,7 +1616,7 @@
                     </div>
                 </div>
                 <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                <div class="card-body">
+                <div class="card-body card-body-white">
                     <label for="id_impact_3" class="form-control border-0 small-font">Impact</label>
                     <select id="id_impact_3" name="impact" class="form-control small-font">
                         <option value="">-- Select Impact --</option>
@@ -1505,7 +1627,7 @@
                 </div>
               </div>
                 <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                    <div class="card-body">
+                    <div class="card-body card-body-white">
                         <label for="txtAssets_3" class="form-control border-0 align-text-bottom">Asset Name/s</label>
                         <textarea class="form-control" name="txtAssets_3" id="txtAssets_3" rows="3" style="resize: none; word-wrap: normal" placeholder="Add asset names relevant to the scenario..."></textarea>
                     </div>
@@ -1516,7 +1638,7 @@
                 <h5>Business Impact Analysis</h5>
                 Click the icons to add additional detail
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                        <div class="card-body">
+                        <div class="card-body card-body-white">
                             <!--slider for safety rating -->
                             <div class="slider-container d-flex align-items-center" >
                                 <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#safetyModal_3" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/safety.png' %}" style="height:2rem"> &nbsp;Safety</label></div>
@@ -1528,7 +1650,7 @@
                         </div>
                     </div>
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                        <div class="card-body">
+                        <div class="card-body card-body-white">
                             <!--slider for life rating -->
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#lifeModal_3" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/danger.png' %}" style="height:2rem"> &nbsp;Life</label></div>
@@ -1540,7 +1662,7 @@
                         </div>
                     </div>
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                        <div class="card-body">
+                        <div class="card-body card-body-white">
                             <!--slider for production rating -->
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#productionModal_3" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/production.png' %}" style="height:2rem">&nbsp; Production</label></div>
@@ -1552,7 +1674,7 @@
                         </div>
                     </div>
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                        <div class="card-body">
+                        <div class="card-body card-body-white">
                              <!--slider for finance rating -->
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#financeModal_3" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/finance.png' %}" style="height:2rem">&nbsp; Financial</label></div>
@@ -1565,7 +1687,7 @@
                     </div>
 
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                        <div class="card-body">
+                        <div class="card-body card-body-white">
                             <!--slider for reputation rating -->
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#reputationModal_3" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/reputation.png' %}" style="height:2rem"> &nbsp; Reputation</label></div>
@@ -1578,7 +1700,7 @@
                     </div>
 
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                        <div class="card-body">
+                        <div class="card-body card-body-white">
                             <!--slider for environment impact rating -->
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#environmentModal_3" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/environment.png' %}" style="height:2rem"> &nbsp; Environment</label></div>
@@ -1590,7 +1712,7 @@
                         </div>
                     </div>
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                        <div class="card-body">
+                        <div class="card-body card-body-white">
                             <!--slider for regulatory impact rating -->
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#regulationModal_3" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/regulation.png' %}" style="height:2rem">&nbsp; Regulatory</label></div>
@@ -1602,7 +1724,7 @@
                         </div>
                     </div>
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                        <div class="card-body">
+                        <div class="card-body card-body-white">
                             <!--slider for data impact rating -->
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#dataModal_3" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/data.png' %}" style="height:2rem"> &nbsp; Data/IP</label></div>
@@ -1614,7 +1736,7 @@
                         </div>
                     </div>
                 <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                        <div class="card-body">
+                        <div class="card-body card-body-white">
                             <!--slider for data impact rating -->
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#supplyModal_3" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/supply.png' %}" style="height:2rem"> &nbsp;Supply Chain</label></div>
@@ -1628,7 +1750,7 @@
                 <br>
                 <h5>Vulnerability and Likelihood Analysis</h5>
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                        <div class="card-body">
+                        <div class="card-body card-body-white">
                             <!--slider for vulnerability rating -->
                             <div class="slider-container d-flex align-items-center" >
                                 <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#vulnModal_3" data-bs-placement="top" style="cursor: pointer">Vulnerability</label></div>
@@ -1640,7 +1762,7 @@
                         </div>
                     </div>
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                        <div class="card-body">
+                        <div class="card-body card-body-white">
                             <!--slider for threat rating -->
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="">Threat</label></div>
@@ -1652,7 +1774,7 @@
                         </div>
                     </div>
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                        <div class="card-body">
+                        <div class="card-body card-body-white">
                             <!--slider for Asset Status-->
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to indicate asset status">Asset Status</label></div>
@@ -1678,14 +1800,14 @@
 
 
                     <div class="card mb-3 shadow-sm">
-                        <div class="card-body">
+                        <div class="card-body card-body-white">
                             <label class="form-label">Risk Rating: </label>
                             <input type="text" id="lblriskRating_3" name="lblriskRating_3" class="form-control" readonly>
                         </div>
                     </div>
 
                     <div class="card mb-3 shadow-sm">
-                        <div class="card-body">
+                        <div class="card-body card-body-white">
                             <div class="row">
                                 <div class="col">
                                     <label class="form-label" style="font-size: 10px">Est. Incident Costs (Low): </label>
@@ -1703,7 +1825,7 @@
                         </div>
                     </div>
                     <div class="card mb-3 shadow-sm">
-                        <div class="card-body">
+                        <div class="card-body card-body-white">
                             <label class="form-label">Recommended Controls: </label>
 
 
@@ -1785,12 +1907,10 @@
           <div class="col-md-4 small-font">
                 <input type="hidden" name="hdnScenarioID_4" id="hdnScenarioID_4">
               <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                <div class="card-body">
+                <div class="card-body card-body-white">
                                 <div class="spinner-container" style="position: relative;">
               <textarea class="form-control small-font" name="txtScenarioDescription_4" id="txtScenarioDescription_4" rows="3" style="resize: none; word-wrap: normal" placeholder="Enter a concise and descriptive scenario" onchange="setRiskAssessmentRefreshRequired(1)" onblur="analyze_Scenario(4)"></textarea>
-              <div class="educational-resources">
-                <a href="#" class="link-to-resource" data-bs-toggle="modal" data-bs-target="#scenarioModal">Cybersecurity Scenario Guidelines</a>
-            </div>
+
                                     <div class="spinner-overlay_4" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255, 255, 255, 0.7); display: none; justify-content: center; align-items: center;">
                   <div class="spinner-border" role="status">
                       <span class="sr-only">Analyzing...</span>
@@ -1821,7 +1941,7 @@
   <div class="row">
       <div class="col-md-1"></div>
                 <div class="col-md-5">
-                    <div class="form-group">
+                    <div class="form-group-white">
                         <label class="form-control border-0 small-font"><h6>Internet Exposed IP Address</h6></label>
                         <label class="switch">
                           <input type="checkbox" id="exposed_system_4" name="exposed_system_4">
@@ -1830,7 +1950,7 @@
                     </div>
                 </div>
                 <div class="col-md-5">
-                    <div class="form-group">
+                    <div class="form-group-white">
                         <label class="form-control border-0 small-font"><h6>Default/Weak Credentials</h6></label>
                         <label class="switch">
                           <input type="checkbox" id="weak_credentials_4" name="weak_credentials_4">
@@ -1842,7 +1962,7 @@
             </div>
           <br>
               <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                    <div class="card-body">
+                    <div class="card-body card-body-white">
                         <div class="row">
                             <div class="col-md-6">
                                 <label for="selectOutage_4" class="form-control border-0 small-font">Production Outage</label>
@@ -1860,7 +1980,7 @@
                     </div>
                   </div>
               <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                <div class="card-body">
+                <div class="card-body card-body-white">
                       <label for="selectThreat_4" class="form-control border-0">Threat Source</label>
                       <select id="selectThreat_4" name="selectThreat_4" class="form-control small-font">
                         <option value="">-- Select Threat Source --</option>
@@ -1871,7 +1991,7 @@
                 </div>
               </div>
               <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                <div class="card-body">
+                <div class="card-body card-body-white">
                       <label for="selectTactics_4" class="form-control border-0">Threat Tactics (Mitre)</label>
                       <select id="selectTactics_4" name="selectTactics_4" class="form-control small-font">
                         <option value="">-- Select Threat Tactics --</option>
@@ -1882,7 +2002,7 @@
                 </div>
               </div>
                 <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                <div class="card-body">
+                <div class="card-body card-body-white">
                     <label for="id_impact_4" class="form-control border-0 small-font">Impact</label>
                     <select id="id_impact_4" name="impact" class="form-control small-font">
                         <option value="">-- Select Impact --</option>
@@ -1893,7 +2013,7 @@
                 </div>
               </div>
               <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                <div class="card-body">
+                <div class="card-body card-body-white">
                     <label for="txtAssets_4" class="form-control border-0 align-text-bottom">Asset Name/s</label>
                     <textarea class="form-control" name="txtAssets_4" id="txtAssets_4" rows="3" style="resize: none; word-wrap: normal" placeholder="Add asset names relevant to the scenario..."></textarea>
                 </div>
@@ -1905,7 +2025,7 @@
                <h5>Business Impact Analysis</h5>
                 Click the icons to add additional detail
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                        <div class="card-body">
+                        <div class="card-body card-body-white">
                             <!--slider for safety rating -->
                             <div class="slider-container d-flex align-items-center" >
                                 <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#safetyModal_4" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/safety.png' %}" style="height:2rem"> &nbsp;Safety</label></div>
@@ -1917,7 +2037,7 @@
                         </div>
                     </div>
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                        <div class="card-body">
+                        <div class="card-body card-body-white">
                             <!--slider for life rating -->
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#lifeModal_4" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/danger.png' %}" style="height:2rem"> &nbsp;Life</label></div>
@@ -1929,7 +2049,7 @@
                         </div>
                     </div>
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                        <div class="card-body">
+                        <div class="card-body card-body-white">
                             <!--slider for production rating -->
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#productionModal_4" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/production.png' %}" style="height:2rem">&nbsp; Production</label></div>
@@ -1941,7 +2061,7 @@
                         </div>
                     </div>
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                        <div class="card-body">
+                        <div class="card-body card-body-white">
                              <!--slider for finance rating -->
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#financeModal_4" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/finance.png' %}" style="height:2rem">&nbsp; Financial</label></div>
@@ -1953,7 +2073,7 @@
                         </div>
                     </div>
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                        <div class="card-body">
+                        <div class="card-body card-body-white">
                             <!--slider for reputation rating -->
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#reputationModal_4" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/reputation.png' %}" style="height:2rem"> &nbsp; Reputation</label></div>
@@ -1965,7 +2085,7 @@
                         </div>
                     </div>
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                        <div class="card-body">
+                        <div class="card-body card-body-white">
                             <!--slider for environment impact rating -->
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#environmentModal_4" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/environment.png' %}" style="height:2rem"> &nbsp; Environment</label></div>
@@ -1977,7 +2097,7 @@
                         </div>
                     </div>
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                        <div class="card-body">
+                        <div class="card-body card-body-white">
                             <!--slider for regulatory impact rating -->
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#regulationModal_4" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/regulation.png' %}" style="height:2rem">&nbsp; Regulatory</label></div>
@@ -1989,7 +2109,7 @@
                         </div>
                     </div>
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                        <div class="card-body">
+                        <div class="card-body card-body-white">
                             <!--slider for data impact rating -->
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#dataModal_4" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/data.png' %}" style="height:2rem"> &nbsp; Data/IP</label></div>
@@ -2001,7 +2121,7 @@
                         </div>
                     </div>
                 <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                        <div class="card-body">
+                        <div class="card-body card-body-white">
                             <!--slider for data impact rating -->
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#supplyModal_4" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/supply.png' %}" style="height:2rem"> &nbsp;Supply Chain</label></div>
@@ -2015,7 +2135,7 @@
                 <br>
                 <h5>Vulnerability and Likelihood Analysis</h5>
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                        <div class="card-body">
+                        <div class="card-body card-body-white">
                             <!--slider for vulnerability rating -->
                             <div class="slider-container d-flex align-items-center" >
                                 <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#vulnModal_4"  data-bs-placement="top" style="cursor: pointer">Vulnerability</label></div>
@@ -2027,7 +2147,7 @@
                         </div>
                     </div>
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                        <div class="card-body">
+                        <div class="card-body card-body-white">
                             <!--slider for threat rating -->
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the danger to life of the selected scenario">Threat</label></div>
@@ -2040,7 +2160,7 @@
                     </div>
 
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                        <div class="card-body">
+                        <div class="card-body card-body-white">
                             <!--slider for asset status-->
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to indicate asset status">Asset Status</label></div>
@@ -2065,14 +2185,14 @@
                 </div>
 
                     <div class="card mb-3 shadow-sm">
-                        <div class="card-body">
+                        <div class="card-body card-body-white">
                             <label class="form-label">Risk Rating: </label>
                             <input type="text" id="lblriskRating_4" name="lblriskRating_4" class="form-control" readonly>
                         </div>
                     </div>
 
                     <div class="card mb-3 shadow-sm">
-                        <div class="card-body">
+                        <div class="card-body card-body-white">
                             <div class="row">
                                 <div class="col">
                                     <label class="form-label" style="font-size: 10px">Est. Incident Costs (Low): </label>
@@ -2090,7 +2210,7 @@
                         </div>
                     </div>
                     <div class="card mb-3 shadow-sm">
-                        <div class="card-body">
+                        <div class="card-body card-body-white">
                             <label class="form-label">Recommended Controls: </label>
 
 
@@ -2171,12 +2291,10 @@
             <div class="col-md-4 small-font">
             <input type="hidden" name="hdnScenarioID_5" id="hdnScenarioID_5">
             <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                <div class="card-body">
+                <div class="card-body card-body-white">
                             <div class="spinner-container" style="position: relative;">
               <textarea class="form-control small-font" name="txtScenarioDescription_5" id="txtScenarioDescription_5" rows="3" style="resize: none; word-wrap: normal" placeholder="Enter a concise and descriptive scenario" onchange="setRiskAssessmentRefreshRequired(1)" onblur="analyze_Scenario(5)"></textarea>
-              <div class="educational-resources">
-                <a href="#" class="link-to-resource" data-bs-toggle="modal" data-bs-target="#scenarioModal">Cybersecurity Scenario Guidelines</a>
-            </div>
+
                                 <div class="spinner-overlay_5" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255, 255, 255, 0.7); display: none; justify-content: center; align-items: center;">
                   <div class="spinner-border" role="status">
                       <span class="sr-only">Analyzing...</span>
@@ -2207,7 +2325,7 @@
   <div class="row">
                   <div class="col-md-1"></div>
                 <div class="col-md-5">
-                    <div class="form-group">
+                    <div class="form-group-white">
                         <label class="form-control border-0 small-font"><h6>Internet Exposed IP Address</h6></label>
                         <label class="switch">
                           <input type="checkbox" id="exposed_system_5" name="exposed_system_5">
@@ -2216,7 +2334,7 @@
                     </div>
                 </div>
                 <div class="col-md-5">
-                    <div class="form-group">
+                    <div class="form-group-white">
                         <label class="form-control border-0 small-font"><h6>Default/Weak Credentials</h6></label>
                         <label class="switch">
                           <input type="checkbox" id="weak_credentials_5" name="weak_credentials_5">
@@ -2229,7 +2347,7 @@
             </div>
             <br>
             <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                <div class="card-body">
+                <div class="card-body card-body-white">
                     <div class="row">
                         <div class="col-md-6">
                             <label for="selectOutage_5" class="form-control border-0 small-font">Production Outage</label>
@@ -2247,7 +2365,7 @@
                 </div>
               </div>
             <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                <div class="card-body">
+                <div class="card-body card-body-white">
                   <label for="selectThreat_5" class="form-control border-0">Threat Source</label>
                   <select id="selectThreat_5" name="selectThreat_5" class="form-control small-font">
                     <option value="">-- Select Threat Source --</option>
@@ -2258,7 +2376,7 @@
                 </div>
             </div>
             <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                <div class="card-body">
+                <div class="card-body card-body-white">
                   <label for="selectTactics_5" class="form-control border-0 small-font">Threat Tactics (Mitre)</label>
                   <select id="selectTactics_5" name="selectTactics_5" class="form-control">
                     <option value="">-- Select Threat Tactics --</option>
@@ -2269,7 +2387,7 @@
                 </div>
             </div>
             <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                <div class="card-body">
+                <div class="card-body card-body-white">
                     <label for="id_impact_5" class="form-control border-0 small-font">Impact</label>
                     <select id="id_impact_5" name="impact" class="form-control small-font">
                         <option value="">-- Select Impact --</option>
@@ -2280,7 +2398,7 @@
                 </div>
               </div>
             <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                <div class="card-body">
+                <div class="card-body card-body-white">
                     <label for="txtAssets_5" class="form-control border-0 align-text-bottom">Asset Name/s</label>
                     <textarea class="form-control" name="txtAssets_5" id="txtAssets_5" rows="3" style="resize: none; word-wrap: normal" placeholder="Add asset names relevant to the scenario..."></textarea>
                 </div>
@@ -2293,7 +2411,7 @@
                 Click the icons to add additional detail
                     <!--slider for safety rating -->
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                        <div class="card-body">
+                        <div class="card-body card-body-white">
                             <div class="slider-container d-flex align-items-center" >
                                 <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#safetyModal_5" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/safety.png' %}" style="height:2rem"> &nbsp;Safety</label></div>
                                 <div class="col-7">
@@ -2304,7 +2422,7 @@
                         </div>
                     </div>
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                        <div class="card-body">
+                        <div class="card-body card-body-white">
                             <!--slider for life rating -->
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#lifeModal_5" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/danger.png' %}" style="height:2rem"> &nbsp;Life</label></div>
@@ -2316,7 +2434,7 @@
                         </div>
                     </div>
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                        <div class="card-body">
+                        <div class="card-body card-body-white">
                             <!--slider for production rating -->
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#productionModal_5" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/production.png' %}" style="height:2rem">&nbsp; Production</label></div>
@@ -2328,7 +2446,7 @@
                         </div>
                     </div>
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                        <div class="card-body">
+                        <div class="card-body card-body-white">
                              <!--slider for finance rating -->
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#financeModal_5" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/finance.png' %}" style="height:2rem">&nbsp; Financial</label></div>
@@ -2340,7 +2458,7 @@
                         </div>
                     </div>
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                        <div class="card-body">
+                        <div class="card-body card-body-white">
                             <!--slider for reputation rating -->
                              <div class="slider-container d-flex align-items-center">
                                 <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#reputationModal_5" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/reputation.png' %}" style="height:2rem"> &nbsp; Reputation</label></div>
@@ -2352,7 +2470,7 @@
                         </div>
                     </div>
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                        <div class="card-body">
+                        <div class="card-body card-body-white">
                             <!--slider for environment impact rating -->
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#environmentModal_5" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/environment.png' %}" style="height:2rem"> &nbsp; Environment</label></div>
@@ -2364,7 +2482,7 @@
                         </div>
                     </div>
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                        <div class="card-body">
+                        <div class="card-body card-body-white">
                             <!--slider for regulatory impact rating -->
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#regulationModal_5" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/regulation.png' %}" style="height:2rem">&nbsp; Regulatory</label></div>
@@ -2376,7 +2494,7 @@
                         </div>
                     </div>
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                        <div class="card-body">
+                        <div class="card-body card-body-white">
                             <!--slider for data impact rating -->
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#dataModal_5" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/data.png' %}" style="height:2rem"> &nbsp; Data/IP</label></div>
@@ -2388,7 +2506,7 @@
                         </div>
                     </div>
                 <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                        <div class="card-body">
+                        <div class="card-body card-body-white">
                             <!--slider for data impact rating -->
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#supplyModal_5" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/supply.png' %}" style="height:2rem"> &nbsp;Supply Chain</label></div>
@@ -2402,7 +2520,7 @@
                 <br>
                 <h5>Vulnerability and Likelihood Analysis</h5>
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                        <div class="card-body">
+                        <div class="card-body card-body-white">
                             <!--slider for vulnerability rating -->
                             <div class="slider-container d-flex align-items-center" >
                                 <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#vulnModal_5"  data-bs-placement="top" style="cursor: pointer">Vulnerability</label></div>
@@ -2414,7 +2532,7 @@
                         </div>
                     </div>
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                        <div class="card-body">
+                        <div class="card-body card-body-white">
                             <!--slider for safety rating -->
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the danger to life of the selected scenario">Threat</label></div>
@@ -2426,7 +2544,7 @@
                         </div>
                     </div>
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                        <div class="card-body">
+                        <div class="card-body card-body-white">
                             <!--slider for frequency-->
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to indicate asset status">Asset Status</label></div>
@@ -2452,14 +2570,14 @@
                 </div>
 
                     <div class="card mb-3 shadow-sm">
-                        <div class="card-body">
+                        <div class="card-body card-body-white">
                             <label class="form-label">Risk Rating: </label>
                             <input type="text" id="lblriskRating_5" name="lblriskRating_5" class="form-control" readonly>
                         </div>
                     </div>
 
                     <div class="card mb-3 shadow-sm">
-                        <div class="card-body">
+                        <div class="card-body card-body-white">
                             <div class="row">
                                 <div class="col">
                                     <label class="form-label" style="font-size: 10px">Est. Incident Costs (Low): </label>
@@ -2477,7 +2595,7 @@
                         </div>
                     </div>
                     <div class="card mb-3 shadow-sm">
-                        <div class="card-body">
+                        <div class="card-body card-body-white">
                             <label class="form-label">Recommended Controls: </label>
 
 
@@ -2496,7 +2614,7 @@
                             </div>
                             <input type="text" id="control_score_5" name="control_score_5" style="visibility: hidden">
                                      <script>
-                                    function initializeControlScore_4() {
+                                    function initializeControlScore_5() {
                                         // Get all sliders in the table
                                         var sliders = document.querySelectorAll('#risk_summary_controls_table_5 input[type="range"]');
 
@@ -2557,26 +2675,26 @@
     </div>
 </div>
 
-    <div class="col-md-1 bg-white"></div>
+    <div class="col-md-1 "></div>
 </div>
 
 
 <div class="row">
-    <div class="col-md-1 bg-white"></div>
+    <div class="col-md-1"></div>
     <div class="col-md-10 ">
-     <div class="row" style="background-color: white; height: 15px"></div>
+     <div class="row" style="height: 15px"></div>
    </div>
-    <div class="col-md-1 bg-white"></div>
-</div> <!-- white stripe -->
+    <div class="col-md-1 "></div>
+</div>
 
 <!-- table for actions -->
 <div class="row">
-    <div class="col-md-1 bg-white"></div>
+    <div class="col-md-1 "></div>
 
-    <div class="col-md-10" style="background-color: white">
+    <div class="col-md-10" >
         <br>
-        <label for="actiontable" class="form-label">Actions for this Risk Assessment</label>
-        <table id="actiontable" class="table table-striped table-bordered small-font">
+        <label for="accountable" class="form-label" style="color: white">Actions for this Risk Assessment</label>
+        <table id="actiontable" class="table table-striped table-bordered small-font" style="background-color: white">
             <thead>
                 <tr>
                     <th>ID</th>
@@ -2585,7 +2703,6 @@
                     <th>Status</th>
                     <th>Priority</th>
                     <th>Owner</th>
-                    <!-- Add more <th> elements for each field in the RAWorksheet model -->
                 </tr>
             </thead>
             <tbody>
@@ -2593,17 +2710,10 @@
             </tbody>
         </table>
 
-    </div> <!-- table view of existing risk assessments -->
+    </div>
 
-    <div class="col-md-1 bg-white"></div>
+    <div class="col-md-1 "></div>
 </div>
-
-
-
-
-<!--modal forms -->
-
-
 
 <!-- safety ratings -->
 <div class="modal fade" id="safetyModal_1" tabindex="-1" aria-labelledby="safetyModal_1_Label" aria-hidden="true">
@@ -4500,7 +4610,140 @@
     </div>
   </div>
 </div>
+<div class="modal fade" id="scenarioSelectModal" tabindex="-1" aria-labelledby="scenarioSelectModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="scenarioSelectModalLabel">Select a Scenario</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="file-explorer">
+          <ul id="scenarioList" class="list-group">
+            <!-- Scenario items will be populated here -->
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
+<script>
+
+
+    var selectedButtonId = "";
+    // Function to populate the scenario list in the modal
+function populateScenarioList() {
+  $.ajax({
+    url: '/OTRisk/get_saved_scenario_builders',
+    type: 'GET',
+    success: function(response) {
+      var scenarioList = $('#scenarioList');
+      scenarioList.empty();
+
+      response.forEach(function(scenario) {
+        var listItem = $(`
+          <li class="list-group-item list-group-item-action" data-id="${scenario.id}">
+            <span class="file-icon"><i class="fas fa-file-alt"></i></span>
+            <span class="file-name">${scenario.scenario_name}</span>
+          </li>
+        `);
+        listItem.on('click', function() {
+          retrieveScenario($(this).data('id'));
+          $('#scenarioSelectModal').modal('hide');
+        });
+        scenarioList.append(listItem);
+      });
+    },
+    error: function(error) {
+      console.error('Error fetching scenarios:', error);
+    }
+  });
+}
+
+
+
+// Function to retrieve and display a selected scenario
+function retrieveScenario(scenarioId) {
+  resetScenarioTab(selectedButtonId);
+  $.ajax({
+    url: '/OTRisk/retrieve_scenario_builder/' + scenarioId,
+    type: 'GET',
+    success: function(response) {
+        resetScenarioTab(selectedButtonId);
+      $('#txtScenarioDescription_' + selectedButtonId).val(response.scenario_description);
+      $('#txtScenarioAnalysis_' + selectedButtonId).val(response.consequences);
+      // $('#attack_tree_text').val(response.attack_tree_data);
+
+        // Check if data.attack_tree_text is defined, not null, and not an empty string
+        //if (response.attack_tree_data && response.attack_tree_data.trim() !== '') {
+
+        //    var jsonStringFromDatabase = response.attack_tree_data;
+         //   var jsonObject = JSON.parse(jsonStringFromDatabase);
+        //    drawAttackTree(jsonObject);
+        // }
+
+      if (response.factors['Environmental consequences']) {
+        $('#range_environment_' + selectedButtonId).val(response.factors['Environmental consequences'].score);
+        $('#txtenvironmentJustify_' + selectedButtonId).val(response.factors['Environmental consequences'].narrative);
+      }
+       if (response.factors['Data']) {
+        $('#range_data_' + selectedButtonId).val(response.factors['Data'].score);
+        $('#txtdataJustify_' + selectedButtonId).val(response.factors['Data'].narrative);
+      }
+      if (response.factors['Danger-to-life']) {
+        $('#range_life_' + selectedButtonId).val(response.factors['Danger-to-life'].score);
+        $('#txtlifeJustify_' + selectedButtonId).val(response.factors['Danger-to-life'].narrative);
+      }
+      if (response.factors['Financials']) {
+        $('#range_finance_' + selectedButtonId).val(response.factors['Financials'].score);
+        $('#txtfinanceJustify_' + selectedButtonId).val(response.factors['Financials'].narrative);
+      }
+      if (response.factors['Operations']) {
+        $('#range_production_' + selectedButtonId).val(response.factors['Operations'].score);
+        $('#txtproductionJustify_' + selectedButtonId).val(response.factors['Operations'].narrative);
+      }
+      if (response.factors['Regulations']) {
+        $('#range_regulatory_' + selectedButtonId).val(response.factors['Regulations'].score);
+        $('#txtregulatoryJustify_' + selectedButtonId).val(response.factors['Regulations'].narrative);
+      }
+      if (response.factors['Reputation']) {
+        $('#range_reputation_' + selectedButtonId).val(response.factors['Reputation'].score);
+        $('#txtreputationJustify_' + selectedButtonId).val(response.factors['Reputation'].narrative);
+      }
+      if (response.factors['Safety']) {
+        $('#range_safety_' + selectedButtonId).val(response.factors['Safety'].score);
+        $('#txtsafetyJustify_' + selectedButtonId).val(response.factors['Safety'].narrative);
+      }
+      if (response.factors['Supply chain']) {
+        $('#range_supply_' + selectedButtonId).val(response.factors['Supply chain'].score);
+        $('#txtsupplyJustify_' + selectedButtonId).val(response.factors['Supply chain'].narrative);
+      }
+
+
+
+    },
+    error: function(error) {
+      console.error('Error retrieving scenario:', error);
+    }
+  });
+}
+
+// Call populateScenarioList when the modal is about to be shown
+$('#scenarioSelectModal').on('show.bs.modal', function (e) {
+  populateScenarioList();
+  selectedButtonId = $(e.relatedTarget).attr('id'); // Store the ID of the clicked button
+});
+
+// Event handlers for the buttons
+// Event handlers for the buttons
+$('[id^=btnSelectScenario_]').on('click', function() {
+  var fullId = $(this).attr('id');
+  selectedButtonId = fullId.charAt(fullId.length - 1); // Get the last character, which is the number
+});
+
+
+</script>
 <script>
 
 
@@ -6009,54 +6252,9 @@ function analyze_Scenario(scenario) {
 <textarea id="lblriskSummary_3" name="lblriskSummary_3" class="form-control" readonly style="resize: none; visibility: hidden" rows="15" > </textarea>
 <textarea id="lblriskSummary_4" name="lblriskSummary_4" class="form-control" readonly style="resize: none; visibility: hidden" rows="15" > </textarea>
 <textarea id="lblriskSummary_5" name="lblriskSummary_5" class="form-control" readonly style="resize: none; visibility: hidden" rows="15" > </textarea>
-<div id="scenarioModal" class="modal fade" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-xl">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Definition of a Well-Constructed Scenario</h5>
-                <button type="button" class="btn-close modal-button" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-    <p>A well-constructed scenario, especially in the context of cybersecurity for industrial systems, is a concise yet detailed narrative that outlines a potential event or situation. It includes:</p>
-    <ul>
-        <li><strong>Specificity:</strong> Precise description of the industrial device or system, its operational context, and specific cybersecurity threats or vulnerabilities.</li>
-        <li><strong>Contextual Relevance:</strong> Set within a well-defined operational environment, outlining relevant factors like network connectivity, system architecture, or third-party integrations.</li>
-        <li><strong>Problem Definition:</strong> Clear description of the cybersecurity challenge or threat, including potential cyber attacks or specific vulnerabilities.</li>
-    </ul>
-    <h3>Examples:</h3>
-    <ol>
-        <li><strong>Phishing Attack in a Power Plant:</strong> An operator at a nuclear power plant receives an email that appears to be from the plant’s IT department, asking them to click on a link to update their password credentials.</li>
-        <li><strong>Malware in Manufacturing:</strong> A manufacturing facility’s network is breached when an employee unknowingly installs software from an unverified source, which claims to be a new tool for inventory management.</li>
-        <li><strong>ERP System Vulnerability in Pharmaceutical Industry:</strong> A routine security audit reveals an unpatched vulnerability in the ERP software used by a pharmaceutical company, potentially exposing the system to unauthorized access.</li>
-    </ol>
-</div>
-
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary modal-button" data-bs-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-var link = document.getElementById("link-to-resource");
-var modal = new bootstrap.Modal(document.getElementById("scenarioModal"), {});
-
-// Check if elements exist
-if (link && modal) {
-// When the user clicks the link, open the modal
-link.addEventListener('click', function() {
-modal.show();
-});
-}
-});
-
-$(document).ready(function() {
-    $('#scenarioList').DataTable();
-});
 
 
-</script>
+
 
 </body>
 </html>

@@ -1,6 +1,9 @@
 import decimal
 import os
-
+from pptx import Presentation
+from pptx.util import Inches
+import requests
+from io import BytesIO
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.serializers import serialize
@@ -2675,12 +2678,15 @@ def generate_scenario_description(request):
         target_system = request.POST.get('targetSystem', '').strip()
         impact = request.POST.get('impact', '').strip()
         motivation = request.POST.get('motivation', '').strip()
+        country = request.POST.get('country', '').strip()
+        industry = request.POST.get('industry', '').strip()
+        facility_type = request.POST.get('facility_type', '').strip()
         severity = request.POST.get('severity', '').strip()
         detection_response = request.POST.get('detectionResponse', '').strip()
         preventive_measures = request.POST.get('preventiveMeasures', '').strip()
 
         prompt = (
-            "You are an OT cybersecurity risk analyst writing scenarios for a cybersecurity insurance underwriter. Using only the following inputs, you are to construct and generate a brief, concise, and realistic scenario. Consider that an attack tree will be created from the scenario. You output MUST be less than 150 words with no additional narrative or commentary.  \n\n"
+            "You are an Data scientist specialising in OT cybersecurity writing scenarios for a cybersecurity insurance underwriter. Using only the following inputs, you are to construct and generate a brief, concise, and realistic scenario. Consider that an attack tree will be created from the scenario. You output MUST be less than 150 words with no additional narrative or commentary.  \n\n"
             f"- Attacker: {attacker}\n"
             f"- Attack Vector: {attack_vector}\n"
             f"- Target Component: {target_component}\n"
@@ -2688,8 +2694,10 @@ def generate_scenario_description(request):
             f"- Target System/Network: {target_system}\n"
             f"- Potential Impact: {impact}\n"
             f"- Attacker's Motivation: {motivation}\n\n"
+            f"- Facility type: {facility_type}\n\n"
+            f"- Industry sector: {industry}\n\n"
         )
-
+        print(prompt)
         # Setting OpenAI API key
         openai.api_key = get_api_key('openai')
 
@@ -2715,7 +2723,6 @@ def generate_scenario_description(request):
 
 
 def save_scenario_builder(request):
-    print(request.POST)
     if request.method == 'POST':
         user = request.user
         data = request.POST
@@ -2758,7 +2765,7 @@ def save_scenario_builder(request):
 def get_saved_scenario_builders(request):
     if request.method == 'GET':
         user = request.user
-        scenarios = ScenarioBuilder.objects.filter(user=user).values('id','scenario_name', 'created_at')
+        scenarios = ScenarioBuilder.objects.filter(user=user).values('id', 'scenario_name', 'created_at')
 
         return JsonResponse(list(scenarios), safe=False)
     return JsonResponse({'error': 'Invalid request'}, status=400)

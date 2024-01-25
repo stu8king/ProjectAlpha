@@ -153,6 +153,7 @@ def iotaphamanager(request, record_id=None):
 
         pha_header.UserID = request.user.id
         pha_header.save()
+        saved_record_id = pha_header.ID
 
         if is_new_record:
             pha_header.set_workflow_status('Started')
@@ -264,7 +265,7 @@ def iotaphamanager(request, record_id=None):
         'workflow_status_choices': WorkflowStatus.STATUS_CHOICES,
         'anychart_key': anychart_key,
         'group_types': CyberPHA_Group.GROUP_TYPES,
-
+        'saved_record_id': new_record_id
     })
 
 
@@ -402,7 +403,7 @@ def facility_threat_profile(facility, facility_type, country, industry, safety_s
 
     # Constructing a more specific context with format instructions
     context = (
-        f"You are providing value-add analysis for an OT cybersecurity assessment. Analyze the {facility} which is a {facility_type} in {country}, operating within the {industry} industry. "
+        f"You are a data scientist expert on industrial cybersecurity providing value-add analysis for an OT cybersecurity assessment. Analyze the {facility} which is a {facility_type} in {country}, operating within the {industry} industry. "
         f"Use the following summaries to generate a report: Safety Hazards - {safety_summary}, "
         f"Chemical Hazards - {chemical_summary}, Physical Security Challenges - {physical_security_summary}, "
         f"OT Devices - {other_summary}, and Compliance Requirements - {compliance_summary}. The analysis should offer insights that are in depth and specific to the facility. ")

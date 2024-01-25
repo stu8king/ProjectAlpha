@@ -5,8 +5,8 @@
 <!--suppress ALL -->
 <html lang="">
 <head>
-    <title>iOTa</title>
-    <link rel="icon" href="{% static 'images/iota - white 1.png' %}" type="image/x-icon">
+    <title>AnzenOT - GRC for OT</title>
+    <link rel="icon" href="{% static 'images/AnzenOTIconBlack.png' %}" type="image/x-icon">
 
  <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css">
@@ -53,19 +53,7 @@
 padding: 12px; /* More padding for table cells */
 border-bottom: 1px solid #dee2e6;
 }
-.btn-custom {
-    border-radius: 5px;
-    transition: background-color 0.3s, box-shadow 0.3s;
-}
 
-.btn-custom:hover {
-    background-color: #e0e0e0;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
-}
-
-.navbar-scroll {
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
 
 .notification-message {
     position: fixed; /* or absolute */
@@ -126,33 +114,57 @@ body {
     background-color: #f5f5f5; /* Change this to the color you want */
     }
 
-   .navbar-scroll .nav-link,
-    .navbar-scroll,
-    .navbar-scroll .navbar-brand {
-      color: #000000;
-    }
+.navbar {
+    background-color: #464748;
+    border-bottom: 1px solid #000;
+    height: 50px; /* Fixed height */
+    position: relative;
+}
 
-    /* Color of the navbar BEFORE scroll */
-    .navbar-scroll {
-      background-color: #FFFFFF;
-        text-decoration-color: #000000;
-    }
+.owl-logo {
+    height: 60px; /* Set a fixed height for the image */
+    width: auto; /* Maintain aspect ratio */
+    position: relative;
+    top: 50%; /* Center vertically in the navbar */
+    transform: translateY(-30%); /* Adjust vertical position */
+    margin-bottom: -20px; /* Negative margin to overlap */
+}
 
 
-    /* Color of the links AFTER scroll */
-    .navbar-scrolled .nav-link,
-    .navbar-scrolled .navbar-toggler-icon,
-    .navbar-scroll .navbar-brand {
-      color: #262626;
-    }
+.navbar-brand, .nav-link {
+    color: #d3d1cd; /* White text for clear visibility on initial view */
+}
 
-    .navbar-logo {
-    position: absolute;
-    top: 5px; /* Adjust this as needed */
-    left: 5px; /* Adjust this as needed */
-    height: 100px; /* Adjust this as needed */
-    z-index: 10;
-    }
+.menu-item {
+    border-right: 1px solid #4B6B6B; /* Subtle line between items */
+    font-size: 14px; /* Adjust font size */
+}
+
+.menu-item:last-child {
+    border-right: none; /* Remove border for the last item */
+}
+
+.menu-item:hover, .dropdown-item:hover {
+    background-color: #3A5F5F; /* Slightly lighter grey on hover */
+    color: #E0E0E0; /* Light grey text on hover */
+}
+
+.nav-link:hover, .dropdown-item {
+    color: #E0E0E0; /* Light grey text on hover */
+}
+
+.dropdown-menu {
+    background-color: #464748; /* Dark Slate Grey */
+    border: none;
+}
+
+.dropdown-item {
+    color: #FFFFFF; /* White text for clear visibility */
+}
+
+.dropdown-item:hover {
+    background-color: #3A5F5F; /* Slightly lighter grey on hover */
+    color: #E0E0E0;}
 
         .col-md-2 {
     place-items: center;
@@ -247,9 +259,36 @@ body {
 
 /* Additional styling can be added as needed */
 
+.form-group {
+    border: 1px solid #464748; /* Border color */
+    box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.5); /* Outer shadow */
+    background-color: #5E6266; /* Lighter shade of #464748 */
+    padding: 15px; /* Optional: for internal spacing */
+}
+.form-sim .form-control {
+    max-width: 100%; /* Ensures select does not exceed container width */
+    width: auto; /* Optional: Ensures select width is based on content up to max-width */
+}
+/* Change font color of the DataTable pagination info */
+.dataTables_info {
+    color: white;
+}
+
+/* Change font color of the DataTable search label */
+.dataTables_filter label {
+    color: white;
+}
+#headertable_wrapper .dataTables_info {
+    color: white !important;
+}
+
+#headertable_wrapper .dataTables_paginate .paginate_button {
+    color: white !important;
+}
+
 </style>
 </head>
-<body style="background-color: white">
+<body style="background-color: #464748">
 <script>
 
 anychart.licenseKey("{{ anychart_key }}");
@@ -395,74 +434,71 @@ function drawControlGauge(score) {
 
 </script>
 
-<nav class="navbar navbar-expand-lg navbar-scroll shadow-0 border-bottom border-dark rounded">
-  <div class="container-fluid d-flex justify-content-between">
-   <a class="navbar-brand" href="{% url 'OTRisk:dashboardhome' %}"><img src="{% static 'images/iota - white 1.png' %}" style="height: 140px; width: 140px" class="navbar-logo" alt="">   </a>
-      <h6 class="my-auto text-center flex-grow-1 icon-text">
-    <img src="{% static 'images/gears1.png' %}" alt=""> CyberPHA
-</h6>
-
-    <div class="collapse navbar-collapse" id="navbarSupportedContent">
-      <ul class="navbar-nav ms-auto">
-
-        <li class="nav-item">
-          <a class="nav-link"  style="font-size: 12px;" href="{% url 'OTRisk:qraw' %}"><i class="bi bi-journal-text"></i> Risk Assessment</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" style="font-size: 12px;" href="{% url 'OTRisk:iotaphamanager' %}"><i class="bi bi-journal-text"></i> CyberPHA</a>
-        </li>
-      <li class="nav-item">
-          <a class="nav-link" style="font-size: 12px;" href="{% url 'OTRisk:scenario_sim' %}"><i class="bi bi-bricks"></i> Scenario Builder</a>
-        </li>
-          <li class="nav-item">
-          <a class="nav-link" style="font-size: 12px;" href="{% url 'OTRisk:ra_actions_view_default' %}" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Actions</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" style="font-size: 12px;" href="{% url 'OTRisk:risk_register' %}" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Risk Register</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" style="font-size: 12px;" href="{% url 'OTRisk:list_frameworks' %}" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Assessments</a>
-        </li>
-        <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="font-size: 12px;">
-                <i class="bi bi-diagram-3"></i> Admin
-              </a>
-              <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-
-                  <li><a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:admin_users' %}">Admin Users</a></li>
-                  {% if user.is_staff %}
-                    <!-- Links visible only to superusers -->
-                    <li><a class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:user_admin' %}">User Administration</a></li>
-                      <li><a class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:execute_sql' %}">Execute SQL</a></li>
-                    {% endif %}
-
-              </ul>
-
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" href="{% url 'accounts:profile' %}" style="font-size: 12px;">
-                <i class="bi bi-person-fill"></i> {{ user.first_name }} {{ user.last_name }} | {{ user.userprofile.organization.name }}
-            </a>
-        </li>
-
-          <li class="nav-item">
-            <a class="nav-link" href="{% url 'logout' %}">
-                <i class="bi bi-box-arrow-right"></i> Logout
-            </a>
-        </li>
-      </ul>
+<nav class="navbar navbar-expand-lg navbar-scroll shadow-0 border-bottom rounded">
+    <div class="container-fluid d-flex justify-content-between">
+        <a class="navbar-brand" href="{% url 'OTRisk:dashboardhome' %}">
+            &nbsp; &nbsp; &nbsp; &nbsp;
+            <img src="{% static 'images/anzen_owl.png' %}" class="owl-logo" style="width: 18%; height: 18%">
+        </a>
+        <h6 class="my-auto text-center flex-grow-1 navbar-brand"><img src="{% static 'images/anzen_noowl.png' %}" style="width: 15%; height: 15%" alt=""> Dashboard</h6>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item menu-item">
+                    <a class="nav-link" href="{% url 'OTRisk:qraw' %}"><i class="bi bi-calculator"></i> QRAW</a>
+                </li>
+                <li class="nav-item menu-item">
+                    <a class="nav-link" href="{% url 'OTRisk:iotaphamanager' %}"><i class="bi bi-journal-text"></i> CyberPHA</a>
+                </li>
+                <li class="nav-item menu-item">
+                    <a class="nav-link" href="{% url 'OTRisk:scenario_sim' %}"><i class="bi bi-bricks"></i> Scenario Builder</a>
+                </li>
+                <li class="nav-item menu-item">
+                    <a class="nav-link" href="{% url 'OTRisk:ra_actions_view_default' %}"><i class="bi-file-earmark-easel"></i> Actions</a>
+                </li>
+                <li class="nav-item menu-item">
+                    <a class="nav-link" href="{% url 'OTRisk:risk_register' %}"><i class="bi-file-earmark-easel"></i> Risk Register</a>
+                </li>
+                <li class="nav-item menu-item">
+                    <a class="nav-link" href="{% url 'OTRisk:list_frameworks' %}"><i class="bi-file-earmark-easel"></i> Assessments</a>
+                </li>
+    <li class="nav-item dropdown menu-item">
+    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+    <i class="bi bi-diagram-3"></i> Admin
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+    <li><a class="dropdown-item" href="{% url 'OTRisk:admin_users' %}">Admin Users</a></li>
+    {% if user.is_staff %}
+    <li><a class="dropdown-item" href="{% url 'OTRisk:user_admin' %}">User Administration</a></li>
+    <li><a class="dropdown-item" href="{% url 'OTRisk:execute_sql' %}">Execute SQL</a></li>
+    {% endif %}
+    </ul>
+    </li>
+    <li class="nav-item menu-item">
+    <a class="nav-link" href="{% url 'accounts:profile' %}">
+    <i class="bi bi-person-fill"></i> {{ user.first_name }} {{ user.last_name }} | {{ user.userprofile.organization.name }}
+    </a>
+    </li>
+    <li class="nav-item menu-item">
+    <a class="nav-link" href="{% url 'logout' %}">
+    <i class="bi bi-box-arrow-right"></i> Logout
+    </a>
+    </li>
+    </ul>
     </div>
-  </div>
+    </div>
+    </nav>
 
-</nav>
 <div id="notificationMessage" class="notification-message" style="display: none;"></div>
 <form name="frmHeader" id="frmRAW" method="POST" action="{% url 'OTRisk:iotaphamanager' %}">
 {% csrf_token %}
-
+<br>
 <div class="row">
-    <div class="col-md-1 bg-white"></div>
-    <div class="col-md-10 bg-white">
-        <label for="headertable" class="form-label">Select a record in the table to view and edit the CyberPHA</label>
+    <div class="col-md-1" style="background-color: #464748"></div>
+    <div class="col-md-10">
+    <div class="row">
+    <div class="form-group">
+    <div class="col-md-12 " style="background-color: #464748">
+        <label for="headertable" class="form-label" style="color:white">Select a record in the table to view and edit the CyberPHA</label>
         <table id="headertable" class="table small-font compact">
         <thead style="background-color: #2c2c2c; color: white">
             <tr>
@@ -530,7 +566,7 @@ function drawControlGauge(score) {
                     </td>
                     <td>
                         {% if pha_header_records.scenario_count != 0 %}
-                            <a class="dropdown-item" href="{% url 'OTRisk:pha_reports'  cyber_pha_header_id=pha_header_records.ID  %}" style="font-weight: bold;">Report</a>
+                            <a class="dropdown-item" href="{% url 'OTRisk:pha_reports'  cyber_pha_header_id=pha_header_records.ID  %}" style="font-weight: bold; color: black">Report</a>
                         {% else %}
 
                         {% endif %}
@@ -542,226 +578,95 @@ function drawControlGauge(score) {
         </table>
 
         <script>
-        $(document).ready(function() {
-            $('#headertable').on('click', 'tbody tr.selectable-row', function() {
-            // Remove 'highlighted' class from all other rows
-            $('tr.selectable-row').removeClass('highlighted');
+         $(document).ready(function() {
+             // Event handler for clicking on a table row
+             $('#headertable').on('click', 'tbody tr.selectable-row', function () {
+                 // Remove 'highlighted' class from all other rows
+                 $('tr.selectable-row').removeClass('highlighted');
 
-            // Add 'highlighted' class to the clicked row
-            $(this).addClass('highlighted');
-            });
+                 // Add 'highlighted' class to the clicked row
+                 $(this).addClass('highlighted');
 
-            // Fetching header record when a row is clicked
-            $('#headertable').on('click', 'tbody tr', function() {
-                let recordId = $(this).data('id');  // get the ID of the clicked row
-                fetchHeaderRecord(recordId);
-            });
+                 let recordId = $(this).data('id');  // get the ID of the clicked row
+                 fetchHeaderRecord(recordId);
+             });
 
-            // Check if a selected_record_id is provided in the rendered context
-                let selectedRecordId = "{{ selected_record_id }}";  // Get the selected_record_id from the Django context
-                if (selectedRecordId) {
-                     $('tr[data-id="' + selectedRecordId + '"]').addClass('highlighted');
-                    // If a selectedRecordId is provided, automatically trigger the AJAX call
-                    fetchHeaderRecord(selectedRecordId);
-                }
-            });
-
-            function fetchHeaderRecord(recordId) {
-                sessionStorage.setItem('activeCyberPHA', recordId);
-                // Set the value of the hidden text field
-                document.getElementById('txtHdnCyberPHAID').value = recordId;
-                $.ajax({
-                    url: '/OTRisk/get_headerrecord',  // the URL of the view that will handle the request
-                    data: {
-                        'record_id': recordId
-                    },
-                    dataType: 'json',
-                    success: function (data) {
-
-                        $('#txtTitle').val(data.headerrecord.title);
-                        $('#txtLeader').val(data.headerrecord.leader);
-                        $('#selIndustry').val(data.headerrecord.industry);
-                        $('#txtUnit').val(data.headerrecord.unit);
-                        $('#txtFacility').val(data.headerrecord.facility);
-                        $('#txtLeaderEmail').val(data.headerrecord.leaderemail);
-                        $('#selFacilityType').val(data.headerrecord.facilitytype);
-
-                        $('#selFacilityType').val(data.headerrecord.facilitytype).trigger('change');
-
-                        $('#assessment_id').val(data.headerrecord.assessment_id);
-                        $('#assessment_id').val(data.headerrecord.assessment_id).trigger('change');
-
-                        $('#selZone').val(data.headerrecord.zone);
-                        $('#selSL').val(data.headerrecord.sl_t);
-                        $('#txtStartDate').val(data.headerrecord.startdate);
-                        $('#txtEndDate').val(data.headerrecord.enddate);
-                        $('#txtSafetySummary').val(data.headerrecord.safetysummary);
-                        $('#txtChemical').val(data.headerrecord.chemicalsummary);
-                        $('#txtPhysical').val(data.headerrecord.physicalsummary);
-                        $('#txtOther').val(data.headerrecord.othersummary);
-                        $('#txtCompliance').val(data.headerrecord.compliancesummary);
-                        $('#threatSummary').val(data.headerrecord.threatSummary);
-                        $('#insightSummary').val(data.headerrecord.insightSummary);
-                        $('#strategySummary').val(data.headerrecord.strategySummary);
-                        $('#txtAddress').val(data.headerrecord.address);
-                        $('#countrySelector').val(data.headerrecord.country).trigger('change');
-                        $('#shift_model').val(data.headerrecord.shift_model);
-                        $('#txtEmployees').val(data.headerrecord.EmployeesOnSite);
-                        $('#annual_revenue').val(formatAsCurrency(data.headerrecord.annual_revenue));
-                        $('#cyber_insurance').val(data.headerrecord.cyber_insurance);
-                        $('#cyber_insurance').val(data.headerrecord.cyber_insurance).trigger('change');
-                        $('#hdn_pha_score').val(data.headerrecord.pha_score);
-                        $('#npm').val(data.headerrecord.npm);
-                        $('#coho').val(formatAsCurrency(data.headerrecord.coho));
-                        drawGauge(data.headerrecord.pha_score);
-
-                        drawControlGauge(data.control_effectiveness);
-
-                        sessionStorage.setItem('sessionIndustry', data.headerrecord.industry);
-                        sessionStorage.setItem('sessionFacilityType', data.headerrecord.facilitytype);
-                        sessionStorage.setItem('sessionFacility', data.headerrecord.facility);
-                        sessionStorage.setItem('sessionCountry', data.headerrecord.country);
-                        var pha_score = data.headerrecord.pha_score;
-
-                        // Enable the controls
-                        $('#txtTitle, #txtLeader, #txtUnit, #txtStartDate, #txtAddress, #txtFacility, #txtLeaderEmail, #txtEndDate, #txtSafetySummary, #txtChemical, #txtPhysical, #txtOther, #txtCompliance, #strategySummary, #insightSummary, #threatSummary, #selFacilityType, #assessment_id, #cyber_insurance, #shift_model, #annual_revenue, #txtEmployees, #selIndustry, #selZone, #selSL, #countrySelector, #btnformSubmit,  #risk-assessment-btn, #scenarioButton, #generatePPT').prop('disabled', false);
-                        $('#btnformSubmit').prop('disabled', false);
-                        $('#scenarioButton').prop('disabled', false);
-                        // Set the workflow status dropdown
-                        // Ensure the current workflow status matches the format of the dropdown options
-                        var currentWorkflowStatus = data.headerrecord.current_workflow_status;
-
-                        var workflowSelector = $('#workflow_selector');
-
-                        // Check if the current workflow status exists in the options
-                        if (workflowSelector.find("option[value='" + currentWorkflowStatus + "']").length > 0) {
-                            workflowSelector.val(currentWorkflowStatus).trigger('change');
-                        } else {
-                            // If the status doesn't exist, select the default placeholder
-                            workflowSelector.val('').trigger('change');
-                        }
-
-                        if (currentWorkflowStatus == 'Complete'){
-
-                            lockControls();
-                        } else { unlockControls(); }
-
-                        $('#generatePPT').prop('disabled', false);
-                        populateModeratorsTable(data.organization_moderators, data.moderator_ids);
-                         // Populate current group assignments
-                        console.log(data.all_groups);
-                        populateCurrentGroups(data.headerrecord.current_groups);
-
-                        // Populate all available groups in the dropdown (for the modal)
-                        populateAllGroupsDropdown(data.all_groups);
-                        updateGroupAssignmentsDisplay(recordId);
-                        updateGroupList();
-
-
-                    }
-                });
-            }
-            // Function to populate current groups
-            function populateCurrentGroups(groups) {
-                var currentGroupsDiv = $('#currentGroupsDiv');
-                currentGroupsDiv.empty(); // Clear existing content
-
-                // Check if 'groups' is an array and has elements
-                if (Array.isArray(groups) && groups.length > 0) {
-                    groups.forEach(function(group) {
-                        currentGroupsDiv.append($('<p>').text(group.name));
-                    });
-                } else {
-                    // Handle non-array or empty 'groups'
-                    currentGroupsDiv.append($('<p>').text('No groups assigned.'));
-                }
-            }
+             // Check if a saved_record_id is provided in the rendered context
+             let savedRecordId = "{{ saved_record_id }}";  // Get the saved_record_id from the Django context
+             if (savedRecordId && savedRecordId !== "None") {
+                 $('tr[data-id="' + savedRecordId + '"]').addClass('highlighted');
+                 // If a savedRecordId is provided, automatically trigger the AJAX call
+                 fetchHeaderRecord(savedRecordId);
+             }
 
 
 
-            function populateAllGroupsDropdown(groups) {
-                var allGroupsSelect = $('#existing_group'); // ID of the select element in the modal
-                allGroupsSelect.empty(); // Clear existing options
-
-                allGroupsSelect.append($('<option>', {
-                    value: '',
-                    text: 'Select a Group'
-                }));
-
-                if (groups && groups.length > 0) {
-                    groups.forEach(function(group) {
-                        allGroupsSelect.append($('<option>', {
-                            value: group.id,
-                            text: group.name
-                        }));
-                    });
-                }
-            }
-
-            function populateModeratorsTable(moderators, moderatorIds) {
-                var tbody = $('#moderatorModal tbody');
-                tbody.empty(); // Clear existing rows
-
-                moderators.forEach(function(moderator) {
-                    var checked = moderatorIds.includes(moderator.id) ? 'checked' : '';
-                    var row = '<tr>' +
-                              '<td>' + moderator.name + '</td>' +
-                              '<td><input type="checkbox" name="moderator" value="' + moderator.id + '" ' + checked + '></td>' +
-                              '</tr>';
-                    tbody.append(row);
-                });
-            }
-
-            function formatAsCurrency(value) {
-                // Strip any non-digit characters
-                let cleanedValue = String(value).replace(/\D/g, '');
-
-                // Convert the number to a currency format
-                return parseInt(cleanedValue).toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 });
-            }
 
 
+
+
+
+
+
+         });
     </script>
     </div> <!-- table view of existing risk assessments -->
-
-    <div class="col-md-1" style="background-color: white;"></div>
+    </div>
+    </div>
+    </div>
+    <div class="col-md-1" style="background-color: #464748"></div>
 </div>
 
 <div class="row">
-    <div class="col-md-1" style="background-color: white"></div>
-    <div class="col-md-3" style="background-color: white"></div>
-    <div class="col-md-4" style="background-color: white">
+    <div class="col-md-1" style="background-color: #464748"></div>
+    <div class="col-md-3" style="background-color: #464748"></div>
+    <div class="col-md-4" style="background-color: #464748">
+        <div class="form-group">
+            <div class="row">
+                <div class="col-md-3">
+                    <button type="submit" id="btnformSubmit" class="form-control"><i class="bi bi-file-earmark-plus"></i> Save</button>
+                    <script>
+                // Add an event listener to the "Save Header" button
+                document.getElementById('btnformSubmit').addEventListener('click', function(event) {
+                    event.preventDefault(); // Prevent the form submission (if it's within a form)
 
-    <button type="submit" id="btnformSubmit" class="custom-btn"><i class="bi bi-file-earmark-plus"></i> Save</button>
-<script>
-    // Add an event listener to the "Save Header" button
-    document.getElementById('btnformSubmit').addEventListener('click', function(event) {
-        event.preventDefault(); // Prevent the form submission (if it's within a form)
+                    // Show a SweetAlert confirmation dialog
+                    swal({
+                        title: "Confirm Save?",
+                        text: "Are you sure you want to save the header information?",
+                        icon: "warning",
+                        buttons: ["Cancel", "Save"],
+                        dangerMode: true,
+                    })
+                    .then((willSave) => {
+                        if (willSave) {
+                            // User confirmed, continue with the form submission
+                            document.forms['frmRAW'].submit();
 
-        // Show a SweetAlert confirmation dialog
+                        } else {
+                            // User canceled the action
+                            // You can add additional code here if needed
+                        }
+                    });
+                });
+            </script>
+                </div>
+                <div class="col-md-3" >
+                    <button type="button" class="form-control " id="resetButton"><i class="bi bi-plus-circle"></i> New</button>
+                    <script>
+$(document).ready(function() {
+    $('#resetButton').on('click', function() {
+        // SweetAlert confirmation prompt
         swal({
-            title: "Confirm Save?",
-            text: "Are you sure you want to save the header information?",
-            icon: "warning",
-            buttons: ["Cancel", "Save"],
+            title: 'Are you sure you wish to create a new CyberPHA?',
+            text: "Any unsaved changes to the current records will be lost.",
+            icon: 'warning',
+            buttons: true, // This will enable both buttons
             dangerMode: true,
-        })
-        .then((willSave) => {
-            if (willSave) {
-                // User confirmed, continue with the form submission
-                document.forms['frmRAW'].submit();
-
-            } else {
-                // User canceled the action
-                // You can add additional code here if needed
-            }
-        });
-    });
-</script>
-        <button type="button" class="custom-btn" id="resetButton"><i class="bi bi-plus-circle"></i> New</button>
-        <script>
-        $(document).ready(function() {
-            $('#resetButton').on('click', function() {
+            buttons: ["Cancel", "Yes, proceed"] // Define the buttons
+        }).then((willProceed) => {
+            if (willProceed) {
+                // User clicked 'Yes, proceed', so execute the reset actions
                 // Reset textboxes and textareas
                 $('#txtTitle, #txtLeader, #txtUnit, #txtStartDate, #txtAddress, #txtFacility, #txtLeaderEmail, #txtEndDate, #txtSafetySummary, #txtChemical, #txtPhysical, #txtEmployees, #annual_revenue, #cyber_insurance, #shift_model, #txtOther, #txtCompliance, #strategySummary, #insightSummary, #threatSummary').val('');
 
@@ -771,45 +676,56 @@ function drawControlGauge(score) {
                 // Enable the controls
                 $('#txtTitle, #txtLeader, #txtUnit, #txtStartDate, #txtAddress, #txtFacility, #txtLeaderEmail, #txtEndDate, #txtSafetySummary, #txtChemical, #txtPhysical, #txtOther, #txtCompliance, #strategySummary, #insightSummary, #threatSummary, #selFacilityType, #selIndustry, #selZone, #selSL, #shift_model, #txtEmployees, #annual_revenue, #cyber_insurance, #countrySelector, #btnformSubmit, #risk-assessment-btn').prop('disabled', false);
                 $('#btnformSubmit').prop('disabled', false);
-
+                clearContainer('pha_gauge');
+                clearContainer('control_gauge');
                 //reset session variables
                 sessionStorage.setItem('activeCyberPHA', '0');
                 // Set the value of the hidden text field
                 document.getElementById('txtHdnCyberPHAID').value = '0';
-
-            });
+            }
         });
+    });
+});
+</script>
 
-        </script>
-        <button type="button" class="custom-btn" id="scenarioButton"><i class="bi bi-pencil-square"></i> Scenarios</button>
-        <script>
-             $(document).ready(function() {
-                $('#scenarioButton').on('click', function() {
-                    window.location.href = "{% url 'OTRisk:assess_cyberpha' %}?active_cyberpha=" + sessionStorage.getItem('activeCyberPHA');
-                });
-             });
-        </script>
-        <button id="generatePPT" class=" custom-btn"><i class="bi bi-printer"></i> Print</button>
+
+                </div>
+                <div class="col-md-3" >
+                    <button type="button" class="form-control " id="scenarioButton"><i class="bi bi-pencil-square"></i> Scenarios</button>
+                    <script>
+                         $(document).ready(function() {
+                            $('#scenarioButton').on('click', function() {
+                                window.location.href = "{% url 'OTRisk:assess_cyberpha' %}?active_cyberpha=" + sessionStorage.getItem('activeCyberPHA');
+                            });
+                         });
+                    </script>
+                </div>
+                <div class="col-md-3" >
+                    <button id="generatePPT" class="form-control"><i class="bi bi-printer"></i> Print</button>
+                </div>
+            </div>
+        </div>
+
     </div>
-    <div class="col-md-3" style="background-color: white"></div>
-    <div class="col-md-1" style="background-color: white"></div>
+    <div class="col-md-3" style="background-color: #464748"></div>
+    <div class="col-md-1" style="background-color: #464748"></div>
 </div>
 
 
-<div class="row" style="height: 10px">
-    <div class="col-md-1 "></div>
-    <div class="col-md-10 ">
-     <div class="row" style="background-color: white; height: 10px"></div>
+<div class="row" style="background-color: #464748">
+    <div class="col-md-1 " style="background-color: #464748"></div>
+    <div class="col-md-10 " >
+     <div class="row" style="background-color: #464748; height: 10px"></div>
    </div>
-    <div class="col-md-1 " style="background-color: white;"></div>
+    <div class="col-md-1 " style="background-color: #464748;"></div>
 </div> <!-- dark grey stripe -->
 
 <div class="row" style="height: 10px">
-    <div class="col-md-1 "></div>
+    <div class="col-md-1 " style="background-color: #464748;"></div>
     <div class="col-md-10 ">
-     <div class="row" style="background-color: white; height: 10px"></div>
+     <div class="row" style="background-color: #464748; height: 10px"></div>
    </div>
-    <div class="col-md-1 " style="background-color: white;"></div>
+    <div class="col-md-1 " style="background-color: #464748;"></div>
 </div> <!-- dark grey stripe -->
     <input type="hidden" name="txtHdnCyberPHAID" id="txtHdnCyberPHAID" value="0">
 {% if new_record_id %}
@@ -823,21 +739,21 @@ function drawControlGauge(score) {
 
 {% endif %}
 <div class="row small-font">
-    <div class="col-md-1 bg-white"></div>
-    <div class="col-md-3 bg-white">
-        <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+    <div class="col-md-1" style="background-color: #464748;"></div>
+    <div class="col-md-3 " style="background-color: #464748;">
+        <div class="card mb-3 shadow-sm" style="background-color: #5E6266;"> <!-- Bootstrap card with shadow -->
             <div class="card-body">
-                <label for="txtTitle">Title</label><input type="text" class="form-control" name="txtTitle" id="txtTitle" value="{{ current_pha_header.title }}" maxlength="100" style="font-size: 16px; font-weight: bold;" required>
+                <label for="txtTitle" style="color: white">Title:</label><input type="text" class="form-control" name="txtTitle" id="txtTitle" value="{{ current_pha_header.title }}" maxlength="100" style="font-size: 16px; font-weight: bold;" required>
             </div>
         </div>
-        <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+        <div class="card mb-3 shadow-sm" style="background-color: #5E6266;"> <!-- Bootstrap card with shadow -->
             <div class="card-body">
-                <label for="txtLeader">CyberPHA Owner</label><input type="text" class="form-control" name="txtLeader" id="txtLeader" value="{{ current_pha_header.PHALeader }}" maxlength="100"  required>
+                <label for="txtLeader" style="color: white">CyberPHA Owner:</label><input type="text" class="form-control" name="txtLeader" id="txtLeader" value="{{ current_pha_header.PHALeader }}" maxlength="100"  required>
             </div>
         </div>
-        <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+        <div class="card mb-3 shadow-sm" style="background-color: #5E6266;">
             <div class="card-body">
-                <label for="selIndustry">Industry</label>
+                <label for="selIndustry" style="color: white">Industry:</label>
                 <select class="form-control" name="selIndustry" id="selIndustry">
                     <option value=""> -- Select Industry -- </option>
                     {% for industry in industries %}
@@ -847,30 +763,32 @@ function drawControlGauge(score) {
                         </option>
                     {% endfor %}
                 </select>
+
             </div>
         </div>
-        <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+        <div class="card mb-3 shadow-sm" style="background-color: #5E6266;">
             <div class="card-body">
-                <label for="txtUnit">Unit</label><input type="text" class="form-control" name="txtUnit" id="txtUnit" value="{{ current_pha_header.AssessmentUnit }}" required maxlength="100">
+                <label for="txtUnit" style="color: white">Unit:</label><input type="text" class="form-control" name="txtUnit" id="txtUnit" value="{{ current_pha_header.AssessmentUnit }}" required maxlength="100">
             </div>
         </div>
 
-        <div class="card mb-3 shadow-sm">
-    <div class="card-body">
-        <label for="shift_model">Shift Model</label>
-        <select class="form-control" name="shift_model" id="shift_model" required>
-            <option value="">Select Shift Model</option>
-            {% for model in SHIFT_MODELS %}
-                <option value="{{ model.0 }}" {% if current_pha_header.shift_model == model.0 %}selected{% endif %}>{{ model.1 }}</option>
-            {% endfor %}
-        </select>
-    </div>
+        <div class="card mb-3 shadow-sm" style="background-color: #5E6266;">
+        <div class="card-body">
+            <label for="shift_model" style="color: white">Shift Model:</label>
+            <select class="form-control" name="shift_model" id="shift_model" required>
+                <option value="">Select Shift Model</option>
+                {% for model in SHIFT_MODELS %}
+                    <option value="{{ model.0 }}" {% if current_pha_header.shift_model == model.0 %}selected{% endif %}>{{ model.1 }}</option>
+                {% endfor %}
+            </select>
+        </div>
 </div>
-<div class="row">
-    <div class="col-md-4">
-        <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+    <div class="form-group">
+        <div class="row">
+    <div class="col-md-4" style="background-color: #5E6266;">
+        <div class="card mb-3 shadow-sm" style="background-color: #5E6266;"> <!-- Bootstrap card with shadow -->
             <div class="card-body">
-                <label for="annual_revenue">Facility Annual Revenue</label>
+                <label for="annual_revenue" style="color: white">Facility Annual Revenue:</label>
                 <input type="text" class="form-control currency-input" name="annual_revenue" id="annual_revenue" value="{{ annual_revenue_str|default:'0' }}" oninput="checkMaxValue(this)" required>
                 <script>
                     document.addEventListener("DOMContentLoaded", function() {
@@ -901,10 +819,10 @@ function drawControlGauge(score) {
             </div>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="card mb-3 shadow-sm">
+    <div class="col-md-4" style="background-color: #5E6266;">
+        <div class="card mb-3 shadow-sm" style="background-color: #5E6266;">
             <div class="card-body">
-                <label for="coho">Operating Cost/Hour</label>
+                <label for="coho" style="color: white">Operating Cost/Hour:</label>
                 <input type="text" class="form-control currency-input" name="coho" id="coho" value="{{ coho_str|default:'0' }}" oninput="checkMaxValue(this)" required>
                 <script>
                     document.addEventListener("DOMContentLoaded", function() {
@@ -925,10 +843,10 @@ function drawControlGauge(score) {
             </div>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="card mb-3 shadow-sm">
+    <div class="col-md-4" style="background-color: #5E6266;">
+        <div class="card mb-3 shadow-sm" style="background-color: #5E6266;">
             <div class="card-body">
-                <label for="npm">Facility NPM (%)</label>
+                <label for="npm" style="color: white">Facility NPM (%):</label>
                 <input type="number" class="form-control" name="npm" id="npm" value="{{ npm|default:'0' }}" min="0" max="100">
 
 
@@ -936,35 +854,38 @@ function drawControlGauge(score) {
         </div>
     </div>
 </div>
-        <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+    </div>
+        <div class="card mb-3 shadow-sm" style="background-color: #5E6266;"> <!-- Bootstrap card with shadow -->
             <div class="card-body">
-                <label for="txtStartDate">Start Date</label><input type="date" class="form-control" name="txtStartDate" id="txtStartDate"  value="{{ current_pha_header.AssessmentStartDate }}" required>
+                <label for="txtStartDate" style="color: white">Start Date:</label><input type="date" class="form-control" name="txtStartDate" id="txtStartDate"  value="{{ current_pha_header.AssessmentStartDate }}" required>
             </div>
         </div>
-        <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+        <div class="card mb-3 shadow-sm" style="background-color: #5E6266;"> <!-- Bootstrap card with shadow -->
             <div class="card-body">
-                <label for="txtAddress">Facility Address</label>
+                <label for="txtAddress" style="color: white">Facility Address:</label>
                 <textarea class="form-control" rows="2" name="txtAddress" id="txtAddress" style="resize: none" maxlength="500" required>{{ current_pha_header.facilityAddress }}</textarea>
             </div>
         </div>
-        <div class="card mb-3 shadow-sm">
+        <div class="card mb-3 shadow-sm" style="background-color: #5E6266;">
             <div class="card-body">
-            <label for="countrySelector">Country</label><a href="#" data-bs-toggle="modal" data-bs-target="#countryModal">❓</a><br><select id="countrySelector" name="countrySelector" style="width: 400px;"></select>
+            <label for="countrySelector" style="color: white">Country:</label><a href="#" data-bs-toggle="modal" data-bs-target="#countryModal">❓</a><br><select id="countrySelector" name="countrySelector" style="width: 400px;"></select>
 
             </div>
         </div>
         <br>
 
     </div>
-    <div class="col-md-3 bg-white">
-        <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+
+
+    <div class="col-md-3" style="background-color: #464748;">
+        <div class="card mb-3 shadow-sm" style="background-color: #5E6266;"> <!-- Bootstrap card with shadow -->
             <div class="card-body">
-                <label for="txtFacility">Facility</label><input type="text" class="form-control" name="txtFacility" id="txtFacility" value="{{ current_pha_header.FacilityName }}"  maxlength="100"  required>
+                <label for="txtFacility" style="color: white">Facility:</label><input type="text" class="form-control" name="txtFacility" id="txtFacility" value="{{ current_pha_header.FacilityName }}"  maxlength="100"  required>
             </div>
         </div>
-        <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+        <div class="card mb-3 shadow-sm" style="background-color: #5E6266;"> <!-- Bootstrap card with shadow -->
             <div class="card-body">
-                <label for="txtLeaderEmail">Leader Email</label><input type="email" class="form-control" name="txtLeaderEmail" id="txtLeaderEmail" value="{{ current_pha_header.PHALeaderEmail }}" required onblur="validateEmail(this)">
+                <label for="txtLeaderEmail" style="color: white">Leader Email:</label><input type="email" class="form-control" name="txtLeaderEmail" id="txtLeaderEmail" value="{{ current_pha_header.PHALeaderEmail }}" required onblur="validateEmail(this)">
                 <script type="text/javascript">
                     function validateEmail(input) {
                         var regex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
@@ -976,9 +897,10 @@ function drawControlGauge(score) {
                 </script>
             </div>
         </div>
-        <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+
+        <div class="card mb-3 shadow-sm" style="background-color: #5E6266;">
             <div class="card-body">
-                <label for="selFacilityType">Facility Type</label>
+                <label for="selFacilityType" style="color: white">Facility Type:</label><br>
                 <select class="form-control" name="selFacilityType" id="selFacilityType">
                     <option value=""> -- Select Facility Type -- </option>
                     {% for facilities in facilities %}
@@ -995,8 +917,8 @@ function drawControlGauge(score) {
                 </script>
             </div>
         </div>
-        <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-            <div class="card-body">    <label for="selZone">Zone</label>
+        <div class="card mb-3 shadow-sm" style="background-color: #5E6266;"> <!-- Bootstrap card with shadow -->
+            <div class="card-body">    <label for="selZone" style="color: white">Zone:</label>
                 <select class="form-control" name="selZone" id="selZone">
                     <option value = ""> -- Select Plant Zone -- </option>
                     {% for zone in zones %}
@@ -1010,9 +932,9 @@ function drawControlGauge(score) {
 
         </div>
 
-        <div class="card mb-3 shadow-sm">
+        <div class="card mb-3 shadow-sm" style="background-color: #5E6266;">
             <div class="card-body">
-                <label for="selSL">Target Security Level (SL-T)</label>
+                <label for="selSL" style="color: white">Target Security Level (SL-T):</label>
                 <select class="form-control" name="selSL" id="selSL">
             <option value="0"> -- Select SL-T -- </option>
             {% for value, description in SECURITY_LEVELS %}
@@ -1025,18 +947,16 @@ function drawControlGauge(score) {
         </div>
 
 
-        <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+        <div class="card mb-3 shadow-sm" style="background-color: #5E6266;">
             <div class="card-body">
-                <label for="txtEmployees">Employees on Site</label><input type="number" class="form-control" name="txtEmployees" id="txtEmployees" value="{{ current_pha_header.EmployeesOnSite }}" max="99999">
+                <label for="txtEmployees" style="color: white">Employees on Site:</label><input type="number" class="form-control" name="txtEmployees" id="txtEmployees" value="{{ current_pha_header.EmployeesOnSite }}" max="99999">
 
             </div>
         </div>
 
-
-
-        <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+        <div class="card mb-3 shadow-sm" style="background-color: #5E6266;">
             <div class="card-body">
-                <label for="txtEndDate">End Date</label><input type="date" class="form-control" name="txtEndDate" id="txtEndDate" value="{{ current_pha_header.AssessmentEndDate }}" onchange="validateDates()">
+                <label for="txtEndDate" style="color: white">End Date:</label><input type="date" class="form-control" name="txtEndDate" id="txtEndDate" value="{{ current_pha_header.AssessmentEndDate }}" onchange="validateDates()">
             </div>
         </div>
         <script type="text/javascript">
@@ -1052,9 +972,9 @@ function drawControlGauge(score) {
         </script>
 
 
-        <div class="card mb-3 shadow-sm">
+        <div class="card mb-3 shadow-sm" style="background-color: #5E6266;">
             <div class="card-body">
-            <label for="assessment_id">Control Assessment</label>
+            <label for="assessment_id" style="color: white">Control Assessment:</label>
                 <select class="form-control"   id="assessment_id" name="assessment_id">
                     <option value="">Select an Assessment</option>
                     {% for assessment in assessments %}
@@ -1066,7 +986,7 @@ function drawControlGauge(score) {
             </div>
         </div>
 
-        <div class="card mb-3 shadow-sm">
+        <div class="card mb-3 shadow-sm" style="background-color: #5E6266;">
             <div class="card-body">
                 <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#moderatorModal">
                     Select CyberPHA Moderators
@@ -1081,9 +1001,9 @@ function drawControlGauge(score) {
             });
         </script>
 
-        <div class="card mb-3 shadow-sm">
+        <div class="card mb-3 shadow-sm" style="background-color: #5E6266;">
     <div class="card-body">
-        <label for="workflow_selector">Workflow Status</label>
+        <label for="workflow_selector" style="color: white">Workflow Status:</label>
         <select class="form-control" id="workflow_selector" name="workflow_selector">
             <option value="">Select a Status</option>
             {% for status, status_display in workflow_status_choices %}
@@ -1094,7 +1014,7 @@ function drawControlGauge(score) {
             {% endfor %}
         </select>
     </div>
-        <div class="card-body">
+        <div class="card-body" style="color: white">
         Current Group Assignments:
         <div id="currentGroupsDiv">
     <!-- Current groups will be populated here by the fetchHeaderRecord function -->
@@ -1104,18 +1024,18 @@ function drawControlGauge(score) {
     Assign to Group
 </button>
 
-<!-- The Modal -->
+
 <div class="modal" id="assignGroupModal">
     <div class="modal-dialog">
         <div class="modal-content">
 
-            <!-- Modal Header -->
+
             <div class="modal-header">
                 <h4 class="modal-title">Assign to Group</h4>
                 <button type="button" class="close" data-dismiss="modal">&times;</button>
             </div>
 
-            <!-- Modal Body -->
+
             <div class="modal-body">
                 <form id="group-assignment-form">
                     <!-- Existing Groups -->
@@ -1265,35 +1185,33 @@ updateGroupList();
 
     </div>
 
-    <div class="col-md-4 row" style="background-color: white">
-        <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+    <div class="col-md-4 row" style="background-color: #464748;">
+        <div class="card mb-3 shadow-sm" style="background-color: #5E6266;"> <!-- Bootstrap card with shadow -->
             <div class="card-body">
-               <button id="risk-assessment-btn" type="button" class="btn btn-link" style="text-decoration: none;
-">
+               <button id="risk-assessment-btn" type="button" class="btn btn-link" style="text-decoration: none; color: white">
                     <img src="{% static 'images/facility1.png' %}" alt="" class="align-bottom" style="max-height: 2rem; margin-left: 5px;">
                     Assess Facility Profile
                 </button>
-
                 <br>
                 <div class="spinner" id="loadingSpinner"></div>
-
-                <p style="font-size: 10px">A valid address, industry, and facility name must be entered for the risk profile to be accurately assessed. Profiles are generated by a machine-learning algorithm and may slightly vary given the same inputs at different times</p>
+                <p style="font-size: 10px; color: white">A valid address, industry, and facility name must be entered for the risk profile to be accurately assessed. Profiles are generated by a machine-learning algorithm and may slightly vary given the same inputs at different times</p>
+                <div class="form-group">
                 <div class="row">
-                    <div class="col-md-6">
+                    <div class="col-md-6" style="background-color: #5E6266;">
                         <div id="pha_gauge"></div>
 
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-6" style="background-color: #5E6266;">
                         <div id="control_gauge"></div>
                     </div>
                 </div>
-
+                </div>
                 <input type="hidden" id="hdn_pha_score" name="hdn_pha_score" value="{{ pha_header_records.pha_score }}">
                 <script>
                     drawGauge({{ current_pha_header.pha_score }});
                     drawControlGauge(0);
                 </script>
-
+                <div class="form-group">
                 <div class="card mb-3 shadow-sm">
     <div class="card-body">
         <!-- Nav tabs -->
@@ -1363,6 +1281,7 @@ updateGroupList();
         </div>
     </div>
 </div>
+                </div>
                 </div>
 
         </div>
@@ -1501,32 +1420,31 @@ $(document).ready(function() {
     </script>
     <br>
 
-
-
-
-
     </div>
-    <div class="col-md-1" style="background-color: white;"></div>
+
+
+
+    <div class="col-md-1" style="background-color: #464748;"></div>
 </div>
 
 
 <div class="row">
-        <div class="col-md-1 "></div>
-        <div class="col-md-10 ">
-         <div class="row" style="background-color: white; height: 200px; ">
-             <div class="col-md-1 text-left">
+        <div class="col-md-1 " style="background-color: #464748;"></div>
+        <div class="col-md-10 " style="background-color: #464748;">
+         <div class="row" style="background-color: #464748; height: 200px; ">
+             <div class="col-md-1 text-left" style="background-color: #464748;">
              </div>
-             <div class="col-md-2 text-left" style="background-color: white">
+             <div class="col-md-2 text-left" style="background-color: #464748;">
              </div>
-             <div class="col-md-3 text-left"></div>
-            <div class="col-md-6 text-right">
+             <div class="col-md-3 text-left" style="background-color: #464748;"></div>
+            <div class="col-md-6 text-right" style="background-color: #464748;">
 
 
              </div>
         </div>
 
        </div>
-        <div class="col-md-1 " style="background-color: white;"></div>
+        <div class="col-md-1 " style="background-color: #464748;"></div>
     </div> <!-- dark grey stripe with submit/reset buttons-->
 
 <!-- Modal -->
@@ -1578,14 +1496,206 @@ $(document).ready(function() {
 </form>
 
 <script>
-    $(document).ready(function(){
-    $('#headertable').dataTable( {
-        "pageLength": 5,
+    $(document).ready(function() {
+        var table = $('#headertable').DataTable({
+            "pageLength": 5,
             "lengthChange": false
+        });
 
-    } );
+        function navigateToRecord(recordId) {
+            var allPages = table.page.info().pages;
+            var found = false;
+
+            for (var i = 0; i < allPages; i++) {
+                // Navigate to the page
+                table.page(i).draw('page');
+
+                // Check if the record is in the current page
+                var row = $('tr[data-id="' + recordId + '"]');
+                if (row.length) {
+                    // Record found, highlight it
+                    $('tr.selectable-row').removeClass('highlighted');
+                    row.addClass('highlighted');
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found) {
+                console.log("Record not found");
+            }
+        }
+
+        // Check if a saved_record_id is provided in the rendered context
+        let savedRecordId = "{{ saved_record_id }}";
+        if (savedRecordId && savedRecordId !== "None") {
+            navigateToRecord(savedRecordId);
+        }
+
+        $('#headertable').on('click', 'tbody tr.selectable-row', function() {
+            let recordId = $(this).data('id');
+            navigateToRecord(recordId);
+        });
 });
+function fetchHeaderRecord(recordId) {
+                 sessionStorage.setItem('activeCyberPHA', recordId);
+                 // Set the value of the hidden text field
+                 document.getElementById('txtHdnCyberPHAID').value = recordId;
+                 $.ajax({
+                     url: '/OTRisk/get_headerrecord',  // the URL of the view that will handle the request
+                     data: {
+                         'record_id': recordId
+                     },
+                     dataType: 'json',
+                     success: function (data) {
 
+                         $('#txtTitle').val(data.headerrecord.title);
+                         $('#txtLeader').val(data.headerrecord.leader);
+                         $('#selIndustry').val(data.headerrecord.industry);
+                         $('#txtUnit').val(data.headerrecord.unit);
+                         $('#txtFacility').val(data.headerrecord.facility);
+                         $('#txtLeaderEmail').val(data.headerrecord.leaderemail);
+                         $('#selFacilityType').val(data.headerrecord.facilitytype);
+
+                         $('#selFacilityType').val(data.headerrecord.facilitytype).trigger('change');
+
+                         $('#assessment_id').val(data.headerrecord.assessment_id);
+                         $('#assessment_id').val(data.headerrecord.assessment_id).trigger('change');
+
+                         $('#selZone').val(data.headerrecord.zone);
+                         $('#selSL').val(data.headerrecord.sl_t);
+                         $('#txtStartDate').val(data.headerrecord.startdate);
+                         $('#txtEndDate').val(data.headerrecord.enddate);
+                         $('#txtSafetySummary').val(data.headerrecord.safetysummary);
+                         $('#txtChemical').val(data.headerrecord.chemicalsummary);
+                         $('#txtPhysical').val(data.headerrecord.physicalsummary);
+                         $('#txtOther').val(data.headerrecord.othersummary);
+                         $('#txtCompliance').val(data.headerrecord.compliancesummary);
+                         $('#threatSummary').val(data.headerrecord.threatSummary);
+                         $('#insightSummary').val(data.headerrecord.insightSummary);
+                         $('#strategySummary').val(data.headerrecord.strategySummary);
+                         $('#txtAddress').val(data.headerrecord.address);
+                         $('#countrySelector').val(data.headerrecord.country).trigger('change');
+                         $('#shift_model').val(data.headerrecord.shift_model);
+                         $('#txtEmployees').val(data.headerrecord.EmployeesOnSite);
+                         $('#annual_revenue').val(formatAsCurrency(data.headerrecord.annual_revenue));
+                         $('#cyber_insurance').val(data.headerrecord.cyber_insurance);
+                         $('#cyber_insurance').val(data.headerrecord.cyber_insurance).trigger('change');
+                         $('#hdn_pha_score').val(data.headerrecord.pha_score);
+                         $('#npm').val(data.headerrecord.npm);
+                         $('#coho').val(formatAsCurrency(data.headerrecord.coho));
+                         drawGauge(data.headerrecord.pha_score);
+
+                         drawControlGauge(data.control_effectiveness);
+
+                         sessionStorage.setItem('sessionIndustry', data.headerrecord.industry);
+                         sessionStorage.setItem('sessionFacilityType', data.headerrecord.facilitytype);
+                         sessionStorage.setItem('sessionFacility', data.headerrecord.facility);
+                         sessionStorage.setItem('sessionCountry', data.headerrecord.country);
+                         var pha_score = data.headerrecord.pha_score;
+
+                         // Enable the controls
+                         $('#txtTitle, #txtLeader, #txtUnit, #txtStartDate, #txtAddress, #txtFacility, #txtLeaderEmail, #txtEndDate, #txtSafetySummary, #txtChemical, #txtPhysical, #txtOther, #txtCompliance, #strategySummary, #insightSummary, #threatSummary, #selFacilityType, #assessment_id, #cyber_insurance, #shift_model, #annual_revenue, #txtEmployees, #selIndustry, #selZone, #selSL, #countrySelector, #btnformSubmit,  #risk-assessment-btn, #scenarioButton, #generatePPT').prop('disabled', false);
+                         $('#btnformSubmit').prop('disabled', false);
+                         $('#scenarioButton').prop('disabled', false);
+                         // Set the workflow status dropdown
+                         // Ensure the current workflow status matches the format of the dropdown options
+                         var currentWorkflowStatus = data.headerrecord.current_workflow_status;
+
+                         var workflowSelector = $('#workflow_selector');
+
+                         // Check if the current workflow status exists in the options
+                         if (workflowSelector.find("option[value='" + currentWorkflowStatus + "']").length > 0) {
+                             workflowSelector.val(currentWorkflowStatus).trigger('change');
+                         } else {
+                             // If the status doesn't exist, select the default placeholder
+                             workflowSelector.val('').trigger('change');
+                         }
+
+                         if (currentWorkflowStatus == 'Complete') {
+
+                             lockControls();
+                         } else {
+                             unlockControls();
+                         }
+
+                         $('#generatePPT').prop('disabled', false);
+                         populateModeratorsTable(data.organization_moderators, data.moderator_ids);
+                         // Populate current group assignments
+                         console.log(data.all_groups);
+                         populateCurrentGroups(data.headerrecord.current_groups);
+
+                         // Populate all available groups in the dropdown (for the modal)
+                         populateAllGroupsDropdown(data.all_groups);
+                         updateGroupAssignmentsDisplay(recordId);
+                         updateGroupList();
+
+
+                     }
+                 });
+             }
+
+function formatAsCurrency(value) {
+                 // Strip any non-digit characters
+                 let cleanedValue = String(value).replace(/\D/g, '');
+
+                 // Convert the number to a currency format
+                 return parseInt(cleanedValue).toLocaleString('en-US', {
+                     style: 'currency',
+                     currency: 'USD',
+                     minimumFractionDigits: 0
+                 });
+             }
+
+function populateModeratorsTable(moderators, moderatorIds) {
+                 var tbody = $('#moderatorModal tbody');
+                 tbody.empty(); // Clear existing rows
+
+                 moderators.forEach(function (moderator) {
+                     var checked = moderatorIds.includes(moderator.id) ? 'checked' : '';
+                     var row = '<tr>' +
+                         '<td>' + moderator.name + '</td>' +
+                         '<td><input type="checkbox" name="moderator" value="' + moderator.id + '" ' + checked + '></td>' +
+                         '</tr>';
+                     tbody.append(row);
+                 });
+             }
+
+                 // Function to populate current groups
+ function populateCurrentGroups(groups) {
+                 var currentGroupsDiv = $('#currentGroupsDiv');
+                 currentGroupsDiv.empty(); // Clear existing content
+
+                 // Check if 'groups' is an array and has elements
+                 if (Array.isArray(groups) && groups.length > 0) {
+                     groups.forEach(function (group) {
+                         currentGroupsDiv.append($('<p>').text(group.name));
+                     });
+                 } else {
+                     // Handle non-array or empty 'groups'
+                     currentGroupsDiv.append($('<p>').text('No groups assigned.'));
+                 }
+             }
+
+
+ function populateAllGroupsDropdown(groups) {
+                 var allGroupsSelect = $('#existing_group'); // ID of the select element in the modal
+                 allGroupsSelect.empty(); // Clear existing options
+
+                 allGroupsSelect.append($('<option>', {
+                     value: '',
+                     text: 'Select a Group'
+                 }));
+
+                 if (groups && groups.length > 0) {
+                     groups.forEach(function (group) {
+                         allGroupsSelect.append($('<option>', {
+                             value: group.id,
+                             text: group.name
+                         }));
+                     });
+                 }
+             }
 </script>
 
 <div class="modal fade" id="countryModal" tabindex="-1" aria-labelledby="countryModal" aria-hidden="true">
@@ -1688,15 +1798,17 @@ $(document).ready(function() {
 </div>
 </div>
 <script>
-function lockControls() {
-        // Disable all input, select, and button elements
-        document.querySelectorAll('input, select, button').forEach(function(el) {
-            // Exclude elements inside the 'headertable' table
-            if (!el.closest('#headertable')) {
-                el.disabled = true;
-            }
-        });
-    }
+    function lockControls() {
+    // Disable all input, select, and button elements
+    document.querySelectorAll('input, select, button').forEach(function(el) {
+        // Exclude elements inside the 'headertable' table and the 'resetButton' by id
+        if (!el.closest('#headertable') && el.id !== 'resetButton') {
+            el.disabled = true;
+        }
+    });
+}
+
+
 function unlockControls() {
         // Disable all input, select, and button elements
         document.querySelectorAll('input, select, button').forEach(function(el) {
