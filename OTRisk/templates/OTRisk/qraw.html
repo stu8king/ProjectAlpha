@@ -3,21 +3,27 @@
 <!--suppress ALL -->
 <html lang="">
 <head>
+
 <title>AnzenOT</title>
     <link rel="icon" href="{% static 'images/iota - white 1.png' %}" type="image/x-icon">
     <link rel="stylesheet" type="text/css" href="{%  static 'css/qraw.css' %}">
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
+<script src="https://cdn.anychart.com/releases/8.10.0/js/anychart-bundle.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.1/css/bootstrap-select.min.css">
 
 <!-- Bootstrap Icons -->
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.1/font/bootstrap-icons.css" rel="stylesheet">
+<script src="https://d3js.org/d3.v6.min.js"></script>
+
 
 <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
 <!-- Bootstrap JS -->
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.bundle.min.js"></script>
+    <link href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" rel="stylesheet">
 
 <!-- Bootstrap Select JS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.1/js/bootstrap-select.min.js"></script>
@@ -145,23 +151,29 @@
 .card-body .custom-table-style .thead-dark th {
     background-color: #464748; /* Dark background for table header */
 }
+
 .group-container {
-    background-color: #464748; /* Same as page background */
-    border: 1px solid #ccc; /* Border around the container */
-    padding: 10px;
-    margin-bottom: 15px; /* Space between each group container */
+    background: linear-gradient(to bottom right, #464748, #57595b); /* Gradient background */
+    border: 1px solid #666; /* Darker border */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5); /* Box shadow */
+    padding: 15px;
+    margin-bottom: 20px; /* Increased space between containers */
+    border-radius: 5px; /* Rounded corners */
 }
 
 .group-header {
-    color: white;
+    color: #d3d1cd; /* Lighter color for contrast */
     font-weight: bold;
-    margin-bottom: 10px;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #777; /* Subtle bottom border */
+    font-size: 1.2em; /* Larger font size */
 }
 
 .group-body {
-    color: white;
+    color: #e0e0e0; /* Slightly lighter text color */
+    font-family: 'Arial', sans-serif; /* Modern font */
 }
-
 .cyberpha-item {
     display: flex;
     align-items: center;
@@ -176,6 +188,12 @@
 
 .facility-name {
     color: white;
+}
+.form-group-attack-tree {
+    border: 1px solid #464748; /* Border color */
+    box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.5); /* Outer shadow */
+    background-color: #FFFFFF;
+    padding: 15px; /* Optional: for internal spacing */
 }
 
 .form-group {
@@ -209,6 +227,64 @@
 .file-explorer .list-group-item .file-name {
   flex-grow: 1;
 }
+    .btn-file-dialog {
+        background-color: #f0ad4e; /* File folder color */
+        color: white;
+        border: none;
+        padding: 5px 10px;
+        border-radius: 5px;
+        font-weight: bold;
+        box-shadow: 0 2px 2px rgba(0, 0, 0, 0.2);
+        transition: background-color 0.3s ease;
+    }
+    .btn-file-dialog:hover {
+        background-color: #ec971f; /* Darker shade for hover effect */
+        color: white;
+    }
+    /* Optional: Add an icon to resemble a file folder */
+    .btn-file-dialog:before {
+        content: '\f07b'; /* FontAwesome folder icon */
+        font-family: FontAwesome;
+        margin-right: 5px;
+    }
+
+    .table#rawtable {
+        font-family: "Segoe UI", Arial, sans-serif; /* Windows font */
+        font-size: 12px;
+        color: #000;
+    }
+    .table#rawtable thead {
+        background-color: #e1e1e1; /* Light grey header */
+        color: #000;
+    }
+    .table#rawtable tbody tr {
+        background-color: #fff; /* White rows */
+    }
+    .table#rawtable tbody tr:hover {
+        background-color: #e8f4fc; /* Light blue on hover, like Windows selection */
+        cursor: default;
+    }
+    .table#rawtable th, .table#rawtable td {
+        border-color: #d3d3d3; /* Light borders for cells */
+    }
+    /* Style for file/folder icons */
+    .table#rawtable .file-icon {
+        font-size: 16px;
+        color: #808080; /* Grey icon */
+        margin-right: 5px;
+    }
+    .copy-code-link {
+    display: inline-block;
+    margin-top: 5px;
+    color: #aaacaf; /* Adjust the color to match ChatGPT's style or your preference */
+    text-decoration: none; /* Removes underline from the link */
+    cursor: pointer; /* Changes cursor to indicate clickable */
+}
+
+.copy-code-link:hover {
+    text-decoration: underline; /* Adds underline on hover for better UX */
+}
+
 </style>
  <title>Risk Assessment Worksheet</title>
 
@@ -248,7 +324,7 @@
         setRiskAssessmentRefreshNotRequired(4)
         setRiskAssessmentRefreshNotRequired(5)
 });
-
+anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
 </script>
 
 {% include 'menu_bar.html' %}
@@ -256,71 +332,81 @@
 <form name="frmRAW" id="frmRAW" method="POST" action="{% url 'OTRisk:qraw' %}">
 {% csrf_token %}
 <input type="hidden" id="orgid" name="orgid" value="{{ user.userprofile.organization.id }}">
+<input type="hidden" id="userId" name="userId" value="{{ user.id }}">
+<input type="hidden" id="isSuperUser" value="{{ user.is_superuser }}">
+
+
 <div id="notificationMessage" class="notification-message" style="display: none;"></div>
 <br>
 <div class="row">
-    <div class="col-md-1"></div>
-    <div class="col-md-10">
-    <div class="form-group">
-    <table id="rawtable" class="table table-striped table-bordered" style="font-size: 10px">
-        <thead style="background-color: #2c2c2c; color: white">
-            <tr>
-                <th></th>
-                <th width="20%">Title</th>
-                <th>Status</th>
-                <th>BIA</th>
-                <th>Risk</th>
-                <th>Trigger</th>
-                <th>Facility Type</th>
-                <th>Industry</th>
-                <th>Business Unit</th>
-                <th>Leader</th>
-                <th></th>
-                <!-- Add more <th> elements for each field in the RAWorksheet model -->
-            </tr>
-        </thead>
-        <tbody>
-            {% for raws in raws %}
-                <tr class="selectable-row"
-                    data-id="{{ raw.ID }}"
-                    data-revenue="{{ raws.revenue }}"
-                    data-insurance="{{ raws.insurance }}"
-                    data-deductable="{{ raws.deductable }}">
-                    <td>{{ raws.ID }}</td>
-                    <td style="font-size: 14px"><b>{{ raws.RATitle }}</b></td>
-                    <td>{{ raws.StatusFlag }}</td>
-                    <td>
-                        {% if raws.bia_text == 'Low' or raws.bia_text == 'Low/Medium' %}
-                            <span class="green-circle"></span>
-                        {% elif raws.bia_text == 'Medium' or raws.bia_text == 'Medium/High' %}
-                            <span class="orange-circle"></span>
-                        {% elif raws.bia_text == 'High' or raws.bia_text == 'Very High' %}
-                            <span class="red-circle"></span>
-                        {% endif %}
-                        {{ raws.bia_text }}
-                    </td>
-                    <td>
-                        {% if raws.risk_text == 'Low' or raws.risk_text == 'Low/Medium' %}
-                            <span class="green-circle"></span>
-                        {% elif raws.risk_text == 'Medium' or raws.risk_text == 'Medium/High' %}
-                            <span class="orange-circle"></span>
-                        {% elif raws.risk_text == 'High' or raws.risk_text == 'Very High' %}
-                            <span class="red-circle"></span>
-                        {% endif %}
-                        {{ raws.risk_text }}
-                    </td>
-                    <td>{{ raws.RATrigger }}</td>
-                    <td>{{ raws.BusinessUnitType }}</td>
-                    <td>{{ raws.industry }}</td>
-                    <td>{{ raws.BusinessUnit }}</td>
-                    <td>{{ raws.AssessorName }}</td>
-                    <td><a class="dropdown-item" href="{% url 'OTRisk:qraw_reports'  qraw_id=raws.ID  %}">Report</a></td>
-                </tr>
-            {% endfor %}
-        </tbody>
-        </table>
+    <div class="col-md-1">
+
     </div>
-    <script>
+    <div class="col-md-10">
+        <div id="dataTableContainer" data-saved-id="{{ saved_worksheet_id }}" style="display: none;">
+        <div class="form-group">
+            <table id="rawtable" class="table table-striped table-bordered">
+                <thead style="background-color: #2c2c2c; color: white">
+                <tr>
+                    <th></th>
+                    <th width="20%">Title</th>
+                    <th>Status</th>
+                    <th>BIA</th>
+                    <th>Risk</th>
+                    <th>Trigger</th>
+                    <th>Facility Type</th>
+                    <th>Industry</th>
+                    <th>Business Unit</th>
+                    <th>Leader</th>
+                    <th></th>
+                    <!-- Add more <th> elements for each field in the RAWorksheet model -->
+                </tr>
+            </thead>
+            <tbody>
+                {% for raw in raws %}
+                    <tr class="selectable-row"
+                        data-id="{{ raw.ID }}"
+                        data-revenue="{{ raw.revenue }}"
+                        data-insurance="{{ raw.insurance }}"
+                        data-approver-id="{{ raw.approver_id }}"
+                        data-owner="{{ raw.UserID}}"
+                        data-deductable="{{ raw.deductable }}">
+                        <td>{{ raw.ID }}</td>
+                        <td style="font-size: 14px"><b>{{ raw.RATitle }}</b></td>
+                        <td>{{ raw.StatusFlag }}</td>
+                        <td>
+                            {% if raw.bia_text == 'Low' or raw.bia_text == 'Low/Medium' %}
+                                <span class="green-circle"></span>
+                            {% elif raw.bia_text == 'Medium' or raw.bia_text == 'Medium/High' %}
+                                <span class="orange-circle"></span>
+                            {% elif raw.bia_text == 'High' or raw.bia_text == 'Very High' %}
+                                <span class="red-circle"></span>
+                            {% endif %}
+                            {{ raw.bia_text }}
+                        </td>
+                        <td>
+                            {% if raw.risk_text == 'Low' or raw.risk_text == 'Low/Medium' %}
+                                <span class="green-circle"></span>
+                            {% elif raw.risk_text == 'Medium' or raw.risk_text == 'Medium/High' %}
+                                <span class="orange-circle"></span>
+                            {% elif raw.risk_text == 'High' or raw.risk_text == 'Very High' %}
+                                <span class="red-circle"></span>
+                            {% endif %}
+                            {{ raw.risk_text }}
+                        </td>
+                        <td>{{ raw.RATrigger }}</td>
+                        <td>{{ raw.BusinessUnitType }}</td>
+                        <td>{{ raw.industry }}</td>
+                        <td>{{ raw.BusinessUnit }}</td>
+                        <td>{{ raw.AssessorName }}</td>
+                        <td><a class="dropdown-item" href="{% url 'OTRisk:qraw_reports'  qraw_id=raw.ID  %}">Report</a></td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+            </table>
+    </div>
+        </div>
+  <script>
         $(document).ready(function() {
             $('#rawtable').on('click', 'tbody tr.selectable-row', function() {
             // Remove 'highlighted' class from all other rows
@@ -333,6 +419,20 @@
         });
 
     </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     </div>
     <div class="col-md-1"></div>
 </div>
@@ -350,19 +450,37 @@
     <div class="col-md-6">
         <div class="form-group">
         <div class="row">
-            <div class="col-md-4" >
+            <div class="col-md-3" >
                     <button class="form-control" id="addNewBtn" type="button"   data-bs-toggle="tooltip" data-bs-placement="top" title="Click this button to clear the form and enter and begin a new risk assessment" onclick="handleAddNewClick(1)"><i class="bi bi-folder-plus"></i> New</button>
             </div>
-            <div class="col-md-4" >
+            <div class="col-md-3" >
                     <button class="form-control" id="editBtn" type="button" data-bs-toggle="tooltip" data-bs-placement="top" title="Click this button to edit the current risk assessment and scenarios"><i class="bi bi-pencil-square"></i> Edit</button>
             </div>
-            <div class="col-md-4" >
+            <div class="col-md-3" >
                 <button class="form-control" type="button" id="actionBtn" onclick="showRAActionsModal()"><i class="bi bi-subtract"></i> Action</button>
+            </div>
+            <div class="col-md-3" >
+                <button id="toggleTableBtn" type="button" class="btn btn-primary btn-file-dialog">Open/Close QRAW Table</button>
             </div>
         </div>
     </div>
     </div>
     <script>
+        $('#toggleTableBtn').click(function() {
+            $('#dataTableContainer').toggle();
+        });
+
+        // Hide DataTable when a row is clicked
+        $('#rawtable').on('click', 'tbody tr.selectable-row', function() {
+            // Remove 'highlighted' class from all other rows
+            $('tr.selectable-row').removeClass('highlighted');
+
+            // Add 'highlighted' class to the clicked row
+            $(this).addClass('highlighted');
+
+            // Hide the DataTable container
+            $('#dataTableContainer').hide();
+        });
             function showRAActionsModal() {
                 var rawid = sessionStorage.getItem('rawid');  // Get the value from session storage
 
@@ -467,10 +585,10 @@
 
               fieldsToReset.forEach(function(field) {
                 var element = document.getElementById(`${field}_${tabNumber}`);
-                if(element.tagName === 'SELECT') element.value = '';
-                else element.value = element.type === 'range' ? '0' : '';
-                element.style.backgroundColor = field === 'lblriskRating' ? 'lightgrey' : element.style.backgroundColor;
-                element.disabled = false;
+                //if(element.tagName === 'SELECT') element.value = '';
+                // else element.value = element.type === 'range' ? '0' : '';
+                // element.style.backgroundColor = field === 'lblriskRating' ? 'lightgrey' : element.style.backgroundColor;
+                // element.disabled = false;
               });
 
              const categories = [
@@ -486,9 +604,7 @@
                     initSlider(`range_${category}_${i}`, `${category}range_${i}`);
                 });
             }
-              // Clear the risk summary controls table
-              document.getElementById(`risk_summary_controls_table_${tabNumber}`)
-                .getElementsByTagName("tbody")[0].innerHTML = "";
+
             }
             // end of reset controls
 
@@ -567,7 +683,7 @@
                 </div>
             <div class="card mb-3 shadow-sm" style="border: 1px solid black;"> <!-- Bootstrap card with shadow -->
                 <div class="card-body">
-                    <label for="selectFacility" style="color: #d3d1cd">Facility Type</label>
+                    <label for="selectFacility" style="color: #d3d1cd">Facility Type</label><br>
                     <select id="selectFacility" name="selectFacility" class="form-control">
                         <option value="">-- Select Facility --</option>
                         {% for facility in facilities %}
@@ -598,6 +714,8 @@
                         <option value="">-- Select Status --</option>
                         <option value="Open">Open</option>
                         <option value="Closed">Closed</option>
+                        <option value="Approved">Approved</option>
+                        <option value="Rejected">Rejected</option>
                     </select>
                 </div>
             </div>
@@ -671,6 +789,123 @@
             </div>
 
     </div>
+        <div class="row">
+        <!-- Workflow Management Section -->
+<div class="col-md-9"></div>
+<div class="col-md-3 workflow-management-section">
+    <div class="card mb-3 shadow-sm" style="border: 1px solid black;" id="workflow-mgmt">
+        <div class="card-body">
+            <h5 class="card-title" style="color: #d3d1cd">Workflow Management</h5>
+
+            <!-- Assign Approver (Visible to Creator/Editor) -->
+            <div class="mb-3">
+                <!-- Approver Selection Dropdown -->
+                <div class="form-group">
+                    <label for="selectApprover">Select Approver:</label>
+                    <select class="form-control" id="selectApprover" name="selectedApprover">
+                        <option value="">-- Select Approver --</option>
+                        {% for approver in potential_approvers %}
+                            <option value="{{ approver.user.id }}">{{ approver.user.get_full_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+            </div>
+
+            <!-- Approval Controls (Visible to Approver) -->
+            <div id="approvalControls" style="display: none;">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="" id="approveCheckbox">
+                    <label class="form-check-label" for="approveCheckbox" style="color: #d3d1cd">
+                        Approve
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="" id="rejectCheckbox">
+                    <label class="form-check-label" for="rejectCheckbox" style="color: #d3d1cd">
+                        Reject
+                    </label>
+                </div>
+                <div class="mb-3">
+                    <label for="rejectionComments" style="color: #d3d1cd">Comments</label>
+                    <textarea class="form-control" id="rejectionComments" rows="3"></textarea>
+                </div>
+            </div>
+
+            <!-- Submit Button for Workflow Actions -->
+            <button class="btn btn-primary" type="button" id="workflowBtn">Submit Workflow Action</button>
+        </div>
+    </div>
+</div>
+<script>
+   $(document).ready(function() {
+    $('#workflowBtn').on('click', function(e) {
+        e.preventDefault();
+
+        var worksheetId = $('#hdnRawID').val(); // Ensure this is the correct ID
+        var selectedApproverId = $('#selectApprover').val();
+        var approvalStatus = $('#approveCheckbox').is(':checked') ? 'Approved' :
+                             $('#rejectCheckbox').is(':checked') ? 'Rejected' : '';
+        var rejectionComments = $('#rejectionComments').val();
+
+        // Determine the action to take (assign approver, approve, or reject)
+        var action, titleText, confirmButtonText;
+        if (selectedApproverId) {
+            action = 'assign_approver';
+            titleText = "Are you sure you want to assign this user as approver?";
+            confirmButtonText = 'Yes, assign it!';
+        } else if (approvalStatus === 'Approved') {
+            action = 'approve';
+            titleText = "You are about to approve this worksheet.";
+            confirmButtonText = 'Yes, approve it!';
+        } else if (approvalStatus === 'Rejected') {
+            action = 'reject';
+            titleText = "You are about to reject this worksheet.";
+            confirmButtonText = 'Yes, reject it!';
+        } else {
+            swal.fire('Error!', 'No action selected.', 'error');
+            return;
+        }
+
+        swal.fire({
+            title: 'Are you sure?',
+            text: titleText,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: confirmButtonText
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: '/OTRisk/update_workflow/',
+                    type: 'POST',
+                    data: {
+                        'worksheet_id': worksheetId,
+                        'selected_approver_id': selectedApproverId,
+                        'approval_status': approvalStatus,
+                        'rejection_comments': rejectionComments,
+                        'action': action,
+                        'csrfmiddlewaretoken': $('input[name=csrfmiddlewaretoken]').val() // CSRF token
+                    },
+                    success: function(response) {
+                        swal.fire('Updated!', response.message, 'success');
+                    },
+                    error: function(xhr) {
+                        var errorMessage = xhr.status === 404 ? 'Worksheet not found.' : 'An error occurred.';
+                        swal.fire('Error!', errorMessage, 'error');
+                    }
+                });
+            }
+        });
+    });
+});
+
+</script>
+
+
+
+        </div>
         </div>
     <div class="col-md-1"></div>
 </div>
@@ -685,9 +920,11 @@
    </div>
     <div class="col-md-1 "></div>
 </div>
+
 <div class="row">
             <div class="col" style="height:10px"></div>
         </div>
+
 <div class="row">
     <div class="col-md-1 "></div>
 
@@ -695,7 +932,7 @@
     <div class="container-fluid small-font">
       <ul class="nav nav-tabs">
         <li class="nav-item">
-            <a class="nav-link active" id="scenario1-tab" data-bs-toggle="tab" href="#scenario1" style="background-color: #e24e42; color: #ffffff;">Scenario 1</a>
+            <a class="nav-link active" id="scenario1-tab" data-bs-toggle="tab" href="#scenario1" style="background-color: #464748; color: #ffffff;">Scenario 1</a>
         </li>
         <li class="nav-item">
             <a class="nav-link " id="scenario2-tab" data-bs-toggle="tab" href="#scenario2" style="background-color: #e98000; color: #ffffff;">Scenario 2</a>
@@ -710,7 +947,7 @@
             <a class="nav-link " id="scenario5-tab" data-bs-toggle="tab" href="#scenario5" style="background-color: #007849; color: #ffffff;">Scenario 5</a>
         </li>
     </ul>
-    <script type="text/javascript">
+<script type="text/javascript">
     document.addEventListener('DOMContentLoaded', function() {
         // Attach event listener to each nav-link
         document.querySelectorAll('.nav-link').forEach(function(tab) {
@@ -724,143 +961,178 @@
         });
     });
 </script>
+<div class="tab-content">
+    <div class="tab-pane active" id="scenario1" style="background-color: #5E6266">
+        <div class="row">
+            <div class="col-md-3 small-font">
 
-
-      <div class="tab-content">
-        <div class="tab-pane active" id="scenario1" >
-            <div class="row">
-            <div class="col-md-4 small-font" >
-               <!-- tab 1 left column -->
                 <input type="hidden" name="hdnScenarioID_1" id="hdnScenarioID_1">
-                <div class="card mb-3 shadow-sm" >
-                    <div class="card-body card-body-white">
+                <br>
+                <div class="group-container">
+                    <div class="group-header">
+                         <span style="color: white;">Scenario Description</span>
+                        <button type="button" class="btn btn-primary btn-file-dialog" data-bs-toggle="modal" data-bs-target="#scenarioSelectModal" id="btnSelectScenario_1">Load Scenario</button>
+                    </div>
+                    <div class="group-body">
+                        <textarea class="form-control small-font" name="txtScenarioDescription_1" id="txtScenarioDescription_1" rows="5" style="resize: none; word-wrap: normal" placeholder="Enter a concise and descriptive scenario" onchange="setRiskAssessmentRefreshRequired(1)" onblur="analyze_Scenario(1)"></textarea>
                         <div class="spinner-container" style="position: relative;">
-                            <!-- start scenario -->
-                            <div class="d-flex align-items-center">
-                                <label for="txtScenarioDescription_1" class="form-control border-0 align-text-bottom small-font cursor-pointer mb-0" style="background-color: transparent;">
-                                    <i class="bi bi-mouse2"></i> Scenario Description
-                                </label>
-                                <button type="button" class="btn btn-link p-0 ms-2" data-bs-toggle="modal" data-bs-target="#scenarioSelectModal" id="btnSelectScenario_1" style="text-decoration: underline; color: blue;">
-                                    <i class="bi bi-box-arrow-down"></i> Load Scenario
-                                </button>
-                            </div>
-                            <textarea class="form-control small-font" name="txtScenarioDescription_1" id="txtScenarioDescription_1" rows="3" style="resize: none; word-wrap: normal" placeholder="Enter a concise and descriptive scenario" onchange="setRiskAssessmentRefreshRequired(1)" onblur="analyze_Scenario(1)"></textarea>
-
                             <div class="spinner-overlay_1" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255, 255, 255, 0.7); display: none; justify-content: center; align-items: center;">
                                 <div class="spinner-border" role="status">
                                     <span class="sr-only">Analyzing...</span>
                                 </div>
                             </div>
-                        </div>
-
-                        <div class="form-check">
+                            <br>
                             <input class="form-check-input" type="checkbox" id="lock_scenario_1" onchange="toggleLockScenario()">
                             <label class="form-check-label" for="lock_scenario_1">
                                 Lock Scenario
                             </label>
+                                <br>
+                            <label for="txtScenarioAnalysis_1" class="small-font" style="visibility: hidden">Recommendations will align with selected standards:</label>
+                            <textarea id="txtScenarioAnalysis_1" name="txtScenarioAnalysis_1" class="form-control small-font"  rows="5" style="resize: none; word-wrap: normal" readonly></textarea>
+
+                            <script>
+                            function toggleLockScenario() {
+                                var checkbox = document.getElementById('lock_scenario_1');
+                                var textarea = document.getElementById('txtScenarioDescription_1');
+                                textarea.readOnly = checkbox.checked; // Set textarea readonly based on checkbox
+                            }
+                            </script>
                         </div>
-
-                        <label for="txtScenarioAnalysis_1" class="small-font" style="visibility: hidden">Recommendations will align with selected standards:</label>
-                        <textarea id="txtScenarioAnalysis_1" name="txtScenarioAnalysis_1" class="form-control small-font"  rows="5" style="resize: none; word-wrap: normal" readonly></textarea>
-                        <! -- end select description -->
-                        <script>
-                        function toggleLockScenario() {
-                            var checkbox = document.getElementById('lock_scenario_1');
-                            var textarea = document.getElementById('txtScenarioDescription_1');
-                            textarea.readOnly = checkbox.checked; // Set textarea readonly based on checkbox
-                        }
-                        </script>
-                    </div>
-
-              </div>
-                <div class="row">
-                    <div class="col-md-1"></div>
-                <div class="col-md-5">
-                    <div class="form-group-white">
-                        <label class="form-control border-0 small-font"><h6>Internet Exposed IP Address</h6></label>
-                        <label class="switch">
-                          <input type="checkbox" id="exposed_system_1" name="exposed_system_1">
-                          <span class="slider1 round"></span>
-                        </label>
                     </div>
                 </div>
+
+
+            <br>
+            <div class="row">
+                    <div class="col-md-1"></div>
+                        <div class="col-md-5">
+                            <div class="group-container">
+                                <div class="group-header">
+                                    Exposed IP Address
+                                </div>
+                                <div class="group-body">
+
+                                    <label class="switch">
+                                      <input type="checkbox" id="exposed_system_1" name="exposed_system_1">
+                                      <span class="slider1 round"></span>
+                                    </label>
+                                </div>
+                            </div>
+
+                </div>
                 <div class="col-md-5">
-                    <div class="form-group-white">
-                        <label class="form-control border-0 small-font"><h6>Default/Weak Credentials</h6></label>
-                        <label class="switch">
+                    <div class="group-container">
+                                <div class="group-header">
+                                    Default/ Weak Credentials
+                                </div>
+                                <div class="group-body">
+                                <label class="switch">
                           <input type="checkbox" id="weak_credentials_1" name="weak_credentials_1">
                           <span class="slider1 round"></span>
                         </label>
-                    </div>
+                                </div>
+                            </div>
+
                 </div>
                 <div class="col-md-1"></div>
             </div>
             <br>
-            <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                <div class="card-body card-body-white">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <label for="selectOutage_1" class="form-control border-0 small-font">Production Outage</label>
-                              <select id="selectOutage_1" name="selectOutage_1" class="form-control small-font">
-                                <option value="N/A">-- Select Outage --</option>
-                                <option value="Yes">Yes</option>
-                                  <option value="No">No</option>
-                              </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="outage_1" class="form-control border-0 small-font switch-label">Outage Length (in hours):</label>
-                            <input type="number" id="outage_1" name="outage_1" min="0" max="100" class="form-control">
-                        </div>
-                    </div>
+            <div class="row">
+                    <div class="col-md-1"></div>
+                        <div class="col-md-5">
+                            <div class="group-container">
+                                <div class="group-header">
+                                    Production Outage
+                                </div>
+                                <div class="group-body">
+                                <label class="switch">
+                                      <input type="checkbox" id="production_outage_1" name="production_outage_1">
+                                      <span class="slider1 round"></span>
+                                    </label>
+                                </div>
+                            </div>
+
                 </div>
-              </div>
-              <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                <div class="card-body card-body-white">
-                  <label for="selectThreat_1" class="form-control border-0 small-font">Threat Source</label>
+                <div class="col-md-5">
+                    <div class="group-container">
+                                <div class="group-header">
+                                    Outage Length (hours)
+                                </div>
+                                <div class="group-body">
+
+                            <input type="number" id="outage_1" name="outage_1" min="0" max="100" class="form-control">
+                                </div>
+                            </div>
+
+                </div>
+                <div class="col-md-1"></div>
+            </div>
+
+            <div class="group-container">
+                <div class="group-header">
+                     Threat Source
+
+                </div>
+                <div class="group-body">
+
                   <select id="selectThreat_1" name="selectThreat_1" class="form-control small-font">
                     <option value="">-- Select Threat Source --</option>
                     {% for threatsources in threatsources %}
                         <option value="{{ threatsources.ThreatSource}}">{{ threatsources.ThreatSource }}</option>
                     {% endfor %}
                   </select>
+
                 </div>
               </div>
 
+            <div class="group-container">
+                <div class="group-header">
+                     Threat Tactic
 
-              <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                <div class="card-body card-body-white">
-                  <label for="selectTactics_1" class="form-control border-0 switch-label">Threat Tactics (Mitre)</label>
-                  <select id="selectTactics_1" name="selectTactics_1" class="form-control small-font">
+                </div>
+                <div class="group-body">
+                    <select id="selectTactics_1" name="selectTactics_1" class="form-control small-font">
                     <option value="">-- Select Threat Tactics --</option>
                     {% for mitreTactics in mitreTactics %}
                         <option value="{{ mitreTactics.tactic}}">{{ mitreTactics.tactic }}</option>
                     {% endfor %}
                   </select>
+
                 </div>
               </div>
-              <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                <div class="card-body card-body-white">
-                    <label for="id_impact_1" class="form-control border-0 small-font switch-label">Impact</label>
-                    <select id="id_impact_1" name="impact" class="form-control small-font">
+            <div class="group-container">
+                <div class="group-header">
+                     Scenario Impact
+
+                </div>
+                <div class="group-body">
+                     <select id="id_impact_1" name="impact" class="form-control small-font">
                         <option value="">-- Select Impact --</option>
                         {% for value, display in scenario_form.fields.impact.choices %}
                             <option value="{{ value }}">{{ display }}</option>
                         {% endfor %}
                     </select>
+
+                </div>
+              </div>
+                <div class="group-container">
+                <div class="group-header">
+                     Asset Detail
+
+                </div>
+                <div class="group-body">
+                     <textarea class="form-control small-font" name="txtAssets_1" id="txtAssets_1" rows="3" style="resize: none; word-wrap: normal" placeholder="Add asset names relevant to the scenario..."></textarea>
+
                 </div>
               </div>
 
-              <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                <div class="card-body card-body-white">
-                    <label for="txtAssets_1" class="form-control border-0 align-text-bottom small-font">Asset Name/s:</label>
-                    <textarea class="form-control small-font" name="txtAssets_1" id="txtAssets_1" rows="3" style="resize: none; word-wrap: normal" placeholder="Add asset names relevant to the scenario..."></textarea>
-                </div>
-              </div>
                 </div>
             <div class="col-md-4 small-font">
                 <br>
-                <h5>Business Impact Analysis</h5>
-                Click the icons to add additional detail
+                <div class="group-container">
+                <h5 style="color: white">Business Impact Analysis</h5>
+                <font style="color:white">Click the icons to add additional detail</font>
+
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                         <div class="card-body card-body-white">
                             <!--slider for safety rating -->
@@ -973,7 +1245,9 @@
                             </div>
                         </div>
                     </div>
-                <h5>Vulnerability and Likelihood Analysis</h5>
+                </div>
+                <h5 style="color: white">Vulnerability and Likelihood Analysis</h5>
+                <div class="group-container">
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                         <div class="card-body card-body-white">
                             <!--slider for vulnerability rating -->
@@ -1010,254 +1284,340 @@
                             </div>
                         </div>
                     </div>
+                    <div class="card mb-3 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title" style="color: white">Physical Safeguards</h5>
+                        <div id="tablePhysicalControls_1" class="mb-2">
+                            <button id="addRowBtn" class="btn btn-primary btn-sm" type="button">Add Row</button>
+                        </div>
+                        <table class="table table-bordered small-font" id="table_safeguards_1">
+                            <thead>
+                                <tr>
+                                    <th>Safeguard</th>
+                                    <th>Safeguard Type</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Rows will be added here dynamically -->
+                            </tbody>
+                        </table>
+                        <script>
+                            $(document).ready(function() {
+                                $("#addRowBtn").click(function() {
+                                    var newRow = `<tr>
+                                        <td><textarea class="form-control" maxlength="100"></textarea></td>
+                                        <td><textarea class="form-control" maxlength="100"></textarea></td>
+                                        <td><button type="button" class="btn btn-danger btn-sm deleteRowBtn">Delete</button></td>
+                                    </tr>`;
+                                    $("#table_safeguards_1 tbody").append(newRow);
+                                });
 
+                                // Event delegation to handle dynamically added elements
+                                $("#table_safeguards_1").on("click", ".deleteRowBtn", function() {
+                                    $(this).closest("tr").remove();
+                                });
+                            });
+                            </script>
+
+                    </div>
+                </div>
+
+                </div>
             </div>
-            <div class="col-md-4 small-font">
+            <div class="col-md-5 small-font">
                 <br>
                 <button id="risk-assessment-btn_1" type="button" class="btn btn-primary" style="background-color: #e24e42"   onclick="checkEditModeAndExecute(this.id, 'loadingSpinner1')">
                     <i class="bi bi-play-fill mr-2"></i>Execute Risk Assessment
                 </button>
-
+                <br>
                 <!-- Add this HTML element where you want to display the loading spinner -->
                 <div id="loadingSpinner1" class="spinner-border" role="status" style="display: none;">
                   <span class="visually-hidden">Loading...</span>
                 </div>
-                    <div class="card mb-3 shadow-sm">
-                        <div class="card-body card-body-white">
-                            <label class="form-label">Risk Rating: </label>
-                            <input type="text" id="lblriskRating_1" name="lblriskRating_1" class="form-control" style="font-size: 14px; color: #0a53be" readonly>
-                        </div>
-                    </div>
-
-                    <div class="card mb-3 shadow-sm">
-                        <div class="card-body card-body-white">
-                            <div class="row">
-                                <div class="col">
-                                    <label class="form-label" style="font-size: 10px">Est. Incident Costs (Low): </label>
-                                    <input type="text" id="lblriskCost_1" name="lblriskCost_1" class="form-control" style="font-size: 14px; color: #0a53be" readonly><br>
-                                </div>
-                                <div class="col">
-                                    <label class="form-label" style="font-size: 10px">Est. Incident Costs (High): </label>
-                                    <input type="text" id="lblriskCostHigh_1" name="lblriskCostHigh_1" class="form-control" style="font-size: 14px; color: #0a53be" readonly><br>
-                                </div>
-                                <div class="col">
-                                    <label class="form-label" style="font-size: 10px">Est. Incident Costs (Median): </label>
-                                    <input type="text" id="lblriskCostMedian_1" name="lblriskCostMedian_1" class="form-control" style="font-size: 14px; color: #0a53be" readonly><br>
-                                </div>
+                <br>
+                <div class="row">
+                    <div class="col-md-1"></div>
+                    <div class="col-md-5">
+                        <div class="group-container">
+                            <div class="group-header">
+                                 Risk Rating
+                            </div>
+                                <div class="group-body">
+                                    <img src="{% static 'images/redcube.png' %}" class="cube-icon" alt="Red Cube"><label id="lblriskRating_1" name="lblriskRating_1" style="color:white"></label>
                             </div>
                         </div>
                     </div>
-                    <div class="card mb-3 shadow-sm">
-                        <div class="card-body card-body-white">
-                            <label class="form-label">Recommended Controls: </label>
-
-
-                            <div id="risk_a=summary_table_container_1">
-                            <table id="risk_summary_controls_table_1" class="table table-striped table-bordered" style="font-size: 10px">
-                                <thead>
-                                    <tr>
-                                        <th>Risk Summary Item</th>
-                                        <th>Control Effectiveness (%)</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <!-- Rows will be populated here -->
-                                </tbody>
-                            </table>
+                    <div class="col-md-5">
+                        <div class="group-container">
+                            <div class="group-header">
+                                 Residual Risk
                             </div>
-                            <input type="text" id="control_score_1" name="control_score_1" style="visibility: hidden">
-                                     <script>
-                                    function initializeControlScore_1() {
-                                        // Get all sliders in the table
-                                        var sliders = document.querySelectorAll('#risk_summary_controls_table_1 input[type="range"]');
+                                <div class="group-body">
+                                    <img src="{% static 'images/redcube.png' %}" class="cube-icon" alt="Red Cube"><label id="lblinherentRisk_1" name="lblinherentRisk_1" style="color:white"></label>
+                                    <input type="hidden" id="txtResidualRisk_1">
+                                </div>
 
-                                        // Function to calculate and update the overall control score
-                                        function updateControlScore() {
-                                            var totalScore = 0;
-
-                                            sliders.forEach(function(slider) {
-                                                totalScore += parseInt(slider.value, 10);
-                                            });
-
-                                            var averageScore = totalScore / sliders.length;
-                                            document.getElementById('control_score_1').value = averageScore.toFixed(2);  // Displaying the score up to two decimal places
-
-                                            // Calculate the residual risk
-                                            var inherentRisk = parseFloat(document.getElementById('lblriskScore_1').value);
-                                            var residualRisk = inherentRisk * (1 - (averageScore / 100));
-
-                                            // Update the residual risk slider value
-                                            document.getElementById('residual_risk_1').value = residualRisk.toFixed(2);
-
-                                            setSliderColor(document.getElementById("residual_risk_1"));
-                                             const event = new Event('input', {
-                                                'bubbles': true,
-                                                'cancelable': true
-                                            });
-                                            document.getElementById("residual_risk_1").dispatchEvent(event);
-
-                                        }
-
-                                        // Attach event listener to each slider
-                                        sliders.forEach(function(slider) {
-                                            slider.addEventListener('input', updateControlScore);
-                                        });
-
-                                        // Initial calculation
-                                        updateControlScore();
-                                    }
-
+                        </div>
+                    </div>
+                    <div class="col-md-1"></div>
+                </div>
+                <div class="row">
+                    <div class="col-md-1"></div>
+                    <div class="col">
+                        <div class="group-container">
+                            <div class="group-header">
+                                 Executive Summary
+                            </div>
+                                <div class="group-body">
+                            <textarea rows="10"  id="txtexec_summary_1" name="txtexec_summary_1" class="form-control" style="font-size: 14px; color: #0a53be; resize: none" readonly></textarea>
+                            <a href="#" id="copyExecSummaryLink" class="copy-code-link">
+                                <i class="bi bi-clipboard"></i> Copy Exec Summary
+                            </a>
+                            </div>
+                            <script>
+                                document.getElementById('copyExecSummaryLink').addEventListener('click', function(event) {
+                                    event.preventDefault(); // Prevent the default anchor action
+                                    var execSummaryText = document.getElementById('txtexec_summary_1').value;
+                                    navigator.clipboard.writeText(execSummaryText).then(function() {
+                                        /* Success action, e.g., showing a tooltip or alert */
+                                        console.log('Executive summary copied to clipboard.');
+                                    }, function(err) {
+                                        /* Handle error */
+                                        console.error('Could not copy text: ', err);
+                                    });
+                                });
                                 </script>
-                                <!-- ><input type="text" id="residual_risk_1" name="residual_risk_1"> --><br>
-                                <label class="form-label">Inherent Risk Score: </label>
-                                <input type="range" id="lblriskScore_1" name="lblriskScore_1" class="form-control risk-slider" min="0" max="10" step="1" value="0"><br>
-                                <label for="residual_risk_1">Residual Risk</label>
-                                <input type="range" id="residual_risk_1" name="residual_risk_1" class="form-control risk-slider" min="0" max="10" step="0.01" value="0">
 
                         </div>
-
                     </div>
+
+                    <div class="col-md-1"></div>
+                </div>
+                <div class="row">
+                    <div class="col-md-1"></div>
+                    <div class="col">
+                        <div class="group-container">
+                            <div class="group-header">
+                                 Damage Estimate
+                            </div>
+                                <div class="group-body">
+                            <textarea rows="7"  id="txtDamage_1" name="txtDamage_1" class="form-control" style="font-size: 14px; color: #0a53be; resize: none" readonly></textarea>
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-1"></div>
+                </div>
+                <div class="row">
+                    <div class="col-md-1"></div>
+                    <div class="col">
+                        <div class="group-container">
+                            <div class="group-header">
+                                 Event Costs
+                            </div>
+                                <div class="group-body">
+                                    <div id="monthly_cost_chart_1" style="height:300px"></div>
+                                    <input type="hidden" id="scenario_12month_costs_1" name="scenario_12month_costs_1">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-1"></div>
+                </div>
 
                     <button id="save_scenario_1" type="button" class="btn btn-primary" style="background-color: #e24e42" onclick="save_scenario(1);">
                     <i class="bi bi-play-fill mr-2"></i>Save Scenario 1
                     </button>
+                <br>
+
 
                 </div>
             </div>
         </div>
-        <div class="tab-pane" id="scenario2">
-          <!-- Scenario 2 controls -->
-            <div class="row">
-                <div class="col-md-4 small-font">
-                <!-- tab 1 left column -->
-                    <input type="hidden" name="hdnScenarioID_2" id="hdnScenarioID_2">
-                    <div class="card mb-3 shadow-sm">
-                        <div class="card-body card-body-white">
-                            <div class="spinner-container" style="position: relative;">
-                            <label for="txtScenarioDescription_2" class="form-control border-0 align-text-bottom small-font cursor-pointer" ><i class="bi bi-mouse2"></i> Scenario Description</label>
-                            <textarea class="form-control small-font" name="txtScenarioDescription_2" id="txtScenarioDescription_2" rows="3" style="resize: none; word-wrap: normal" onchange="setRiskAssessmentRefreshRequired(2)" onblur="analyze_Scenario(2)"></textarea>
+    <div class="tab-pane" id="scenario2" style="background-color: #5E6266">
+        <div class="row">
+            <div class="col-md-3 small-font">
 
-                                <div class="spinner-overlay_2" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255, 255, 255, 0.7); display: none; justify-content: center; align-items: center;">
+                <input type="hidden" name="hdnScenarioID_2" id="hdnScenarioID_2">
+                <br>
+                <div class="group-container">
+                    <div class="group-header">
+                         <span style="color: white;">Scenario Description</span>
+                        <button type="button" class="btn btn-primary btn-file-dialog" data-bs-toggle="modal" data-bs-target="#scenarioSelectModal" id="btnSelectScenario_2">Load Scenario</button>
+                    </div>
+                    <div class="group-body">
+                        <textarea class="form-control small-font" name="txtScenarioDescription_2" id="txtScenarioDescription_2" rows="5" style="resize: none; word-wrap: normal" placeholder="Enter a concise and descriptive scenario" onchange="setRiskAssessmentRefreshRequired(1)" onblur="analyze_Scenario(1)"></textarea>
+                        <div class="spinner-container" style="position: relative;">
+                            <div class="spinner-overlay_2" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255, 255, 255, 0.7); display: none; justify-content: center; align-items: center;">
                                 <div class="spinner-border" role="status">
-                                  <span class="sr-only">Analyzing...</span>
-                              </div>
-                          </div>
-                        </div>
-                         <div class="form-check">
-                              <input class="form-check-input" type="checkbox" id="lock_scenario_2" onchange="toggleLockScenario_2()">
-                              <label class="form-check-label" for="lock_scenario_2">
-                                  Lock Scenario
-                              </label>
-                          </div>
+                                    <span class="sr-only">Analyzing...</span>
+                                </div>
+                            </div>
+                            <br>
+                            <input class="form-check-input" type="checkbox" id="lock_scenario_2" onchange="toggleLockScenario()">
+                            <label class="form-check-label" for="lock_scenario_2">
+                                Lock Scenario
+                            </label>
+                                <br>
                             <label for="txtScenarioAnalysis_2" class="small-font" style="visibility: hidden">Recommendations will align with selected standards:</label>
-          <textarea id="txtScenarioAnalysis_2" name="txtScenarioAnalysis_2" class="form-control small-font"  rows="5" style="resize: none; word-wrap: normal" readonly></textarea>
+                            <textarea id="txtScenarioAnalysis_2" name="txtScenarioAnalysis_2" class="form-control small-font"  rows="5" style="resize: none; word-wrap: normal" readonly></textarea>
 
-          <script>
-          function toggleLockScenario_2() {
-              var checkbox = document.getElementById('lock_scenario_2');
-              var textarea = document.getElementById('txtScenarioDescription_2');
-              textarea.readOnly = checkbox.checked; // Set textarea readonly based on checkbox
-          }
-          </script>
-      </div>
-
-</div>
-
-                <div class="row">
-                    <div class="col-md-1"></div>
-                <div class="col-md-5">
-                    <div class="form-group-white">
-                        <label class="form-control border-0 small-font"><h6>Internet Exposed IP Address</h6></label>
-                        <label class="switch">
-                          <input type="checkbox" id="exposed_system_2" name="exposed_system_2">
-                          <span class="slider1 round"></span>
-                        </label>
+                            <script>
+                            function toggleLockScenario() {
+                                var checkbox = document.getElementById('lock_scenario_2');
+                                var textarea = document.getElementById('txtScenarioDescription_2');
+                                textarea.readOnly = checkbox.checked; // Set textarea readonly based on checkbox
+                            }
+                            </script>
+                        </div>
                     </div>
                 </div>
+
+
+            <br>
+            <div class="row">
+                    <div class="col-md-1"></div>
+                        <div class="col-md-5">
+                            <div class="group-container">
+                                <div class="group-header">
+                                    Exposed IP Address
+                                </div>
+                                <div class="group-body">
+
+                                    <label class="switch">
+                                      <input type="checkbox" id="exposed_system_2" name="exposed_system_2">
+                                      <span class="slider1 round"></span>
+                                    </label>
+                                </div>
+                            </div>
+
+                </div>
                 <div class="col-md-5">
-                    <div class="form-group-white">
-                        <label class="form-control border-0 small-font"><h6>Default/Weak Credentials</h6></label>
-                        <label class="switch">
+                    <div class="group-container">
+                                <div class="group-header">
+                                    Default/ Weak Credentials
+                                </div>
+                                <div class="group-body">
+                                <label class="switch">
                           <input type="checkbox" id="weak_credentials_2" name="weak_credentials_2">
                           <span class="slider1 round"></span>
                         </label>
-                    </div>
-                </div>
-                    <div class="col-md-1"></div>
-            </div>
-                <br>
-                    <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                        <div class="card-body card-body-white">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <label for="selectOutage_2" class="form-control border-0 small-font">Production Outage</label>
-                                      <select id="selectOutage_2" name="selectOutage_2" class="form-control small-font">
-                                        <option value="N/A">-- Select Outage --</option>
-                                        <option value="Yes">Yes</option>
-                                          <option value="No">No</option>
-                                      </select>
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="outage_2" class="form-control border-0 small-font">Outage Length (in hours):</label>
-                                    <input type="number" id="outage_2" name="outage_2" min="0" max="100" class="form-control">
                                 </div>
                             </div>
-                        </div>
-                  </div>
-                    <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                        <div class="card-body card-body-white">
-                            <label for="selectThreat_2" class="form-control border-0">Threat Source</label>
-                            <select id="selectThreat_2" name="selectThreat_2" class="form-control small-font">
-                                <option value="">-- Select Threat Source --</option>
-                                    {% for threatsources in threatsources %}
-                                        <option value="{{ threatsources.ThreatSource}}">{{ threatsources.ThreatSource }}</option>
-                                    {% endfor %}
-                            </select>
-                        </div>
-                    </div>
-                    <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                        <div class="card-bodycard-body-white">
-                            <label for="selectTactics_2" class="form-control border-0">Threat Tactics (Mitre)</label>
-                            <select id="selectTactics_2" name="selectTactics_2" class="form-control">
-                                <option value="">-- Select Threat Tactics --</option>
-                                    {% for mitreTactics in mitreTactics %}
-                                        <option value="{{ mitreTactics.tactic}}">{{ mitreTactics.tactic }}</option>
-                                    {% endfor %}
-                            </select>
-                        </div>
-                    </div>
-                    <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                    <div class="card-body card-body-white">
-                        <label for="id_impact_2" class="form-control border-0 small-font">Impact</label>
-                        <select id="id_impact_2" name="impact" class="form-control small-font">
-                            <option value="">-- Select Impact --</option>
-                            {% for value, display in scenario_form.fields.impact.choices %}
-                                <option value="{{ value }}">{{ display }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                  </div>
-                    <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                        <div class="card-body card-body-white">
-                           <label for="txtAssets_1" class="form-control border-0 align-text-bottom small-font">Asset Name/s</label>
-                           <textarea class="form-control small-font" name="txtAssets_2" id="txtAssets_2" rows="3" style="resize: none; word-wrap: normal" placeholder="Add asset names relevant to the scenario..."></textarea>
-                        </div>
-                    </div>
-          </div>
+
+                </div>
+                <div class="col-md-1"></div>
+            </div>
+            <br>
+            <div class="row">
+                    <div class="col-md-1"></div>
+                        <div class="col-md-5">
+                            <div class="group-container">
+                                <div class="group-header">
+                                    Production Outage
+                                </div>
+                                <div class="group-body">
+                                <label class="switch">
+                                      <input type="checkbox" id="production_outage_2" name="production_outage_2">
+                                      <span class="slider1 round"></span>
+                                    </label>
+                                </div>
+                            </div>
+
+                </div>
+                <div class="col-md-5">
+                    <div class="group-container">
+                                <div class="group-header">
+                                    Outage Length (hours)
+                                </div>
+                                <div class="group-body">
+
+                            <input type="number" id="outage_2" name="outage_2" min="0" max="100" class="form-control">
+                                </div>
+                            </div>
+
+                </div>
+                <div class="col-md-1"></div>
+            </div>
+
+            <div class="group-container">
+                <div class="group-header">
+                     Threat Source
+
+                </div>
+                <div class="group-body">
+
+                  <select id="selectThreat_2" name="selectThreat_2" class="form-control small-font">
+                    <option value="">-- Select Threat Source --</option>
+                    {% for threatsources in threatsources %}
+                        <option value="{{ threatsources.ThreatSource}}">{{ threatsources.ThreatSource }}</option>
+                    {% endfor %}
+                  </select>
+
+                </div>
+              </div>
+
+            <div class="group-container">
+                <div class="group-header">
+                     Threat Tactic
+
+                </div>
+                <div class="group-body">
+                    <select id="selectTactics_2" name="selectTactics_2" class="form-control small-font">
+                    <option value="">-- Select Threat Tactics --</option>
+                    {% for mitreTactics in mitreTactics %}
+                        <option value="{{ mitreTactics.tactic}}">{{ mitreTactics.tactic }}</option>
+                    {% endfor %}
+                  </select>
+
+                </div>
+              </div>
+            <div class="group-container">
+                <div class="group-header">
+                     Scenario Impact
+
+                </div>
+                <div class="group-body">
+                     <select id="id_impact_2" name="impact" class="form-control small-font">
+                        <option value="">-- Select Impact --</option>
+                        {% for value, display in scenario_form.fields.impact.choices %}
+                            <option value="{{ value }}">{{ display }}</option>
+                        {% endfor %}
+                    </select>
+
+                </div>
+              </div>
+                <div class="group-container">
+                <div class="group-header">
+                     Asset Detail
+
+                </div>
+                <div class="group-body">
+                     <textarea class="form-control small-font" name="txtAssets_2" id="txtAssets_2" rows="3" style="resize: none; word-wrap: normal" placeholder="Add asset names relevant to the scenario..."></textarea>
+
+                </div>
+              </div>
+
+                </div>
             <div class="col-md-4 small-font">
                 <br>
-                <h5>Business Impact Analysis</h5>
-                Click the icons to add additional detail
+                <div class="group-container">
+                <h5 style="color: white">Business Impact Analysis</h5>
+                <font style="color:white">Click the icons to add additional detail</font>
+
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                         <div class="card-body card-body-white">
                             <!--slider for safety rating -->
                             <div class="slider-container d-flex align-items-center" >
                                 <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#safetyModal_2" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/safety.png' %}" style="height:2rem"> &nbsp;Safety</label></div>
                                 <div class="col-7">
-                                    <label for="range_safety_2"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_safety_2" name="range_safety_2" onchange="initSlider('range_safety_2', 'safetyrange_2');setRiskAssessmentRefreshRequired(2);">
+                                    <label for="range_safety_2"></label>
+
+                                    <input type="range" min="1" max="10" value="1" class="slider" id="range_safety_2" name="range_safety_2" onchange="initSlider('range_safety_2', 'safetyrange_2');setRiskAssessmentRefreshRequired(2);">
                                 </div>
                                 <div class="col-2"><label id="safetyrange_2" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></div>
-                            </div>
+                              </div>
                         </div>
                     </div>
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
@@ -1266,15 +1626,16 @@
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#lifeModal_2" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/danger.png' %}" style="height:2rem"> &nbsp;Life</label></div>
                                 <div class="col-7">
-                                    <label for="range_life_2"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_life_2" name="range_life_2" onchange="initSlider('range_life_2', 'liferange_2'); setRiskAssessmentRefreshRequired(2);">
+                                    <label for="range_life_2"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_life_2" name="range_life_2" onchange="initSlider('range_life_2', 'liferange_2');setRiskAssessmentRefreshRequired(2);">
                                 </div>
                                 <div class="col-2"><h6><label id="liferange_2" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
                         </div>
                     </div>
+
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                         <div class="card-body card-body-white">
-                            <!--slider for Production rating -->
+                            <!--slider for production rating -->
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#productionModal_2" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/production.png' %}" style="height:2rem">&nbsp; Production</label></div>
                                 <div class="col-7">
@@ -1284,14 +1645,14 @@
                             </div>
                         </div>
                     </div>
+
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                         <div class="card-body card-body-white">
                              <!--slider for finance rating -->
                             <div class="slider-container d-flex align-items-center">
-                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#financeModal_2" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/finance.png' %}" style="height:2rem">&nbsp; Financial</label></div>
+                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#financeModal_2"  data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/finance.png' %}" style="height:2rem">&nbsp; Financial</label></div>
                                 <div class="col-7">
-                                    <label for="range_finance_2"></label>
-                                    <input type="range" min="1" max="10" value="1" class="slider" id="range_finance_2" name="range_finance_2" onchange="initSlider('range_finance_2', 'financerange_2');setRiskAssessmentRefreshRequired(2);">
+                                    <label for="range_finance_2"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_finance_2" name="range_finance_2" onchange="initSlider('range_finance_2', 'financerange_2');setRiskAssessmentRefreshRequired(2);">
                                 </div>
                                 <div class="col-2"><h6><label id="financerange_2" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
@@ -1301,7 +1662,7 @@
                         <div class="card-body card-body-white">
                             <!--slider for reputation rating -->
                             <div class="slider-container d-flex align-items-center">
-                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#reputationModal_2" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/reputation.png' %}" style="height:2rem"> &nbsp;Reputation</label></div>
+                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#reputationModal_2"  data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/reputation.png' %}" style="height:2rem"> &nbsp;Reputation</label></div>
                                 <div class="col-7">
                                     <label for="range_reputation_2"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_reputation_2" name="range_reputation_2" onchange="initSlider('range_reputation_2', 'reputationrange_2');setRiskAssessmentRefreshRequired(2);">
                                 </div>
@@ -1313,7 +1674,7 @@
                         <div class="card-body card-body-white">
                             <!--slider for environment impact rating -->
                             <div class="slider-container d-flex align-items-center">
-                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#environmentModal_2" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/environment.png' %}" style="height:2rem"> &nbsp; Environment</label></div>
+                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#environmentModal_2"  data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/environment.png' %}" style="height:2rem"> &nbsp;Environment</label></div>
                                 <div class="col-7">
                                     <label for="range_environment_2"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_environment_2" name="range_environment_2" onchange="initSlider('range_environment_2', 'environmentrange_2');setRiskAssessmentRefreshRequired(2);">
                                 </div>
@@ -1325,7 +1686,7 @@
                         <div class="card-body card-body-white">
                             <!--slider for regulatory impact rating -->
                             <div class="slider-container d-flex align-items-center">
-                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#regulationModal_2" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/regulation.png' %}" style="height:2rem">&nbsp; Regulatory</label></div>
+                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#regulationModal_2"  data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/regulation.png' %}" style="height:2rem">&nbsp; Regulatory</label></div>
                                 <div class="col-7">
                                     <label for="range_regulatory_2"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_regulatory_2" name="range_regulatory_2" onchange="initSlider('range_regulatory_2', 'regulatoryrange_2');setRiskAssessmentRefreshRequired(2);">
                                 </div>
@@ -1337,7 +1698,7 @@
                         <div class="card-body card-body-white">
                             <!--slider for data impact rating -->
                             <div class="slider-container d-flex align-items-center">
-                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#dataModal_2" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/data.png' %}" style="height:2rem"> &nbsp;Data/IP</label></div>
+                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#dataModal_2"  data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/data.png' %}" style="height:2rem"> &nbsp;Data/IP</label></div>
                                 <div class="col-7">
                                     <label for="range_data_2"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_data_2" name="range_data_2" onchange="initSlider('range_data_2', 'datarange_2');setRiskAssessmentRefreshRequired(2);">
                                 </div>
@@ -1345,11 +1706,11 @@
                             </div>
                         </div>
                     </div>
-                <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                    <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                         <div class="card-body card-body-white">
                             <!--slider for data impact rating -->
                             <div class="slider-container d-flex align-items-center">
-                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#supplyModal_2" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/supply.png' %}" style="height:2rem"> &nbsp;Supply Chain</label></div>
+                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#supplyModal_2"  data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/supply.png' %}" style="height:2rem"> &nbsp;Supply Chain</label></div>
                                 <div class="col-7">
                                     <label for="range_supply_2"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_supply_2" name="range_supply_2" onchange="initSlider('range_supply_2', 'supplyrange_2');setRiskAssessmentRefreshRequired(2);">
                                 </div>
@@ -1357,164 +1718,197 @@
                             </div>
                         </div>
                     </div>
-                    <h5>Vulnerability and Likelihood Analysis</h5>
+                </div>
+                <h5 style="color: white">Vulnerability and Likelihood Analysis</h5>
+                <div class="group-container">
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                         <div class="card-body card-body-white">
-                           <!--slider for vulnerability rating -->
-                           <div class="slider-container d-flex align-items-center" >
-                               <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#vulnModal_2"  data-bs-placement="top" style="cursor: pointer">Vulnerability</label></div>
-                               <div class="col-7">
-                                   <label for="range_vuln_2"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_vuln_2" name="range_vuln_2" onchange="initSlider('range_vuln_2', 'vulnrange_2')">
-                               </div>
-                               <div class="col-2"><label id="vulnrange_2" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></div>
-                           </div>
+                            <!--slider for vulnerability rating -->
+                            <div class="slider-container d-flex align-items-center" >
+                                <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#vulnModal_2"  data-bs-placement="top" style="cursor: pointer">Vulnerability</label></div>
+                                <div class="col-7">
+                                    <label for="range_vuln_2"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_vuln_2" name="range_vuln_2" onchange="initSlider('range_vuln_2', 'vulnrange_2')">
+                                </div>
+                                <div class="col-3"><label id="vulnrange_2" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></div>
+                            </div>
                         </div>
                     </div>
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                         <div class="card-body card-body-white">
-                           <!--slider for threat rating -->
-                           <div class="slider-container d-flex align-items-center">
-                               <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the danger to life of the selected scenario">Threat</label></div>
-                               <div class="col-7">
-                                   <label for="range_threat_2"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_threat_2" name="range_threat_2" onchange="initSlider('range_threat_2', 'threatrange_2');">
-                               </div>
-                               <div class="col-2"><h6><label id="threatrange_2" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
-                           </div>
+                            <!--slider for threat rating -->
+                            <div class="slider-container d-flex align-items-center">
+                                <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the danger to life of the selected scenario">Threat</label></div>
+                                <div class="col-7">
+                                    <label for="range_threat_2"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_threat_2" name="range_threat_2" onchange="initSlider('range_threat_2', 'threatrange_2');">
+                                </div>
+                                <div class="col-3"><h6><label id="threatrange_2" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                            </div>
                         </div>
                     </div>
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                         <div class="card-body card-body-white">
-                           <!--slider for frequency-->
-                           <div class="slider-container d-flex align-items-center">
-                               <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to indicate asset status">Asset Status</label></div>
-                               <div class="col-7">
-                                   <label for="range_frequency_2"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_frequency_2" name="range_frequency_2" onchange="initFrequencySlider('range_frequency_2', 'frequencyrange_2');">
-                               </div>
-                               <div class="col-2"><h6><label id="frequencyrange_2" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
-                           </div>
+                            <!--slider for frequency-->
+                            <div class="slider-container d-flex align-items-center">
+                                <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to indicate asset status">Asset Status</label></div>
+                                <div class="col-7">
+                                    <label for="range_frequency_2"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_frequency_2" name="range_frequency_2" onchange="initFrequencySlider('range_frequency_2', 'frequencyrange_2');">
+                                </div>
+                                <div class="col-3"><h6><label id="frequencyrange_2" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                            </div>
                         </div>
                     </div>
+                    <div class="card mb-3 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title" style="color: white">Physical Safeguards</h5>
+                        <div id="tablePhysicalControls_2" class="mb-2">
+                            <button id="addRowBtn" class="btn btn-primary btn-sm" type="button">Add Row</button>
+                        </div>
+                        <table class="table table-bordered small-font" id="table_safeguards_2">
+                            <thead>
+                                <tr>
+                                    <th>Safeguard</th>
+                                    <th>Safeguard Type</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Rows will be added here dynamically -->
+                            </tbody>
+                        </table>
+                        <script>
+                            $(document).ready(function() {
+                                $("#addRowBtn").click(function() {
+                                    var newRow = `<tr>
+                                        <td><textarea class="form-control" maxlength="100"></textarea></td>
+                                        <td><textarea class="form-control" maxlength="100"></textarea></td>
+                                        <td><button type="button" class="btn btn-danger btn-sm deleteRowBtn">Delete</button></td>
+                                    </tr>`;
+                                    $("#table_safeguards_2 tbody").append(newRow);
+                                });
 
-           </div>
+                                // Event delegation to handle dynamically added elements
+                                $("#table_safeguards_2").on("click", ".deleteRowBtn", function() {
+                                    $(this).closest("tr").remove();
+                                });
+                            });
+                            </script>
 
-            <div class="col-md-4 small-font">
-                <br>
-                <button id="risk-assessment-btn_2" type="button" class="btn btn-primary" style="background-color: #e98000" onclick="checkEditModeAndExecute(this.id, 'loadingSpinner2')">
-                    <i class="bi bi-play-fill mr-2"></i>Execute Risk Assessment
-                </button>
-
-
-
-
-                <!-- Add this HTML element where you want to display the loading spinner -->
-                <div id="loadingSpinner2" class="spinner-border" role="status" style="display: none;">
-                  <span class="visually-hidden">Loading...</span>
+                    </div>
                 </div>
 
-                    <div class="card mb-3 shadow-sm">
-                        <div class="card-body card-body-white">
-                            <label class="form-label">Risk Rating: </label>
-                            <input type="text" id="lblriskRating_2" name="lblriskRating_2" class="form-control" readonly>
-                        </div>
-                    </div>
-
-                    <div class="card mb-3 shadow-sm">
-                        <div class="card-body card-body-white">
-                            <div class="row">
-                                <div class="col">
-                                    <label class="form-label" style="font-size: 10px">Est. Incident Costs (Low): </label>
-                                    <input type="text" id="lblriskCost_2" name="lblriskCost_2" class="form-control" style="font-size: 14px; color: #0a53be" readonly><br>
-                                </div>
-                                <div class="col">
-                                    <label class="form-label" style="font-size: 10px">Est. Incident Costs (High): </label>
-                                    <input type="text" id="lblriskCostHigh_2" name="lblriskCostHigh_2" class="form-control" style="font-size: 14px; color: #0a53be" readonly><br>
-                                </div>
-                                <div class="col">
-                                    <label class="form-label" style="font-size: 10px">Est. Incident Costs (Median): </label>
-                                    <input type="text" id="lblriskCostMedian_2" name="lblriskCostMedian_2" class="form-control" style="font-size: 14px; color: #0a53be" readonly><br>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="card mb-3 shadow-sm">
-                        <div class="card-body card-body-white">
-                            <label class="form-label">Recommended Controls: </label>
-
-
-                            <div id="risk_a=summary_table_container_2">
-                            <table id="risk_summary_controls_table_2" class="table table-striped table-bordered" style="font-size: 10px">
-                                <thead>
-                                    <tr>
-                                        <th>Risk Summary Item</th>
-                                        <th>Control Effectiveness (%)</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <!-- Rows will be populated here -->
-                                </tbody>
-                            </table>
-                            </div>
-                            <input type="text" id="control_score_2" name="control_score_2" style="visibility: hidden">
-                                     <script>
-                                    function initializeControlScore_2() {
-                                        // Get all sliders in the table
-                                        var sliders = document.querySelectorAll('#risk_summary_controls_table_2 input[type="range"]');
-
-                                        // Function to calculate and update the overall control score
-                                        function updateControlScore() {
-                                            var totalScore = 0;
-
-                                            sliders.forEach(function(slider) {
-                                                totalScore += parseInt(slider.value, 10);
-                                            });
-
-                                            var averageScore = totalScore / sliders.length;
-                                            document.getElementById('control_score_2').value = averageScore.toFixed(2);  // Displaying the score up to two decimal places
-
-                                            // Calculate the residual risk
-                                            var inherentRisk = parseFloat(document.getElementById('lblriskScore_2').value);
-                                            var residualRisk = inherentRisk * (1 - (averageScore / 100));
-
-                                            // Update the residual risk slider value
-                                            document.getElementById('residual_risk_2').value = residualRisk.toFixed(2);
-
-                                            setSliderColor(document.getElementById("residual_risk_2"));
-                                             const event = new Event('input', {
-                                                'bubbles': true,
-                                                'cancelable': true
-                                            });
-                                            document.getElementById("residual_risk_2").dispatchEvent(event);
-
-                                        }
-
-                                        // Attach event listener to each slider
-                                        sliders.forEach(function(slider) {
-                                            slider.addEventListener('input', updateControlScore);
-                                        });
-
-                                        // Initial calculation
-                                        updateControlScore();
-                                    }
-
-                                </script>
-                                <!-- ><input type="text" id="residual_risk_1" name="residual_risk_1"> --><br>
-                                <label class="form-label">Inherent Risk Score: </label>
-                                <input type="range" id="lblriskScore_2" name="lblriskScore_2" class="form-control risk-slider" min="0" max="10" step="1" value="0"><br>
-                                <label for="residual_risk_1">Residual Risk</label>
-                                <input type="range" id="residual_risk_2" name="residual_risk_2" class="form-control risk-slider" min="0" max="10" step="0.01" value="0">
-
-                        </div>
-
-                    </div>
-
-                <button id="save_scenario_2" type="button" class="btn btn-primary" style="background-color: #e98000" onclick="save_scenario(2);">
-                    <i class="bi bi-play-fill mr-2"></i>Save Scenario 2
+                </div>
+            </div>
+            <div class="col-md-5 small-font">
+                <br>
+                <button id="risk-assessment-btn_2" type="button" class="btn btn-primary" style="background-color: #e24e42"   onclick="checkEditModeAndExecute(this.id, 'loadingSpinner1')">
+                    <i class="bi bi-play-fill mr-2"></i>Execute Risk Assessment
                 </button>
+                <br>
+                <!-- Add this HTML element where you want to display the loading spinner -->
+                <div id="loadingSpinner1" class="spinner-border" role="status" style="display: none;">
+                  <span class="visually-hidden">Loading...</span>
+                </div>
+                <br>
+                <div class="row">
+                    <div class="col-md-1"></div>
+                    <div class="col-md-5">
+                        <div class="group-container">
+                            <div class="group-header">
+                                 Risk Rating
+                            </div>
+                                <div class="group-body">
+                                    <img src="{% static 'images/redcube.png' %}" class="cube-icon" alt="Red Cube"><label id="lblriskRating_2" name="lblriskRating_2" style="color:white"></label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-5">
+                        <div class="group-container">
+                            <div class="group-header">
+                                 Residual Risk
+                            </div>
+                                <div class="group-body">
+                                    <img src="{% static 'images/redcube.png' %}" class="cube-icon" alt="Red Cube"><label id="lblinherentRisk_2" name="lblinherentRisk_2" style="color:white"></label>
+                                    <input type="hidden" id="txtResidualRisk_2">
+                                </div>
+
+                        </div>
+                    </div>
+                    <div class="col-md-1"></div>
+                </div>
+                <div class="row">
+                    <div class="col-md-1"></div>
+                    <div class="col">
+                        <div class="group-container">
+                            <div class="group-header">
+                                 Executive Summary
+                            </div>
+                                <div class="group-body">
+                            <textarea rows="10"  id="txtexec_summary_2" name="txtexec_summary_2" class="form-control" style="font-size: 14px; color: #0a53be; resize: none" readonly></textarea>
+                            <a href="#" id="copyExecSummaryLink" class="copy-code-link">
+                                <i class="bi bi-clipboard"></i> Copy Exec Summary
+                            </a>
+                            </div>
+                            <script>
+                                document.getElementById('copyExecSummaryLink').addEventListener('click', function(event) {
+                                    event.preventDefault(); // Prevent the default anchor action
+                                    var execSummaryText = document.getElementById('txtexec_summary_2').value;
+                                    navigator.clipboard.writeText(execSummaryText).then(function() {
+                                        /* Success action, e.g., showing a tooltip or alert */
+                                        console.log('Executive summary copied to clipboard.');
+                                    }, function(err) {
+                                        /* Handle error */
+                                        console.error('Could not copy text: ', err);
+                                    });
+                                });
+                                </script>
+
+                        </div>
+                    </div>
+
+                    <div class="col-md-1"></div>
+                </div>
+                <div class="row">
+                    <div class="col-md-1"></div>
+                    <div class="col">
+                        <div class="group-container">
+                            <div class="group-header">
+                                 Damage Estimate
+                            </div>
+                                <div class="group-body">
+                            <textarea rows="7"  id="txtDamage_2" name="txtDamage_2" class="form-control" style="font-size: 14px; color: #0a53be; resize: none" readonly></textarea>
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-1"></div>
+                </div>
+                <div class="row">
+                    <div class="col-md-1"></div>
+                    <div class="col">
+                        <div class="group-container">
+                            <div class="group-header">
+                                 Event Costs
+                            </div>
+                                <div class="group-body">
+                                    <div id="monthly_cost_chart_2" style="height:300px"></div>
+                                    <input type="hidden" id="scenario_12month_costs_2" name="scenario_12month_costs_2">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-1"></div>
+                </div>
+
+                    <button id="save_scenario_2" type="button" class="btn btn-primary" style="background-color: #e24e42" onclick="save_scenario(2);">
+                    <i class="bi bi-play-fill mr-2"></i>Save Scenario 2
+                    </button>
+                <br>
 
 
                 </div>
             </div>
         </div>
+
         <div class="tab-pane " id="scenario3">
           <!-- Scenario 3 controls -->
             <div class="row">
@@ -1885,10 +2279,10 @@
                                     }
 
                                 </script>
-                                <!-- ><input type="text" id="residual_risk_1" name="residual_risk_1"> --><br>
+                                <!-- ><input type="text" id="residual_risk_2" name="residual_risk_2"> --><br>
                                 <label class="form-label">Inherent Risk Score: </label>
                                 <input type="range" id="lblriskScore_3" name="lblriskScore_3" class="form-control risk-slider" min="0" max="10" step="1" value="0"><br>
-                                <label for="residual_risk_1">Residual Risk</label>
+                                <label for="residual_risk_2">Residual Risk</label>
                                 <input type="range" id="residual_risk_3" name="residual_risk_3" class="form-control risk-slider" min="0" max="10" step="0.01" value="0">
 
                         </div>
@@ -2674,12 +3068,11 @@
       </div>
     </div>
 </div>
-
-    <div class="col-md-1 "></div>
+<div class="col-md-1 "></div>
 </div>
 
 
-<div class="row">
+<div class="row" >
     <div class="col-md-1"></div>
     <div class="col-md-10 ">
      <div class="row" style="height: 15px"></div>
@@ -2714,7 +3107,17 @@
 
     <div class="col-md-1 "></div>
 </div>
+<br>
+<div class="row" id="attacktreerow" style="visibility:hidden">
 
+                <div class="col">
+                    <div class="form-group-attack-tree ">
+                        <div id="attack_tree"></div>
+                    </div>
+                </div>
+
+            </div>
+<input type="hidden" id="hdnattacktree" name="hdnattacktree">
 <!-- safety ratings -->
 <div class="modal fade" id="safetyModal_1" tabindex="-1" aria-labelledby="safetyModal_1_Label" aria-hidden="true">
   <div class="modal-dialog modal-xl">
@@ -4785,6 +5188,17 @@ function checkEditModeAndExecute(buttonId, spinnerId) {
         });
     }
 
+function abbreviateValue(value) {
+    var newValue = value;
+    if (value >= 1000 && value < 1000000) {
+        newValue = "$" + (value / 1000).toFixed(1) + "k"; // Thousands
+    } else if (value >= 1000000) {
+        newValue = "$" + (value / 1000000).toFixed(1) + "m"; // Millions
+    } else {
+        newValue = "$" + value; // Less than 1000
+    }
+    return newValue;
+}
 
         // Function to assign value with error handling
         function assignValueWithValidation(targetId, value) {
@@ -4797,6 +5211,62 @@ function checkEditModeAndExecute(buttonId, spinnerId) {
           }
         }
 
+function createCostChart(containerId, costArray) {
+    var data = [];
+    for (let i = 0; i < costArray.length; i++) {
+        data.push({x: `Month ${i + 1}`, value: costArray[i]});
+    }
+
+    // Ensure the chart library is ready before creating the chart
+    anychart.onDocumentReady(function() {
+        // Clear the container before creating a new chart
+        document.getElementById(containerId).innerHTML = '';
+
+        var chart = anychart.column();
+        chart.data(data);
+
+        // Set the chart title
+        chart.title("Monthly Cost Estimates");
+
+        // Customize the X-axis labels
+        var xAxis = chart.xAxis();
+        xAxis.title("Month");
+        xAxis.labels()
+            .rotation(-70) // Angle the labels
+            .fontSize(10); // Smaller font size
+
+        // Customize the Y-axis
+        var yAxis = chart.yAxis();
+        yAxis.title("Cost in USD");
+
+        var series = chart.getSeries(0);
+        series.labels(true);
+        series.labels()
+            .position("above")
+            .anchor("centerBottom")
+            .fontSize(10)
+            .format(function() {
+                return abbreviateValue(this.value);
+            });
+
+        // Optionally disable credits if needed
+        var credits = chart.credits();
+        credits.enabled(false);
+
+        // Draw the chart in the specified container
+        chart.container(containerId);
+        chart.draw();
+    });
+}
+
+// Helper function to abbreviate large numbers
+function abbreviateValue(value) {
+    // Implement abbreviation logic here
+    // For example, converting 1000 to "1K"
+    // This is just a placeholder function
+    return value; // Modify this according to your abbreviation logic
+}
+
         // AJAX function to call the Django view
         function executeRiskAssessment(buttonID, spinnerID) {
 
@@ -4804,13 +5274,7 @@ function checkEditModeAndExecute(buttonId, spinnerId) {
             var buttonNumber = buttonID.split('_')[1];
             var scenarioCountTextbox = document.querySelector('input[name="scenarioCount"]');
 
-            document.getElementById("lblriskScore_" + buttonNumber).value = 0;
-            setSliderColor(document.getElementById("lblriskScore_" + buttonNumber));
-             const event = new Event('input', {
-                'bubbles': true,
-                'cancelable': true
-            });
-             document.getElementById("lblriskScore_" + buttonNumber).dispatchEvent(event);
+
 
 
             // Check if the textbox value is null, empty, or less than buttonNumber
@@ -4848,12 +5312,28 @@ function checkEditModeAndExecute(buttonId, spinnerId) {
             var assetStatus = document.getElementById('range_frequency_' + buttonNumber).value;
             var insurance = document.getElementById('txtInsurance').value;
             var deductable = document.getElementById('txtDeductable').value;
-            var outage = document.getElementById('selectOutage_' + buttonNumber).value;
+            var outage = document.getElementById('production_outage_' + buttonNumber).checked;
             var exposed_system = document.getElementById('exposed_system_' + buttonNumber).checked;
             var weak_credentials = document.getElementById('weak_credentials_' + buttonNumber).checked;
             var outageLength = document.getElementById('outage_' + buttonNumber).value;
-            var controlScore = document.getElementById('control_score_' + buttonNumber).value;
+            // var controlScore = document.getElementById('control_score_' + buttonNumber).value;
             var consequences = document.getElementById('txtScenarioAnalysis_' + buttonNumber).value;
+            var safeguardDescriptions = [];
+            $('#table_safeguards tbody tr').each(function() {
+                var description = $(this).find('textarea').eq(0).val(); // Assuming the first textarea is the Safeguard Description
+                if (description) {
+                    safeguardDescriptions.push(description);
+                }
+            });
+
+            // Prepare the safeguards data for the AJAX request
+            var safeguardsData;
+            if (safeguardDescriptions.length === 0) {
+                safeguardsData = "None defined";
+            } else {
+                // Join the descriptions with a separator if there are any
+                safeguardsData = safeguardDescriptions.join('; ');
+            }
 
             // Make the AJAX call to the Django view using a separate endpoint for risk assessment
             $.ajax({
@@ -4884,108 +5364,44 @@ function checkEditModeAndExecute(buttonId, spinnerId) {
                     outage: outage,
                     outageLength: outageLength,
                     impact: impact,
-                    controlScore: controlScore,
+                    // controlScore: controlScore,
                     weak_credentials: weak_credentials,
                     exposed_system: exposed_system,
                     consequences: consequences,
+                    safeguards: safeguardsData,
                  },
                 success: function (response) {
 
                     // Extract the risk score and risk rating from the response
                     var riskRating = response[0];
                     var riskScore = response[1];
-                    var low_estimate = response[2];
-                    var high_estimate = response[3];
-                    var riskSummary = response[4];
-                    var median_estimate = response[5];
-                    var risk_summary_array = response[6];
+                    // var low_estimate = response[2];
+                    // var high_estimate = response[3];
+                    var riskSummary = response[2];
+                    var executive_summary = response[4];
+                    var costArray = riskSummary.split('|').map(Number);
+                    document.getElementById('scenario_12month_costs_' + buttonNumber).value = riskSummary;
+                    createCostChart('monthly_cost_chart_1', costArray);
 
-                    var riskSummaryArray = risk_summary_array;
 
-                    $('#lblriskScore_' +buttonNumber).val(riskScore);
-                    setSliderColor(document.getElementById("lblriskScore_" + buttonNumber));
-                     const event = new Event('input', {
-                        'bubbles': true,
-                        'cancelable': true
-                    });
-                     document.getElementById("lblriskScore_" + buttonNumber).dispatchEvent(event);
+                    // var median_estimate = response[5];
+                    // var risk_summary_array = response[6];
+                    var damage = response[3];
+                    // var riskSummaryArray = risk_summary_array;
 
-                    $('#lblriskRating_' + buttonNumber).val(riskRating);
 
-                    let numberValue1 = parseFloat(low_estimate);  // Convert string to number if needed
 
-                    $('#lblriskCost_' + buttonNumber).val(numberValue1.toLocaleString('en-US', {
-                        style: 'currency',
-                        currency: 'USD',
-                        maximumFractionDigits: 0  // To ensure no decimal point
-                    }));
+                    $('#lblriskRating_' + buttonNumber).text(riskRating);
+                    $('#lblinherentRisk_' + buttonNumber).text(riskScore);
+                    $('#txtDamage_' + buttonNumber).val(damage);
+                    $('#txtexec_summary_' + buttonNumber).val(executive_summary);
 
-                    let numberValue2 = parseFloat(high_estimate);  // Convert string to number if needed
-
-                    $('#lblriskCostHigh_' + buttonNumber).val(numberValue2.toLocaleString('en-US', {
-                        style: 'currency',
-                        currency: 'USD',
-                        maximumFractionDigits: 0
-                    }));
-
-                    let numberValue3 = parseFloat(median_estimate);
-
-                    $('#lblriskCostMedian_' + buttonNumber).val(numberValue3.toLocaleString('en-US', {
-                        style: 'currency',
-                        currency: 'USD',
-                        maximumFractionDigits: 0  // To ensure no decimal point
-                    }));
 
                     $('#lblriskSummary_' + buttonNumber).val(riskSummary);
+
+
                     $('#' + spinnerID).hide();
 
-                    // Set the background and foreground colors based on the risk rating
-                    if (riskRating.includes('Low')) {
-                        $('#lblriskRating_' + buttonNumber).css('background-color', 'green');
-                        $('#lblriskRating_' + buttonNumber).css('color', 'black');
-                    } else if (riskRating.includes('Medium')) {
-                        $('#lblriskRating_' + buttonNumber).css('background-color', 'yellow');
-                        $('#lblriskRating_' + buttonNumber).css('color', 'black');
-                    } else if (riskRating.includes('High')) {
-                        $('#lblriskRating_' + buttonNumber).css('background-color', 'red');
-                        $('#lblriskRating_' + buttonNumber).css('color', 'black');
-                    } else {
-                        // Default styles if the risk rating doesn't match any of the above
-                        $('#lblriskRating_' + buttonNumber).css('background-color', 'white');
-                        $('#lblriskRating_' + buttonNumber).css('color', 'black');
-                    }
-
-                    if (risk_summary_array !== 'x') {
-                        // new table:
-                        var tableBody = document.querySelector('#risk_summary_controls_table_' + buttonNumber + ' tbody');
-
-                        // Clear existing rows
-                        while (tableBody.firstChild) {
-                            tableBody.removeChild(tableBody.firstChild);
-                        }
-
-                        // Populate the table
-                        riskSummaryArray.forEach(function (item) {
-                            var row = tableBody.insertRow();
-                            var cell1 = row.insertCell(0);
-                            var cell2 = row.insertCell(1);
-
-                            cell1.textContent = item;
-
-                            var slider = document.createElement('input');
-                            slider.type = 'range';
-                            slider.min = '0';
-                            slider.max = '100';
-                            slider.value = '50';  // Default value, you can adjust as needed
-                            cell2.appendChild(slider);
-                        });
-                        // Example:
-                        // After populating the table with sliders:
-                        var functionName = 'initializeControlScore_' + buttonNumber;
-                        window[functionName]();
-                    }
-                    // Append the table to the document if not already done
-                    //document.body.appendChild(table);
 
                     $('#' + spinnerID).hide();
 
@@ -5039,14 +5455,14 @@ function checkEditModeAndExecute(buttonId, spinnerId) {
     });
   });
 
-
-$(document).ready(function(){
+  $(document).ready(function(){
     $('#rawtable').dataTable( {
         "pageLength": 5,
             "lengthChange": false
 
     } );
 });
+
 
 $(document).ready(function() {
     $('#selectIndustry').select2();
@@ -5086,6 +5502,7 @@ $(document).ready(function() {
             sessionStorage.setItem('scenario5id', '');
         }
 
+
         document.getElementById("txtScenarioDescription_1").value = "";
 
         document.getElementById("txtScenarioDescription_2").value = "";
@@ -5114,6 +5531,43 @@ $(document).ready(function() {
         var revenue = $(this).data('revenue');
         var deductable = $(this).data('deductable');
         var raw_id = $(this).find('td:eq(0)').text();
+         var approverId = $(this).data('approver-id');
+
+        var currentUserId = $('#userId').val();
+        var recordCreatorId = $(this).data('data_owner');
+        var isSuperUser = $('#isSuperUser').val();
+        var statusFlag = $(this).find('td:eq(2)').text().trim(); // Assuming the StatusFlag is in the third column
+        var approverId = $(this).data('approver-id');
+
+        var isCreatorOrSuperUser = (currentUserId == recordCreatorId || isSuperUser);
+        var isCurrentApprover = (currentUserId == approverId);
+
+        var showApproverDropdown = isCreatorOrSuperUser && statusFlag !== 'Approved' && statusFlag !== 'Closed';
+        var showApprovalControls = isCurrentApprover && statusFlag !== 'Approved' && statusFlag !== 'Closed';
+
+
+        // Show or hide the approver selection dropdown based on user role and status
+        if (isCreatorOrSuperUser && statusFlag === 'Open') {
+            $('#selectApprover').closest('.form-group').show();
+        } else {
+            $('#selectApprover').closest('.form-group').hide();
+        }
+
+        // Show or hide the approval controls
+        if (isCurrentApprover && statusFlag !== 'Approved' && statusFlag !== 'Closed') {
+            $('#approvalControls').show();
+        } else {
+            $('#approvalControls').hide();
+        }
+
+        // Hide the entire Workflow Management container if both dropdown and checkboxes are not visible
+         if (!showApproverDropdown && !showApprovalControls) {
+            $('.workflow-management-section').attr('style', 'visibility: hidden;');
+        } else {
+            $('.workflow-management-section').attr('style', 'display: block;');
+        }
+
+
         document.getElementById("hdnRawID").value = raw_id;
         document.getElementById('hdntxtModalRAW').value = raw_id;
         sessionStorage.setItem('rawid',raw_id);
@@ -5164,116 +5618,127 @@ $(document).ready(function() {
 
             success: function(data) {
                 var scenarios = data.scenarios;
-                var controls = data.controls;
+                var safeguards = data.safeguards;
 
                 document.getElementById("scenarioCount").value = "1";
 
                 if (scenarios.length >= 2) {
                     document.getElementById("scenarioCount").value = "2";
-                    document.getElementById("scenario2-tab").click();
                     document.getElementById("hdnScenarioID_2").value = scenarios[1].pk;
-                    sessionStorage.setItem('scenario2id',scenarios[1].pk);
+                    sessionStorage.setItem('scenario2id', scenarios[1].pk);
                     document.getElementById("txtScenarioDescription_2").value = scenarios[1].fields.ScenarioDescription;
                     document.getElementById("txtScenarioAnalysis_2").value = scenarios[1].fields.raw_consequences;
                     document.getElementById("selectThreat_2").value = scenarios[1].fields.threatSource;
                     document.getElementById("selectTactics_2").value = scenarios[1].fields.threatTactic;
                     document.getElementById("id_impact_2").value = scenarios[1].fields.impact;
-                    document.getElementById("selectOutage_2").value = scenarios[1].fields.outage;
-                    document.getElementById("outage_2").value = scenarios[1].fields.outageLength;
                     document.getElementById('exposed_system_2').checked = scenarios[1].fields.exposed_system;
                     document.getElementById('weak_credentials_2').checked = scenarios[1].fields.weak_credentials;
-
-                    document.getElementById("lblriskScore_2").value = scenarios[1].fields.RiskScore;
-                    setSliderColor(document.getElementById("lblriskScore_2"));
-                     const event = new Event('input', {
-                        'bubbles': true,
-                        'cancelable': true
-                    });
-
-                    document.getElementById("lblriskScore_2").dispatchEvent(event);
-                    document.getElementById("lblriskRating_2").value = scenarios[1].fields.RiskStatus;
                     document.getElementById("lblriskSummary_2").value = scenarios[1].fields.riskSummary;
-                    document.getElementById("lblriskCost_2").value = parseFloat(scenarios[1].fields.event_cost_low).toLocaleString('en-US', {
-                        style: 'currency',
-                        currency: 'USD',
-                        maximumFractionDigits: 0
-                    });
-                    document.getElementById("lblriskCostHigh_2").value = parseFloat(scenarios[1].fields.event_cost_high).toLocaleString('en-US', {
-                        style: 'currency',
-                        currency: 'USD',
-                        maximumFractionDigits: 0
-                    });
+                    document.getElementById("range_safety_1").value = scenarios[1].fields.SafetyScore;
+                     initSlider('range_safety_2', 'safetyrange_2')
+                     document.getElementById("range_life_2").value = scenarios[1].fields.lifeScore;
+                     initSlider('range_life_2', 'liferange_2')
+                     document.getElementById("range_production_2").value = scenarios[1].fields.productionScore;
+                     initSlider('range_production_2', 'productionrange_2')
+                     document.getElementById("range_finance_2").value = scenarios[1].fields.FinancialScore;
+                     initSlider('range_finance_2', 'financerange_2')
+                     document.getElementById("range_reputation_2").value = scenarios[1].fields.ReputationScore;
+                     initSlider('range_reputation_2', 'reputationrange_2')
+                     document.getElementById("range_environment_2").value = scenarios[1].fields.environmentScore;
+                     initSlider('range_environment_2', 'environmentrange_1')
+                     document.getElementById("range_regulatory_2").value = scenarios[1].fields.regulatoryScore;
+                     initSlider('range_regulatory_2', 'regulatoryrange_2')
+                     document.getElementById("range_supply_2").value = scenarios[1].fields.SupplyChainScore;
+                     initSlider('range_supply_2', 'supplyrange_2')
+                         document.getElementById("range_data_2").value = scenarios[1].fields.DataScore;
+                         initSlider('range_data_2', 'datarange_2')
+                         document.getElementById("range_vuln_2").value = scenarios[1].fields.VulnScore;
+                         initSlider('range_vuln_2', 'vulnrange_2')
+                         document.getElementById("range_threat_2").value = scenarios[1].fields.ThreatScore;
+                         initSlider('range_threat_2', 'threatrange_2');
+                         document.getElementById("txtAssets_2").value = scenarios[1].fields.notes;
+                         document.getElementById("txtsafetyJustify_2").value = scenarios[1].fields.justifySafety;
+                         document.getElementById("txtlifeJustify_2").value = scenarios[1].fields.justifyLife;
+                          document.getElementById("txtproductionJustify_2").value = scenarios[1].fields.justifyProduction;
+                          document.getElementById("txtfinanceJustify_2").value = scenarios[1].fields.justifyFinancial;
+                          document.getElementById("txtreputationJustify_2").value = scenarios[1].fields.justifyReputation;
+                          document.getElementById("txtenvironmentJustify_2").value = scenarios[1].fields.justifyEnvironment;
+                          document.getElementById("txtregulationJustify_2").value = scenarios[1].fields.justifyRegulation;
+                          document.getElementById("txtdataJustify_2").value = scenarios[1].fields.justifyData;
+                          document.getElementById("txtsupplyJustify_2").value = scenarios[1].fields.justifySupply;
+                          document.getElementById("txtDamage_2").value = scenarios[1].fields.scenario_damage;
+                          document.getElementById("txtexec_summary_2").value = scenarios[1].fields.executive_summary;
+                          document.getElementById("scenario_12month_costs_2").value = scenarios[1].fields.scenario_12month_costs;
+                          document.getElementById("lblriskRating_2").textContent = scenarios[1].fields.RiskStatus;
 
-                    document.getElementById("lblriskCostMedian_2").value = parseFloat(scenarios[1].fields.event_cost_median).toLocaleString('en-US', {
-                        style: 'currency',
-                        currency: 'USD',
-                        maximumFractionDigits: 0
-                    });
+                          document.getElementById("lblinherentRisk_2").textContent = scenarios[1].fields.residual_risk;
+                          document.getElementById("txtResidualRisk_2").value = scenarios[1].fields.residual_risk;
+                          var residualRisk = scenarios[1].fields.residual_risk;
+                          var riskText = "";
 
-                    document.getElementById("range_safety_2").value = scenarios[1].fields.SafetyScore;
-                    initSlider('range_safety_2', 'safetyrange_2')
-                    document.getElementById("range_life_2").value = scenarios[1].fields.lifeScore;
-                    initSlider('range_life_2', 'liferange_2')
-                    document.getElementById("range_production_2").value = scenarios[1].fields.productionScore;
-                    initSlider('range_production_2', 'productionrange_2')
-                    document.getElementById("range_finance_2").value = scenarios[1].fields.FinancialScore;
-                    initSlider('range_finance_1', 'financerange_2')
-                    document.getElementById("range_reputation_2").value = scenarios[1].fields.ReputationScore;
-                    initSlider('range_reputation_2', 'reputationrange_2')
-                    document.getElementById("range_environment_2").value = scenarios[1].fields.environmentScore;
-                    initSlider('range_environment_2', 'environmentrange_2')
-                    document.getElementById("range_regulatory_2").value = scenarios[1].fields.regulatoryScore;
-                    initSlider('range_regulatory_2', 'regulatoryrange_2')
-                    document.getElementById("range_supply_2").value = scenarios[1].fields.SupplyChainScore;
-                    initSlider('range_supply_2', 'supplyrange_2')
-                    document.getElementById("range_data_2").value = scenarios[1].fields.DataScore;
-                    initSlider('range_data_2', 'datarange_2')
-                    document.getElementById("range_vuln_2").value = scenarios[1].fields.VulnScore;
-                    initSlider('range_vuln_2', 'vulnrange_2')
-                    document.getElementById("range_threat_2").value = scenarios[1].fields.ThreatScore;
-                    initSlider('range_threat_2', 'threatrange_2')
-                    document.getElementById("txtAssets_2").value = scenarios[1].fields.notes;
-                    document.getElementById("txtsafetyJustify_2").value = scenarios[1].fields.justifySafety;
-                    document.getElementById("txtlifeJustify_2").value = scenarios[1].fields.justifyLife;
-                    document.getElementById("txtproductionJustify_2").value = scenarios[1].fields.justifyProduction;
-                    document.getElementById("txtfinanceJustify_2").value = scenarios[1].fields.justifyFinancial;
-                    document.getElementById("txtreputationJustify_2").value = scenarios[1].fields.justifyReputation;
-                    document.getElementById("txtenvironmentJustify_2").value = scenarios[1].fields.justifyEnvironment;
-                    document.getElementById("txtregulationJustify_2").value = scenarios[1].fields.justifyRegulation;
-                    document.getElementById("txtdataJustify_2").value = scenarios[1].fields.justifyData;
-                    document.getElementById("txtsupplyJustify_2").value = scenarios[1].fields.justifySupply;
-
-                  // Check if controls exist for the scenario
-                    var relevantControls = controls.filter(function(controlItem) {
-                        return controlItem.fields.scenarioID === scenarios[1].pk;
-                    });
-
-                    if (relevantControls.length > 0) {
-                        var tableBody = document.querySelector('#risk_summary_controls_table_2 tbody');
-
-                        // Clear existing rows
-                        while (tableBody.firstChild) {
-                        tableBody.removeChild(tableBody.firstChild);
+                        // Determine the risk text based on the value of residual risk
+                        if (residualRisk >= 0 && residualRisk <= 2) {
+                            riskText = "Low";
+                        } else if (residualRisk === 3 || residualRisk === 4) {
+                            riskText = "Low/Medium";
+                        } else if (residualRisk === 5 || residualRisk === 6) {
+                            riskText = "Medium";
+                        } else if (residualRisk === 7) {
+                            riskText = "Medium/High";
+                        } else if (residualRisk === 8 || residualRisk === 9) {
+                            riskText = "High";
+                        } else if (residualRisk === 10) {
+                            riskText = "Very High";
                         }
-                        // Populate the table with controls
-                        relevantControls.forEach(function(controlItem) {
-                            var row = tableBody.insertRow();
-                            var cell1 = row.insertCell(0);
-                            var cell2 = row.insertCell(1);
 
-                                cell1.textContent = controlItem.fields.control;
+                         document.getElementById("lblinherentRisk_2").textContent = riskText;
 
-                                var slider = document.createElement('input');
-                                slider.type = 'range';
-                                slider.min = '0';
-                                slider.max = '100';
-                                slider.value = controlItem.fields.score;  // Set the value from the controlItem
-                                cell2.appendChild(slider);
+                          var costArray = scenarios[1] && scenarios[1].fields.scenario_12month_costs_2
+                            ? scenarios[1].fields.scenario_12month_costs_2.split('|').map(Number)
+                            : null; // Set to null if undefined or null
+
+                        if (costArray) {
+                            createCostChart('monthly_cost_chart_2', costArray);
+                        }
+
+
+                          // Assuming 'safeguards' is the variable holding the safeguards data received from the server
+                        var scenarioId = scenarios[1].pk; // The ID of the currently selected scenario
+                        var scenarioSafeguards = safeguards[scenarioId]; // The safeguards for the selected scenario
+
+                        // Find the table where you want to add the safeguards
+                        var safeguardsTableBody = document.getElementById('table_safeguards_2').getElementsByTagName('tbody')[0];
+
+                        // Clear existing rows in the table
+                        safeguardsTableBody.innerHTML = '';
+
+                        // Check if there are safeguards for the selected scenario
+                        if (scenarioSafeguards && scenarioSafeguards.length > 0) {
+                            // Iterate over each safeguard and add it to the table as editable rows
+                            scenarioSafeguards.forEach(function(safeguard) {
+                                var newRow = `<tr>
+                                    <td><textarea class="form-control" maxlength="255">${safeguard.fields.safeguard_description}</textarea></td>
+                                    <td><textarea class="form-control" maxlength="100">${safeguard.fields.safeguard_type}</textarea></td>
+                                    <td><button type="button" class="btn btn-danger btn-sm deleteRowBtn">Delete</button></td>
+                                </tr>`;
+                                $(safeguardsTableBody).append(newRow);
                             });
-                            initializeControlScore_2();
+                        } else {
+
                         }
+
+                        // Reattach the event handler for delete buttons in case it was cleared with innerHTML = ''
+                        $("#table_safeguards_2").on("click", ".deleteRowBtn", function() {
+                            $(this).closest("tr").remove();
+                        });
+
+
+                        disableAllControls();
+                    loadActions(raw_id)
+
 
                       }
+
                   if (scenarios.length >= 3) {
                       document.getElementById("scenarioCount").value = "3";
                       document.getElementById("scenario3-tab").click();
@@ -5344,35 +5809,6 @@ $(document).ready(function() {
                       document.getElementById("txtdataJustify_3").value = scenarios[2].fields.justifyData;
                       document.getElementById("txtsupplyJustify_3").value = scenarios[2].fields.justifySupply;
 
-                      // Check if controls exist for the scenario
-                        var relevantControls = controls.filter(function(controlItem) {
-                            return controlItem.fields.scenarioID === scenarios[2].pk;
-                        });
-
-                        if (relevantControls.length > 0) {
-                            var tableBody = document.querySelector('#risk_summary_controls_table_3 tbody');
-
-                            // Clear existing rows
-                            while (tableBody.firstChild) {
-                            tableBody.removeChild(tableBody.firstChild);
-                            }
-                            // Populate the table with controls
-                            relevantControls.forEach(function(controlItem) {
-                                var row = tableBody.insertRow();
-                                var cell1 = row.insertCell(0);
-                                var cell2 = row.insertCell(1);
-
-                                cell1.textContent = controlItem.fields.control;
-
-                                var slider = document.createElement('input');
-                                slider.type = 'range';
-                                slider.min = '0';
-                                slider.max = '100';
-                                slider.value = controlItem.fields.score;  // Set the value from the controlItem
-                                cell2.appendChild(slider);
-                            });
-                            initializeControlScore_3();
-                        }
                       }
                   if (scenarios.length >= 4) {
                       document.getElementById("scenarioCount").value = "4";
@@ -5443,35 +5879,7 @@ $(document).ready(function() {
                       document.getElementById("txtdataJustify_4").value = scenarios[3].fields.justifyData;
                       document.getElementById("txtsupplyJustify_4").value = scenarios[3].fields.justifySupply;
 
-                      // Check if controls exist for the scenario
-                        var relevantControls = controls.filter(function(controlItem) {
-                            return controlItem.fields.scenarioID === scenarios[3].pk;
-                        });
 
-                        if (relevantControls.length > 0) {
-                            var tableBody = document.querySelector('#risk_summary_controls_table_4 tbody');
-
-                            // Clear existing rows
-                            while (tableBody.firstChild) {
-                            tableBody.removeChild(tableBody.firstChild);
-                            }
-                            // Populate the table with controls
-                            relevantControls.forEach(function(controlItem) {
-                                var row = tableBody.insertRow();
-                                var cell1 = row.insertCell(0);
-                                var cell2 = row.insertCell(1);
-
-                                cell1.textContent = controlItem.fields.control;
-
-                                var slider = document.createElement('input');
-                                slider.type = 'range';
-                                slider.min = '0';
-                                slider.max = '100';
-                                slider.value = controlItem.fields.score;  // Set the value from the controlItem
-                                cell2.appendChild(slider);
-                            });
-                            initializeControlScore_4();
-                        }
                       }
                   if (scenarios.length >= 5) {
                       document.getElementById("scenarioCount").value = "5";
@@ -5542,78 +5950,25 @@ $(document).ready(function() {
                       document.getElementById("txtdataJustify_5").value = scenarios[4].fields.justifyData;
                       document.getElementById("txtsupplyJustify_5").value = scenarios[4].fields.justifySupply;
 
-                      // Check if controls exist for the scenario
-                        var relevantControls = controls.filter(function(controlItem) {
-                            return controlItem.fields.scenarioID === scenarios[4].pk;
-                        });
 
-                        if (relevantControls.length > 0) {
-                            var tableBody = document.querySelector('#risk_summary_controls_table_5 tbody');
-
-                            // Clear existing rows
-                            while (tableBody.firstChild) {
-                            tableBody.removeChild(tableBody.firstChild);
-                            }
-                            // Populate the table with controls
-                            relevantControls.forEach(function(controlItem) {
-                                var row = tableBody.insertRow();
-                                var cell1 = row.insertCell(0);
-                                var cell2 = row.insertCell(1);
-
-                                cell1.textContent = controlItem.fields.control;
-
-                                var slider = document.createElement('input');
-                                slider.type = 'range';
-                                slider.min = '0';
-                                slider.max = '100';
-                                slider.value = controlItem.fields.score;  // Set the value from the controlItem
-                                cell2.appendChild(slider);
-                            });
-                            initializeControlScore_5();
-                        }
                       }
                 try {
                     document.getElementById("scenario1-tab").click();
                      if (scenarios && scenarios.length > 0 && scenarios[0]) {
                          document.getElementById("hdnScenarioID_1").value = scenarios[0].pk;
+
                          sessionStorage.setItem('scenario1id', scenarios[0].pk);
                          document.getElementById("txtScenarioDescription_1").value = scenarios[0].fields.ScenarioDescription;
                          document.getElementById("txtScenarioAnalysis_1").value = scenarios[0].fields.raw_consequences;
                          document.getElementById("selectThreat_1").value = scenarios[0].fields.threatSource;
                          document.getElementById("selectTactics_1").value = scenarios[0].fields.threatTactic;
                          document.getElementById("id_impact_1").value = scenarios[0].fields.impact;
-                         document.getElementById("selectOutage_1").value = scenarios[0].fields.outage;
+                         // document.getElementById("selectOutage_1").value = scenarios[0].fields.outage;
                          document.getElementById('exposed_system_1').checked = scenarios[0].fields.exposed_system;
                          document.getElementById('weak_credentials_1').checked = scenarios[0].fields.weak_credentials;
-                         document.getElementById("outage_1").value = scenarios[0].fields.outageLength;
-                         document.getElementById("lblriskScore_1").value = scenarios[0].fields.RiskScore;
-                         setSliderColor(document.getElementById("lblriskScore_1"));
-                         const event = new Event('input', {
-                            'bubbles': true,
-                            'cancelable': true
-                        });
-                        document.getElementById("lblriskScore_1").dispatchEvent(event);
+                         //document.getElementById("outage_1").value = scenarios[0].fields.outageLength;
 
-                         document.getElementById("lblriskRating_1").value = scenarios[0].fields.RiskStatus;
                          document.getElementById("lblriskSummary_1").value = scenarios[0].fields.riskSummary;
-
-                         document.getElementById("lblriskCost_1").value = parseFloat(scenarios[0].fields.event_cost_low).toLocaleString('en-US', {
-                            style: 'currency',
-                            currency: 'USD',
-                            maximumFractionDigits: 0
-                        });
-                         document.getElementById("lblriskCostHigh_1").value = parseFloat(scenarios[0].fields.event_cost_high).toLocaleString('en-US', {
-                            style: 'currency',
-                            currency: 'USD',
-                            maximumFractionDigits: 0
-                        });
-
-                         document.getElementById("lblriskCostMedian_1").value = parseFloat(scenarios[0].fields.event_cost_median).toLocaleString('en-US', {
-                            style: 'currency',
-                            currency: 'USD',
-                            maximumFractionDigits: 0
-                        });
-
 
                          document.getElementById("range_safety_1").value = scenarios[0].fields.SafetyScore;
                          initSlider('range_safety_1', 'safetyrange_1')
@@ -5647,47 +6002,79 @@ $(document).ready(function() {
                           document.getElementById("txtregulationJustify_1").value = scenarios[0].fields.justifyRegulation;
                           document.getElementById("txtdataJustify_1").value = scenarios[0].fields.justifyData;
                           document.getElementById("txtsupplyJustify_1").value = scenarios[0].fields.justifySupply;
+                          document.getElementById("txtDamage_1").value = scenarios[0].fields.scenario_damage;
+                          document.getElementById("txtexec_summary_1").value = scenarios[0].fields.executive_summary;
+                          document.getElementById("scenario_12month_costs_1").value = scenarios[0].fields.scenario_12month_costs;
+                          document.getElementById("lblriskRating_1").textContent = scenarios[0].fields.RiskStatus;
 
-                        // Check if controls exist for the scenario
-                        var relevantControls = controls.filter(function(controlItem) {
-                            return controlItem.fields.scenarioID === scenarios[0].pk;
-                        });
+                          document.getElementById("lblinherentRisk_1").textContent = scenarios[0].fields.residual_risk;
+                          document.getElementById("txtResidualRisk_1").value = scenarios[0].fields.residual_risk;
+                          var residualRisk = scenarios[0].fields.residual_risk; // Assuming this is an integer
+                            var riskText = ""; // Initialize the risk text variable
 
-                        if (relevantControls.length > 0) {
-                            var tableBody = document.querySelector('#risk_summary_controls_table_1 tbody');
-
-                            // Clear existing rows
-                            while (tableBody.firstChild) {
-                            tableBody.removeChild(tableBody.firstChild);
+                            // Determine the risk text based on the value of residual risk
+                            if (residualRisk >= 0 && residualRisk <= 2) {
+                                riskText = "Low";
+                            } else if (residualRisk === 3 || residualRisk === 4) {
+                                riskText = "Low/Medium";
+                            } else if (residualRisk === 5 || residualRisk === 6) {
+                                riskText = "Medium";
+                            } else if (residualRisk === 7) {
+                                riskText = "Medium/High";
+                            } else if (residualRisk === 8 || residualRisk === 9) {
+                                riskText = "High";
+                            } else if (residualRisk === 10) {
+                                riskText = "Very High";
                             }
-                            // Populate the table with controls
-                            relevantControls.forEach(function(controlItem) {
-                                var row = tableBody.insertRow();
-                                var cell1 = row.insertCell(0);
-                                var cell2 = row.insertCell(1);
 
-                                cell1.textContent = controlItem.fields.control;
+                            // Set the text content of lblinherentRisk_1 to the determined risk text
+                            document.getElementById("lblinherentRisk_1").textContent = riskText;
 
-                                var slider = document.createElement('input');
-                                slider.type = 'range';
-                                slider.min = '0';
-                                slider.max = '100';
-                                slider.value = controlItem.fields.score;  // Set the value from the controlItem
-                                cell2.appendChild(slider);
-                            });
-                            initializeControlScore_1();
-                        }
+                          var costArray = scenarios[0].fields.scenario_12month_costs.split('|').map(Number);
+                          createCostChart('monthly_cost_chart_1', costArray);
+
+                          // Assuming 'safeguards' is the variable holding the safeguards data received from the server
+                                var scenarioId = scenarios[0].pk; // The ID of the currently selected scenario
+                                var scenarioSafeguards = safeguards[scenarioId]; // The safeguards for the selected scenario
+
+                                // Find the table where you want to add the safeguards
+                                var safeguardsTableBody = document.getElementById('table_safeguards_1').getElementsByTagName('tbody')[0];
+
+                                // Clear existing rows in the table
+                                safeguardsTableBody.innerHTML = '';
+
+                                // Check if there are safeguards for the selected scenario
+                                if (scenarioSafeguards && scenarioSafeguards.length > 0) {
+                                    // Iterate over each safeguard and add it to the table as editable rows
+                                    scenarioSafeguards.forEach(function(safeguard) {
+                                        var newRow = `<tr>
+                                            <td><textarea class="form-control" maxlength="255">${safeguard.fields.safeguard_description}</textarea></td>
+                                            <td><textarea class="form-control" maxlength="100">${safeguard.fields.safeguard_type}</textarea></td>
+                                            <td><button type="button" class="btn btn-danger btn-sm deleteRowBtn">Delete</button></td>
+                                        </tr>`;
+                                        $(safeguardsTableBody).append(newRow);
+                                    });
+                                } else {
+
+                                }
+
+                                // Reattach the event handler for delete buttons in case it was cleared with innerHTML = ''
+                                $("#table_safeguards_1").on("click", ".deleteRowBtn", function() {
+                                    $(this).closest("tr").remove();
+                                });
+
+
                         disableAllControls();
 
                          //now load the action items table
                      } else {
-                        console.warn("");
+                        // console.warn("");
                      }
 
                     loadActions(raw_id)
 
                 } catch (error){
-                      console.error(error);
+                      console.log(error);
                 }
                  }
         });
@@ -5722,8 +6109,6 @@ function loadActions(rawID) {
         }
     });
 }
-
-
 
 function initFrequencySlider(sliderId, outputId) {
     var slider = document.getElementById(sliderId);
@@ -6074,15 +6459,12 @@ function save_scenario(buttonId) {
             'productionScore': $('#range_production_' + buttonId).val(),
             'environmentScore': $('#range_environment_' + buttonId).val(),
             'regulatoryScore': $('#range_regulatory_' + buttonId).val(),
-            'RiskStatus': $('#lblriskRating_' + buttonId).val(),
+            'RiskStatus': document.getElementById('lblriskRating_' + buttonId).textContent,
+
             'threatSource': $('#selectThreat_' + buttonId).val(),
             'threatTactic': $('#selectTactics_' + buttonId).val(),
             'impact': $('#id_impact_' + buttonId).val(),
             'riskSummary': $('#lblriskSummary_' + buttonId).val(),
-            'scenarioCost': $('#lblriskCostMedian_' + buttonId).val(),
-            'event_cost_low': $('#lblriskCost_' + buttonId).val(),
-            'event_cost_high': $('#lblriskCostHigh_' + buttonId).val(),
-            'event_cost_median': $('#lblriskCostMedian_' + buttonId).val(),
             'justifySafety': $('#txtsafetyJustify_' + buttonId).val(),
             'justifyLife': $('#txtlifeJustify_' + buttonId).val(),
             'justifyProduction': $('#txtproductionJustify_' + buttonId).val(),
@@ -6092,7 +6474,7 @@ function save_scenario(buttonId) {
             'justifyRegulation': $('#txtregulationJustify_' + buttonId).val(),
             'justifyData': $('#txtdataJustify_' + buttonId).val(),
             'justifySupply': $('#txtsupplyJustify_' + buttonId).val(),
-            'outage': $('#selectOutage_' + buttonId).val(),
+            'outage': $('#production_outage_' + buttonId).prop('checked'),
             'weak_credentials': $('#weak_credentials_' + buttonId).prop('checked'),
             'exposed_system': $('#exposed_system_' + buttonId).prop('checked'),
             'outageLength': $('#outage_' + buttonId).val(),
@@ -6115,20 +6497,24 @@ function save_scenario(buttonId) {
             'bia_supply_prodimpact': $('#productionImpact_' + buttonId).val(),
             'bia_supply_security': $('#supplyChainSecurityImpact_' + buttonId).val(),
             'raw_consequences': $('#txtScenarioAnalysis_' + buttonId).val(),
+            'scenario_damage': $('#txtDamage_' + buttonId).val(),
+            'scenario_12month_costs': $('#scenario_12month_costs_' + buttonId).val(),
+            'executive_summary': $('#txtexec_summary_' + buttonId).val(),
+            'safeguards': [],
+            'residual_risk': $('#lblinherentRisk_' + buttonId).textContent,
         };
-        // Extract controls and their scores from the table
-        var controlList = [];
-        $('#risk_summary_controls_table_' + buttonId + ' tbody tr').each(function() {
-            var control = $(this).find('td').eq(0).text();  // Get the Risk Summary Item
-            var score = $(this).find('input[type="range"]').val();  // Get the Control Effectiveness value from the slider
+        // Iterate over each row in the table_safeguards table
+        $('#table_safeguards_' +buttonId + ' tbody tr').each(function() {
+            var safeguard = $(this).find('textarea').eq(0).val(); // Assuming the first textarea is Safeguard
+            var safeguardType = $(this).find('textarea').eq(1).val(); // Assuming the second textarea is Safeguard Type
 
-            controlList.push({
-                'control': control,
-                'score': score
+            // Add this row's data to the scenarioData.safeguards array
+            scenarioData.safeguards.push({
+                'safeguard_description': safeguard,
+                'safeguard_type': safeguardType
             });
         });
-        scenarioData['controlList'] = JSON.stringify(controlList);;
-        // Make an AJAX POST request to your Django server
+
         $.ajax({
             type: 'POST',
             url: '/OTRisk/create_or_update_raw_scenario/',
@@ -6176,6 +6562,7 @@ function setSliderColor(slider) {
 }
 
 $(document).ready(function() {
+
     $('#rawtable').on('click', 'tbody tr.selectable-row', function() {
         // Remove 'highlighted' class from all other rows
         $('tr.selectable-row').removeClass('highlighted');
@@ -6183,9 +6570,9 @@ $(document).ready(function() {
         // Add 'highlighted' class to the clicked row
         $(this).addClass('highlighted');
     });
-
     // Trigger click on the first row of the table
     $('#rawtable tbody tr.selectable-row:first').click();
+
 });
 
 
@@ -6199,6 +6586,8 @@ $(document).ready(function() {
         });
         document.getElementById('addNewBtn').disabled = false;
         document.getElementById('editBtn').disabled = false;
+        document.getElementById('toggleTableBtn').disabled = false;
+
     }
 
     function enableAllControls() {
@@ -6236,12 +6625,152 @@ function analyze_Scenario(scenario) {
                 // Handle scenarios where 'consequence' is empty or not in response
                 analyzeTextarea.value = 'No analysis available.';
             }
+
+            // var attackTreeJson = JSON.stringify(response.incident_flow_diagram);
+            // document.getElementById('hdnattacktree').value = attackTreeJson;
+            // drawAttackTree(response.incident_flow_diagram);
+
+            // document.getElementById("attacktreerow").style.visibility = "visible";
             spinner.style.display = 'none'; // Hide spinner
         },
         error: function(xhr, status, error) {
             console.error("Error in analyzing scenario: ", status, error);
             spinner.style.display = 'none'; // Hide spinner
         }
+    });
+}
+
+function drawAttackTree(data) {
+
+    var container = document.getElementById('attack_tree');
+    var containerWidth = container.clientWidth;
+    var svgWidth = containerWidth; // Use full container width
+    var margin = { top: 10, right: 60, bottom: 10, left: 140 }; // Adjusted margins
+    var width = svgWidth - margin.left - margin.right;
+    var svgHeight = 200; // Match the container height
+
+    // Create an off-screen SVG element for D3 to use
+    var svgElement = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svgElement.setAttribute("width", svgWidth);
+    svgElement.setAttribute("height", svgHeight);
+    svgElement.setAttribute("viewBox", "0 0 " + svgWidth + " " + svgHeight);
+
+    // Render the diagram to the off-screen SVG using D3
+     var svg = d3.select(svgElement)
+        .append("g")
+        .attr("transform", "translate(140,10)"); // Adjusted margins
+
+    // Define the arrow marker
+    svg.append("svg:defs").selectAll("marker")
+        .data(["end"])
+        .enter().append("svg:marker")
+        .attr("id", String)
+        .attr("viewBox", "0 -5 10 10")
+        .attr("refX", 25)
+        .attr("markerWidth", 6)
+        .attr("markerHeight", 6)
+        .attr("orient", "auto")
+        .append("svg:path")
+        .attr("d", "M0,-5L10,0L0,5");
+
+     var i = 0;
+    var svgHeight = svgHeight * 2; // Increase the height of the SVG
+    svgElement.setAttribute("height", svgHeight);
+    var treemap = d3.tree()
+        .size([svgHeight, svgWidth - margin.left - margin.right])
+        .nodeSize([50, 100]); // Adjust node size to control spacing
+
+    var root = d3.hierarchy(data, function(d) { return d.children; });
+    root.x0 = svgHeight / 2;
+    root.y0 = 0;
+
+    // Color-blind-friendly color scale
+    var colorScale = d3.scaleOrdinal(["#88CCEE", "#DDCC77", "#CC6677", "#882255", "#44AA99", "#117733", "#999933", "#AA4499"]);
+
+    update(root);
+
+    function update(source) {
+        var treeData = treemap(root);
+
+        var nodes = treeData.descendants(),
+            links = treeData.descendants().slice(1);
+
+        nodes.forEach(function(d) {
+            d.x = d.x + svgHeight / 4; // Adjust this value as needed
+        });
+
+        var node = svg.selectAll('g.node')
+            .data(nodes, function(d) { return d.id || (d.id = ++i); });
+
+        var nodeEnter = node.enter().append('g')
+            .attr('class', 'node')
+            .attr("transform", function(d) { return "translate(" + d.y + "," + d.x + ")"; });
+
+        nodeEnter.append('circle')
+            .attr('r', 5) // Smaller radius
+            .style("stroke", "black")
+            .style("stroke-width", 1.5)
+            .style("fill", function(d) { return colorScale(d.depth); });
+
+        nodeEnter.append('text')
+            .style("fill", "darkgray")
+            .style("font-size", "14px") // Increased font size
+            .style("font-weight", "bold")
+            .attr("transform", "rotate(-10)")
+            .attr("dy", ".35em")
+            .attr("x", function(d) { return d.children ? -13 - this.getComputedTextLength() : 13; })
+            .attr("text-anchor", function(d) { return d.children ? "end" : "start"; })
+            .text(function(d) { return d.data.name; });
+
+        var link = svg.selectAll('path.link')
+            .data(links, function(d) { return d.id; });
+
+        link.enter().insert('path', "g")
+            .attr("class", "link")
+            .style("stroke", function(d) { return colorScale(d.depth); })
+            .style("stroke-width", 2)
+            .style("fill", "none")
+            .attr("marker-end", "url(#end)") // Add the arrow marker
+            .attr('d', function(d) {
+                return "M" + d.y + "," + d.x
+                    + "C" + (d.y + d.parent.y) / 2 + "," + d.x
+                    + " " + (d.y + d.parent.y) / 2 + "," + d.parent.x
+                    + " " + d.parent.y + "," + d.parent.x;
+            });
+    }
+
+     // Ensure the SVG is fully rendered before converting
+    setTimeout(function() {
+        convertSVGtoPNG(svgElement).then(pngUrl => {
+            // Display the PNG in the attack_tree container
+            container.innerHTML = '<img src="' + pngUrl + '" style="width: 100%; height: auto;">';
+        }).catch(error => {
+            console.error("Error converting SVG to PNG:", error);
+        });
+    }, 0); // Timeout set to 0 to allow the rendering cycle to complet
+}
+
+function convertSVGtoPNG(svgElement) {
+    return new Promise((resolve, reject) => {
+        var svgData = new XMLSerializer().serializeToString(svgElement);
+        var canvas = document.createElement('canvas');
+        var ctx = canvas.getContext('2d');
+        var img = new Image();
+
+        canvas.width = svgElement.getAttribute("width");
+        canvas.height = svgElement.getAttribute("height");
+
+        img.onload = function() {
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            var pngUrl = canvas.toDataURL("image/png");
+            resolve(pngUrl);
+        };
+
+        img.onerror = function() {
+            reject(new Error("Error loading SVG data into image"));
+        };
+
+        img.src = 'data:image/svg+xml; charset=utf8, ' + encodeURIComponent(svgData);
     });
 }
 

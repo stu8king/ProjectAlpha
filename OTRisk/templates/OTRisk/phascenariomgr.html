@@ -36,6 +36,41 @@
 {% bootstrap_javascript %}
 
 <script>
+
+     function getSeverityLabel(value) {
+        switch (parseInt(value)) {
+          case 1:
+            case 2:
+            return "Low";
+          case 3:
+            case 4:
+            return "Low/Medium";
+          case 5:
+            case 6:
+            return "Medium";
+          case 7:
+            case 8:
+            return "Medium/High";
+          case 9:
+            case 10:
+            return "High";
+          default:
+            return "";
+        }
+      }
+    function initSlider(sliderId, outputId) {
+        var slider = document.getElementById(sliderId);
+        var output = document.getElementById(outputId);
+
+        // Display the default slider value
+        output.innerHTML = getSeverityLabel(slider.value);
+
+        // Update the current slider value (each time you drag the slider handle)
+        slider.oninput = function() {
+          output.innerHTML = getSeverityLabel(this.value);
+
+        };
+      }
 // Initialize sliders when the page loads
 window.onload = function() {
 initSlider("range_safety", "safetyrange");
@@ -553,102 +588,130 @@ $(function () {
                 </button>
                 <script>
                 function drawAttackTree(data) {
+    var container = document.getElementById('attack_tree');
+    var containerWidth = container.clientWidth;
+    var svgWidth = containerWidth * 0.8;
+    var margin = { top: 20, right: 120, bottom: 20, left: 280 };
+    var width = svgWidth - margin.left - margin.right;
+    var height = 800; // Increased height for better resolution
 
-                    var container = document.getElementById('attack_tree');
-                    var containerWidth = container.clientWidth;
-                    var svgWidth = containerWidth * 0.8; // SVG width is 80% of the container width
-                    var margin = { top: 20, right: 120, bottom: 20, left: 280 };
-                    var width = svgWidth - margin.left - margin.right; // Adjusted tree width
-                    var height = 600; // Adjust as needed
+    d3.select(container).selectAll("svg").remove();
 
-                    d3.select(container).selectAll("svg").remove();
+    var svg = d3.select(container).append("svg")
+        .attr("width", "100%")
+        .attr("viewBox", "0 0 " + svgWidth + " " + height)
+        .attr("height", height)
+        .style("display", "block")
+        .style("margin", "auto")
+        .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-                    var svg = d3.select(container).append("svg")
-                        .attr("width", "100%") // Make SVG responsive
-                        .attr("viewBox", "0 0 " + svgWidth + " " + height)
-                        .attr("height", height)
-                        .style("display", "block")
-                        .style("margin", "auto") // Center the SVG in the container
-                        .append("g")
-                        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+    // Define the arrow marker
+    svg.append("svg:defs").selectAll("marker")
+        .data(["end"])
+        .enter().append("svg:marker")
+        .attr("id", String)
+        .attr("viewBox", "0 -5 10 10")
+        .attr("refX", 25)
+        .attr("markerWidth", 6)
+        .attr("markerHeight", 6)
+        .attr("orient", "auto")
+        .append("svg:path")
+        .attr("d", "M0,-5L10,0L0,5");
 
-                    var i = 0,
-                        duration = 750,
-                        root;
+    var i = 0,
+        duration = 750,
+        root;
 
-                    var treemap = d3.tree()
-                            .size([height, width - margin.left - margin.right])
-                            .separation(function(a, b) {
-                        return (a.parent == b.parent ? 1 : 2);
-                    });
+    var treemap = d3.tree()
+        .size([height, width - margin.left - margin.right])
+        .separation(function(a, b) { return (a.parent == b.parent ? 1 : 2); });
 
-                    root = d3.hierarchy(data, function(d) { return d.children; });
-                    root.x0 = height / 2;
-                    root.y0 = 0;
+    root = d3.hierarchy(data, function(d) { return d.children; });
+    root.x0 = height / 2;
+    root.y0 = 0;
 
-                    update(root);
+    // Color-blind-friendly color scale
+    var colorScale = d3.scaleOrdinal(["#88CCEE", "#DDCC77", "#CC6677", "#882255", "#44AA99", "#117733", "#999933", "#AA4499"]);
 
-                    function update(source) {
+    update(root);
 
-                        var treeData = treemap(root);
+    function update(source) {
+        var treeData = treemap(root);
 
-                        var nodes = treeData.descendants(),
-                            links = treeData.descendants().slice(1);
+        var nodes = treeData.descendants(),
+            links = treeData.descendants().slice(1);
 
-                        nodes.forEach(function(d) { d.y = d.depth * 180 });
+        nodes.forEach(function(d) { d.y = d.depth * 180 });
 
-                        var node = svg.selectAll('g.node')
-                            .data(nodes, function(d) { return d.id || (d.id = ++i); });
+        var node = svg.selectAll('g.node')
+            .data(nodes, function(d) { return d.id || (d.id = ++i); });
 
-                        var nodeEnter = node.enter().append('g')
-                            .attr('class', 'node')
-                            .attr("transform", function(d) {
-                                return "translate(" + d.y + "," + d.x + ")";
-                            });
+        var nodeEnter = node.enter().append('g')
+            .attr('class', 'node')
+            .attr("transform", function(d) { return "translate(" + d.y + "," + d.x + ")"; });
 
-                        nodeEnter.append('circle')
-                            .attr('r', 10)
-                            .style("fill", "#1f77b4"); // Changed fill color
+        nodeEnter.append('circle')
+            .attr('r', 10)
+            .style("stroke", "black")
+            .style("stroke-width", 1.5)
+            .style("fill", function(d) { return colorScale(d.depth); });
 
-                        nodeEnter.append('text')
-                            .style("fill", "darkgray") // Changed text color
-                            .style("font-size", "14px") // Increased font size
-                            .style("font-weight", "bold") // Bold text
-                            .attr("transform", "rotate(-10)")
-                            .attr("dy", ".35em")
-                            .attr("x", function(d) {
-                                return d.children ? -13 - this.getComputedTextLength() : 13;
-                            })
-                            .attr("text-anchor", function(d) {
-                                return d.children ? "end" : "start";
-                            })
-                            .text(function(d) { return d.data.name; });
+        nodeEnter.append('text')
+            .style("fill", "darkgray")
+            .style("font-size", "14px")
+            .style("font-weight", "bold")
+            .attr("transform", "rotate(-10)")
+            .attr("dy", ".35em")
+            .attr("x", function(d) { return d.children ? -13 - this.getComputedTextLength() : 13; })
+            .attr("text-anchor", function(d) { return d.children ? "end" : "start"; })
+            .text(function(d) { return d.data.name; });
 
-                        var link = svg.selectAll('path.link')
-                            .data(links, function(d) { return d.id; });
+        var link = svg.selectAll('path.link')
+            .data(links, function(d) { return d.id; });
 
-                        link.enter().insert('path', "g")
-                            .attr("class", "link")
-                            .style("stroke", "#aaa") // Changed stroke color
-                            .style("stroke-width", 1.5) // Increased stroke width
-                            .attr("stroke-opacity", 0.6) // Adjusted opacity
-                            .attr('d', function(d) {
-                                return "M" + d.y + "," + d.x
-                                    + "C" + (d.y + d.parent.y) / 2 + "," + d.x
-                                    + " " + (d.y + d.parent.y) / 2 + "," + d.parent.x
-                                    + " " + d.parent.y + "," + d.parent.x;
-                            });
-                    }
-                    var attackTreeDiv = document.getElementById('attack_tree');
-                    attackTreeDiv.style.display = 'block'; // Changed to display the tree
-                    sessionStorage.setItem('attackTreeDrawn', 'true');
-                    var attackTreeDiv = document.getElementById('attack_tree')
-                    attackTreeDiv.style.display = 'none';
+        link.enter().insert('path', "g")
+            .attr("class", "link")
+            .style("stroke", function(d) { return colorScale(d.depth); })
+            .style("stroke-width", 2)
+            .style("fill", "none")
+            .attr("marker-end", "url(#end)") // Add the arrow marker
+            .attr('d', function(d) {
+                return "M" + d.y + "," + d.x
+                    + "C" + (d.y + d.parent.y) / 2 + "," + d.x
+                    + " " + (d.y + d.parent.y) / 2 + "," + d.parent.x
+                    + " " + d.parent.y + "," + d.parent.x;
+            });
+    }
 
-                    document.getElementById('viewAttackTreeBtn').style.display = 'block';
-                   // document.getElementById('exportAttackTreeBtn').style.display = 'block';
-                    //document.getElementById('closeAttackTreeBtn').style.display = 'block';
-                }
+    // Add border and shadow to the container
+    var attackTreeDiv = document.getElementById('attack_tree');
+    attackTreeDiv.style.display = 'block';
+    attackTreeDiv.style.border = '1px solid #ccc';
+    attackTreeDiv.style.boxShadow = '0px 0px 10px rgba(0, 0, 0, 0.5)';
+    sessionStorage.setItem('attackTreeDrawn', 'true');
+
+    sessionStorage.setItem('attackTreeDrawn', 'true');
+    var attackTreeDiv = document.getElementById('attack_tree')
+    attackTreeDiv.style.display = 'none';
+
+    document.getElementById('viewAttackTreeBtn').style.display = 'block';
+    // Add export button functionality (if feasible)
+    var exportButton = document.getElementById('exportButton');
+    if (exportButton) {
+        exportButton.addEventListener('click', function() {
+            var svgData = new XMLSerializer().serializeToString(document.querySelector('svg'));
+            var svgBlob = new Blob([svgData], {type:"image/svg+xml;charset=utf-8"});
+            var svgUrl = URL.createObjectURL(svgBlob);
+            var downloadLink = document.createElement("a");
+            downloadLink.href = svgUrl;
+            downloadLink.download = "attack_tree.svg";
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
+        });
+    }
+}
 
 
                 document.getElementById('analyzeScenarioBtn').addEventListener('click', function() {
@@ -994,7 +1057,7 @@ $(function () {
                 </div>
             </div>
         </div>
-            <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+       <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
         <div class="card-body">
             <div id="scenarioStatus">
                 <label for="scenarioStatusSelect" class="form-label">Scenario Status</label>
@@ -1007,6 +1070,44 @@ $(function () {
             </div>
         </div>
     </div>
+        <div class="card mb-3 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title" >Physical Safeguards</h5>
+                        <div id="tablePhysicalControls" class="mb-2">
+                            <button id="addRowBtn" class="btn btn-primary btn-sm" type="button">Add Row</button>
+                        </div>
+                        <table class="table table-bordered small-font" id="table_safeguards">
+                            <thead>
+                                <tr>
+                                    <th>Safeguard</th>
+                                    <th>Safeguard Type</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Rows will be added here dynamically -->
+                            </tbody>
+                        </table>
+                        <script>
+                            $(document).ready(function() {
+                                $("#addRowBtn").click(function() {
+                                    var newRow = `<tr>
+                                        <td><textarea class="form-control" maxlength="100"></textarea></td>
+                                        <td><textarea class="form-control" maxlength="100"></textarea></td>
+                                        <td><button type="button" class="btn btn-danger btn-sm deleteRowBtn">Delete</button></td>
+                                    </tr>`;
+                                    $("#table_safeguards tbody").append(newRow);
+                                });
+
+                                // Event delegation to handle dynamically added elements
+                                $("#table_safeguards").on("click", ".deleteRowBtn", function() {
+                                    $(this).closest("tr").remove();
+                                });
+                            });
+                            </script>
+
+                    </div>
+                </div>
 
     </div>
             </div>
@@ -1628,41 +1729,9 @@ makeDraggable(document.getElementById("floatingContainer"));
 
 <script>
 
-      function initSlider(sliderId, outputId) {
-        var slider = document.getElementById(sliderId);
-        var output = document.getElementById(outputId);
 
-        // Display the default slider value
-        output.innerHTML = getSeverityLabel(slider.value);
 
-        // Update the current slider value (each time you drag the slider handle)
-        slider.oninput = function() {
-          output.innerHTML = getSeverityLabel(this.value);
 
-        };
-      }
-
-      function getSeverityLabel(value) {
-        switch (parseInt(value)) {
-          case 1:
-            case 2:
-            return "Low";
-          case 3:
-            case 4:
-            return "Low/Medium";
-          case 5:
-            case 6:
-            return "Medium";
-          case 7:
-            case 8:
-            return "Medium/High";
-          case 9:
-            case 10:
-            return "High";
-          default:
-            return "";
-        }
-      }
 
 
         // Function to save or update CyberPHA data
@@ -1933,13 +2002,35 @@ makeDraggable(document.getElementById("floatingContainer"));
                     }
                   formData.append('snapshot', snapshot);
                   for (let i = 0; i < rows.length; i++) {
-                    const row = rows[i];
-                    const isChecked = row.cells[1].getElementsByTagName('input')[0].checked;
-                    if (isChecked) {
-                        const consequenceText = row.cells[0].innerText;
-                        formData.append('validated_consequences', consequenceText);
+                      const row = rows[i];
+                      const isChecked = row.cells[1].getElementsByTagName('input')[0].checked;
+                      if (isChecked) {
+                          const consequenceText = row.cells[0].innerText;
+                          formData.append('validated_consequences', consequenceText);
+                      }
+                  }
+                  // Check for safeguards in the table and add them to formData
+                    const safeguardsTable = document.getElementById('table_safeguards');
+                    const safeguard_rows = safeguardsTable.getElementsByTagName('tbody')[0].rows;
+                    let safeguardsAdded = false;
+
+                    for (let i = 0; i < safeguard_rows.length; i++) {
+                        const safeguardDescription = safeguard_rows[i].cells[0].getElementsByTagName('textarea')[0].value.trim();
+                        const safeguardType = safeguard_rows[i].cells[1].getElementsByTagName('textarea')[0].value.trim();
+
+                        // Ignore empty rows
+                        if (safeguardDescription || safeguardType) {
+                            formData.append(`safeguards[${i}][description]`, safeguardDescription);
+                            formData.append(`safeguards[${i}][type]`, safeguardType);
+                            safeguardsAdded = true;
+                        }
                     }
-                }
+
+                    // If no safeguards were added (table was empty or all rows were empty), add a dummy row
+                    if (!safeguardsAdded) {
+                        formData.append('safeguards[0][description]', 'No physical safeguards defined');
+                        formData.append('safeguards[0][type]', 'N/A');
+                    }
                   // Call the saveOrUpdateCyberPHA function
                   saveOrUpdateCyberPHA(formData);
 
@@ -3840,11 +3931,7 @@ function resetformcontrols() {
       sessionStorage.setItem('ls', '0');
       sessionStorage.setItem('sid', 0);
 
-      try {
-        clearVulnerabilityTable();
-      } catch (error) {
-        console.error('Error clearing vulnerability table:', error);
-      }
+
     }
   });
 }
@@ -3925,11 +4012,7 @@ function clearScenario(){
       sessionStorage.setItem('ls', '0');
       sessionStorage.setItem('sid', 0);
 
-      try {
-        clearVulnerabilityTable();
-      } catch (error) {
-        console.error('Error clearing vulnerability table:', error);
-      }
+
 }
 
  function fillScenario(scenarioId) {
@@ -4096,6 +4179,29 @@ function clearScenario(){
             tableBody.append(row);
         });
 
+        // Clear existing rows in the safeguards table
+    $('#table_safeguards tbody').empty();
+
+    // Check if there are safeguards in the response
+    if (data.safeguards && data.safeguards.length > 0) {
+        // Iterate over each safeguard and append it to the table
+        data.safeguards.forEach(function(safeguard) {
+            var newRow = `<tr>
+                <td><textarea class="form-control" maxlength="100">${safeguard.safeguard_description}</textarea></td>
+                <td><textarea class="form-control" maxlength="100">${safeguard.safeguard_type}</textarea></td>
+                <td><button type="button" class="btn btn-danger btn-sm deleteRowBtn">Delete</button></td>
+            </tr>`;
+            $('#table_safeguards tbody').append(newRow);
+        });
+    } else {
+        // If no safeguards, add a dummy row indicating this
+        var newRow = `<tr>
+            <td><textarea class="form-control" maxlength="100">No physical safeguards defined</textarea></td>
+            <td><textarea class="form-control" maxlength="100">No physical safeguards defined</textarea></td>
+            <td><button type="button" class="btn btn-danger btn-sm deleteRowBtn">Delete</button></td>
+        </tr>`;
+        $('#table_safeguards tbody').append(newRow);
+    }
         // Define the text values based on the percentage range
                     var textValue = "";
                     if (data.control_effectiveness < 25) {

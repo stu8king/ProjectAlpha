@@ -20,7 +20,8 @@ from OTRisk.models.RiskScenario import RiskScenario, tblScenarioRecommendations
 from OTRisk.models.Model_Scenario import tblConsequence
 from OTRisk.models.questionnairemodel import Questionnaire, FacilityType
 from OTRisk.models.ThreatAssessment import ThreatAssessment
-from OTRisk.models.raw import RAWorksheet, RAWorksheetScenario, RAActions, MitreICSMitigations, RawControlList
+from OTRisk.models.raw import RAWorksheet, RAWorksheetScenario, RAActions, MitreICSMitigations, RawControlList, \
+    QRAW_Safeguard
 from django.db.models import F, Count, Avg, Case, When, Value, CharField, Sum
 from django.db.models.functions import Ceil
 
@@ -35,7 +36,7 @@ from OTRisk.models.Model_CyberPHA import tblCyberPHAHeader, tblRiskCategories, \
     tblThreatIntelligence, tblMitigationMeasures, tblScenarios, tblSafeguards, tblThreatSources, tblThreatActions, \
     tblNodes, tblUnits, tblZones, tblCyberPHAScenario, tblIndustry, auditlog, tblStandards, MitreControlAssessment, \
     CyberPHAScenario_snapshot, Audit, PHAControlList, SECURITY_LEVELS, OrganizationDefaults, scenario_compliance, \
-    ScenarioConsequences, APIKey, ScenarioBuilder
+    ScenarioConsequences, APIKey, ScenarioBuilder, PHA_Safeguard
 from django.shortcuts import render, redirect
 from .dashboard_views import get_user_organization_id
 from django.contrib.auth.decorators import login_required
@@ -48,7 +49,7 @@ from xml.etree import ElementTree as ET
 from .raw_views import qraw, openai_assess_risk, GetTechniquesView, raw_action, check_vulnerabilities, rawreport, \
     raw_from_walkdown, save_ra_action, get_rawactions, ra_actions_view, UpdateRAAction, reports, reports_pha, \
     create_or_update_raw_scenario, analyze_raw_scenario, analyze_sim_scenario, generate_sim_attack_tree, \
-    analyze_sim_consequences
+    analyze_sim_consequences, update_workflow
 from .dashboard_views import dashboardhome
 from .pha_views import iotaphamanager, facility_risk_profile, get_headerrecord, scenario_analysis, phascenarioreport, \
     getSingleScenario, pha_report, scenario_vulnerability, add_vulnerability, get_asset_types, calculate_effectiveness, \
@@ -1360,6 +1361,32 @@ def save_or_update_cyberpha(request):
             scenario_id_value = cyberpha_entry.ID
 
             scenarioID = cyberpha_entry.pk
+            scenario_instance = get_object_or_404(tblCyberPHAScenario, pk=scenario_id)
+
+            # Delete existing safeguards for this scenario
+            PHA_Safeguard.objects.filter(scenario=scenario_instance).delete()
+
+            # Process and save new safeguards
+            safeguard_index = 0
+            while True:
+                safeguard_description_key = f'safeguards[{safeguard_index}][description]'
+                safeguard_type_key = f'safeguards[{safeguard_index}][type]'
+
+                # Check if these keys exist in the POST data
+                if safeguard_description_key in request.POST and safeguard_type_key in request.POST:
+                    safeguard_description = request.POST.get(safeguard_description_key)
+                    safeguard_type = request.POST.get(safeguard_type_key)
+
+                    # Create new PHA_Safeguard record
+                    PHA_Safeguard.objects.create(
+                        scenario=scenario_instance,
+                        safeguard_description=safeguard_description,
+                        safeguard_type=safeguard_type
+                    )
+                    safeguard_index += 1
+                else:
+                    # Break the loop if no more safeguards are found
+                    break
 
             request.session['cyberPHAID'] = cyberphaid  # Set the session variable
 
@@ -1697,14 +1724,18 @@ def get_scenarios(request):
     scenarios = RAWorksheetScenario.objects.filter(RAWorksheetID=raw_id)
     scenarios_json = serialize('json', scenarios)
 
-    # Fetch controls associated with the scenarios
-    controls = RawControlList.objects.filter(scenarioID__in=scenarios)
-    controls_json = serialize('json', controls)
+    # Fetch and serialize safeguards for each scenario
+    safeguards_data = {}
+    for scenario in scenarios:
+        safeguards = QRAW_Safeguard.objects.filter(scenario=scenario)
+        # Serialize each set of safeguards and add to the safeguards_data dictionary
+        # Use scenario.ID to correctly reference the primary key
+        safeguards_data[scenario.ID] = json.loads(serialize('json', safeguards))
 
     # Return both serialized lists in the response
     response_data = {
         'scenarios': json.loads(scenarios_json),
-        'controls': json.loads(controls_json)
+        'safeguards': safeguards_data
     }
 
     return JsonResponse(response_data, safe=False)
@@ -2639,8 +2670,10 @@ def scenario_sim(request):  # Changed the function name
     industries = tblIndustry.objects.all().order_by('Industry')
     facilities = FacilityType.objects.all().order_by('FacilityType')
     threatsources = tblThreatSources.objects.all().order_by('ThreatSource')
+    attack_vectors = tblThreatActions.objects.all().order_by('ThreatAction')
     return render(request, 'OTRisk/scenario_sim.html',
-                  {'scenario_form': scenario_form, 'industries': industries, 'facilities': facilities})
+                  {'scenario_form': scenario_form, 'industries': industries, 'facilities': facilities,
+                   'threats': threatsources, 'attack_vectors': attack_vectors})
 
 
 def get_api_key(service_name):
@@ -2686,7 +2719,7 @@ def generate_scenario_description(request):
         preventive_measures = request.POST.get('preventiveMeasures', '').strip()
 
         prompt = (
-            "You are an Data scientist specialising in OT cybersecurity writing scenarios for a cybersecurity insurance underwriter. Using only the following inputs, you are to construct and generate a brief, concise, and realistic scenario. Consider that an attack tree will be created from the scenario. You output MUST be less than 150 words with no additional narrative or commentary.  \n\n"
+            "You are an Data scientist specialising in OT cybersecurity writing scenarios for a cybersecurity insurance underwriter. Using only the following inputs, you are to construct and generate in natural language a brief, concise, and realistic scenario. Consider that an attack tree will be created from the scenario. You output MUST be less than 150 words with no additional narrative or commentary.  \n\n"
             f"- Attacker: {attacker}\n"
             f"- Attack Vector: {attack_vector}\n"
             f"- Target Component: {target_component}\n"
@@ -2748,6 +2781,7 @@ def save_scenario_builder(request):
                 'attackTree': data.get('attackTree'),
                 'consequences': data.get('consequences'),
                 'tableData': tableData,  # Updated line
+                'cost_projection': data.get('cost_projection'),
                 'costs': {
                     'bestCase': data.get('bestCaseCost'),
                     'mostLikelyCase': data.get('mostLikelyCaseCost'),
@@ -2769,3 +2803,23 @@ def get_saved_scenario_builders(request):
 
         return JsonResponse(list(scenarios), safe=False)
     return JsonResponse({'error': 'Invalid request'}, status=400)
+
+
+@login_required
+def list_scenario_builders(request):
+    if request.method == 'GET':
+        user_scenarios = ScenarioBuilder.objects.filter(user=request.user, is_deleted=False).values('id',
+                                                                                                    'scenario_name')
+        return JsonResponse({'scenarios': list(user_scenarios)})
+    else:
+        return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+
+@login_required
+def get_scenario_builder_details(request, scenario_id):
+    try:
+        scenario = ScenarioBuilder.objects.get(id=scenario_id, user=request.user, is_deleted=False)
+
+        return JsonResponse({'scenario_data': scenario.scenario_data})
+    except ScenarioBuilder.DoesNotExist:
+        return JsonResponse({'error': 'Scenario not found'}, status=404)

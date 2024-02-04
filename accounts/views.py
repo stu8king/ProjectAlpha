@@ -96,11 +96,6 @@ def two_factor_setup(request):
     return render(request, 'accounts/two_factor_setup.html', {'form': form})
 
 
-# views.py
-
-from twilio.rest import Client
-
-
 def two_factor_verify(request):
     if request.method == 'POST':
         form = TwoFactorVerifyForm(request.POST)
@@ -125,6 +120,10 @@ def two_factor_verify(request):
                 if verification_check.status == "approved":
                     # Token is valid
                     messages.success(request, "2FA verification successful!")
+                    user_profile = request.user.userprofile
+                    if not user_profile.two_factor_confirmed:
+                        user_profile.two_factor_confirmed = 1
+                        user_profile.save()
                     return redirect('OTRisk:dashboardhome')
                 else:
                     # Token is invalid
@@ -178,6 +177,7 @@ def two_factor_verify_bak(request):
     return render(request, 'accounts/two_factor_verify.html', {'form': form})
 
 
+@csrf_exempt
 def password_reset_request(request):
     if request.method == "POST":
         form = PasswordResetRequestForm(request.POST)
@@ -211,6 +211,7 @@ def password_reset_request(request):
     return render(request, 'accounts/password_reset_request.html', {'form': form})
 
 
+@csrf_exempt
 def password_reset(request, uid):
     if request.method == "POST":
         form = PasswordResetForm(request.POST)
@@ -342,7 +343,7 @@ def register(request):
         form = CustomUserCreationForm()
     return render(request, 'accounts/register.html', {'form': form})
 
-
+@csrf_exempt
 def setup_2fa(request):
     if not request.user.is_authenticated:
         return redirect('accounts:login')

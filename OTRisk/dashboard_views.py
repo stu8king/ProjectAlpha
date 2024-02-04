@@ -8,7 +8,7 @@ from OTRisk.models.raw import RAWorksheet, RAWorksheetScenario, RAActions
 from django.contrib.auth.decorators import login_required
 from OTRisk.models.Model_CyberPHA import tblCyberPHAHeader, tblCyberPHAScenario, OrganizationDefaults, auditlog, \
     CyberPHAModerators, CyberPHA_Group
-from django.db.models import Count, Sum
+from django.db.models import Count, Sum, Q
 from django.db.models import Avg
 from accounts.models import Organization, UserProfile
 
@@ -309,6 +309,16 @@ def dashboardhome(request):
             'group_name': group.name,
             'cyberphas': [{'facility_name': cyberpha.FacilityName} for cyberpha in cyberphas]
         })
+    worksheets_to_approve = RAWorksheet.objects.filter(
+        Q(approver=request.user),
+        Q(approval_status='Pending') | Q(approval_status='Rejected')
+    )
+
+    # Check if there are any worksheets to approve
+    if worksheets_to_approve.count != 0:
+        worksheets_to_approve_list = list(worksheets_to_approve.values('ID', 'RATitle', 'RADate', 'StatusFlag'))
+    else:
+        worksheets_to_approve_list = "No approvals for action"
 
     context = {
         'records_by_business_unit_type': list(records_by_business_unit_type),
@@ -338,7 +348,8 @@ def dashboardhome(request):
         'phas': phas,
         'last_100_logs': last_100_logs,
         'moderation_tasks': moderation_details,
-        'groups_with_cyberphas':groups_with_cyberphas
+        'groups_with_cyberphas':groups_with_cyberphas,
+        'worksheets_to_approve': worksheets_to_approve_list
     }
 
     return render(request, 'dashboard.html', context)

@@ -487,6 +487,33 @@
 
     </div>
     <div class="col-md-5 ">
+        <div class="form-group">
+            <!-- Worksheets Approval Section -->
+            <div class="card shadow flex-fill">
+                <div class="card-body">
+                <div class="worksheets-approval-section">
+                    <h4 style="color: white">Worksheets for Moderation</h4>
+                    {% if worksheets_to_approve == "No moderations waiting" %}
+                        <p>No approvals for action.</p>
+                    {% else %}
+                        <ul>
+                            {% for worksheet in worksheets_to_approve %}
+                                <li style="color: white">
+                                    <strong>Title:</strong> {{ worksheet.RATitle }}<br>
+                                    <strong>Date:</strong> {{ worksheet.RADate }}<br>
+                                    <strong>Status:</strong> {{ worksheet.StatusFlag }}<br>
+                                    <!-- Add link to view or approve the worksheet -->
+
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+                </div>
+            </div>
+
+        </div>
+
         <div class="form-group form-sim" >
             <div class="card shadow flex-fill">
                 <div class="card-body">

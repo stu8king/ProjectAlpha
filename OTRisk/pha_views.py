@@ -9,7 +9,7 @@ from django.views.decorators.http import require_POST
 from OTRisk.models.Model_CyberPHA import tblIndustry, tblCyberPHAHeader, tblZones, tblStandards, \
     tblCyberPHAScenario, vulnerability_analysis, tblAssetType, tblMitigationMeasures, MitreControlAssessment, \
     cyberpha_safety, SECURITY_LEVELS, ScenarioConsequences, user_scenario_audit, auditlog, CyberPHAModerators, \
-    WorkflowStatus, APIKey, CyberPHA_Group, ScenarioBuilder
+    WorkflowStatus, APIKey, CyberPHA_Group, ScenarioBuilder, PHA_Safeguard
 from OTRisk.models.raw import SecurityControls
 from OTRisk.models.raw import MitreICSMitigations, RAActions
 from OTRisk.models.questionnairemodel import FacilityType
@@ -799,6 +799,18 @@ def getSingleScenario(request):
     consequences_list = [{'consequence_text': consequence.consequence_text, 'is_validated': consequence.is_validated}
                          for consequence in consequences]
     scenario_dict['Consequences'] = consequences_list
+    # Retrieve the related PHA_Safeguard records
+    safeguards = PHA_Safeguard.objects.filter(scenario=scenario)
+    safeguards_list = [
+        {
+            'id': safeguard.id,
+            'safeguard_description': safeguard.safeguard_description,
+            'safeguard_type': safeguard.safeguard_type
+        } for safeguard in safeguards
+    ]
+
+    # Add the safeguards list to the scenario dictionary
+    scenario_dict['safeguards'] = safeguards_list
     # Return the scenario as a JSON response
     return JsonResponse(scenario_dict)
 
@@ -1439,9 +1451,22 @@ def retrieve_scenario_builder(request, scenario_id):
         # Extract elements from the scenario data
         attack_tree_data = scenario_data.get('attackTree')
         scenario_description = scenario_data.get('scenario')
-        consequences = scenario_data.get('consequences', '').split("-")
+        # Correctly process consequences to ensure each starts with a single dash
+        raw_consequences = scenario_data.get('consequences', '')
+        # Split by any known delimiter and ensure each consequence starts with a dash
+        consequences_list = raw_consequences.replace(',', '\n').split('\n')
+        consequences = [f"- {line.strip()}" if not line.strip().startswith('-') else line.strip()
+                        for line in consequences_list if line.strip()]
+        # Join the consequences with a line break between each
+        formatted_consequences = '\n'.join(consequences)
+
         table_data = scenario_data.get('tableData')
+
         costs = scenario_data.get('costs')
+        # Check if cost_projection is None or not present, and set a default value if so
+        cost_projection = scenario_data.get('cost_projection', '0|0|0|0|0|0|0|0|0|0|0|0')
+        if not cost_projection:
+            cost_projection = '0|0|0|0|0|0|0|0|0|0|0|0'
 
         # Prepare factors data
         factors = {}
@@ -1451,14 +1476,14 @@ def retrieve_scenario_builder(request, scenario_id):
             narrative = item.get('narrative')
             factors[factor] = {'score': score, 'narrative': narrative}
 
-
         # Return the extracted data
         return JsonResponse({
             'attack_tree_data': attack_tree_data,
             'scenario_description': scenario_description,
-            'consequences': consequences,
+            'consequences': formatted_consequences,
             'factors': factors,
-            'costs': costs
+            'costs': costs,
+            'cost_projection': cost_projection
         })
 
     except ScenarioBuilder.DoesNotExist:

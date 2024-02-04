@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 from accounts.models import Organization
@@ -41,8 +42,10 @@ class RAWorksheet(models.Model):
     STATUS_CHOICES = [
         ("Open", "Open"),
         ("Closed", "Closed"),
+        ("Approved", "Approved"),
+        ("Rejected", "Rejected"),
     ]
-    StatusFlag = models.CharField(max_length=6, choices=STATUS_CHOICES, default='Open')
+    StatusFlag = models.CharField(max_length=8, choices=STATUS_CHOICES, default='Open')
     RATrigger = models.CharField(max_length=25)
     AssessorName = models.CharField(max_length=50)
     BusinessUnit = models.CharField(max_length=50)
@@ -57,7 +60,14 @@ class RAWorksheet(models.Model):
     insurance = models.IntegerField()
     deductable = models.IntegerField()
     deleted = models.IntegerField()
-
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='created_scenarios', on_delete=models.CASCADE)
+    last_updated_by = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='updated_scenarios',
+                                        on_delete=models.CASCADE)
+    approver = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='scenarios_to_approve',
+                                 on_delete=models.SET_NULL, null=True, blank=True)
+    approval_status = models.CharField(max_length=10, choices=[('Pending', 'Pending'), ('Approved', 'Approved'),
+                                                               ('Rejected', 'Rejected')], default='Pending')
+    rejection_comments = models.TextField(blank=True, null=True)
     class Meta:
         db_table = 'tblRAWorksheet'
 
@@ -139,7 +149,7 @@ class RAWorksheetScenario(models.Model):
         ("Radiation", "Radiation")
 
     ]
-    bia_safety_hazard = models.CharField(max_length=12, choices=BIA_SAFETY_CHOICES, default='N/A' )
+    bia_safety_hazard = models.CharField(max_length=12, choices=BIA_SAFETY_CHOICES, default='N/A')
     bia_sis_outage = models.BooleanField(default=False)
     bia_sis_compromise = models.BooleanField(default=False)
     BIA_LIFE_SCOPE_CHOICES = [
@@ -197,9 +207,33 @@ class RAWorksheetScenario(models.Model):
     exposed_system = models.BooleanField(default=False)
     weak_credentials = models.BooleanField(default=False)
     raw_consequences = models.TextField(null=True)
+    scenario_damage = models.TextField(null=True)
+    attack_tree = models.TextField(null=True)
+    scenario_12month_costs = models.TextField(null=True)
+    executive_summary = models.TextField(null=True)
 
     class Meta:
         db_table = 'tblRAWorksheetScenario'
+
+
+class QRAW_Safeguard(models.Model):
+    scenario = models.ForeignKey(RAWorksheetScenario, on_delete=models.CASCADE, related_name='safeguards')
+    safeguard_description = models.TextField(max_length=255)
+    safeguard_type = models.CharField(max_length=100)
+
+    class Meta:
+        db_table = 'tblQRAWSafeguard'
+
+class WorksheetActivity(models.Model):
+    worksheet = models.ForeignKey(RAWorksheet, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    activity_type = models.CharField(max_length=50)  # e.g., 'Created', 'Updated', 'Approved', 'Rejected'
+    timestamp = models.DateTimeField(auto_now_add=True)
+    comments = models.TextField(blank=True, null=True)
+
+    class Meta:
+        ordering = ['-timestamp']
+
 
 
 class RAActions(models.Model):

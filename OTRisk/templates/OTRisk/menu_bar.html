@@ -1,0 +1,55 @@
+{% load static %}
+
+<nav class="navbar navbar-expand-lg navbar-scroll shadow-0 border-bottom rounded">
+    <div class="container-fluid d-flex justify-content-between">
+        <a class="navbar-brand" href="{% url 'OTRisk:dashboardhome' %}">
+            &nbsp; &nbsp; &nbsp; &nbsp;
+            <img src="{% static 'images/anzen_owl.png' %}" class="owl-logo" style="width: 18%; height: 18%" alt="">
+        </a>
+        <h6 class="my-auto text-center flex-grow-1 navbar-brand" style="color: #d3d1cd"><img src="{% static 'images/anzen_noowl.png' %}" style="width: 15%; height: 15%" alt=""> Dashboard</h6>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item menu-item">
+                    <a class="nav-link" href="{% url 'OTRisk:qraw' %}" style="color: #d3d1cd"><i class="bi bi-calculator"></i> QRAW</a>
+                </li>
+                <li class="nav-item menu-item">
+                    <a class="nav-link" href="{% url 'OTRisk:iotaphamanager' %}" style="color: #d3d1cd"><i class="bi bi-journal-text"></i> CyberPHA</a>
+                </li>
+                <li class="nav-item menu-item">
+                    <a class="nav-link" href="{% url 'OTRisk:scenario_sim' %}" style="color: #d3d1cd"><i class="bi bi-bricks"></i> Scenario Builder</a>
+                </li>
+                <li class="nav-item menu-item">
+                    <a class="nav-link" href="{% url 'OTRisk:ra_actions_view_default' %}" style="color: #d3d1cd"><i class="bi-file-earmark-easel"></i> Actions</a>
+                </li>
+                <li class="nav-item menu-item">
+                    <a class="nav-link" href="{% url 'OTRisk:risk_register' %}" style="color: #d3d1cd"><i class="bi-file-earmark-easel"></i> Risk Register</a>
+                </li>
+                <li class="nav-item menu-item">
+                    <a class="nav-link" href="{% url 'OTRisk:list_frameworks' %}" style="color: #d3d1cd"><i class="bi-file-earmark-easel"></i> Assessments</a>
+                </li>
+    <li class="nav-item dropdown menu-item">
+    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="color: #d3d1cd">
+    <i class="bi bi-diagram-3"></i> Admin
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+    <li><a class="dropdown-item" href="{% url 'OTRisk:admin_users' %}" style="color: #d3d1cd">Admin Users</a></li>
+    {% if user.is_staff %}
+    <li><a class="dropdown-item" href="{% url 'OTRisk:user_admin' %}" style="color: #d3d1cd">User Administration</a></li>
+    <li><a class="dropdown-item" href="{% url 'OTRisk:execute_sql' %}" style="color: #d3d1cd">Execute SQL</a></li>
+    {% endif %}
+    </ul>
+    </li>
+    <li class="nav-item menu-item">
+    <a class="nav-link" href="{% url 'accounts:profile' %}" style="color: #d3d1cd">
+    <i class="bi bi-person-fill"></i> {{ user.first_name }} {{ user.last_name }} | {{ user.userprofile.organization.name }}
+    </a>
+    </li>
+    <li class="nav-item menu-item">
+    <a class="nav-link" href="{% url 'logout' %}" style="color: #d3d1cd">
+    <i class="bi bi-box-arrow-right"></i> Logout
+    </a>
+    </li>
+    </ul>
+    </div>
+    </div>
+    </nav>

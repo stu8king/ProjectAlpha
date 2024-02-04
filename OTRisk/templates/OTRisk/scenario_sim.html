@@ -8,7 +8,8 @@
 <link rel="icon" href="{% static 'images/iota - white 1.png' %}" type="image/x-icon">
 <!-- FontAwesome CDN -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"/>
-
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
+<script src="https://cdn.anychart.com/releases/8.10.0/js/anychart-bundle.min.js"></script>
 <!-- Bootstrap CSS -->
 <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
 
@@ -55,6 +56,42 @@
 {% bootstrap_javascript %}
 
 <style>
+    #checklistContainer {
+    color: white; /* White text color */
+}
+
+/* Style for the text next to checkboxes */
+#checklistContainer div {
+    font-size: 0.8em; /* Smaller font size */
+}
+    .custom-checkbox {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    width: 1em;
+    height: 1em;
+    border: 1px solid #000; /* Black border */
+    border-radius: 0.15em;
+    outline: none;
+    cursor: pointer;
+    position: relative;
+}
+
+.custom-checkbox:checked {
+    background-color: #000; /* Black background when checked */
+}
+
+.custom-checkbox:checked:after {
+    content: '';
+    position: absolute;
+    top: 0.15em;
+    left: 0.45em;
+    width: 0.2em;
+    height: 0.6em;
+    border: solid white;
+    border-width: 0 0.15em 0.15em 0;
+    transform: rotate(45deg);
+}
 /* Modal styles */
 .modal {
   display: none;
@@ -181,6 +218,11 @@
     height: 20px; /* Adjust size as needed */
     margin-right: 10px;
 }
+#scenarioSelectionModal .modal-body .list-group {
+    max-height: 400px; /* Adjust this value based on your needs */
+    overflow-y: auto; /* Enables vertical scrolling */
+}
+
 </style>
 </head>
 <body style="background-color: #464748">
@@ -221,7 +263,7 @@ fetch('https://restcountries.com/v3.1/all')
             &nbsp; &nbsp; &nbsp; &nbsp;
             <img src="{% static 'images/anzen_owl.png' %}" class="owl-logo" style="width: 18%; height: 18%">
         </a>
-        <h6 class="my-auto text-center flex-grow-1 navbar-brand"><img src="{% static 'images/anzen_noowl.png' %}" style="width: 15%; height: 15%" alt=""> Dashboard</h6>
+        <h6 class="my-auto text-center flex-grow-1 navbar-brand"><img src="{% static 'images/anzen_noowl.png' %}" style="width: 15%; height: 15%" alt=""> Scenario Builder</h6>
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
             <ul class="navbar-nav ms-auto">
                 <li class="nav-item menu-item">
@@ -272,10 +314,21 @@ fetch('https://restcountries.com/v3.1/all')
 <br>
 
 <div class="row">
-    <div class="col-md-2">
+    <div class="col-md-1">
+
+</div>
+
+    <div class="col-md-3">
         <div class="row">
             <div class="col-md-2"></div>
             <div class="col-md-10">
+                <div class="form-group form-sim" >
+                    <div class="card mb-2 shadow-sm">
+                        <div class="card-body">
+                            <button type="button" class="btn btn-primary" onclick="fetchAndDisplayScenarios()">Load Scenario</button>
+                        </div>
+                    </div>
+                </div>
                 <div class="form-group form-sim" >
                     <div class="card mb-2 shadow-sm">
                         <div class="card-body">
@@ -322,53 +375,6 @@ fetch('https://restcountries.com/v3.1/all')
                             </select>
                         </div>
                     </div>
-                </div>
-            </div>
-        </div>
-    </div>
-   <div class="col-md-2">
-        <div class="row">
-
-            <div class="col-md-10">
-                <div class="form-group" >
-                    <div class="card mb-2 shadow-sm">
-                        <div class="card-body">
-                            <label for="selAssetValue"><img src="{% static 'images/icon_asset.png' %}" alt="" class="align-bottom" style="max-height: 1.5rem; margin-left: 5px;"> Asset Value</label>
-                            <select class="form-control" id="selAssetValue" name="selAssetValue">
-                                <option value=""> -- Select Asset Value -- </option>
-                                <option value="Low Value">Low Value</option>
-                                <option value="Medium Value">Medium Value</option>
-                                <option value="High Value">High Value</option>
-                                <option value="Very High Value">Very High Value</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="card mb-2 shadow-sm">
-                        <div class="card-body">
-                            <label for="selOperationalImpact"><img src="{% static 'images/icon_impact.png' %}" alt="" class="align-bottom" style="max-height: 1.5rem; margin-left: 5px;"> Operational Impact</label>
-                            <select class="form-control" id="selOperationalImpact" name="selOperationalImpact">
-                                <option value=""> -- Select Operational Impact -- </option>
-                                <option value="High impact">High impact</option>
-                                <option value="Moderate impact">Moderate impact</option>
-                                <option value="Low impact">Low impact</option>
-                                <option value="Significant disruption">Significant disruption</option>
-                                <option value="Negligible impact">Negligible impact</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="card mb-2 shadow-sm">
-                                <div class="card-body">
-                                    <label for="selSecurityMeasures"><img src="{% static 'images/icon_security.png' %}" alt="" class="align-bottom" style="max-height: 1.5rem; margin-left: 5px;"> Security Measures</label>
-                                    <select class="form-control" id="selSecurityMeasures" name="selSecurityMeasures">
-                                        <option value=""> -- Select Security Measures -- </option>
-                                        <option value="Basic Security Measures">Basic Security Measures</option>
-                                        <option value="Enhanced Security Measures">Enhanced Security Measures</option>
-                                        <option value="Comprehensive Security Measures">Comprehensive Security Measures</option>
-                                        <option value="Industry-Specific Security Measures">Industry-Specific Security Measures</option>
-                                        <option value="Custom Security Measures">Custom Security Measures</option>
-                                    </select>
-                                </div>
-                            </div>
                     <div class="card mb-2 shadow-sm">
                             <div class="card-body">
                                 <label for="selRegulatoryEnvironment"><img src="{% static 'images/icon_regulation.png' %}" alt="" class="align-bottom" style="max-height: 1.5rem; margin-left: 5px;"> Regulatory Environment</label>
@@ -383,11 +389,10 @@ fetch('https://restcountries.com/v3.1/all')
                             </div>
                         </div>
                 </div>
-
             </div>
-            <div class="col-md-2"></div>
         </div>
     </div>
+
 
     <div class="col-md-3">
         <div class="form-group" >
@@ -489,7 +494,23 @@ fetch('https://restcountries.com/v3.1/all')
     </div>
 
     <div class="col-md-1">
+        <br><br>
+    <div id="checklistContainer">
+        <div>
+            <input type="checkbox" id="analyzeConsequencesCheckbox" class="custom-checkbox" disabled> Analyze Consequences
+        </div>
+        <div>
+            <input type="checkbox" id="generateAttackTreeCheckbox" class="custom-checkbox" disabled> Generate Attack Tree
+        </div>
+        <div>
+            <input type="checkbox" id="analyzeScenarioCheckbox" class="custom-checkbox" disabled> Analyze Scenario
+        </div>
+
+
     </div>
+</div>
+
+
 </div>
 
 
@@ -498,13 +519,12 @@ fetch('https://restcountries.com/v3.1/all')
     $(document).ready(function() {
         // Initialize Select2 for all dropdowns
         $('#selIndustry').select2();
-        $('#selAssetValue').select2();
+        // $('#selAssetValue').select2();
         $('#selFacilityType').select2();
         $('#selOrganizationSize').select2();
-        $('#selOperationalImpact').select2();
-        $('#selSecurityMeasures').select2();
+        // $('#selOperationalImpact').select2();
+        // $('#selSecurityMeasures').select2();
         $('#selRegulatoryEnvironment').select2();
-
         // Add more initialization if needed
     });
 </script>
@@ -545,7 +565,21 @@ fetch('https://restcountries.com/v3.1/all')
     </div>
     <div class="col-md-4"></div>
 </div>
-
+<div class="row">
+    <div class="col-md-1"></div>
+        <div class="col">
+            <div class="group-container">
+                <div class="group-header">
+                     Twelve-Month Projection
+                </div>
+                <div class="group-body">
+                    <div id="monthly_cost_chart" style="height:300px"></div>
+                    <input type="hidden" id="scenario_12month_costs" name="scenario_12month_costs">
+                </div>
+            </div>
+        </div>
+    <div class="col-md-1"></div>
+</div>
  <div class="row">
     <div class="col-md-1"></div>
 
@@ -607,16 +641,32 @@ fetch('https://restcountries.com/v3.1/all')
       <div class="modal-body">
         <form id="scenarioForm">
           <div class="form-group">
-            <label for="attacker">Attacker/Bad Actor:</label>
-            <input type="text" class="form-control" id="attacker" name="attacker">
+            <label for="selThreats" style="color: white">Attacker/Bad Actor:</label>
+            <select class="form-control" name="selThreats" id="selThreats" >
+                <option value=""> -- Select Attacker -- </option>
+                {% for threats in threats %}
+                <option value="{{ threats.ThreatSource }}">
+
+                    {{ threats.ThreatSource }}
+                </option>
+                {% endfor %}
+            </select>
           </div>
           <div class="form-group">
-            <label for="attackVector">Attack Vector:</label>
-            <input type="text" class="form-control" id="attackVector" name="attackVector">
+            <label for="selVectors" style="color: white">Attack Vector:</label>
+            <select class="form-control" name="selVectors" id="selVectors" >
+                <option value=""> -- Select Attack Vector -- </option>
+                {% for attack_vectors in attack_vectors %}
+                <option value="{{ attack_vectors.ThreatAction }}">
+
+                    {{ attack_vectors.ThreatAction }}
+                </option>
+                {% endfor %}
+            </select>
           </div>
           <div class="form-group">
-            <label for="targetComponent">Target Component/Device:</label>
-            <input type="text" class="form-control" id="targetComponent" name="targetComponent">
+            <label for="targetComponent" style="color: white">Target Component/Device:</label>
+            <input type="text" class="form-control" id="targetComponent" name="targetComponent" >
           </div>
           <div class="form-group">
             <label for="attackEffect">Effect of Attack:</label>
@@ -649,6 +699,36 @@ fetch('https://restcountries.com/v3.1/all')
   </div>
 </div>
 
+<!-- Scenario Selection Modal -->
+<div class="modal fade" id="scenarioSelectionModal" tabindex="-1" role="dialog" aria-labelledby="scenarioSelectionModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="scenarioSelectionModalLabel">Select Scenario</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="input-group mb-3">
+          <input type="text" class="form-control" placeholder="Search scenario..." aria-label="Search scenario">
+          <div class="input-group-append">
+            <button class="btn btn-outline-secondary" type="button"><i class="bi bi-search"></i></button>
+          </div>
+        </div>
+        <ul id="scenarioList" class="list-group">
+          <!-- Dynamically populated list items will go here -->
+        </ul>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary">Open</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
 
  <script>
 
@@ -657,10 +737,11 @@ fetch('https://restcountries.com/v3.1/all')
     let facility_type = document.getElementById('selFacilityType').value;
     let industry = document.getElementById('selIndustry').value;
     let organization_size = document.getElementById('selOrganizationSize').value;
-    let asset_value = document.getElementById('selAssetValue').value;
-    let operational_impact = document.getElementById('selOperationalImpact').value;
-    let security_measures = document.getElementById('selSecurityMeasures').value;
+    // let asset_value = document.getElementById('selAssetValue').value;
+    // let operational_impact = document.getElementById('selOperationalImpact').value;
+    // let security_measures = document.getElementById('selSecurityMeasures').value;
     let regulatory_environment = document.getElementById('selRegulatoryEnvironment').value;
+    let country = document.getElementById('countrySelector').value;
 
     var button = this;
     var spinnerContainer = document.getElementById('spinnerContainer');
@@ -679,6 +760,7 @@ fetch('https://restcountries.com/v3.1/all')
                 'csrfmiddlewaretoken': '{{ csrf_token }}'
             },
             success: function(response) {
+                document.getElementById('analyzeScenarioCheckbox').checked = true;
                 var tableContainer = document.getElementById('table_scenario');
                 var table = document.getElementById('consequencesTable');
                 if (table) {
@@ -724,17 +806,17 @@ fetch('https://restcountries.com/v3.1/all')
                 resolve();
 
                 var biaGroupsContainer = document.getElementById('bia_groups');
-    biaGroupsContainer.innerHTML = ''; // Clear existing content
+                biaGroupsContainer.innerHTML = ''; // Clear existing content
 
-    // Assuming each item in response.consequence has 'factor', 'score', and 'narrative' properties
-    var rows = [];
-    response.consequence.forEach(function(item, index) {
-        // Create a new row every 3 items
-        if (index % 3 === 0) {
-            var row = document.createElement('div');
-            row.className = 'row';
-            rows.push(row);
-        }
+                // Assuming each item in response.consequence has 'factor', 'score', and 'narrative' properties
+                var rows = [];
+                response.consequence.forEach(function(item, index) {
+                    // Create a new row every 3 items
+                    if (index % 3 === 0) {
+                        var row = document.createElement('div');
+                        row.className = 'row';
+                        rows.push(row);
+                    }
 
         // Create the group container
         var groupContainer = document.createElement('div');
@@ -785,6 +867,7 @@ fetch('https://restcountries.com/v3.1/all')
                 'csrfmiddlewaretoken': '{{ csrf_token }}'
             },
             success: function(attackTreeResponse) {
+                document.getElementById('generateAttackTreeCheckbox').checked = true;
                 if (attackTreeResponse && !attackTreeResponse.error) {
                     var attackTreeJson = JSON.stringify(attackTreeResponse);
                     document.getElementById('hdnAT').value = attackTreeJson;
@@ -810,13 +893,12 @@ fetch('https://restcountries.com/v3.1/all')
                 'industry': industry,
                 'facility_type': facility_type,
                 'organization_size': organization_size,
-                'asset_value': asset_value,
-                'operational_impact': operational_impact,
-                'security_measures': security_measures,
                 'regulatory_environment': regulatory_environment,
+                'country': country,
                 'csrfmiddlewaretoken': '{{ csrf_token }}'
             },
             success: function(consequenceResponse) {
+                document.getElementById('analyzeConsequencesCheckbox').checked = true;
                 if (consequenceResponse.consequence && consequenceResponse.consequence.trim()) {
                     document.getElementById('txtConsequences').value = consequenceResponse.consequence;
                 } else {
@@ -826,7 +908,10 @@ fetch('https://restcountries.com/v3.1/all')
                 document.getElementById('txtBestCase').value = consequenceResponse.best_case_cost;
                 document.getElementById('txtMostLikelyCase').value = consequenceResponse.most_likely_case_cost;
                 document.getElementById('txtWorstCase').value = consequenceResponse.worst_case_cost;
+                document.getElementById('scenario_12month_costs').value = consequenceResponse.projection;
 
+                var costArray = consequenceResponse.projection.split('|').map(Number);
+                createCostChart('monthly_cost_chart', costArray);
                 resolve();
             },
             error: function(xhr, status, error) {
@@ -848,99 +933,234 @@ fetch('https://restcountries.com/v3.1/all')
         button.disabled = false;
     });
 });
-
-
-
-        function drawAttackTree(data) {
-                    var container = document.getElementById('attack_tree');
-                    var containerWidth = container.clientWidth;
-                    var svgWidth = containerWidth * 0.8; // SVG width is 80% of the container width
-                    var margin = { top: 20, right: 120, bottom: 20, left: 280 };
-                    var width = svgWidth - margin.left - margin.right; // Adjusted tree width
-                    var height = 600; // Adjust as needed
-
-                    d3.select(container).selectAll("svg").remove();
-
-                    var svg = d3.select(container).append("svg")
-                        .attr("width", "100%") // Make SVG responsive
-                        .attr("viewBox", "0 0 " + svgWidth + " " + height)
-                        .attr("height", height)
-                        .style("display", "block")
-                        .style("margin", "auto") // Center the SVG in the container
-                        .append("g")
-                        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-                    var i = 0,
-                        duration = 750,
-                        root;
-
-                    var treemap = d3.tree()
-                            .size([height, width - margin.left - margin.right])
-                            .separation(function(a, b) {
-                        return (a.parent == b.parent ? 1 : 2);
-                    });
-
-                    root = d3.hierarchy(data, function(d) { return d.children; });
-                    root.x0 = height / 2;
-                    root.y0 = 0;
-
-                    update(root);
-
-                    function update(source) {
-
-                        var treeData = treemap(root);
-
-                        var nodes = treeData.descendants(),
-                            links = treeData.descendants().slice(1);
-
-                        nodes.forEach(function(d) { d.y = d.depth * 180 });
-
-                        var node = svg.selectAll('g.node')
-                            .data(nodes, function(d) { return d.id || (d.id = ++i); });
-
-                        var nodeEnter = node.enter().append('g')
-                            .attr('class', 'node')
-                            .attr("transform", function(d) {
-                                return "translate(" + d.y + "," + d.x + ")";
-                            });
-
-                        nodeEnter.append('circle')
-                            .attr('r', 10)
-                            .style("fill", "#1f77b4"); // Changed fill color
-
-                        nodeEnter.append('text')
-                            .style("fill", "darkgray") // Changed text color
-                            .style("font-size", "14px") // Increased font size
-                            .style("font-weight", "bold") // Bold text
-                            .attr("transform", "rotate(-10)")
-                            .attr("dy", ".35em")
-                            .attr("x", function(d) {
-                                return d.children ? -13 - this.getComputedTextLength() : 13;
-                            })
-                            .attr("text-anchor", function(d) {
-                                return d.children ? "end" : "start";
-                            })
-                            .text(function(d) { return d.data.name; });
-
-                        var link = svg.selectAll('path.link')
-                            .data(links, function(d) { return d.id; });
-
-                        link.enter().insert('path', "g")
-                            .attr("class", "link")
-                            .style("stroke", "#aaa") // Changed stroke color
-                            .style("stroke-width", 1) // Increased stroke width
-                            .attr("stroke-opacity", 0.6) // Adjusted opacity
-                             .attr('d', function(d) {
-        return "M" + d.y + "," + d.x
-            + "L" + d.parent.y + "," + d.parent.x; // Changed to a straight line
+function fetchAndDisplayScenarios() {
+    $.ajax({
+        url: "/OTRisk/list_scenario_builders/", // Adjust the URL to your backend endpoint
+        type: "GET",
+        success: function(response) {
+            const scenarios = response.scenarios;
+            const scenarioList = $('#scenarioList');
+            scenarioList.empty(); // Clear existing items
+            scenarios.forEach(function(scenario) {
+                 scenarioList.append(`
+                  <li class="list-group-item d-flex align-items-center scenario-item" data-id="${scenario.id}">
+                    <i class="bi bi-file-earmark-text mr-2"></i> ${scenario.scenario_name}
+                  </li>
+                `);
+            });
+            $('.scenario-item').click(function() {
+                const scenarioId = $(this).data('id');
+                loadScenarioDetails(scenarioId); // Function to load selected scenario details
+                $('#scenarioSelectionModal').modal('hide');
+            });
+            $('#scenarioSelectionModal').modal('show');
+        },
+        error: function(xhr, status, error) {
+            console.error('Error fetching scenarios:', error);
+        }
     });
-                    }
-                    var attackTreeDiv = document.getElementById('attack_tree');
-                    attackTreeDiv.style.display = 'block'; // Changed to display the tree
-                    sessionStorage.setItem('attackTreeDrawn', 'true');
-                    var attackTreeDiv = document.getElementById('attack_tree');
+}
 
+function loadScenarioDetails(scenarioId) {
+    $.ajax({
+        url: `/OTRisk/retrieve_scenario_builder/${scenarioId}`, // Adjust the URL to your backend endpoint
+        type: "GET",
+        success: function(response) {
+            $('#txtScenario').val(response.scenario_description);
+            $('#txtConsequences').val(response.consequences);
+            var costs = response.costs;
+            $('#txtBestCase').val(costs.bestCase); // Set best case cost
+            $('#txtMostLikelyCase').val(costs.mostLikelyCase); // Set most likely case cost
+            $('#txtWorstCase').val(costs.worstCase); // Set worst case cost
+
+            var costArray = response.cost_projection.split('|').map(Number);
+            createCostChart('monthly_cost_chart', costArray);
+
+            $('#hdnAT').val(response.attack_tree_data);
+
+            var jsonObject = JSON.parse(response.attack_tree_data);
+            drawAttackTree(jsonObject);
+
+            // Clear existing BIA groups content
+            var biaGroupsContainer = document.getElementById('bia_groups');
+            biaGroupsContainer.innerHTML = '';
+
+            var factors = response.factors; // Assuming this is the object structure as described
+            var factorKeys = Object.keys(factors); // Get all factor names as an array
+            var rows = []; // To keep track of the rows of BIA groups
+
+            factorKeys.forEach(function(factor, index) {
+                // Create a new row every 3 items
+                if (index % 3 === 0) {
+                    var row = document.createElement('div');
+                    row.className = 'row';
+                    rows.push(row);
                 }
+
+                // Create the group container
+                var groupContainer = document.createElement('div');
+                groupContainer.className = 'group-container col-md-4';
+
+                // Create the group header
+                var groupHeader = document.createElement('div');
+                groupHeader.className = 'group-header';
+                var icon = document.createElement('img');
+                icon.src = "{% static 'images/green_cube.png' %}"; // Adjust the path as needed
+                icon.className = 'cube-icon';
+                icon.alt = 'green_cube';
+                groupHeader.appendChild(icon);
+                var headerText = document.createTextNode(factor); // factor is the key from factors object
+                groupHeader.appendChild(headerText);
+                groupContainer.appendChild(groupHeader);
+
+                // Create the group body
+                var groupBody = document.createElement('div');
+                groupBody.className = 'group-body';
+                var factorData = factors[factor]; // Get the data for this factor
+                groupBody.textContent = factorData.score + '. ' + factorData.narrative;
+                groupContainer.appendChild(groupBody);
+
+                // Add the group container to the current row
+                rows[rows.length - 1].appendChild(groupContainer);
+
+                // Add the row to the biaGroupsContainer if it's full (3 items) or if it's the last item
+                if ((index + 1) % 3 === 0 || index === factorKeys.length - 1) {
+                    biaGroupsContainer.appendChild(rows[rows.length - 1]);
+                }
+            });
+            // Populate table data, costs, and other fields similarly
+            alert('Scenario loaded successfully');
+        },
+        error: function(xhr, status, error) {
+            console.error('Error loading scenario:', error);
+        }
+    });
+}
+
+
+function drawAttackTree(data) {
+    var container = document.getElementById('attack_tree');
+    var containerWidth = container.clientWidth;
+    var svgWidth = containerWidth * 0.8;
+    var margin = { top: 20, right: 120, bottom: 20, left: 280 };
+    var width = svgWidth - margin.left - margin.right;
+    var height = 800; // Increased height for better resolution
+
+    d3.select(container).selectAll("svg").remove();
+
+    var svg = d3.select(container).append("svg")
+        .attr("width", "100%")
+        .attr("viewBox", "0 0 " + svgWidth + " " + height)
+        .attr("height", height)
+        .style("display", "block")
+        .style("margin", "auto")
+        .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    // Define the arrow marker
+    svg.append("svg:defs").selectAll("marker")
+        .data(["end"])
+        .enter().append("svg:marker")
+        .attr("id", String)
+        .attr("viewBox", "0 -5 10 10")
+        .attr("refX", 25)
+        .attr("markerWidth", 6)
+        .attr("markerHeight", 6)
+        .attr("orient", "auto")
+        .append("svg:path")
+        .attr("d", "M0,-5L10,0L0,5");
+
+    var i = 0,
+        duration = 750,
+        root;
+
+    var treemap = d3.tree()
+        .size([height, width - margin.left - margin.right])
+        .separation(function(a, b) { return (a.parent == b.parent ? 1 : 2); });
+
+    root = d3.hierarchy(data, function(d) { return d.children; });
+    root.x0 = height / 2;
+    root.y0 = 0;
+
+    // Color-blind-friendly color scale
+    var colorScale = d3.scaleOrdinal(["#88CCEE", "#DDCC77", "#CC6677", "#882255", "#44AA99", "#117733", "#999933", "#AA4499"]);
+
+    update(root);
+
+    function update(source) {
+        var treeData = treemap(root);
+
+        var nodes = treeData.descendants(),
+            links = treeData.descendants().slice(1);
+
+        nodes.forEach(function(d) { d.y = d.depth * 180 });
+
+        var node = svg.selectAll('g.node')
+            .data(nodes, function(d) { return d.id || (d.id = ++i); });
+
+        var nodeEnter = node.enter().append('g')
+            .attr('class', 'node')
+            .attr("transform", function(d) { return "translate(" + d.y + "," + d.x + ")"; });
+
+        nodeEnter.append('circle')
+            .attr('r', 10)
+            .style("stroke", "black")
+            .style("stroke-width", 1.5)
+            .style("fill", function(d) { return colorScale(d.depth); });
+
+        nodeEnter.append('text')
+            .style("fill", "darkgray")
+            .style("font-size", "14px")
+            .style("font-weight", "bold")
+            .attr("transform", "rotate(-10)")
+            .attr("dy", ".35em")
+            .attr("x", function(d) { return d.children ? -13 - this.getComputedTextLength() : 13; })
+            .attr("text-anchor", function(d) { return d.children ? "end" : "start"; })
+            .text(function(d) { return d.data.name; });
+
+        var link = svg.selectAll('path.link')
+            .data(links, function(d) { return d.id; });
+
+        link.enter().insert('path', "g")
+            .attr("class", "link")
+            .style("stroke", function(d) { return colorScale(d.depth); })
+            .style("stroke-width", 2)
+            .style("fill", "none")
+            .attr("marker-end", "url(#end)") // Add the arrow marker
+            .attr('d', function(d) {
+                return "M" + d.y + "," + d.x
+                    + "C" + (d.y + d.parent.y) / 2 + "," + d.x
+                    + " " + (d.y + d.parent.y) / 2 + "," + d.parent.x
+                    + " " + d.parent.y + "," + d.parent.x;
+            });
+    }
+
+    // Add border and shadow to the container
+    var attackTreeDiv = document.getElementById('attack_tree');
+    attackTreeDiv.style.display = 'block';
+    attackTreeDiv.style.border = '1px solid #ccc';
+    attackTreeDiv.style.boxShadow = '0px 0px 10px rgba(0, 0, 0, 0.5)';
+    sessionStorage.setItem('attackTreeDrawn', 'true');
+
+    // Add export button functionality (if feasible)
+    var exportButton = document.getElementById('exportButton');
+    if (exportButton) {
+        exportButton.addEventListener('click', function() {
+            var svgData = new XMLSerializer().serializeToString(document.querySelector('svg'));
+            var svgBlob = new Blob([svgData], {type:"image/svg+xml;charset=utf-8"});
+            var svgUrl = URL.createObjectURL(svgBlob);
+            var downloadLink = document.createElement("a");
+            downloadLink.href = svgUrl;
+            downloadLink.download = "attack_tree.svg";
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
+        });
+    }
+}
+
+
+
 
 $(document).ready(function() {
 document.addEventListener('DOMContentLoaded', (event) => {
@@ -964,8 +1184,8 @@ document.addEventListener('DOMContentLoaded', (event) => {
         document.getElementById('submitScenario').addEventListener('click', function() {
             document.getElementById('spinner').style.display = 'block';
             var formData = {
-                'attacker' : document.getElementById('attacker').value,
-                'attackVector' : document.getElementById('attackVector').value,
+                'attacker' : document.getElementById('selThreats').value,
+                'attackVector' : document.getElementById('selVectors').value,
                 'targetComponent' : document.getElementById('targetComponent').value,
                 'attackEffect' : document.getElementById('attackEffect').value,
                 'targetSystem' : document.getElementById('targetSystem').value,
@@ -1007,7 +1227,8 @@ function saveScenario(scenarioName) {
     tableData: extractTableData(), // Add this line
     bestCaseCost: document.getElementById('txtBestCase').value,
     mostLikelyCaseCost: document.getElementById('txtMostLikelyCase').value,
-    worstCaseCost: document.getElementById('txtWorstCase').value
+    worstCaseCost: document.getElementById('txtWorstCase').value,
+    cost_projection: document.getElementById('scenario_12month_costs').value
     };
 
     $.ajax({
@@ -1059,6 +1280,77 @@ function getCsrfToken() {
     return cookieValue;
 }
 
+function abbreviateValue(value) {
+    var newValue = value;
+    if (value >= 1000 && value < 1000000) {
+        newValue = "$" + (value / 1000).toFixed(1) + "k"; // Thousands
+    } else if (value >= 1000000) {
+        newValue = "$" + (value / 1000000).toFixed(1) + "m"; // Millions
+    } else {
+        newValue = "$" + value; // Less than 1000
+    }
+    return newValue;
+}
+
+function createCostChart(containerId, costArray) {
+    var data = [];
+    for (let i = 0; i < costArray.length; i++) {
+        data.push({x: `Month ${i + 1}`, value: costArray[i]});
+    }
+
+    // Ensure the chart library is ready before creating the chart
+    anychart.onDocumentReady(function() {
+        // Clear the container before creating a new chart
+        document.getElementById(containerId).innerHTML = '';
+
+        var chart = anychart.column();
+        chart.data(data);
+
+        // Set the chart title
+        chart.title("Monthly Cost Estimates");
+
+        // Customize the X-axis labels
+        var xAxis = chart.xAxis();
+        xAxis.title("Month");
+        xAxis.labels()
+            .rotation(-70) // Angle the labels
+            .fontSize(10); // Smaller font size
+
+        // Customize the Y-axis
+        var yAxis = chart.yAxis();
+        yAxis.title("Cost in USD");
+
+        var series = chart.getSeries(0);
+        series.labels(true);
+        series.labels()
+            .position("above")
+            .anchor("centerBottom")
+            .fontSize(10)
+            .format(function() {
+                return abbreviateValue(this.value);
+            });
+
+        // Optionally disable credits if needed
+        var credits = chart.credits();
+        credits.enabled(false);
+
+        // Draw the chart in the specified container
+        chart.container(containerId);
+        chart.draw();
+    });
+}
+
+$(document).ready(function() {
+    // Close button inside the modal header
+    $('.close').click(function() {
+        $('#scenarioSelectionModal').modal('hide');
+    });
+
+    // Close button in the modal footer
+    $('#scenarioSelectionModal .btn-secondary').click(function() {
+        $('#scenarioSelectionModal').modal('hide');
+    });
+});
 
         </script>
 </body>

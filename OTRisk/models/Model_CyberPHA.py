@@ -838,6 +838,15 @@ class CyberPHAScenario_snapshot(models.Model):
     attack_tree_text = models.TextField(null=True)
 
 
+class PHA_Safeguard(models.Model):
+    scenario = models.ForeignKey(tblCyberPHAScenario, on_delete=models.CASCADE, related_name='safeguards')
+    safeguard_description = models.TextField(max_length=255)
+    safeguard_type = models.CharField(max_length=100)
+
+    class Meta:
+        db_table = 'tblPHASafeguard'
+
+
 class Audit(models.Model):
     USER_ACTIONS = [
         ("Edit", "Edit"),
@@ -920,7 +929,7 @@ class ScenarioBuilder(models.Model):
 
     # JSON field to store the scenario data
     scenario_data = models.JSONField()
-
+    cost_projection = models.TextField(null=True)
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -935,3 +944,19 @@ class ScenarioBuilder(models.Model):
 
     def __str__(self):
         return self.scenario_name
+
+
+class attack_motivation(models.Model):
+    attack_motivation = models.TextField(null=False)
+
+
+class attack_effect(models.Model):
+    attack_effect = models.TextField(null=False)
+
+
+class attack_impact(models.Model):
+    attack_impact = models.TextField(null=False)
+
+
+class attack_motive(models.Model):
+    attack_motive = models.TextField(null=False)

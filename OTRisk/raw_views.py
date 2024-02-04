@@ -2,9 +2,10 @@ import openai
 import os
 
 from django.forms import model_to_dict
+from django.views.decorators.http import require_POST
 
 from OTRisk.models.raw import RAWorksheet, RAWorksheetScenario, RAActions, MitreICSMitigations, MitreICSTechniques, \
-    RawControlList
+    RawControlList, WorksheetActivity, QRAW_Safeguard
 from django.contrib.auth.decorators import login_required
 from OTRisk.models.questionnairemodel import FacilityType
 from OTRisk.models.Model_CyberPHA import tblIndustry, tblThreatSources, auditlog, tblScenarios, tblCyberPHAHeader, \
@@ -13,7 +14,7 @@ from OTRisk.models.Model_Mitre import MitreICSTactics
 from accounts.models import Organization, UserProfile
 from django.shortcuts import render
 from django.utils import timezone
-from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from datetime import date
@@ -570,6 +571,11 @@ def qraw(request):
         # Handle the case where no OrganizationDefaults is found for the given org_id
         industry_id = None
 
+    # Query for potential approvers
+    current_user_profile = UserProfile.objects.get(user=request.user)
+    potential_approvers = UserProfile.objects.filter(organization=current_user_profile.organization).exclude(
+        user=request.user)
+
     if request.method == 'POST':
 
         # Check for duplicate records
@@ -622,6 +628,10 @@ def qraw(request):
                     RADate=date.today(),
                     deleted=0
                 )
+                selected_approver_id = request.POST.get('selectedApprover')
+                if selected_approver_id:
+                    selected_approver = User.objects.get(id=selected_approver_id)
+                    ra_worksheet.approver = selected_approver
                 ra_worksheet.save()
                 saved_worksheet_id = ra_worksheet.ID
 
@@ -638,6 +648,10 @@ def qraw(request):
             ra_worksheet.insurance = parse_currency(request.POST.get('txtInsurance'))
             ra_worksheet.revenue = parse_currency(request.POST.get('txtRevenue'))
             ra_worksheet.deductable = parse_currency(request.POST.get('txtDeductable'))
+            selected_approver_id = request.POST.get('selectedApprover')
+            if selected_approver_id:
+                selected_approver = User.objects.get(id=selected_approver_id)
+                ra_worksheet.approver = selected_approver
             ra_worksheet.save()
             saved_worksheet_id = ra_worksheet.ID
 
@@ -687,7 +701,8 @@ def qraw(request):
                    # 'scenarios': scenarios,
                    'scenario_form': scenario_form,
                    'saved_worksheet_id': saved_worksheet_id,
-                   'org_defaults': org_defaults})
+                   'org_defaults': org_defaults,
+                   'potential_approvers': potential_approvers})
 
 
 class GetTechniquesView(View):
@@ -733,6 +748,7 @@ def openai_assess_risk(request):
         exposed_system = request.GET.get('exposed_system')
         weak_credentials = request.GET.get('weak_credentials')
         consequences = request.GET.get('consequences')
+        safeguards = request.GET.get('safeguards', '')
 
         if outageLength and outageLength.isdigit():
             outageLength = int(outageLength)
@@ -740,7 +756,7 @@ def openai_assess_risk(request):
             outageLength = 0
 
         impact = request.GET.get('impact')
-        controlScore = request.GET.get('controlScore')
+        # controlScore = request.GET.get('controlScore')
 
         ASSET_STATUS_MAPPING = {
             1: "New / Hardened",
@@ -761,13 +777,13 @@ def openai_assess_risk(request):
         content = "Outage information not provided."
 
         if outage == "Yes":
-            content = f"The scenario is expected to result in a production outage of {outageLength}."
+            content = f"The scenario is expected to result in a production outage of {outageLength} hours."
         elif outage == "No":
             content = "The scenario is not expected to result in a production outage."
 
         system_message = {
             "role": "system",
-            "content": f"You are an OT Cybersecurity Risk expert and an expert in industrial system engineering. Make a risk assessment for {scenario} in a {facility_type} in the {industry} industry. Vulnerability has been rated as {vulnerability}. Annual revenue for the business is {revenue}. Cyber insurance cover to the value of {insurance} and the cyber insurance deductible is {deductable}. {content}"
+            "content": f"You are an OT Cybersecurity Risk expert and an expert in industrial system engineering for the {industry} industry. Make a risk assessment for {scenario} in a {facility_type} in the {industry} industry. Vulnerability has been rated as {vulnerability}. Physical safeguards are {safeguards}. Annual revenue for the business is {revenue}. Cyber insurance cover to the value of {insurance} and the cyber insurance deductible is {deductable}. {content}"
         }
 
         def query_openai(user_message_content):
@@ -794,7 +810,7 @@ def openai_assess_risk(request):
                 model="gpt-4",
                 messages=messages,
                 temperature=0.1,
-                max_tokens=250
+                max_tokens=550
             )
             return response['choices'][0]['message']['content'].strip()
 
@@ -813,6 +829,7 @@ def openai_assess_risk(request):
                 f"Provide a rating for the risk from one of the following possible responses: Low, Low/Medium, Medium, Medium/High, or High. The response must be only the single response with no additional text or explanation. The user must only see the final response without any other detail  ")
         }
 
+
         # 2. Query for risk score
         risk_score_message = {
             "role": "user",
@@ -830,21 +847,20 @@ def openai_assess_risk(request):
         event_cost_estimate_message = {
             "role": "user",
             "content": (
-                f" Estimate the DIRECT COSTS of a single loss event (SLE) in US dollars for the scenario: {scenario}. Provide figures as lowest|highest|median. Business impact assessment as follows:"
-                f"- Operations impact : {production_impact} out of 10."
-                f" - Production outage: {outage}."
-                f" - Length of production outage: {outageLength} hours."
-                f"- Safety impact: {safety_impact} out of 10."
-                f"- Supply Chain Impact: {supply_impact} out of 10."
-                f"- Financial Impact: {financial_impact} out of 10."
-                f"- Data Impact: {data_impact} out of 10."
-                f"- Reputation Impact: {reputation_impact} out of 10."
-                f"- Regulatory Impact: {regulatory_impact} out of 10."
-                f"- Danger to life Impact: {life_impact} out of 10."
-                f"If the estimates exceed the insurance deductable amount then deduct the insurance coverage amount from the estimates otherwise ignore the insurance amounts. "
-                f"Guidelines: Give three estimates best case, worst case, and most likely case. Output as integers in the format low|medium|high where | is the delimiter between the three integer values. Your estimates should be realistic and specific to the scenario. Consider only the relevant Direct costs which can include all or some of the following depending on the incident: incident response, remediation, legal fees, notification costs, regulatory fines, compensations, and increased insurance premiums."
-                f"Give the answer in the format lowest|highest|median using | as the character to indicate the delimiter between the values."
-                f"Provide only the dollar amount values in your response without any narrative or explanation because the response from this query will be used in a calculation."
+                f"Generate a 12-month cost projection for direct costs relating to a hypothetical cybersecurity incident at a  {facility_type}. The scenario is: {scenario}. "
+                f"Base your estimates on historical data from similar OT cybersecurity incidents. Include costs if they apply to the given scenario. Direct costs are those related to incident response, remediation, legal fees, regulatory fines, and other direct expenses. A cybersecurity risk expert completed a business impact assessment and the scores (where 1 is low and 10 is high) to be used in this assessment for each category for the given scenario are: "
+                f"- Operations impact: {production_impact} out of 10, "
+                f"- Production outage: {outage}, "
+                f"- Length of production outage: {outageLength} hours, "
+                f"- Safety impact: {safety_impact} out of 10, "
+                f"- Supply Chain Impact: {supply_impact} out of 10, "
+                f"- Financial Impact: {financial_impact} out of 10, "
+                f"- Data Impact: {data_impact} out of 10, "
+                f"- Reputation Impact: {reputation_impact} out of 10, "
+                f"- Regulatory Impact: {regulatory_impact} out of 10, "
+                f"- Danger to life Impact: {life_impact} out of 10. "
+                f"- Annual revenue of the facility: {revenue}. "
+                f"Estimate the budget cost for each month so that the Chief Finance Officer for the organization can plan appropriately. Use a pragmatic and realistic monthly estimate. Only consider costs directly related to the cybersecurity incident. (IMPORTANT Give only the cost for each month, NOT an aggregate of previous months plus the current month). You as the estimator should be able to justify why month on month costs increase OR decrease. The expectation is that costs will taper off over the 12 month period but YOU must give the most realistic response.Provide the estimates as a series of 12 integers in the format: Month1|Month2|...|Month12. Each value should represent the cost for that month in US dollars. Remember, only provide the numerical values without any narrative or explanation."
             )
         }
 
@@ -877,29 +893,6 @@ def openai_assess_risk(request):
             }
         }
 
-        try:
-            controlScoreValue = int(controlScore)
-        except ValueError:  # This will catch if controlScore is not a valid integer (e.g., NaN)
-            controlScoreValue = 0
-
-        if controlScoreValue > 0:
-            risk_summary = 'x'
-        else:
-            risk_summary_message = {
-                "role": "user",
-                "content": dict(
-                    prompt=(
-                        f"From the scenario {scenario} and following variables: Weak Credentials: {weak_credentials}, Internet exposed IP address {exposed_system}, threat source {threat_source}, threat tactics {threat_tactic} make a concise bullet point list of the most relevant and OT (operational technology) and ICS (industrial control system) technical and physical controls and configurations necessary to mitigate or avoid the risks:\n"
-                        f"Controls should be technical and focused on mitigating risks most relevant to OT Cybersecurity. If a specific device, PLC, software, or equipment is named in the scenario, give controls specific to the device, PLC, software, or equipment. Controls must be pragmatic, practical and realistic to implement at a {facility_type}, should align to NIST 800-82 standards and/or vendor published controls for the specific device, plc, software, or equipment. Each control should be accompanied with the cited reference code for the related control in the standards or vendor material"
-                    ),
-                    additional_request={
-                        "formatting": f"Place line breaks between lines. No more than 10 words per bullet point. No extra commentary or explanation. Give the response in language {language}"
-                    }
-                )
-            }
-
-            risk_summary = query_openai(risk_summary_message['content'])
-
         ###############################
         # risk rating
         system_content = system_message['content'] if isinstance(system_message['content'], str) else ""
@@ -927,13 +920,50 @@ def openai_assess_risk(request):
         ###############################
 
         # risk_summary = query_openai(risk_summary_message['content'])
-        risk_summary_array = parse_risk_summary(risk_summary) if risk_summary != 'x' else []
-        values = event_cost_estimate.split('|')
-        low_estimate, high_estimate, median_estimate = values
-
+        # risk_summary_array = parse_risk_summary(risk_summary) if risk_summary != 'x' else []
+        monthly_values = event_cost_estimate.split('|')
+        ## low_estimate, high_estimate, median_estimate = values
         # Return the results
-        result_array = [risk_rating, risk_score, low_estimate, high_estimate, risk_summary, median_estimate,
-                        risk_summary_array]
+        result_array = [risk_rating, risk_score, event_cost_estimate]
+
+        damage_repair_estimate_message = {
+            "role": "user",
+            "content": (
+                f"You are an expert in OT cybersecurity risk management and must provide an accurate and pragmatic damage analysis to an insurance underwriter. Given the scenario {scenario} in a {facility_type} within the {industry} industry, estimate the potential damage and repair effort specific to the scenario. Do not consider finances, outages or other outcomes unrelated to damage - only refer to the physical and product damage that the given scenario might result in."
+                f"Provide a concise estimate in less than 50 words, focusing specifically on the scenario's impact and necessary repair efforts."
+            )
+        }
+
+        # Query OpenAI for Damage and Repair Estimate
+        system_content = system_message['content'] if isinstance(system_message['content'], str) else ""
+        damage_repair_content = damage_repair_estimate_message['content'] if isinstance(
+            damage_repair_estimate_message['content'], str) else ""
+
+        combined_message = system_content + ' ' + damage_repair_content
+        damage_repair_estimate = query_openai(combined_message)
+
+        # Add the new estimate to the result array
+        result_array.append(damage_repair_estimate)
+
+        executive_summary_message = {
+            "role": "user",
+            "content": (
+                f"As the CISO presenting to the CEO, write a concise executive summary of the cybersecurity risk assessment for the scenario '{scenario}' affecting our {facility_type} in the {industry} industry. "
+                f"Consider the threat source '{threat_source}', tactic '{threat_tactic}', and our vulnerabilities rated {vulnerability}/10. "
+                f"Discuss the impacts on safety ({safety_impact}/10), life ({life_impact}/10), production ({production_impact}/10), financial ({financial_impact}/10), "
+                f"reputation ({reputation_impact}/10), environment ({environment_impact}/10), regulatory ({regulatory_impact}/10), data ({data_impact}/10), "
+                f"and supply chain ({supply_impact}/10). Mention the role of safeguards '{safeguards}', the potential outage ({outage}), "
+                f"and the estimated direct costs over the next 12 months which are given in order of month in {event_cost_estimate}."
+                f"Conclude with the main strategic considerations the company should focus on. "
+                f"Provide this summary in a concise, executive-friendly format that can be used on a slide. YOu will have less than 3 minutes to present the information so you must be sharp and concise. DO NOT PUT THE WORD 'SLIDE' ON THE SLIDE. INCLUDE THE TOTAL OF THE COSTS NOT THE MONTH BY MONTH BREAKDOWN"
+            )
+        }
+
+        # Generate the executive summary
+        executive_summary = query_openai(executive_summary_message['content'])
+
+        # Add the executive summary to the result array to be returned
+        result_array.append(executive_summary)
         return JsonResponse(result_array, safe=False)
 
 
@@ -1311,6 +1341,7 @@ def checkbox_to_boolean(value):
 
 
 def create_or_update_raw_scenario(request):
+
     if request.method == 'POST':
         raw_id = int(request.POST.get('rawID'))  # Assuming rawID is the ID of RAWorksheet
 
@@ -1325,9 +1356,6 @@ def create_or_update_raw_scenario(request):
         else:
             scenario_id = int(scenario_id_value)
 
-        control_list_str = request.POST.get('controlList')
-        control_list = json.loads(control_list_str)
-
         bia_sis_outage_bool = request.POST.get('bia_sis_outage') == 'yes'
         bia_sis_compromise_bool = request.POST.get('bia_sis_compromise') == 'yes'
         exposed_system_value = request.POST.get('exposed_system', 'off')
@@ -1341,7 +1369,8 @@ def create_or_update_raw_scenario(request):
             'ScenarioDescription': request.POST.get('ScenarioDescription'),
             'weak_credentials': weak_credentials,
             'exposed_system': exposed_system,
-            'RiskScore': request.POST.get('RiskScore'),
+            ## 'RiskScore': request.POST.get('RiskScore'),
+            'RiskScore': 0,
             'VulnScore': request.POST.get('VulnScore'),
             'ReputationScore': request.POST.get('ReputationScore'),
             'OperationScore': request.POST.get('OperationScore'),
@@ -1357,9 +1386,9 @@ def create_or_update_raw_scenario(request):
             'threatSource': request.POST.get('threatSource'),
             'riskSummary': request.POST.get('riskSummary'),
             'scenarioCost': clean_numeric_string(request.POST.get('scenarioCost')),
-            'event_cost_low': clean_numeric_string(request.POST.get('event_cost_low')),
-            'event_cost_high': clean_numeric_string(request.POST.get('event_cost_high')),
-            'event_cost_median': clean_numeric_string(request.POST.get('event_cost_median')),
+            # 'event_cost_low': clean_numeric_string(request.POST.get('event_cost_low')),
+            # 'event_cost_high': clean_numeric_string(request.POST.get('event_cost_high')),
+            # 'event_cost_median': clean_numeric_string(request.POST.get('event_cost_median')),
             'justifySafety': request.POST.get('justifySafety') or "No data entered",
             'justifyLife': request.POST.get('justifyLife') or "No data entered",
             'justifyProduction': request.POST.get('justifyProduction') or "No data entered",
@@ -1374,7 +1403,8 @@ def create_or_update_raw_scenario(request):
             'ThreatScore': request.POST.get('ThreatScore'),
             'threatTactic': request.POST.get('threatTactic'),
             'impact': request.POST.get('impact'),
-            'residual_risk': int(round(float(request.POST.get('residual_risk')))),
+            ## 'residual_risk': int(round(float(request.POST.get('residual_risk')))),
+            'residual_risk': 0,
             'bia_safety_hazard': request.POST.get('bia_safety_hazard'),
             'bia_sis_outage': bia_sis_outage_bool,
             'bia_sis_compromise': bia_sis_compromise_bool,
@@ -1393,6 +1423,9 @@ def create_or_update_raw_scenario(request):
             'bia_supply_prodimpact': request.POST.get('bia_supply_prodimpact'),
             'bia_supply_security': checkbox_to_boolean(request.POST.get('bia_supply_security', False)),
             'raw_consequences': request.POST.get('raw_consequences'),
+            'scenario_damage': request.POST.get('scenario_damage'),
+            'scenario_12month_costs': request.POST.get('scenario_12month_costs'),
+            'executive_summary': request.POST.get('executive_summary'),
         }
 
         # Check if scenario_id is provided to determine if it's an update or create
@@ -1405,21 +1438,34 @@ def create_or_update_raw_scenario(request):
             new_scenario = RAWorksheetScenario(**scenario_data)
             new_scenario.save()
             scenario_id = new_scenario.ID
+            scenario = get_object_or_404(RAWorksheetScenario, ID=scenario_id)
 
-        # Delete all existing controls for the given scenario
-        RawControlList.objects.filter(scenarioID_id=scenario_id).delete()
+        # Delete existing QRAW_Safeguard records related to this scenario
+        QRAW_Safeguard.objects.filter(scenario=scenario).delete()
 
-        # Add new controls from the control_list
-        for control_item in control_list:
-            control_name = control_item['control']
-            control_score = control_item['score']
+        # Process and save new safeguards
+        # Initialize a counter to iterate through the safeguards in the POST data
+        index = 0
+        while True:
+            # Construct the form field names for the current index
+            safeguard_description_key = f'safeguards[{index}][safeguard_description]'
+            safeguard_type_key = f'safeguards[{index}][safeguard_type]'
 
-            # Create a new control instance
-            RawControlList.objects.create(
-                scenarioID_id=scenario_id,
-                control=control_name,
-                score=control_score
-            )
+            # Check if there is a safeguard description for the current index
+            if safeguard_description_key in request.POST:
+                safeguard_description = request.POST[safeguard_description_key]
+                safeguard_type = request.POST.get(safeguard_type_key, '')
+
+                # Create the QRAW_Safeguard record
+                QRAW_Safeguard.objects.create(
+                    scenario=scenario,
+                    safeguard_description=safeguard_description,
+                    safeguard_type=safeguard_type
+                )
+                index += 1
+            else:
+                # Exit the loop if no more safeguards are found
+                break
 
         return JsonResponse({'message': 'Scenario created/updated successfully'}, status=200)
 
@@ -1499,7 +1545,34 @@ def analyze_raw_scenario(request):
             consequence_text = response['choices'][0]['message']['content']
             # consequence_list = consequence_text.split(';')  # Splitting based on the chosen delimiter
 
-            return JsonResponse({'consequence': consequence_text})
+            ## incident_flow_system_message = f"""
+            ##            Generate a diagram in JSON format representing the flow of the incident scenario from external to internal for the given scenario: '{scenario}'. The diagram should be structured hierarchically with 'name' for node labels and 'children' for nested nodes, representing each step or phase of the incident flow. EXTRA INSTRUCTION: Output MUST be in JSON format with no additional characters outside of the JSON structure.
+            ##        """
+
+            # Query OpenAI API for the incident flow diagram
+            ##incident_flow_response = openai.ChatCompletion.create(
+            ##    model="gpt-4",
+            ##    messages=[
+            ##        {"role": "system", "content": incident_flow_system_message},
+            ##        {"role": "user", "content": scenario}
+            ##    ],
+            ##    max_tokens=800,
+            ##    temperature=0.3
+            ##)
+
+            # Process the response for incident flow diagram
+            ## incident_flow_raw = incident_flow_response['choices'][0]['message']['content']
+
+            ## try:
+            # Parse the raw JSON string into a Python dictionary
+            ##    incident_flow_data = json.loads(incident_flow_raw)
+            ## except json.JSONDecodeError:
+            ##    return JsonResponse({"error": "Invalid JSON format from AI response"}, status=400)
+
+            # Return the results
+            return JsonResponse({
+                'consequence': consequence_text
+            })
 
 
     else:
@@ -1507,7 +1580,7 @@ def analyze_raw_scenario(request):
 
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
-
+@login_required
 def analyze_sim_scenario(request):
     openai_api_key = get_api_key('openai')
     openai.api_key = openai_api_key
@@ -1658,25 +1731,21 @@ def analyze_sim_consequences(request):
         scenario = request.POST.get('scenario')
         facility_type = request.POST.get('facility_type')
         industry = request.POST.get('industry')
+        country = request.POST.get('country')
         # Additional inputs for cost estimation
         organization_size = request.POST.get('organization_size', '').strip()
-        asset_value = request.POST.get('asset_value', '').strip()
-        operational_impact = request.POST.get('operational_impact', '').strip()
-        security_measures = request.POST.get('security_measures', '').strip()
+
         regulatory_environment = request.POST.get('regulatory_environment', '').strip()
 
         # Construct the system message for consequences
         consequence_message = f"""
-            You are an OT Cybersecurity incident scenario simulator. Given a cybersecurity scenario at a {facility_type} in the {industry} industry described as: '{scenario}'. Concisely describe in 50 words in a bulleted list format of a maximum of 5 of the most likely direct consequences of the given scenario.
+            You are an OT Cybersecurity incident scenario simulator. Given a cybersecurity scenario at a {facility_type} in the {industry} industry described as: '{scenario}'. Concisely describe in 80 words OR LESS in a bulleted list format of a MAXIMUM of 8 of the most likely direct consequences of the given scenario.
         """
 
         # Construct the system message for cost estimation
         cost_estimation_message = f"""
-            You are a cybersecurity insurance underwriter, estimate the most realistic and likely financial impact of a cybersecurity incident for a {facility_type} in the {industry} industry. The estimate should be based on current understandings, previously reported incidents, and real-world events. Provide the best case, worst case, and most likely case cost estimates in plain numerical format (e.g. 1000000 for one million dollars). Provide only the numerical values, without any additional explanation or narrative. Be pragmatic and do not exaggerate. Scenario details: '{scenario}'.
+            You are an actuary for an insurance company that underwrites cybersecurity insurance. Estimate the most realistic and likely financial impact of a cybersecurity incident for a {facility_type} in the {industry} industry. The estimate should be based on current understandings, previously reported incidents, and real-world events. Provide the best case, worst case, and most likely case cost estimates in plain numerical format (e.g. 1000000 for one million dollars). Provide only the numerical values, without any additional explanation or narrative. Be pragmatic and do not exaggerate. Scenario details: '{scenario}'.
             - Organization Size: {organization_size}
-            - Value of Affected Assets: {asset_value}
-            - Operational Impact: {operational_impact}
-            - Security Measures: {security_measures}
             - Regulatory Environment: {regulatory_environment}
             Provide the estimates as plain numerical values without any currency symbols or words (e.g., '1000000' for one million dollars):
             Best Case Cost: [value] 
@@ -1707,7 +1776,6 @@ def analyze_sim_consequences(request):
             temperature=0.1
         )
         cost_estimation_text = cost_response['choices'][0]['message']['content']
-        print(cost_estimation_text)
 
         # Extract numerical values from the response
         def extract_cost_value(text, label):
@@ -1723,12 +1791,78 @@ def analyze_sim_consequences(request):
         worst_case_cost = f"${int(worst_case_cost):,}" if worst_case_cost != "Not available" else worst_case_cost
         most_likely_case_cost = f"${int(most_likely_case_cost):,}" if most_likely_case_cost != "Not available" else most_likely_case_cost
 
+        event_cost_estimate_message = {
+            "role": "user",
+            "content": (
+                f"You are an insurance actuary. Generate a best-guess 12-month cost projection for direct costs relating to a hypothetical cybersecurity incident at a {organization_size} {facility_type} in the {industry} industry in {country}. Assume the annual revenue is average in the industry for the given facility in the given country. The scenario is: {scenario}. "
+                f"Base estimates on historical data from similar OT and IT cybersecurity incidents. Include costs if they apply to the given scenario. Direct costs are those related to incident response, remediation, legal fees, regulatory fines, and other direct expenses.  "
+                f"Estimate the budget cost for each month so that the Chief Finance Officer for the organization can plan appropriately. Use a pragmatic and realistic monthly estimate that only covers the direct expenses that would be covered by a cybersecurity insurance policy. Only consider costs directly related to the cybersecurity incident. (IMPORTANT Give only the cost for each month, NOT an aggregate of previous months plus the current month). You as the estimator should be able to justify why month on month costs increase OR decrease. The expectation is that costs will taper off over the 12 month period but YOU must give the most realistic response.Provide the estimates as a series of 12 integers in the format: Month1|Month2|...|Month12. Each value should represent the cost for that month in US dollars. Remember, only provide the numerical values without any narrative or explanation."
+            )
+        }
+        # Query OpenAI API for cost estimation
+        projection_response = openai.ChatCompletion.create(
+            model="gpt-4",
+            messages=[
+                {"role": "system",
+                 "content": "You are an insurance actuary tasked with generating a 12-month cost projection."},
+                event_cost_estimate_message  # This is the user message
+            ],
+            max_tokens=250,
+            temperature=0.1
+        )
+        projection_text = projection_response['choices'][0]['message']['content']
 
         return JsonResponse({
-                'best_case_cost': best_case_cost,
-                'worst_case_cost': worst_case_cost,
-                'most_likely_case_cost': most_likely_case_cost,
-                'consequence': consequence_text
-            })
+            'best_case_cost': best_case_cost,
+            'worst_case_cost': worst_case_cost,
+            'most_likely_case_cost': most_likely_case_cost,
+            'consequence': consequence_text,
+            'projection': projection_text
+        })
     else:
         return JsonResponse({'error': 'Invalid request'}, status=400)
+
+
+@require_POST
+@csrf_protect
+def update_workflow(request):
+    try:
+        worksheet_id = int(request.POST.get('worksheet_id'))
+        action = request.POST.get('action')
+        worksheet = RAWorksheet.objects.get(ID=worksheet_id)
+
+        if action == 'assign_approver':
+            selected_approver_id = request.POST.get('selected_approver_id')
+            worksheet.approver_id = selected_approver_id
+            activity_type = 'Approver Assigned'
+        elif action == 'approve':
+            worksheet.approval_status = 'Approved'
+            worksheet.StatusFlag = 'Approved'
+            activity_type = 'Approved'
+        elif action == 'reject':
+            worksheet.approval_status = 'Rejected'
+            worksheet.StatusFlag = 'Rejected'
+            worksheet.rejection_comments = request.POST.get('rejection_comments')
+            activity_type = 'Rejected'
+        else:
+            return JsonResponse({'status': 'error', 'message': 'Invalid action.'}, status=400)
+
+        worksheet.save()
+
+        # Update WorksheetActivity
+        activity = WorksheetActivity(
+            worksheet=worksheet,
+            user=request.user,
+            activity_type=activity_type,
+            timestamp=timezone.now(),
+            comments=request.POST.get('rejection_comments', '')
+        )
+        activity.save()
+
+        return JsonResponse({'status': 'success', 'message': 'Worksheet updated successfully.'})
+    except RAWorksheet.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Worksheet not found.'}, status=404)
+    except ValueError:
+        return JsonResponse({'status': 'error', 'message': 'Invalid worksheet ID.'}, status=400)
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
