@@ -158,6 +158,37 @@ $(function () {
     background-color: #3A5F5F; /* Slightly lighter grey on hover */
     color: #E0E0E0;
 }
+
+/* Add this to your CSS file */
+.docked-container {
+    position: fixed;
+    top: 0; /* Adjust based on your navbar height */
+    right: 0; /* Adjust if necessary */
+    width: 250px; /* Adjust based on your needs */
+    height: 60px; /* Adjust based on your navbar height */
+    z-index: 1030; /* Ensure it's above the navbar */
+    display: none; /* Initially hidden */
+}
+
+.floating-container {
+    position: fixed;
+    width: 50%; /* Initial width when floating */
+    display: none; /* Initially hidden */
+    z-index: 1040; /* Ensure it's above other content */
+}
+
+/* Adjustments for when the container is minimized */
+.minimized .content, .minimized .controls button:not(#maximizeBtn) {
+    display: none;
+}
+
+.minimized #maximizeBtn {
+    display: block;
+}
+
+
+
+
 </style>
 </head>
 <body style="background-color: #464748">
@@ -172,6 +203,10 @@ $(function () {
             <img src="{% static 'images/anzen_owl.png' %}" class="owl-logo" style="width: 18%; height: 18%">
         </a>
         <h6 class="my-auto text-center flex-grow-1 navbar-brand"><img src="{% static 'images/anzen_noowl.png' %}" style="width: 15%; height: 15%" alt=""> Scenario Manager</h6>
+    <div class="modal-dock-placeholder" style="display: none;">
+            <!-- The "Show KPIs" button will be moved here when the modal is docked -->
+            <button id="maximizeBtnDocked" style="display: none;" type="button" class="btn btn-primary">Show Scenario Report</button>
+        </div>
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
             <ul class="navbar-nav ms-auto">
                 <li class="nav-item menu-item">
@@ -1287,7 +1322,7 @@ $(function () {
 
     <div class="floating-container" id="floatingContainer">
         <div class="controls" >
-        <button id="minimizeBtn" type="button">Hide KPIs</button>
+        <button id="minimizeBtn" type="button">Hide Scenario Report</button>
         <button id="maximizeBtn" style="display: none;" type="button">Show KPIs</button>
         </div>
         <div class="content" id="content">
@@ -1522,6 +1557,49 @@ makeDraggable(document.getElementById('floatingContainer')); // Assuming makeDra
 
 // Call this function with your floating container element
 makeDraggable(document.getElementById("floatingContainer"));
+$(document).ready(function () {
+    // Initially dock the container
+    dockContainer();
+
+    $("#minimizeBtn").click(function () {
+        dockContainer();
+    });
+
+    // Adjusted to target the docked "Show KPIs" button
+    $("#maximizeBtnDocked").click(function () {
+        undockContainer();
+    });
+
+    // Function to dock the container
+    function dockContainer() {
+        var floatingContainer = $('#floatingContainer');
+        floatingContainer.hide(); // Hide the floating container
+        $('#content').hide();
+        $('#minimizeBtn').hide();
+        $('#maximizeBtn').hide(); // Hide the original maximize button
+        $('.modal-dock-placeholder').show(); // Show the dock placeholder
+        $('#maximizeBtnDocked').show(); // Show the docked "Show KPIs" button
+    }
+
+    // Function to make the container floating
+    function undockContainer() {
+        var floatingContainer = $('#floatingContainer');
+        floatingContainer.show();
+        $('#content').show();
+        $('#maximizeBtn').hide();
+        $('#minimizeBtn').show();
+        $('.modal-dock-placeholder').hide(); // Hide the dock placeholder
+         floatingContainer.css('width', '50%'); // Or set to a specific pixel width if preferred
+
+        $('body').append(floatingContainer); // Move back to body if needed
+        makeDraggable(floatingContainer.get(0)); // Make it draggable again
+    }
+
+    // Your existing draggable functionality remains the same
+    function makeDraggable(element) {
+        // Your existing draggable code...
+    }
+});
 
 </script>
 
@@ -3257,6 +3335,18 @@ $('#scenarioSelectModal').on('show.bs.modal', function (e) {
             let validatedConsequences = [];
             let validatedConsequenceExists = false;
 
+             // Gather Physical Safeguards from the table
+            let physicalSafeguards = [];
+            $("#table_safeguards tbody tr").each(function() {
+                let safeguard = $(this).find("td:first textarea").val(); // Assuming the first column contains a textarea
+                if (safeguard) {
+                    physicalSafeguards.push(safeguard.trim());
+                }
+            });
+
+            // Format the physical safeguards into a string
+            let physicalSafeguardsStr = "Physical security controls. Control:" + physicalSafeguards.join(". Control: ")
+
             for (let i = 0; i < rows.length; i++) {
                 const isChecked = rows[i].cells[1].getElementsByTagName('input')[0].checked;
                 if (isChecked) {
@@ -3306,6 +3396,7 @@ $('#scenarioSelectModal').on('show.bs.modal', function (e) {
                     production_outage: production_outage,
                     production_outage_length: production_outage_length,
                     validated_consequences: validatedConsequencesStr,
+                    physical_safeguards: physicalSafeguardsStr
                 },
                 success: function (response) {
                     $('#loadingSpinner').hide();

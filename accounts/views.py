@@ -360,7 +360,9 @@ def setup_2fa(request):
                     raise ValidationError("Invalid phone number format")
 
                 phone_number = phonenumbers.format_number(parsed_number, phonenumbers.PhoneNumberFormat.E164)
-
+                user_profile = UserProfile.objects.get(user__id=request.user.id)
+                user_profile.phone_number = phone_number
+                user_profile.save()
                 # Send verification code to the user's phone
                 code = send_verification_code(phone_number)
                 request.session['verification_code'] = code

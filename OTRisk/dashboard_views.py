@@ -305,10 +305,12 @@ def dashboardhome(request):
     groups_with_cyberphas = []
     for group in CyberPHA_Group.objects.all():
         cyberphas = group.tblcyberphaheader_set.filter(UserID__in=organization_users)
-        groups_with_cyberphas.append({
-            'group_name': group.name,
-            'cyberphas': [{'facility_name': cyberpha.FacilityName} for cyberpha in cyberphas]
-        })
+        # Only append the group if it has associated tblCyberPHAHeader records within the organization
+        if cyberphas.exists():
+            groups_with_cyberphas.append({
+                'group_name': group.name,
+                'cyberphas': [{'facility_name': cyberpha.FacilityName} for cyberpha in cyberphas]
+            })
     worksheets_to_approve = RAWorksheet.objects.filter(
         Q(approver=request.user),
         Q(approval_status='Pending') | Q(approval_status='Rejected')

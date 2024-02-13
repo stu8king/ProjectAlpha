@@ -5,7 +5,7 @@
 <head>
 
 <title>AnzenOT</title>
-    <link rel="icon" href="{% static 'images/iota - white 1.png' %}" type="image/x-icon">
+    <link rel="icon" href="{% static 'images/AnzenOTIconBlack.png' %}" type="image/x-icon">
     <link rel="stylesheet" type="text/css" href="{%  static 'css/qraw.css' %}">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
@@ -791,7 +791,101 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
     </div>
         <div class="row">
         <!-- Workflow Management Section -->
-<div class="col-md-9"></div>
+<div class="col-md-9">
+        <div class="form-group">
+            <div class="row">
+                <div class="col" style="color:white; text-align: center">
+                    Indicate if the controls have been implemented at the facility
+                </div>
+            </div>
+            <br>
+            <div class="row">
+                <div class="col-md-2">
+                    <div class="group-container">
+                        <div class="group-header">
+                            Employee Security Awareness
+                        </div>
+                        <div class="group-body">
+
+                            <label class="switch">
+                              <input type="checkbox" id="security_awareness" name="security_awareness">
+                              <span class="slider1 round"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="group-container">
+                        <div class="group-header">
+                            Network Segmentation
+                        </div>
+                        <div class="group-body">
+
+                            <label class="switch">
+                              <input type="checkbox" id="network_segmentation" name="network_segmentation">
+                              <span class="slider1 round"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="group-container">
+                        <div class="group-header">
+                            Role-based Access Control
+                        </div>
+                        <div class="group-body">
+
+                            <label class="switch">
+                              <input type="checkbox" id="access_control" name="access_control">
+                              <span class="slider1 round"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="group-container">
+                        <div class="group-header">
+                            Asset Inventory Management
+                        </div>
+                        <div class="group-body">
+
+                            <label class="switch">
+                              <input type="checkbox" id="asset_management" name="asset_management">
+                              <span class="slider1 round"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="group-container">
+                        <div class="group-header">
+                            Monitoring and Anomaly Detection
+                        </div>
+                        <div class="group-body">
+
+                            <label class="switch">
+                              <input type="checkbox" id="anomaly_detection" name="anomaly_detection">
+                              <span class="slider1 round"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-2"><div class="group-container">
+                        <div class="group-header">
+                            Incident Response Plan
+                        </div>
+                        <div class="group-body">
+
+                            <label class="switch">
+                              <input type="checkbox" id="ir_plan" name="ir_plan">
+                              <span class="slider1 round"></span>
+                            </label>
+                        </div>
+                    </div></div>
+
+            </div>
+        </div>
+</div>
 <div class="col-md-3 workflow-management-section">
     <div class="card mb-3 shadow-sm" style="border: 1px solid black;" id="workflow-mgmt">
         <div class="card-body">
@@ -1447,7 +1541,7 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                         <button type="button" class="btn btn-primary btn-file-dialog" data-bs-toggle="modal" data-bs-target="#scenarioSelectModal" id="btnSelectScenario_2">Load Scenario</button>
                     </div>
                     <div class="group-body">
-                        <textarea class="form-control small-font" name="txtScenarioDescription_2" id="txtScenarioDescription_2" rows="5" style="resize: none; word-wrap: normal" placeholder="Enter a concise and descriptive scenario" onchange="setRiskAssessmentRefreshRequired(1)" onblur="analyze_Scenario(1)"></textarea>
+                        <textarea class="form-control small-font" name="txtScenarioDescription_2" id="txtScenarioDescription_2" rows="5" style="resize: none; word-wrap: normal" placeholder="Enter a concise and descriptive scenario" onchange="setRiskAssessmentRefreshRequired(2)" onblur="analyze_Scenario(2)"></textarea>
                         <div class="spinner-container" style="position: relative;">
                             <div class="spinner-overlay_2" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255, 255, 255, 0.7); display: none; justify-content: center; align-items: center;">
                                 <div class="spinner-border" role="status">
@@ -1800,12 +1894,12 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
             </div>
             <div class="col-md-5 small-font">
                 <br>
-                <button id="risk-assessment-btn_2" type="button" class="btn btn-primary" style="background-color: #e24e42"   onclick="checkEditModeAndExecute(this.id, 'loadingSpinner1')">
+                <button id="risk-assessment-btn_2" type="button" class="btn btn-primary" style="background-color: #e24e42"   onclick="checkEditModeAndExecute(this.id, 'loadingSpinner2')">
                     <i class="bi bi-play-fill mr-2"></i>Execute Risk Assessment
                 </button>
                 <br>
                 <!-- Add this HTML element where you want to display the loading spinner -->
-                <div id="loadingSpinner1" class="spinner-border" role="status" style="display: none;">
+                <div id="loadingSpinner2" class="spinner-border" role="status" style="display: none;">
                   <span class="visually-hidden">Loading...</span>
                 </div>
                 <br>
@@ -1908,146 +2002,196 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                 </div>
             </div>
         </div>
+    <div class="tab-pane" id="scenario3" style="background-color: #5E6266">
+        <div class="row">
+            <div class="col-md-3 small-font">
 
-        <div class="tab-pane " id="scenario3">
-          <!-- Scenario 3 controls -->
-            <div class="row">
-          <div class="col-md-4 small-font">
                 <input type="hidden" name="hdnScenarioID_3" id="hdnScenarioID_3">
-                <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                    <div class="card-body card-body-white">
+                <br>
+                <div class="group-container">
+                    <div class="group-header">
+                         <span style="color: white;">Scenario Description</span>
+                        <button type="button" class="btn btn-primary btn-file-dialog" data-bs-toggle="modal" data-bs-target="#scenarioSelectModal" id="btnSelectScenario_3">Load Scenario</button>
+                    </div>
+                    <div class="group-body">
+                        <textarea class="form-control small-font" name="txtScenarioDescription_3" id="txtScenarioDescription_3" rows="5" style="resize: none; word-wrap: normal" placeholder="Enter a concise and descriptive scenario" onchange="setRiskAssessmentRefreshRequired(3)" onblur="analyze_Scenario(3)"></textarea>
                         <div class="spinner-container" style="position: relative;">
-                          <textarea class="form-control small-font" name="txtScenarioDescription_3" id="txtScenarioDescription_3" rows="3" style="resize: none; word-wrap: normal" placeholder="Enter a concise and descriptive scenario" onchange="setRiskAssessmentRefreshRequired(1)" onblur="analyze_Scenario(3)"></textarea>
-
                             <div class="spinner-overlay_3" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255, 255, 255, 0.7); display: none; justify-content: center; align-items: center;">
-                              <div class="spinner-border" role="status">
-                                  <span class="sr-only">Analyzing...</span>
-                              </div>
-                          </div>
-                      </div>
+                                <div class="spinner-border" role="status">
+                                    <span class="sr-only">Analyzing...</span>
+                                </div>
+                            </div>
+                            <br>
+                            <input class="form-check-input" type="checkbox" id="lock_scenario_2" onchange="toggleLockScenario()">
+                            <label class="form-check-label" for="lock_scenario_2">
+                                Lock Scenario
+                            </label>
+                                <br>
+                            <label for="txtScenarioAnalysis_3" class="small-font" style="visibility: hidden">Recommendations will align with selected standards:</label>
+                            <textarea id="txtScenarioAnalysis_3" name="txtScenarioAnalysis_3" class="form-control small-font"  rows="5" style="resize: none; word-wrap: normal" readonly></textarea>
 
-          <div class="form-check">
-              <input class="form-check-input" type="checkbox" id="lock_scenario_3" onchange="toggleLockScenario_3()">
-              <label class="form-check-label" for="lock_scenario_3">
-                  Lock Scenario
-              </label>
-          </div>
-
-          <label for="txtScenarioAnalysis_3" class="small-font" style="visibility: hidden">Recommendations will align with selected standards:</label>
-          <textarea id="txtScenarioAnalysis_3" name="txtScenarioAnalysis_3" class="form-control small-font"  rows="5" style="resize: none; word-wrap: normal" readonly></textarea>
-
-          <script>
-          function toggleLockScenario_3() {
-              var checkbox = document.getElementById('lock_scenario_3');
-              var textarea = document.getElementById('txtScenarioDescription_3');
-              textarea.readOnly = checkbox.checked; // Set textarea readonly based on checkbox
-          }
-          </script>
-      </div>
-
-</div>
-  <div class="row">
-      <div class="col-md-1"></div>
-                <div class="col-md-5">
-                    <div class="form-group-white">
-                        <label class="form-control border-0 small-font"><h6>Internet Exposed IP Address</h6></label>
-                        <label class="switch">
-                          <input type="checkbox" id="exposed_system_3" name="exposed_system_3">
-                          <span class="slider1 round"></span>
-                        </label>
+                            <script>
+                            function toggleLockScenario() {
+                                var checkbox = document.getElementById('lock_scenario_3');
+                                var textarea = document.getElementById('txtScenarioDescription_3');
+                                textarea.readOnly = checkbox.checked; // Set textarea readonly based on checkbox
+                            }
+                            </script>
+                        </div>
                     </div>
                 </div>
+
+
+            <br>
+            <div class="row">
+                    <div class="col-md-1"></div>
+                        <div class="col-md-5">
+                            <div class="group-container">
+                                <div class="group-header">
+                                    Exposed IP Address
+                                </div>
+                                <div class="group-body">
+
+                                    <label class="switch">
+                                      <input type="checkbox" id="exposed_system_3" name="exposed_system_3">
+                                      <span class="slider1 round"></span>
+                                    </label>
+                                </div>
+                            </div>
+
+                </div>
                 <div class="col-md-5">
-                    <div class="form-group-white">
-                        <label class="form-control border-0 small-font"><h6>Default/Weak Credentials</h6></label>
-                        <label class="switch">
+                    <div class="group-container">
+                                <div class="group-header">
+                                    Default/ Weak Credentials
+                                </div>
+                                <div class="group-body">
+                                <label class="switch">
                           <input type="checkbox" id="weak_credentials_3" name="weak_credentials_3">
                           <span class="slider1 round"></span>
                         </label>
-                    </div>
+                                </div>
+                            </div>
+
                 </div>
-      <div class="col-md-1"></div>
+                <div class="col-md-1"></div>
             </div>
-          <br>
-              <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                    <div class="card-body card-body-white">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <label for="selectOutage_3" class="form-control border-0 small-font">Production Outage</label>
-                                  <select id="selectOutage_3" name="selectOutage_3" class="form-control small-font">
-                                    <option value="N/A">-- Select Outage --</option>
-                                    <option value="Yes">Yes</option>
-                                      <option value="No">No</option>
-                                  </select>
+            <br>
+            <div class="row">
+                    <div class="col-md-1"></div>
+                        <div class="col-md-5">
+                            <div class="group-container">
+                                <div class="group-header">
+                                    Production Outage
+                                </div>
+                                <div class="group-body">
+                                <label class="switch">
+                                      <input type="checkbox" id="production_outage_3" name="production_outage_3">
+                                      <span class="slider1 round"></span>
+                                    </label>
+                                </div>
                             </div>
-                            <div class="col-md-6">
-                                <label for="outage_3" class="form-control border-0 small-font">Outage Length (in hours):</label>
-                                <input type="number" id="outage_3" name="outage_3" min="0" max="100" class="form-control">
+
+                </div>
+                <div class="col-md-5">
+                    <div class="group-container">
+                                <div class="group-header">
+                                    Outage Length (hours)
+                                </div>
+                                <div class="group-body">
+
+                            <input type="number" id="outage_3" name="outage_3" min="0" max="100" class="form-control">
+                                </div>
                             </div>
-                        </div>
-                    </div>
-                  </div>
-                <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                    <div class="card-body card-body-white">
-                          <label for="selectThreat_3" class="form-control border-0 small-font">Threat Source</label>
-                          <select id="selectThreat_3" name="selectThreat_3" class="form-control">
-                            <option value="">-- Select Threat Source --</option>
-                            {% for threatsources in threatsources %}
-                                <option value="{{ threatsources.ThreatSource}}">{{ threatsources.ThreatSource }}</option>
-                            {% endfor %}
-                          </select>
-                    </div>
+
                 </div>
-                <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                    <div class="card-body card-body-white">
-                      <label for="selectTactics_3" class="form-control border-0 small-font">Threat Tactics (Mitre)</label>
-                      <select id="selectTactics_3" name="selectTactics_3" class="form-control">
-                        <option value="">-- Select Threat Tactics --</option>
-                        {% for mitreTactics in mitreTactics %}
-                            <option value="{{ mitreTactics.tactic}}">{{ mitreTactics.tactic }}</option>
-                        {% endfor %}
-                      </select>
-                    </div>
+                <div class="col-md-1"></div>
+            </div>
+
+            <div class="group-container">
+                <div class="group-header">
+                     Threat Source
+
                 </div>
-                <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                <div class="card-body card-body-white">
-                    <label for="id_impact_3" class="form-control border-0 small-font">Impact</label>
-                    <select id="id_impact_3" name="impact" class="form-control small-font">
+                <div class="group-body">
+
+                  <select id="selectThreat_3" name="selectThreat_3" class="form-control small-font">
+                    <option value="">-- Select Threat Source --</option>
+                    {% for threatsources in threatsources %}
+                        <option value="{{ threatsources.ThreatSource}}">{{ threatsources.ThreatSource }}</option>
+                    {% endfor %}
+                  </select>
+
+                </div>
+              </div>
+
+            <div class="group-container">
+                <div class="group-header">
+                     Threat Tactic
+
+                </div>
+                <div class="group-body">
+                    <select id="selectTactics_3" name="selectTactics_3" class="form-control small-font">
+                    <option value="">-- Select Threat Tactics --</option>
+                    {% for mitreTactics in mitreTactics %}
+                        <option value="{{ mitreTactics.tactic}}">{{ mitreTactics.tactic }}</option>
+                    {% endfor %}
+                  </select>
+
+                </div>
+              </div>
+            <div class="group-container">
+                <div class="group-header">
+                     Scenario Impact
+
+                </div>
+                <div class="group-body">
+                     <select id="id_impact_3" name="impact" class="form-control small-font">
                         <option value="">-- Select Impact --</option>
                         {% for value, display in scenario_form.fields.impact.choices %}
                             <option value="{{ value }}">{{ display }}</option>
                         {% endfor %}
                     </select>
+
                 </div>
               </div>
-                <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                    <div class="card-body card-body-white">
-                        <label for="txtAssets_3" class="form-control border-0 align-text-bottom">Asset Name/s</label>
-                        <textarea class="form-control" name="txtAssets_3" id="txtAssets_3" rows="3" style="resize: none; word-wrap: normal" placeholder="Add asset names relevant to the scenario..."></textarea>
-                    </div>
+                <div class="group-container">
+                <div class="group-header">
+                     Asset Detail
+
                 </div>
-            </div>
+                <div class="group-body">
+                     <textarea class="form-control small-font" name="txtAssets_3" id="txtAssets_3" rows="3" style="resize: none; word-wrap: normal" placeholder="Add asset names relevant to the scenario..."></textarea>
+
+                </div>
+              </div>
+
+                </div>
             <div class="col-md-4 small-font">
                 <br>
-                <h5>Business Impact Analysis</h5>
-                Click the icons to add additional detail
+                <div class="group-container">
+                <h5 style="color: white">Business Impact Analysis</h5>
+                <font style="color:white">Click the icons to add additional detail</font>
+
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                         <div class="card-body card-body-white">
                             <!--slider for safety rating -->
                             <div class="slider-container d-flex align-items-center" >
                                 <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#safetyModal_3" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/safety.png' %}" style="height:2rem"> &nbsp;Safety</label></div>
                                 <div class="col-7">
-                                    <label for="range_safety_3"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_safety_3" name="range_safety_3" onchange="initSlider('range_safety_3', 'safetyrange_3');setRiskAssessmentRefreshRequired(3);">
+                                    <label for="range_safety_3"></label>
+
+                                    <input type="range" min="1" max="10" value="1" class="slider" id="range_safety_3" name="range_safety_3" onchange="initSlider('range_safety_3', 'safetyrange_3');setRiskAssessmentRefreshRequired(3);">
                                 </div>
                                 <div class="col-2"><label id="safetyrange_3" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></div>
-                            </div>
+                              </div>
                         </div>
                     </div>
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                         <div class="card-body card-body-white">
                             <!--slider for life rating -->
                             <div class="slider-container d-flex align-items-center">
-                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#lifeModal_3" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/danger.png' %}" style="height:2rem"> &nbsp;Life</label></div>
+                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#lifeModal_2" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/danger.png' %}" style="height:2rem"> &nbsp;Life</label></div>
                                 <div class="col-7">
                                     <label for="range_life_3"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_life_3" name="range_life_3" onchange="initSlider('range_life_3', 'liferange_3');setRiskAssessmentRefreshRequired(3);">
                                 </div>
@@ -2055,23 +2199,25 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                             </div>
                         </div>
                     </div>
+
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                         <div class="card-body card-body-white">
                             <!--slider for production rating -->
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#productionModal_3" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/production.png' %}" style="height:2rem">&nbsp; Production</label></div>
                                 <div class="col-7">
-                                    <label for="range_production_3"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_production_3" name="range_production_3" onchange="initSlider('range_production_3', 'productionrange_3');setRiskAssessmentRefreshRequired(3);">
+                                    <label for="range_production_3"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_production_3" name="range_production_2" onchange="initSlider('range_production_3', 'productionrange_3');setRiskAssessmentRefreshRequired(3);">
                                 </div>
                                 <div class="col-2"><h6><label id="productionrange_3" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
                         </div>
                     </div>
+
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                         <div class="card-body card-body-white">
                              <!--slider for finance rating -->
                             <div class="slider-container d-flex align-items-center">
-                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#financeModal_3" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/finance.png' %}" style="height:2rem">&nbsp; Financial</label></div>
+                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#financeModal_3"  data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/finance.png' %}" style="height:2rem">&nbsp; Financial</label></div>
                                 <div class="col-7">
                                     <label for="range_finance_3"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_finance_3" name="range_finance_3" onchange="initSlider('range_finance_3', 'financerange_3');setRiskAssessmentRefreshRequired(3);">
                                 </div>
@@ -2079,12 +2225,11 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                             </div>
                         </div>
                     </div>
-
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                         <div class="card-body card-body-white">
                             <!--slider for reputation rating -->
                             <div class="slider-container d-flex align-items-center">
-                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#reputationModal_3" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/reputation.png' %}" style="height:2rem"> &nbsp; Reputation</label></div>
+                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#reputationModal_3"  data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/reputation.png' %}" style="height:2rem"> &nbsp;Reputation</label></div>
                                 <div class="col-7">
                                     <label for="range_reputation_3"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_reputation_3" name="range_reputation_3" onchange="initSlider('range_reputation_3', 'reputationrange_3');setRiskAssessmentRefreshRequired(3);">
                                 </div>
@@ -2092,12 +2237,11 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                             </div>
                         </div>
                     </div>
-
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                         <div class="card-body card-body-white">
                             <!--slider for environment impact rating -->
                             <div class="slider-container d-flex align-items-center">
-                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#environmentModal_3" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/environment.png' %}" style="height:2rem"> &nbsp; Environment</label></div>
+                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#environmentModal_3"  data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/environment.png' %}" style="height:2rem"> &nbsp;Environment</label></div>
                                 <div class="col-7">
                                     <label for="range_environment_3"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_environment_3" name="range_environment_3" onchange="initSlider('range_environment_3', 'environmentrange_3');setRiskAssessmentRefreshRequired(3);">
                                 </div>
@@ -2109,7 +2253,7 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                         <div class="card-body card-body-white">
                             <!--slider for regulatory impact rating -->
                             <div class="slider-container d-flex align-items-center">
-                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#regulationModal_3" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/regulation.png' %}" style="height:2rem">&nbsp; Regulatory</label></div>
+                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#regulationModal_3"  data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/regulation.png' %}" style="height:2rem">&nbsp; Regulatory</label></div>
                                 <div class="col-7">
                                     <label for="range_regulatory_3"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_regulatory_3" name="range_regulatory_3" onchange="initSlider('range_regulatory_3', 'regulatoryrange_3');setRiskAssessmentRefreshRequired(3);">
                                 </div>
@@ -2121,7 +2265,7 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                         <div class="card-body card-body-white">
                             <!--slider for data impact rating -->
                             <div class="slider-container d-flex align-items-center">
-                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#dataModal_3" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/data.png' %}" style="height:2rem"> &nbsp; Data/IP</label></div>
+                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#dataModal_3"  data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/data.png' %}" style="height:2rem"> &nbsp;Data/IP</label></div>
                                 <div class="col-7">
                                     <label for="range_data_3"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_data_3" name="range_data_3" onchange="initSlider('range_data_3', 'datarange_3');setRiskAssessmentRefreshRequired(3);">
                                 </div>
@@ -2129,11 +2273,11 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                             </div>
                         </div>
                     </div>
-                <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                    <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                         <div class="card-body card-body-white">
                             <!--slider for data impact rating -->
                             <div class="slider-container d-flex align-items-center">
-                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#supplyModal_3" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/supply.png' %}" style="height:2rem"> &nbsp;Supply Chain</label></div>
+                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#supplyModal_3"  data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/supply.png' %}" style="height:2rem"> &nbsp;Supply Chain</label></div>
                                 <div class="col-7">
                                     <label for="range_supply_3"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_supply_3" name="range_supply_3" onchange="initSlider('range_supply_3', 'supplyrange_3');setRiskAssessmentRefreshRequired(3);">
                                 </div>
@@ -2141,17 +2285,18 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                             </div>
                         </div>
                     </div>
-                <br>
-                <h5>Vulnerability and Likelihood Analysis</h5>
+                </div>
+                <h5 style="color: white">Vulnerability and Likelihood Analysis</h5>
+                <div class="group-container">
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                         <div class="card-body card-body-white">
                             <!--slider for vulnerability rating -->
                             <div class="slider-container d-flex align-items-center" >
-                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#vulnModal_3" data-bs-placement="top" style="cursor: pointer">Vulnerability</label></div>
+                                <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#vulnModal_3"  data-bs-placement="top" style="cursor: pointer">Vulnerability</label></div>
                                 <div class="col-7">
                                     <label for="range_vuln_3"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_vuln_3" name="range_vuln_3" onchange="initSlider('range_vuln_3', 'vulnrange_3')">
                                 </div>
-                                <div class="col-2"><label id="vulnrange_3" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></div>
+                                <div class="col-3"><label id="vulnrange_3" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></div>
                             </div>
                         </div>
                     </div>
@@ -2159,282 +2304,367 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                         <div class="card-body card-body-white">
                             <!--slider for threat rating -->
                             <div class="slider-container d-flex align-items-center">
-                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="">Threat</label></div>
+                                <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the danger to life of the selected scenario">Threat</label></div>
                                 <div class="col-7">
                                     <label for="range_threat_3"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_threat_3" name="range_threat_3" onchange="initSlider('range_threat_3', 'threatrange_3');">
                                 </div>
-                                <div class="col-2"><h6><label id="threatrange_3" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                                <div class="col-3"><h6><label id="threatrange_3" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
                         </div>
                     </div>
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                         <div class="card-body card-body-white">
-                            <!--slider for Asset Status-->
+                            <!--slider for frequency-->
                             <div class="slider-container d-flex align-items-center">
-                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to indicate asset status">Asset Status</label></div>
+                                <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to indicate asset status">Asset Status</label></div>
                                 <div class="col-7">
                                     <label for="range_frequency_3"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_frequency_3" name="range_frequency_3" onchange="initFrequencySlider('range_frequency_3', 'frequencyrange_3');">
                                 </div>
-                                <div class="col-2"><h6><label id="frequencyrange_3" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                                <div class="col-3"><h6><label id="frequencyrange_3" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
                         </div>
                     </div>
+                    <div class="card mb-3 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title" style="color: white">Physical Safeguards</h5>
+                        <div id="tablePhysicalControls_3" class="mb-2">
+                            <button id="addRowBtn" class="btn btn-primary btn-sm" type="button">Add Row</button>
+                        </div>
+                        <table class="table table-bordered small-font" id="table_safeguards_3">
+                            <thead>
+                                <tr>
+                                    <th>Safeguard</th>
+                                    <th>Safeguard Type</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Rows will be added here dynamically -->
+                            </tbody>
+                        </table>
+                        <script>
+                            $(document).ready(function() {
+                                $("#addRowBtn").click(function() {
+                                    var newRow = `<tr>
+                                        <td><textarea class="form-control" maxlength="100"></textarea></td>
+                                        <td><textarea class="form-control" maxlength="100"></textarea></td>
+                                        <td><button type="button" class="btn btn-danger btn-sm deleteRowBtn">Delete</button></td>
+                                    </tr>`;
+                                    $("#table_safeguards_3 tbody").append(newRow);
+                                });
 
+                                // Event delegation to handle dynamically added elements
+                                $("#table_safeguards_3").on("click", ".deleteRowBtn", function() {
+                                    $(this).closest("tr").remove();
+                                });
+                            });
+                            </script>
+
+                    </div>
+                </div>
+
+                </div>
             </div>
-            <div class="col-md-4 small-font">
+            <div class="col-md-5 small-font">
                 <br>
-                <button id="risk-assessment-btn_3" type="button" class="btn btn-primary" style="background-color: #eb6e80" onclick="checkEditModeAndExecute(this.id, 'loadingSpinner3')">
+                <button id="risk-assessment-btn_3" type="button" class="btn btn-primary" style="background-color: #e24e42"   onclick="checkEditModeAndExecute(this.id, 'loadingSpinner3')">
                     <i class="bi bi-play-fill mr-2"></i>Execute Risk Assessment
                 </button>
-
+                <br>
                 <!-- Add this HTML element where you want to display the loading spinner -->
                 <div id="loadingSpinner3" class="spinner-border" role="status" style="display: none;">
                   <span class="visually-hidden">Loading...</span>
                 </div>
-
-
-                    <div class="card mb-3 shadow-sm">
-                        <div class="card-body card-body-white">
-                            <label class="form-label">Risk Rating: </label>
-                            <input type="text" id="lblriskRating_3" name="lblriskRating_3" class="form-control" readonly>
-                        </div>
-                    </div>
-
-                    <div class="card mb-3 shadow-sm">
-                        <div class="card-body card-body-white">
-                            <div class="row">
-                                <div class="col">
-                                    <label class="form-label" style="font-size: 10px">Est. Incident Costs (Low): </label>
-                                    <input type="text" id="lblriskCost_3" name="lblriskCost_3" class="form-control" style="font-size: 14px; color: #0a53be" readonly><br>
-                                </div>
-                                <div class="col">
-                                    <label class="form-label" style="font-size: 10px">Est. Incident Costs (High): </label>
-                                    <input type="text" id="lblriskCostHigh_3" name="lblriskCostHigh_3" class="form-control" style="font-size: 14px; color: #0a53be" readonly><br>
-                                </div>
-                                <div class="col">
-                                    <label class="form-label" style="font-size: 10px">Est. Incident Costs (Median): </label>
-                                    <input type="text" id="lblriskCostMedian_3" name="lblriskCostMedian_3" class="form-control" style="font-size: 14px; color: #0a53be" readonly><br>
-                                </div>
+                <br>
+                <div class="row">
+                    <div class="col-md-1"></div>
+                    <div class="col-md-5">
+                        <div class="group-container">
+                            <div class="group-header">
+                                 Risk Rating
+                            </div>
+                                <div class="group-body">
+                                    <img src="{% static 'images/redcube.png' %}" class="cube-icon" alt="Red Cube"><label id="lblriskRating_3" name="lblriskRating_3" style="color:white"></label>
                             </div>
                         </div>
                     </div>
-                    <div class="card mb-3 shadow-sm">
-                        <div class="card-body card-body-white">
-                            <label class="form-label">Recommended Controls: </label>
-
-
-                            <div id="risk_a=summary_table_container_3">
-                            <table id="risk_summary_controls_table_3" class="table table-striped table-bordered" style="font-size: 10px">
-                                <thead>
-                                    <tr>
-                                        <th>Risk Summary Item</th>
-                                        <th>Control Effectiveness (%)</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <!-- Rows will be populated here -->
-                                </tbody>
-                            </table>
+                    <div class="col-md-5">
+                        <div class="group-container">
+                            <div class="group-header">
+                                 Residual Risk
                             </div>
-                            <input type="text" id="control_score_3" name="control_score_3" style="visibility: hidden">
-                                     <script>
-                                    function initializeControlScore_3() {
-                                        // Get all sliders in the table
-                                        var sliders = document.querySelectorAll('#risk_summary_controls_table_4 input[type="range"]');
+                                <div class="group-body">
+                                    <img src="{% static 'images/redcube.png' %}" class="cube-icon" alt="Red Cube"><label id="lblinherentRisk_3" name="lblinherentRisk_3" style="color:white"></label>
+                                    <input type="hidden" id="txtResidualRisk_3">
+                                </div>
 
-                                        // Function to calculate and update the overall control score
-                                        function updateControlScore() {
-                                            var totalScore = 0;
-
-                                            sliders.forEach(function(slider) {
-                                                totalScore += parseInt(slider.value, 10);
-                                            });
-
-                                            var averageScore = totalScore / sliders.length;
-                                            document.getElementById('control_score_3').value = averageScore.toFixed(2);  // Displaying the score up to two decimal places
-
-                                            // Calculate the residual risk
-                                            var inherentRisk = parseFloat(document.getElementById('lblriskScore_3').value);
-                                            var residualRisk = inherentRisk * (1 - (averageScore / 100));
-
-                                            // Update the residual risk slider value
-                                            document.getElementById('residual_risk_3').value = residualRisk.toFixed(2);
-
-                                            setSliderColor(document.getElementById("residual_risk_3"));
-                                             const event = new Event('input', {
-                                                'bubbles': true,
-                                                'cancelable': true
-                                            });
-                                            document.getElementById("residual_risk_3").dispatchEvent(event);
-
-                                        }
-
-                                        // Attach event listener to each slider
-                                        sliders.forEach(function(slider) {
-                                            slider.addEventListener('input', updateControlScore);
-                                        });
-
-                                        // Initial calculation
-                                        updateControlScore();
-                                    }
-
+                        </div>
+                    </div>
+                    <div class="col-md-1"></div>
+                </div>
+                <div class="row">
+                    <div class="col-md-1"></div>
+                    <div class="col">
+                        <div class="group-container">
+                            <div class="group-header">
+                                 Executive Summary
+                            </div>
+                                <div class="group-body">
+                            <textarea rows="10"  id="txtexec_summary_3" name="txtexec_summary_3" class="form-control" style="font-size: 14px; color: #0a53be; resize: none" readonly></textarea>
+                            <a href="#" id="copyExecSummaryLink" class="copy-code-link">
+                                <i class="bi bi-clipboard"></i> Copy Exec Summary
+                            </a>
+                            </div>
+                            <script>
+                                document.getElementById('copyExecSummaryLink').addEventListener('click', function(event) {
+                                    event.preventDefault(); // Prevent the default anchor action
+                                    var execSummaryText = document.getElementById('txtexec_summary_3').value;
+                                    navigator.clipboard.writeText(execSummaryText).then(function() {
+                                        /* Success action, e.g., showing a tooltip or alert */
+                                        console.log('Executive summary copied to clipboard.');
+                                    }, function(err) {
+                                        /* Handle error */
+                                        console.error('Could not copy text: ', err);
+                                    });
+                                });
                                 </script>
-                                <!-- ><input type="text" id="residual_risk_2" name="residual_risk_2"> --><br>
-                                <label class="form-label">Inherent Risk Score: </label>
-                                <input type="range" id="lblriskScore_3" name="lblriskScore_3" class="form-control risk-slider" min="0" max="10" step="1" value="0"><br>
-                                <label for="residual_risk_2">Residual Risk</label>
-                                <input type="range" id="residual_risk_3" name="residual_risk_3" class="form-control risk-slider" min="0" max="10" step="0.01" value="0">
 
                         </div>
-
                     </div>
-                    <button id="save_scenario_3" type="button" class="btn btn-primary" style="background-color: #eb6e80" onclick="save_scenario(3);">
+
+                    <div class="col-md-1"></div>
+                </div>
+                <div class="row">
+                    <div class="col-md-1"></div>
+                    <div class="col">
+                        <div class="group-container">
+                            <div class="group-header">
+                                 Damage Estimate
+                            </div>
+                                <div class="group-body">
+                            <textarea rows="7"  id="txtDamage_3" name="txtDamage_3" class="form-control" style="font-size: 14px; color: #0a53be; resize: none" readonly></textarea>
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-1"></div>
+                </div>
+                <div class="row">
+                    <div class="col-md-1"></div>
+                    <div class="col">
+                        <div class="group-container">
+                            <div class="group-header">
+                                 Event Costs
+                            </div>
+                                <div class="group-body">
+                                    <div id="monthly_cost_chart_3" style="height:300px"></div>
+                                    <input type="hidden" id="scenario_12month_costs_3" name="scenario_12month_costs_3">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-1"></div>
+                </div>
+
+                    <button id="save_scenario_3" type="button" class="btn btn-primary" style="background-color: #e24e42" onclick="save_scenario(3);">
                     <i class="bi bi-play-fill mr-2"></i>Save Scenario 3
-                </button>
+                    </button>
+                <br>
+
 
                 </div>
             </div>
         </div>
-        <div class="tab-pane" id="scenario4">
-          <!-- Scenario 4 controls -->
-            <div class="row">
-          <div class="col-md-4 small-font">
+    <div class="tab-pane" id="scenario4" style="background-color: #5E6266">
+        <div class="row">
+            <div class="col-md-3 small-font">
+
                 <input type="hidden" name="hdnScenarioID_4" id="hdnScenarioID_4">
-              <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                <div class="card-body card-body-white">
-                                <div class="spinner-container" style="position: relative;">
-              <textarea class="form-control small-font" name="txtScenarioDescription_4" id="txtScenarioDescription_4" rows="3" style="resize: none; word-wrap: normal" placeholder="Enter a concise and descriptive scenario" onchange="setRiskAssessmentRefreshRequired(1)" onblur="analyze_Scenario(4)"></textarea>
+                <br>
+                <div class="group-container">
+                    <div class="group-header">
+                         <span style="color: white;">Scenario Description</span>
+                        <button type="button" class="btn btn-primary btn-file-dialog" data-bs-toggle="modal" data-bs-target="#scenarioSelectModal" id="btnSelectScenario_4">Load Scenario</button>
+                    </div>
+                    <div class="group-body">
+                        <textarea class="form-control small-font" name="txtScenarioDescription_4" id="txtScenarioDescription_4" rows="5" style="resize: none; word-wrap: normal" placeholder="Enter a concise and descriptive scenario" onchange="setRiskAssessmentRefreshRequired(3)" onblur="analyze_Scenario(3)"></textarea>
+                        <div class="spinner-container" style="position: relative;">
+                            <div class="spinner-overlay_4" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255, 255, 255, 0.7); display: none; justify-content: center; align-items: center;">
+                                <div class="spinner-border" role="status">
+                                    <span class="sr-only">Analyzing...</span>
+                                </div>
+                            </div>
+                            <br>
+                            <input class="form-check-input" type="checkbox" id="lock_scenario_4" onchange="toggleLockScenario()">
+                            <label class="form-check-label" for="lock_scenario_4">
+                                Lock Scenario
+                            </label>
+                                <br>
+                            <label for="txtScenarioAnalysis_4" class="small-font" style="visibility: hidden">Recommendations will align with selected standards:</label>
+                            <textarea id="txtScenarioAnalysis_4" name="txtScenarioAnalysis_4" class="form-control small-font"  rows="5" style="resize: none; word-wrap: normal" readonly></textarea>
 
-                                    <div class="spinner-overlay_4" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255, 255, 255, 0.7); display: none; justify-content: center; align-items: center;">
-                  <div class="spinner-border" role="status">
-                      <span class="sr-only">Analyzing...</span>
-                  </div>
-              </div>
-          </div>
-
-          <div class="form-check">
-              <input class="form-check-input" type="checkbox" id="lock_scenario_4" onchange="toggleLockScenario_4()">
-              <label class="form-check-label" for="lock_scenario_4">
-                  Lock Scenario
-              </label>
-          </div>
-
-          <label for="txtScenarioAnalysis_4" class="small-font" style="visibility: hidden">Recommendations will align with selected standards:</label>
-          <textarea id="txtScenarioAnalysis_4" name="txtScenarioAnalysis_4" class="form-control small-font"  rows="5" style="resize: none; word-wrap: normal" readonly></textarea>
-
-          <script>
-          function toggleLockScenario_4() {
-              var checkbox = document.getElementById('lock_scenario_4');
-              var textarea = document.getElementById('txtScenarioDescription_4');
-              textarea.readOnly = checkbox.checked; // Set textarea readonly based on checkbox
-          }
-          </script>
-      </div>
-
-</div>
-  <div class="row">
-      <div class="col-md-1"></div>
-                <div class="col-md-5">
-                    <div class="form-group-white">
-                        <label class="form-control border-0 small-font"><h6>Internet Exposed IP Address</h6></label>
-                        <label class="switch">
-                          <input type="checkbox" id="exposed_system_4" name="exposed_system_4">
-                          <span class="slider1 round"></span>
-                        </label>
+                            <script>
+                            function toggleLockScenario() {
+                                var checkbox = document.getElementById('lock_scenario_4');
+                                var textarea = document.getElementById('txtScenarioDescription_4');
+                                textarea.readOnly = checkbox.checked; // Set textarea readonly based on checkbox
+                            }
+                            </script>
+                        </div>
                     </div>
                 </div>
+
+
+            <br>
+            <div class="row">
+                    <div class="col-md-1"></div>
+                        <div class="col-md-5">
+                            <div class="group-container">
+                                <div class="group-header">
+                                    Exposed IP Address
+                                </div>
+                                <div class="group-body">
+
+                                    <label class="switch">
+                                      <input type="checkbox" id="exposed_system_4" name="exposed_system_4">
+                                      <span class="slider1 round"></span>
+                                    </label>
+                                </div>
+                            </div>
+
+                </div>
                 <div class="col-md-5">
-                    <div class="form-group-white">
-                        <label class="form-control border-0 small-font"><h6>Default/Weak Credentials</h6></label>
-                        <label class="switch">
+                    <div class="group-container">
+                                <div class="group-header">
+                                    Default/ Weak Credentials
+                                </div>
+                                <div class="group-body">
+                                <label class="switch">
                           <input type="checkbox" id="weak_credentials_4" name="weak_credentials_4">
                           <span class="slider1 round"></span>
                         </label>
-                    </div>
+                                </div>
+                            </div>
+
                 </div>
-      <div class="col-md-1"></div>
+                <div class="col-md-1"></div>
             </div>
-          <br>
-              <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                    <div class="card-body card-body-white">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <label for="selectOutage_4" class="form-control border-0 small-font">Production Outage</label>
-                                  <select id="selectOutage_4" name="selectOutage_4" class="form-control small-font">
-                                    <option value="N/A">-- Select Outage --</option>
-                                    <option value="Yes">Yes</option>
-                                      <option value="No">No</option>
-                                  </select>
+            <br>
+            <div class="row">
+                    <div class="col-md-1"></div>
+                        <div class="col-md-5">
+                            <div class="group-container">
+                                <div class="group-header">
+                                    Production Outage
+                                </div>
+                                <div class="group-body">
+                                <label class="switch">
+                                      <input type="checkbox" id="production_outage_4" name="production_outage_4">
+                                      <span class="slider1 round"></span>
+                                    </label>
+                                </div>
                             </div>
-                            <div class="col-md-6">
-                                <label for="outage_4" class="form-control border-0 small-font">Outage Length (in hours):</label>
-                                <input type="number" id="outage_4" name="outage_4" min="0" max="100" class="form-control">
+
+                </div>
+                <div class="col-md-5">
+                    <div class="group-container">
+                                <div class="group-header">
+                                    Outage Length (hours)
+                                </div>
+                                <div class="group-body">
+
+                            <input type="number" id="outage_4" name="outage_4" min="0" max="100" class="form-control">
+                                </div>
                             </div>
-                        </div>
-                    </div>
-                  </div>
-              <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                <div class="card-body card-body-white">
-                      <label for="selectThreat_4" class="form-control border-0">Threat Source</label>
-                      <select id="selectThreat_4" name="selectThreat_4" class="form-control small-font">
-                        <option value="">-- Select Threat Source --</option>
-                        {% for threatsources in threatsources %}
-                            <option value="{{ threatsources.ThreatSource}}">{{ threatsources.ThreatSource }}</option>
-                        {% endfor %}
-                      </select>
+
+                </div>
+                <div class="col-md-1"></div>
+            </div>
+
+            <div class="group-container">
+                <div class="group-header">
+                     Threat Source
+
+                </div>
+                <div class="group-body">
+
+                  <select id="selectThreat_4" name="selectThreat_4" class="form-control small-font">
+                    <option value="">-- Select Threat Source --</option>
+                    {% for threatsources in threatsources %}
+                        <option value="{{ threatsources.ThreatSource}}">{{ threatsources.ThreatSource }}</option>
+                    {% endfor %}
+                  </select>
+
                 </div>
               </div>
-              <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                <div class="card-body card-body-white">
-                      <label for="selectTactics_4" class="form-control border-0">Threat Tactics (Mitre)</label>
-                      <select id="selectTactics_4" name="selectTactics_4" class="form-control small-font">
-                        <option value="">-- Select Threat Tactics --</option>
-                        {% for mitreTactics in mitreTactics %}
-                            <option value="{{ mitreTactics.tactic}}">{{ mitreTactics.tactic }}</option>
-                        {% endfor %}
-                      </select>
+
+            <div class="group-container">
+                <div class="group-header">
+                     Threat Tactic
+
+                </div>
+                <div class="group-body">
+                    <select id="selectTactics_4" name="selectTactics_4" class="form-control small-font">
+                    <option value="">-- Select Threat Tactics --</option>
+                    {% for mitreTactics in mitreTactics %}
+                        <option value="{{ mitreTactics.tactic}}">{{ mitreTactics.tactic }}</option>
+                    {% endfor %}
+                  </select>
+
                 </div>
               </div>
-                <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                <div class="card-body card-body-white">
-                    <label for="id_impact_4" class="form-control border-0 small-font">Impact</label>
-                    <select id="id_impact_4" name="impact" class="form-control small-font">
+            <div class="group-container">
+                <div class="group-header">
+                     Scenario Impact
+
+                </div>
+                <div class="group-body">
+                     <select id="id_impact_4" name="impact" class="form-control small-font">
                         <option value="">-- Select Impact --</option>
                         {% for value, display in scenario_form.fields.impact.choices %}
                             <option value="{{ value }}">{{ display }}</option>
                         {% endfor %}
                     </select>
+
                 </div>
               </div>
-              <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                <div class="card-body card-body-white">
-                    <label for="txtAssets_4" class="form-control border-0 align-text-bottom">Asset Name/s</label>
-                    <textarea class="form-control" name="txtAssets_4" id="txtAssets_4" rows="3" style="resize: none; word-wrap: normal" placeholder="Add asset names relevant to the scenario..."></textarea>
+                <div class="group-container">
+                <div class="group-header">
+                     Asset Detail
+
+                </div>
+                <div class="group-body">
+                     <textarea class="form-control small-font" name="txtAssets_4" id="txtAssets_4" rows="3" style="resize: none; word-wrap: normal" placeholder="Add asset names relevant to the scenario..."></textarea>
+
                 </div>
               </div>
 
-          </div>
+                </div>
             <div class="col-md-4 small-font">
                 <br>
-               <h5>Business Impact Analysis</h5>
-                Click the icons to add additional detail
+                <div class="group-container">
+                <h5 style="color: white">Business Impact Analysis</h5>
+                <font style="color:white">Click the icons to add additional detail</font>
+
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                         <div class="card-body card-body-white">
                             <!--slider for safety rating -->
                             <div class="slider-container d-flex align-items-center" >
                                 <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#safetyModal_4" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/safety.png' %}" style="height:2rem"> &nbsp;Safety</label></div>
                                 <div class="col-7">
-                                    <label for="range_safety_4"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_safety_4" name="range_safety_4" onchange="initSlider('range_safety_4', 'safetyrange_4');setRiskAssessmentRefreshRequired(4);">
+                                    <label for="range_safety_4"></label>
+
+                                    <input type="range" min="1" max="10" value="1" class="slider" id="range_safety_4" name="range_safety_4" onchange="initSlider('range_safety_4', 'safetyrange_4');setRiskAssessmentRefreshRequired(4);">
                                 </div>
                                 <div class="col-2"><label id="safetyrange_4" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></div>
-                            </div>
+                              </div>
                         </div>
                     </div>
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                         <div class="card-body card-body-white">
                             <!--slider for life rating -->
                             <div class="slider-container d-flex align-items-center">
-                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#lifeModal_4" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/danger.png' %}" style="height:2rem"> &nbsp;Life</label></div>
+                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#lifeModal_2" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/danger.png' %}" style="height:2rem"> &nbsp;Life</label></div>
                                 <div class="col-7">
                                     <label for="range_life_4"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_life_4" name="range_life_4" onchange="initSlider('range_life_4', 'liferange_4');setRiskAssessmentRefreshRequired(4);">
                                 </div>
@@ -2442,23 +2672,25 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                             </div>
                         </div>
                     </div>
+
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                         <div class="card-body card-body-white">
                             <!--slider for production rating -->
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#productionModal_4" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/production.png' %}" style="height:2rem">&nbsp; Production</label></div>
                                 <div class="col-7">
-                                    <label for="range_production_4"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_production_4" name="range_production_4" onchange="initSlider('range_production_4', 'productionrange_4');setRiskAssessmentRefreshRequired(4);">
+                                    <label for="range_production_4"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_production_4" name="range_production_2" onchange="initSlider('range_production_4', 'productionrange_4');setRiskAssessmentRefreshRequired(4);">
                                 </div>
                                 <div class="col-2"><h6><label id="productionrange_4" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
                         </div>
                     </div>
+
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                         <div class="card-body card-body-white">
                              <!--slider for finance rating -->
                             <div class="slider-container d-flex align-items-center">
-                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#financeModal_4" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/finance.png' %}" style="height:2rem">&nbsp; Financial</label></div>
+                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#financeModal_4"  data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/finance.png' %}" style="height:2rem">&nbsp; Financial</label></div>
                                 <div class="col-7">
                                     <label for="range_finance_4"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_finance_4" name="range_finance_4" onchange="initSlider('range_finance_4', 'financerange_4');setRiskAssessmentRefreshRequired(4);">
                                 </div>
@@ -2470,7 +2702,7 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                         <div class="card-body card-body-white">
                             <!--slider for reputation rating -->
                             <div class="slider-container d-flex align-items-center">
-                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#reputationModal_4" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/reputation.png' %}" style="height:2rem"> &nbsp; Reputation</label></div>
+                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#reputationModal_4"  data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/reputation.png' %}" style="height:2rem"> &nbsp;Reputation</label></div>
                                 <div class="col-7">
                                     <label for="range_reputation_4"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_reputation_4" name="range_reputation_4" onchange="initSlider('range_reputation_4', 'reputationrange_4');setRiskAssessmentRefreshRequired(4);">
                                 </div>
@@ -2482,7 +2714,7 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                         <div class="card-body card-body-white">
                             <!--slider for environment impact rating -->
                             <div class="slider-container d-flex align-items-center">
-                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#environmentModal_4" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/environment.png' %}" style="height:2rem"> &nbsp; Environment</label></div>
+                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#environmentModal_4"  data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/environment.png' %}" style="height:2rem"> &nbsp;Environment</label></div>
                                 <div class="col-7">
                                     <label for="range_environment_4"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_environment_4" name="range_environment_4" onchange="initSlider('range_environment_4', 'environmentrange_4');setRiskAssessmentRefreshRequired(4);">
                                 </div>
@@ -2494,7 +2726,7 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                         <div class="card-body card-body-white">
                             <!--slider for regulatory impact rating -->
                             <div class="slider-container d-flex align-items-center">
-                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#regulationModal_4" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/regulation.png' %}" style="height:2rem">&nbsp; Regulatory</label></div>
+                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#regulationModal_4"  data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/regulation.png' %}" style="height:2rem">&nbsp; Regulatory</label></div>
                                 <div class="col-7">
                                     <label for="range_regulatory_4"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_regulatory_4" name="range_regulatory_4" onchange="initSlider('range_regulatory_4', 'regulatoryrange_4');setRiskAssessmentRefreshRequired(4);">
                                 </div>
@@ -2506,7 +2738,7 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                         <div class="card-body card-body-white">
                             <!--slider for data impact rating -->
                             <div class="slider-container d-flex align-items-center">
-                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#dataModal_4" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/data.png' %}" style="height:2rem"> &nbsp; Data/IP</label></div>
+                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#dataModal_4"  data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/data.png' %}" style="height:2rem"> &nbsp;Data/IP</label></div>
                                 <div class="col-7">
                                     <label for="range_data_4"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_data_4" name="range_data_4" onchange="initSlider('range_data_4', 'datarange_4');setRiskAssessmentRefreshRequired(4);">
                                 </div>
@@ -2514,11 +2746,11 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                             </div>
                         </div>
                     </div>
-                <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                    <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                         <div class="card-body card-body-white">
                             <!--slider for data impact rating -->
                             <div class="slider-container d-flex align-items-center">
-                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#supplyModal_4" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/supply.png' %}" style="height:2rem"> &nbsp;Supply Chain</label></div>
+                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#supplyModal_4"  data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/supply.png' %}" style="height:2rem"> &nbsp;Supply Chain</label></div>
                                 <div class="col-7">
                                     <label for="range_supply_4"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_supply_4" name="range_supply_4" onchange="initSlider('range_supply_4', 'supplyrange_4');setRiskAssessmentRefreshRequired(4);">
                                 </div>
@@ -2526,17 +2758,18 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                             </div>
                         </div>
                     </div>
-                <br>
-                <h5>Vulnerability and Likelihood Analysis</h5>
+                </div>
+                <h5 style="color: white">Vulnerability and Likelihood Analysis</h5>
+                <div class="group-container">
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                         <div class="card-body card-body-white">
                             <!--slider for vulnerability rating -->
                             <div class="slider-container d-flex align-items-center" >
-                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#vulnModal_4"  data-bs-placement="top" style="cursor: pointer">Vulnerability</label></div>
+                                <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#vulnModal_4"  data-bs-placement="top" style="cursor: pointer">Vulnerability</label></div>
                                 <div class="col-7">
                                     <label for="range_vuln_4"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_vuln_4" name="range_vuln_4" onchange="initSlider('range_vuln_4', 'vulnrange_4')">
                                 </div>
-                                <div class="col-2"><label id="vulnrange_4" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></div>
+                                <div class="col-3"><label id="vulnrange_4" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></div>
                             </div>
                         </div>
                     </div>
@@ -2544,282 +2777,367 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                         <div class="card-body card-body-white">
                             <!--slider for threat rating -->
                             <div class="slider-container d-flex align-items-center">
-                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the danger to life of the selected scenario">Threat</label></div>
+                                <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the danger to life of the selected scenario">Threat</label></div>
                                 <div class="col-7">
                                     <label for="range_threat_4"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_threat_4" name="range_threat_4" onchange="initSlider('range_threat_4', 'threatrange_4');">
                                 </div>
-                                <div class="col-2"><h6><label id="threatrange_4" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                                <div class="col-3"><h6><label id="threatrange_4" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
                         </div>
                     </div>
-
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                         <div class="card-body card-body-white">
-                            <!--slider for asset status-->
+                            <!--slider for frequency-->
                             <div class="slider-container d-flex align-items-center">
-                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to indicate asset status">Asset Status</label></div>
+                                <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to indicate asset status">Asset Status</label></div>
                                 <div class="col-7">
                                     <label for="range_frequency_4"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_frequency_4" name="range_frequency_4" onchange="initFrequencySlider('range_frequency_4', 'frequencyrange_4');">
                                 </div>
-                                <div class="col-2"><h6><label id="frequencyrange_4" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                                <div class="col-3"><h6><label id="frequencyrange_4" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
                         </div>
                     </div>
+                    <div class="card mb-3 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title" style="color: white">Physical Safeguards</h5>
+                        <div id="tablePhysicalControls_4" class="mb-2">
+                            <button id="addRowBtn" class="btn btn-primary btn-sm" type="button">Add Row</button>
+                        </div>
+                        <table class="table table-bordered small-font" id="table_safeguards_4">
+                            <thead>
+                                <tr>
+                                    <th>Safeguard</th>
+                                    <th>Safeguard Type</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Rows will be added here dynamically -->
+                            </tbody>
+                        </table>
+                        <script>
+                            $(document).ready(function() {
+                                $("#addRowBtn").click(function() {
+                                    var newRow = `<tr>
+                                        <td><textarea class="form-control" maxlength="100"></textarea></td>
+                                        <td><textarea class="form-control" maxlength="100"></textarea></td>
+                                        <td><button type="button" class="btn btn-danger btn-sm deleteRowBtn">Delete</button></td>
+                                    </tr>`;
+                                    $("#table_safeguards_4 tbody").append(newRow);
+                                });
 
+                                // Event delegation to handle dynamically added elements
+                                $("#table_safeguards_4").on("click", ".deleteRowBtn", function() {
+                                    $(this).closest("tr").remove();
+                                });
+                            });
+                            </script>
+
+                    </div>
+                </div>
+
+                </div>
             </div>
-            <div class="col-md-4 small-font">
+            <div class="col-md-5 small-font">
                 <br>
-                <button id="risk-assessment-btn_4" type="button" class="btn btn-primary" style="background-color: #008f95" onclick="checkEditModeAndExecute(this.id, 'loadingSpinner4')">
+                <button id="risk-assessment-btn_4" type="button" class="btn btn-primary" style="background-color: #e24e42"   onclick="checkEditModeAndExecute(this.id, 'loadingSpinner4')">
                     <i class="bi bi-play-fill mr-2"></i>Execute Risk Assessment
                 </button>
-
+                <br>
                 <!-- Add this HTML element where you want to display the loading spinner -->
                 <div id="loadingSpinner4" class="spinner-border" role="status" style="display: none;">
                   <span class="visually-hidden">Loading...</span>
                 </div>
-
-                    <div class="card mb-3 shadow-sm">
-                        <div class="card-body card-body-white">
-                            <label class="form-label">Risk Rating: </label>
-                            <input type="text" id="lblriskRating_4" name="lblriskRating_4" class="form-control" readonly>
-                        </div>
-                    </div>
-
-                    <div class="card mb-3 shadow-sm">
-                        <div class="card-body card-body-white">
-                            <div class="row">
-                                <div class="col">
-                                    <label class="form-label" style="font-size: 10px">Est. Incident Costs (Low): </label>
-                                    <input type="text" id="lblriskCost_4" name="lblriskCost_4" class="form-control" style="font-size: 14px; color: #0a53be" readonly><br>
-                                </div>
-                                <div class="col">
-                                    <label class="form-label" style="font-size: 10px">Est. Incident Costs (High): </label>
-                                    <input type="text" id="lblriskCostHigh_4" name="lblriskCostHigh_4" class="form-control" style="font-size: 14px; color: #0a53be" readonly><br>
-                                </div>
-                                <div class="col">
-                                    <label class="form-label" style="font-size: 10px">Est. Incident Costs (Median): </label>
-                                    <input type="text" id="lblriskCostMedian_4" name="lblriskCostMedian_4" class="form-control" style="font-size: 14px; color: #0a53be" readonly><br>
-                                </div>
+                <br>
+                <div class="row">
+                    <div class="col-md-1"></div>
+                    <div class="col-md-5">
+                        <div class="group-container">
+                            <div class="group-header">
+                                 Risk Rating
+                            </div>
+                                <div class="group-body">
+                                    <img src="{% static 'images/redcube.png' %}" class="cube-icon" alt="Red Cube"><label id="lblriskRating_4" name="lblriskRating_4" style="color:white"></label>
                             </div>
                         </div>
                     </div>
-                    <div class="card mb-3 shadow-sm">
-                        <div class="card-body card-body-white">
-                            <label class="form-label">Recommended Controls: </label>
-
-
-                            <div id="risk_a=summary_table_container_4">
-                            <table id="risk_summary_controls_table_4" class="table table-striped table-bordered" style="font-size: 10px">
-                                <thead>
-                                    <tr>
-                                        <th>Risk Summary Item</th>
-                                        <th>Control Effectiveness (%)</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <!-- Rows will be populated here -->
-                                </tbody>
-                            </table>
+                    <div class="col-md-5">
+                        <div class="group-container">
+                            <div class="group-header">
+                                 Residual Risk
                             </div>
-                            <input type="text" id="control_score_4" name="control_score_4" style="visibility: hidden">
-                                     <script>
-                                    function initializeControlScore_4() {
-                                        // Get all sliders in the table
-                                        var sliders = document.querySelectorAll('#risk_summary_controls_table_4 input[type="range"]');
+                                <div class="group-body">
+                                    <img src="{% static 'images/redcube.png' %}" class="cube-icon" alt="Red Cube"><label id="lblinherentRisk_4" name="lblinherentRisk_4" style="color:white"></label>
+                                    <input type="hidden" id="txtResidualRisk_4">
+                                </div>
 
-                                        // Function to calculate and update the overall control score
-                                        function updateControlScore() {
-                                            var totalScore = 0;
-
-                                            sliders.forEach(function(slider) {
-                                                totalScore += parseInt(slider.value, 10);
-                                            });
-
-                                            var averageScore = totalScore / sliders.length;
-                                            document.getElementById('control_score_4').value = averageScore.toFixed(2);  // Displaying the score up to two decimal places
-
-                                            // Calculate the residual risk
-                                            var inherentRisk = parseFloat(document.getElementById('lblriskScore_4').value);
-                                            var residualRisk = inherentRisk * (1 - (averageScore / 100));
-
-                                            // Update the residual risk slider value
-                                            document.getElementById('residual_risk_4').value = residualRisk.toFixed(2);
-
-                                            setSliderColor(document.getElementById("residual_risk_4"));
-                                             const event = new Event('input', {
-                                                'bubbles': true,
-                                                'cancelable': true
-                                            });
-                                            document.getElementById("residual_risk_4").dispatchEvent(event);
-
-                                        }
-
-                                        // Attach event listener to each slider
-                                        sliders.forEach(function(slider) {
-                                            slider.addEventListener('input', updateControlScore);
-                                        });
-
-                                        // Initial calculation
-                                        updateControlScore();
-                                    }
-
+                        </div>
+                    </div>
+                    <div class="col-md-1"></div>
+                </div>
+                <div class="row">
+                    <div class="col-md-1"></div>
+                    <div class="col">
+                        <div class="group-container">
+                            <div class="group-header">
+                                 Executive Summary
+                            </div>
+                                <div class="group-body">
+                            <textarea rows="10"  id="txtexec_summary_4" name="txtexec_summary_4" class="form-control" style="font-size: 14px; color: #0a53be; resize: none" readonly></textarea>
+                            <a href="#" id="copyExecSummaryLink" class="copy-code-link">
+                                <i class="bi bi-clipboard"></i> Copy Exec Summary
+                            </a>
+                            </div>
+                            <script>
+                                document.getElementById('copyExecSummaryLink').addEventListener('click', function(event) {
+                                    event.preventDefault(); // Prevent the default anchor action
+                                    var execSummaryText = document.getElementById('txtexec_summary_4').value;
+                                    navigator.clipboard.writeText(execSummaryText).then(function() {
+                                        /* Success action, e.g., showing a tooltip or alert */
+                                        console.log('Executive summary copied to clipboard.');
+                                    }, function(err) {
+                                        /* Handle error */
+                                        console.error('Could not copy text: ', err);
+                                    });
+                                });
                                 </script>
-                                <!-- ><input type="text" id="residual_risk_1" name="residual_risk_1"> --><br>
-                                <label class="form-label">Inherent Risk Score: </label>
-                                <input type="range" id="lblriskScore_4" name="lblriskScore_4" class="form-control risk-slider" min="0" max="10" step="1" value="0"><br>
-                                <label for="residual_risk_1">Residual Risk</label>
-                                <input type="range" id="residual_risk_4" name="residual_risk_4" class="form-control risk-slider" min="0" max="10" step="0.01" value="0">
 
                         </div>
-
                     </div>
-                    <button id="save_scenario_4" type="button" class="btn btn-primary" style="background-color: #008f95" onclick="save_scenario(4);">
+
+                    <div class="col-md-1"></div>
+                </div>
+                <div class="row">
+                    <div class="col-md-1"></div>
+                    <div class="col">
+                        <div class="group-container">
+                            <div class="group-header">
+                                 Damage Estimate
+                            </div>
+                                <div class="group-body">
+                            <textarea rows="7"  id="txtDamage_4" name="txtDamage_4" class="form-control" style="font-size: 14px; color: #0a53be; resize: none" readonly></textarea>
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-1"></div>
+                </div>
+                <div class="row">
+                    <div class="col-md-1"></div>
+                    <div class="col">
+                        <div class="group-container">
+                            <div class="group-header">
+                                 Event Costs
+                            </div>
+                                <div class="group-body">
+                                    <div id="monthly_cost_chart_4" style="height:300px"></div>
+                                    <input type="hidden" id="scenario_12month_costs_4" name="scenario_12month_costs_4">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-1"></div>
+                </div>
+
+                    <button id="save_scenario_4" type="button" class="btn btn-primary" style="background-color: #e24e42" onclick="save_scenario(4);">
                     <i class="bi bi-play-fill mr-2"></i>Save Scenario 4
-                </button>
+                    </button>
+                <br>
+
+
                 </div>
             </div>
         </div>
-        <div class="tab-pane" id="scenario5">
-          <!-- Scenario 5 controls -->
-            <div class="row">
-            <div class="col-md-4 small-font">
-            <input type="hidden" name="hdnScenarioID_5" id="hdnScenarioID_5">
-            <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                <div class="card-body card-body-white">
-                            <div class="spinner-container" style="position: relative;">
-              <textarea class="form-control small-font" name="txtScenarioDescription_5" id="txtScenarioDescription_5" rows="3" style="resize: none; word-wrap: normal" placeholder="Enter a concise and descriptive scenario" onchange="setRiskAssessmentRefreshRequired(1)" onblur="analyze_Scenario(5)"></textarea>
+    <div class="tab-pane" id="scenario5" style="background-color: #5E6266">
+        <div class="row">
+            <div class="col-md-3 small-font">
 
-                                <div class="spinner-overlay_5" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255, 255, 255, 0.7); display: none; justify-content: center; align-items: center;">
-                  <div class="spinner-border" role="status">
-                      <span class="sr-only">Analyzing...</span>
-                  </div>
-              </div>
-          </div>
+                <input type="hidden" name="hdnScenarioID_5" id="hdnScenarioID_5">
+                <br>
+                <div class="group-container">
+                    <div class="group-header">
+                         <span style="color: white;">Scenario Description</span>
+                        <button type="button" class="btn btn-primary btn-file-dialog" data-bs-toggle="modal" data-bs-target="#scenarioSelectModal" id="btnSelectScenario_5">Load Scenario</button>
+                    </div>
+                    <div class="group-body">
+                        <textarea class="form-control small-font" name="txtScenarioDescription_5" id="txtScenarioDescription_5" rows="5" style="resize: none; word-wrap: normal" placeholder="Enter a concise and descriptive scenario" onchange="setRiskAssessmentRefreshRequired(3)" onblur="analyze_Scenario(3)"></textarea>
+                        <div class="spinner-container" style="position: relative;">
+                            <div class="spinner-overlay_5" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255, 255, 255, 0.7); display: none; justify-content: center; align-items: center;">
+                                <div class="spinner-border" role="status">
+                                    <span class="sr-only">Analyzing...</span>
+                                </div>
+                            </div>
+                            <br>
+                            <input class="form-check-input" type="checkbox" id="lock_scenario_5" onchange="toggleLockScenario()">
+                            <label class="form-check-label" for="lock_scenario_5">
+                                Lock Scenario
+                            </label>
+                                <br>
+                            <label for="txtScenarioAnalysis_5" class="small-font" style="visibility: hidden">Recommendations will align with selected standards:</label>
+                            <textarea id="txtScenarioAnalysis_5" name="txtScenarioAnalysis_5" class="form-control small-font"  rows="5" style="resize: none; word-wrap: normal" readonly></textarea>
 
-          <div class="form-check">
-              <input class="form-check-input" type="checkbox" id="lock_scenario_5" onchange="toggleLockScenario_5()">
-              <label class="form-check-label" for="lock_scenario_5">
-                  Lock Scenario
-              </label>
-          </div>
-
-          <label for="txtScenarioAnalysis_5" class="small-font" style="visibility: hidden">Recommendations will align with selected standards:</label>
-          <textarea id="txtScenarioAnalysis_5" name="txtScenarioAnalysis_5" class="form-control small-font"  rows="5" style="resize: none; word-wrap: normal" readonly></textarea>
-
-          <script>
-          function toggleLockScenario_5() {
-              var checkbox = document.getElementById('lock_scenario_5');
-              var textarea = document.getElementById('txtScenarioDescription_5');
-              textarea.readOnly = checkbox.checked;
-          }
-          </script>
-      </div>
-
-</div>
-  <div class="row">
-                  <div class="col-md-1"></div>
-                <div class="col-md-5">
-                    <div class="form-group-white">
-                        <label class="form-control border-0 small-font"><h6>Internet Exposed IP Address</h6></label>
-                        <label class="switch">
-                          <input type="checkbox" id="exposed_system_5" name="exposed_system_5">
-                          <span class="slider1 round"></span>
-                        </label>
+                            <script>
+                            function toggleLockScenario() {
+                                var checkbox = document.getElementById('lock_scenario_5');
+                                var textarea = document.getElementById('txtScenarioDescription_5');
+                                textarea.readOnly = checkbox.checked; // Set textarea readonly based on checkbox
+                            }
+                            </script>
+                        </div>
                     </div>
                 </div>
+
+
+            <br>
+            <div class="row">
+                    <div class="col-md-1"></div>
+                        <div class="col-md-5">
+                            <div class="group-container">
+                                <div class="group-header">
+                                    Exposed IP Address
+                                </div>
+                                <div class="group-body">
+
+                                    <label class="switch">
+                                      <input type="checkbox" id="exposed_system_5" name="exposed_system_5">
+                                      <span class="slider1 round"></span>
+                                    </label>
+                                </div>
+                            </div>
+
+                </div>
                 <div class="col-md-5">
-                    <div class="form-group-white">
-                        <label class="form-control border-0 small-font"><h6>Default/Weak Credentials</h6></label>
-                        <label class="switch">
+                    <div class="group-container">
+                                <div class="group-header">
+                                    Default/ Weak Credentials
+                                </div>
+                                <div class="group-body">
+                                <label class="switch">
                           <input type="checkbox" id="weak_credentials_5" name="weak_credentials_5">
                           <span class="slider1 round"></span>
                         </label>
-                    </div>
-                </div>
+                                </div>
+                            </div>
 
-            <div class="col-md-1"></div>
+                </div>
+                <div class="col-md-1"></div>
             </div>
             <br>
-            <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                <div class="card-body card-body-white">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <label for="selectOutage_5" class="form-control border-0 small-font">Production Outage</label>
-                              <select id="selectOutage_5" name="selectOutage_5" class="form-control small-font">
-                                <option value="N/A">-- Select Outage --</option>
-                                <option value="Yes">Yes</option>
-                                  <option value="No">No</option>
-                              </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="outage_5" class="form-control border-0 small-font">Outage Length (in hours):</label>
-                            <input type="number" id="outage_5" name="outage_5" min="0" max="100" class="form-control">
-                        </div>
-                    </div>
+            <div class="row">
+                    <div class="col-md-1"></div>
+                        <div class="col-md-5">
+                            <div class="group-container">
+                                <div class="group-header">
+                                    Production Outage
+                                </div>
+                                <div class="group-body">
+                                <label class="switch">
+                                      <input type="checkbox" id="production_outage_5" name="production_outage_5">
+                                      <span class="slider1 round"></span>
+                                    </label>
+                                </div>
+                            </div>
+
                 </div>
-              </div>
-            <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                <div class="card-body card-body-white">
-                  <label for="selectThreat_5" class="form-control border-0">Threat Source</label>
+                <div class="col-md-5">
+                    <div class="group-container">
+                                <div class="group-header">
+                                    Outage Length (hours)
+                                </div>
+                                <div class="group-body">
+
+                            <input type="number" id="outage_5" name="outage_5" min="0" max="100" class="form-control">
+                                </div>
+                            </div>
+
+                </div>
+                <div class="col-md-1"></div>
+            </div>
+
+            <div class="group-container">
+                <div class="group-header">
+                     Threat Source
+
+                </div>
+                <div class="group-body">
+
                   <select id="selectThreat_5" name="selectThreat_5" class="form-control small-font">
                     <option value="">-- Select Threat Source --</option>
                     {% for threatsources in threatsources %}
                         <option value="{{ threatsources.ThreatSource}}">{{ threatsources.ThreatSource }}</option>
                     {% endfor %}
                   </select>
+
                 </div>
-            </div>
-            <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                <div class="card-body card-body-white">
-                  <label for="selectTactics_5" class="form-control border-0 small-font">Threat Tactics (Mitre)</label>
-                  <select id="selectTactics_5" name="selectTactics_5" class="form-control">
+              </div>
+
+            <div class="group-container">
+                <div class="group-header">
+                     Threat Tactic
+
+                </div>
+                <div class="group-body">
+                    <select id="selectTactics_5" name="selectTactics_5" class="form-control small-font">
                     <option value="">-- Select Threat Tactics --</option>
                     {% for mitreTactics in mitreTactics %}
                         <option value="{{ mitreTactics.tactic}}">{{ mitreTactics.tactic }}</option>
                     {% endfor %}
                   </select>
+
                 </div>
-            </div>
-            <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                <div class="card-body card-body-white">
-                    <label for="id_impact_5" class="form-control border-0 small-font">Impact</label>
-                    <select id="id_impact_5" name="impact" class="form-control small-font">
+              </div>
+            <div class="group-container">
+                <div class="group-header">
+                     Scenario Impact
+
+                </div>
+                <div class="group-body">
+                     <select id="id_impact_5" name="impact" class="form-control small-font">
                         <option value="">-- Select Impact --</option>
                         {% for value, display in scenario_form.fields.impact.choices %}
                             <option value="{{ value }}">{{ display }}</option>
                         {% endfor %}
                     </select>
+
                 </div>
               </div>
-            <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                <div class="card-body card-body-white">
-                    <label for="txtAssets_5" class="form-control border-0 align-text-bottom">Asset Name/s</label>
-                    <textarea class="form-control" name="txtAssets_5" id="txtAssets_5" rows="3" style="resize: none; word-wrap: normal" placeholder="Add asset names relevant to the scenario..."></textarea>
-                </div>
-            </div>
+                <div class="group-container">
+                <div class="group-header">
+                     Asset Detail
 
-          </div>
+                </div>
+                <div class="group-body">
+                     <textarea class="form-control small-font" name="txtAssets_5" id="txtAssets_5" rows="3" style="resize: none; word-wrap: normal" placeholder="Add asset names relevant to the scenario..."></textarea>
+
+                </div>
+              </div>
+
+                </div>
             <div class="col-md-4 small-font">
                 <br>
-                <h5>Business Impact Analysis</h5>
-                Click the icons to add additional detail
-                    <!--slider for safety rating -->
+                <div class="group-container">
+                <h5 style="color: white">Business Impact Analysis</h5>
+                <font style="color:white">Click the icons to add additional detail</font>
+
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                         <div class="card-body card-body-white">
+                            <!--slider for safety rating -->
                             <div class="slider-container d-flex align-items-center" >
                                 <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#safetyModal_5" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/safety.png' %}" style="height:2rem"> &nbsp;Safety</label></div>
                                 <div class="col-7">
-                                    <label for="range_safety_5"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_safety_5" name="range_safety_5" onchange="initSlider('range_safety_5', 'safetyrange_5');setRiskAssessmentRefreshRequired(5);">
+                                    <label for="range_safety_5"></label>
+
+                                    <input type="range" min="1" max="10" value="1" class="slider" id="range_safety_5" name="range_safety_5" onchange="initSlider('range_safety_5', 'safetyrange_5');setRiskAssessmentRefreshRequired(5);">
                                 </div>
                                 <div class="col-2"><label id="safetyrange_5" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></div>
-                            </div>
+                              </div>
                         </div>
                     </div>
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                         <div class="card-body card-body-white">
                             <!--slider for life rating -->
                             <div class="slider-container d-flex align-items-center">
-                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#lifeModal_5" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/danger.png' %}" style="height:2rem"> &nbsp;Life</label></div>
+                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#lifeModal_2" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/danger.png' %}" style="height:2rem"> &nbsp;Life</label></div>
                                 <div class="col-7">
                                     <label for="range_life_5"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_life_5" name="range_life_5" onchange="initSlider('range_life_5', 'liferange_5');setRiskAssessmentRefreshRequired(5);">
                                 </div>
@@ -2827,23 +3145,25 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                             </div>
                         </div>
                     </div>
+
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                         <div class="card-body card-body-white">
                             <!--slider for production rating -->
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#productionModal_5" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/production.png' %}" style="height:2rem">&nbsp; Production</label></div>
                                 <div class="col-7">
-                                    <label for="range_production_5"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_production_5" name="range_production_5" onchange="initSlider('range_production_5', 'productionrange_5');setRiskAssessmentRefreshRequired(5);">
+                                    <label for="range_production_5"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_production_5" name="range_production_2" onchange="initSlider('range_production_5', 'productionrange_5');setRiskAssessmentRefreshRequired(5);">
                                 </div>
                                 <div class="col-2"><h6><label id="productionrange_5" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
                         </div>
                     </div>
+
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                         <div class="card-body card-body-white">
                              <!--slider for finance rating -->
                             <div class="slider-container d-flex align-items-center">
-                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#financeModal_5" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/finance.png' %}" style="height:2rem">&nbsp; Financial</label></div>
+                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#financeModal_5"  data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/finance.png' %}" style="height:2rem">&nbsp; Financial</label></div>
                                 <div class="col-7">
                                     <label for="range_finance_5"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_finance_5" name="range_finance_5" onchange="initSlider('range_finance_5', 'financerange_5');setRiskAssessmentRefreshRequired(5);">
                                 </div>
@@ -2854,11 +3174,11 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                         <div class="card-body card-body-white">
                             <!--slider for reputation rating -->
-                             <div class="slider-container d-flex align-items-center">
-                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#reputationModal_5" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/reputation.png' %}" style="height:2rem"> &nbsp; Reputation</label></div>
-                                    <div class="col-7">
-                                        <label for="range_reputation_5"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_reputation_5" name="range_reputation_5" onchange="initSlider('range_reputation_5', 'reputationrange_5');setRiskAssessmentRefreshRequired(5);">
-                                    </div>
+                            <div class="slider-container d-flex align-items-center">
+                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#reputationModal_5"  data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/reputation.png' %}" style="height:2rem"> &nbsp;Reputation</label></div>
+                                <div class="col-7">
+                                    <label for="range_reputation_5"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_reputation_5" name="range_reputation_5" onchange="initSlider('range_reputation_5', 'reputationrange_5');setRiskAssessmentRefreshRequired(5);">
+                                </div>
                                 <div class="col-2"><h6><label id="reputationrange_5" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
                         </div>
@@ -2867,7 +3187,7 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                         <div class="card-body card-body-white">
                             <!--slider for environment impact rating -->
                             <div class="slider-container d-flex align-items-center">
-                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#environmentModal_5" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/environment.png' %}" style="height:2rem"> &nbsp; Environment</label></div>
+                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#environmentModal_5"  data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/environment.png' %}" style="height:2rem"> &nbsp;Environment</label></div>
                                 <div class="col-7">
                                     <label for="range_environment_5"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_environment_5" name="range_environment_5" onchange="initSlider('range_environment_5', 'environmentrange_5');setRiskAssessmentRefreshRequired(5);">
                                 </div>
@@ -2879,7 +3199,7 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                         <div class="card-body card-body-white">
                             <!--slider for regulatory impact rating -->
                             <div class="slider-container d-flex align-items-center">
-                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#regulationModal_5" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/regulation.png' %}" style="height:2rem">&nbsp; Regulatory</label></div>
+                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#regulationModal_5"  data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/regulation.png' %}" style="height:2rem">&nbsp; Regulatory</label></div>
                                 <div class="col-7">
                                     <label for="range_regulatory_5"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_regulatory_5" name="range_regulatory_5" onchange="initSlider('range_regulatory_5', 'regulatoryrange_5');setRiskAssessmentRefreshRequired(5);">
                                 </div>
@@ -2891,28 +3211,29 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                         <div class="card-body card-body-white">
                             <!--slider for data impact rating -->
                             <div class="slider-container d-flex align-items-center">
-                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#dataModal_5" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/data.png' %}" style="height:2rem"> &nbsp; Data/IP</label></div>
+                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#dataModal_5"  data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/data.png' %}" style="height:2rem"> &nbsp;Data/IP</label></div>
                                 <div class="col-7">
-                                    <label for="range_data_5"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_data_5" name="range_data_5" onchange="initSlider('range_data_5', 'datarange_5'); setRiskAssessmentRefreshRequired(5);">
+                                    <label for="range_data_5"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_data_5" name="range_data_5" onchange="initSlider('range_data_5', 'datarange_5');setRiskAssessmentRefreshRequired(5);">
                                 </div>
                                 <div class="col-2"><h6><label id="datarange_5" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
                         </div>
                     </div>
-                <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                    <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                         <div class="card-body card-body-white">
                             <!--slider for data impact rating -->
                             <div class="slider-container d-flex align-items-center">
-                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#supplyModal_5" data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/supply.png' %}" style="height:2rem"> &nbsp;Supply Chain</label></div>
+                                <div class="col-3"><label class="small-font d-flex align-items-center " data-bs-toggle="modal" data-bs-target="#supplyModal_5"  data-bs-placement="top" style="cursor: pointer"><img src="{% static 'images/supply.png' %}" style="height:2rem"> &nbsp;Supply Chain</label></div>
                                 <div class="col-7">
-                                    <label for="range_supply_1"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_supply_5" name="range_supply_5" onchange="initSlider('range_supply_5', 'supplyrange_5');setRiskAssessmentRefreshRequired(5);">
+                                    <label for="range_supply_5"></label><input type="range" min="1" max="10" value="1" class="slider" id="range_supply_5" name="range_supply_5" onchange="initSlider('range_supply_5', 'supplyrange_5');setRiskAssessmentRefreshRequired(5);">
                                 </div>
                                 <div class="col-2"><h6><label id="supplyrange_5" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
                             </div>
                         </div>
                     </div>
-                <br>
-                <h5>Vulnerability and Likelihood Analysis</h5>
+                </div>
+                <h5 style="color: white">Vulnerability and Likelihood Analysis</h5>
+                <div class="group-container">
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                         <div class="card-body card-body-white">
                             <!--slider for vulnerability rating -->
@@ -2927,7 +3248,7 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                     </div>
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                         <div class="card-body card-body-white">
-                            <!--slider for safety rating -->
+                            <!--slider for threat rating -->
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-2"><label class="small-font d-flex align-items-center " data-bs-toggle="tooltip" data-bs-placement="top" title="Use the slider to estimate the danger to life of the selected scenario">Threat</label></div>
                                 <div class="col-7">
@@ -2949,122 +3270,159 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                             </div>
                         </div>
                     </div>
+                    <div class="card mb-3 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title" style="color: white">Physical Safeguards</h5>
+                        <div id="tablePhysicalControls_5" class="mb-2">
+                            <button id="addRowBtn" class="btn btn-primary btn-sm" type="button">Add Row</button>
+                        </div>
+                        <table class="table table-bordered small-font" id="table_safeguards_5">
+                            <thead>
+                                <tr>
+                                    <th>Safeguard</th>
+                                    <th>Safeguard Type</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Rows will be added here dynamically -->
+                            </tbody>
+                        </table>
+                        <script>
+                            $(document).ready(function() {
+                                $("#addRowBtn").click(function() {
+                                    var newRow = `<tr>
+                                        <td><textarea class="form-control" maxlength="100"></textarea></td>
+                                        <td><textarea class="form-control" maxlength="100"></textarea></td>
+                                        <td><button type="button" class="btn btn-danger btn-sm deleteRowBtn">Delete</button></td>
+                                    </tr>`;
+                                    $("#table_safeguards_5 tbody").append(newRow);
+                                });
 
+                                // Event delegation to handle dynamically added elements
+                                $("#table_safeguards_5").on("click", ".deleteRowBtn", function() {
+                                    $(this).closest("tr").remove();
+                                });
+                            });
+                            </script>
 
+                    </div>
+                </div>
+
+                </div>
             </div>
-            <div class="col-md-4 small-font">
+            <div class="col-md-5 small-font">
                 <br>
-                <button id="risk-assessment-btn_5" type="button" class="btn btn-primary" style="background-color: #007849" onclick="checkEditModeAndExecute(this.id, 'loadingSpinner5')">
+                <button id="risk-assessment-btn_5" type="button" class="btn btn-primary" style="background-color: #e24e42"   onclick="checkEditModeAndExecute(this.id, 'loadingSpinner5')">
                     <i class="bi bi-play-fill mr-2"></i>Execute Risk Assessment
                 </button>
-
+                <br>
                 <!-- Add this HTML element where you want to display the loading spinner -->
                 <div id="loadingSpinner5" class="spinner-border" role="status" style="display: none;">
                   <span class="visually-hidden">Loading...</span>
                 </div>
-
-                    <div class="card mb-3 shadow-sm">
-                        <div class="card-body card-body-white">
-                            <label class="form-label">Risk Rating: </label>
-                            <input type="text" id="lblriskRating_5" name="lblriskRating_5" class="form-control" readonly>
-                        </div>
-                    </div>
-
-                    <div class="card mb-3 shadow-sm">
-                        <div class="card-body card-body-white">
-                            <div class="row">
-                                <div class="col">
-                                    <label class="form-label" style="font-size: 10px">Est. Incident Costs (Low): </label>
-                                    <input type="text" id="lblriskCost_5" name="lblriskCost_5" class="form-control" style="font-size: 14px; color: #0a53be" readonly><br>
-                                </div>
-                                <div class="col">
-                                    <label class="form-label" style="font-size: 10px">Est. Incident Costs (High): </label>
-                                    <input type="text" id="lblriskCostHigh_5" name="lblriskCostHigh_5" class="form-control" style="font-size: 14px; color: #0a53be" readonly><br>
-                                </div>
-                                <div class="col">
-                                    <label class="form-label" style="font-size: 10px">Est. Incident Costs (Median): </label>
-                                    <input type="text" id="lblriskCostMedian_5" name="lblriskCostMedian_5" class="form-control" style="font-size: 14px; color: #0a53be" readonly><br>
-                                </div>
+                <br>
+                <div class="row">
+                    <div class="col-md-1"></div>
+                    <div class="col-md-5">
+                        <div class="group-container">
+                            <div class="group-header">
+                                 Risk Rating
+                            </div>
+                                <div class="group-body">
+                                    <img src="{% static 'images/redcube.png' %}" class="cube-icon" alt="Red Cube"><label id="lblriskRating_5" name="lblriskRating_5" style="color:white"></label>
                             </div>
                         </div>
                     </div>
-                    <div class="card mb-3 shadow-sm">
-                        <div class="card-body card-body-white">
-                            <label class="form-label">Recommended Controls: </label>
-
-
-                            <div id="risk_a=summary_table_container_5">
-                            <table id="risk_summary_controls_table_5" class="table table-striped table-bordered" style="font-size: 10px">
-                                <thead>
-                                    <tr>
-                                        <th>Risk Summary Item</th>
-                                        <th>Control Effectiveness (%)</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <!-- Rows will be populated here -->
-                                </tbody>
-                            </table>
+                    <div class="col-md-5">
+                        <div class="group-container">
+                            <div class="group-header">
+                                 Residual Risk
                             </div>
-                            <input type="text" id="control_score_5" name="control_score_5" style="visibility: hidden">
-                                     <script>
-                                    function initializeControlScore_5() {
-                                        // Get all sliders in the table
-                                        var sliders = document.querySelectorAll('#risk_summary_controls_table_5 input[type="range"]');
+                                <div class="group-body">
+                                    <img src="{% static 'images/redcube.png' %}" class="cube-icon" alt="Red Cube"><label id="lblinherentRisk_5" name="lblinherentRisk_5" style="color:white"></label>
+                                    <input type="hidden" id="txtResidualRisk_5">
+                                </div>
 
-                                        // Function to calculate and update the overall control score
-                                        function updateControlScore() {
-                                            var totalScore = 0;
-
-                                            sliders.forEach(function(slider) {
-                                                totalScore += parseInt(slider.value, 10);
-                                            });
-
-                                            var averageScore = totalScore / sliders.length;
-                                            document.getElementById('control_score_5').value = averageScore.toFixed(2);  // Displaying the score up to two decimal places
-
-                                            // Calculate the residual risk
-                                            var inherentRisk = parseFloat(document.getElementById('lblriskScore_5').value);
-                                            var residualRisk = inherentRisk * (1 - (averageScore / 100));
-
-                                            // Update the residual risk slider value
-                                            document.getElementById('residual_risk_5').value = residualRisk.toFixed(2);
-
-                                            setSliderColor(document.getElementById("residual_risk_5"));
-                                             const event = new Event('input', {
-                                                'bubbles': true,
-                                                'cancelable': true
-                                            });
-                                            document.getElementById("residual_risk_5").dispatchEvent(event);
-
-                                        }
-
-                                        // Attach event listener to each slider
-                                        sliders.forEach(function(slider) {
-                                            slider.addEventListener('input', updateControlScore);
-                                        });
-
-                                        // Initial calculation
-                                        updateControlScore();
-                                    }
-
+                        </div>
+                    </div>
+                    <div class="col-md-1"></div>
+                </div>
+                <div class="row">
+                    <div class="col-md-1"></div>
+                    <div class="col">
+                        <div class="group-container">
+                            <div class="group-header">
+                                 Executive Summary
+                            </div>
+                                <div class="group-body">
+                            <textarea rows="10"  id="txtexec_summary_5" name="txtexec_summary_5" class="form-control" style="font-size: 14px; color: #0a53be; resize: none" readonly></textarea>
+                            <a href="#" id="copyExecSummaryLink" class="copy-code-link">
+                                <i class="bi bi-clipboard"></i> Copy Exec Summary
+                            </a>
+                            </div>
+                            <script>
+                                document.getElementById('copyExecSummaryLink').addEventListener('click', function(event) {
+                                    event.preventDefault(); // Prevent the default anchor action
+                                    var execSummaryText = document.getElementById('txtexec_summary_5').value;
+                                    navigator.clipboard.writeText(execSummaryText).then(function() {
+                                        /* Success action, e.g., showing a tooltip or alert */
+                                        console.log('Executive summary copied to clipboard.');
+                                    }, function(err) {
+                                        /* Handle error */
+                                        console.error('Could not copy text: ', err);
+                                    });
+                                });
                                 </script>
-                                <!-- ><input type="text" id="residual_risk_1" name="residual_risk_1"> --><br>
-                                <label class="form-label">Inherent Risk Score: </label>
-                                <input type="range" id="lblriskScore_5" name="lblriskScore_5" class="form-control risk-slider" min="0" max="10" step="1" value="0"><br>
-                                <label for="residual_risk_1">Residual Risk</label>
-                                <input type="range" id="residual_risk_5" name="residual_risk_5" class="form-control risk-slider" min="0" max="10" step="0.01" value="0">
 
                         </div>
-
                     </div>
-                    <button id="save_scenario_5" type="button" class="btn btn-primary" style="background-color: #007849" onclick="save_scenario(5);">
+
+                    <div class="col-md-1"></div>
+                </div>
+                <div class="row">
+                    <div class="col-md-1"></div>
+                    <div class="col">
+                        <div class="group-container">
+                            <div class="group-header">
+                                 Damage Estimate
+                            </div>
+                                <div class="group-body">
+                            <textarea rows="7"  id="txtDamage_5" name="txtDamage_5" class="form-control" style="font-size: 14px; color: #0a53be; resize: none" readonly></textarea>
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-1"></div>
+                </div>
+                <div class="row">
+                    <div class="col-md-1"></div>
+                    <div class="col">
+                        <div class="group-container">
+                            <div class="group-header">
+                                 Event Costs
+                            </div>
+                                <div class="group-body">
+                                    <div id="monthly_cost_chart_5" style="height:300px"></div>
+                                    <input type="hidden" id="scenario_12month_costs_5" name="scenario_12month_costs_5">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-1"></div>
+                </div>
+
+                    <button id="save_scenario_5" type="button" class="btn btn-primary" style="background-color: #e24e42" onclick="save_scenario(5);">
                     <i class="bi bi-play-fill mr-2"></i>Save Scenario 5
-                </button>
+                    </button>
+                <br>
+
 
                 </div>
             </div>
         </div>
+
+
       </div>
     </div>
 </div>
@@ -4663,7 +5021,7 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                 <div class="mb-3">
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                         <div class="card-body">
-                            <label for="actionTitle" class="form-label">Headline</label>
+                            <label for="actionTitle" class="form-label" style="color: white">Headline</label>
                             <input type="text" class="form-control" id="actionTitle" name="actionTitle" required>
                         </div>
                     </div>
@@ -4675,7 +5033,7 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                         <div class="mb-3">
                             <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                                 <div class="card-body">
-                                    <label for="actionOwner" class="form-label">Risk Owner</label>
+                                    <label for="actionOwner" class="form-label" style="color: white">Risk Owner</label>
                                     <input type="text" class="form-control" id="actionOwner" name="actionOwner" required>
                                 </div>
                             </div>
@@ -4686,7 +5044,7 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                         <div class="mb-3">
                             <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                                 <div class="card-body">
-                                    <label for="actionDate" class="form-label">Action Date</label>
+                                    <label for="actionDate" class="form-label" style="color: white">Action Date</label>
                                     <input type="date" class="form-control" id="actionDate" name="actionDate" required>
                                 </div>
                             </div>
@@ -4699,7 +5057,7 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                         <div class="mb-3">
                             <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                                 <div class="card-body">
-                                    <label for="actionEffort" class="form-label">Effort Level:</label>
+                                    <label for="actionEffort" class="form-label" style="color: white">Effort Level:</label>
                                     <Select class="form-control" id="actionEffort" name="actionEffort">
                                             <option value="">-- Select Effort --</option>
                                             <option value="Low">Low</option>
@@ -4715,7 +5073,7 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                         <div class="mb-3">
                             <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                                 <div class="card-body">
-                                    <label for="actionDifficulty" class="form-label">Difficulty Level</label>
+                                    <label for="actionDifficulty" class="form-label" style="color: white">Difficulty Level</label>
                                     <Select class="form-control" id="actionDifficulty" name="actionDifficulty">
                                             <option value="">-- Select Difficulty --</option>
                                             <option value="Low">Low</option>
@@ -4737,7 +5095,7 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                         <div class="mb-3">
                             <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                                 <div class="card-body">
-                                    <label for="actionCost" class="form-label">Estimated Cost</label>
+                                    <label for="actionCost" class="form-label" style="color: white">Estimated Cost</label>
                                     <Select class="form-control" id="actionCost" name="actionCost">
                                             <option value="">-- Select Costs --</option>
                                             <option value="Low">Low</option>
@@ -4754,7 +5112,7 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                         <div class="mb-3">
                             <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                                 <div class="card-body">
-                                    <label for="actionAffinity" class="form-label">Risk Mitigation</label>
+                                    <label for="actionAffinity" class="form-label" style="color: white">Risk Mitigation</label>
                                     <Select class="form-control" id="actionAffinity" name="actionAffinity">
                                             <option value="">-- Select Level --</option>
                                             <option value="Low">Low</option>
@@ -4771,7 +5129,7 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                         <div class="mb-3">
                             <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                                 <div class="card-body">
-                                    <label for="actionStatus" class="form-label">Status</label>
+                                    <label for="actionStatus" class="form-label" style="color: white">Status</label>
                                     <input type="text" class="form-control" id="actionStatus" name="actionStatus" readonly value="Open">
                                 </div>
                             </div>
@@ -4781,7 +5139,7 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                 <div class="mb-3">
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                         <div class="card-body">
-                            <label for="actionDescription" class="form-label">Description</label>
+                            <label for="actionDescription" class="form-label" style="color: white">Description</label>
                             <textarea id="actionDescription" name="actionDescription" class="form-control" rows="3" style="resize: none"></textarea>
                         </div>
                     </div>
@@ -4793,7 +5151,7 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                         <div class="mb-3">
                             <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                                 <div class="card-body">
-                                    <label for="actionPriority" class="form-label">Urgency</label>
+                                    <label for="actionPriority" class="form-label" style="color: white">Urgency</label>
                                         <select class="form-control" id="actionPriority" name="actionPriority">
                                             <option value="0">-- Select Urgency --</option>
                                             <option value="1">Low</option>
@@ -4810,7 +5168,7 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                         <div class="mb-3">
                             <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                                 <div class="card-body">
-                                    <label for="actionDueDate" class="form-label">Target Date</label>
+                                    <label for="actionDueDate" class="form-label" style="color: white">Target Date</label>
                                     <input type="date" class="form-control" id="actionDueDate" name="actionDueDate">
                                 </div>
                             </div>
@@ -4823,60 +5181,60 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                         <div class="card-body">
                             <div class="row justify-content-center">
                                 <div class="col-md-12">
-                                <p class="justify-content-center">Expected Risk Mitigation from Action</p>
+                                <p class="justify-content-center" style="color: white">Expected Risk Mitigation from Action</p>
                                 </div>
                             </div>
                             <div class="row justify-content-center">
                                 <div class="col-md-4">
-                                    <label for="safetyMitigation">Safety: <span id="safetyMitigationValue"></span></label>
+                                    <label for="safetyMitigation" style="color: white">Safety: <span id="safetyMitigationValue"></span></label>
                                     <input type="range" class="form-control custom-range" id="safetyMitigation" name="safetyMitigation" min="0" max="100" value="0">
                                 </div>
                                 <div class="col-md-4">
-                                    <label for="lifeMitigation">Life: <span id="lifeMitigationValue"></span></label>
+                                    <label for="lifeMitigation" style="color: white">Life: <span id="lifeMitigationValue"></span></label>
                                     <input type="range" class="form-control custom-range" id="lifeMitigation" name="lifeMitigation" min="0" max="100" value="0">
                                 </div>
                                 <div class="col-md-4">
-                                    <label for="productionMitigation">Production: <span id="productionMitigationValue"></span></label>
+                                    <label for="productionMitigation" style="color: white">Production: <span id="productionMitigationValue"></span></label>
                                     <input type="range" class="form-control custom-range" id="productionMitigation" name="productionMitigation" min="0" max="100" value="0">
                                 </div>
                             </div>
                             <div class="row justify-content-center mt-4">
                                 <div class="col-md-4">
-                                    <label for="financeMitigation">Finance: <span id="financeMitigationValue"></span></label>
+                                    <label for="financeMitigation" style="color: white">Finance: <span id="financeMitigationValue"></span></label>
                                     <input type="range" class="form-control custom-range" id="financeMitigation" name="financeMitigation" min="0" max="100" value="0">
                                 </div>
 
                                 <div class="col-md-4">
-                                    <label for="reputationMitigation">Reputation: <span id="reputationMitigationValue"></span></label>
+                                    <label for="reputationMitigation" style="color: white">Reputation: <span id="reputationMitigationValue"></span></label>
                                     <input type="range" class="form-control custom-range" id="reputationMitigation" name="reputationMitigation" min="0" max="100" value="0">
                                 </div>
                                 <div class="col-md-4">
-                                    <label for="environmentMitigation">Environment: <span id="environmentMitigationValue"></span></label>
+                                    <label for="environmentMitigation" style="color: white">Environment: <span id="environmentMitigationValue"></span></label>
                                     <input type="range" class="form-control custom-range" id="environmentMitigation" name="environmentMitigation" min="0" max="100" value="0">
                                 </div>
                             </div>
                             <div class="row justify-content-center mt-4">
                                 <div class="col-md-4">
-                                    <label for="regulationMitigation">Regulation: <span id="regulationMitigationValue"></span></label>
+                                    <label for="regulationMitigation" style="color: white">Regulation: <span id="regulationMitigationValue"></span></label>
                                     <input type="range" class="form-control custom-range" id="regulationMitigation" name="regulationMitigation" min="0" max="100" value="0">
                                 </div>
                                 <div class="col-md-4">
-                                    <label for="dataMitigation">Data: <span id="dataMitigationValue"></span></label>
+                                    <label for="dataMitigation" style="color: white">Data: <span id="dataMitigationValue"></span></label>
                                     <input type="range" class="form-control custom-range" id="dataMitigation" name="dataMitigation" min="0" max="100" value="0">
                                 </div>
 
                                 <div class="col-md-4">
-                                    <label for="supplyMitigation">Supply: <span id="supplyMitigationValue"></span></label>
+                                    <label for="supplyMitigation" style="color: white">Supply: <span id="supplyMitigationValue"></span></label>
                                     <input type="range" class="form-control custom-range" id="supplyMitigation" name="supplyMitigation" min="0" max="100" value="0">
                                 </div>
                             </div>
                             <div class="row justify-content-center mt-4">
                                 <div class="col-md-4">
-                                    <label for="threatMitigation">Threat: <span id="threatMitigationValue"></span></label>
+                                    <label for="threatMitigation" style="color: white">Threat: <span id="threatMitigationValue"></span></label>
                                     <input type="range" class="form-control custom-range" id="threatMitigation" name="threatMitigation" min="0" max="100" value="0">
                                 </div>
                                 <div class="col-md-4">
-                                    <label for="vulnerabilityMitigation">Vulnerability: <span id="vulnerabilityMitigationValue"></span></label>
+                                    <label for="vulnerabilityMitigation" style="color: white">Vulnerability: <span id="vulnerabilityMitigationValue"></span></label>
                                     <input type="range" class="form-control custom-range" id="vulnerabilityMitigation" name="vulnerabilityMitigation" min="0" max="100" value="0">
                                 </div>
                             </div>
@@ -4915,7 +5273,7 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                         <div class="mb-3">
                             <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                                 <div class="card-body">
-                                    <label for="outageSIS" class="form-label">Safety (SIS) Outage:</label>
+                                    <label for="outageSIS" class="form-label" style="color: white">Safety (SIS) Outage:</label>
                                         <select class="form-control" id="outageSIS" name="outageSIS">
                                             <option value="">-- Select Option --</option>
                                             <option value="Yes">Yes</option>
@@ -4930,7 +5288,7 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                         <div class="mb-3">
                             <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                                 <div class="card-body">
-                                    <label for="outageICS" class="form-label">Control System (SCADA/ICS) Outage:</label>
+                                    <label for="outageICS" class="form-label" style="color: white">Control System (SCADA/ICS) Outage:</label>
                                         <select class="form-control" id="outageICS" name="outageICS">
                                             <option value="">-- Select Option --</option>
                                             <option value="Yes">Yes</option>
@@ -4945,7 +5303,7 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                         <div class="mb-3">
                             <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                                 <div class="card-body">
-                                    <label for="outageEMS" class="form-label">Environmental (EMS) Outage:</label>
+                                    <label for="outageEMS" class="form-label" style="color: white">Environmental (EMS) Outage:</label>
                                         <select class="form-control" id="outageEMS" name="outageEMS">
                                             <option value="">-- Select Option --</option>
                                             <option value="Yes">Yes</option>
@@ -4962,7 +5320,7 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                         <div class="mb-3">
                             <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                                 <div class="card-body">
-                                    <label for="outageIT" class="form-label">IT Outage:</label>
+                                    <label for="outageIT" class="form-label" style="color: white">IT Outage:</label>
                                         <select class="form-control" id="outageIT" name="outageIT">
                                             <option value="">-- Select Option --</option>
                                             <option value="Yes">Yes</option>
@@ -4977,7 +5335,7 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                         <div class="mb-3">
                             <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                                 <div class="card-body">
-                                    <label for="outagePS" class="form-label">Physical Security Outage:</label>
+                                    <label for="outagePS" class="form-label" style="color: white">Physical Security Outage:</label>
                                         <select class="form-control" id="outagePS" name="outagePS">
                                             <option value="">-- Select Option --</option>
                                             <option value="Yes">Yes</option>
@@ -4992,7 +5350,7 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                         <div class="mb-3">
                             <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                                 <div class="card-body">
-                                    <label for="outageWWW" class="form-label">Internet Outage:</label>
+                                    <label for="outageWWW" class="form-label" style="color: white">Internet Outage:</label>
                                         <select class="form-control" id="outageWWW" name="outageWWW">
                                             <option value="0">-- Select Option --</option>
                                             <option value="1">Yes</option>
@@ -5381,7 +5739,7 @@ function abbreviateValue(value) {
                     var executive_summary = response[4];
                     var costArray = riskSummary.split('|').map(Number);
                     document.getElementById('scenario_12month_costs_' + buttonNumber).value = riskSummary;
-                    createCostChart('monthly_cost_chart_1', costArray);
+                    createCostChart('monthly_cost_chart_' + buttonNumber, costArray);
 
 
                     // var median_estimate = response[5];
@@ -5619,10 +5977,10 @@ $(document).ready(function() {
             success: function(data) {
                 var scenarios = data.scenarios;
                 var safeguards = data.safeguards;
-
-                document.getElementById("scenarioCount").value = "1";
+                document.getElementById("scenarioCount").value = scenarios.length;
 
                 if (scenarios.length >= 2) {
+                    document.getElementById("scenario2-tab").click();
                     document.getElementById("scenarioCount").value = "2";
                     document.getElementById("hdnScenarioID_2").value = scenarios[1].pk;
                     sessionStorage.setItem('scenario2id', scenarios[1].pk);
@@ -5634,47 +5992,47 @@ $(document).ready(function() {
                     document.getElementById('exposed_system_2').checked = scenarios[1].fields.exposed_system;
                     document.getElementById('weak_credentials_2').checked = scenarios[1].fields.weak_credentials;
                     document.getElementById("lblriskSummary_2").value = scenarios[1].fields.riskSummary;
-                    document.getElementById("range_safety_1").value = scenarios[1].fields.SafetyScore;
-                     initSlider('range_safety_2', 'safetyrange_2')
-                     document.getElementById("range_life_2").value = scenarios[1].fields.lifeScore;
-                     initSlider('range_life_2', 'liferange_2')
-                     document.getElementById("range_production_2").value = scenarios[1].fields.productionScore;
-                     initSlider('range_production_2', 'productionrange_2')
-                     document.getElementById("range_finance_2").value = scenarios[1].fields.FinancialScore;
-                     initSlider('range_finance_2', 'financerange_2')
-                     document.getElementById("range_reputation_2").value = scenarios[1].fields.ReputationScore;
-                     initSlider('range_reputation_2', 'reputationrange_2')
-                     document.getElementById("range_environment_2").value = scenarios[1].fields.environmentScore;
-                     initSlider('range_environment_2', 'environmentrange_1')
-                     document.getElementById("range_regulatory_2").value = scenarios[1].fields.regulatoryScore;
-                     initSlider('range_regulatory_2', 'regulatoryrange_2')
-                     document.getElementById("range_supply_2").value = scenarios[1].fields.SupplyChainScore;
-                     initSlider('range_supply_2', 'supplyrange_2')
-                         document.getElementById("range_data_2").value = scenarios[1].fields.DataScore;
-                         initSlider('range_data_2', 'datarange_2')
-                         document.getElementById("range_vuln_2").value = scenarios[1].fields.VulnScore;
-                         initSlider('range_vuln_2', 'vulnrange_2')
-                         document.getElementById("range_threat_2").value = scenarios[1].fields.ThreatScore;
-                         initSlider('range_threat_2', 'threatrange_2');
-                         document.getElementById("txtAssets_2").value = scenarios[1].fields.notes;
-                         document.getElementById("txtsafetyJustify_2").value = scenarios[1].fields.justifySafety;
-                         document.getElementById("txtlifeJustify_2").value = scenarios[1].fields.justifyLife;
-                          document.getElementById("txtproductionJustify_2").value = scenarios[1].fields.justifyProduction;
-                          document.getElementById("txtfinanceJustify_2").value = scenarios[1].fields.justifyFinancial;
-                          document.getElementById("txtreputationJustify_2").value = scenarios[1].fields.justifyReputation;
-                          document.getElementById("txtenvironmentJustify_2").value = scenarios[1].fields.justifyEnvironment;
-                          document.getElementById("txtregulationJustify_2").value = scenarios[1].fields.justifyRegulation;
-                          document.getElementById("txtdataJustify_2").value = scenarios[1].fields.justifyData;
-                          document.getElementById("txtsupplyJustify_2").value = scenarios[1].fields.justifySupply;
-                          document.getElementById("txtDamage_2").value = scenarios[1].fields.scenario_damage;
-                          document.getElementById("txtexec_summary_2").value = scenarios[1].fields.executive_summary;
-                          document.getElementById("scenario_12month_costs_2").value = scenarios[1].fields.scenario_12month_costs;
-                          document.getElementById("lblriskRating_2").textContent = scenarios[1].fields.RiskStatus;
+                    document.getElementById("range_safety_2").value = scenarios[1].fields.SafetyScore;
+                    initSlider('range_safety_2', 'safetyrange_2')
+                    document.getElementById("range_life_2").value = scenarios[1].fields.lifeScore;
+                    initSlider('range_life_2', 'liferange_2')
+                    document.getElementById("range_production_2").value = scenarios[1].fields.productionScore;
+                    initSlider('range_production_2', 'productionrange_2')
+                    document.getElementById("range_finance_2").value = scenarios[1].fields.FinancialScore;
+                    initSlider('range_finance_2', 'financerange_2')
+                    document.getElementById("range_reputation_2").value = scenarios[1].fields.ReputationScore;
+                    initSlider('range_reputation_2', 'reputationrange_2')
+                    document.getElementById("range_environment_2").value = scenarios[1].fields.environmentScore;
+                    initSlider('range_environment_2', 'environmentrange_1')
+                    document.getElementById("range_regulatory_2").value = scenarios[1].fields.regulatoryScore;
+                    initSlider('range_regulatory_2', 'regulatoryrange_2')
+                    document.getElementById("range_supply_2").value = scenarios[1].fields.SupplyChainScore;
+                    initSlider('range_supply_2', 'supplyrange_2')
+                    document.getElementById("range_data_2").value = scenarios[1].fields.DataScore;
+                    initSlider('range_data_2', 'datarange_2')
+                    document.getElementById("range_vuln_2").value = scenarios[1].fields.VulnScore;
+                    initSlider('range_vuln_2', 'vulnrange_2')
+                    document.getElementById("range_threat_2").value = scenarios[1].fields.ThreatScore;
+                    initSlider('range_threat_2', 'threatrange_2');
+                    document.getElementById("txtAssets_2").value = scenarios[1].fields.notes;
+                    document.getElementById("txtsafetyJustify_2").value = scenarios[1].fields.justifySafety;
+                    document.getElementById("txtlifeJustify_2").value = scenarios[1].fields.justifyLife;
+                    document.getElementById("txtproductionJustify_2").value = scenarios[1].fields.justifyProduction;
+                    document.getElementById("txtfinanceJustify_2").value = scenarios[1].fields.justifyFinancial;
+                    document.getElementById("txtreputationJustify_2").value = scenarios[1].fields.justifyReputation;
+                    document.getElementById("txtenvironmentJustify_2").value = scenarios[1].fields.justifyEnvironment;
+                    document.getElementById("txtregulationJustify_2").value = scenarios[1].fields.justifyRegulation;
+                    document.getElementById("txtdataJustify_2").value = scenarios[1].fields.justifyData;
+                    document.getElementById("txtsupplyJustify_2").value = scenarios[1].fields.justifySupply;
+                    document.getElementById("txtDamage_2").value = scenarios[1].fields.scenario_damage;
+                    document.getElementById("txtexec_summary_2").value = scenarios[1].fields.executive_summary;
+                    document.getElementById("scenario_12month_costs_2").value = scenarios[1].fields.scenario_12month_costs;
+                    document.getElementById("lblriskRating_2").textContent = scenarios[1].fields.RiskStatus;
 
-                          document.getElementById("lblinherentRisk_2").textContent = scenarios[1].fields.residual_risk;
-                          document.getElementById("txtResidualRisk_2").value = scenarios[1].fields.residual_risk;
-                          var residualRisk = scenarios[1].fields.residual_risk;
-                          var riskText = "";
+                    document.getElementById("lblinherentRisk_2").textContent = scenarios[1].fields.residual_risk;
+                    document.getElementById("txtResidualRisk_2").value = scenarios[1].fields.residual_risk;
+                    var residualRisk = scenarios[1].fields.residual_risk;
+                    var riskText = "";
 
                         // Determine the risk text based on the value of residual risk
                         if (residualRisk >= 0 && residualRisk <= 2) {
@@ -6460,7 +6818,7 @@ function save_scenario(buttonId) {
             'environmentScore': $('#range_environment_' + buttonId).val(),
             'regulatoryScore': $('#range_regulatory_' + buttonId).val(),
             'RiskStatus': document.getElementById('lblriskRating_' + buttonId).textContent,
-
+            'residual_risk': document.getElementById('lblinherentRisk_' + buttonId).textContent,
             'threatSource': $('#selectThreat_' + buttonId).val(),
             'threatTactic': $('#selectTactics_' + buttonId).val(),
             'impact': $('#id_impact_' + buttonId).val(),

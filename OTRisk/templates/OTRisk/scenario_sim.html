@@ -222,6 +222,43 @@
     max-height: 400px; /* Adjust this value based on your needs */
     overflow-y: auto; /* Enables vertical scrolling */
 }
+@media (max-width: 768px) {
+  .modal-lg {
+    max-width: 90%; /* Adjust based on preference */
+  }
+}
+
+.investment-box {
+    fill: #eee; /* Light background for the boxes */
+    stroke: #666; /* Dark border for the boxes */
+}
+
+.investment-text {
+    fill: #000; /* Black text color */
+    font-size: 12px; /* Adjust as needed */
+}
+
+svg {
+    display: block;
+    margin: 0 auto; /* Center the SVG in its container */
+    overflow: visible;
+}
+
+path.connection {
+    stroke: #333;
+    stroke-width: 2;
+    fill: none;
+}
+
+#investmentImpactVisualization {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+}
+
+
+/* Adjustments may be needed based on the exact layout and spacing */
 
 </style>
 </head>
@@ -256,6 +293,8 @@ fetch('https://restcountries.com/v3.1/all')
     .catch(error => {
         console.error("There was an error fetching the country list:", error);
     });
+
+
 </script>
 <nav class="navbar navbar-expand-lg navbar-scroll shadow-0 border-bottom rounded">
     <div class="container-fluid d-flex justify-content-between">
@@ -404,6 +443,7 @@ fetch('https://restcountries.com/v3.1/all')
                         <textarea id="txtScenario" class='form-control' rows=11 placeholder='Enter a detailed cybersecurity scenario or click the link above to use the scenario builder...' style="resize: none; border: 3px #97979A; border-radius: 10px; box-shadow: inset 3px 3px 8px rgba(0, 0, 0, 0.5); padding: 20px; background-color: white"></textarea>
 
                         <div id="suggestions"></div>
+
                     <script>
 
                 // Ensure DOM is fully loaded before executing the script
@@ -465,6 +505,13 @@ fetch('https://restcountries.com/v3.1/all')
                 });
 
     </script>
+                </div>
+                <div class="card mb-3 shadow-sm" style="background-color: white;">
+                    <div class="card-body">
+                        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#investmentModal">
+                        Add OT Security Investments
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -585,17 +632,29 @@ fetch('https://restcountries.com/v3.1/all')
 
     <div class="col-md-10">
         <div class="form-group">
+            <label style="color:white">Business Impact Analysis:</label>
         <span id="bia_groups"></span>
             </div>
     </div>
     <div class="col-md-1"></div>
 </div>
+<div class="row">
+    <div class="col-md-1"></div>
+        <div class="col-md-10">
+            <div class="form-group">
+                <label style="color:white">Investment Impacts:</label>
+            <div id="investmentImpactVisualization"></div>
 
+            </div>
+        </div>
+    <div class="col-md-1"></div>
+</div>
 
 <div class="row">
     <div class="col-md-1"></div>
     <div class="col-md-10">
         <div class="form-group">
+            <label style="color:white">Scenario Attack Tree:</label>
         <div id="attack_tree" style="width:100%"></div>
             <div>
     </div>
@@ -728,9 +787,59 @@ fetch('https://restcountries.com/v3.1/all')
   </div>
 </div>
 
-
+    </div>
+<input type="hidden" id="txthdninvestmentstring" name="txthdninvestmentstring">
 
  <script>
+    function renderInvestmentImpact(investmentImpactText) {
+    var bulletPoints = investmentImpactText.split('\n').filter(bp => bp.trim().length > 0);
+
+    // Clear previous content
+    $("#investmentImpactVisualization").empty();
+
+    // Create a container for the visualization
+    var container = d3.select("#investmentImpactVisualization")
+        .style("display", "flex")
+        .style("justify-content", "space-evenly")
+        .style("align-items", "flex-start") // Align items at the start to manage varying heights
+        .style("flex-wrap", "wrap") // Allow boxes to wrap in the container
+        .style("padding", "20px")
+        .style("gap", "20px") // Space between boxes
+        .style("background-color", "#f0f0f0");
+
+    bulletPoints.forEach(function(bp, index) {
+        var box = container.append("div")
+            .style("border", "2px solid #007BFF") // A vibrant, color-blind friendly border color
+            .style("border-radius", "10px")
+            .style("padding", "20px")
+            .style("margin-bottom", "20px") // Margin at the bottom for spacing
+            .style("background-color", "#ffffff") // White background for contrast
+            .style("box-shadow", "0 8px 16px rgba(0,0,0,0.15)") // Deeper shadow for a sleek look
+            .style("display", "flex")
+            .style("flex-direction", "column")
+            .style("justify-content", "space-between") // Distribute space evenly inside the box
+            .style("align-items", "center")
+            .style("text-align", "center") // Center align the text
+            .attr("class", "investment-box") // Add a class for further manipulation
+            .style("min-width", "240px") // Minimum width for each box
+            .style("max-width", "300px") // Maximum width to ensure consistency
+            .append("p")
+            .text(bp)
+            .style("margin-top", "10px") // Margin at the top inside the box
+            .style("margin-bottom", "10px") // Margin at the bottom inside the box
+            .style("font-size", "16px") // Enhanced font size for readability
+            .style("color", "#333333") // Darker text color for better contrast
+            .style("word-wrap", "break-word"); // Ensure text wraps within the box
+    });
+
+    // After all boxes are created, adjust their height to match the tallest box
+    var maxHeight = d3.max(container.selectAll(".investment-box").nodes(), function(box) {
+        return box.getBoundingClientRect().height;
+    });
+
+    // Set the container height to accommodate the tallest box with some padding
+    container.selectAll(".investment-box").style("height", maxHeight + "px");
+}
 
     document.getElementById('analyzeScenarioBtn').addEventListener('click', function() {
     var scenarioText = document.getElementById('txtScenario').value;
@@ -742,7 +851,17 @@ fetch('https://restcountries.com/v3.1/all')
     // let security_measures = document.getElementById('selSecurityMeasures').value;
     let regulatory_environment = document.getElementById('selRegulatoryEnvironment').value;
     let country = document.getElementById('countrySelector').value;
-
+    let investments = [];
+        $('#investmentTable tbody tr').each(function() {
+            let investment = {
+                type: $(this).find('select[name="investment_type[]"]').val(),
+                vendor_name: $(this).find('input[name="vendor_name[]"]').val(),
+                product_name: $(this).find('input[name="product_name[]"]').val(),
+                cost: $(this).find('input[name="cost[]"]').val(),
+                date: $(this).find('input[name="date[]"]').val()
+            };
+            investments.push(investment);
+        });
     var button = this;
     var spinnerContainer = document.getElementById('spinnerContainer');
     button.disabled = true;
@@ -757,6 +876,7 @@ fetch('https://restcountries.com/v3.1/all')
                 'scenario': scenarioText,
                 'industry': industry,
                 'facility_type': facility_type,
+                'investments': JSON.stringify(investments),
                 'csrfmiddlewaretoken': '{{ csrf_token }}'
             },
             success: function(response) {
@@ -802,6 +922,19 @@ fetch('https://restcountries.com/v3.1/all')
                     paging: false,
                     info: false
                 });
+
+                 if (response.investment_impact) {
+                // Call renderInvestmentImpact function with the investment_impact data
+
+                document.getElementById('txthdninvestmentstring').value = btoa(response.investment_impact);
+                renderInvestmentImpact(response.investment_impact);
+            } else {
+                // Handle the case where investment_impact data is not available
+                console.log("No investment impact data available.");
+            }
+
+
+
 
                 resolve();
 
@@ -972,6 +1105,10 @@ function loadScenarioDetails(scenarioId) {
             $('#txtBestCase').val(costs.bestCase); // Set best case cost
             $('#txtMostLikelyCase').val(costs.mostLikelyCase); // Set most likely case cost
             $('#txtWorstCase').val(costs.worstCase); // Set worst case cost
+            var decodedText = atob(response.investment_projection);
+            $('#txthdninvestmentstring').val(response.investment_projection);
+
+            renderInvestmentImpact(decodedText);
 
             var costArray = response.cost_projection.split('|').map(Number);
             createCostChart('monthly_cost_chart', costArray);
@@ -1228,7 +1365,8 @@ function saveScenario(scenarioName) {
     bestCaseCost: document.getElementById('txtBestCase').value,
     mostLikelyCaseCost: document.getElementById('txtMostLikelyCase').value,
     worstCaseCost: document.getElementById('txtWorstCase').value,
-    cost_projection: document.getElementById('scenario_12month_costs').value
+    cost_projection: document.getElementById('scenario_12month_costs').value,
+    investment_projection: document.getElementById('txthdninvestmentstring').value
     };
 
     $.ajax({
@@ -1353,5 +1491,89 @@ $(document).ready(function() {
 });
 
         </script>
+
+<div class="modal fade" id="investmentModal" tabindex="-1" role="dialog" aria-labelledby="investmentModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="investmentModalLabel">Add Cybersecurity Investments</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+          <div class="table-responsive">
+
+          <table class="table" id="investmentTable">
+            <colgroup>
+                  <col span="1" style="width: 20%;"> <!-- Type -->
+                  <col span="1" style="width: 20%;"> <!-- Vendor Name -->
+                  <col span="1" style="width: 20%;"> <!-- Product Name -->
+                  <col span="1" style="width: 15%;"> <!-- Cost -->
+                  <col span="1" style="width: 15%;"> <!-- Date -->
+                  <col span="1" style="width: 10%;"> <!-- Action -->
+                </colgroup>
+            <thead>
+              <tr>
+                <th>Type</th>
+                <th>Vendor Name</th>
+                <th>Product Name</th>
+                <th>Cost</th>
+                <th>Date</th> <!-- New Date Column -->
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+
+                <td><select name="investment_type[]" class="form-control">
+                    <option value="Software">Software</option>
+                    <option value="Hardware">Hardware</option>
+                    </select>
+                </td>
+
+                <td><input type="text" name="vendor_name[]" class="form-control" /></td>
+                <td><input type="text" name="product_name[]" class="form-control" /></td>
+                <td><input type="number" name="cost[]" class="form-control" step="0.01" /></td>
+                <td><input type="date" name="date[]" class="form-control" /></td> <!-- New Date Input -->
+                <td><button class="btn btn-danger removeRow">Remove</button></td>
+              </tr>
+            </tbody>
+
+          </table>
+          <button type="button" class="btn btn-primary" id="addRow">Add Row</button>
+
+          </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+$(document).ready(function() {
+  $("#addRow").click(function() {
+    var newRow = `<tr>
+      <td><select name="investment_type[]" class="form-control">
+        <option value="Software">Software</option>
+        <option value="Hardware">Hardware</option>
+        <option value="People">People</option>
+      </select></td>
+      <td><input type="text" name="vendor_name[]" class="form-control" /></td>
+      <td><input type="text" name="product_name[]" class="form-control" /></td>
+      <td><input type="number" name="cost[]" class="form-control" step="0.01" /></td>
+      <td><input type="date" name="date[]" class="form-control" /></td>
+      <td><button type="button" class="btn btn-danger removeRow">Remove</button></td>
+    </tr>`;
+    $("#investmentTable tbody").append(newRow);
+  });
+
+  $(document).on('click', '.removeRow', function() {
+    $(this).closest('tr').remove();
+  });
+});
+</script>
 </body>
 </html>

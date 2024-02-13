@@ -2,8 +2,9 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>iOTa</title>
-    <link rel="icon" href="{% static 'images/iota - white 1.png' %}" type="image/x-icon">
+    <title>AnzenOT - CyberPHA and OT Risk Management</title>
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+    <link rel="icon" href="{% static 'images/AnzenOTIconBlack.png' %}" type="image/x-icon">
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css">
 
@@ -37,13 +38,16 @@
     <script src="{% static 'anychart/dist/js/anychart-pie.min.js' %}"></script>
     <script src="{% static 'anychart/dist/js/anychart-cartesian.min.js' %}"></script>
     <script src="{% static 'anychart/dist/js/anychart-radar.min.js' %}"></script>
+    <script src="{% static 'anychart/dist/js/anychart-circular-gauge.min.js' %}"></script>
 
+     <script src="https://cdn.anychart.com/releases/8.11.1/js/anychart-linear-gauge.min.js" type="text/javascript"></script>
 
      {% load django_bootstrap5 %}
      {% bootstrap_css %}
      {% bootstrap_javascript %}
     <style>
-.control-item {
+
+        .control-item {
     border: 1px solid #ccc;
     padding: 10px;
     margin: 10px 0;
@@ -121,33 +125,61 @@
         border-radius: 4px; /* rounded corners (optional) */
     }
 
-       .navbar-scroll .nav-link,
-        .navbar-scroll .navbar-toggler-icon,
-        .navbar-scroll .navbar-brand {
-          color: #000000;
-        }
+.navbar {
+    background-color: #464748;
+    border-bottom: 1px solid #000;
+    height: 50px; /* Fixed height */
+    position: relative;
+}
 
-        /* Color of the navbar BEFORE scroll */
-        .navbar-scroll {
-          background-color: #ffffff;
-            text-decoration-color: #000000;
-        }
+.owl-logo {
+    height: 60px; /* Set a fixed height for the image */
+    width: auto; /* Maintain aspect ratio */
+    position: relative;
+    top: 50%; /* Center vertically in the navbar */
+    transform: translateY(-30%); /* Adjust vertical position */
+    margin-bottom: -20px; /* Negative margin to overlap */
+}
 
 
-        /* Color of the links AFTER scroll */
-        .navbar-scrolled .nav-link,
-        .navbar-scrolled .navbar-toggler-icon,
-        .navbar-scroll .navbar-brand {
-          color: #262626;
-        }
+.navbar-brand, .nav-link {
+    color: #d3d1cd; /* White text for clear visibility on initial view */
+}
 
-        .navbar-logo {
-        position: absolute;
-        top: 5px; /* Adjust this as needed */
-        left: 5px; /* Adjust this as needed */
-        height: 100px; /* Adjust this as needed */
-        z-index: 10;
-        }
+.menu-item {
+    border-right: 1px solid #4B6B6B; /* Subtle line between items */
+    font-size: 14px; /* Adjust font size */
+}
+
+.menu-item:last-child {
+    border-right: none; /* Remove border for the last item */
+}
+
+.menu-item:hover, .dropdown-item:hover {
+    background-color: #3A5F5F; /* Slightly lighter grey on hover */
+    color: #E0E0E0; /* Light grey text on hover */
+}
+
+.nav-link:hover, .dropdown-item {
+    color: #E0E0E0; /* Light grey text on hover */
+}
+
+.dropdown-menu {
+    background-color: #464748; /* Dark Slate Grey */
+    border: none;
+}
+
+.dropdown-item {
+    color: #FFFFFF; /* White text for clear visibility */
+}
+
+.dropdown-item:hover {
+    background-color: #3A5F5F; /* Slightly lighter grey on hover */
+    color: #E0E0E0;}
+
+     .small-font {
+        font-size: 0.8rem; /* adjust as needed */
+   }
 
             .col-md-2 {
         place-items: center;
@@ -173,7 +205,6 @@
 .scenario-item {
     width: 100%;
     box-sizing: border-box; /* Include padding and border in the element's total width and height */
-    font-size: 16px;
 }
 
 
@@ -195,7 +226,8 @@
 
 .scenario-link.highlighted {
     border-color: black;
-    background-color: #fff8e8;
+    background-color: #5E6266;
+    color: white;
 }
 
 body {
@@ -232,66 +264,110 @@ body {
     flex: 1; /* This will make sure the content takes up all available space */
 }
 
+.form-group {
+    border: 1px solid #464748; /* Border color */
+    box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.5); /* Outer shadow */
+    background-color: #5E6266; /* Lighter shade of #464748 */
+    padding: 15px; /* Optional: for internal spacing */
+}
+.form-sim {
+    max-width: 100%; /* Ensures select does not exceed container width */
+    width: auto; /* Optional: Ensures select width is based on content up to max-width */
+}
 
-    </style>
+                        #action_table {
+                            border-collapse: collapse;
+                            width: 100%;
+                            background-color: #fff8e8;
+                        }
+
+                        #action_table th, #action_table td {
+                            border: 1px solid #ddd;
+                            padding: 8px;
+                        }
+
+                        #action_table th {
+                            padding-top: 12px;
+                            padding-bottom: 12px;
+                            text-align: left;
+                            background-color: #f2f2f2;
+                            color: black;
+                            border-bottom: 3px solid #ddd;
+                        }
+
+                        #action_table tr:hover {
+                            background-color: #f5f5f5;
+                        }
+
+                        /* 3D shading effect */
+                        #action_table {
+                            box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.3);
+                        }
+                    </style>
 </head>
-<body>
-<script>anychart.licenseKey("{{ anychart_key }}");</script>
-<nav class="navbar navbar-expand-lg navbar-scroll shadow-0 border-bottom border-dark rounded">
-  <div class="container-fluid d-flex justify-content-between">
-   <a class="navbar-brand" href="{% url 'OTRisk:dashboardhome' %}"><img src="{% static 'images/iota - white 1.png' %}" style="height: 140px; width: 140px" class="navbar-logo" alt="">   </a>
-      <h6 class="my-auto text-center flex-grow-1">QRAW Report</h6>
-
-    <div class="collapse navbar-collapse" id="navbarSupportedContent">
-      <ul class="navbar-nav ms-auto">
-
-        <li class="nav-item">
-          <a class="nav-link"  style="font-size: 12px;" href="{% url 'OTRisk:qraw' %}"><i class="bi bi-journal-text"></i> Risk Assessment</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" style="font-size: 12px;" href="{% url 'OTRisk:iotaphamanager' %}"><i class="bi bi-journal-text"></i> CyberPHA</a>
-        </li>
-          <li class="nav-item">
-          <a class="nav-link" style="font-size: 12px;" href="{% url 'OTRisk:ra_actions_view_default' %}" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Actions</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" style="font-size: 12px;" href="{% url 'OTRisk:risk_register' %}" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Risk Register</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" style="font-size: 12px;" href="{% url 'OTRisk:list_frameworks' %}" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Assessments</a>
-        </li>
-        <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="font-size: 12px;">
+<body style="background-color: #464748">
+<script>anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");</script>
+<nav class="navbar navbar-expand-lg navbar-scroll shadow-0 border-bottom rounded">
+    <div class="container-fluid d-flex justify-content-between">
+        <a class="navbar-brand" href="{% url 'OTRisk:dashboardhome' %}">
+            &nbsp; &nbsp; &nbsp; &nbsp;
+            <img src="{% static 'images/anzen_owl.png' %}" class="owl-logo" style="width: 18%; height: 18%">
+        </a>
+        <h6 class="my-auto text-center flex-grow-1 navbar-brand"><img src="{% static 'images/anzen_noowl.png' %}" style="width: 15%; height: 15%"> Dashboard</h6>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item menu-item">
+                    <a class="nav-link" href="{% url 'OTRisk:qraw' %}"><i class="bi bi-calculator"></i> QRAW</a>
+                </li>
+                <li class="nav-item menu-item">
+                    <a class="nav-link" href="{% url 'OTRisk:iotaphamanager' %}"><i class="bi bi-journal-text"></i> CyberPHA</a>
+                </li>
+                <li class="nav-item menu-item">
+                    <a class="nav-link" href="{% url 'OTRisk:scenario_sim' %}"><i class="bi bi-bricks"></i> Scenario Builder</a>
+                </li>
+                <li class="nav-item menu-item">
+                    <a class="nav-link" href="{% url 'OTRisk:ra_actions_view_default' %}"><i class="bi-file-earmark-easel"></i> Actions</a>
+                </li>
+                <li class="nav-item menu-item">
+                    <a class="nav-link" href="{% url 'OTRisk:risk_register' %}"><i class="bi-file-earmark-easel"></i> Risk Register</a>
+                </li>
+                <li class="nav-item menu-item">
+                    <a class="nav-link" href="{% url 'OTRisk:list_frameworks' %}"><i class="bi-file-earmark-easel"></i> Assessments</a>
+                </li>
+    <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                 <i class="bi bi-diagram-3"></i> Admin
               </a>
               <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
 
+                    <li><a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:setup_org' %}">Set Defaults</a></li>
                   <li><a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:admin_users' %}">Admin Users</a></li>
+              <li><a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:upload_questionnaire' %}">Upload Questionnaires</a></li>
                   {% if user.is_staff %}
                     <!-- Links visible only to superusers -->
                     <li><a class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:user_admin' %}">User Administration</a></li>
+                      <li><a class="dropdown-item"  style="font-size: 12px;" href="{% url 'OTRisk:organization_form' %}">Manage Organizations</a></li>
+
                       <li><a class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:execute_sql' %}">Execute SQL</a></li>
                     {% endif %}
 
               </ul>
 
         </li>
-        <li class="nav-item">
-            <a class="nav-link" href="{% url 'accounts:profile' %}" style="font-size: 12px;">
-                <i class="bi bi-person-fill"></i> {{ user.first_name }} {{ user.last_name }} | {{ user.userprofile.organization.name }}
-            </a>
-        </li>
-
-          <li class="nav-item">
-            <a class="nav-link" href="{% url 'logout' %}">
-                <i class="bi bi-box-arrow-right"></i> Logout
-            </a>
-        </li>
-      </ul>
+    <li class="nav-item menu-item">
+    <a class="nav-link" href="{% url 'accounts:profile' %}">
+    <i class="bi bi-person-fill"></i> {{ user.first_name }} {{ user.last_name }} | {{ user.userprofile.organization.name }}
+    </a>
+    </li>
+    <li class="nav-item menu-item">
+    <a class="nav-link" href="{% url 'logout' %}">
+    <i class="bi bi-box-arrow-right"></i> Logout
+    </a>
+    </li>
+    </ul>
     </div>
-  </div>
-
-</nav>
+    </div>
+    </nav>
 
 <div class="row">
     <div class="col-md-1"></div>
@@ -299,56 +375,64 @@ body {
         <div class="row">
             <div class="col-md-12">
                 <p>
-                <H4 style="color: #0a53be; display: inline-block;">{{ qraw_header.RATitle }}</H4>
-                <h6 style="display: inline-block; color: #0a53be"> Risk Assessment (QRAW)</h6>
+                <H4 style="color: white; display: inline-block;">QRAW Title: {{ qraw_header.RATitle }}</H4>
+
             </div>
         </div>
         <div class="row"  style="font-size: 10px">
-            <div class="col" style="font-size: 12px">
-                 Facility Type: {{ qraw_header.BusinessUnitType }}<br>
-                 Industry: {{ qraw_header.industry }}<br>
-                 Status: {{ qraw_header.StatusFlag }}<br>
 
-                <div id="bia_container" style="width: 100%; height: 250px;"></div>
+            <div class="col" style="font-size: 12px; color: white">
+                Facility Type:{{ qraw_header.BusinessUnitType }}<br>
+                Industry: {{ qraw_header.industry }}<br>
+                Status:{{ qraw_header.StatusFlag }}<br>
+                Date:{{ qraw_header.RADate }}
 
             </div> <!--  BIA summary chart -->
-            <div class="col">
-                <div class="row">
-                    <div class="col-md-3">
-                        Estimated Event Costs
-                        <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                            <div class="card-body">
-                                <img src="{% static 'images/bestcase.png' %}" alt="" style="height: 2em; vertical-align: middle; color: #3B6BF9"> Best Case<br>
-                                <h4>{{ total_cost_impact_low }}</h4>
-                            </div>
-                        </div>
-                        <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                            <div class="card-body">
-                                <img src="{% static 'images/mostlikely.png' %}" alt="" style="height: 2em; vertical-align: middle;"> Median<br>
-                                <h4>{{ total_cost_impact }}</h4>
-                            </div>
-                        </div>
-                        <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                            <div class="card-body">
-                                <img src="{% static 'images/worstcase.png' %}" alt="" style="height: 2em; vertical-align: middle;"> Worst Case<br>
-                                <h4>{{ total_cost_impact_high }}</h4>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-9">
-                        <div id="risk_score_container" style="width: 100%; height: 350px;"></div>
 
-                    </div>
-
+    <div class="col">
+        <div class="row">
+            <div class="col-md-3">
+                <div class="form-group">
+                    <label style="color:white">Estimated Event Costs</label>
+                <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                <div class="card-body">
+                <img src="{% static 'images/bestcase.png' %}" alt="" style="height: 2em; vertical-align: middle; color: #3B6BF9"> Best Case<br>
+                <h4>{{ total_cost_impact_low }}</h4>
                 </div>
-            </div> <!-- QRAW Risk Summary bar chart -->
-            <div class="col">
-
+                </div>
+                <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                    <div class="card-body">
+                    <img src="{% static 'images/mostlikely.png' %}" alt="" style="height: 2em; vertical-align: middle;"> Median<br>
+                    <h4>{{ total_cost_impact }}</h4>
+                    </div>
+                    </div>
+                    <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                    <div class="card-body">
+                    <img src="{% static 'images/worstcase.png' %}" alt="" style="height: 2em; vertical-align: middle;"> Worst Case<br>
+                    <h4>{{ total_cost_impact_high }}</h4>
+                    </div>
             </div>
+        </div>
+    </div>
+
+    <div class="col-md-9">
+        <div class="form-group">
+
+            <div id="risk_score_container" style="width: 100%; height: 350px;"></div>
 
         </div>
-        <div class="row"  style="font-size: 10px">
+        </div>
+
+        </div>
     </div>
+    <div class="col">
+        <div class="form-group">
+        <div id="bia_container" style="width: 100%; height: 350px;"></div>
+        </div>
+    </div>
+</div>
+<div class="row"  style="font-size: 10px">
+</div>
 
     <div class="col-md-1"></div>
 </div> <!-- BIA Summary and profile -->

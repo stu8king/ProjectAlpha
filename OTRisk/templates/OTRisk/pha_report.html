@@ -4,14 +4,14 @@
 <head>
     <title>iOTa</title>
     <script src="https://d3js.org/d3.v6.min.js"></script>
-    <link rel="icon" href="{% static 'images/iota - white 1.png' %}" type="image/x-icon">
+    <link rel="icon" href="{% static 'images/AnzenOTIconBlack.png' %}" type="image/x-icon">
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css">
 
     <!-- Bootstrap Select CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.1/css/bootstrap-select.min.css">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js"></script>
-
+    <script src="https://d3js.org/d3.v6.min.js"></script>
     <!-- Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.1/font/bootstrap-icons.css" rel="stylesheet">
 
@@ -46,6 +46,12 @@
      {% bootstrap_css %}
      {% bootstrap_javascript %}
     <style>
+#investmentImpactVisualization {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+}
 
         .control-item {
     border: 1px solid #ccc;
@@ -226,7 +232,8 @@
 
 .scenario-link.highlighted {
     border-color: black;
-    background-color: #fff8e8;
+    background-color: #5E6266;
+    color: white;
 }
 
 body {
@@ -443,9 +450,10 @@ body {
                 <div class="row">
                 <div id="bia_container" style="width: 100%; height: 250px;"></div>
 
-
                 <div class="row d-flex">
+
                     <div class="col-md-4">
+                        <br>
                         <div class="card mb-3 shadow-sm h-100" style="background-color: #464748;">
                             <div class="card-body text-center" style="color: #d3d1cd">
                                 Control Effectiveness<br>
@@ -454,6 +462,7 @@ body {
                         </div>
                     </div>
                     <div class="col-md-4">
+                        <br>
                         <div class="card mb-3 shadow-sm h-100" style="background-color: #464748;">
                             <div class="card-body text-center" style="color: #d3d1cd">
                                 Probability of Attack Success<br>
@@ -462,6 +471,7 @@ body {
                         </div>
                     </div>
                     <div class="col-md-4">
+                        <br>
                         <div class="card mb-3 shadow-sm h-100" style="background-color: #464748;">
                             <div class="card-body text-center" style="color: #d3d1cd">
                                 Overall Likelihood<br>
@@ -574,7 +584,7 @@ body {
                 <div class="form-group">
                 <div class="row">
                     <div class="col">
-                        <b>Open Actions:</b>
+                        <b style="color:white">Open Actions:</b>
                     <div id="action_container">
                         <table id="action_table">
                             <thead>
@@ -703,20 +713,20 @@ body {
     </script>
 
 
-    <div class="col-7" style="border: 0px solid; padding-left: 0; background-color: #fff8e8;">
+    <div class="col-7" style="border: 0px solid; padding-left: 0; background-color: #5E6266;">
         <div class="row" style="height: 5px"></div>
 
         <div class="row">
             <div class="col-md-1"></div>
 
             <div class="col-md-4">
-                <u><b>Consequences</b></u><br>
-                <label id="lblConsequence"></label>
+                <u style="color: white"><b>Consequences</b></u><br>
+                <label id="lblConsequence" style="color:white"></label>
             </div>
             <div class="col-md-7">
                 <div class="row">
                     <div class="col-md-9 text-center">
-                        <b>Estimated Single Event Costs</b>
+                        <b style="color:white">Estimated Single Event Costs</b>
                     </div>
                     <div class="col-md-3"></div>
                 </div>
@@ -770,13 +780,13 @@ body {
             </div>
             <div class="col-md-3 d-flex flex-column justify-content-end" style="font-size: 10px;">
                 <div class="card mb-3 shadow-sm "> <!-- Bootstrap card with shadow -->
-                    <div class="card-body text-center" style="background-color: #fff8e8; font-size: 12px">
+                    <div class="card-body text-center" style="background-color: #f0f0f0; font-size: 12px">
                         Scenario Likelihood<br>
                         <h6><label id="scenario_likelihood"></label></h6>
                     </div>
                 </div>
                 <div class="card mb-3 shadow-sm "> <!-- Bootstrap card with shadow -->
-                    <div class="card-body text-center" style="background-color: #fff8e8; font-size: 12px">
+                    <div class="card-body text-center" style="background-color: #f0f0f0; font-size: 12px">
                         Residual Risk<br>
                         <h6><label id="RRa"></label></h6>
                     </div>
@@ -794,13 +804,26 @@ body {
         <div class="row">
             <div class="col-md-1"></div>
 
-            <div class="col-md-9">
+            <div class="col-md-10">
+                <div class="form-group">
+                <label style="color:white">Effect of OT Security Investments</label>
+                <div id="investment_projection"></div>
+                    </div>
+            </div> <!-- recommended controls -->
+
+            <div class="col-md-1"></div>
+
+        </div>
+        <div class="row">
+            <div class="col-md-1"></div>
+
+            <div class="col-md-10">
                 <div class="form-group">
                 <div id="attack_tree"></div>
                     </div>
             </div> <!-- recommended controls -->
 
-            <div class="col-md-2"></div>
+            <div class="col-md-1"></div>
 
         </div>
 
@@ -814,6 +837,56 @@ body {
 </div>
 
 <script>
+
+function renderInvestmentImpact(investmentImpactText) {
+    var bulletPoints = investmentImpactText.split('\n').filter(bp => bp.trim().length > 0);
+
+    // Clear previous content
+    $("#investment_projection").empty();
+
+    // Create a container for the visualization
+    var container = d3.select("#investment_projection")
+        .style("display", "flex")
+        .style("justify-content", "space-evenly")
+        .style("align-items", "flex-start") // Align items at the start to manage varying heights
+        .style("flex-wrap", "wrap") // Allow boxes to wrap in the container
+        .style("padding", "20px")
+        .style("gap", "20px") // Space between boxes
+        .style("background-color", "#f0f0f0");
+
+    bulletPoints.forEach(function(bp, index) {
+        var box = container.append("div")
+            .style("border", "2px solid #007BFF") // A vibrant, color-blind friendly border color
+            .style("border-radius", "10px")
+            .style("padding", "20px")
+            .style("margin-bottom", "20px") // Margin at the bottom for spacing
+            .style("background-color", "#ffffff") // White background for contrast
+            .style("box-shadow", "0 8px 16px rgba(0,0,0,0.15)") // Deeper shadow for a sleek look
+            .style("display", "flex")
+            .style("flex-direction", "column")
+            .style("justify-content", "space-between") // Distribute space evenly inside the box
+            .style("align-items", "center")
+            .style("text-align", "center") // Center align the text
+            .attr("class", "investment-box") // Add a class for further manipulation
+            .style("min-width", "240px") // Minimum width for each box
+            .style("max-width", "300px") // Maximum width to ensure consistency
+            .append("p")
+            .text(bp)
+            .style("margin-top", "10px") // Margin at the top inside the box
+            .style("margin-bottom", "10px") // Margin at the bottom inside the box
+            .style("font-size", "16px") // Enhanced font size for readability
+            .style("color", "#333333") // Darker text color for better contrast
+            .style("word-wrap", "break-word"); // Ensure text wraps within the box
+    });
+
+    // After all boxes are created, adjust their height to match the tallest box
+    var maxHeight = d3.max(container.selectAll(".investment-box").nodes(), function(box) {
+        return box.getBoundingClientRect().height;
+    });
+
+    // Set the container height to accommodate the tallest box with some padding
+    container.selectAll(".investment-box").style("height", maxHeight + "px");
+}
     anychart.onDocumentReady(function() {
         // Create data for AnyChart
         var data = [];
@@ -881,7 +954,7 @@ body {
     document.getElementById('sle_high').textContent = data.sle_high;
     document.getElementById('RRa').textContent = data.residual_risk;
     document.getElementById('scenario_likelihood').textContent = data.scenario_likelihood;
-
+    renderInvestmentImpact(data.investment_impact);
 }
 
 function setSliderColor(slider) {
@@ -920,7 +993,7 @@ function setSliderColor(slider) {
         var credits = chart.credits();
         credits.enabled(false);
         chart.line(seriesData);
-        chart.background().fill("#fff8e8");
+        chart.background().fill("#f0f0f0");
         chart.yScale().minimum(0).maximum(10);
         chart.xGrid().palette(["gray 0.05", "gray 0.1"]);
         chart.yGrid().palette(["gray 0.05", "gray 0.1"]);
@@ -961,7 +1034,7 @@ function generateLineChart(data) {
 
         var credits = chart.credits();
         credits.enabled(false);
-        chart.background().fill("#fff8e8");
+        chart.background().fill("#f0f0f0");
         var title = chart.title();
         title.text("Scenario Risk");
         title.orientation("top");
@@ -973,40 +1046,56 @@ function generateLineChart(data) {
 }
 
 
- function drawAttackTree(data) {
-
+function drawAttackTree(data) {
     var container = document.getElementById('attack_tree');
     var containerWidth = container.clientWidth;
-    var svgWidth = containerWidth ;
+    var svgWidth = containerWidth * 0.8;
     var margin = { top: 20, right: 120, bottom: 20, left: 280 };
-    var width = svgWidth - margin.left - margin.right; // Adjusted tree width
-    var height = 500; // Adjust as needed
+    var width = svgWidth - margin.left - margin.right;
+    var height = 800; // Increased height for better resolution
 
     d3.select(container).selectAll("svg").remove();
 
     var svg = d3.select(container).append("svg")
-        .attr("width", "100%") // Make SVG responsive
+        .attr("width", "100%")
         .attr("viewBox", "0 0 " + svgWidth + " " + height)
         .attr("height", height)
         .style("display", "block")
-        .style("margin", "auto") // Center the SVG in the container
+        .style("margin", "auto")
         .append("g")
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    // Define the arrow marker
+    svg.append("svg:defs").selectAll("marker")
+        .data(["end"])
+        .enter().append("svg:marker")
+        .attr("id", String)
+        .attr("viewBox", "0 -5 10 10")
+        .attr("refX", 25)
+        .attr("markerWidth", 6)
+        .attr("markerHeight", 6)
+        .attr("orient", "auto")
+        .append("svg:path")
+        .attr("d", "M0,-5L10,0L0,5");
 
     var i = 0,
         duration = 750,
         root;
 
-    var treemap = d3.tree().size([height, width - margin.left - margin.right]);
+    var treemap = d3.tree()
+        .size([height, width - margin.left - margin.right])
+        .separation(function(a, b) { return (a.parent == b.parent ? 1 : 2); });
 
     root = d3.hierarchy(data, function(d) { return d.children; });
     root.x0 = height / 2;
     root.y0 = 0;
 
+    // Color-blind-friendly color scale
+    var colorScale = d3.scaleOrdinal(["#88CCEE", "#DDCC77", "#CC6677", "#882255", "#44AA99", "#117733", "#999933", "#AA4499"]);
+
     update(root);
 
     function update(source) {
-
         var treeData = treemap(root);
 
         var nodes = treeData.descendants(),
@@ -1019,25 +1108,22 @@ function generateLineChart(data) {
 
         var nodeEnter = node.enter().append('g')
             .attr('class', 'node')
-            .attr("transform", function(d) {
-                return "translate(" + d.y + "," + d.x + ")";
-            });
+            .attr("transform", function(d) { return "translate(" + d.y + "," + d.x + ")"; });
 
         nodeEnter.append('circle')
-            .attr('r', 5)
-            .style("fill", "#1f77b4"); // Changed fill color
+            .attr('r', 10)
+            .style("stroke", "black")
+            .style("stroke-width", 1.5)
+            .style("fill", function(d) { return colorScale(d.depth); });
 
         nodeEnter.append('text')
-            .style("fill", "darkgray") // Changed text color
-            .style("font-size", "14px") // Increased font size
-            .style("font-weight", "bold") // Bold text
+            .style("fill", "darkgray")
+            .style("font-size", "14px")
+            .style("font-weight", "bold")
+            .attr("transform", "rotate(-10)")
             .attr("dy", ".35em")
-            .attr("x", function(d) {
-                return d.children ? -13 : 13;
-            })
-            .attr("text-anchor", function(d) {
-                return d.children ? "end" : "start";
-            })
+            .attr("x", function(d) { return d.children ? -13 - this.getComputedTextLength() : 13; })
+            .attr("text-anchor", function(d) { return d.children ? "end" : "start"; })
             .text(function(d) { return d.data.name; });
 
         var link = svg.selectAll('path.link')
@@ -1045,15 +1131,40 @@ function generateLineChart(data) {
 
         link.enter().insert('path', "g")
             .attr("class", "link")
-            .style("stroke", "#aaa")
-            .style("stroke-width", 1)
-            .attr("stroke-opacity", 0.6) // Adjusted opacity
+            .style("stroke", function(d) { return colorScale(d.depth); })
+            .style("stroke-width", 2)
+            .style("fill", "none")
+            .attr("marker-end", "url(#end)") // Add the arrow marker
             .attr('d', function(d) {
-    return "M" + d.y + "," + d.x
-        + "L" + d.parent.y + "," + d.parent.x; // Changed to a straight line
-});
+                return "M" + d.y + "," + d.x
+                    + "C" + (d.y + d.parent.y) / 2 + "," + d.x
+                    + " " + (d.y + d.parent.y) / 2 + "," + d.parent.x
+                    + " " + d.parent.y + "," + d.parent.x;
+            });
     }
 
+    // Add border and shadow to the container
+    var attackTreeDiv = document.getElementById('attack_tree');
+    attackTreeDiv.style.display = 'block';
+    attackTreeDiv.style.border = '1px solid #ccc';
+    attackTreeDiv.style.boxShadow = '0px 0px 10px rgba(0, 0, 0, 0.5)';
+    sessionStorage.setItem('attackTreeDrawn', 'true');
+
+    // Add export button functionality (if feasible)
+    var exportButton = document.getElementById('exportButton');
+    if (exportButton) {
+        exportButton.addEventListener('click', function() {
+            var svgData = new XMLSerializer().serializeToString(document.querySelector('svg'));
+            var svgBlob = new Blob([svgData], {type:"image/svg+xml;charset=utf-8"});
+            var svgUrl = URL.createObjectURL(svgBlob);
+            var downloadLink = document.createElement("a");
+            downloadLink.href = svgUrl;
+            downloadLink.download = "attack_tree.svg";
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
+        });
+    }
 }
 </script>
 

@@ -1,20 +1,43 @@
+import openai
 from django.contrib.auth.decorators import login_required
 from django.db.models import Count, Avg, F, ExpressionWrapper, FloatField, Value, CharField, Func, Sum
 from django.db.models.functions import Cast, Substr, Length, math
 from math import ceil
 from django.forms import IntegerField
+from django.http import JsonResponse, HttpResponseRedirect, HttpResponseForbidden
+from django.urls import reverse
+
 from django.shortcuts import get_object_or_404
 from django.core import serializers
 from OTRisk.models.Model_CyberPHA import tblCyberPHAHeader, tblCyberPHAScenario, vulnerability_analysis, \
-    MitreControlAssessment, ScenarioConsequences
+    MitreControlAssessment, ScenarioConsequences, CyberSecurityInvestment
 from OTRisk.models.raw import RAWorksheet, RAWorksheetScenario
 from OTRisk.models.raw import RAActions
+from accounts.models import UserProfile
 from .pha_views import calculate_effectiveness, get_overall_control_effectiveness_score, get_api_key
 
 from django.shortcuts import render
 
 
+@login_required()
 def pha_reports(request, cyber_pha_header_id):
+    cyber_pha_header = get_object_or_404(tblCyberPHAHeader, ID=cyber_pha_header_id)
+
+    # Get the ID of the user who created the CyberPHA
+    creator_user_id = cyber_pha_header.UserID
+
+    # Get the organization ID of the user who created the CyberPHA
+    creator_organization_id = UserProfile.objects.filter(user_id=creator_user_id).values_list('organization_id',
+                                                                                              flat=True).first()
+
+    # Get the current user's organization ID
+    current_user_organization_id = request.user.userprofile.organization_id
+
+    # Check if the current user is the creator or belongs to the same organization
+    if str(request.user.id) != creator_user_id and current_user_organization_id != creator_organization_id:
+        # Optionally, instead of logging out, you might want to redirect to a forbidden page or show an error message
+        return HttpResponseRedirect(reverse('logout'))
+
     # Get the related records using the function we defined earlier
     context = get_pha_records(cyber_pha_header_id)
 
@@ -23,7 +46,6 @@ def pha_reports(request, cyber_pha_header_id):
 
 
 def get_pha_records(cyber_pha_header_id):
-
     # Retrieve the main record from tblCyberPHAHeader
     cyber_pha_header = get_object_or_404(tblCyberPHAHeader, ID=cyber_pha_header_id)
 
@@ -47,6 +69,7 @@ def get_pha_records(cyber_pha_header_id):
 
     # Retrieve related records from tblCyberPHAScenario
     cyber_pha_scenarios = tblCyberPHAScenario.objects.filter(CyberPHA=cyber_pha_header)
+
     total_cost_impact = format_currency(cyber_pha_scenarios.aggregate(Sum('sle'))['sle__sum'])
 
     total_cost_impact_low = format_currency(cyber_pha_scenarios.aggregate(Sum('sle_low'))['sle_low__sum'])
@@ -138,12 +161,109 @@ def format_currency(value):
         return "${:.2f}".format(value)
 
 
-from django.http import JsonResponse, HttpResponseForbidden
+login_required()
+
+
+def scenario_investment_report(cyber_pha_id, scenario_id):
+    # Fetch the scenario and related investments
+    try:
+        cyber_pha = tblCyberPHAHeader.objects.get(ID=cyber_pha_id)
+        scenario = tblCyberPHAScenario.objects.get(ID=scenario_id, CyberPHA_id=cyber_pha_id)
+        investments = CyberSecurityInvestment.objects.filter(cyber_pha_header_id=cyber_pha_id)
+    except tblCyberPHAScenario.DoesNotExist:
+        return "Scenario not found."
+
+    if not investments.exists():
+        return "No investments found for this CyberPHA."
+
+    # Construct the investment statement
+    investment_statement = "\n".join(
+        [f"- {inv.investment_type}: {inv.product_name} by {inv.vendor_name}, costing {inv.cost} on {inv.date}." for inv
+         in investments])
+    facility_details = f"Industry: {cyber_pha.Industry}, Facility Type: {cyber_pha.FacilityType}, Country: {cyber_pha.country}"
+    # Construct the scenario details
+    scenario_details = f"""
+    Scenario: {scenario.Scenario}
+    Threat Class: {scenario.ThreatClass}
+    Threat Agent: {scenario.ThreatAgent}
+    Threat Action: {scenario.ThreatAction}
+    Countermeasures: {scenario.Countermeasures}
+    """
+
+    # Construct the impacts
+    impacts = f"""
+    Safety Impact: {scenario.impactSafety}
+    Danger Impact: {scenario.impactDanger}
+    Production Impact: {scenario.impactProduction}
+    Financial Impact: {scenario.impactFinance}
+    Reputation Impact: {scenario.impactReputation}
+    Environment Impact: {scenario.impactEnvironment}
+    Regulation Impact: {scenario.impactRegulation}
+    Data Impact: {scenario.impactData}
+    Supply Impact: {scenario.impactSupply}
+    """
+
+    # OpenAI prompt
+    investment_impact_prompt = f"""
+        Given the cybersecurity scenario for the {cyber_pha.FacilityType} in the {cyber_pha.Industry} industry, located in {cyber_pha.country}, and the following investments:
+        {investment_statement}
+    and considering the scenario details:
+    {scenario_details}
+    with the impacts as follows:
+    {impacts}
+    Please provide exactly 6 bullet points summarizing the impact of these investments for the given scenario on:
+    1. Level of risk reduction
+    2. Business impact analysis improvement
+    3. Event costs mitigation
+    4. Operational risks decrease
+    5. Compliance enhancement
+    6. Return on investment or cost savings
+    Each bullet point should contain a concise statement (no more than 30 words) quantifying the impact. Be cautiously and modestly optimistic.
+    """
+
+    # Configure OpenAI API key
+    openai.api_key = get_api_key("openai")
+    openai_model = get_api_key("OpenAI_Model")
+    # Query OpenAI API for investment impact analysis
+    investment_impact_response = openai.ChatCompletion.create(
+        model=openai_model,  # Ensure this model name is current and available for your use
+        messages=[
+            {"role": "system", "content": "You are a knowledgeable assistant about cybersecurity investments."},
+            {"role": "user", "content": investment_impact_prompt}
+        ],
+        temperature=0.3,  # Adjust creativity
+        max_tokens=800,
+    )
+
+    # Extract the response
+    investment_impact_text = investment_impact_response['choices'][0]['message']['content'].strip()
+
+    return investment_impact_text
 
 
 def get_scenario_report_details(request):
+
     scenario_id = request.GET.get('id')
+
     scenario = tblCyberPHAScenario.objects.get(ID=scenario_id)
+
+    creator_user_id = scenario.CyberPHA.UserID
+
+    # Get the organization ID of the user who created the CyberPHA
+    creator_organization_id = UserProfile.objects.filter(user_id=creator_user_id).values_list('organization_id',
+                                                                                              flat=True).first()
+
+    # Get the current user's organization ID
+    current_user_organization_id = request.user.userprofile.organization_id
+
+    # Check if the current user is the creator or belongs to the same organization
+    if str(request.user.id) != creator_user_id and current_user_organization_id != creator_organization_id:
+        # Log out the user
+        return HttpResponseRedirect(reverse('logout'))
+
+    cyber_pha_id = scenario.CyberPHA.ID
+    investment_impact_text = scenario_investment_report(cyber_pha_id, scenario_id)
+
     control_effectiveness = int(ceil(get_overall_control_effectiveness_score(scenario.CyberPHA)))
     controls = scenario.controls.all().values('control', 'score', 'reference')
     sle = format_currency(scenario.sle)
@@ -192,7 +312,8 @@ def get_scenario_report_details(request):
         'scenario_likelihood': scenario_likelihood,
         'controls': list(controls),
         'Consequences': consequences_list,
-        'attack_tree_text': attack_tree_text
+        'attack_tree_text': attack_tree_text,
+        'investment_impact': investment_impact_text
     }
     return JsonResponse(data)
 

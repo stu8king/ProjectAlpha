@@ -557,19 +557,41 @@ def map_riskscore_to_text(score):
         return 'Very High'
 
 
+def get_or_create_org_defaults(org_id):
+    # Try to get the OrganizationDefaults instance
+    try:
+        org_defaults = OrganizationDefaults.objects.get(organization_id=org_id)
+    except OrganizationDefaults.DoesNotExist:
+        # If it doesn't exist, create a new instance with default values
+        organization = Organization.objects.get(pk=org_id)  # Assuming the organization exists
+        org_defaults = OrganizationDefaults.objects.create(
+            organization=organization,
+            language='en',
+            annual_revenue=1000000,
+            cyber_insurance=0,
+            insurance_deductible=0,
+            employees=1000,
+            industry_id=10,  # Make sure this industry ID exists in your tblIndustry table
+            impact_weight_safety=5,
+            impact_weight_danger=5,
+            impact_weight_environment=5,
+            impact_weight_production=5,
+            impact_weight_finance=5,
+            impact_weight_reputation=5,
+            impact_weight_regulation=5,
+            impact_weight_data=5,
+            impact_weight_supply=5,
+        )
+    return org_defaults
+
+
 @login_required
 def qraw(request):
     # check the organization that the user belong to
     org_id = get_user_organization_id(request)
     saved_worksheet_id = None
     # get organization defaults
-    try:
-        # Assuming org_id is already defined
-        org_defaults = OrganizationDefaults.objects.get(organization_id=org_id)
-        industry_id = org_defaults.industry_id  # Access the industry_id field
-    except OrganizationDefaults.DoesNotExist:
-        # Handle the case where no OrganizationDefaults is found for the given org_id
-        industry_id = None
+    org_defaults = get_or_create_org_defaults(org_id)
 
     # Query for potential approvers
     current_user_profile = UserProfile.objects.get(user=request.user)
@@ -610,6 +632,8 @@ def qraw(request):
                 deductable_str = ensure_non_empty(request.POST.get('txtDeductable'))
                 deductable_cleaned = deductable_str.replace(',', '').replace('$', '')
                 deductable_int = int(deductable_cleaned)
+                created_by_id = request.user.id
+                last_updated_by_id = request.user.id
 
                 ra_worksheet = RAWorksheet(
                     RATitle=request.POST.get('txtTitle'),
@@ -626,7 +650,9 @@ def qraw(request):
                     WalkdownID=0,
                     StatusFlag="Open",
                     RADate=date.today(),
-                    deleted=0
+                    deleted=0,
+                    created_by_id=created_by_id,
+                    last_updated_by_id=last_updated_by_id
                 )
                 selected_approver_id = request.POST.get('selectedApprover')
                 if selected_approver_id:
@@ -829,7 +855,6 @@ def openai_assess_risk(request):
                 f"Provide a rating for the risk from one of the following possible responses: Low, Low/Medium, Medium, Medium/High, or High. The response must be only the single response with no additional text or explanation. The user must only see the final response without any other detail  ")
         }
 
-
         # 2. Query for risk score
         risk_score_message = {
             "role": "user",
@@ -964,6 +989,7 @@ def openai_assess_risk(request):
 
         # Add the executive summary to the result array to be returned
         result_array.append(executive_summary)
+
         return JsonResponse(result_array, safe=False)
 
 
@@ -1341,7 +1367,6 @@ def checkbox_to_boolean(value):
 
 
 def create_or_update_raw_scenario(request):
-
     if request.method == 'POST':
         raw_id = int(request.POST.get('rawID'))  # Assuming rawID is the ID of RAWorksheet
 
@@ -1386,9 +1411,9 @@ def create_or_update_raw_scenario(request):
             'threatSource': request.POST.get('threatSource'),
             'riskSummary': request.POST.get('riskSummary'),
             'scenarioCost': clean_numeric_string(request.POST.get('scenarioCost')),
-            # 'event_cost_low': clean_numeric_string(request.POST.get('event_cost_low')),
-            # 'event_cost_high': clean_numeric_string(request.POST.get('event_cost_high')),
-            # 'event_cost_median': clean_numeric_string(request.POST.get('event_cost_median')),
+            'event_cost_low': 0,
+            'event_cost_high': 0,
+            'event_cost_median': 0,
             'justifySafety': request.POST.get('justifySafety') or "No data entered",
             'justifyLife': request.POST.get('justifyLife') or "No data entered",
             'justifyProduction': request.POST.get('justifyProduction') or "No data entered",
@@ -1580,6 +1605,7 @@ def analyze_raw_scenario(request):
 
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
+
 @login_required
 def analyze_sim_scenario(request):
     openai_api_key = get_api_key('openai')
@@ -1593,6 +1619,17 @@ def analyze_sim_scenario(request):
             organization_id = user_profile.organization.id
         except UserProfile.DoesNotExist:
             organization_id = None  # Or handle the lack of a profile as you see fit
+
+        investments_data = request.POST.get('investments')
+        if investments_data:
+            investments = json.loads(investments_data)
+        else:
+            investments = []
+
+        # Generate the text statement for investments
+        investment_statement = "Investments have been made in:\n"
+        for idx, investment in enumerate(investments, start=1):
+            investment_statement += f"{idx}: Investment Type:{investment['type']}, Vendor:{investment['vendor_name']}, Product:{investment['product_name']}, Investment date:{investment['date']}.\n"
 
         # Create a record in user_scenario_audit
         user_scenario_audit.objects.create(
@@ -1644,7 +1681,7 @@ def analyze_sim_scenario(request):
 
             # Query OpenAI API
             response = openai.ChatCompletion.create(
-                model="gpt-4",
+                model=get_api_key('OpenAI_Model'),
                 messages=[
                     {"role": "system", "content": system_message}
                 ],
@@ -1657,7 +1694,39 @@ def analyze_sim_scenario(request):
             # Parse the response into a structured format
             parsed_consequences = parse_consequences(consequence_text)
 
-            return JsonResponse({'consequence': parsed_consequences})
+            investment_impact_prompt = f"""
+            Given the cybersecurity scenario: '{scenario}' for the {facility_type} and the following investments:
+            {investment_statement}
+            Please provide exactly 6 bullet points summarizing the impact of these investments on:
+            1. Level of risk reduction
+            2. Business impact analysis improvement
+            3. Event costs mitigation
+            4. Operational risks decrease
+            5. Compliance enhancement
+            6. Return on investment or cost savings
+
+            Each bullet point should contain a concise statement (no more than 30 words) quantifying the impact. EXTRA INSTRUCTION: be cautiously and modestly optimistic.
+            """
+
+            # Query OpenAI API for investment impact analysis
+            investment_impact_response = openai.ChatCompletion.create(
+                model=get_api_key('OpenAI_Model'),
+                messages=[
+                    {"role": "system", "content": investment_impact_prompt}
+                ],
+                max_tokens=400,  # Adjust token limit based on expected response length
+                temperature=0.1  # Adjust for creativity as needed
+            )
+
+            # Process the investment impact response
+            investment_impact_text = investment_impact_response['choices'][0]['message']['content']
+
+            response = {
+                'consequence': parsed_consequences,
+                'investment_impact': investment_impact_text
+            }
+
+            return JsonResponse(response)
 
         else:
             return JsonResponse({'consequence': [], 'error': 'Not a valid scenario'}, status=400)
@@ -1710,7 +1779,7 @@ def generate_sim_attack_tree(request):
             {"role": "system", "content": attack_tree_system_message},
             {"role": "user", "content": scenario}
         ],
-        max_tokens=800,
+        max_tokens=400,
         temperature=0.3
     )
 
@@ -1757,26 +1826,25 @@ def analyze_sim_consequences(request):
         openai_api_key = get_api_key('openai')
         openai.api_key = openai_api_key
         consequence_response = openai.ChatCompletion.create(
-            model="gpt-4",
+            model="gpt-4-0125-preview",
             messages=[
                 {"role": "system", "content": consequence_message}
             ],
-            max_tokens=500,
+            max_tokens=250,
             temperature=0.1
         )
         consequence_text = consequence_response['choices'][0]['message']['content']
 
         # Query OpenAI API for cost estimation
         cost_response = openai.ChatCompletion.create(
-            model="gpt-4",
+            model="gpt-4-0125-preview",
             messages=[
                 {"role": "system", "content": cost_estimation_message}
             ],
-            max_tokens=500,
+            max_tokens=350,
             temperature=0.1
         )
         cost_estimation_text = cost_response['choices'][0]['message']['content']
-
         # Extract numerical values from the response
         def extract_cost_value(text, label):
             match = re.search(fr'{label}: (\d+)', text)

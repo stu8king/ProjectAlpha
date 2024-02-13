@@ -325,6 +325,26 @@ class tblCyberPHAHeader(models.Model):
         return self.FacilityName
 
 
+class CyberSecurityInvestment(models.Model):
+    TYPE_CHOICES = [
+        ('Software', 'Software'),
+        ('Hardware', 'Hardware'),
+        ('People', 'People'),
+    ]
+    cyber_pha_header = models.ForeignKey('tblCyberPHAHeader', on_delete=models.CASCADE, related_name='investments')
+    investment_type = models.CharField(max_length=50, choices=TYPE_CHOICES)
+    vendor_name = models.CharField(max_length=255)
+    product_name = models.CharField(max_length=255)
+    cost = models.DecimalField(max_digits=10, decimal_places=2)
+    date = models.DateField()
+
+    class Meta:
+        db_table = 'tblCyberSecurityInvestment'
+
+    def __str__(self):
+        return f"{self.product_name} by {self.vendor_name} - {self.investment_type}"
+
+
 class WorkflowStatus(models.Model):
     STATUS_CHOICES = [
         ('Started', 'Started'),

@@ -1376,7 +1376,7 @@ def save_or_update_cyberpha(request):
                 if safeguard_description_key in request.POST and safeguard_type_key in request.POST:
                     safeguard_description = request.POST.get(safeguard_description_key)
                     safeguard_type = request.POST.get(safeguard_type_key)
-
+                    print(scenario_instance)
                     # Create new PHA_Safeguard record
                     PHA_Safeguard.objects.create(
                         scenario=scenario_instance,
@@ -1732,6 +1732,7 @@ def get_scenarios(request):
         # Use scenario.ID to correctly reference the primary key
         safeguards_data[scenario.ID] = json.loads(serialize('json', safeguards))
 
+    print(scenarios_json)
     # Return both serialized lists in the response
     response_data = {
         'scenarios': json.loads(scenarios_json),
@@ -2782,6 +2783,7 @@ def save_scenario_builder(request):
                 'consequences': data.get('consequences'),
                 'tableData': tableData,  # Updated line
                 'cost_projection': data.get('cost_projection'),
+                'investment_projection': data.get('investment_projection'),
                 'costs': {
                     'bestCase': data.get('bestCaseCost'),
                     'mostLikelyCase': data.get('mostLikelyCaseCost'),
@@ -2798,21 +2800,56 @@ def save_scenario_builder(request):
 # Django view to fetch saved scenarios
 def get_saved_scenario_builders(request):
     if request.method == 'GET':
-        user = request.user
-        scenarios = ScenarioBuilder.objects.filter(user=user).values('id', 'scenario_name', 'created_at')
+        current_user = request.user
 
-        return JsonResponse(list(scenarios), safe=False)
+        try:
+            # Get the current user's organization ID directly from their UserProfile
+            current_user_organization_id = UserProfile.objects.get(user=current_user).organization_id
+
+            # Get IDs of all users in the same organization as the current user
+            users_in_same_organization_ids = UserProfile.objects.filter(
+                organization_id=current_user_organization_id
+            ).values_list('user_id', flat=True)
+
+            # Filter scenarios by users in the same organization and not deleted
+            scenarios = ScenarioBuilder.objects.filter(
+                user_id__in=users_in_same_organization_ids,
+                is_deleted=False
+            ).values('id', 'scenario_name', 'created_at')
+
+            return JsonResponse(list(scenarios), safe=False)
+        except UserProfile.DoesNotExist:
+            # Handle the case where the current user does not have a UserProfile
+            return JsonResponse({'error': 'UserProfile for the current user does not exist'}, status=400)
+
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
 
 @login_required
 def list_scenario_builders(request):
     if request.method == 'GET':
-        user_scenarios = ScenarioBuilder.objects.filter(user=request.user, is_deleted=False).values('id',
-                                                                                                    'scenario_name')
-        return JsonResponse({'scenarios': list(user_scenarios)})
-    else:
-        return JsonResponse({'error': 'Invalid request method'}, status=405)
+        current_user = request.user
+        try:
+            # Get the current user's organization ID directly from their UserProfile
+            current_user_organization_id = UserProfile.objects.get(user=current_user).organization_id
+
+            # Get IDs of all users in the same organization as the current user
+            users_in_same_organization_ids = UserProfile.objects.filter(
+                organization_id=current_user_organization_id
+            ).values_list('user_id', flat=True)
+
+            # Filter scenarios by users in the same organization and not deleted
+            scenarios = ScenarioBuilder.objects.filter(
+                user_id__in=users_in_same_organization_ids,
+                is_deleted=False
+            ).values('id', 'scenario_name', 'created_at')
+
+            return JsonResponse({'scenarios': list(scenarios)})
+
+        except UserProfile.DoesNotExist:
+            # Handle the case where the current user does not have a UserProfile
+            return JsonResponse({'error': 'UserProfile for the current user does not exist'}, status=400)
+
 
 
 @login_required

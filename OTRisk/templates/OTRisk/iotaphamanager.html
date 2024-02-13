@@ -286,6 +286,47 @@ body {
     color: white !important;
 }
 
+/* Enhance nav-tabs appearance */
+.nav-tabs .nav-link.active {
+    background-color: #f0f0f8;
+    border-color: #dee2e6 #dee2e6 #fff;
+    color: #495057;
+}
+
+.nav-tabs .nav-link i {
+    margin-right: 8px;
+    color: #007bff; /* Adjust the color to match your theme */
+}
+
+/* Style text areas */
+.tab-pane textarea {
+    background-color: #f8f9fa;
+    border: 1px solid #c5c7c9;
+    box-shadow: 0 2px 4px rgba(0,0,0,.1);
+    border-radius: 5px;
+}
+
+/* Custom scrollbar for text areas */
+.tab-pane textarea::-webkit-scrollbar {
+    width: 8px;
+}
+
+.tab-pane textarea::-webkit-scrollbar-thumb {
+    background-color: #007bff; /* Adjust the color to match your theme */
+    border-radius: 4px;
+}
+
+/* Responsive images/icons in tab content */
+.tab-pane img {
+    width: 50px; /* Adjust based on your layout */
+    float: right;
+    margin: 10px;
+}
+@media (max-width: 768px) {
+  .modal-lg {
+    max-width: 90%; /* Adjust based on preference */
+  }
+}
 </style>
 </head>
 <body style="background-color: #464748">
@@ -672,7 +713,7 @@ $(document).ready(function() {
 
                 // Reset select dropdowns
                 $('#selIndustry, #selFacilityType, #assessment_id, #selZone, #selSL').prop('selectedIndex', 0);
-
+                $('#investmentTable tbody').empty();
                 // Enable the controls
                 $('#txtTitle, #txtLeader, #txtUnit, #txtStartDate, #txtAddress, #txtFacility, #txtLeaderEmail, #txtEndDate, #txtSafetySummary, #txtChemical, #txtPhysical, #txtOther, #txtCompliance, #strategySummary, #insightSummary, #threatSummary, #selFacilityType, #selIndustry, #selZone, #selSL, #shift_model, #txtEmployees, #annual_revenue, #cyber_insurance, #countrySelector, #btnformSubmit, #risk-assessment-btn').prop('disabled', false);
                 $('#btnformSubmit').prop('disabled', false);
@@ -985,7 +1026,13 @@ $(document).ready(function() {
                 </select>
             </div>
         </div>
-
+           <div class="card mb-3 shadow-sm" style="background-color: #5E6266;">
+            <div class="card-body">
+                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#investmentModal">
+                OT Security Investments
+                </button>
+            </div>
+        </div>
         <div class="card mb-3 shadow-sm" style="background-color: #5E6266;">
             <div class="card-body">
                 <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#moderatorModal">
@@ -1000,6 +1047,8 @@ $(document).ready(function() {
                 $("#assessment-select").selectmenu().selectmenu("menuWidget").addClass("overflow");
             });
         </script>
+
+
 
         <div class="card mb-3 shadow-sm" style="background-color: #5E6266;">
     <div class="card-body">
@@ -1071,6 +1120,90 @@ $(document).ready(function() {
         </div>
     </div>
 </div>
+<!-- Modal -->
+<div class="modal fade" id="investmentModal" tabindex="-1" role="dialog" aria-labelledby="investmentModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="investmentModalLabel">Add Cybersecurity Investments</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+          <div class="table-responsive">
+
+          <table class="table" id="investmentTable">
+            <colgroup>
+                  <col span="1" style="width: 20%;"> <!-- Type -->
+                  <col span="1" style="width: 20%;"> <!-- Vendor Name -->
+                  <col span="1" style="width: 20%;"> <!-- Product Name -->
+                  <col span="1" style="width: 15%;"> <!-- Cost -->
+                  <col span="1" style="width: 15%;"> <!-- Date -->
+                  <col span="1" style="width: 10%;"> <!-- Action -->
+                </colgroup>
+            <thead>
+              <tr>
+                <th>Type</th>
+                <th>Vendor Name</th>
+                <th>Product Name</th>
+                <th>Cost</th>
+                <th>Date</th> <!-- New Date Column -->
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                    <td><input type="hidden" name="investment_id[]" value="{{ investment.id | default:'' }}" class="form-control"></td>
+                <td><select name="investment_type[]" class="form-control">
+                    <option value="Software">Software</option>
+                    <option value="Hardware">Hardware</option>
+                    </select>
+                </td>
+
+                <td><input type="text" name="vendor_name[]" class="form-control" /></td>
+                <td><input type="text" name="product_name[]" class="form-control" /></td>
+                <td><input type="number" name="cost[]" class="form-control" step="0.01" /></td>
+                <td><input type="date" name="date[]" class="form-control" /></td> <!-- New Date Input -->
+                <td><button class="btn btn-danger removeRow">Remove</button></td>
+              </tr>
+            </tbody>
+
+          </table>
+          <button type="button" class="btn btn-primary" id="addRow">Add Row</button>
+
+          </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+$(document).ready(function() {
+  $("#addRow").click(function() {
+    var newRow = `<tr>
+      <td><select name="investment_type[]" class="form-control">
+        <option value="Software">Software</option>
+        <option value="Hardware">Hardware</option>
+        <option value="People">People</option>
+      </select></td>
+      <td><input type="text" name="vendor_name[]" class="form-control" /></td>
+      <td><input type="text" name="product_name[]" class="form-control" /></td>
+      <td><input type="number" name="cost[]" class="form-control" step="0.01" /></td>
+      <td><input type="date" name="date[]" class="form-control" /></td>
+      <td><button type="button" class="btn btn-danger removeRow">Remove</button></td>
+    </tr>`;
+    $("#investmentTable tbody").append(newRow);
+  });
+
+  $(document).on('click', '.removeRow', function() {
+    $(this).closest('tr').remove();
+  });
+});
+</script>
 
 
     </div>
@@ -1190,7 +1323,7 @@ updateGroupList();
             <div class="card-body">
                <button id="risk-assessment-btn" type="button" class="btn btn-link" style="text-decoration: none; color: white">
                     <img src="{% static 'images/facility1.png' %}" alt="" class="align-bottom" style="max-height: 2rem; margin-left: 5px;">
-                    Assess Facility Profile
+                    Create Facility PHA Profile
                 </button>
                 <br>
                 <div class="spinner" id="loadingSpinner"></div>
@@ -1363,7 +1496,17 @@ $(document).ready(function() {
             let facility = document.getElementById('txtFacility').value;
             let shift_model = document.getElementById('shift_model').value;
             let employees = document.getElementById('txtEmployees').value;
-
+            let investments = [];
+            $('#investmentTable tbody tr').each(function() {
+                let investment = {
+                    type: $(this).find('select[name="investment_type[]"]').val(),
+                    vendor_name: $(this).find('input[name="vendor_name[]"]').val(),
+                    product_name: $(this).find('input[name="product_name[]"]').val(),
+                    cost: $(this).find('input[name="cost[]"]').val(),
+                    date: $(this).find('input[name="date[]"]').val()
+                };
+                investments.push(investment);
+            });
             // Make the AJAX call to the Django view using a separate endpoint for risk assessment
             $.ajax({
                 type: "GET",
@@ -1377,7 +1520,8 @@ $(document).ready(function() {
                     facility: facility,
                     shift_model: shift_model,
                     employees: employees,
-                    assessment_id: assessment_id
+                    assessment_id: assessment_id,
+                    investments: JSON.stringify(investments)
                  },
                 success: function (response) {
 
@@ -1537,6 +1681,35 @@ $(document).ready(function() {
             navigateToRecord(recordId);
         });
 });
+
+    function populateInvestmentTable(investments) {
+    const tableBody = $('#investmentTable tbody');
+    tableBody.empty(); // Clear existing rows
+
+    investments.forEach(function(investment) {
+        const row = `<tr>
+            <td><input type="hidden" name="investment_id[]" value="${investment.id}" class="form-control">
+                <select name="investment_type[]" class="form-control">
+                    <option value="Software" ${investment.investment_type === 'Software' ? 'selected' : ''}>Software</option>
+                    <option value="Hardware" ${investment.investment_type === 'Hardware' ? 'selected' : ''}>Hardware</option>
+                    <option value="People" ${investment.investment_type === 'People' ? 'selected' : ''}>People</option>
+                </select>
+            </td>
+            <td><input type="text" name="vendor_name[]" value="${investment.vendor_name}" class="form-control"></td>
+            <td><input type="text" name="product_name[]" value="${investment.product_name}" class="form-control"></td>
+            <td><input type="number" name="cost[]" value="${investment.cost}" class="form-control" step="0.01"></td>
+            <td><input type="date" name="date[]" value="${investment.date}" class="form-control"></td>
+            <td><button type="button" class="btn btn-danger removeRow">Remove</button></td>
+        </tr>`;
+        tableBody.append(row);
+    });
+
+    // Ensure the removeRow button functionality is re-bound after adding new rows
+    $('.removeRow').off('click').on('click', function() {
+        $(this).closest('tr').remove();
+    });
+}
+
 function fetchHeaderRecord(recordId) {
                  sessionStorage.setItem('activeCyberPHA', recordId);
                  // Set the value of the hidden text field
@@ -1587,6 +1760,8 @@ function fetchHeaderRecord(recordId) {
                          drawGauge(data.headerrecord.pha_score);
 
                          drawControlGauge(data.control_effectiveness);
+
+                         populateInvestmentTable(data.investments);
 
                          sessionStorage.setItem('sessionIndustry', data.headerrecord.industry);
                          sessionStorage.setItem('sessionFacilityType', data.headerrecord.facilitytype);
