@@ -1,3 +1,4 @@
+import json
 import os
 from datetime import timedelta, date
 
@@ -10,6 +11,7 @@ from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.models import User
+from django.contrib.auth.views import LogoutView
 from django.contrib.sessions.models import Session
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.db.models import Q, F
@@ -22,6 +24,7 @@ import string
 import random
 import phonenumbers
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
 
 from accounts.models import UserProfile, SubscriptionType, Organization, LoginAttempt, ActiveUserSession
 from OTRisk.models.Model_CyberPHA import auditlog, APIKey
@@ -48,6 +51,12 @@ from django import forms
 from twilio.rest import Client
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
+
+
+class CustomLogoutView(LogoutView):
+    def get(self, request, *args, **kwargs):
+        self.next_page = '/'
+        return self.post(request, *args, **kwargs)
 
 
 def send_verification_code_bak(phone_number):
@@ -96,48 +105,65 @@ def two_factor_setup(request):
     return render(request, 'accounts/two_factor_setup.html', {'form': form})
 
 
+@login_required()
 def two_factor_verify(request):
-    if request.method == 'POST':
-        form = TwoFactorVerifyForm(request.POST)
-        if form.is_valid():
-            token = form.cleaned_data['token']
-            phone_number = request.user.userprofile.phone_number
-
-            # Twilio setup
-            twilio_sid = get_api_key('twilliosid')
-            twilio_token = get_api_key('twilliotoken')
-            verify_service_sid = get_api_key('twilio_verify_service_sid')
-
-            client = Client(twilio_sid, twilio_token)
-
-            # Verify the token
-            try:
-                verification_check = client.verify \
-                    .services(verify_service_sid) \
-                    .verification_checks \
-                    .create(to=phone_number, code=token)
-
-                if verification_check.status == "approved":
-                    # Token is valid
-                    messages.success(request, "2FA verification successful!")
-                    user_profile = request.user.userprofile
-                    if not user_profile.two_factor_confirmed:
-                        user_profile.two_factor_confirmed = 1
-                        user_profile.save()
-                    return redirect('OTRisk:dashboardhome')
-                else:
-                    # Token is invalid
-                    messages.error(request, "Invalid token. Please try again.")
-            except Exception as e:
-                messages.error(request, f"Error during verification: {e}")
-
-        else:
-            messages.error(request, "Invalid form submission.")
-
-    else:
+    if request.method == 'GET':
+        # Display the form for GET requests
         form = TwoFactorVerifyForm()
+        return render(request, 'accounts/verify_2fa.html', {'form': form})
 
-    return render(request, 'accounts/verify_2fa.html', {'form': form})
+    elif request.method == 'POST':
+        # Determine if the request is AJAX based on the Content-Type header
+        is_ajax = request.headers.get('Content-Type') == 'application/json'
+
+        if is_ajax:
+            # Handle AJAX request with JSON data
+            data = json.loads(request.body)
+            token = data.get('token')
+        else:
+            # Handle standard form submission
+            form = TwoFactorVerifyForm(request.POST)
+            if not form.is_valid():
+                messages.error(request, "Invalid form submission.")
+                return render(request, 'accounts/verify_2fa.html', {'form': form})
+            token = form.cleaned_data['token']
+
+        # Assuming you have a function `get_api_key` to retrieve Twilio API keys
+        twilio_sid = get_api_key('twilliosid')
+        twilio_token = get_api_key('twilliotoken')
+        verify_service_sid = get_api_key('twilio_verify_service_sid')
+        client = Client(twilio_sid, twilio_token)
+
+        try:
+            verification_check = client.verify.services(verify_service_sid) \
+                .verification_checks.create(to=request.user.userprofile.phone_number, code=token)
+
+            if verification_check.status == "approved":
+                user_profile = request.user.userprofile
+                if not user_profile.two_factor_confirmed:
+                    user_profile.two_factor_confirmed = True
+                    user_profile.save()
+
+                if is_ajax:
+                    # For AJAX requests, return JSON response
+                    return JsonResponse(
+                        {"message": "2FA verification successful!", "redirect": "/OTRisk/dashboardhome"})
+                else:
+                    # For non-AJAX requests, use Django's messaging and redirection
+                    messages.success(request, "2FA verification successful!")
+                    return redirect('OTRisk:dashboardhome')
+            else:
+                if is_ajax:
+                    return JsonResponse({"error": "Invalid token. Please try again."}, status=400)
+                else:
+                    messages.error(request, "Invalid token. Please try again.")
+                    return render(request, 'accounts/verify_2fa.html', {'form': TwoFactorVerifyForm()})
+        except Exception as e:
+            if is_ajax:
+                return JsonResponse({"error": f"Error during verification: {e}"}, status=500)
+            else:
+                messages.error(request, f"Error during verification: {e}")
+                return render(request, 'accounts/verify_2fa.html', {'form': TwoFactorVerifyForm()})
 
 
 @csrf_exempt
@@ -343,6 +369,7 @@ def register(request):
         form = CustomUserCreationForm()
     return render(request, 'accounts/register.html', {'form': form})
 
+
 @csrf_exempt
 def setup_2fa(request):
     if not request.user.is_authenticated:
@@ -367,7 +394,7 @@ def setup_2fa(request):
                 code = send_verification_code(phone_number)
                 request.session['verification_code'] = code
                 request.session['phone_number'] = phone_number
-                return redirect('accounts:two_factor_verify')
+                return redirect('two_factor_verify')
             except phonenumbers.NumberParseException:
                 form.add_error('phone_number', 'Invalid phone number format')
             except ValidationError as e:
@@ -485,7 +512,7 @@ def login_view(request):
                     ### request.session['verification_sid'] = verification_sid
                     ### code = send_verification_code(user_profile.phone_number)
                     #### request.session['verification_code'] = code
-                    return redirect('accounts:two_factor_verify')
+                    return redirect('two_factor_verify')
                 except Exception as e:
                     messages.error(request, f"Error sending verification code: {e}")
                     # Log the error

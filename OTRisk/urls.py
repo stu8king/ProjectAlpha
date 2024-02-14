@@ -76,13 +76,7 @@ urlpatterns = [
     path('ra_actions_view/qraw/<int:qraw_id>/pha/<int:pha_id>/', views.ra_actions_view, name='ra_actions_view_both'),
 
     path('update_ra_action/', views.UpdateRAAction.as_view(), name='update_ra_action'),
-    # For adding and editing scenarios
-    path('scenario/add/', views.add_or_update_scenario, name='add_scenario'),
-    path('scenario/edit/<int:scenario_id>/', views.add_or_update_scenario, name='edit_scenario'),
 
-    # For deleting scenarios
-    path('scenario/delete/<int:scenario_id>/', views.delete_scenario, name='delete_scenario'),
-    path('OTRisk/scenario/add/<int:scenario_id>/', views.add_or_update_scenario, name='edit_scenario'),
 
     # For adding and editing consequences
     path('consequence/add/', views.add_or_update_consequence, name='add_consequence'),
@@ -156,6 +150,7 @@ urlpatterns = [
     path('update_workflow/', views.update_workflow, name='update_workflow'),
     path('list_scenario_builders/', views.list_scenario_builders, name='list_scenario_builders'),
     path('get_scenario_builder_details/<int:scenario_id>/', views.get_scenario_builder_details, name='get_scenario_builder_details'),
+    path('get_analysis_result/', views.get_analysis_result, name='get_analysis_result'),
 ]
 
 

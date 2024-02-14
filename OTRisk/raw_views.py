@@ -9,7 +9,7 @@ from OTRisk.models.raw import RAWorksheet, RAWorksheetScenario, RAActions, Mitre
 from django.contrib.auth.decorators import login_required
 from OTRisk.models.questionnairemodel import FacilityType
 from OTRisk.models.Model_CyberPHA import tblIndustry, tblThreatSources, auditlog, tblScenarios, tblCyberPHAHeader, \
-    OrganizationDefaults, user_scenario_audit
+    OrganizationDefaults, user_scenario_audit, ScenarioBuilder_AnalysisResult
 from OTRisk.models.Model_Mitre import MitreICSTactics
 from accounts.models import Organization, UserProfile
 from django.shortcuts import render
@@ -38,6 +38,7 @@ from .dashboard_views import get_user_organization_id
 from django.http import HttpResponseForbidden
 from django.contrib.auth.models import User
 from .forms import RAWorksheetScenarioForm
+from .tasks import analyze_scenario_task
 
 
 class UpdateRAAction(View):
@@ -1606,130 +1607,45 @@ def analyze_raw_scenario(request):
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
 
-@login_required
+def get_analysis_result(request):
+
+    user = request.user
+    try:
+        # Attempt to get the latest analysis result for the user
+        latest_result = ScenarioBuilder_AnalysisResult.objects.filter(user=user).latest('created_at')
+        return JsonResponse({
+            'status': 'success',
+            'data': {
+                'consequences': json.loads(latest_result.consequences),
+                'investment_impact': latest_result.investment_impact
+            }
+        })
+    except ScenarioBuilder_AnalysisResult.DoesNotExist:
+        return JsonResponse({'status': 'pending'})
+
+
+
 def analyze_sim_scenario(request):
-    openai_api_key = get_api_key('openai')
-    openai.api_key = openai_api_key
 
     if request.method == 'POST':
+
+        # Extract the necessary data from the request
+        user_id = request.user.id
         scenario = request.POST.get('scenario')
-        # Fetch the organization_id from the user's profile
-        try:
-            user_profile = UserProfile.objects.get(user=request.user)
-            organization_id = user_profile.organization.id
-        except UserProfile.DoesNotExist:
-            organization_id = None  # Or handle the lack of a profile as you see fit
-
         investments_data = request.POST.get('investments')
-        if investments_data:
-            investments = json.loads(investments_data)
-        else:
-            investments = []
+        facility_type = request.POST.get('facility_type')
+        industry = request.POST.get('industry')
 
-        # Generate the text statement for investments
-        investment_statement = "Investments have been made in:\n"
-        for idx, investment in enumerate(investments, start=1):
-            investment_statement += f"{idx}: Investment Type:{investment['type']}, Vendor:{investment['vendor_name']}, Product:{investment['product_name']}, Investment date:{investment['date']}.\n"
-
-        # Create a record in user_scenario_audit
-        user_scenario_audit.objects.create(
-            scenario_text=scenario,
-            user=request.user,
-            organization_id=organization_id,
-            ip_address=get_client_ip(request),
-            session_id=request.session.session_key
-        )
-        # validate the scenario doesn't contain vulgar terms using the OpenAPI moderator
-        if is_inappropriate(scenario):
-            consequence_text = 'Scenario contains inappropriate terms'
-            return JsonResponse({'consequence_text': consequence_text}, status=400)
-
-        validation_prompt = f"""
-        Evaluate if the following text represents a coherent and plausible cybersecurity scenario, or OT incident scenario, or industrial incident scenario: '{scenario}'. Respond yes if valid, no if invalid.
-        """
-
-        validation_response = openai.ChatCompletion.create(
-            model="gpt-4",
-            messages=[
-                {"role": "system", "content": validation_prompt}
-            ],
-            max_tokens=50,
-            temperature=0.7
+        # Trigger the Celery task
+        analyze_scenario_task.delay(
+            user_id=user_id,
+            scenario=scenario,
+            investments_data=investments_data,
+            facility_type=facility_type,
+            industry=industry
         )
 
-        if "yes" in validation_response['choices'][0]['message']['content'].lower():
-
-            facility_type = request.POST.get('facility_type')
-            industry = request.POST.get('industry')
-
-            system_message = f"""
-                Analyze the following cybersecurity scenario at a {facility_type} in the {industry} industry: '{scenario}'. For each factor listed below, provide a score out of 10 for impact severity and a brief narrative. Format your response with clear delimiters as follows: 'Factor: [Factor Name] | Score: X/10 | Narrative: [Explanation]'.
-
-                Factors:
-                - Safety
-                - Danger-to-life
-                - Environmental consequences
-                - Supply chain
-                - Data
-                - Operations
-                - Financials
-                - Reputation
-                - Regulations
-
-                Ensure that the scores and narratives are specific to the facility and scenario described. Use '|' as a delimiter between different sections of your response for each factor.
-            """
-
-            # Query OpenAI API
-            response = openai.ChatCompletion.create(
-                model=get_api_key('OpenAI_Model'),
-                messages=[
-                    {"role": "system", "content": system_message}
-                ],
-                max_tokens=500,
-                temperature=0.1
-            )
-
-            # Process the response
-            consequence_text = response['choices'][0]['message']['content']
-            # Parse the response into a structured format
-            parsed_consequences = parse_consequences(consequence_text)
-
-            investment_impact_prompt = f"""
-            Given the cybersecurity scenario: '{scenario}' for the {facility_type} and the following investments:
-            {investment_statement}
-            Please provide exactly 6 bullet points summarizing the impact of these investments on:
-            1. Level of risk reduction
-            2. Business impact analysis improvement
-            3. Event costs mitigation
-            4. Operational risks decrease
-            5. Compliance enhancement
-            6. Return on investment or cost savings
-
-            Each bullet point should contain a concise statement (no more than 30 words) quantifying the impact. EXTRA INSTRUCTION: be cautiously and modestly optimistic.
-            """
-
-            # Query OpenAI API for investment impact analysis
-            investment_impact_response = openai.ChatCompletion.create(
-                model=get_api_key('OpenAI_Model'),
-                messages=[
-                    {"role": "system", "content": investment_impact_prompt}
-                ],
-                max_tokens=400,  # Adjust token limit based on expected response length
-                temperature=0.1  # Adjust for creativity as needed
-            )
-
-            # Process the investment impact response
-            investment_impact_text = investment_impact_response['choices'][0]['message']['content']
-
-            response = {
-                'consequence': parsed_consequences,
-                'investment_impact': investment_impact_text
-            }
-
-            return JsonResponse(response)
-
-        else:
-            return JsonResponse({'consequence': [], 'error': 'Not a valid scenario'}, status=400)
+        return JsonResponse({'message': 'Analysis in progress. Please check back later for results.'})
 
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
@@ -1845,6 +1761,7 @@ def analyze_sim_consequences(request):
             temperature=0.1
         )
         cost_estimation_text = cost_response['choices'][0]['message']['content']
+
         # Extract numerical values from the response
         def extract_cost_value(text, label):
             match = re.search(fr'{label}: (\d+)', text)

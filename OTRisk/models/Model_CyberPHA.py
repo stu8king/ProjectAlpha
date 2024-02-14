@@ -980,3 +980,11 @@ class attack_impact(models.Model):
 
 class attack_motive(models.Model):
     attack_motive = models.TextField(null=False)
+
+
+class ScenarioBuilder_AnalysisResult(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    scenario = models.TextField()
+    consequences = models.TextField()
+    investment_impact = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)

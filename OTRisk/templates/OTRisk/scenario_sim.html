@@ -841,34 +841,10 @@ fetch('https://restcountries.com/v3.1/all')
     container.selectAll(".investment-box").style("height", maxHeight + "px");
 }
 
-    document.getElementById('analyzeScenarioBtn').addEventListener('click', function() {
-    var scenarioText = document.getElementById('txtScenario').value;
-    let facility_type = document.getElementById('selFacilityType').value;
-    let industry = document.getElementById('selIndustry').value;
-    let organization_size = document.getElementById('selOrganizationSize').value;
-    // let asset_value = document.getElementById('selAssetValue').value;
-    // let operational_impact = document.getElementById('selOperationalImpact').value;
-    // let security_measures = document.getElementById('selSecurityMeasures').value;
-    let regulatory_environment = document.getElementById('selRegulatoryEnvironment').value;
-    let country = document.getElementById('countrySelector').value;
-    let investments = [];
-        $('#investmentTable tbody tr').each(function() {
-            let investment = {
-                type: $(this).find('select[name="investment_type[]"]').val(),
-                vendor_name: $(this).find('input[name="vendor_name[]"]').val(),
-                product_name: $(this).find('input[name="product_name[]"]').val(),
-                cost: $(this).find('input[name="cost[]"]').val(),
-                date: $(this).find('input[name="date[]"]').val()
-            };
-            investments.push(investment);
-        });
-    var button = this;
-    var spinnerContainer = document.getElementById('spinnerContainer');
-    button.disabled = true;
-    spinnerContainer.style.display = 'block'; // Show the spinner
 
-    // Convert AJAX calls to promises
-    var analyzeScenarioPromise = new Promise(function(resolve, reject) {
+
+function analyzeScenario(scenarioText, industry, facility_type, investments) {
+    return new Promise(function(resolve, reject) {
         $.ajax({
             url: "{% url 'OTRisk:analyze_sim_scenario' %}",
             type: 'POST',
@@ -881,75 +857,259 @@ fetch('https://restcountries.com/v3.1/all')
             },
             success: function(response) {
                 document.getElementById('analyzeScenarioCheckbox').checked = true;
-                var tableContainer = document.getElementById('table_scenario');
-                var table = document.getElementById('consequencesTable');
-                if (table) {
-                    if ($.fn.DataTable.isDataTable('#consequencesTable')) {
-                        $('#consequencesTable').DataTable().clear().destroy();
-                    }
-                    table.remove();
+                console.log("Scenario analysis initiated. Polling for results...");
+                resolve(response);
+            },
+            error: function(xhr, status, error) {
+                console.error('Error analyzing scenario:', error);
+                reject(error);
+            }
+        });
+    });
+}
+function generateAttackTree(scenarioText) {
+    return new Promise(function(resolve, reject) {
+    $.ajax({
+            url: "{% url 'OTRisk:generate_sim_attack_tree' %}",
+            type: 'POST',
+            data: {
+                'scenario': scenarioText,
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            },
+            success: function(attackTreeResponse) {
+                document.getElementById('generateAttackTreeCheckbox').checked = true;
+                if (attackTreeResponse && !attackTreeResponse.error) {
+                    var attackTreeJson = JSON.stringify(attackTreeResponse);
+                    document.getElementById('hdnAT').value = attackTreeJson;
+                    drawAttackTree(attackTreeResponse);
+                    resolve(attackTreeResponse);
+                } else {
+                    console.error('Attack tree data not available or invalid response');
+                    reject('Attack tree data not available or invalid response');
                 }
 
-                table = document.createElement('table');
-                table.id = 'consequencesTable';
-                table.className = 'display dataTable';
-                tableContainer.appendChild(table);
+            },
+            error: function(xhr, status, error) {
+                console.error('Error fetching attack tree:', error);
+                reject(error);
+            }
+        });
+    });
+}
 
-                var thead = document.createElement('thead');
-                var headerRow = document.createElement('tr');
-                ['Factor', 'Score', 'Narrative'].forEach(function(header) {
-                    var th = document.createElement('th');
-                    th.textContent = header;
-                    headerRow.appendChild(th);
+function analyzeConsequences(scenarioText, industry, facility_type, organization_size, regulatory_environment, country) {
+return new Promise(function(resolve, reject) {
+    $.ajax({
+            url: "{% url 'OTRisk:analyze_sim_consequences' %}",
+            type: 'POST',
+            data: {
+                'scenario': scenarioText,
+                'industry': industry,
+                'facility_type': facility_type,
+                'organization_size': organization_size,
+                'regulatory_environment': regulatory_environment,
+                'country': country,
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            },
+            success: function(consequenceResponse) {
+                document.getElementById('analyzeConsequencesCheckbox').checked = true;
+                if (consequenceResponse.consequence && consequenceResponse.consequence.trim()) {
+                    document.getElementById('txtConsequences').value = consequenceResponse.consequence;
+                    resolve(consequenceResponse);
+                } else {
+                    document.getElementById('txtConsequences').value = 'No consequence analysis available.';
+                    reject('No consequence analysis available.');
+                }
+
+                document.getElementById('txtBestCase').value = consequenceResponse.best_case_cost;
+                document.getElementById('txtMostLikelyCase').value = consequenceResponse.most_likely_case_cost;
+                document.getElementById('txtWorstCase').value = consequenceResponse.worst_case_cost;
+                document.getElementById('scenario_12month_costs').value = consequenceResponse.projection;
+
+                var costArray = consequenceResponse.projection.split('|').map(Number);
+                createCostChart('monthly_cost_chart', costArray);
+
+            },
+            error: function(xhr, status, error) {
+                spinnerContainer.style.display = 'none';
+                button.disabled = false;
+                console.error('Error fetching consequence analysis:', error);
+                reject(error);
+            }
+        });
+});
+}
+
+
+document.getElementById('analyzeScenarioBtn').addEventListener('click', function() {
+    var scenarioText = document.getElementById('txtScenario').value;
+    let facility_type = document.getElementById('selFacilityType').value;
+    let industry = document.getElementById('selIndustry').value;
+    let organization_size = document.getElementById('selOrganizationSize').value;
+    let regulatory_environment = document.getElementById('selRegulatoryEnvironment').value;
+    let country = document.getElementById('countrySelector').value;
+    let investments = [];
+    $('#investmentTable tbody tr').each(function() {
+        let investment = {
+            type: $(this).find('select[name="investment_type[]"]').val(),
+            vendor_name: $(this).find('input[name="vendor_name[]"]').val(),
+            product_name: $(this).find('input[name="product_name[]"]').val(),
+            cost: $(this).find('input[name="cost[]"]').val(),
+            date: $(this).find('input[name="date[]"]').val()
+        };
+        investments.push(investment);
+    });
+    var button = this;
+    var spinnerContainer = document.getElementById('spinnerContainer');
+    button.disabled = true;
+    spinnerContainer.style.display = 'block'; // Show the spinner
+    var analyzeScenarioPromise = analyzeScenario(scenarioText, industry, facility_type, investments);
+
+    var generateAttackTreePromise = generateAttackTree(scenarioText);
+    var analyzeConsequencesPromise = analyzeConsequences(scenarioText, industry, facility_type, organization_size, regulatory_environment, country);
+    Promise.all([analyzeScenarioPromise, generateAttackTreePromise, analyzeConsequencesPromise])
+        .then(function() {
+            spinnerContainer.style.display = 'none'; // Hide the spinner
+            button.disabled = false;
+        })
+        .catch(function(error) {
+            console.error('An error occurred:', error);
+            spinnerContainer.style.display = 'none'; // Hide the spinner
+            button.disabled = false;
+        });
+    // Start the analysis scenario
+    $.ajax({
+        url: "{% url 'OTRisk:analyze_sim_scenario' %}",
+        type: 'POST',
+        data: {
+            'scenario': scenarioText,
+            'industry': industry,
+            'facility_type': facility_type,
+            'investments': JSON.stringify(investments),
+            'csrfmiddlewaretoken': '{{ csrf_token }}'
+        },
+        success: function(response) {
+            document.getElementById('analyzeScenarioCheckbox').checked = true;
+            console.log("Task initiated. Polling for results...");
+
+            // Polling function
+            function pollForResults() {
+                $.ajax({
+                    url: '/OTRisk/get_analysis_result/', // Update this URL to your result checking endpoint
+                    type: "GET",
+                    xhrFields: {
+                        withCredentials: true
+                    },
+                    success: function(response) {
+                        if (response.status === 'success') {
+                            console.log("Analysis completed", response.data);
+                            clearInterval(pollingInterval); // Stop polling
+
+                            updateUIWithResults(response.data); // Update your UI with the results
+
+                        } else {
+                            console.log("Analysis still in progress...");
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("Error polling for results:", error);
+                        clearInterval(pollingInterval); // Consider stopping or retrying polling
+                    }
                 });
-                thead.appendChild(headerRow);
-                table.appendChild(thead);
-
-                var tbody = document.createElement('tbody');
-                response.consequence.forEach(function(item) {
-                    var row = document.createElement('tr');
-                    Object.values(item).forEach(function(text) {
-                        var td = document.createElement('td');
-                        td.textContent = text;
-                        row.appendChild(td);
-                    });
-                    tbody.appendChild(row);
-                });
-                table.appendChild(tbody);
-
-                $('#consequencesTable').DataTable({
-                    searching: false,
-                    paging: false,
-                    info: false
-                });
-
-                 if (response.investment_impact) {
-                // Call renderInvestmentImpact function with the investment_impact data
-
-                document.getElementById('txthdninvestmentstring').value = btoa(response.investment_impact);
-                renderInvestmentImpact(response.investment_impact);
-            } else {
-                // Handle the case where investment_impact data is not available
-                console.log("No investment impact data available.");
             }
 
+            // Start polling for results every 5 seconds
+            var pollingInterval = setInterval(pollForResults, 5000);
+        },
+        error: function(xhr, status, error) {
+            spinnerContainer.style.display = 'none';
+            button.disabled = false;
+            alert('Error: ' + error);
+        }
+    });
+});
+
+function appendConsequenceGroup(container, consequence, index) {
+    // Ensure the container exists
+    if (!container) {
+        console.error('Container not found');
+        return;
+    }
+
+    // Create a new row for every 3 items or if there are no rows yet
+    let row;
+    if (index % 3 === 0 || container.children.length === 0) {
+        row = document.createElement('div');
+        row.className = 'row';
+        container.appendChild(row);
+    } else {
+        // Use the last row if it exists
+        row = container.lastElementChild;
+    }
+
+    // Create the group container
+    var groupContainer = document.createElement('div');
+    groupContainer.className = 'group-container col-md-4';
+
+    // Create the group header
+    var groupHeader = document.createElement('div');
+    groupHeader.className = 'group-header';
+    var icon = document.createElement('img');
+    // Ensure the path to the image is correct
+    icon.src = "/static/images/green_cube.png"; // Adjust the path as needed
+    icon.className = 'cube-icon';
+    icon.alt = 'green_cube';
+    groupHeader.appendChild(icon);
+    var headerText = document.createTextNode(consequence.factor);
+    groupHeader.appendChild(headerText);
+    groupContainer.appendChild(groupHeader);
+
+    // Create the group body
+    var groupBody = document.createElement('div');
+    groupBody.className = 'group-body';
+    groupBody.textContent = `${consequence.score} - ${consequence.narrative}`;
+    groupContainer.appendChild(groupBody);
+
+    // Append the group container to the row
+    row.appendChild(groupContainer);
+}
 
 
+function updateUIWithResults(data) {
 
-                resolve();
+    // Update the consequences table
+    var tableContainer = document.getElementById('table_scenario');
+    clearTable(tableContainer); // Clear existing table if present
+    createConsequencesTable(tableContainer, data.consequences);
 
-                var biaGroupsContainer = document.getElementById('bia_groups');
-                biaGroupsContainer.innerHTML = ''; // Clear existing content
+    var biaGroupsContainer1 = document.getElementById('bia_groups');
+    biaGroupsContainer1.innerHTML = ''; // Clear existing content
 
-                // Assuming each item in response.consequence has 'factor', 'score', and 'narrative' properties
-                var rows = [];
-                response.consequence.forEach(function(item, index) {
-                    // Create a new row every 3 items
-                    if (index % 3 === 0) {
-                        var row = document.createElement('div');
-                        row.className = 'row';
-                        rows.push(row);
-                    }
+    data.consequences.forEach(function(consequence, index) {
+        // Assuming you have a function to create and append each consequence group
+        appendConsequenceGroup(biaGroupsContainer, consequence, index);
+    });
+
+    // Handle investment impact data
+    if (data.investment_impact && data.investment_impact.trim() !== '') {
+        // Directly display the investment impact data without encoding/decoding
+        document.getElementById('txthdninvestmentstring').value = btoa(data.investment_impact);
+
+        renderInvestmentImpact(data.investment_impact); // Directly pass the raw data
+    } else {
+        console.log("No investment impact data available.");
+        // Handle the case where investment impact data is not available
+    }
+       var biaGroupsContainer = document.getElementById('bia_groups');
+    biaGroupsContainer.innerHTML = ''; // Clear existing content
+
+    data.consequences.forEach(function(item, index) {
+        // Create a new row every 3 items
+        if (index % 3 === 0) {
+            var row = document.createElement('div');
+            row.className = 'row';
+            biaGroupsContainer.appendChild(row);
+        }
 
         // Create the group container
         var groupContainer = document.createElement('div');
@@ -973,99 +1133,61 @@ fetch('https://restcountries.com/v3.1/all')
         groupBody.textContent = item.score + '. ' + item.narrative;
         groupContainer.appendChild(groupBody);
 
-        // Add the group container to the current row
-        rows[rows.length - 1].appendChild(groupContainer);
-
-        // Add the row to the biaGroupsContainer if it's full (3 items)
-        if ((index + 1) % 3 === 0 || index === response.consequence.length - 1) {
-            biaGroupsContainer.appendChild(rows[rows.length - 1]);
-        }
+        // Append the group container to the last row in biaGroupsContainer
+        var rows = biaGroupsContainer.getElementsByClassName('row');
+        var lastRow = rows[rows.length - 1];
+        lastRow.appendChild(groupContainer);
     });
-            },
-            error: function(xhr, status, error) {
-                spinnerContainer.style.display = 'none';
-                button.disabled = false;
-                alert('Error: ' + error);
-                reject(error);
-            }
+}
+
+function clearTable(tableContainer) {
+    while (tableContainer.firstChild) {
+        tableContainer.removeChild(tableContainer.firstChild);
+    }
+}
+
+function createConsequencesTable(tableContainer, consequences) {
+    // Ensure the tableContainer is correctly identified
+    if (!tableContainer) {
+        console.error('Table container not found');
+        return;
+    }
+
+    var table = document.createElement('table');
+    table.id = 'consequencesTable';
+    table.className = 'display dataTable';
+    var thead = document.createElement('thead');
+    var headerRow = document.createElement('tr');
+    ['Factor', 'Score', 'Narrative'].forEach(function(header) {
+        var th = document.createElement('th');
+        th.textContent = header;
+        headerRow.appendChild(th);
+    });
+    thead.appendChild(headerRow);
+    table.appendChild(thead);
+
+    var tbody = document.createElement('tbody');
+    consequences.forEach(function(consequence) {
+        var row = document.createElement('tr');
+        Object.keys(consequence).forEach(function(key) {
+            var cell = document.createElement('td');
+            cell.textContent = consequence[key];
+            row.appendChild(cell);
         });
+        tbody.appendChild(row);
     });
+    table.appendChild(tbody);
+    tableContainer.appendChild(table);
 
-    var generateAttackTreePromise = new Promise(function(resolve, reject) {
-        $.ajax({
-            url: "{% url 'OTRisk:generate_sim_attack_tree' %}",
-            type: 'POST',
-            data: {
-                'scenario': scenarioText,
-                'csrfmiddlewaretoken': '{{ csrf_token }}'
-            },
-            success: function(attackTreeResponse) {
-                document.getElementById('generateAttackTreeCheckbox').checked = true;
-                if (attackTreeResponse && !attackTreeResponse.error) {
-                    var attackTreeJson = JSON.stringify(attackTreeResponse);
-                    document.getElementById('hdnAT').value = attackTreeJson;
-                    drawAttackTree(attackTreeResponse);
-                } else {
-                    console.error('Attack tree data not available or invalid response');
-                }
-                resolve();
-            },
-            error: function(xhr, status, error) {
-                console.error('Error fetching attack tree:', error);
-                reject(error);
-            }
-        });
+    // Re-initialize DataTables on the new table, if necessary
+    $(table).DataTable({
+        searching: false,
+        paging: false,
+        info: false
     });
+}
 
-    var analyzeConsequencesPromise = new Promise(function(resolve, reject) {
-        $.ajax({
-            url: "{% url 'OTRisk:analyze_sim_consequences' %}",
-            type: 'POST',
-            data: {
-                'scenario': scenarioText,
-                'industry': industry,
-                'facility_type': facility_type,
-                'organization_size': organization_size,
-                'regulatory_environment': regulatory_environment,
-                'country': country,
-                'csrfmiddlewaretoken': '{{ csrf_token }}'
-            },
-            success: function(consequenceResponse) {
-                document.getElementById('analyzeConsequencesCheckbox').checked = true;
-                if (consequenceResponse.consequence && consequenceResponse.consequence.trim()) {
-                    document.getElementById('txtConsequences').value = consequenceResponse.consequence;
-                } else {
-                    document.getElementById('txtConsequences').value = 'No consequence analysis available.';
-                }
 
-                document.getElementById('txtBestCase').value = consequenceResponse.best_case_cost;
-                document.getElementById('txtMostLikelyCase').value = consequenceResponse.most_likely_case_cost;
-                document.getElementById('txtWorstCase').value = consequenceResponse.worst_case_cost;
-                document.getElementById('scenario_12month_costs').value = consequenceResponse.projection;
-
-                var costArray = consequenceResponse.projection.split('|').map(Number);
-                createCostChart('monthly_cost_chart', costArray);
-                resolve();
-            },
-            error: function(xhr, status, error) {
-                spinnerContainer.style.display = 'none';
-                button.disabled = false;
-                console.error('Error fetching consequence analysis:', error);
-                reject(error);
-            }
-        });
-    });
-
-    // Use Promise.all to wait for all AJAX calls to complete
-    Promise.all([analyzeScenarioPromise, generateAttackTreePromise, analyzeConsequencesPromise]).then(function() {
-        spinnerContainer.style.display = 'none'; // Hide the spinner
-        button.disabled = false;
-    }).catch(function(error) {
-        console.error('An error occurred:', error);
-        spinnerContainer.style.display = 'none'; // Hide the spinner
-        button.disabled = false;
-    });
-});
 function fetchAndDisplayScenarios() {
     $.ajax({
         url: "/OTRisk/list_scenario_builders/", // Adjust the URL to your backend endpoint

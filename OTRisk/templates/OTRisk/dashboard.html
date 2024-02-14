@@ -21,8 +21,7 @@
 
     <!-- Bootstrap JS -->
     <script src="{% static 'bootstrap/dist/js/bootstrap.bundle.min.js' %}"></script>
-
-    <script src="{% static 'anychart/dist/js/anychart-bundle.min.js' %}"></script>
+    <script src="{% static 'anychart/dist/js/anychart-bundle.min.js'%}"></script>
     <script src="{% static 'anychart/dist/js/anychart-heatmap.min.js' %}"></script>
     <script src="{% static 'anychart/dist/js/anychart-sunburst.min.js' %}"></script>
     <script src="{% static 'anychart/dist/js/anychart-pie.min.js' %}"></script>
@@ -248,9 +247,11 @@
     </a>
     </li>
     <li class="nav-item menu-item">
-    <a class="nav-link" href="{% url 'logout' %}">
-    <i class="bi bi-box-arrow-right"></i> Logout
-    </a>
+    <form action="{% url 'logout' %}" method="post">
+    {% csrf_token %}
+    <button type="submit" class="nav-link" style="background:none; border:none; padding:0; margin:0; color:inherit;">Logout</button>
+</form>
+
     </li>
     </ul>
     </div>

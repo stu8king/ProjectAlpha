@@ -498,7 +498,7 @@ $(function () {
 
 <!-- put the buttons in here -->
 <div class="row small-font" >
-    <div class="col-md-2"></div>
+    <div class="col-md-2" style="background-color: #464748 ;"></div>
     <div class="col-md-8">
         <div class="form-group">
             <div class="row">
@@ -3088,7 +3088,8 @@ function retrieveScenario(scenarioId) {
       var tableBody = $('#consequenceTable tbody');
       tableBody.empty(); // Clear existing rows
 
-      response.consequences.forEach(function(consequence) {
+      var consequencesArray = response.consequences.split('\n');
+      consequencesArray.forEach(function(consequence) {
         if (consequence.trim() !== '') {
           var row = `<tr><td>${consequence}</td><td><input type="checkbox" checked></td></tr>`;
           tableBody.append(row);

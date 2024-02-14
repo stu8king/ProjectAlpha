@@ -49,14 +49,14 @@ from xml.etree import ElementTree as ET
 from .raw_views import qraw, openai_assess_risk, GetTechniquesView, raw_action, check_vulnerabilities, rawreport, \
     raw_from_walkdown, save_ra_action, get_rawactions, ra_actions_view, UpdateRAAction, reports, reports_pha, \
     create_or_update_raw_scenario, analyze_raw_scenario, analyze_sim_scenario, generate_sim_attack_tree, \
-    analyze_sim_consequences, update_workflow
+    analyze_sim_consequences, update_workflow, get_analysis_result
 from .dashboard_views import dashboardhome
 from .pha_views import iotaphamanager, facility_risk_profile, get_headerrecord, scenario_analysis, phascenarioreport, \
     getSingleScenario, pha_report, scenario_vulnerability, add_vulnerability, get_asset_types, calculate_effectiveness, \
     generate_ppt, analyze_scenario, assign_cyberpha_to_group, fetch_groups, fetch_all_groups, retrieve_scenario_builder
 from .report_views import pha_reports, get_scenario_report_details, qraw_reports, get_qraw_scenario_report_details
-from .forms import CustomScenarioForm, CustomConsequenceForm, OrganizationAdmin
-from .models.Model_Scenario import CustomScenario, CustomConsequence
+from .forms import CustomConsequenceForm, OrganizationAdmin
+from .models.Model_Scenario import CustomConsequence
 from accounts.models import Organization, OrganizationHistory
 from accounts.models import UserProfile
 from .forms import UserForm, UserProfileForm, ChangePasswordForm
@@ -894,53 +894,7 @@ def delete_consequence(request, consequence_id):
 
 ### - end of customer scenario code ###
 
-def add_or_update_scenario(request, scenario_id=None):
-    # Start by setting scenario to None
-    scenario = None
 
-    # If there's a scenario_id from URL parameters, fetch the scenario
-    if scenario_id:
-        scenario = CustomScenario.objects.get(pk=scenario_id)
-
-    # Fetch post_scenario_id from POST data, if present
-    post_scenario_id = request.POST.get('scenario_id')
-    if post_scenario_id:
-        scenario = CustomScenario.objects.get(pk=post_scenario_id)
-
-    # Check the organization for security
-    if scenario and scenario.organization_id != request.session['user_organization']:
-        return redirect('some_error_page_or_home')
-
-    # Handle the form submission
-    if request.method == 'POST':
-        form = CustomScenarioForm(request.POST, instance=scenario, user=request.user)
-        if form.is_valid():
-            scenario_instance = form.save(commit=False)
-            organization_id = request.session['user_organization']
-            scenario_instance.organization = Organization.objects.get(pk=organization_id)
-            scenario_instance.save()
-            return redirect('OTRisk:add_scenario')
-    else:
-        form = CustomScenarioForm(instance=scenario)
-
-    # Display the template
-    organization_id = request.session['user_organization']
-    scenarios = CustomScenario.objects.filter(organization_id=organization_id)
-
-    # Ensure that scenario_id is passed to the template
-    return render(request, 'OTRisk/custom_scenario.html',
-                  {'form': form, 'scenarios': scenarios, 'scenario_id': scenario_id or post_scenario_id})
-
-
-def delete_scenario(request, scenario_id):
-    scenario = CustomScenario.objects.get(pk=scenario_id)
-    if scenario.organization != request.user.userprofile.organization:
-        return redirect('OTRisk:add_scenario')
-    scenario.delete()
-    return redirect('OTRisk:add_scenario')
-
-
-### - end of customer scenario code ###
 
 def get_consequences(request):
     consequences = tblConsequence.objects.all()
@@ -1467,7 +1421,7 @@ def assess_cyberpha(request, cyberPHAID=None):
     # tbl_scenarios = tblScenarios.objects.all()
 
     # Get custom scenarios for the current user's organization
-    custom_scenarios = CustomScenario.objects.filter(organization_id=organization_id)
+
     # Convert querysets to lists of dictionaries
     # tbl_scenarios_list = [{'ID': obj.ID, 'Scenario': obj.Scenario} for obj in tbl_scenarios]
     # custom_scenarios_list = [{'ID': obj.id, 'Scenario': obj.scenario} for obj in custom_scenarios]
@@ -1732,7 +1686,6 @@ def get_scenarios(request):
         # Use scenario.ID to correctly reference the primary key
         safeguards_data[scenario.ID] = json.loads(serialize('json', safeguards))
 
-    print(scenarios_json)
     # Return both serialized lists in the response
     response_data = {
         'scenarios': json.loads(scenarios_json),

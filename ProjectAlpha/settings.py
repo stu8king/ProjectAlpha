@@ -22,7 +22,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-7wdzw^mq5o67v*fju@hs$mvd_fn0u1iqzr-_byo4y@nog%$$on'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['ec2-3-223-201-144.compute-1.amazonaws.com','3.223.201.144', '127.0.0.1', 'iotarisk.com', 'www.iotarisk.com', 'localhost']
 
@@ -52,27 +52,35 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    'django.middleware.csrf.CsrfViewMiddleware',
     'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',  # Keep this single instance
     'django.middleware.common.CommonMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
     'OTRisk.middleware.SessionIdleTimeout',
     'two_factor.middleware.threadlocals.ThreadLocals',
     'django_otp.middleware.OTPMiddleware',
 ]
 
+
 CORS_ORIGIN_WHITELIST = [
-    'http://127.0.0.1:8000'
+    'http://127.0.0.1:8000',
+    'https://www.iotarisk.com',
+    'https://iotarisk.com',
+    'http://127.0.0.1:8000/accounts',
+    'http://127.0.0.1:8000/OTRisk',
+    'https://www.iotarisk.com/accounts',
+    'https://iotarisk.com/OTRisk',
 ]
 
 ROOT_URLCONF = 'ProjectAlpha.urls'
-CORS_ORIGIN_ALLOW_ALL = True
+CORS_ORIGIN_ALLOW_ALL = False
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
+CSRF_COOKIE_SAMESITE = 'None'
+CSRF_COOKIE_PATH = '/'
 
 TEMPLATES = [
     {
@@ -154,7 +162,7 @@ USE_I18N = True
 
 USE_TZ = True
 
-STATIC_URL = '/staticfiles/'
+STATIC_URL = '/static/'
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
 ]
@@ -180,3 +188,4 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 RECAPTCHA_PUBLIC_KEY = '6LcktGooAAAAAJVgzqc3HVpK1kY6UXsyfUYmfiJJ'
 RECAPTCHA_PRIVATE_KEY = '6LcktGooAAAAABqHVJDBKHPu_9iyeDJLCaeow258'
 
+CELERY_BROKER_URL = 'redis://localhost:6379/0'

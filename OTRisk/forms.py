@@ -5,7 +5,7 @@ from OTRisk.models.RiskScenario import RiskScenario
 from OTRisk.models.Model_CyberPHA import vulnerability_analysis, tblAssetType, tblMitigationMeasures, \
     OrganizationDefaults, tblIndustry, tblCyberPHAHeader
 from .models.raw import RAWorksheet, RAActions, MitreICSMitigations, RAWorksheetScenario, MitreICSTechniques
-from .models.Model_Scenario import CustomScenario, CustomConsequence
+from .models.Model_Scenario import CustomConsequence
 from .models.model_assessment import AssessmentFramework, AssessmentAnswer
 import accounts
 from django.contrib.auth.models import User
@@ -262,28 +262,6 @@ class UserForm(forms.ModelForm):
         model = User
         fields = ['username', 'first_name', 'last_name', 'email', 'is_superuser', 'is_active']
 
-
-class CustomScenarioForm(forms.ModelForm):
-    scenario = forms.CharField(
-        widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 3})  # 'rows' is optional, adjust as needed
-    )
-
-    class Meta:
-        model = CustomScenario
-        fields = ['scenario']
-
-    def __init__(self, *args, **kwargs):
-        self.user = kwargs.pop('user', None)  # Fetch the user and remove it from kwargs
-        super().__init__(*args, **kwargs)
-
-    def save(self, commit=True):
-        instance = super().save(commit=False)
-        if not instance.pk:  # Use pk instead of id for clarity
-            instance.created_by = self.user
-            instance.user_profile = accounts.models.UserProfile.objects.get(user=self.user)
-        if commit:
-            instance.save()
-        return instance
 
 
 class CustomConsequenceForm(forms.ModelForm):

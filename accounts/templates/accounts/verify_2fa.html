@@ -114,7 +114,7 @@
             <div class="col-md-12">
                 <br>
                 <p style="color:white">Enter the code in the SMS sent to your device</p>
-               <form method="post">
+               <form id="two_factor_verify_form" method="post">
                 {% csrf_token %}
                 {{ form.as_p }}
                 <button type="submit" class="form-control btn-primary">Submit Code</button><br>
@@ -145,13 +145,47 @@
         </div>
         <div class="col-md-5"></div>
     </div>
-        <!--
-        <div class="col-md-2">
-                <form method="post" class="text-center">
-                    {% csrf_token %}
-                    <label for="{{ form.token.id_for_label }}" class="form-label">Token:</label>
-                    <input type="text" name="{{ form.token.name }}" id="{{ form.token.id_for_label }}" class="form-control" />
-                    <br>
-                    <button type="submit" class="btn btn-primary" style="color: white;">Verify Token</button>
-                </form>
-            </div> -->
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    var form = document.getElementById('two_factor_verify_form');
+    form.addEventListener('submit', function(e) {
+        e.preventDefault(); // Prevent the default form submission
+
+        // Correctly serialize the form data
+        var formData = new FormData(form);
+        var data = {
+            'token': formData.get('token') // Correctly get the token input value
+        };
+
+        fetch('/token/', {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json', // Expecting JSON response
+                'Content-Type': 'application/json', // Sending JSON data
+                'X-CSRFToken': formData.get('csrfmiddlewaretoken') // Correctly include CSRF token from the form
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json(); // Parse JSON response
+        })
+        .then(data => {
+            console.log('Success:', data);
+            if (data.redirect) {
+                // Redirect if a URL is provided in the response
+                window.location.href = data.redirect;
+            }
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+        });
+    });
+});
+</script>
+
+
+</body>
+</html>
