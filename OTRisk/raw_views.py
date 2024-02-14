@@ -1608,7 +1608,6 @@ def analyze_raw_scenario(request):
 
 
 def get_analysis_result(request):
-
     user = request.user
     try:
         # Attempt to get the latest analysis result for the user
@@ -1624,11 +1623,9 @@ def get_analysis_result(request):
         return JsonResponse({'status': 'pending'})
 
 
-
+@login_required()
 def analyze_sim_scenario(request):
-
     if request.method == 'POST':
-
         # Extract the necessary data from the request
         user_id = request.user.id
         scenario = request.POST.get('scenario')
