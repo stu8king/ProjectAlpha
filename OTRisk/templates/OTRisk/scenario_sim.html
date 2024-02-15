@@ -940,6 +940,7 @@ return new Promise(function(resolve, reject) {
 });
 }
 
+var pollingInterval;
 
 document.getElementById('analyzeScenarioBtn').addEventListener('click', function() {
     var scenarioText = document.getElementById('txtScenario').value;
@@ -977,6 +978,7 @@ document.getElementById('analyzeScenarioBtn').addEventListener('click', function
             spinnerContainer.style.display = 'none'; // Hide the spinner
             button.disabled = false;
         });
+     if (window.pollingInterval) clearInterval(window.pollingInterval);
     // Start the analysis scenario
     $.ajax({
         url: "{% url 'OTRisk:analyze_sim_scenario' %}",
@@ -990,7 +992,6 @@ document.getElementById('analyzeScenarioBtn').addEventListener('click', function
         },
         success: function(response) {
             document.getElementById('analyzeScenarioCheckbox').checked = true;
-            console.log("Task initiated. Polling for results...");
 
             // Polling function
             function pollForResults() {
@@ -1002,24 +1003,23 @@ document.getElementById('analyzeScenarioBtn').addEventListener('click', function
                     },
                     success: function(response) {
                         if (response.status === 'success') {
-                            console.log("Analysis completed", response.data);
-                            clearInterval(pollingInterval); // Stop polling
+                            clearInterval(window.pollingInterval); // Stop polling
 
                             updateUIWithResults(response.data); // Update your UI with the results
 
                         } else {
-                            console.log("Analysis still in progress...");
+                            spinnerContainer.style.display = 'block';
                         }
                     },
                     error: function(xhr, status, error) {
-                        console.error("Error polling for results:", error);
-                        clearInterval(pollingInterval); // Consider stopping or retrying polling
+
+                        clearInterval(window.pollingInterval); // Consider stopping or retrying polling
                     }
                 });
             }
 
             // Start polling for results every 5 seconds
-            var pollingInterval = setInterval(pollForResults, 5000);
+            window.pollingInterval = setInterval(pollForResults, 5000);
         },
         error: function(xhr, status, error) {
             spinnerContainer.style.display = 'none';
@@ -1074,16 +1074,22 @@ function appendConsequenceGroup(container, consequence, index) {
     row.appendChild(groupContainer);
 }
 
-
 function updateUIWithResults(data) {
-
+    document.getElementById('spinnerContainer').style.display = 'none';
     // Update the consequences table
     var tableContainer = document.getElementById('table_scenario');
+    var biaGroupsContainer = document.getElementById('bia_groups');
+    var investmentImpactInput = document.getElementById('txthdninvestmentstring');
+
+    if (!tableContainer || !biaGroupsContainer || !investmentImpactInput) {
+        // If any of the elements are not found, silently return without updating the UI or logging errors
+        return;
+    }
+
     clearTable(tableContainer); // Clear existing table if present
     createConsequencesTable(tableContainer, data.consequences);
+    biaGroupsContainer.innerHTML = '';
 
-    var biaGroupsContainer1 = document.getElementById('bia_groups');
-    biaGroupsContainer1.innerHTML = ''; // Clear existing content
 
     data.consequences.forEach(function(consequence, index) {
         // Assuming you have a function to create and append each consequence group
@@ -1097,47 +1103,10 @@ function updateUIWithResults(data) {
 
         renderInvestmentImpact(data.investment_impact); // Directly pass the raw data
     } else {
-        console.log("No investment impact data available.");
+        document.getElementById('spinnerContainer').style.display = 'none';
         // Handle the case where investment impact data is not available
     }
-       var biaGroupsContainer = document.getElementById('bia_groups');
-    biaGroupsContainer.innerHTML = ''; // Clear existing content
 
-    data.consequences.forEach(function(item, index) {
-        // Create a new row every 3 items
-        if (index % 3 === 0) {
-            var row = document.createElement('div');
-            row.className = 'row';
-            biaGroupsContainer.appendChild(row);
-        }
-
-        // Create the group container
-        var groupContainer = document.createElement('div');
-        groupContainer.className = 'group-container col-md-4'; // Adjust the column size as needed
-
-        // Create the group header
-        var groupHeader = document.createElement('div');
-        groupHeader.className = 'group-header';
-        var icon = document.createElement('img');
-        icon.src = "{% static 'images/green_cube.png' %}"; // Adjust the path as needed
-        icon.className = 'cube-icon';
-        icon.alt = 'green_cube';
-        groupHeader.appendChild(icon);
-        var headerText = document.createTextNode(item.factor);
-        groupHeader.appendChild(headerText);
-        groupContainer.appendChild(groupHeader);
-
-        // Create the group body
-        var groupBody = document.createElement('div');
-        groupBody.className = 'group-body';
-        groupBody.textContent = item.score + '. ' + item.narrative;
-        groupContainer.appendChild(groupBody);
-
-        // Append the group container to the last row in biaGroupsContainer
-        var rows = biaGroupsContainer.getElementsByClassName('row');
-        var lastRow = rows[rows.length - 1];
-        lastRow.appendChild(groupContainer);
-    });
 }
 
 function clearTable(tableContainer) {
@@ -1149,7 +1118,7 @@ function clearTable(tableContainer) {
 function createConsequencesTable(tableContainer, consequences) {
     // Ensure the tableContainer is correctly identified
     if (!tableContainer) {
-        console.error('Table container not found');
+
         return;
     }
 

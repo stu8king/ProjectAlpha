@@ -1607,24 +1607,37 @@ def analyze_raw_scenario(request):
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
 
+@login_required
 def get_analysis_result(request):
     user = request.user
     try:
-        # Attempt to get the latest analysis result for the user
+        # Fetch the latest analysis result for this user
         latest_result = ScenarioBuilder_AnalysisResult.objects.filter(user=user).latest('created_at')
+
+        # Prepare the data to be sent to the client
+        data = {
+            'consequences': json.loads(latest_result.consequences),
+            'investment_impact': latest_result.investment_impact
+        }
+
+        # Delete the record now that it's been retrieved
+        ScenarioBuilder_AnalysisResult.objects.filter(user=user).delete()
+
+        # Return the success response with data
         return JsonResponse({
             'status': 'success',
-            'data': {
-                'consequences': json.loads(latest_result.consequences),
-                'investment_impact': latest_result.investment_impact
-            }
+            'data': data
         })
     except ScenarioBuilder_AnalysisResult.DoesNotExist:
+        # If no result is found, indicate that the analysis is still pending
         return JsonResponse({'status': 'pending'})
 
 
 @login_required()
 def analyze_sim_scenario(request):
+    user = request.user
+    ScenarioBuilder_AnalysisResult.objects.filter(user=user).delete()
+
     if request.method == 'POST':
         # Extract the necessary data from the request
         user_id = request.user.id

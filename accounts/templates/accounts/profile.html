@@ -1,17 +1,200 @@
-{% extends "OTRisk/base.html" %}
-
 {% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AnzenOT</title>
+    <link rel="icon" href="{% static 'images/iota - white 1.png' %}" type="image/x-icon">
+    <!-- Correct Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
 
-{% block nav_title %}
-    Profile
-{% endblock %}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.1/css/bootstrap-select.min.css">
+    <!-- Bootstrap 5 JavaScript Bundle (includes Popper) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.1/font/bootstrap-icons.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.25/css/jquery.dataTables.css">
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.js"></script>
+    {% load django_bootstrap5 %}
+    {% bootstrap_css %}
+    {% bootstrap_javascript %}
+    <style>
+    .form-group {
+        border: 1px solid #464748; /* Border color */
+        box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.5); /* Outer shadow */
+        background-color: #5E6266; /* Lighter shade of #464748 */
+        padding: 15px; /* Optional: for internal spacing */
+    }
+    .custom-table-style th,
+    .custom-table-style td {
+        color: white;
+    }
 
-{% block content %}
-    <br>
-    <div class="row">
-        <div class="col-md-2" style="background-color: white"></div>
-        <div class="col-md-3">
-            <div class="card-style">
+.custom-table-style .thead-dark th {
+    background-color: #464748;
+}
+.card-body {
+    background-color: #464748; /* Dark background */
+}
+
+.card-body .custom-table-style th,
+.card-body .custom-table-style td {
+    color: white; /* White text */
+}
+
+.card-body .custom-table-style .thead-dark th {
+    background-color: #464748; /* Dark background for table header */
+}
+        body {
+        background-color: #464748;
+        color: #d3d1cd;
+    }
+    .sidebar {
+        height: 100vh;
+        background-color: #2D2E30; /* Darker shade for sidebar */
+        padding: 20px 0;
+        width: 200px; /* Reduced width */
+    }
+    .sidebar-logo {
+        padding: 10px 15px;
+        text-align: center;
+    }
+    .nav-sidebar {
+        display: flex;
+        flex-direction: column;
+        padding-left: 0;
+        list-style: none;
+    }
+    .nav-sidebar .nav-item {
+        padding: 5px 10px;
+        /* border-bottom: 1px solid  #fac330; /* Light orange line */
+        margin: 0 10%;
+    }
+    .nav-sidebar .nav-link {
+        color: #d3d1cd;
+        border-radius: 0;
+        transition: color 0.3s ease-in-out;
+        font-size: 0.8em;
+    }
+    .nav-sidebar .nav-link:hover, .nav-sidebar .nav-link.active {
+        background-color: #3A5F5F;
+        color: #E0E0E0;
+    }
+    /* Enhance dropdown menu */
+    .dropdown-menu {
+        background-color: #d3d1cd;
+        border: none;
+    }
+    .dropdown-item:hover, .dropdown-item:focus {
+        background-color: #fac330; /* Light orange background for hovered dropdown items */
+        color: #2D2E30;
+    }
+    .content {
+        padding: 20px;
+    }
+    @media (max-width: 768px) {
+        .sidebar {
+            width: 100%;
+            height: auto;
+            position: relative;
+        }
+        .nav-sidebar {
+            flex-direction: row;
+            flex-wrap: wrap;
+        }
+        .nav-sidebar .nav-item {
+            flex: 1 0 50%;
+            border-bottom: none; /* Remove border for smaller screens */
+        }
+        .main {
+            margin-left: 0;
+        }
+    }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <nav class="col-md-3 col-lg-2 d-md-block sidebar collapse" id="sidebarMenu">
+                <div class="sidebar-sticky">
+                    <div class="sidebar-logo">
+                        <img src="{% static 'images/anzen_owl.png' %}" class="img-fluid" alt="Logo">
+                    </div>
+                    <ul class="nav flex-column nav-sidebar">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'OTRisk:dashboardhome' %}">Dashboard</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'OTRisk:qraw' %}">QRAW</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'OTRisk:iotaphamanager' %}">CyberPHA</a>
+                        </li>
+                        <li class="nav-item menu-item">
+                            <a class="nav-link" href="{% url 'OTRisk:scenario_sim' %}">Scenario Builder</a>
+                        </li>
+                        <li class="nav-item menu-item">
+                            <a class="nav-link" href="{% url 'OTRisk:ra_actions_view_default' %}">Actions</a>
+                        </li>
+                        <li class="nav-item menu-item">
+                            <a class="nav-link" href="{% url 'OTRisk:risk_register' %}">Risk Register</a>
+                        </li>
+                        <li class="nav-item menu-item">
+                            <a class="nav-link" href="{% url 'OTRisk:list_frameworks' %}">Assessments</a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Admin
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+
+                                <li>
+                                    <a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:setup_org' %}">Set Defaults</a>
+                                </li>
+                                <li>
+                                    <a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:admin_users' %}">Admin Users</a>
+                                </li>
+                                <li>
+                                    <a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:upload_questionnaire' %}">Upload Questionnaires</a>
+                                </li>
+                                {% if user.is_staff %}
+                                <!-- Links visible only to superusers -->
+                                <li>
+                                    <a class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:user_admin' %}">User Administration</a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item"  style="font-size: 12px;" href="{% url 'OTRisk:organization_form' %}">Manage Organizations</a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:execute_sql' %}">Execute SQL</a>
+                                </li>
+                                {% endif %}
+                            </ul>
+                         </li>
+                    <li class="nav-item menu-item">
+                        <a class="nav-link" href="{% url 'accounts:profile' %}">
+                        <i class="bi bi-person-fill"></i> {{ user.first_name }} {{ user.last_name }} | {{ user.userprofile.organization.name }}
+                        </a>
+                        </li>
+                        <li class="nav-item menu-item">
+                        <form action="{% url 'logout' %}" method="post">
+                        {% csrf_token %}
+                        <button type="submit" class="nav-link" style="background:none; border:none; padding:0; margin:0; color:inherit;">Logout</button>
+                    </form>
+
+                        </li>
+                        </ul>
+                </div>
+            </nav>
+
+
+            <main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-4">
+                <div class="content">
+                     <div class="row">
+                        <div class="col-md-2"></div>
+                        <div class="col-md-3">
+                                <div class="form-group">
+            <div class="card-style" style="color: white">
                 <h4><i class="bi bi-person-circle"></i> User Profile</h4>
                 <br>
                 <p>Name: {{ user.first_name }} {{ user.last_name }}</p>
@@ -25,9 +208,11 @@
                     {% endif %}
                 </p>
             </div>
-         </div>
-        <div class="col-md-3">
-            <div class="card-style">
+            </div>
+                        </div>
+                        <div class="col-md-5">
+            <div class="form-group">
+            <div class="card-style" style="color: white">
                 <h4><i class="bi bi-key"></i> Subscription</h4>
 
                 <div class="row">
@@ -50,7 +235,22 @@
                 User licenses: {{ org_data.max_users }}<br>
                 User Licenses Used: {{ org_data.user_count }}
             </div>
+            </div>
         </div>
-        <div class="col-md-4"></div>
+                        <div class="col-md-2"></div>
+                    </div>
+
+                </div>
+            </main>
+        </div>
     </div>
-{% endblock %}
+
+<script>
+  var dropdownElementList = [].slice.call(document.querySelectorAll('.dropdown-toggle'))
+  var dropdownList = dropdownElementList.map(function (dropdownToggleEl) {
+    return new bootstrap.Dropdown(dropdownToggleEl)
+  })
+</script>
+
+</body>
+</html>

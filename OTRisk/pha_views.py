@@ -631,13 +631,14 @@ def facility_risk_profile(request):
             })
 
         openai_api_key = get_api_key('openai')
+        openai_model = get_api_key('OpenAI_Model')
         # openai_api_key = os.environ.get('OPENAI_API_KEY')
         openai.api_key = openai_api_key
         context = f"You are an industrial safety and hazard expert. For the {facility} {facility_type} at {address}, {country} in the {Industry} industry, with {employees} employees working a {shift_model} shift model,"
 
         prompts = [
-            f"{context}. provide a concise bullet-point list of the likely safety hazards at the facility given expected standards. Limit the response to a maximum of 100 words, or less. EXTRA INSTRUCTIONS: Do not give commentary or extra information. List only the specific hazard relevant to the facility. Add a line space between each bullet point.  If {language} is not en then give the response in the language {language} with the english directly underneath",
-            f"{context}, provide a concise bullet point list of the likely chemicals an inspector would expect to find stored or used at the facility . Limit the response to a maximum of 100 words, or less. EXTRA INSTRUCTIONS: Only list the chemical - no additional information. Add a line space between each bullet point.  If {language} is not en then give the response in the language {language} with the english directly underneath",
+            f"{context}. List safety hazards, max 100 words. - Specific to facility - Space between bullets. ",
+            f"{context},  List expected chemicals, max 100 words. - Specific to facility - Chemical names only - Space between bullets. ",
             f"{context}, provide a concise bullet-point list of physical security challenges for the facility. Limit the response to a maximum of 100 words, or less. EXTRA INSTRUCTION: Add a line space between each bullet point.  If {language} is not en then give the response in the language {language} with the english directly underneath",
             # f"For the {facility} {facility_type} at {address}, {country} in the {Industry} industry, provide a concise bullet point list of other localized risks that are likely to be identified for a {facility_type} at {address}. Limit the response to a maximum of 100 words, or less. Add a line space between each bullet point"
             f"You are an operational technology (OT) Cybersecurity expert with deep knowledge in the {Industry} industry, specifically focusing on {facility_type} facilities. Given the unique operational requirements and processes of a {facility_type} in the {Industry} industry located at {address}, provide a concise bullet-point list of specialized OT and IoT devices and equipment that are typically connected to IT networks for monitoring, supervision, and control. These should be devices and systems uniquely relevant to the operations, safety, and efficiency of such facilities. Limit the response to a maximum of 100 words, or less, and focus on providing industry-specific examples that reflect the specialized needs of {facility_type} facilities within the {Industry} sector.EXTRA INSTRUCTION: Add a line space between each bullet point. If the response is not in English and {language} is specified, provide the response in {language} with the English translation directly underneath.",
@@ -651,7 +652,7 @@ def facility_risk_profile(request):
         def fetch_response(prompt):
             return openai.ChatCompletion.create(
                 # model="gpt-4",
-                model="gpt-4-turbo-preview",
+                model=openai_model,
                 messages=[
                     {"role": "system",
                      "content": "You are a model trained to provide concise responses. Please provide a concise numbered bullet-point list based on the given statement."},
@@ -659,6 +660,7 @@ def facility_risk_profile(request):
                 ],
                 temperature=0.1,
                 max_tokens=600
+
             )
 
             # Use ThreadPoolExecutor to parallelize the API calls

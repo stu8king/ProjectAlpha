@@ -28,7 +28,10 @@ def parse_consequences(text):
 def analyze_scenario_task(user_id, scenario, investments_data, facility_type, industry):
     openai_api_key = get_api_key('openai')
     openai.api_key = openai_api_key
-
+    existing_results = ScenarioBuilder_AnalysisResult.objects.filter(user_id=user_id)
+    if existing_results.exists():
+        # If results exist, no further processing is needed
+        return
     try:
         user_profile = UserProfile.objects.get(user_id=user_id)
         organization_id = user_profile.organization.id
@@ -57,7 +60,7 @@ def analyze_scenario_task(user_id, scenario, investments_data, facility_type, in
 
     if "yes" in validation_response.choices[0].message.content.lower():
         system_message = f"""
-        Analyze the following cybersecurity scenario at a {facility_type} in the {industry} industry: '{scenario}'. For each factor listed below, provide a score out of 10 for impact severity and a brief narrative. Format your response with clear delimiters as follows: 'Factor: [Factor Name] | Score: X/10 | Narrative: [Explanation]'.
+        Analyze the following cybersecurity scenario at a {facility_type} in the {industry} industry: '{scenario}'. For each factor listed below, provide a score out of 10 for impact severity and a very concise narrative of 30 words or less. Format your response with clear delimiters as follows: 'Factor: [Factor Name] | Score: X/10 | Narrative: [Explanation]'.
 
         Factors:
         - Safety
@@ -76,7 +79,7 @@ def analyze_scenario_task(user_id, scenario, investments_data, facility_type, in
         response = openai.ChatCompletion.create(
             model=get_api_key('OpenAI_Model'),
             messages=[{"role": "system", "content": system_message}],
-            max_tokens=1600,
+            max_tokens=2000,
             temperature=0.1
         )
 
@@ -108,7 +111,11 @@ def analyze_scenario_task(user_id, scenario, investments_data, facility_type, in
 
         investment_impact_text = investment_impact_response.choices[0].message.content
 
-        # Return or process the analysis results as needed
-        # This could involve updating a database record with the results, sending a notification, etc.
+        ScenarioBuilder_AnalysisResult.objects.create(
+            user_id=user_id,
+            scenario=scenario,
+            consequences=json.dumps(parsed_consequences),  # Assuming this is a JSON-serializable object
+            investment_impact=investment_impact_text
+        )
     else:
         return {'error': 'Not a valid scenario'}

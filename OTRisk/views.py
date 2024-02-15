@@ -36,7 +36,7 @@ from OTRisk.models.Model_CyberPHA import tblCyberPHAHeader, tblRiskCategories, \
     tblThreatIntelligence, tblMitigationMeasures, tblScenarios, tblSafeguards, tblThreatSources, tblThreatActions, \
     tblNodes, tblUnits, tblZones, tblCyberPHAScenario, tblIndustry, auditlog, tblStandards, MitreControlAssessment, \
     CyberPHAScenario_snapshot, Audit, PHAControlList, SECURITY_LEVELS, OrganizationDefaults, scenario_compliance, \
-    ScenarioConsequences, APIKey, ScenarioBuilder, PHA_Safeguard
+    ScenarioConsequences, APIKey, ScenarioBuilder, PHA_Safeguard, OpenAIAPILog
 from django.shortcuts import render, redirect
 from .dashboard_views import get_user_organization_id
 from django.contrib.auth.decorators import login_required
@@ -893,7 +893,6 @@ def delete_consequence(request, consequence_id):
 
 
 ### - end of customer scenario code ###
-
 
 
 def get_consequences(request):
@@ -2804,7 +2803,6 @@ def list_scenario_builders(request):
             return JsonResponse({'error': 'UserProfile for the current user does not exist'}, status=400)
 
 
-
 @login_required
 def get_scenario_builder_details(request, scenario_id):
     try:
@@ -2813,3 +2811,10 @@ def get_scenario_builder_details(request, scenario_id):
         return JsonResponse({'scenario_data': scenario.scenario_data})
     except ScenarioBuilder.DoesNotExist:
         return JsonResponse({'error': 'Scenario not found'}, status=404)
+
+
+
+
+
+
+
