@@ -988,3 +988,20 @@ class ScenarioBuilder_AnalysisResult(models.Model):
     consequences = models.TextField()
     investment_impact = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
+
+
+class OpenAIAPILog(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    datetime = models.DateTimeField(auto_now_add=True)
+    ip_address = models.CharField(max_length=45)
+    prompt = models.TextField()
+    model_used = models.CharField(max_length=30)
+    temperature = models.FloatField()
+    tokens_used_query = models.IntegerField()
+    tokens_used_response = models.IntegerField()
+    total_tokens_used = models.IntegerField()
+    error_message = models.TextField(blank=True, null=True)
+    status_code = models.CharField(max_length=10, blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.user.username} - {self.datetime.strftime('%Y-%m-%d %H:%M:%S')}"
