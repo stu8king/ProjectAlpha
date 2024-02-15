@@ -73,7 +73,12 @@ SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 CSRF_COOKIE_SAMESITE = 'None'
 CSRF_COOKIE_PATH = '/'
-
+CORS_ALLOWED_ORIGINS = [
+    'https://iotarisk.com',
+    'https://www.iotarisk.com',
+    'https://3.223.201.144',
+    'https://127.0.0.1'
+]
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
