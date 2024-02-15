@@ -81,7 +81,7 @@ def analyze_scenario_task(user_id, scenario, investments_data, facility_type, in
         )
 
         consequence_text = response.choices[0].message.content
-        print(consequence_text)
+
         parsed_consequences = parse_consequences(
             consequence_text)  # Ensure this utility function is implemented to parse the response
 

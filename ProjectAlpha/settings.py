@@ -65,18 +65,8 @@ MIDDLEWARE = [
 ]
 
 
-CORS_ORIGIN_WHITELIST = [
-    'http://127.0.0.1:8000',
-    'https://www.iotarisk.com',
-    'https://iotarisk.com',
-    'http://127.0.0.1:8000/accounts',
-    'http://127.0.0.1:8000/OTRisk',
-    'https://www.iotarisk.com/accounts',
-    'https://iotarisk.com/OTRisk',
-]
-
 ROOT_URLCONF = 'ProjectAlpha.urls'
-CORS_ORIGIN_ALLOW_ALL = False
+CORS_ORIGIN_ALLOW_ALL = True
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 CSRF_COOKIE_SAMESITE = 'None'
