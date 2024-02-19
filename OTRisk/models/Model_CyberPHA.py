@@ -1,5 +1,7 @@
+import random
+
 from django.conf import settings
-from django.db import models
+from django.db import models, IntegrityError
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db.models import URLField
@@ -154,15 +156,6 @@ class auditlog(models.Model):
 
     class Meta:
         db_table = 'tblAuditLog'
-
-
-class tblDeviations(models.Model):
-    ID = models.AutoField(primary_key=True)
-    Deviation = models.CharField(max_length=25)
-    Description = models.CharField(max_length=255)
-
-    class Meta:
-        db_table = 'tblDeviations'
 
 
 class tblUnits(models.Model):
@@ -499,8 +492,13 @@ class tblCyberPHAEntry(models.Model):
         db_table = 'tblCyberPHAEntry'
 
 
+def generate_unique_id():
+    # Generate a random 9-digit number
+    return random.randint(1, 999999999)
+
+
 class tblCyberPHAScenario(models.Model):
-    ID = models.AutoField(primary_key=True)
+    ID = models.IntegerField(primary_key=True)
     CyberPHA = models.ForeignKey(tblCyberPHAHeader, on_delete=models.CASCADE, db_column='CyberPHA')
     Scenario = models.CharField(max_length=255)
     ThreatClass = models.CharField(max_length=100)
@@ -608,14 +606,30 @@ class tblCyberPHAScenario(models.Model):
         default=False)  # flag set by the user to define if the scenario has systems that are configured with weak or default credentials
     compliance_map = models.TextField(default="No Compliance Map Saved", null=True)
     attack_tree_text = models.TextField(null=True)
+    executive_summary = models.TextField(null=True)
+    cost_projection = models.TextField(null=True)
 
     class Meta:
         db_table = 'tblCyberPHAScenario'
 
     def save(self, *args, **kwargs):
-        # If the record is being created and there's a user available, set the userID
-        if not self.pk and hasattr(self, '_current_user'):
-            self.userID = self._current_user
+        if not self.pk:  # If the record is new
+            # If the record is being created and there's a user available, set the userID
+            if hasattr(self, '_current_user'):
+                self.userID = self._current_user
+
+            # Ensure a unique ID is generated
+            unique = False
+            max_attempts = 10
+            attempts = 0
+            while not unique and attempts < max_attempts:
+                attempts += 1
+                new_id = generate_unique_id()
+                if not tblCyberPHAScenario.objects.filter(ID=new_id).exists():
+                    self.ID = new_id
+                    unique = True
+                if attempts == max_attempts:
+                    raise IntegrityError("Unable to generate a unique ID after several attempts.")
 
         super(tblCyberPHAScenario, self).save(*args, **kwargs)
 
@@ -856,6 +870,8 @@ class CyberPHAScenario_snapshot(models.Model):
         default=False)  # flag set by the user to define if the scenario has systems that are configured with weak or default credentials
     compliance_map = models.TextField(default="No Compliance Map Saved", null=True)
     attack_tree_text = models.TextField(null=True)
+    executive_summary = models.TextField(null=True)
+    cost_projection = models.TextField(null=True)
 
 
 class PHA_Safeguard(models.Model):
@@ -1005,3 +1021,13 @@ class OpenAIAPILog(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.datetime.strftime('%Y-%m-%d %H:%M:%S')}"
+
+
+class UserScenarioHash(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    cyberphaID = models.IntegerField()
+    hash_value = models.CharField(max_length=64)  # Assuming SHA-256 hash
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'cyberphaID', 'hash_value')

@@ -39,6 +39,7 @@
 
 <!-- D3.js -->
 <script src="https://d3js.org/d3.v6.min.js"></script>
+<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
 
 <!-- AnyChart -->
 <script src="https://cdn.anychart.com/releases/8.10.0/js/anychart-bundle.min.js"></script>
@@ -129,63 +130,77 @@
   text-decoration: none;
   cursor: pointer;
 }
-.navbar {
-    background-color: #464748;
-    border-bottom: 1px solid #000;
-    height: 50px; /* Fixed height */
-    position: relative;
-}
-
-.owl-logo {
-    height: 60px; /* Set a fixed height for the image */
-    width: auto; /* Maintain aspect ratio */
-    position: relative;
-    top: 50%; /* Center vertically in the navbar */
-    transform: translateY(-30%); /* Adjust vertical position */
-    margin-bottom: -20px; /* Negative margin to overlap */
-}
 
 
-.navbar-brand, .nav-link {
-    color: #d3d1cd; /* White text for clear visibility on initial view */
-}
-
-.menu-item {
-    border-right: 1px solid #4B6B6B; /* Subtle line between items */
-    font-size: 14px; /* Adjust font size */
-}
-
-.menu-item:last-child {
-    border-right: none; /* Remove border for the last item */
-}
-
-.menu-item:hover, .dropdown-item:hover {
-    background-color: #3A5F5F; /* Slightly lighter grey on hover */
-    color: #E0E0E0; /* Light grey text on hover */
-}
-
-.nav-link:hover, .dropdown-item {
-    color: #E0E0E0; /* Light grey text on hover */
-}
-
-.dropdown-menu {
-    background-color: #464748; /* Dark Slate Grey */
-    border: none;
-}
-
-.dropdown-item {
-    color: #FFFFFF; /* White text for clear visibility */
-}
-
-.dropdown-item:hover {
-    background-color: #3A5F5F; /* Slightly lighter grey on hover */
-    color: #E0E0E0;}
-
-.form-group {
+    .form-group {
     border: 1px solid #464748; /* Border color */
     box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.5); /* Outer shadow */
     background-color: #5E6266; /* Lighter shade of #464748 */
     padding: 15px; /* Optional: for internal spacing */
+}
+
+
+     body {
+        background-color: #464748;
+        color: #d3d1cd;
+    }
+    .sidebar {
+        height: 100vh;
+        background-color: #2D2E30; /* Darker shade for sidebar */
+        padding: 20px 0;
+        width: 200px; /* Reduced width */
+    }
+    .sidebar-logo {
+        padding: 10px 15px;
+        text-align: center;
+    }
+    .nav-sidebar {
+        display: flex;
+        flex-direction: column;
+        padding-left: 0;
+        list-style: none;
+    }
+    .nav-sidebar .nav-item {
+        padding: 5px 10px;
+        /* border-bottom: 1px solid  #fac330; /* Light orange line */
+        margin: 0 10%;
+    }
+    .nav-sidebar .nav-link {
+        color: #d3d1cd;
+        border-radius: 0;
+        transition: color 0.3s ease-in-out;
+        font-size: 0.8em;
+    }
+    .nav-sidebar .nav-link:hover, .nav-sidebar .nav-link.active {
+        background-color: #3A5F5F;
+        color: #E0E0E0;
+    }
+    /* Enhance dropdown menu */
+    .dropdown-menu {
+        background-color: #d3d1cd;
+        border: none;
+    }
+    .dropdown-item:hover, .dropdown-item:focus {
+        background-color: #fac330; /* Light orange background for hovered dropdown items */
+        color: #2D2E30;
+    }
+    .content {
+        padding: 20px;
+    }
+.custom-main-content {
+    position: relative; /* Needed for absolute positioning of tabs */
+    margin-left: 10px; /* Adjust to account for both sidebars */
+    width: calc(100% - 350px); /* Adjust based on the total width of the sidebars */
+    min-height: 100vh; /* Ensure it fills the viewport height */
+}
+
+
+@media (min-width: 992px) { /* Adjusting for Bootstrap's large devices breakpoint */
+    .custom-main-content {
+        width: calc(100% - 200px);
+        max-width: calc(90vw - 200px);
+        margin-left: 100px;
+    }
 }
 .form-sim .form-control {
     max-width: 100%; /* Ensures select does not exceed container width */
@@ -259,6 +274,115 @@ path.connection {
 
 
 /* Adjustments may be needed based on the exact layout and spacing */
+.custom-main-content .container {
+    width: 100%; /* Ensure the container fills the custom-main-content */
+    max-width: none; /* Override Bootstrap's max-width for containers if necessary */
+}
+.top-strip {
+    background-color: #464748; /* Same as body background for seamless integration */
+    color: #d3d1cd; /* Text color */
+    padding: 10px 20px; /* Adjust as needed */
+    padding-left: 100px; /* Align with the end of the sidebar */
+    width: calc(100% - 200px); /* Adjust based on the actual sidebar width */
+    box-sizing: border-box;
+}
+
+.page-title {
+    margin: 0; /* Remove default margins */
+    font-size: 1.5rem; /* Adjust size as needed */
+}
+
+@media (max-width: 992px) {
+    .top-strip {
+        padding-left: 0;
+        width: 100%;
+    }
+     .sub-menu {
+        left: 0;
+        width: 100px; /* Adjust for smaller screens */
+    }
+
+.tab-content {
+    display: none; /* Hide all tab content by default */
+    padding: 20px; /* Padding around content */
+    border: 1px solid #666; /* Border for definition */
+    margin-top: 20px; /* Space from the top */
+    width: 80%; /* 80% of the available width to the right */
+    height: 80vh; /* 80% of the viewport height */
+    position: absolute; /* Positioning relative to its nearest positioned ancestor */
+    left: 350px; /* This should be directly to the right of the sub-menu */
+    top: 0; /* Align with the top of the viewport */
+    overflow: auto; /* Add scroll for overflow content */
+    box-sizing: border-box; /* Include padding and border in the element's total width and height */
+}
+
+.tab-content.active {
+    display: block; /* Only the active tab is displayed */
+}
+
+
+
+    .custom-main-content {
+        margin-left: 100px; /* Adjust based on the sub-menu width on smaller screens */
+    }
+}
+/* Sub-menu styles */
+.sub-menu {
+    position: fixed; /* Fixed position to stay in view */
+    top: 0; /* Align with the top of the viewport */
+    left: 200px; /* Adjust based on the width of the main sidebar */
+    width: 150px; /* Width of the sub-menu */
+    height: 100vh; /* Full viewport height */
+    background-color: #333; /* Sub-menu background color */
+    color: #fff; /* Text color */
+    padding: 20px 10px; /* Padding */
+    box-sizing: border-box; /* Include padding in width calculation */
+}
+
+.sub-menu ul {
+    list-style: none; /* Remove default list styling */
+    padding: 0; /* Remove default padding */
+    margin: 0; /* Remove default margin */
+}
+
+.sub-menu li a {
+    color: #d3d1cd; /* Link color */
+    text-decoration: none; /* Remove underline */
+    display: block; /* Make the links fill the container */
+    padding: 10px 0; /* Padding for touch targets */
+    transition: background-color 0.3s; /* Smooth transition for hover effect */
+}
+
+.sub-menu li a:hover, .sub-menu li a.active {
+    background-color: #57595b; /* Hover/active background color */
+}
+.tab-content {
+    display: none; /* Hide all tab content by default */
+    padding: 20px; /* Padding around content */
+    border: 1px solid #666; /* Border for definition */
+    margin-top: 20px; /* Space from the top */
+}
+
+.tab-content.active {
+    display: block; /* Only the active tab is displayed */
+}
+.tab-content {
+    display: none; /* Hide all tab content by default */
+    padding: 20px; /* Padding around content */
+    border: 1px solid #666; /* Border for definition */
+    margin-top: 20px; /* Space from the top */
+    width: 80%; /* 80% of the available width */
+    height: 80vh; /* 80% of the viewport height */
+    position: absolute; /* Positioning relative to its nearest positioned ancestor */
+    left: 350px; /* Adjust based on the total width of the main sidebar and sub-menu */
+    top: 0; /* Align with the top of the viewport */
+    overflow: auto; /* Add scroll for overflow content */
+    box-sizing: border-box; /* Include padding and border in the element's total width and height */
+}
+
+.tab-content.active {
+    display: block; /* Only the active tab is displayed */
+}
 
 </style>
 </head>
@@ -294,157 +418,408 @@ fetch('https://restcountries.com/v3.1/all')
         console.error("There was an error fetching the country list:", error);
     });
 
+document.addEventListener("DOMContentLoaded", function() {
+    const links = document.querySelectorAll('.sub-menu a');
+    links.forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const currentTab = document.querySelector('.tab-content.active');
+            if (currentTab) currentTab.classList.remove('active');
+            const newTab = document.getElementById(this.getAttribute('data-tab'));
+            newTab.classList.add('active');
 
+            // Update active state for links
+            document.querySelector('.sub-menu a.active')?.classList.remove('active');
+            this.classList.add('active');
+        });
+    });
+});
 </script>
-<nav class="navbar navbar-expand-lg navbar-scroll shadow-0 border-bottom rounded">
-    <div class="container-fluid d-flex justify-content-between">
-        <a class="navbar-brand" href="{% url 'OTRisk:dashboardhome' %}">
-            &nbsp; &nbsp; &nbsp; &nbsp;
-            <img src="{% static 'images/anzen_owl.png' %}" class="owl-logo" style="width: 18%; height: 18%">
-        </a>
-        <h6 class="my-auto text-center flex-grow-1 navbar-brand"><img src="{% static 'images/anzen_noowl.png' %}" style="width: 15%; height: 15%" alt=""> Scenario Builder</h6>
-        <div class="collapse navbar-collapse" id="navbarSupportedContent">
-            <ul class="navbar-nav ms-auto">
-                <li class="nav-item menu-item">
-                    <a class="nav-link" href="{% url 'OTRisk:qraw' %}"><i class="bi bi-calculator"></i> QRAW</a>
-                </li>
-                <li class="nav-item menu-item">
-                    <a class="nav-link" href="{% url 'OTRisk:iotaphamanager' %}"><i class="bi bi-journal-text"></i> CyberPHA</a>
-                </li>
-                <li class="nav-item menu-item">
-                    <a class="nav-link" href="{% url 'OTRisk:scenario_sim' %}"><i class="bi bi-bricks"></i> Scenario Builder</a>
-                </li>
-                <li class="nav-item menu-item">
-                    <a class="nav-link" href="{% url 'OTRisk:ra_actions_view_default' %}"><i class="bi-file-earmark-easel"></i> Actions</a>
-                </li>
-                <li class="nav-item menu-item">
-                    <a class="nav-link" href="{% url 'OTRisk:risk_register' %}"><i class="bi-file-earmark-easel"></i> Risk Register</a>
-                </li>
-                <li class="nav-item menu-item">
-                    <a class="nav-link" href="{% url 'OTRisk:list_frameworks' %}"><i class="bi-file-earmark-easel"></i> Assessments</a>
-                </li>
-    <li class="nav-item dropdown menu-item">
-    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-    <i class="bi bi-diagram-3"></i> Admin
-    </a>
-    <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-    <li><a class="dropdown-item" href="{% url 'OTRisk:admin_users' %}">Admin Users</a></li>
-    {% if user.is_staff %}
-    <li><a class="dropdown-item" href="{% url 'OTRisk:user_admin' %}">User Administration</a></li>
-    <li><a class="dropdown-item" href="{% url 'OTRisk:execute_sql' %}">Execute SQL</a></li>
-    {% endif %}
-    </ul>
-    </li>
-    <li class="nav-item menu-item">
-    <a class="nav-link" href="{% url 'accounts:profile' %}">
-    <i class="bi bi-person-fill"></i> {{ user.first_name }} {{ user.last_name }} | {{ user.userprofile.organization.name }}
-    </a>
-    </li>
-    <li class="nav-item menu-item">
-    <a class="nav-link" href="{% url 'logout' %}">
-    <i class="bi bi-box-arrow-right"></i> Logout
-    </a>
-    </li>
-    </ul>
-    </div>
-    </div>
-    </nav>
+<div class="container-fluid">
 
-<br>
-
-<div class="row">
-    <div class="col-md-1">
-
-</div>
-
-    <div class="col-md-3">
-        <div class="row">
-            <div class="col-md-2"></div>
-            <div class="col-md-10">
-                <div class="form-group form-sim" >
-                    <div class="card mb-2 shadow-sm">
-                        <div class="card-body">
-                            <button type="button" class="btn btn-primary" onclick="fetchAndDisplayScenarios()">Load Scenario</button>
-                        </div>
+    <div class="row">
+        <nav class="col-md-3 col-lg-2 d-md-block sidebar collapse" id="sidebarMenu">
+                <div class="sidebar-sticky">
+                    <div class="sidebar-logo">
+                        <img src="{% static 'images/anzen_owl.png' %}" class="img-fluid" alt="Logo">
                     </div>
+                    <ul class="nav flex-column nav-sidebar">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'OTRisk:dashboardhome' %}">Dashboard</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'OTRisk:qraw' %}">QRAW</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'OTRisk:iotaphamanager' %}">CyberPHA</a>
+                        </li>
+                        <li class="nav-item menu-item">
+                            <a class="nav-link" href="{% url 'OTRisk:scenario_sim' %}">Scenario Builder</a>
+                        </li>
+                        <li class="nav-item menu-item">
+                            <a class="nav-link" href="{% url 'OTRisk:ra_actions_view_default' %}">Actions</a>
+                        </li>
+                        <li class="nav-item menu-item">
+                            <a class="nav-link" href="{% url 'OTRisk:risk_register' %}">Risk Register</a>
+                        </li>
+                        <li class="nav-item menu-item">
+                            <a class="nav-link" href="{% url 'OTRisk:list_frameworks' %}">Assessments</a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Admin
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+
+                                <li>
+                                    <a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:setup_org' %}">Set Defaults</a>
+                                </li>
+                                <li>
+                                    <a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:admin_users' %}">Admin Users</a>
+                                </li>
+                                <li>
+                                    <a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:upload_questionnaire' %}">Upload Questionnaires</a>
+                                </li>
+                                {% if user.is_staff %}
+                                <!-- Links visible only to superusers -->
+                                <li>
+                                    <a class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:user_admin' %}">User Administration</a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item"  style="font-size: 12px;" href="{% url 'OTRisk:organization_form' %}">Manage Organizations</a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:execute_sql' %}">Execute SQL</a>
+                                </li>
+                                {% endif %}
+                            </ul>
+                         </li>
+                    <li class="nav-item menu-item">
+                        <a class="nav-link" href="{% url 'accounts:profile' %}">
+                        <i class="bi bi-person-fill"></i> {{ user.first_name }} {{ user.last_name }} | {{ user.userprofile.organization.name }}
+                        </a>
+                        </li>
+                        <li class="nav-item menu-item">
+                        <form action="{% url 'logout' %}" method="post">
+                        {% csrf_token %}
+                        <button type="submit" class="nav-link" style="background:none; border:none; padding:0; margin:0; color:inherit;">Logout</button>
+                    </form>
+
+                        </li>
+                        </ul>
                 </div>
-                <div class="form-group form-sim" >
-                    <div class="card mb-2 shadow-sm">
-                        <div class="card-body">
-                            <label for="selIndustry"><img src="{% static 'images/icon_industry.png' %}" alt="" class="align-bottom" style="max-height: 1.5rem; margin-left: 5px;"> Industry</label>
-                            <select class="form-control" name="selIndustry" id="selIndustry" >
-                                <option value=""> -- Select Industry -- </option>
-                                {% for industry in industries %}
-                                <option value="{{ industry.Industry }}"
-                                        {% if current_pha_header.Industry == industry.Industry %}selected{% endif %}>
-                                    {{ industry.Industry }}
-                                </option>
-                                {% endfor %}
-                            </select>
-                        </div>
+            </nav>
+        <!-- Main content area, including sub-menu and tabs -->
+        <div class="col-md-9 col-lg-10">
+            <!-- Top Strip -->
+            <div class="top-strip">
+                <div class="row">
+                    <div class="col-md-2"></div>
+                    <div class="col-md-3">
+                    <h1 class="page-title">Scenario Builder@AnzenOT</h1>
                     </div>
-                    <div class="card mb-2 shadow-sm">
-                        <div class="card-body">
-                            <label for="selFacilityType"><img src="{% static 'images/function.png' %}" alt="" class="align-bottom" style="max-height: 1.5rem; margin-left: 5px;"> Facility Type</label>
-                            <select class="form-control" name="selFacilityType" id="selFacilityType">
-                                <option value=""> -- Select Facility Type -- </option>
-                                {% for facilities in facilities %}
-                                    <option value="{{ facilities.FacilityType }}"
-                                    {% if current_pha_header.FacilityType == facilities.FacilityType %}selected{% endif %}>
-                                    {{  facilities.FacilityType }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
+                    <div class="col-md-1">
+                        <button id="newScenarioBtn" class="btn nav-link">New Scenario</button>
+                        <script>
+                            document.getElementById('newScenarioBtn').addEventListener('click', function() {
+                                swal({
+                                    title: "Are you sure?",
+                                    text: "Any unsaved changed data will be lost. Proceed?",
+                                    icon: "warning",
+                                    buttons: true,
+                                    dangerMode: true,
+                                    buttons: ["Cancel", "Yes"]
+                                })
+                                .then((willDelete) => {
+                                    if (willDelete) {
+                                        // User pressed "Yes", clear the content
+                                        document.getElementById('txtScenario').value = ''; // Clear Scenario tab content
+                                        document.getElementById('txtConsequences').value = ''; // Clear Consequences tab content
+                                        document.getElementById('txtBestCase').value = ''; // Clear Event Costs tab content
+                                        document.getElementById('txtMostLikelyCase').value = '';
+                                        document.getElementById('txtWorstCase').value = '';
+                                        // Add more lines as needed for other inputs you wish to clear
+
+                                        swal("The data has been cleared!", {
+                                            icon: "success",
+                                        });
+                                    } else {
+                                        // User pressed "Cancel", do nothing
+                                        swal("Your data is safe!");
+                                    }
+                                });
+                            });
+                            </script>
+
+
                     </div>
-                    <div class="card mb-2 shadow-sm">
-                        <div class="card-body">
-                            <label for="countrySelector"><img src="{% static 'images/icon_world.png' %}" alt="" class="align-bottom" style="max-height: 1.5rem; margin-left: 5px;"> Country</label>
-                            <select class="form-control" id="countrySelector" name="countrySelector" ></select>
-                        </div>
+                    <div class="col-md-1">
+                    <button type="button" class="btn nav-link" onclick="fetchAndDisplayScenarios()">Load Scenario</button>
                     </div>
-                    <div class="card mb-2 shadow-sm">
-                        <div class="card-body">
-                            <label for="selOrganizationSize"><img src="{% static 'images/icon_group.png' %}" alt="" class="align-bottom" style="max-height: 1.5rem; margin-left: 5px;"> Organization Size</label>
-                            <select class="form-control" id="selOrganizationSize" name="selOrganizationSize">
-                                <option value=""> -- Select Organization Size -- </option>
-                                <option value="Small, 50-200 employees">Small, 50-200 employees</option>
-                                <option value="Medium-sized, 200-1000 employees">Medium-sized, 200-1000 employees</option>
-                                <option value="Large, over 1000 employees">Large, over 1000 employees</option>
-                                <option value="Multinational corporation">Multinational corporation</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="card mb-2 shadow-sm">
-                            <div class="card-body">
-                                <label for="selRegulatoryEnvironment"><img src="{% static 'images/icon_regulation.png' %}" alt="" class="align-bottom" style="max-height: 1.5rem; margin-left: 5px;"> Regulatory Environment</label>
-                                <select class="form-control" id="selRegulatoryEnvironment" name="selRegulatoryEnvironment">
-                                    <option value=""> -- Select Regulatory Environment -- </option>
-                                    <option value="Strict Regulation">Strict Regulation</option>
-                                    <option value="Moderate Regulation">Moderate Regulation</option>
-                                    <option value="Minimal Regulation">Minimal Regulation</option>
-                                    <option value="International Standards Compliance">International Standards Compliance</option>
-                                    <option value="Self-Regulated">Self-Regulated</option>
-                                </select>
+                    <div class="col-md-1">
+                        <button id="analyzeScenarioBtn" class="btn nav-link" type="button">Execute Analysis>></button>
+                        <div id="spinnerContainer" style="display: none;">
+                            <div class="spinner-border" role="status">
+                                <span class="sr-only">Loading...</span>
                             </div>
                         </div>
+                    </div>
+                    <div class="col-md-1">
+                       <button id="saveScenarioBtn" class="btn nav-link">Save Scenario</button>
+                        <script>
+                            document.getElementById('saveScenarioBtn').addEventListener('click', function() {
+                            var scenarioName = prompt("Please enter a name for this scenario:");
+                            if (scenarioName) {
+                                saveScenario(scenarioName);
+                            }
+                        });
+
+                        </script>
+
+                    </div>
+                    <div class="col-md-4"></div>
                 </div>
             </div>
+        <div class="sub-menu">
+            <br><br><br><br><br><br><br><br><br><br>
+        <ul>
+            <li><a href="#" data-tab="tab1">Instructions</a></li>
+            <li><a href="#" data-tab="tab2">Parameters</a></li>
+            <li><a href="#" data-tab="tab3">OT Investments</a></li>
+            <li><a href="#" data-tab="tab4" id="scenarioTabLink">Scenario</a></li>
+
+            <li><a href="#" data-tab="tab5">Consequences</a></li>
+            <li><a href="#" data-tab="tab6">Event Costs</a></li>
+            <li><a href="#" data-tab="tab7">Business Impact</a></li>
+            <li><a href="#" data-tab="tab8">Investment Analysis</a></li>
+            <li><a href="#" data-tab="tab9">Attack Tree</a></li>
+        </ul>
+    </div>
+
+
+    <div class="custom-main-content" >
+
+    <div id="checklistContainer">
+        <div>
+            <input type="checkbox" id="analyzeConsequencesCheckbox" class="custom-checkbox" disabled> Analyze Consequences
+        </div>
+        <div>
+            <input type="checkbox" id="generateAttackTreeCheckbox" class="custom-checkbox" disabled> Generate Attack Tree
+        </div>
+        <div>
+            <input type="checkbox" id="analyzeScenarioCheckbox" class="custom-checkbox" disabled> Business Impact Analysis
+        </div>
+    </div>
+    <div class="tab-content active" id="tab1">
+        <h2>Instructions</h2>
+        <div class="form-group">
+            <label id="instructions">
+
+                <p>
+                <h5>1. Parameters.</h5> Input and select parameters relevant to the scenario. The industry sector, type of facility, and country are mandatory fields.
+                </p>
+                <p>
+                <h5>2. OT Investments.</h5> Enter information about any investments that have been made or are planned in OT Cybersecurity hardware and software.
+                </p>
+                <p>
+                <h5>3. Scenario.</h5> Changing any of the parameters in step 1 will automatically update the text in the scenario box. You can use the generated text or edit and update the scenario text with more relevant information. The more specific and detailed the scenario text, the better the results.
+                </p>
+                <p>When the scenario text is complete, click the "Execute Analysis" link in the top menu to activate the scenario builder.</p>
+                <p>
+                <h5>4. Consequences.</h5> After the scenario builder has completed execution, the assumed immediate consequences of the scenario will be listed in the tab. .
+                </p>
+                <p>
+                <h5>New Scenario.</h5> Clicking this link clears any scenario information currently displayed on the screen. A warning message will be displayed stating that "Any unsaved data will be lost". Click Cancel to stop to operation. Click Yes to continue and clear the current scenario data.
+                </p>
+                <p>
+                <h5>Load Scenario.</h5> Click this link to load previously saved scenarios.
+                </p>
+                <p>
+                <h5>Execute Analysis.</h5> Click this link to run the Scenario Builder AI and generate the analysis objects.
+                </p>
+                <p>
+                <h5>Save Scenario.</h5> Click this link to store the existing scenario and the associated objects that are generated with it.
+                </p>
+            </label>
         </div>
     </div>
 
+    <div class="tab-content " id="tab2">
+        <h2>Scenario Parameters</h2>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group form-sim" >
+                    <label>Enter parameters for the scenario</label>
+                        <div class="card mb-2 shadow-sm">
+                            <div class="card-body">
+                                <label for="selIndustry" style="color:black"><img src="{% static 'images/icon_industry.png' %}" alt="" class="align-bottom" style="max-height: 1.5rem; margin-left: 5px;" > Industry</label>
+                                <select class="form-control" name="selIndustry" id="selIndustry" style="color:black">
+                                    <option value=""> -- Select Industry -- </option>
+                                    {% for industry in industries %}
+                                    <option value="{{ industry.Industry }}"
+                                            {% if current_pha_header.Industry == industry.Industry %}selected{% endif %}>
+                                        {{ industry.Industry }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="card mb-2 shadow-sm">
+                            <div class="card-body">
+                                <label for="selFacilityType" style="color:black"><img src="{% static 'images/function.png' %}" alt="" class="align-bottom" style="max-height: 1.5rem; margin-left: 5px;"> Facility Type</label>
+                                <select class="form-control" name="selFacilityType" id="selFacilityType">
+                                    <option value=""> -- Select Facility Type -- </option>
+                                    {% for facilities in facilities %}
+                                        <option value="{{ facilities.FacilityType }}"
+                                        {% if current_pha_header.FacilityType == facilities.FacilityType %}selected{% endif %}>
+                                        {{  facilities.FacilityType }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="card mb-2 shadow-sm">
+                            <div class="card-body">
+                                <label for="countrySelector" style="color:black"><img src="{% static 'images/icon_world.png' %}" alt="" class="align-bottom" style="max-height: 1.5rem; margin-left: 5px;"> Country</label>
+                                <select class="form-control" id="countrySelector" name="countrySelector" ></select>
+                            </div>
+                        </div>
+                        <div class="card mb-2 shadow-sm">
+                            <div class="card-body">
+                                <label for="selOrganizationSize" style="color:black"><img src="{% static 'images/icon_group.png' %}" alt="" class="align-bottom" style="max-height: 1.5rem; margin-left: 5px;"> Organization Size</label>
+                                <select class="form-control" id="selOrganizationSize" name="selOrganizationSize">
+                                    <option value=""> -- Select Organization Size -- </option>
+                                    <option value="Small, 50-200 employees">Small, 50-200 employees</option>
+                                    <option value="Medium-sized, 200-1000 employees">Medium-sized, 200-1000 employees</option>
+                                    <option value="Large, over 1000 employees">Large, over 1000 employees</option>
+                                    <option value="Multinational corporation">Multinational corporation</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="card mb-2 shadow-sm">
+                                <div class="card-body">
+                                    <label for="selRegulatoryEnvironment" style="color:black"><img src="{% static 'images/icon_regulation.png' %}" alt="" class="align-bottom" style="max-height: 1.5rem; margin-left: 5px;"> Regulatory Environment</label>
+                                    <select class="form-control" id="selRegulatoryEnvironment" name="selRegulatoryEnvironment">
+                                        <option value=""> -- Select Regulatory Environment -- </option>
+                                        <option value="Strict Regulation">Strict Regulation</option>
+                                        <option value="Moderate Regulation">Moderate Regulation</option>
+                                        <option value="Minimal Regulation">Minimal Regulation</option>
+                                        <option value="International Standards Compliance">International Standards Compliance</option>
+                                        <option value="Self-Regulated">Self-Regulated</option>
+                                    </select>
+                                </div>
+                            </div>
+                    </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                <form id="scenarioForm">
 
-    <div class="col-md-3">
-        <div class="form-group" >
-            <br>
-            <div class="card mb-2 shadow-sm">
-                <div class="card-body">
-                    <label for="txtScenario" class="d-flex align-items-center clickable-label" data-bs-toggle="modal" data-bs-target="#scenarioBuilderModal" data-modal-id="scenarioBuilderModal" ><img src="{% static 'images/scenario.png' %}" alt="" class="align-bottom" style="max-height: 2rem; margin-left: 5px;"> &nbsp;Scenario Builder</label>
+                    <label for="selThreats" style="color: white">Attacker/Bad Actor:</label>
+                    <select class="form-control" name="selThreats" id="selThreats" >
+                        <option value=""> -- Select Attacker -- </option>
+                        {% for threats in threats %}
+                        <option value="{{ threats.ThreatSource }}">
 
-                        <textarea id="txtScenario" class='form-control' rows=11 placeholder='Enter a detailed cybersecurity scenario or click the link above to use the scenario builder...' style="resize: none; border: 3px #97979A; border-radius: 10px; box-shadow: inset 3px 3px 8px rgba(0, 0, 0, 0.5); padding: 20px; background-color: white"></textarea>
+                            {{ threats.ThreatSource }}
+                        </option>
+                        {% endfor %}
+                    </select>
 
-                        <div id="suggestions"></div>
+                    <label for="selVectors" style="color: white">Attack Vector:</label>
+                    <select class="form-control" name="selVectors" id="selVectors" >
+                        <option value=""> -- Select Attack Vector -- </option>
+                        {% for attack_vectors in attack_vectors %}
+                        <option value="{{ attack_vectors.ThreatAction }}">
 
-                    <script>
+                            {{ attack_vectors.ThreatAction }}
+                        </option>
+                        {% endfor %}
+                    </select>
+
+            <label for="targetComponent" style="color: white">Target Component/Device:</label>
+            <input type="text" class="form-control" id="targetComponent" name="targetComponent" >
+
+            <label for="attackEffect">Effect of Attack:</label>
+            <input type="text" class="form-control" id="attackEffect" name="attackEffect">
+
+            <label for="targetSystem">Target System/Network:</label>
+            <input type="text" class="form-control" id="targetSystem" name="targetSystem">
+
+            <label for="impact">Potential Impact:</label>
+            <input type="text" class="form-control" id="impact" name="impact">
+
+            <label for="motivation">Attack Motivation:</label>
+            <input type="text" class="form-control" id="motivation" name="motivation">
+
+        </form>
+            </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Tab 2 Content -->
+    <div class="tab-content" id="tab3">
+        <h2>OT Investments</h2>
+        <div class="form-group">
+            <label style="color:white">List investments that have been, or are planned to be, made for OT Cybersecurity risk mitigation</label>
+            <div class="table-responsive">
+
+          <table class="table" id="investmentTable">
+            <colgroup>
+                  <col span="1" style="width: 10%;"> <!-- Type -->
+                  <col span="1" style="width: 25%;"> <!-- Vendor Name -->
+                  <col span="1" style="width: 25%;"> <!-- Product Name -->
+                  <col span="1" style="width: 15%;"> <!-- Cost -->
+                  <col span="1" style="width: 15%;"> <!-- Date -->
+                  <col span="1" style="width: 10%;"> <!-- Action -->
+                </colgroup>
+            <thead>
+              <tr>
+                <th>Type</th>
+                <th>Vendor Name</th>
+                <th>Product Name</th>
+                <th>Cost</th>
+                <th>Date</th> <!-- New Date Column -->
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+
+                <td><select name="investment_type[]" class="form-control">
+                    <option value="Software">Software</option>
+                    <option value="Appliance">Appliance</option>
+                    </select>
+                </td>
+
+                <td><input type="text" name="vendor_name[]" class="form-control" /></td>
+                <td><input type="text" name="product_name[]" class="form-control" /></td>
+                <td><input type="number" name="cost[]" class="form-control" step="0.01" /></td>
+                <td><input type="date" name="date[]" class="form-control" /></td> <!-- New Date Input -->
+                <td><button class="btn btn-danger removeRow">Remove</button></td>
+              </tr>
+            </tbody>
+
+          </table>
+          <button type="button" class="btn btn-primary" id="addRow">Add Row</button>
+
+          </div>
+        </div>
+    </div>
+
+    <!-- Tab 3 Content -->
+    <div class="tab-content" id="tab4">
+        <h2>Scenario</h2>
+        <div class="card-body">
+            <div id="spinner" class="spinner-border" role="status" style="display: none;">
+            <span class="sr-only">Loading...</span>
+            </div>
+            <div class="form-group">
+            <label for="txtScenario">Review and edit the scenario text then click "Execute Analysis"</label>
+            <textarea id="txtScenario" class='form-control' rows=11 placeholder='Enter a detailed cybersecurity scenario or click the button above to use the scenario builder...' style="resize: none; border: 3px #97979A; border-radius: 10px; box-shadow: inset 3px 3px 8px rgba(0, 0, 0, 0.5); padding: 20px; background-color: white"></textarea>
+            </div>
+                <script>
 
                 // Ensure DOM is fully loaded before executing the script
                 document.addEventListener('DOMContentLoaded', function() {
@@ -506,32 +881,15 @@ fetch('https://restcountries.com/v3.1/all')
 
     </script>
                 </div>
-                <div class="card mb-3 shadow-sm" style="background-color: white;">
-                    <div class="card-body">
-                        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#investmentModal">
-                        Add OT Security Investments
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-1 " >
-        <br><br><br><br><br><br><br>
-        <div class="form-group">
-            <button id="analyzeScenarioBtn" class="btn btn-primary mb-2" type="button">Build Scenario >></button>
-            <div id="spinnerContainer" style="display: none;">
-                <div class="spinner-border" role="status">
-                    <span class="sr-only">Loading...</span>
-                </div>
-            </div>
-        </div>
+
+
     </div>
 
-    <div class="col-md-3">
-        <div class="form-group" >
-            <br>
-            <div class="card mb-2 shadow-sm">
+    <!-- Tab 4 Content -->
+    <div class="tab-content" id="tab5">
+        <h2>Consequences</h2>
+        <div class="form-group">
+        <div class="card mb-2 shadow-sm">
                 <div class="card-body">
                     <label for="txtConsequences" class="d-flex align-items-center clickable-label"  ><img src="{% static 'images/scenario.png' %}" alt="" class="align-bottom" style="max-height: 2rem; margin-left: 5px;"> &nbsp;Consequences</label>
                     <textarea id="txtConsequences" class='form-control' rows=11 placeholder='' style="resize: none; border: 3px #97979A; border-radius: 10px; box-shadow: inset 3px 3px 8px rgba(0, 0, 0, 0.5); padding: 20px; background-color: white"></textarea>
@@ -540,47 +898,8 @@ fetch('https://restcountries.com/v3.1/all')
         </div>
     </div>
 
-    <div class="col-md-1">
-        <br><br>
-    <div id="checklistContainer">
-        <div>
-            <input type="checkbox" id="analyzeConsequencesCheckbox" class="custom-checkbox" disabled> Analyze Consequences
-        </div>
-        <div>
-            <input type="checkbox" id="generateAttackTreeCheckbox" class="custom-checkbox" disabled> Generate Attack Tree
-        </div>
-        <div>
-            <input type="checkbox" id="analyzeScenarioCheckbox" class="custom-checkbox" disabled> Analyze Scenario
-        </div>
-
-
-    </div>
-</div>
-
-
-</div>
-
-
-
-<script>
-    $(document).ready(function() {
-        // Initialize Select2 for all dropdowns
-        $('#selIndustry').select2();
-        // $('#selAssetValue').select2();
-        $('#selFacilityType').select2();
-        $('#selOrganizationSize').select2();
-        // $('#selOperationalImpact').select2();
-        // $('#selSecurityMeasures').select2();
-        $('#selRegulatoryEnvironment').select2();
-        // Add more initialization if needed
-    });
-</script>
-
-<br>
-
-<div class="row">
-    <div class="col-md-4"></div>
-    <div class="col-md-4">
+    <div class="tab-content" id="tab6">
+        <h2>Event Costs</h2>
         <div class="form-group">
         <div class="row">
             <div class="col-md-4">
@@ -609,13 +928,7 @@ fetch('https://restcountries.com/v3.1/all')
             </div>
         </div>
             </div>
-    </div>
-    <div class="col-md-4"></div>
-</div>
-<div class="row">
-    <div class="col-md-1"></div>
-        <div class="col">
-            <div class="group-container">
+         <div class="group-container">
                 <div class="group-header">
                      Twelve-Month Projection
                 </div>
@@ -624,58 +937,51 @@ fetch('https://restcountries.com/v3.1/all')
                     <input type="hidden" id="scenario_12month_costs" name="scenario_12month_costs">
                 </div>
             </div>
-        </div>
-    <div class="col-md-1"></div>
-</div>
- <div class="row">
-    <div class="col-md-1"></div>
-
-    <div class="col-md-10">
+    </div>
+    <!-- Tab 5 Content -->
+    <div class="tab-content" id="tab7">
+        <h2>Business Impact</h2>
         <div class="form-group">
-            <label style="color:white">Business Impact Analysis:</label>
         <span id="bia_groups"></span>
-            </div>
-    </div>
-    <div class="col-md-1"></div>
-</div>
-<div class="row">
-    <div class="col-md-1"></div>
-        <div class="col-md-10">
-            <div class="form-group">
-                <label style="color:white">Investment Impacts:</label>
-            <div id="investmentImpactVisualization"></div>
-
-            </div>
         </div>
-    <div class="col-md-1"></div>
-</div>
-
-<div class="row">
-    <div class="col-md-1"></div>
-    <div class="col-md-10">
-        <div class="form-group">
-            <label style="color:white">Scenario Attack Tree:</label>
-        <div id="attack_tree" style="width:100%"></div>
-            <div>
     </div>
-    <div class="col-md-1"></div>
-</div>
-  <div class="row">
-      <div class="col-md-1"></div>
-         <div class="col-md-10 d-flex justify-content-center align-items-center flex-column">
-                    <button id="saveScenarioBtn" class="btn btn-primary">Save Scenario</button>
-    <script>
-        document.getElementById('saveScenarioBtn').addEventListener('click', function() {
-        var scenarioName = prompt("Please enter a name for this scenario:");
-        if (scenarioName) {
-            saveScenario(scenarioName);
-        }
-    });
 
-    </script>
-         </div>
-      <div class="col-md-1"></div>
-  </div>
+    <!-- Tab 6 Content -->
+    <div class="tab-content" id="tab8">
+        <h2>Investment Analysis</h2>
+        <div class="form-group">
+            <div id="investmentImpactVisualization"></div>
+        </div>
+    </div>
+
+    <div class="tab-content" id="tab9">
+        <h2>Attack Tree</h2>
+        <div class="form-group">
+            <div id="attack_tree" style="width:100%"></div>
+        </div>
+    </div>
+</div>
+ </div>
+
+
+
+
+
+<script>
+    $(document).ready(function() {
+        // Initialize Select2 for all dropdowns
+        $('#selIndustry').select2();
+        // $('#selAssetValue').select2();
+        $('#selFacilityType').select2();
+        $('#selOrganizationSize').select2();
+        // $('#selOperationalImpact').select2();
+        // $('#selSecurityMeasures').select2();
+        $('#selRegulatoryEnvironment').select2();
+        // Add more initialization if needed
+    });
+</script>
+
+
 <input type="hidden" id="hdnAT" name="hdnAT">
 
 <div class="row" style="visibility: hidden">
@@ -747,11 +1053,7 @@ fetch('https://restcountries.com/v3.1/all')
         </form>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          <div id="spinner" class="spinner-border" role="status" style="display: none;">
-        <span class="sr-only">Loading...</span>
-        </div>
-        <button type="button" class="btn btn-primary" id="submitScenario">Submit</button>
+
 
       </div>
     </div>
@@ -792,6 +1094,7 @@ fetch('https://restcountries.com/v3.1/all')
 
  <script>
     function renderInvestmentImpact(investmentImpactText) {
+        $('#tab8').addClass('active').show();
     var bulletPoints = investmentImpactText.split('\n').filter(bp => bp.trim().length > 0);
 
     // Clear previous content
@@ -839,11 +1142,13 @@ fetch('https://restcountries.com/v3.1/all')
 
     // Set the container height to accommodate the tallest box with some padding
     container.selectAll(".investment-box").style("height", maxHeight + "px");
+    document.querySelector('a[data-tab="tab5"]').click();
 }
 
 
 
 function analyzeScenario(scenarioText, industry, facility_type, investments) {
+
     return new Promise(function(resolve, reject) {
         $.ajax({
             url: "{% url 'OTRisk:analyze_sim_scenario' %}",
@@ -943,6 +1248,12 @@ return new Promise(function(resolve, reject) {
 var pollingInterval;
 
 document.getElementById('analyzeScenarioBtn').addEventListener('click', function() {
+    // Disable submenu links and change their color to a lighter shade
+    $('.sub-menu a').css({
+        'pointer-events': 'none',
+        'color': '#000000' // Example of a lighter color (light gray)
+    }).addClass('disabled-link');
+
     var scenarioText = document.getElementById('txtScenario').value;
     let facility_type = document.getElementById('selFacilityType').value;
     let industry = document.getElementById('selIndustry').value;
@@ -964,70 +1275,96 @@ document.getElementById('analyzeScenarioBtn').addEventListener('click', function
     var spinnerContainer = document.getElementById('spinnerContainer');
     button.disabled = true;
     spinnerContainer.style.display = 'block'; // Show the spinner
-    var analyzeScenarioPromise = analyzeScenario(scenarioText, industry, facility_type, investments);
 
-    var generateAttackTreePromise = generateAttackTree(scenarioText);
-    var analyzeConsequencesPromise = analyzeConsequences(scenarioText, industry, facility_type, organization_size, regulatory_environment, country);
-    Promise.all([analyzeScenarioPromise, generateAttackTreePromise, analyzeConsequencesPromise])
-        .then(function() {
-            spinnerContainer.style.display = 'none'; // Hide the spinner
-            button.disabled = false;
-        })
-        .catch(function(error) {
-            console.error('An error occurred:', error);
-            spinnerContainer.style.display = 'none'; // Hide the spinner
-            button.disabled = false;
-        });
-     if (window.pollingInterval) clearInterval(window.pollingInterval);
-    // Start the analysis scenario
     $.ajax({
-        url: "{% url 'OTRisk:analyze_sim_scenario' %}",
-        type: 'POST',
-        data: {
-            'scenario': scenarioText,
-            'industry': industry,
-            'facility_type': facility_type,
-            'investments': JSON.stringify(investments),
-            'csrfmiddlewaretoken': '{{ csrf_token }}'
+        url: "/OTRisk/cleanup_scenariobuilder/", // Update this URL to your cleanup endpoint
+        type: "GET", // or "POST" if you're sending data
+        beforeSend: function(xhr) {
+            xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}"); // Add CSRF token header if needed
         },
         success: function(response) {
-            document.getElementById('analyzeScenarioCheckbox').checked = true;
 
-            // Polling function
-            function pollForResults() {
-                $.ajax({
-                    url: '/OTRisk/get_analysis_result/', // Update this URL to your result checking endpoint
-                    type: "GET",
-                    xhrFields: {
-                        withCredentials: true
-                    },
-                    success: function(response) {
-                        if (response.status === 'success') {
-                            clearInterval(window.pollingInterval); // Stop polling
+            //var analyzeScenarioPromise = analyzeScenario(scenarioText, industry, facility_type, investments);
+            var generateAttackTreePromise = generateAttackTree(scenarioText);
+            var analyzeConsequencesPromise = analyzeConsequences(scenarioText, industry, facility_type, organization_size, regulatory_environment, country);
+            Promise.all([ generateAttackTreePromise, analyzeConsequencesPromise])
+                .then(function() {
+                    spinnerContainer.style.display = 'none'; // Hide the spinner
+                    button.disabled = false;
 
-                            updateUIWithResults(response.data); // Update your UI with the results
-
-                        } else {
-                            spinnerContainer.style.display = 'block';
-                        }
-                    },
-                    error: function(xhr, status, error) {
-
-                        clearInterval(window.pollingInterval); // Consider stopping or retrying polling
-                    }
+                })
+                .catch(function(error) {
+                    console.error('An error occurred:', error);
+                    spinnerContainer.style.display = 'none'; // Hide the spinner
+                    button.disabled = false;
                 });
-            }
+                if (window.pollingInterval) clearInterval(window.pollingInterval);
 
-            // Start polling for results every 5 seconds
-            window.pollingInterval = setInterval(pollForResults, 5000);
-        },
-        error: function(xhr, status, error) {
+                    // Start the analysis scenario
+                    $.ajax({
+                        url: "{% url 'OTRisk:analyze_sim_scenario' %}",
+                        type: 'POST',
+                        data: {
+                            'scenario': scenarioText,
+                            'industry': industry,
+                            'facility_type': facility_type,
+                            'investments': JSON.stringify(investments),
+                            'csrfmiddlewaretoken': '{{ csrf_token }}'
+                        },
+                        success: function(response) {
+                            document.getElementById('analyzeScenarioCheckbox').checked = true;
+
+                            // Polling function
+                            function pollForResults() {
+                                $.ajax({
+                                    url: '/OTRisk/get_analysis_result/', // Update this URL to your result checking endpoint
+                                    type: "GET",
+                                    xhrFields: {
+                                        withCredentials: true
+                                    },
+                                    success: function(response) {
+                                        if (response.status === 'success') {
+                                            clearInterval(window.pollingInterval); // Stop polling
+
+                                            updateUIWithResults(response.data); // Update your UI with the results
+                                            // Re-enable submenu links and restore their original color here
+                                            $('.sub-menu a').css({
+                                                'pointer-events': '',
+                                                'color': '' // Assuming you want to revert to the stylesheet-defined color
+                                            }).removeClass('disabled-link');
+
+                                        } else {
+                                            spinnerContainer.style.display = 'block';
+                                        }
+                                    },
+                                    error: function(xhr, status, error) {
+
+                                        clearInterval(window.pollingInterval); // Consider stopping or retrying polling
+                                    }
+                                });
+                            }
+
+                            // Start polling for results every 5 seconds
+                            window.pollingInterval = setInterval(pollForResults, 5000);
+                        },
+                        error: function(xhr, status, error) {
+                            spinnerContainer.style.display = 'none';
+                            button.disabled = false;
+                            alert('Error: ' + error);
+                        }
+                    });
+                },
+                error: function(xhr, status, error) {
+            // Handle error from cleanup_scenariobuilder
+            console.error('Cleanup error:', error);
             spinnerContainer.style.display = 'none';
             button.disabled = false;
-            alert('Error: ' + error);
         }
     });
 });
+
+
+
 
 function appendConsequenceGroup(container, consequence, index) {
     // Ensure the container exists
@@ -1267,6 +1604,8 @@ function loadScenarioDetails(scenarioId) {
 
 
 function drawAttackTree(data) {
+
+    $('#tab9').addClass('active').show();
     var container = document.getElementById('attack_tree');
     var containerWidth = container.clientWidth;
     var svgWidth = containerWidth * 0.8;
@@ -1369,6 +1708,7 @@ function drawAttackTree(data) {
     attackTreeDiv.style.border = '1px solid #ccc';
     attackTreeDiv.style.boxShadow = '0px 0px 10px rgba(0, 0, 0, 0.5)';
     sessionStorage.setItem('attackTreeDrawn', 'true');
+    document.querySelector('a[data-tab="tab5"]').click();
 
     // Add export button functionality (if feasible)
     var exportButton = document.getElementById('exportButton');
@@ -1408,43 +1748,73 @@ document.addEventListener('DOMContentLoaded', (event) => {
 });
 });
 
+$(document).ready(function() {
+    var tab2Changed = false; // Flag to track changes in Tab 1
 
-        document.getElementById('submitScenario').addEventListener('click', function() {
+    // Attach change listeners to all inputs and selects within Tab 1
+    $('#tab2 input, #tab2 select').change(function() {
+        tab2Changed = true;
+    });
+
+    $('.sub-menu a').click(function(e) {
+        e.preventDefault();
+
+        // Remove 'active' class from all tabs
+        $('.tab-content').removeClass('active');
+
+        // Add 'active' class to clicked tab
+        var tabId = $(this).attr('data-tab');
+        $('#' + tabId).addClass('active');
+
+        // Check if the Scenario tab was clicked
+        if ($(this).attr('id') === 'scenarioTabLink') {
+            if (!tab2Changed) {
+                // If no changes were made in Tab 1, do not execute the AJAX call
+
+                document.getElementById('spinner').style.display = 'none'; // Ensure spinner is hidden
+                return; // Exit the function early
+            }
+
+            // Proceed with AJAX call only if changes were made in Tab 1
             document.getElementById('spinner').style.display = 'block';
             var formData = {
-                'attacker' : document.getElementById('selThreats').value,
-                'attackVector' : document.getElementById('selVectors').value,
-                'targetComponent' : document.getElementById('targetComponent').value,
-                'attackEffect' : document.getElementById('attackEffect').value,
-                'targetSystem' : document.getElementById('targetSystem').value,
-                'impact' : document.getElementById('impact').value,
-                'motivation' : document.getElementById('motivation').value,
-                'facility_type' : document.getElementById('selFacilityType').value,
-                'industry' : document.getElementById('selIndustry').value,
+                'attacker': $('#selThreats').val(),
+                'attackVector': $('#selVectors').val(),
+                'targetComponent': $('#targetComponent').val(),
+                'attackEffect': $('#attackEffect').val(),
+                'targetSystem': $('#targetSystem').val(),
+                'impact': $('#impact').val(),
+                'motivation': $('#motivation').val(),
+                'facility_type': $('#selFacilityType').val(),
+                'industry': $('#selIndustry').val(),
                 'csrfmiddlewaretoken': '{{ csrf_token }}'
-           };
+            };
 
-    $.ajax({
-        url: "{% url 'OTRisk:generate_scenario_description' %}",
-        type: 'POST',
-        data: formData,
-        success: function(response) {
-            if (response.scenario_description) {
-                document.getElementById('txtScenario').value = response.scenario_description;
-            } else {
-                document.getElementById('txtScenario').value = 'No scenario description available.';
-            }
-            $('#scenarioBuilderModal').modal('hide');
-        },
-        error: function(xhr, status, error) {
-            console.error('Error generating scenario:', error);
-        },
-        complete: function() {
-            // Hide the spinner
-            document.getElementById('spinner').style.display = 'none';
+            $.ajax({
+                url: "{% url 'OTRisk:generate_scenario_description' %}",
+                type: 'POST',
+                data: formData,
+                success: function(response) {
+                    if (response.scenario_description) {
+                        $('#txtScenario').val(response.scenario_description);
+                    } else {
+                        $('#txtScenario').val('No scenario description available.');
+                    }
+                    $('#scenarioBuilderModal').modal('hide');
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error generating scenario:', error);
+                },
+                complete: function() {
+                    // Hide the spinner and reset the flag
+                    document.getElementById('spinner').style.display = 'none';
+                    tab2Changed = false;
+                }
+            });
         }
     });
 });
+
 
 function saveScenario(scenarioName) {
     var scenarioData = {
@@ -1581,69 +1951,7 @@ $(document).ready(function() {
     });
 });
 
-        </script>
 
-<div class="modal fade" id="investmentModal" tabindex="-1" role="dialog" aria-labelledby="investmentModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="investmentModalLabel">Add Cybersecurity Investments</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body">
-          <div class="table-responsive">
-
-          <table class="table" id="investmentTable">
-            <colgroup>
-                  <col span="1" style="width: 20%;"> <!-- Type -->
-                  <col span="1" style="width: 20%;"> <!-- Vendor Name -->
-                  <col span="1" style="width: 20%;"> <!-- Product Name -->
-                  <col span="1" style="width: 15%;"> <!-- Cost -->
-                  <col span="1" style="width: 15%;"> <!-- Date -->
-                  <col span="1" style="width: 10%;"> <!-- Action -->
-                </colgroup>
-            <thead>
-              <tr>
-                <th>Type</th>
-                <th>Vendor Name</th>
-                <th>Product Name</th>
-                <th>Cost</th>
-                <th>Date</th> <!-- New Date Column -->
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-
-                <td><select name="investment_type[]" class="form-control">
-                    <option value="Software">Software</option>
-                    <option value="Hardware">Hardware</option>
-                    </select>
-                </td>
-
-                <td><input type="text" name="vendor_name[]" class="form-control" /></td>
-                <td><input type="text" name="product_name[]" class="form-control" /></td>
-                <td><input type="number" name="cost[]" class="form-control" step="0.01" /></td>
-                <td><input type="date" name="date[]" class="form-control" /></td> <!-- New Date Input -->
-                <td><button class="btn btn-danger removeRow">Remove</button></td>
-              </tr>
-            </tbody>
-
-          </table>
-          <button type="button" class="btn btn-primary" id="addRow">Add Row</button>
-
-          </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-
-      </div>
-    </div>
-  </div>
-</div>
-<script>
 $(document).ready(function() {
   $("#addRow").click(function() {
     var newRow = `<tr>
@@ -1666,5 +1974,6 @@ $(document).ready(function() {
   });
 });
 </script>
+
 </body>
 </html>

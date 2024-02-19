@@ -60,69 +60,70 @@
     background-color: #5E6266; /* Lighter shade of #464748 */
     padding: 15px; /* Optional: for internal spacing */
 }
-.navbar {
-    background-color: #464748;
-    border-bottom: 1px solid #000;
-    height: 50px; /* Fixed height */
-    position: relative;
-}
 
-.owl-logo {
-    height: 60px; /* Set a fixed height for the image */
-    width: auto; /* Maintain aspect ratio */
-    position: relative;
-    top: 50%; /* Center vertically in the navbar */
-    transform: translateY(-30%); /* Adjust vertical position */
-    margin-bottom: -20px; /* Negative margin to overlap */
-}
 
-.navbar-brand, .nav-link {
-    color: #d3d1cd !important; /* White text for clear visibility on initial view */
-}
-
-.menu-item {
-    border-right: 1px solid #4B6B6B; /* Subtle line between items */
-    font-size: 14px; /* Adjust font size */
-}
-
-.menu-item:last-child {
-    border-right: none; /* Remove border for the last item */
-}
-
-.menu-item:hover, .dropdown-item:hover {
-    background-color: #3A5F5F; /* Slightly lighter grey on hover */
-    color: #E0E0E0; /* Light grey text on hover */
-}
-
-.nav-link:hover, .dropdown-item {
-    color: #E0E0E0; /* Light grey text on hover */
-}
-
-.dropdown-menu {
-    background-color: #464748; /* Dark Slate Grey */
-    border: none;
-}
-
-.dropdown-item {
-    color: #FFFFFF; /* White text for clear visibility */
-}
-
-.dropdown-item:hover {
-    background-color: #3A5F5F; /* Slightly lighter grey on hover */
-    color: #E0E0E0;
-}
-        .table-wrap {
-          height: 200px;
-          overflow-y: auto;
-        }
-
-        .small-font {
-        font-size: 0.8rem; /* adjust as needed */
-        }
-
-    .clickable-label:hover {
-        cursor: pointer;
+     body {
+        background-color: #464748;
+        color: #d3d1cd;
     }
+    .sidebar {
+        height: 100vh;
+        background-color: #2D2E30; /* Darker shade for sidebar */
+        padding: 20px 0;
+        width: 200px; /* Reduced width */
+    }
+    .sidebar-logo {
+        padding: 10px 15px;
+        text-align: center;
+    }
+    .nav-sidebar {
+        display: flex;
+        flex-direction: column;
+        padding-left: 0;
+        list-style: none;
+    }
+    .nav-sidebar .nav-item {
+        padding: 5px 10px;
+        /* border-bottom: 1px solid  #fac330; /* Light orange line */
+        margin: 0 10%;
+    }
+    .nav-sidebar .nav-link {
+        color: #d3d1cd;
+        border-radius: 0;
+        transition: color 0.3s ease-in-out;
+        font-size: 0.8em;
+    }
+    .nav-sidebar .nav-link:hover, .nav-sidebar .nav-link.active {
+        background-color: #3A5F5F;
+        color: #E0E0E0;
+    }
+    /* Enhance dropdown menu */
+    .dropdown-menu {
+        background-color: #d3d1cd;
+        border: none;
+    }
+    .dropdown-item:hover, .dropdown-item:focus {
+        background-color: #fac330; /* Light orange background for hovered dropdown items */
+        color: #2D2E30;
+    }
+    .content {
+        padding: 20px;
+    }
+   .custom-main-content {
+    position: relative; /* Adjust if necessary */
+    width: calc(100% - 200px); /* Adjust based on the actual sidebar width */
+    max-width: calc(90vw - 200px); /* 90% of the viewport width minus sidebar width */
+    margin-left: 200px; /* Push content to the right of the sidebar */
+}
+
+@media (min-width: 992px) { /* Adjusting for Bootstrap's large devices breakpoint */
+    .custom-main-content {
+        width: calc(100% - 200px);
+        max-width: calc(90vw - 200px);
+        margin-left: 100px;
+    }
+}
+
 
     .table tbody tr:hover {
     cursor: pointer;
@@ -148,143 +149,236 @@
     .body {
         font-size: 10px;
     }
+.custom-main-content .container {
+    width: 100%; /* Ensure the container fills the custom-main-content */
+    max-width: none; /* Override Bootstrap's max-width for containers if necessary */
+}
+.top-strip {
+    background-color: #464748; /* Same as body background for seamless integration */
+    color: #d3d1cd; /* Text color */
+    padding: 10px 20px; /* Adjust as needed */
+    padding-left: 100px; /* Align with the end of the sidebar */
+    width: calc(100% - 200px); /* Adjust based on the actual sidebar width */
+    box-sizing: border-box;
+}
+
+.page-title {
+    margin: 0; /* Remove default margins */
+    font-size: 1.5rem; /* Adjust size as needed */
+}
+
+@media (max-width: 992px) {
+    .top-strip {
+        padding-left: 0;
+        width: 100%;
+    }
+}
+
 </style>
 
 
 </head>
 <body style="background-color: #464748">
+
+
 <script>anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");</script>
 
-<nav class="navbar navbar-expand-lg navbar-scroll shadow-0 border-bottom rounded">
-    <div class="container-fluid d-flex justify-content-between">
-        <a class="navbar-brand" href="{% url 'OTRisk:dashboardhome' %}">
-            &nbsp; &nbsp; &nbsp; &nbsp;
-            <img src="{% static 'images/anzen_owl.png' %}" class="owl-logo" style="width: 18%; height: 18%">
-        </a>
-        <h6 class="my-auto text-center flex-grow-1 navbar-brand"><img src="{% static 'images/anzen_noowl.png' %}" style="width: 15%; height: 15%"> Risk Register</h6>
-        <div class="collapse navbar-collapse" id="navbarSupportedContent">
-            <ul class="navbar-nav ms-auto">
-                <li class="nav-item menu-item">
-                    <a class="nav-link" href="{% url 'OTRisk:qraw' %}"><i class="bi bi-calculator"></i> QRAW</a>
-                </li>
-                <li class="nav-item menu-item">
-                    <a class="nav-link" href="{% url 'OTRisk:iotaphamanager' %}"><i class="bi bi-journal-text"></i> CyberPHA</a>
-                </li>
-                <li class="nav-item menu-item">
-                    <a class="nav-link" href="{% url 'OTRisk:scenario_sim' %}"><i class="bi bi-bricks"></i> Scenario Builder</a>
-                </li>
-                <li class="nav-item menu-item">
-                    <a class="nav-link" href="{% url 'OTRisk:ra_actions_view_default' %}"><i class="bi-file-earmark-easel"></i> Actions</a>
-                </li>
-                <li class="nav-item menu-item">
-                    <a class="nav-link" href="{% url 'OTRisk:risk_register' %}"><i class="bi-file-earmark-easel"></i> Risk Register</a>
-                </li>
-                <li class="nav-item menu-item">
-                    <a class="nav-link" href="{% url 'OTRisk:list_frameworks' %}"><i class="bi-file-earmark-easel"></i> Assessments</a>
-                </li>
-    <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                <i class="bi bi-diagram-3"></i> Admin
-              </a>
-              <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+<div class="container-fluid">
 
-                    <li><a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:setup_org' %}">Set Defaults</a></li>
-                  <li><a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:admin_users' %}">Admin Users</a></li>
-              <li><a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:upload_questionnaire' %}">Upload Questionnaires</a></li>
-                  {% if user.is_staff %}
-                    <!-- Links visible only to superusers -->
-                    <li><a class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:user_admin' %}">User Administration</a></li>
-                      <li><a class="dropdown-item"  style="font-size: 12px;" href="{% url 'OTRisk:organization_form' %}">Manage Organizations</a></li>
+    <div class="row">
+        <nav class="col-md-3 col-lg-2 d-md-block sidebar collapse" id="sidebarMenu">
+                <div class="sidebar-sticky">
+                    <div class="sidebar-logo">
+                        <img src="{% static 'images/anzen_owl.png' %}" class="img-fluid" alt="Logo">
+                    </div>
+                    <ul class="nav flex-column nav-sidebar">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'OTRisk:dashboardhome' %}">Dashboard</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'OTRisk:qraw' %}">QRAW</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'OTRisk:iotaphamanager' %}">CyberPHA</a>
+                        </li>
+                        <li class="nav-item menu-item">
+                            <a class="nav-link" href="{% url 'OTRisk:scenario_sim' %}">Scenario Builder</a>
+                        </li>
+                        <li class="nav-item menu-item">
+                            <a class="nav-link" href="{% url 'OTRisk:ra_actions_view_default' %}">Actions</a>
+                        </li>
+                        <li class="nav-item menu-item">
+                            <a class="nav-link" href="{% url 'OTRisk:risk_register' %}">Risk Register</a>
+                        </li>
+                        <li class="nav-item menu-item">
+                            <a class="nav-link" href="{% url 'OTRisk:list_frameworks' %}">Assessments</a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Admin
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
 
-                      <li><a class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:execute_sql' %}">Execute SQL</a></li>
-                    {% endif %}
+                                <li>
+                                    <a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:setup_org' %}">Set Defaults</a>
+                                </li>
+                                <li>
+                                    <a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:admin_users' %}">Admin Users</a>
+                                </li>
+                                <li>
+                                    <a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:upload_questionnaire' %}">Upload Questionnaires</a>
+                                </li>
+                                {% if user.is_staff %}
+                                <!-- Links visible only to superusers -->
+                                <li>
+                                    <a class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:user_admin' %}">User Administration</a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item"  style="font-size: 12px;" href="{% url 'OTRisk:organization_form' %}">Manage Organizations</a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:execute_sql' %}">Execute SQL</a>
+                                </li>
+                                {% endif %}
+                            </ul>
+                         </li>
+                    <li class="nav-item menu-item">
+                        <a class="nav-link" href="{% url 'accounts:profile' %}">
+                        <i class="bi bi-person-fill"></i> {{ user.first_name }} {{ user.last_name }} | {{ user.userprofile.organization.name }}
+                        </a>
+                        </li>
+                        <li class="nav-item menu-item">
+                        <form action="{% url 'logout' %}" method="post">
+                        {% csrf_token %}
+                        <button type="submit" class="nav-link" style="background:none; border:none; padding:0; margin:0; color:inherit;">Logout</button>
+                    </form>
 
-              </ul>
+                        </li>
+                        </ul>
+                </div>
+            </nav>
 
-        </li>
-    <li class="nav-item menu-item">
-    <a class="nav-link" href="{% url 'accounts:profile' %}">
-    <i class="bi bi-person-fill"></i> {{ user.first_name }} {{ user.last_name }} | {{ user.userprofile.organization.name }}
-    </a>
-    </li>
-    <li class="nav-item menu-item">
-    <a class="nav-link" href="{% url 'logout' %}">
-    <i class="bi bi-box-arrow-right"></i> Logout
-    </a>
-    </li>
-    </ul>
-    </div>
-    </div>
-    </nav>
+            <main role="main" class="col-md-10 ml-sm-auto col-lg-12  custom-main-content" >
+            <div class="top-strip">
+                <h1 class="page-title">Risk Register@AnzenOT</h1>
+            </div>
+            <div class="container mt-5" >
+                <div class="row">
+                  <div class="col-md-2">
+                      <div class="form-group">
 
-<div class="row">
-<div class="col-md-1 "></div>
-<div class="col-md-6 ">
-    <br>
-    <div class="form-group">
-    <table class="table table-bordered table-striped compact" id="tbl_risk_register" style="font-size: 10px">
-        <thead>
-            <tr>
-                <th>Facility Name</th>
-                <th>Assessment Unit</th>
-                <th>Risk Scenario</th>
-                <th>Residual Risk</th>
-                <th>BIA</th>
-                <th>Est Costs (Low/Medium/High)</th>
-                <th>Probability</th>
-                <th>Snapshots</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for item in data %}
-            <tr data-id="{{ item.ID }}">
+                            <h5><i class="bi bi-funnel"></i> </h5>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="Low" id="filterLow">
+                                <label class="form-check-label" for="filterLow">
+                                    Low (<span id="countLow">0</span>)
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="Low/Medium" id="filterLowMedium">
+                                <label class="form-check-label" for="filterLowMedium">
+                                    Low/Medium (<span id="countLowMedium">0</span>)
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="Medium" id="filterMedium">
+                                <label class="form-check-label" for="filterMedium">
+                                    Medium (<span id="countMedium">0</span>)
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="Medium/High" id="filterMediumHigh">
+                                <label class="form-check-label" for="filterMediumHigh">
+                                    Medium/High (<span id="countMediumHigh">0</span>)
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="High" id="filterHigh">
+                                <label class="form-check-label" for="filterHigh">
+                                    High (<span id="countHigh">0</span>)
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="NoValue" id="filterNoValue">
+                                <label class="form-check-label" for="filterNoValue">
+                                    No Selection (<span id="countNoValue">0</span>)
+                                </label>
+                            </div>
+                      </div>
+                </div>
 
-                <td><a href="{% url 'OTRisk:iotaphamanager_with_id' item.CyberPHA__ID %}">{{ item.CyberPHA__FacilityName }}</a>
-</td>
-                <td>{{ item.CyberPHA__AssessmentUnit }}</td>
-                <td>{{ item.Scenario }}</td>
-                <td>
-                    {% if item.RRa == "Low" %}
-                        <span style="color:green;">●</span>
-                    {% elif item.RRa == "Low/Medium" %}
-                        <span style="color:olive;">●</span>
-                    {% elif item.RRa == "Medium" %}
-                        <span style="color:yellow;">●</span>
-                    {% elif  item.RRa == "Medium/High" %}
-                        <span style="color:orange;">●</span>
-                    {% elif item.RRa == "High" %}
-                        <span style="color:red;">●</span>
-                    {% endif %}
-                    {{ item.RRa }}
-                </td>
-                <td>{{ item.business_impact_analysis_score }}({{ item.business_impact_analysis_code }})</td>
-                <td>${{ item.sle_low|intcomma }}/${{ item.sle|intcomma }}/${{ item.sle_high|intcomma }}</td>
+        <div class="col-md-10">
+
+            <div class="form-group">
+                <table class="table table-bordered table-striped compact" id="tbl_risk_register" style="font-size: 10px; width:100%">
+                    <thead>
+                        <tr>
+                            <th>Facility Name</th>
+                            <th>Assessment Unit</th>
+                            <th>Risk Scenario</th>
+                            <th>Residual Risk</th>
+                            <th>BIA</th>
+                            <th>Est Costs (Low/Medium/High)</th>
+                            <th>Probability</th>
+                            <th>Snapshots</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in data %}
+                        <tr data-id="{{ item.ID }}">
+
+                            <td><a href="{% url 'OTRisk:iotaphamanager_with_id' item.CyberPHA__ID %}">{{ item.CyberPHA__FacilityName }}</a>
+            </td>
+                            <td>{{ item.CyberPHA__AssessmentUnit }}</td>
+                            <td>{{ item.Scenario }}</td>
+                            <td>
+                                {% if item.RRa == "Low" %}
+                                    <span style="color:green;">●</span>
+                                {% elif item.RRa == "Low/Medium" %}
+                                    <span style="color:olive;">●</span>
+                                {% elif item.RRa == "Medium" %}
+                                    <span style="color:yellow;">●</span>
+                                {% elif  item.RRa == "Medium/High" %}
+                                    <span style="color:orange;">●</span>
+                                {% elif item.RRa == "High" %}
+                                    <span style="color:red;">●</span>
+                                {% endif %}
+                                {{ item.RRa }}
+                            </td>
+                            <td>{{ item.business_impact_analysis_score }}({{ item.business_impact_analysis_code }})</td>
+                            <td>${{ item.sle_low|intcomma }}/${{ item.sle|intcomma }}/${{ item.sle_high|intcomma }}</td>
 
 
-                <td>
-                    {% if item.probability < 25 %}
-                        <span style="color:green;">●</span>
-                    {% elif item.probability >= 25 and item.probability < 50 %}
-                        <span style="color:yellow;">●</span>
-                    {% elif item.probability >= 50 and item.probability < 75 %}
-                        <span style="color:orange;">●</span>
-                    {% elif item.probability >= 75 %}
-                        <span style="color:red;">●</span>
-                    {% endif %}
-                    {{ item.probability }}%
-                </td>
-                <td>
-                    {% if item.snapshots == 1 %}
-                        <a href="{% url 'OTRisk:view_snapshots' item.ID %}">View Snapshots</a>
-                    {% endif %}
-                </td>
+                            <td>
+                                {% if item.probability < 25 %}
+                                    <span style="color:green;">●</span>
+                                {% elif item.probability >= 25 and item.probability < 50 %}
+                                    <span style="color:yellow;">●</span>
+                                {% elif item.probability >= 50 and item.probability < 75 %}
+                                    <span style="color:orange;">●</span>
+                                {% elif item.probability >= 75 %}
+                                    <span style="color:red;">●</span>
+                                {% endif %}
+                                {{ item.probability }}%
+                            </td>
+                            <td>
+                                {% if item.snapshots == 1 %}
+                                    <a href="{% url 'OTRisk:view_snapshots' item.ID %}">View Snapshots</a>
+                                {% endif %}
+                            </td>
 
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    </div>
-    <script>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div> <!-- risk register table -->
+
+    <div class="row" style="height: 10px"></div>
+                </div>
+</div>
+<script>
+
  $(document).ready(function() {
     $("table tbody tr").click(function() {
         var scenarioId = $(this).data("id");
@@ -310,112 +404,73 @@ $(document).ready(function() {
 
 
     </script>
+<script>
+$(document).ready(function() {
+    function updateTable() {
+        let selectedRisks = $('input[type="checkbox"]:checked').map(function() {
+            return $(this).val();
+        }).get();
 
-</div> <!-- risk register table -->
-<div class="col-md-5 " >
-    <div class="row" style="height: 20px"></div>
+        $('#tbl_risk_register tbody tr').each(function() {
+            let cellText = $(this).find('td:nth-child(4)').text().trim();
+            let riskText = cellText.replace(/^[^\w]+/, ''); // Clean leading symbols for safety
 
-        <div class="row align-items-center">
-            <br>
-            <div class="col-md-12 d-flex justify-content-center align-items-end">
+            // Determine if the row should be shown
+            let showRow = false;
+            if (selectedRisks.length === 0) {
+                showRow = true; // No filter selected, show all
+            } else {
+                // Explicitly handle each case
+                if (riskText === "" && selectedRisks.includes("NoValue")) {
+                    showRow = true;
+                } else if (selectedRisks.includes(riskText)) {
+                    showRow = true;
+                }
+            }
 
-                <!-- <div id="bia_container" style="width: 75%; height: 320px; border: solid #7d929e 1px"></div> -->
-                <div id="heatmapContainer" style="width: 75%; height: 320px; border: solid  #7d929e 1px"></div>
-            </div>
-            <script>
-            document.getElementById('bia_container').innerHTML = '';
-            anychart.onDocumentReady(function() {
-            // Extract data for the line chart
-            var biaData = [
-            {% for item in bia_data_with_id %}
-            {x: "{{ item.x }}", value: {{ item.value }}, id: {{ item.id }}},
-            {% endfor %}
-            ];
+            $(this).toggle(showRow);
+        });
+    }
 
-            // Create the line chart
-            var chart = anychart.cartesian();
+    $('input[type="checkbox"]').on('change', updateTable);
+    updateTable(); // Initial update
 
-            // Add data to the chart
-            var series = chart.marker(biaData); // Store the series in a variable
+    function updateCounts() {
+        let riskValues = {
+            'Low': 0,
+            'Medium': 0,
+            'High': 0,
+            'Low/Medium': 0,
+            'Medium/High': 0,
+            'NoValue': 0
+        };
 
-            series.listen("pointClick", function(e) {
-            var pointId = e.iterator.get("id");
-            loadScenarioDetails(pointId); // Call the function you defined earlier
-            });
+        $('#tbl_risk_register tbody tr').each(function() {
+            let cellText = $(this).find('td:nth-child(4)').text().trim();
+            let riskText = cellText.replace(/^[^\w]+/, ''); // Clean leading symbols
 
-            chart.yScale().minimum(0);
-            chart.yScale().maximum(100);
-            // Set chart title and labels
-            chart.title("BIA Scores");
-            chart.xAxis().title("Assessments");
-            chart.yAxis().title("BIA Score");
+            if (riskText === "") {
+                riskValues['NoValue']++;
+            } else if (riskValues.hasOwnProperty(riskText)) {
+                riskValues[riskText]++;
+            }
+        });
 
-            // Set the container id for the chart
-            chart.container("bia_container");
-            var credits = chart.credits();
-            credits.enabled(false);
-            // Draw the chart
-            chart.draw();
-            });
-            </script>
-        </div>   <!-- BIA Score marker chart -->
-        <br>
-        <div class="row">
-            <div class="col-md-2"></div>
-            <div class="col-md-8">
-                <div class="form-group">
-                    <div class="row">
-                    <div class="col-md-4">
-                        <br><br>
-                        <div class="card shadow-lg inner-card">
-                            <div class="card-body">
-                                <div class="row justify-content-center align-items-center" style="font-size: 12px">
-                                    Est. Costs (Best Case)
-                                </div>
-                                <div class="row">
-                                    <h6 class="card-text text-center">${{ sle_low_sum|intcomma }}</h6>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <br><br>
-                        <div class="card shadow-lg inner-card">
-                            <div class="card-body">
-                                <div class="row justify-content-center align-items-center" style="font-size: 12px">
-                                    Est. Costs (Likely Case)
-                                </div>
-                                <div class="row">
-                                    <h6 class="card-text text-center">${{ sle_sum|intcomma }}</h6>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-            <br><br>
-            <div class="card shadow-lg inner-card">
-                <div class="card-body">
-                    <div class="row justify-content-center align-items-center" style="font-size: 12px">
-                       Est. Costs (Worst Case)
-                    </div>
-                    <div class="row">
-                        <h6 class="card-text text-center">${{ sle_high_sum|intcomma }}</h6>
-                    </div>
-                </div>
-            </div>
-        </div>
-                        </div>
-                </div>
-            </div>
-            <div class="col-md-2"></div>
-        </div> <!-- cost boxes -->
+        // Update counts in the UI
+        for (let risk in riskValues) {
+            $('#count' + risk.replace(/\//g, '').replace('NoValue', 'NoValue')).text(riskValues[risk]);
+        }
+    }
 
-    <div class="row" style="height: 10px"></div>
-</div>
+    updateCounts(); // Call this function to update counts on page load
+});
+</script>
+
 
 <div class="row">
-<div class="col-md-1 " ></div>
+<div class="col-md-2 " ></div>
 <div class="col-md-10 ">
+<div class="form-group">
 <div class="card" style="display: none;" id="scenarioDetailsCard">
 <div class="card-header">
 Scenario Details
@@ -571,8 +626,9 @@ Scenario Details
 
 </div>
 </div>
+    </div>
 </div>
-<div class="col-md-1 "></div>
+
 </div>
 
 
@@ -597,79 +653,11 @@ Scenario Details
 </div>
 <script>
 
-    anychart.onDocumentReady(function() {
-        // create data
-        var data = [];
-
-        {% for item in heatmap_data %}
-            data.push({
-                x: "{{ item.probability }}",
-                y: "{{ item.likelihood }}",
-                heat: {{ item.count }},
-                fill: getHeatmapColor("{{ item.likelihood }}", "{{ item.probability }}")
-            });
-        {% endfor %}
-
-        function getHeatmapColor(likelihood, probability) {
-            // Define your color logic here based on likelihood and probability
-            if (likelihood === "Low" && probability === "Low") return "#00FF00"; // green
-    if (likelihood === "Low" && probability === "Low/Medium") return "#66FF66"; // lighter green
-    if (likelihood === "Low" && probability === "Medium") return "#CCFF66"; // yellow-green
-    if (likelihood === "Low" && probability === "Medium/High") return "#FFFF66"; // yellow
-    if (likelihood === "Low" && probability === "High") return "#FFCC66"; // orange-yellow
-
-    if (likelihood === "Low/Medium" && probability === "Low") return "#66FF66"; // lighter green
-    if (likelihood === "Low/Medium" && probability === "Low/Medium") return "#CCFF66"; // yellow-green
-    if (likelihood === "Low/Medium" && probability === "Medium") return "#FFFF66"; // yellow
-    if (likelihood === "Low/Medium" && probability === "Medium/High") return "#FFCC66"; // orange-yellow
-    if (likelihood === "Low/Medium" && probability === "High") return "#FF9966"; // orange
-
-    if (likelihood === "Medium" && probability === "Low") return "#CCFF66"; // yellow-green
-    if (likelihood === "Medium" && probability === "Low/Medium") return "#FFFF66"; // yellow
-    if (likelihood === "Medium" && probability === "Medium") return "#FFCC66"; // orange-yellow
-    if (likelihood === "Medium" && probability === "Medium/High") return "#FF9966"; // orange
-    if (likelihood === "Medium" && probability === "High") return "#FF6633"; // dark orange
-
-    if (likelihood === "Medium/High" && probability === "Low") return "#FFFF66"; // yellow
-    if (likelihood === "Medium/High" && probability === "Low/Medium") return "#FFCC66"; // orange-yellow
-    if (likelihood === "Medium/High" && probability === "Medium") return "#FF9966"; // orange
-    if (likelihood === "Medium/High" && probability === "Medium/High") return "#FF6633"; // dark orange
-    if (likelihood === "Medium/High" && probability === "High") return "#FF3333"; // red-orange
-
-    if (likelihood === "High" && probability === "Low") return "#FFCC66"; // orange-yellow
-    if (likelihood === "High" && probability === "Low/Medium") return "#FF9966"; // orange
-    if (likelihood === "High" && probability === "Medium") return "#FF6633"; // dark orange
-    if (likelihood === "High" && probability === "Medium/High") return "#FF3333"; // red-orange
-    if (likelihood === "High" && probability === "High") return "#FF0000"; // red
-            return "#FFFF00"; // default to yellow
-        }
-
-        // create a chart
-        var chart = anychart.heatMap(data);
-
-        // set the chart title
-        chart.title("Risk Heatmap");
-        chart.title(false);
-
-        // set the x-axis title
-        chart.xAxis().title("Probability");
-        // set the y-axis title
-        chart.yAxis().title("Residual Risk");
-        // set the container id
-        chart.container("heatmapContainer");
-        var credits = chart.credits();
-            credits.enabled(false);
-        // initiate drawing the chart
-        chart.draw();
-    });
 
     $(document).ready(function() {
     // Initialize DataTable with options
     $('#tbl_risk_register').DataTable({
-        "paging": true, // Enable pagination
-        "pageLength": 8, // Set the number of rows per page
-        "searching": false, // Enable searching
-        "lengthChange": false,
+        "paging": false, // Enable pagination
         "order": [] // Disable initial sorting if needed
     });
 });
@@ -1044,6 +1032,10 @@ var scaleBar = gauge.scaleBar(0);
 }
 </script>
 
+</div>
+            </div>
+ </main>
+    </div>
 </div>
 </body>
 </html>

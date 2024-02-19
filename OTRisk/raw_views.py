@@ -1633,6 +1633,18 @@ def get_analysis_result(request):
         return JsonResponse({'status': 'pending'})
 
 
+@login_required
+def cleanup_scenariobuilder(request):
+
+    if request.method == 'GET':
+        user = request.user
+        ScenarioBuilder_AnalysisResult.objects.filter(user=user).delete()
+
+        return JsonResponse({'status': 'success'})
+    else:
+        return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
+
+
 @login_required()
 def analyze_sim_scenario(request):
     user = request.user
@@ -1790,7 +1802,7 @@ def analyze_sim_consequences(request):
             "role": "user",
             "content": (
                 f"You are an insurance actuary. Generate a best-guess 12-month cost projection for direct costs relating to a hypothetical cybersecurity incident at a {organization_size} {facility_type} in the {industry} industry in {country}. Assume the annual revenue is average in the industry for the given facility in the given country. The scenario is: {scenario}. "
-                f"Base estimates on historical data from similar OT and IT cybersecurity incidents. Include costs if they apply to the given scenario. Direct costs are those related to incident response, remediation, legal fees, regulatory fines, and other direct expenses.  "
+                f"Base estimates on historical data from similar OT and IT cybersecurity incidents. Include costs if they apply to the given scenario. Direct costs are estimated as {most_likely_case_cost}. Direct costs are those related to incident response, remediation, legal fees, regulatory fines, and other direct expenses.  "
                 f"Estimate the budget cost for each month so that the Chief Finance Officer for the organization can plan appropriately. Use a pragmatic and realistic monthly estimate that only covers the direct expenses that would be covered by a cybersecurity insurance policy. Only consider costs directly related to the cybersecurity incident. (IMPORTANT Give only the cost for each month, NOT an aggregate of previous months plus the current month). You as the estimator should be able to justify why month on month costs increase OR decrease. The expectation is that costs will taper off over the 12 month period but YOU must give the most realistic response.Provide the estimates as a series of 12 integers in the format: Month1|Month2|...|Month12. Each value should represent the cost for that month in US dollars. Remember, only provide the numerical values without any narrative or explanation."
             )
         }

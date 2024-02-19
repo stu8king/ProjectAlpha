@@ -1,3 +1,4 @@
+import hashlib
 import json
 
 from google.oauth2 import service_account
@@ -16,7 +17,7 @@ from django.views.decorators.http import require_POST
 from OTRisk.models.Model_CyberPHA import tblIndustry, tblCyberPHAHeader, tblZones, tblStandards, \
     tblCyberPHAScenario, vulnerability_analysis, tblAssetType, tblMitigationMeasures, MitreControlAssessment, \
     cyberpha_safety, SECURITY_LEVELS, ScenarioConsequences, user_scenario_audit, auditlog, CyberPHAModerators, \
-    WorkflowStatus, APIKey, CyberPHA_Group, ScenarioBuilder, PHA_Safeguard, CyberSecurityInvestment
+    WorkflowStatus, APIKey, CyberPHA_Group, ScenarioBuilder, PHA_Safeguard, CyberSecurityInvestment, UserScenarioHash
 from OTRisk.models.raw import SecurityControls
 from OTRisk.models.raw import MitreICSMitigations, RAActions
 from OTRisk.models.questionnairemodel import FacilityType
@@ -943,6 +944,7 @@ def getSingleScenario(request):
         'compliance_map': scenario.compliance_map,
         'attack_tree_text': scenario.attack_tree_text,
         'scenario_status': scenario.scenario_status,
+        'cost_projection': scenario.cost_projection,
         'user_role': user_role
     }
     # Retrieve the related PHAControlList records
@@ -1042,6 +1044,7 @@ def compliance_map_data(common_content):
         return f"Error: {str(e)}"
 
 
+
 @login_required
 def scenario_analysis(request):
     # Log the user activity
@@ -1074,7 +1077,30 @@ def scenario_analysis(request):
         # Retrieve the string of validated consequences
         validated_consequences_str = request.GET.get('validated_consequences', '')
         physical_safeguards_str = request.GET.get('physical_safeguards', '')
+        force_resubmit = request.GET.get('force_resubmit', 'false').lower() == 'true'
 
+        # Concatenate all GET parameters to form a string
+        values_str = '|'.join([request.GET.get(param, '') for param in request.GET])
+        # Generate SHA-256 hash
+        hash_value = hashlib.sha256(values_str.encode()).hexdigest()
+
+        # Attempt to find a matching record
+        existing_record = UserScenarioHash.objects.filter(
+            user=request.user,
+            cyberphaID=request.GET.get('cpha', 0),
+            hash_value=hash_value
+        ).exists()
+
+        if existing_record and not force_resubmit:
+            # If a matching record is found, inform the user and exit
+            return JsonResponse({'message': 'Scenario parameters have not changed.'}, status=200)
+
+        if not existing_record:
+            UserScenarioHash.objects.create(
+                user=request.user,
+                cyberphaID=request.GET.get('cpha', ''),
+                hash_value=hash_value
+            )
         # Split the string into a list, using semicolon as the separator
         validated_consequences_list = validated_consequences_str.split(';')
 
@@ -1159,8 +1185,18 @@ def scenario_analysis(request):
             {
                 "role": "user",
                 "content": f"{common_content}. Hypothesize the business impact score from 0 to 100 in the event of a successful attack resulting in the given scenario. Consequences of the scenario are given as follows: {validated_consequences_list}. A score of 1 would mean minimal business impact while a score of 100 would indicate catastrophic business impact without the ability to continue operations. Your answer should be given as an integer. Do NOT include any other words, sentences, or explanations."
-            }
-
+            },
+            {
+                "role": "user",
+                "content": f"{common_content} Provide a 12-month direct cost projection for the scenario, focusing on incident response, remediation, legal fees, regulatory fines, and other direct expenses covered by cybersecurity insurance. "
+                           f"Base your estimates on historical data from similar cybersecurity incidents in OT and IT. Present the budget as a series of 12 integers, each representing the cost for that month in US dollars, without narrative or explanation. "
+                           f"Format the output as: Month1|Month2|...|Month12. Ensure each value reflects a realistic, pragmatic monthly estimate, justifying the trend of costs decreasing over time. "
+                           f"IMPORTANT: List only the monthly costs individually, not as cumulative totals. Provide the most realistic monthly estimates, anticipating costs to taper off over the 12-month period."
+            },
+            {
+                "role": "user",
+                "content": f"{common_content}. Write a concise executive summary for the CEO of the affected organization. Provide this summary in a concise, executive-friendly format that can be used on a slide. YOu will have less than 3 minutes to present the information so you must be sharp and concise. DO NOT PUT THE WORD 'SLIDE' ON THE SLIDE. INCLUDE THE TOTAL OF THE COSTS NOT THE MONTH BY MONTH BREAKDOWN"
+            },
         ]
 
         def get_response_safe(user_message):
@@ -1178,6 +1214,7 @@ def scenario_analysis(request):
             futures = [executor.submit(get_response, msg) for msg in user_messages]
             # Collect the results in the order the futures were submitted
             responses = [future.result() for future in futures]
+            print(responses[7])
 
         # Now handle the compliance mapping separately
         compliance_data = compliance_map_data(common_content)
@@ -1191,8 +1228,9 @@ def scenario_analysis(request):
             'probability': responses[3],
             'frequency': responses[4],
             'biaScore': responses[5],
+            'projection': responses[6],
             'control_effectiveness': control_effectiveness,
-            'scenario_compliance_data': responses[6]
+            'scenario_compliance_data': responses[7]
         })
 
 

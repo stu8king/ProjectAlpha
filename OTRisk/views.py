@@ -16,7 +16,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.db.models import Subquery, OuterRef, Count, IntegerField, Case, When, Value, Prefetch
 
 import OTRisk.forms
-from OTRisk.models.RiskScenario import RiskScenario, tblScenarioRecommendations
+from OTRisk.models.RiskScenario import RiskScenario
 from OTRisk.models.Model_Scenario import tblConsequence
 from OTRisk.models.questionnairemodel import Questionnaire, FacilityType
 from OTRisk.models.ThreatAssessment import ThreatAssessment
@@ -49,7 +49,7 @@ from xml.etree import ElementTree as ET
 from .raw_views import qraw, openai_assess_risk, GetTechniquesView, raw_action, check_vulnerabilities, rawreport, \
     raw_from_walkdown, save_ra_action, get_rawactions, ra_actions_view, UpdateRAAction, reports, reports_pha, \
     create_or_update_raw_scenario, analyze_raw_scenario, analyze_sim_scenario, generate_sim_attack_tree, \
-    analyze_sim_consequences, update_workflow, get_analysis_result
+    analyze_sim_consequences, update_workflow, get_analysis_result, cleanup_scenariobuilder
 from .dashboard_views import dashboardhome
 from .pha_views import iotaphamanager, facility_risk_profile, get_headerrecord, scenario_analysis, phascenarioreport, \
     getSingleScenario, pha_report, scenario_vulnerability, add_vulnerability, get_asset_types, calculate_effectiveness, \
@@ -1033,6 +1033,8 @@ def save_or_update_cyberpha(request):
         ai_bia_score = request.POST.get('ai_bia_score')
         attack_tree_text = request.POST.get('attack_tree_text')
         scenario_status = request.POST.get('scenario_status')
+        cost_projection = request.POST.get('cost_projection')
+
         if ai_bia_score in ('NaN', ''):
             ai_bia_score = 0
         else:
@@ -1200,7 +1202,8 @@ def save_or_update_cyberpha(request):
                 sl_a=sl_a,
                 dangerScope=dangerScope,
                 compliance_map=compliance_map,
-                attack_tree_text=attack_tree_text
+                attack_tree_text=attack_tree_text,
+                cost_projection=cost_projection
 
             )
             snapshot_record.save()
@@ -1281,7 +1284,8 @@ def save_or_update_cyberpha(request):
                 'ai_bia_score': 0 if ai_bia_score is None else ai_bia_score,
                 'compliance_map': compliance_map,
                 'attack_tree_text': attack_tree_text,
-                'scenario_status': scenario_status
+                'scenario_status': scenario_status,
+                'cost_projection': cost_projection
 
             }
 
@@ -1452,6 +1456,10 @@ def assess_cyberpha(request, cyberPHAID=None):
 
     clicked_row_facility_name = request.session.get('clickedRowFacilityName', None)
     saved_scenarios = tblCyberPHAScenario.objects.filter(CyberPHA=active_cyberpha, Deleted=0)
+    for scenario in saved_scenarios:
+        id_str = str(scenario.ID)
+        formatted_id = f"{id_str[:3]}-{id_str[3:6]}-{id_str[6:]}"
+        scenario.formatted_id = formatted_id
     MitreControlAssessment_results = MitreControlAssessment.objects.filter(cyberPHA_id=active_cyberpha)
     control_assessments_data = serializers.serialize('json', MitreControlAssessment_results)
     scenario_form = CyberSecurityScenarioForm(request.POST)
@@ -2102,41 +2110,6 @@ def save_scenario(request):
         # Handle invalid request method
         return JsonResponse({'success': False, 'message': 'Invalid request method.'})
 
-
-@csrf_exempt
-def save_recommendation(request):
-    if request.method == 'POST':
-        recommendation = request.POST.get('recommendation')
-        post_id = request.session.get('post_id')
-
-        if recommendation and post_id:
-            try:
-                current_scenario = RiskScenario.objects.get(post_id=post_id)
-                current_scenario_id = current_scenario.id
-
-                # Save the recommendation for the current scenario
-                scenario_recommendation = tblScenarioRecommendations(
-                    RiskPostID=current_scenario_id,
-                    Recommendation=recommendation
-                )
-                scenario_recommendation.save()
-
-                # Return success response
-                return JsonResponse({'success': True, 'current_scenario_id': current_scenario_id})
-
-            except RiskScenario.DoesNotExist:
-                # Handle scenario not found
-                return JsonResponse({'success': False, 'message': 'Scenario not found.'})
-
-        else:
-            # Handle missing recommendation or post_id
-            return JsonResponse({'success': False, 'message': 'Missing recommendation or post_id.'})
-
-    else:
-        # Handle invalid request method
-        return JsonResponse({'success': False, 'message': 'Invalid request method.'})
-
-
 def workshop_setup(request):
     if request.method == 'POST':
         workshop_type = request.POST.get('workshoptype')
@@ -2617,7 +2590,7 @@ def get_cve_details(request):
 
     return JsonResponse({"error": "Invalid request method"})
 
-
+@login_required()
 def scenario_sim(request):  # Changed the function name
     scenario_form = CyberSecurityScenarioForm(request.POST)
     industries = tblIndustry.objects.all().order_by('Industry')

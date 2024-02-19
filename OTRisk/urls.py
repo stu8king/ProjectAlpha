@@ -25,7 +25,6 @@ urlpatterns = [
     path('workshop/', views.workshop, name='workshop_without_id'),
     path('workshopsetup/', views.workshop_setup, name='workshop_setup'),
     path('save_scenario/', views.save_scenario, name='save_scenario'),
-    path('save_recommendation/', views.save_recommendation, name='save_recommendation'),
     path('save_threat', views.save_threat, name='save_threat'),
     path('riskassessment/', views.risk_assessment, name='risk_assessment'),
     path('riskassess/', risk_assessment, name='riskassess'),
@@ -151,6 +150,7 @@ urlpatterns = [
     path('list_scenario_builders/', views.list_scenario_builders, name='list_scenario_builders'),
     path('get_scenario_builder_details/<int:scenario_id>/', views.get_scenario_builder_details, name='get_scenario_builder_details'),
     path('get_analysis_result/', views.get_analysis_result, name='get_analysis_result'),
+    path('cleanup_scenariobuilder/', views.cleanup_scenariobuilder, name='cleanup_scenariobuilder'),
 ]
 
 
