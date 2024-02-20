@@ -89,6 +89,7 @@ def validate_and_format_date(date_str, default_date='2001-01-01', date_format='%
 
 @login_required
 def iotaphamanager(request, record_id=None):
+    print(request.POST.get('txtHdnCyberPHAID'))
     pha_header = None
     new_record_id = None  # Initialize new_record_id to None
     annual_revenue_str = "$0"

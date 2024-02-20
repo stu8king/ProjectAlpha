@@ -38,6 +38,191 @@
      {% bootstrap_javascript %}
 
 <style>
+body {
+        background-color: #464748;
+        color: #d3d1cd;
+    }
+    .sidebar {
+        height: 100vh;
+        background-color: #2D2E30; /* Darker shade for sidebar */
+        padding: 20px 0;
+        width: 200px; /* Reduced width */
+    }
+    .sidebar-logo {
+        padding: 10px 15px;
+        text-align: center;
+    }
+    .nav-sidebar {
+        display: flex;
+        flex-direction: column;
+        padding-left: 0;
+        list-style: none;
+    }
+    .nav-sidebar .nav-item {
+        padding: 5px 10px;
+        /* border-bottom: 1px solid  #fac330; /* Light orange line */
+        margin: 0 10%;
+    }
+    .nav-sidebar .nav-link {
+        color: #d3d1cd;
+        border-radius: 0;
+        transition: color 0.3s ease-in-out;
+        font-size: 0.8em;
+    }
+    .nav-sidebar .nav-link:hover, .nav-sidebar .nav-link.active {
+        background-color: #3A5F5F;
+        color: #E0E0E0;
+    }
+    /* Enhance dropdown menu */
+    .dropdown-menu {
+        background-color: #d3d1cd;
+        border: none;
+    }
+    .dropdown-item:hover, .dropdown-item:focus {
+        background-color: #fac330; /* Light orange background for hovered dropdown items */
+        color: #2D2E30;
+    }
+    .content {
+        padding: 20px;
+    }
+.custom-main-content {
+    position: relative; /* Needed for absolute positioning of tabs */
+    margin-left: 10px; /* Adjust to account for both sidebars */
+    width: calc(100% - 350px); /* Adjust based on the total width of the sidebars */
+    min-height: 100vh; /* Ensure it fills the viewport height */
+}
+
+
+@media (min-width: 992px) { /* Adjusting for Bootstrap's large devices breakpoint */
+    .custom-main-content {
+        width: calc(100% - 200px);
+        max-width: calc(90vw - 200px);
+        margin-left: 100px;
+    }
+}
+.form-sim .form-control {
+    max-width: 100%; /* Ensures select does not exceed container width */
+    width: auto; /* Optional: Ensures select width is based on content up to max-width */
+}
+.group-container {
+    background: linear-gradient(to bottom right, #464748, #57595b); /* Gradient background */
+    border: 1px solid #666; /* Darker border */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5); /* Box shadow */
+    padding: 25px;
+    margin-bottom: 30px; /* Increased space between containers */
+    border-radius: 10px; /* Rounded corners */
+}
+
+.group-header {
+    color: #d3d1cd; /* Lighter color for contrast */
+    font-weight: bold;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #777; /* Subtle bottom border */
+    font-size: 1.2em; /* Larger font size */
+}
+
+.group-body {
+    color: #e0e0e0; /* Slightly lighter text color */
+    font-family: 'Arial', sans-serif; /* Modern font */
+}
+
+
+/* Adjustments may be needed based on the exact layout and spacing */
+.custom-main-content .container {
+    width: 100%; /* Ensure the container fills the custom-main-content */
+    max-width: none; /* Override Bootstrap's max-width for containers if necessary */
+}
+.top-strip {
+    background-color: #464748; /* Same as body background for seamless integration */
+    color: #d3d1cd; /* Text color */
+    padding: 10px 20px; /* Adjust as needed */
+    padding-left: -450px; /* Align with the end of the sidebar */
+    width: calc(100% - 200px); /* Adjust based on the actual sidebar width */
+    box-sizing: border-box;
+}
+
+.page-title {
+    margin: 0; /* Remove default margins */
+    font-size: 1.5rem; /* Adjust size as needed */
+}
+
+@media (max-width: 992px) {
+    .top-strip {
+        padding-left: 0;
+        width: 100%;
+    }
+     .sub-menu {
+        left: 0;
+        width: 100px; /* Adjust for smaller screens */
+    }
+
+
+
+.tab-content.active {
+    display: block; /* Only the active tab is displayed */
+}
+
+
+
+    .custom-main-content {
+        margin-left: 100px; /* Adjust based on the sub-menu width on smaller screens */
+    }
+}
+/* Sub-menu styles */
+.sub-menu {
+    position: fixed; /* Fixed position to stay in view */
+    top: 0; /* Align with the top of the viewport */
+    left: 200px; /* Adjust based on the width of the main sidebar */
+    width: 150px; /* Width of the sub-menu */
+    height: 100vh; /* Full viewport height */
+    background-color: #333; /* Sub-menu background color */
+    color: #fff; /* Text color */
+    padding: 20px 10px; /* Padding */
+    box-sizing: border-box; /* Include padding in width calculation */
+}
+
+.sub-menu ul {
+    list-style: none; /* Remove default list styling */
+    padding: 0; /* Remove default padding */
+    margin: 0; /* Remove default margin */
+}
+
+.sub-menu li a {
+    color: #d3d1cd; /* Link color */
+    text-decoration: none; /* Remove underline */
+    display: block; /* Make the links fill the container */
+    padding: 10px 0; /* Padding for touch targets */
+    transition: background-color 0.3s; /* Smooth transition for hover effect */
+}
+
+.sub-menu li a:hover, .sub-menu li a.active {
+    background-color: #57595b; /* Hover/active background color */
+}
+
+
+.tab-content.active {
+    display: block; /* Only the active tab is displayed */
+}
+.tab-content {
+    display: none; /* Hide all tab content by default */
+    padding: 20px; /* Padding around content */
+    border: 1px solid #666; /* Border for definition */
+    margin-top: 20px; /* Space from the top */
+    width: 80%; /* 80% of the available width to the right */
+    /* height: 80vh; /* 80% of the viewport height */
+    position: absolute; /* Positioning relative to its nearest positioned ancestor */
+    left: 350px; /* This should be directly to the right of the sub-menu */
+    top: 0; /* Align with the top of the viewport */
+    overflow: auto; /* Add scroll for overflow content */
+    box-sizing: border-box; /* Include padding and border in the element's total width and height */
+}
+
+.tab-content.active {
+    display: block; /* Only the active tab is displayed */
+}
+
+
 .table th {
     background-color: #007bff; /* Example color - a shade of blue */
     color: white;             /* White text color for contrast */
@@ -327,6 +512,60 @@ body {
     max-width: 90%; /* Adjust based on preference */
   }
 }
+.facility-profile-submenu {
+    display: none;
+    list-style-type: none; /* Removes bullet points from submenu items */
+    padding-left: 20px; /* Indent submenu items */
+}
+
+.facility-profile-heading {
+    cursor: pointer; /* Indicates the heading is clickable */
+}
+.safety-summary-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px; /* Space between boxes */
+    justify-content: flex-start;
+    padding: 20px;
+}
+
+.safety-summary-box {
+    flex: 0 1 calc(33.333% - 20px); /* 3 boxes per row accounting for gap */
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* External shadow */
+    padding: 10px;
+    background-color: #fff;
+    border-radius: 5px; /* Slightly rounded corners for a modern look */
+    margin-bottom: 20px; /* Space between rows */
+    box-sizing: border-box;
+    height: auto; /* Adjust height based on content */
+    /* background-image: url('/static/images/green_cube.png'); /* Path to your static image */
+    background-repeat: no-repeat;
+    background-position: 1px top; /* Adjust the position as needed */
+    background-size: 20px 20px; /* Adjust the size of the icon as needed */
+
+}
+/* Style the Select2 container to match form control styles */
+.select2-container--default .select2-selection--single {
+    height: calc(1.5em + .75rem + 2px); /* Adjust based on your form-control height */
+    border: 1px solid #ced4da; /* Match your form-control border */
+    border-radius: .25rem; /* Match your form-control border radius */
+}
+
+/* Adjust the width of the Select2 dropdown to match form control */
+.select2-container {
+    width: 100% !important; /* Force 100% width */
+}
+
+/* Optionally, style the dropdown items */
+.select2-container--default .select2-results__option {
+    padding: .375rem .75rem; /* Match your form-control padding */
+}
+
+/* Style the search input within the dropdown */
+.select2-container--default .select2-search--dropdown .select2-search__field {
+    border: 1px solid #ced4da; /* Match your form-control border */
+}
+
 </style>
 </head>
 <body style="background-color: #464748">
@@ -417,6 +656,9 @@ function drawGauge(score) {
     var gauge = anychart.gauges.circular();
     var credits = gauge.credits();
     credits.enabled(false);
+
+    gauge.background().fill("#333");
+
     // Set gauge settings
     gauge.data(dataSet).padding('4%');
     gauge.startAngle(270);
@@ -435,7 +677,13 @@ function drawGauge(score) {
         .fill('#F0673B .9')
         .stroke('#F0673B')
         .radius(65);
+
     gauge.title("PHA Profile Rating (/100)");
+    gauge.title().fontColor("#FFFFFF");
+    gauge.title().fontSize(8);
+    gauge.title().orientation("bottom");
+
+
     // Draw the chart
     gauge.container('pha_gauge').draw();
 }
@@ -450,6 +698,8 @@ function drawControlGauge(score) {
     var gauge = anychart.gauges.circular();
     var credits = gauge.credits();
     credits.enabled(false);
+
+     gauge.background().fill("#333");
     // Set gauge settings
     gauge.data(dataSet).padding('4%');
     gauge.startAngle(270);
@@ -469,76 +719,259 @@ function drawControlGauge(score) {
         .stroke('#F0673B')
         .radius(65);
     gauge.title("Control Effectiveness %");
+     gauge.title().fontColor("#FFFFFF");
+    gauge.title().fontSize(8);
+    gauge.title().orientation("bottom");
     // Draw the chart
     gauge.container('control_gauge').draw();
 }
 
 </script>
-
-<nav class="navbar navbar-expand-lg navbar-scroll shadow-0 border-bottom rounded">
-    <div class="container-fluid d-flex justify-content-between">
-        <a class="navbar-brand" href="{% url 'OTRisk:dashboardhome' %}">
-            &nbsp; &nbsp; &nbsp; &nbsp;
-            <img src="{% static 'images/anzen_owl.png' %}" class="owl-logo" style="width: 18%; height: 18%">
-        </a>
-        <h6 class="my-auto text-center flex-grow-1 navbar-brand"><img src="{% static 'images/anzen_noowl.png' %}" style="width: 15%; height: 15%" alt=""> CyberPHA</h6>
-        <div class="collapse navbar-collapse" id="navbarSupportedContent">
-            <ul class="navbar-nav ms-auto">
-                <li class="nav-item menu-item">
-                    <a class="nav-link" href="{% url 'OTRisk:qraw' %}"><i class="bi bi-calculator"></i> QRAW</a>
-                </li>
-                <li class="nav-item menu-item">
-                    <a class="nav-link" href="{% url 'OTRisk:iotaphamanager' %}"><i class="bi bi-journal-text"></i> CyberPHA</a>
-                </li>
-                <li class="nav-item menu-item">
-                    <a class="nav-link" href="{% url 'OTRisk:scenario_sim' %}"><i class="bi bi-bricks"></i> Scenario Builder</a>
-                </li>
-                <li class="nav-item menu-item">
-                    <a class="nav-link" href="{% url 'OTRisk:ra_actions_view_default' %}"><i class="bi-file-earmark-easel"></i> Actions</a>
-                </li>
-                <li class="nav-item menu-item">
-                    <a class="nav-link" href="{% url 'OTRisk:risk_register' %}"><i class="bi-file-earmark-easel"></i> Risk Register</a>
-                </li>
-                <li class="nav-item menu-item">
-                    <a class="nav-link" href="{% url 'OTRisk:list_frameworks' %}"><i class="bi-file-earmark-easel"></i> Assessments</a>
-                </li>
-    <li class="nav-item dropdown menu-item">
-    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-    <i class="bi bi-diagram-3"></i> Admin
-    </a>
-    <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-    <li><a class="dropdown-item" href="{% url 'OTRisk:admin_users' %}">Admin Users</a></li>
-    {% if user.is_staff %}
-    <li><a class="dropdown-item" href="{% url 'OTRisk:user_admin' %}">User Administration</a></li>
-    <li><a class="dropdown-item" href="{% url 'OTRisk:execute_sql' %}">Execute SQL</a></li>
-    {% endif %}
-    </ul>
-    </li>
-    <li class="nav-item menu-item">
-    <a class="nav-link" href="{% url 'accounts:profile' %}">
-    <i class="bi bi-person-fill"></i> {{ user.first_name }} {{ user.last_name }} | {{ user.userprofile.organization.name }}
-    </a>
-    </li>
-    <li class="nav-item menu-item">
-    <a class="nav-link" href="{% url 'logout' %}">
-    <i class="bi bi-box-arrow-right"></i> Logout
-    </a>
-    </li>
-    </ul>
-    </div>
-    </div>
-    </nav>
-
-<div id="notificationMessage" class="notification-message" style="display: none;"></div>
-<form name="frmHeader" id="frmRAW" method="POST" action="{% url 'OTRisk:iotaphamanager' %}">
-{% csrf_token %}
-<br>
+<div class="container-fluid">
 <div class="row">
-    <div class="col-md-1" style="background-color: #464748"></div>
-    <div class="col-md-10">
-    <div class="row">
-    <div class="form-group">
-    <div class="col-md-12 " style="background-color: #464748">
+
+<nav class="col-md-3 col-lg-2 d-md-block sidebar collapse" id="sidebarMenu">
+                <div class="sidebar-sticky">
+                    <div class="sidebar-logo">
+                        <img src="{% static 'images/anzen_owl.png' %}" class="img-fluid" alt="Logo">
+                    </div>
+                    <ul class="nav flex-column nav-sidebar">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'OTRisk:dashboardhome' %}">Dashboard</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'OTRisk:qraw' %}">QRAW</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'OTRisk:iotaphamanager' %}">CyberPHA</a>
+                        </li>
+                        <li class="nav-item menu-item">
+                            <a class="nav-link" href="{% url 'OTRisk:scenario_sim' %}">Scenario Builder</a>
+                        </li>
+                        <li class="nav-item menu-item">
+                            <a class="nav-link" href="{% url 'OTRisk:ra_actions_view_default' %}">Actions</a>
+                        </li>
+                        <li class="nav-item menu-item">
+                            <a class="nav-link" href="{% url 'OTRisk:risk_register' %}">Risk Register</a>
+                        </li>
+                        <li class="nav-item menu-item">
+                            <a class="nav-link" href="{% url 'OTRisk:list_frameworks' %}">Assessments</a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Admin
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+
+                                <li>
+                                    <a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:setup_org' %}">Set Defaults</a>
+                                </li>
+                                <li>
+                                    <a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:admin_users' %}">Admin Users</a>
+                                </li>
+                                <li>
+                                    <a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:upload_questionnaire' %}">Upload Questionnaires</a>
+                                </li>
+                                {% if user.is_staff %}
+                                <!-- Links visible only to superusers -->
+                                <li>
+                                    <a class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:user_admin' %}">User Administration</a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item"  style="font-size: 12px;" href="{% url 'OTRisk:organization_form' %}">Manage Organizations</a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:execute_sql' %}">Execute SQL</a>
+                                </li>
+                                {% endif %}
+                            </ul>
+                         </li>
+                    <li class="nav-item menu-item">
+                        <a class="nav-link" href="{% url 'accounts:profile' %}">
+                        <i class="bi bi-person-fill"></i> {{ user.first_name }} {{ user.last_name }} | {{ user.userprofile.organization.name }}
+                        </a>
+                        </li>
+                        <li class="nav-item menu-item">
+                        <form action="{% url 'logout' %}" method="post">
+                        {% csrf_token %}
+                        <button type="submit" class="nav-link" style="background:none; border:none; padding:0; margin:0; color:inherit;">Logout</button>
+                    </form>
+
+                        </li>
+                        </ul>
+                </div>
+            </nav>
+    <!-- Main content area, including sub-menu and tabs -->
+    <div class="col-md-9 col-lg-10">
+    <div class="top-strip">
+        <div class="row">
+            <div class="col-md-1"></div>
+            <div class="col-md-3">
+            <h1 class="page-title">CyberPHA@AnzenOT</h1>
+            </div>
+            <div class="col-md-1">
+                <button type="submit" id="btnformSubmit" class="btn nav-link"> Save</button>
+                <script>
+                // Add an event listener to the "Save Header" button
+                document.getElementById('btnformSubmit').addEventListener('click', function(event) {
+                    event.preventDefault(); // Prevent the form submission (if it's within a form)
+
+                    // Validate required fields
+                    var industry = document.getElementById('selIndustry').value;
+                    var facilityType = document.getElementById('selFacilityType').value;
+                    var facilityName = document.getElementById('txtFacility').value.trim();
+                    var employees = document.getElementById('txtEmployees').value.trim();
+                    var address = document.getElementById('txtAddress').value.trim();
+                    var country = document.getElementById('countrySelector').value;
+                     // Check if all required fields have values
+                    if (!industry || !facilityType || !facilityName || !employees || !address || !country) {
+                        swal({
+                            icon: 'error',
+                            title: 'Missing Information',
+                            text: 'Please fill in all required fields before saving.'
+                        }).then(() => {
+                            // After closing the alert, make tab2 active and visible
+                            $('.tab-content').removeClass('active').hide();
+
+                             $('#tab2').addClass('active').show();
+                        });
+                        return; // Exit the function and do not proceed to show the save confirmation
+                    }
+                    // Show a SweetAlert confirmation dialog
+                    swal({
+                        title: "Confirm Save?",
+                        text: "Are you sure you want to save the header information?",
+                        icon: "warning",
+                        buttons: ["Cancel", "Save"],
+                        dangerMode: true,
+                    })
+                    .then((willSave) => {
+                        if (willSave) {
+                            // User confirmed, continue with the form submission
+                            document.forms['frmRAW'].submit();
+
+                        } else {
+                            // User canceled the action
+                            // You can add additional code here if needed
+                        }
+                    });
+                });
+
+            </script>
+            </div>
+            <div class="col-md-1">
+                <button type="button" class="btn nav-link " id="resetButton"><i class="bi bi-plus-circle"></i> New</button>
+                    <script>
+$(document).ready(function() {
+    $('#resetButton').on('click', function() {
+        // SweetAlert confirmation prompt
+        swal({
+            title: 'Are you sure you wish to create a new CyberPHA?',
+            text: "Any unsaved changes to the current records will be lost.",
+            icon: 'warning',
+            buttons: true, // This will enable both buttons
+            dangerMode: true,
+            buttons: ["Cancel", "Yes, proceed"] // Define the buttons
+        }).then((willProceed) => {
+            if (willProceed) {
+                // User clicked 'Yes, proceed', so execute the reset actions
+                // Reset textboxes and textareas
+                $('#txtTitle, #txtLeader, #txtUnit, #txtStartDate, #txtAddress, #txtFacility, #txtLeaderEmail, #txtEndDate, #txtSafetySummary, #txtChemical, #txtPhysical, #txtEmployees, #annual_revenue, #cyber_insurance, #shift_model, #txtOther, #txtCompliance, #strategySummary, #insightSummary, #threatSummary').val('');
+
+                // Reset select dropdowns
+                $('#selIndustry, #selFacilityType, #assessment_id, #selZone, #selSL').prop('selectedIndex', 0);
+                $('#investmentTable tbody').empty();
+                // Enable the controls
+                $('#txtTitle, #txtLeader, #txtUnit, #txtStartDate, #txtAddress, #txtFacility, #txtLeaderEmail, #txtEndDate, #txtSafetySummary, #txtChemical, #txtPhysical, #txtOther, #txtCompliance, #strategySummary, #insightSummary, #threatSummary, #selFacilityType, #selIndustry, #selZone, #selSL, #shift_model, #txtEmployees, #annual_revenue, #cyber_insurance, #countrySelector, #btnformSubmit, #risk-assessment-btn').prop('disabled', false);
+                $('#btnformSubmit').prop('disabled', false);
+                clearContainer('pha_gauge');
+                clearContainer('control_gauge');
+                //reset session variables
+                sessionStorage.setItem('activeCyberPHA', '0');
+                // Set the value of the hidden text field
+                document.getElementById('txtHdnCyberPHAID').value = '0';
+            }
+        });
+    });
+});
+</script>
+            </div>
+            <div class="col-md-1">
+                <button type="button" class="btn nav-link " id="scenarioButton"><i class="bi bi-pencil-square"></i> Scenarios</button>
+                    <script>
+                         $(document).ready(function() {
+                            $('#scenarioButton').on('click', function() {
+                                window.location.href = "{% url 'OTRisk:assess_cyberpha' %}?active_cyberpha=" + sessionStorage.getItem('activeCyberPHA');
+                            });
+                         });
+                    </script>
+            </div>
+            <div class="col-md-1">
+                <button type="button" id="risk-assessment-btn" class="btn nav-link" >Profile</button></div>
+
+            <div class="col-md-1">
+                 <button id="generatePPT" class="btn nav-link"><i class="bi bi-printer"></i> Print</button>
+            </div>
+            <div class="col-md-3"></div>
+        </div>
+        <<div class="row">
+            <div class="col-md-1"></div>
+            <div class="col-md-3">
+                <label id="lblCyberPHATitle" style="font-size: 18px"></label>
+            </div>
+            <div class="col-md-8"></div>
+        </div>
+    </div>
+    <div id="notificationMessage" class="notification-message" style="display: none;"></div>
+    <div class="spinner" id="loadingSpinner"></div>
+     <form name="frmHeader" id="frmRAW" method="POST" action="{% url 'OTRisk:iotaphamanager' %}">
+        {% csrf_token %}
+
+     <input type="hidden" name="txtHdnCyberPHAID" id="txtHdnCyberPHAID" value="0">
+     <input type="hidden" id="hdn_pha_score" name="hdn_pha_score" value="{{ pha_header_records.pha_score }}">
+
+    <div class="sub-menu">
+        <br><br><br><br><br><br><br><br><br><br>
+
+    <ul>
+        <li><a href="#" data-tab="tab1">CyberPHA List</a></li>
+        <li><a href="#" data-tab="tab2">Facility</a></li>
+        <li><a href="#" data-tab="tab3">Admin</a></li>
+        <li><a href="#" data-tab="tab4">Investments</a></li>
+        <br>
+        <!-- Facility Profile Heading -->
+        <li class="facility-profile-heading">Facility Profile
+            <ul class="facility-profile-submenu">
+                <li><a href="#" data-tab="tab5">Safety</a></li>
+                <li><a href="#" data-tab="tab6">Chemical</a></li>
+                <li><a href="#" data-tab="tab7">Physical Security</a></li>
+                <li><a href="#" data-tab="tab8">OT Assets</a></li>
+                <li><a href="#" data-tab="tab9">Compliance</a></li>
+                <li><a href="#" data-tab="tab10">Threats</a></li>
+                <li><a href="#" data-tab="tab11">Insights</a></li>
+                <li><a href="#" data-tab="tab12">Strategy</a></li>
+            </ul>
+        </li>
+    </ul>
+        <br>
+<div id="pha_gauge"></div>
+
+        <div id="control_gauge"></div>
+</div>
+<script>
+$(document).ready(function() {
+    $(".facility-profile-heading").click(function() {
+        // Toggle the display of the submenu
+        $(".facility-profile-submenu").slideToggle();
+    });
+});
+</script>
+     <div class="custom-main-content" >
+     <div class="tab-content active" id="tab1">
+        <h3 style="color: white">CyberPHA </h3>
+
+        <div class="form-group">
+
         <label for="headertable" class="form-label" style="color:white">Select a record in the table to view and edit the CyberPHA</label>
         <table id="headertable" class="table small-font compact">
         <thead style="background-color: #2c2c2c; color: white">
@@ -617,6 +1050,7 @@ function drawControlGauge(score) {
             {% endfor %}
         </tbody>
         </table>
+        </div>
 
         <script>
          $(document).ready(function() {
@@ -629,6 +1063,8 @@ function drawControlGauge(score) {
                  $(this).addClass('highlighted');
 
                  let recordId = $(this).data('id');  // get the ID of the clicked row
+                 let title = $(this).find('td:nth-child(2)').text();
+                 document.getElementById("lblCyberPHATitle").textContent = title;
                  fetchHeaderRecord(recordId);
              });
 
@@ -641,197 +1077,100 @@ function drawControlGauge(score) {
              }
 
 
-
-
-
-
-
-
-
-
          });
     </script>
-    </div> <!-- table view of existing risk assessments -->
-    </div>
-    </div>
-    </div>
-    <div class="col-md-1" style="background-color: #464748"></div>
-</div>
+     </div>
 
-<div class="row">
-    <div class="col-md-1" style="background-color: #464748"></div>
-    <div class="col-md-3" style="background-color: #464748"></div>
-    <div class="col-md-4" style="background-color: #464748">
-        <div class="form-group">
-            <div class="row">
-                <div class="col-md-3">
-                    <button type="submit" id="btnformSubmit" class="form-control"><i class="bi bi-file-earmark-plus"></i> Save</button>
-                    <script>
-                // Add an event listener to the "Save Header" button
-                document.getElementById('btnformSubmit').addEventListener('click', function(event) {
-                    event.preventDefault(); // Prevent the form submission (if it's within a form)
-
-                    // Show a SweetAlert confirmation dialog
-                    swal({
-                        title: "Confirm Save?",
-                        text: "Are you sure you want to save the header information?",
-                        icon: "warning",
-                        buttons: ["Cancel", "Save"],
-                        dangerMode: true,
-                    })
-                    .then((willSave) => {
-                        if (willSave) {
-                            // User confirmed, continue with the form submission
-                            document.forms['frmRAW'].submit();
-
-                        } else {
-                            // User canceled the action
-                            // You can add additional code here if needed
-                        }
-                    });
-                });
-            </script>
+     <div class="tab-content" id="tab2">
+        <h3 style="color:white">Facility Details</h3>
+        <label id="facility_detail_label" style="color:white">Information about the selected facility </label>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="txtFacility" style="color: white">Facility:</label>
+                    <input type="text" class="form-control" name="txtFacility" id="txtFacility" value="{{ current_pha_header.FacilityName }}"  maxlength="100"  required>
                 </div>
-                <div class="col-md-3" >
-                    <button type="button" class="form-control " id="resetButton"><i class="bi bi-plus-circle"></i> New</button>
+                <div class="form-group">
+                    <label for="selIndustry" style="color: white">Industry:</label>
+                    <select class="form-control" name="selIndustry" id="selIndustry">
+                        <option value=""> -- Select Industry -- </option>
+                        {% for industry in industries %}
+                            <option value="{{ industry.Industry }}"
+                                    {% if current_pha_header.Industry == industry.Industry %}selected{% endif %}>
+                                {{ industry.Industry }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    </div>
+
+                    <div class="form-group">
+                    <label for="txtEmployees" style="color: white">Employees on Site:</label>
+                    <input type="number" class="form-control" name="txtEmployees" id="txtEmployees" value="{{ current_pha_header.EmployeesOnSite }}" max="99999">
+                    </div>
+
+                    <div class="form-group">
+                    <label for="selFacilityType" style="color: white">Facility Type:</label>
+                    <select class="form-control" name="selFacilityType" id="selFacilityType">
+                        <option value=""> -- Select Facility Type -- </option>
+                        {% for facilities in facilities %}
+                                <option value="{{ facilities.FacilityType }}"
+                                {% if current_pha_header.FacilityType == facilities.FacilityType %}selected{% endif %}>
+                                {{  facilities.FacilityType }}</option>
+                            {% endfor %}
+                    </select>
                     <script>
-$(document).ready(function() {
-    $('#resetButton').on('click', function() {
-        // SweetAlert confirmation prompt
-        swal({
-            title: 'Are you sure you wish to create a new CyberPHA?',
-            text: "Any unsaved changes to the current records will be lost.",
-            icon: 'warning',
-            buttons: true, // This will enable both buttons
-            dangerMode: true,
-            buttons: ["Cancel", "Yes, proceed"] // Define the buttons
-        }).then((willProceed) => {
-            if (willProceed) {
-                // User clicked 'Yes, proceed', so execute the reset actions
-                // Reset textboxes and textareas
-                $('#txtTitle, #txtLeader, #txtUnit, #txtStartDate, #txtAddress, #txtFacility, #txtLeaderEmail, #txtEndDate, #txtSafetySummary, #txtChemical, #txtPhysical, #txtEmployees, #annual_revenue, #cyber_insurance, #shift_model, #txtOther, #txtCompliance, #strategySummary, #insightSummary, #threatSummary').val('');
+                        $(document).ready(function() {
+                            $('#selFacilityType').select2();
+                            $('#selIndustry').select2();
+                        });
 
-                // Reset select dropdowns
-                $('#selIndustry, #selFacilityType, #assessment_id, #selZone, #selSL').prop('selectedIndex', 0);
-                $('#investmentTable tbody').empty();
-                // Enable the controls
-                $('#txtTitle, #txtLeader, #txtUnit, #txtStartDate, #txtAddress, #txtFacility, #txtLeaderEmail, #txtEndDate, #txtSafetySummary, #txtChemical, #txtPhysical, #txtOther, #txtCompliance, #strategySummary, #insightSummary, #threatSummary, #selFacilityType, #selIndustry, #selZone, #selSL, #shift_model, #txtEmployees, #annual_revenue, #cyber_insurance, #countrySelector, #btnformSubmit, #risk-assessment-btn').prop('disabled', false);
-                $('#btnformSubmit').prop('disabled', false);
-                clearContainer('pha_gauge');
-                clearContainer('control_gauge');
-                //reset session variables
-                sessionStorage.setItem('activeCyberPHA', '0');
-                // Set the value of the hidden text field
-                document.getElementById('txtHdnCyberPHAID').value = '0';
-            }
-        });
-    });
-});
-</script>
-
-
-                </div>
-                <div class="col-md-3" >
-                    <button type="button" class="form-control " id="scenarioButton"><i class="bi bi-pencil-square"></i> Scenarios</button>
-                    <script>
-                         $(document).ready(function() {
-                            $('#scenarioButton').on('click', function() {
-                                window.location.href = "{% url 'OTRisk:assess_cyberpha' %}?active_cyberpha=" + sessionStorage.getItem('activeCyberPHA');
-                            });
-                         });
                     </script>
                 </div>
-                <div class="col-md-3" >
-                    <button id="generatePPT" class="form-control"><i class="bi bi-printer"></i> Print</button>
+
+                <div class="form-group">
+                    <label for="txtAddress" style="color: white">Facility Address:</label>
+                    <textarea class="form-control" rows="2" name="txtAddress" id="txtAddress" style="resize: none" maxlength="500" required>{{ current_pha_header.facilityAddress }}</textarea>
+                    <label for="countrySelector" style="color: white">Country:</label>
+                    <select id="countrySelector" name="countrySelector" style="width: 400px;"></select>
                 </div>
-            </div>
-        </div>
 
-    </div>
-    <div class="col-md-3" style="background-color: #464748"></div>
-    <div class="col-md-1" style="background-color: #464748"></div>
-</div>
-
-
-<div class="row" style="background-color: #464748">
-    <div class="col-md-1 " style="background-color: #464748"></div>
-    <div class="col-md-10 " >
-     <div class="row" style="background-color: #464748; height: 10px"></div>
-   </div>
-    <div class="col-md-1 " style="background-color: #464748;"></div>
-</div> <!-- dark grey stripe -->
-
-<div class="row" style="height: 10px">
-    <div class="col-md-1 " style="background-color: #464748;"></div>
-    <div class="col-md-10 ">
-     <div class="row" style="background-color: #464748; height: 10px"></div>
-   </div>
-    <div class="col-md-1 " style="background-color: #464748;"></div>
-</div> <!-- dark grey stripe -->
-    <input type="hidden" name="txtHdnCyberPHAID" id="txtHdnCyberPHAID" value="0">
-{% if new_record_id %}
-    <script>
-        // Set the value of the hidden textbox field
-        document.querySelector('input[name="txtHdnCyberPHAID"]').value = "{{ new_record_id }}";
-
-        // Store the value in the local session storage
-        sessionStorage.setItem('activeCyberPHA', "{{ new_record_id }}");
-    </script>
-
-{% endif %}
-<div class="row small-font">
-    <div class="col-md-1" style="background-color: #464748;"></div>
-    <div class="col-md-3 " style="background-color: #464748;">
-        <div class="card mb-3 shadow-sm" style="background-color: #5E6266;"> <!-- Bootstrap card with shadow -->
-            <div class="card-body">
-                <label for="txtTitle" style="color: white">Title:</label><input type="text" class="form-control" name="txtTitle" id="txtTitle" value="{{ current_pha_header.title }}" maxlength="100" style="font-size: 16px; font-weight: bold;" required>
-            </div>
-        </div>
-        <div class="card mb-3 shadow-sm" style="background-color: #5E6266;"> <!-- Bootstrap card with shadow -->
-            <div class="card-body">
-                <label for="txtLeader" style="color: white">CyberPHA Owner:</label><input type="text" class="form-control" name="txtLeader" id="txtLeader" value="{{ current_pha_header.PHALeader }}" maxlength="100"  required>
-            </div>
-        </div>
-        <div class="card mb-3 shadow-sm" style="background-color: #5E6266;">
-            <div class="card-body">
-                <label for="selIndustry" style="color: white">Industry:</label>
-                <select class="form-control" name="selIndustry" id="selIndustry">
-                    <option value=""> -- Select Industry -- </option>
-                    {% for industry in industries %}
-                        <option value="{{ industry.Industry }}"
-                                {% if current_pha_header.Industry == industry.Industry %}selected{% endif %}>
-                            {{ industry.Industry }}
-                        </option>
-                    {% endfor %}
-                </select>
 
             </div>
-        </div>
-        <div class="card mb-3 shadow-sm" style="background-color: #5E6266;">
-            <div class="card-body">
-                <label for="txtUnit" style="color: white">Unit:</label><input type="text" class="form-control" name="txtUnit" id="txtUnit" value="{{ current_pha_header.AssessmentUnit }}" required maxlength="100">
-            </div>
-        </div>
 
-        <div class="card mb-3 shadow-sm" style="background-color: #5E6266;">
-        <div class="card-body">
-            <label for="shift_model" style="color: white">Shift Model:</label>
-            <select class="form-control" name="shift_model" id="shift_model" required>
-                <option value="">Select Shift Model</option>
-                {% for model in SHIFT_MODELS %}
-                    <option value="{{ model.0 }}" {% if current_pha_header.shift_model == model.0 %}selected{% endif %}>{{ model.1 }}</option>
-                {% endfor %}
-            </select>
-        </div>
-</div>
-    <div class="form-group">
-        <div class="row">
-    <div class="col-md-4" style="background-color: #5E6266;">
-        <div class="card mb-3 shadow-sm" style="background-color: #5E6266;"> <!-- Bootstrap card with shadow -->
-            <div class="card-body">
-                <label for="annual_revenue" style="color: white">Facility Annual Revenue:</label>
-                <input type="text" class="form-control currency-input" name="annual_revenue" id="annual_revenue" value="{{ annual_revenue_str|default:'0' }}" oninput="checkMaxValue(this)" required>
-                <script>
+            <div class="col-md-6" style="background-color: #464748;">
+                <div class="form-group">
+                    <label for="txtUnit" style="color: white">Unit:</label>
+                    <input type="text" class="form-control" name="txtUnit" id="txtUnit" value="{{ current_pha_header.AssessmentUnit }}" required maxlength="100">
+                    <br>
+                    <label for="selZone" style="color: white">Zone:</label>
+                    <select class="form-control" name="selZone" id="selZone">
+                        <option value = ""> -- Select Plant Zone -- </option>
+                        {% for zone in zones %}
+                            <option value="{{ zone.PlantZone }}"
+                            {% if current_pha_header.AssessmentZone == zone.PlantZone %}selected{% endif %}>
+                                {{ zone.PlantZone }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="shift_model" style="color: white">Shift Model:</label>
+                    <select class="form-control" name="shift_model" id="shift_model" required>
+                        <option value="">Select Shift Model</option>
+                        {% for model in SHIFT_MODELS %}
+                            <option value="{{ model.0 }}" {% if current_pha_header.shift_model == model.0 %}selected{% endif %}>{{ model.1 }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                 <div class="form-group">
+                    <div class="row">
+                        <div class="col-md-4" style="background-color: #5E6266;">
+                            <div class="card mb-3 shadow-sm" style="background-color: #5E6266;"> <!-- Bootstrap card with shadow -->
+                                <div class="card-body">
+                                    <label for="annual_revenue" style="color: white">Facility Annual Revenue:</label>
+                                    <input type="text" class="form-control currency-input" name="annual_revenue" id="annual_revenue" value="{{ annual_revenue_str|default:'0' }}" oninput="checkMaxValue(this)" required>
+                                    <script>
                     document.addEventListener("DOMContentLoaded", function() {
                         const currencyInput = document.getElementById('annual_revenue');
 
@@ -857,15 +1196,15 @@ $(document).ready(function() {
                     }
                 </script>
 
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4" style="background-color: #5E6266;">
-        <div class="card mb-3 shadow-sm" style="background-color: #5E6266;">
-            <div class="card-body">
-                <label for="coho" style="color: white">Operating Cost/Hour:</label>
-                <input type="text" class="form-control currency-input" name="coho" id="coho" value="{{ coho_str|default:'0' }}" oninput="checkMaxValue(this)" required>
-                <script>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4" style="background-color: #5E6266;">
+                            <div class="card mb-3 shadow-sm" style="background-color: #5E6266;">
+                                <div class="card-body">
+                                    <label for="coho" style="color: white">Operating Cost/Hour:</label>
+                                    <input type="text" class="form-control currency-input" name="coho" id="coho" value="{{ coho_str|default:'0' }}" oninput="checkMaxValue(this)" required>
+                                    <script>
                     document.addEventListener("DOMContentLoaded", function() {
                         const currencyInput = document.getElementById('coho');
 
@@ -881,338 +1220,44 @@ $(document).ready(function() {
 
                 </script>
 
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4" style="background-color: #5E6266;">
-        <div class="card mb-3 shadow-sm" style="background-color: #5E6266;">
-            <div class="card-body">
-                <label for="npm" style="color: white">Facility NPM (%):</label>
-                <input type="number" class="form-control" name="npm" id="npm" value="{{ npm|default:'0' }}" min="0" max="100">
-
-
-            </div>
-        </div>
-    </div>
-</div>
-    </div>
-        <div class="card mb-3 shadow-sm" style="background-color: #5E6266;"> <!-- Bootstrap card with shadow -->
-            <div class="card-body">
-                <label for="txtStartDate" style="color: white">Start Date:</label><input type="date" class="form-control" name="txtStartDate" id="txtStartDate"  value="{{ current_pha_header.AssessmentStartDate }}" required>
-            </div>
-        </div>
-        <div class="card mb-3 shadow-sm" style="background-color: #5E6266;"> <!-- Bootstrap card with shadow -->
-            <div class="card-body">
-                <label for="txtAddress" style="color: white">Facility Address:</label>
-                <textarea class="form-control" rows="2" name="txtAddress" id="txtAddress" style="resize: none" maxlength="500" required>{{ current_pha_header.facilityAddress }}</textarea>
-            </div>
-        </div>
-        <div class="card mb-3 shadow-sm" style="background-color: #5E6266;">
-            <div class="card-body">
-            <label for="countrySelector" style="color: white">Country:</label><a href="#" data-bs-toggle="modal" data-bs-target="#countryModal">❓</a><br><select id="countrySelector" name="countrySelector" style="width: 400px;"></select>
-
-            </div>
-        </div>
-        <br>
-
-    </div>
-
-
-    <div class="col-md-3" style="background-color: #464748;">
-        <div class="card mb-3 shadow-sm" style="background-color: #5E6266;"> <!-- Bootstrap card with shadow -->
-            <div class="card-body">
-                <label for="txtFacility" style="color: white">Facility:</label><input type="text" class="form-control" name="txtFacility" id="txtFacility" value="{{ current_pha_header.FacilityName }}"  maxlength="100"  required>
-            </div>
-        </div>
-        <div class="card mb-3 shadow-sm" style="background-color: #5E6266;"> <!-- Bootstrap card with shadow -->
-            <div class="card-body">
-                <label for="txtLeaderEmail" style="color: white">Leader Email:</label><input type="email" class="form-control" name="txtLeaderEmail" id="txtLeaderEmail" value="{{ current_pha_header.PHALeaderEmail }}" required onblur="validateEmail(this)">
-                <script type="text/javascript">
-                    function validateEmail(input) {
-                        var regex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
-                        if (!regex.test(input.value)) {
-                            alert('Please enter a valid email address');
-                            input.focus();
-                        }
-                    }
-                </script>
-            </div>
-        </div>
-
-        <div class="card mb-3 shadow-sm" style="background-color: #5E6266;">
-            <div class="card-body">
-                <label for="selFacilityType" style="color: white">Facility Type:</label><br>
-                <select class="form-control" name="selFacilityType" id="selFacilityType">
-                    <option value=""> -- Select Facility Type -- </option>
-                    {% for facilities in facilities %}
-                            <option value="{{ facilities.FacilityType }}"
-                            {% if current_pha_header.FacilityType == facilities.FacilityType %}selected{% endif %}>
-                            {{  facilities.FacilityType }}</option>
-                        {% endfor %}
-                </select>
-                <script>
-                    $(document).ready(function() {
-                        $('#selFacilityType').select2();
-                    });
-
-                </script>
-            </div>
-        </div>
-        <div class="card mb-3 shadow-sm" style="background-color: #5E6266;"> <!-- Bootstrap card with shadow -->
-            <div class="card-body">    <label for="selZone" style="color: white">Zone:</label>
-                <select class="form-control" name="selZone" id="selZone">
-                    <option value = ""> -- Select Plant Zone -- </option>
-                    {% for zone in zones %}
-                        <option value="{{ zone.PlantZone }}"
-                        {% if current_pha_header.AssessmentZone == zone.PlantZone %}selected{% endif %}>
-                            {{ zone.PlantZone }}</option>
-                    {% endfor %}
-                </select>
-
-            </div>
-
-        </div>
-
-        <div class="card mb-3 shadow-sm" style="background-color: #5E6266;">
-            <div class="card-body">
-                <label for="selSL" style="color: white">Target Security Level (SL-T):</label>
-                <select class="form-control" name="selSL" id="selSL">
-            <option value="0"> -- Select SL-T -- </option>
-            {% for value, description in SECURITY_LEVELS %}
-                <option value="{{ value }}"
-                {% if current_pha_header.sl_t|stringformat:"s" == value|stringformat:"s" %}selected{% endif %}>
-                    {{ description }}</option>
-            {% endfor %}
-        </select>
-            </div>
-        </div>
-
-
-        <div class="card mb-3 shadow-sm" style="background-color: #5E6266;">
-            <div class="card-body">
-                <label for="txtEmployees" style="color: white">Employees on Site:</label><input type="number" class="form-control" name="txtEmployees" id="txtEmployees" value="{{ current_pha_header.EmployeesOnSite }}" max="99999">
-
-            </div>
-        </div>
-
-        <div class="card mb-3 shadow-sm" style="background-color: #5E6266;">
-            <div class="card-body">
-                <label for="txtEndDate" style="color: white">End Date:</label><input type="date" class="form-control" name="txtEndDate" id="txtEndDate" value="{{ current_pha_header.AssessmentEndDate }}" onchange="validateDates()">
-            </div>
-        </div>
-        <script type="text/javascript">
-            function validateDates() {
-                var startDate = document.getElementById('txtStartDate').value;
-                var endDate = document.getElementById('txtEndDate').value;
-
-                if (endDate < startDate) {
-                    alert('End date cannot be before start date');
-                    document.getElementById('txtEndDate').value = '';
-                }
-            }
-        </script>
-
-
-        <div class="card mb-3 shadow-sm" style="background-color: #5E6266;">
-            <div class="card-body">
-            <label for="assessment_id" style="color: white">Control Assessment:</label>
-                <select class="form-control"   id="assessment_id" name="assessment_id">
-                    <option value="">Select an Assessment</option>
-                    {% for assessment in assessments %}
-                        <option value="{{ assessment.id }}"
-                        {% if current_pha_header.assessment == assessment.id %}select{% endif %}>
-                            {{ assessment.name }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-        </div>
-           <div class="card mb-3 shadow-sm" style="background-color: #5E6266;">
-            <div class="card-body">
-                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#investmentModal">
-                OT Security Investments
-                </button>
-            </div>
-        </div>
-        <div class="card mb-3 shadow-sm" style="background-color: #5E6266;">
-            <div class="card-body">
-                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#moderatorModal">
-                    Select CyberPHA Moderators
-                </button>
-            </div>
-        </div>
-
-
-        <script>
-            $(document).ready(function() {
-                $("#assessment-select").selectmenu().selectmenu("menuWidget").addClass("overflow");
-            });
-        </script>
-
-
-
-        <div class="card mb-3 shadow-sm" style="background-color: #5E6266;">
-    <div class="card-body">
-        <label for="workflow_selector" style="color: white">Workflow Status:</label>
-        <select class="form-control" id="workflow_selector" name="workflow_selector">
-            <option value="">Select a Status</option>
-            {% for status, status_display in workflow_status_choices %}
-                <option value="{{ status }}"
-                        {% if current_workflow_status == status %} selected {% endif %}>
-                    {{ status_display }}
-                </option>
-            {% endfor %}
-        </select>
-    </div>
-        <div class="card-body" style="color: white">
-        Current Group Assignments:
-        <div id="currentGroupsDiv">
-    <!-- Current groups will be populated here by the fetchHeaderRecord function -->
-</div>
-       <!-- Button to Open the Modal -->
-<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#assignGroupModal">
-    Assign to Group
-</button>
-
-
-<div class="modal" id="assignGroupModal">
-    <div class="modal-dialog">
-        <div class="modal-content">
-
-
-            <div class="modal-header">
-                <h4 class="modal-title">Assign to Group</h4>
-                <button type="button" class="close" data-dismiss="modal">&times;</button>
-            </div>
-
-
-            <div class="modal-body">
-                <form id="group-assignment-form">
-                    <!-- Existing Groups -->
-                    <div class="form-group">
-                        <label for="existing_group">Existing Group:</label>
-                        <select class="form-control" id="existing_group" name="existing_group">
-                            <option value="">Select a Group</option>
-                            {% for group in all_groups %}
-                                <option value="{{ group.id }}">{{ group.name }}</option>
-                            {% endfor %}
-                        </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4" style="background-color: #5E6266;">
+                            <div class="card mb-3 shadow-sm" style="background-color: #5E6266;">
+                                <div class="card-body">
+                                    <label for="npm" style="color: white">Facility NPM (%):</label>
+                                    <input type="number" class="form-control" name="npm" id="npm" value="{{ npm|default:'0' }}" min="0" max="100">
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <!-- New Group -->
-                    <div class="form-group">
-                        <label for="new_group_name">New Group Name:</label>
-                        <input type="text" class="form-control" id="new_group_name" name="new_group_name">
-                    </div>
-                    <div class="form-group">
-                    <label for="new_group_type">New Group Type:</label>
-                    <select class="form-control" id="new_group_type" name="new_group_type">
-                        {% for type_value, type_name in group_types %}
-                            <option value="{{ type_value }}">{{ type_name }}</option>
-                        {% endfor %}
+                </div>
+                <div class="form-group">
+                    <label for="selSL" style="color: white">Target Security Level (SL-T):</label>
+                    <select class="form-control" name="selSL" id="selSL">
+                    <option value="0"> -- Select SL-T -- </option>
+                    {% for value, description in SECURITY_LEVELS %}
+                        <option value="{{ value }}"
+                        {% if current_pha_header.sl_t|stringformat:"s" == value|stringformat:"s" %}selected{% endif %}>
+                            {{ description }}</option>
+                    {% endfor %}
                     </select>
                 </div>
-                    <!-- Hidden Field for CyberPHA ID -->
-                    <input type="hidden" name="cyberpha_id" value="{{ current_pha_header.ID }}">
-                    <!-- Submit Button -->
-                    <button type="button" id="assign-group-btn"  class="btn btn-primary">Assign</button>
-                </form>
+
+
+
             </div>
-
         </div>
-    </div>
-</div>
-<!-- Modal -->
-<div class="modal fade" id="investmentModal" tabindex="-1" role="dialog" aria-labelledby="investmentModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="investmentModalLabel">Add Cybersecurity Investments</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body">
-          <div class="table-responsive">
+     </div>
 
-          <table class="table" id="investmentTable">
-            <colgroup>
-                  <col span="1" style="width: 20%;"> <!-- Type -->
-                  <col span="1" style="width: 20%;"> <!-- Vendor Name -->
-                  <col span="1" style="width: 20%;"> <!-- Product Name -->
-                  <col span="1" style="width: 15%;"> <!-- Cost -->
-                  <col span="1" style="width: 15%;"> <!-- Date -->
-                  <col span="1" style="width: 10%;"> <!-- Action -->
-                </colgroup>
-            <thead>
-              <tr>
-                <th>Type</th>
-                <th>Vendor Name</th>
-                <th>Product Name</th>
-                <th>Cost</th>
-                <th>Date</th> <!-- New Date Column -->
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                    <td><input type="hidden" name="investment_id[]" value="{{ investment.id | default:'' }}" class="form-control"></td>
-                <td><select name="investment_type[]" class="form-control">
-                    <option value="Software">Software</option>
-                    <option value="Hardware">Hardware</option>
-                    </select>
-                </td>
+     <div class="tab-content" id="tab3">
+        <h3 style="color:white">CyberPHA Setup</h3>
+        <label id="cyberpha_detail_label" style="color:white">Information about the CyberPHA </label>
 
-                <td><input type="text" name="vendor_name[]" class="form-control" /></td>
-                <td><input type="text" name="product_name[]" class="form-control" /></td>
-                <td><input type="number" name="cost[]" class="form-control" step="0.01" /></td>
-                <td><input type="date" name="date[]" class="form-control" /></td> <!-- New Date Input -->
-                <td><button class="btn btn-danger removeRow">Remove</button></td>
-              </tr>
-            </tbody>
-
-          </table>
-          <button type="button" class="btn btn-primary" id="addRow">Add Row</button>
-
-          </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-
-      </div>
-    </div>
-  </div>
-</div>
-<script>
-$(document).ready(function() {
-  $("#addRow").click(function() {
-    var newRow = `<tr>
-      <td><select name="investment_type[]" class="form-control">
-        <option value="Software">Software</option>
-        <option value="Hardware">Hardware</option>
-        <option value="People">People</option>
-      </select></td>
-      <td><input type="text" name="vendor_name[]" class="form-control" /></td>
-      <td><input type="text" name="product_name[]" class="form-control" /></td>
-      <td><input type="number" name="cost[]" class="form-control" step="0.01" /></td>
-      <td><input type="date" name="date[]" class="form-control" /></td>
-      <td><button type="button" class="btn btn-danger removeRow">Remove</button></td>
-    </tr>`;
-    $("#investmentTable tbody").append(newRow);
-  });
-
-  $(document).on('click', '.removeRow', function() {
-    $(this).closest('tr').remove();
-  });
-});
-</script>
-
-
-    </div>
-
-
-</div>
-<script>
-$(document).ready(function() {
-    $('#assign-group-btn').on('click', function() {
+        <script>
+        $(document).ready(function() {
+        $('#assign-group-btn').on('click', function() {
 
         var cyberphaId = sessionStorage.getItem('activeCyberPHA'); // Retrieve from session storage
         var existingGroupId = $('#existing_group').val();
@@ -1315,111 +1360,347 @@ document.addEventListener('DOMContentLoaded', function() {
 
 updateGroupList();
 </script>
-
-    </div>
-
-    <div class="col-md-4 row" style="background-color: #464748;">
-        <div class="card mb-3 shadow-sm" style="background-color: #5E6266;"> <!-- Bootstrap card with shadow -->
-            <div class="card-body">
-               <button id="risk-assessment-btn" type="button" class="btn btn-link" style="text-decoration: none; color: white">
-                    <img src="{% static 'images/facility1.png' %}" alt="" class="align-bottom" style="max-height: 2rem; margin-left: 5px;">
-                    Create Facility PHA Profile
-                </button>
-                <br>
-                <div class="spinner" id="loadingSpinner"></div>
-                <p style="font-size: 10px; color: white">A valid address, industry, and facility name must be entered for the risk profile to be accurately assessed. Profiles are generated by a machine-learning algorithm and may slightly vary given the same inputs at different times</p>
+        <div class="row">
+            <div class="col-md-6">
                 <div class="form-group">
-                <div class="row">
-                    <div class="col-md-6" style="background-color: #5E6266;">
-                        <div id="pha_gauge"></div>
-
-                    </div>
-                    <div class="col-md-6" style="background-color: #5E6266;">
-                        <div id="control_gauge"></div>
-                    </div>
+                    <label for="txtTitle" style="color: white">CyberPHA Title</label>
+                    <input type="text" class="form-control" name="txtTitle" id="txtTitle" value="{{ current_pha_header.title }}" maxlength="100" style="font-size: 16px; font-weight: bold;" required>
                 </div>
+                <div class="form-group">
+                    <label for="txtLeader" style="color: white">CyberPHA Owner:</label>
+                    <input type="text" class="form-control" name="txtLeader" id="txtLeader" value="{{ current_pha_header.PHALeader }}" maxlength="100"  required>
                 </div>
-                <input type="hidden" id="hdn_pha_score" name="hdn_pha_score" value="{{ pha_header_records.pha_score }}">
-                <script>
-                    drawGauge({{ current_pha_header.pha_score }});
-                    drawControlGauge(0);
+                <div class="form-group">
+                    <label for="txtLeaderEmail" style="color: white">CyberPHA Owner Email:</label>
+                    <input type="email" class="form-control" name="txtLeaderEmail" id="txtLeaderEmail" value="{{ current_pha_header.PHALeaderEmail }}" required onblur="validateEmail(this)">
+                    <script type="text/javascript">
+                    function validateEmail(input) {
+                        var regex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+                        if (!regex.test(input.value)) {
+                            alert('Please enter a valid email address');
+                            input.focus();
+                        }
+                    }
                 </script>
+                </div>
                 <div class="form-group">
-                <div class="card mb-3 shadow-sm">
-    <div class="card-body">
-        <!-- Nav tabs -->
-        <ul class="nav nav-tabs" id="myTabs" role="tablist">
-            <li class="nav-item" role="presentation">
-                <a class="nav-link active" id="safety-tab" data-toggle="tab" href="#safety" role="tab" aria-controls="safety" aria-selected="true"><i class="bi bi-cone-striped"></i> Safety</a>
-            </li>
-            <li class="nav-item" role="presentation">
-                <a class="nav-link" id="chemical-tab" data-toggle="tab" href="#chemical" role="tab" aria-controls="chemical" aria-selected="false"><i class="bi bi-radioactive"></i> Chemical</a>
-            </li>
-            <li class="nav-item" role="presentation">
-                <a class="nav-link" id="physical-tab" data-toggle="tab" href="#physical" role="tab" aria-controls="physical" aria-selected="false"><i class="bi bi-shield-exclamation"></i> Physical Security</a>
-            </li>
-            <li class="nav-item" role="presentation">
-                <a class="nav-link" id="other-tab" data-toggle="tab" href="#other" role="tab" aria-controls="other" aria-selected="false"><i class="bi bi-pc-display-horizontal"></i> OT Assets</a>
-            </li>
-            <li class="nav-item" role="presentation">
-                <a class="nav-link" id="other-tab" data-toggle="tab" href="#compliance" role="tab" aria-controls="other" aria-selected="false"><i class="bi bi-card-checklist"></i> Compliance</a>
-            </li>
-            <li class="nav-item" role="presentation">
-                <a class="nav-link" id="other-tab" data-toggle="tab" href="#threats" role="tab" aria-controls="other" aria-selected="false"><i class="bi bi-exclamation-circle"></i> Threats</a>
-            </li>
-            <li class="nav-item" role="presentation">
-                <a class="nav-link" id="other-tab" data-toggle="tab" href="#insights" role="tab" aria-controls="other" aria-selected="false"><i class="bi bi-binoculars"></i> Insight</a>
-            </li>
-            <li class="nav-item" role="presentation">
-                <a class="nav-link" id="other-tab" data-toggle="tab" href="#strategy" role="tab" aria-controls="other" aria-selected="false"><i class="bi bi-send-check"></i> Strategy</a>
-            </li>
-        </ul>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label for="txtStartDate" style="color: white">Start Date:</label>
+                            <input type="date" class="form-control" name="txtStartDate" id="txtStartDate"  value="{{ current_pha_header.AssessmentStartDate }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="txtEndDate" style="color: white">End Date:</label>
+                            <input type="date" class="form-control" name="txtEndDate" id="txtEndDate" value="{{ current_pha_header.AssessmentEndDate }}" onchange="validateDates()">
+                        </div>
+                         <script type="text/javascript">
+                        function validateDates() {
+                            var startDate = document.getElementById('txtStartDate').value;
+                            var endDate = document.getElementById('txtEndDate').value;
 
-        <!-- Tab panes -->
-        <div class="tab-content mt-3">
-            <div class="tab-pane active" id="safety" role="tabpanel" aria-labelledby="safety-tab">
-                <label for="txtSafetySummary">Safety Summary:</label>
+                            if (endDate < startDate) {
+                                alert('End date cannot be before start date');
+                                document.getElementById('txtEndDate').value = '';
+                            }
+                        }
+                    </script>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="assessment_id" style="color: white">Control Assessment:</label>
+                    <select class="form-control"   id="assessment_id" name="assessment_id">
+                        <option value="">Select an Assessment</option>
+                        {% for assessment in assessments %}
+                            <option value="{{ assessment.id }}"
+                            {% if current_pha_header.assessment == assessment.id %}select{% endif %}>
+                                {{ assessment.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#moderatorModal">
+                        Select CyberPHA Moderators
+                    </button>
+                </div>
+                <script>
+                        $(document).ready(function() {
+                            $("#assessment-select").selectmenu().selectmenu("menuWidget").addClass("overflow");
+                        });
+                    </script>
 
+                <div class="form-group">
+                    <label for="workflow_selector" style="color: white">Workflow Status:</label>
+                    <select class="form-control" id="workflow_selector" name="workflow_selector">
+                        <option value="">Select a Status</option>
+                        {% for status, status_display in workflow_status_choices %}
+                            <option value="{{ status }}"
+                                    {% if current_workflow_status == status %} selected {% endif %}>
+                                {{ status_display }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
 
-                <textarea rows="25" name="txtSafetySummary" id="txtSafetySummary" class="form-control" style="resize: none; background-color: white; border-width: 0px" readonly>{{ current_pha_header.safetySummary }}</textarea>
+                <div class="form-group" style="color: white">
+                        Current Group Assignments:
+                        <br>
+                        <div id="currentGroupsDiv" style="font-size: 16px">
+                        </div>
+                    <br>
+                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#assignGroupModal">
+                        Assign to Group
+                    </button>
+
             </div>
-            <div class="tab-pane" id="chemical" role="tabpanel" aria-labelledby="chemical-tab">
-                <label for="txtChemical">Chemical Storage:</label>
-                <textarea rows="25" name="txtChemical" id="txtChemical" class="form-control" style="resize: none; background-color: white; border-width: 0px" readonly>{{ current_pha_header.chemicalSummary }}</textarea>
-            </div>
-            <div class="tab-pane" id="physical" role="tabpanel" aria-labelledby="physical-tab">
-                <label for="txtPhysical">Physical Security:</label>
-                <textarea rows="25" name="txtPhysical" id="txtPhysical" class="form-control" style="resize: none; background-color: white; border-width: 0px" readonly>{{ current_pha_header.physicalSummary }}</textarea>
-            </div>
-            <div class="tab-pane" id="other" role="tabpanel" aria-labelledby="other-tab">
-                <label for="txtOther">OT Assets:</label>
-                <textarea rows="25" name="txtOther" id="txtOther" class="form-control" style="resize: none; background-color: white; border-width: 0px" readonly>{{ current_pha_header.otherSummary }}</textarea>
-            </div>
-            <div class="tab-pane" id="compliance" role="tabpanel" aria-labelledby="other-tab">
-                <label for="txtCompliance">Compliance:</label>
-                <textarea rows="25" name="txtCompliance" id="txtCompliance" class="form-control" style="resize: none; background-color: white; border-width: 0px" readonly>{{ current_pha_header.complianceSummary }}</textarea>
-            </div>
-            <div class="tab-pane" id="threats" role="tabpanel" aria-labelledby="other-tab">
-                <label for="threatSummary">Threats and Vulnerabilities:</label>
-                <textarea rows="25" name="threatSummary" id="threatSummary" class="form-control" style="resize: none; background-color: white; border-width: 0px" readonly>{{ current_pha_header.threatSummary }}</textarea>
-            </div>
-            <div class="tab-pane" id="insights" role="tabpanel" aria-labelledby="other-tab">
-                <label for="insightSummary">Insights:</label>
-                <textarea rows="25" name="insightSummary" id="insightSummary" class="form-control" style="resize: none; background-color: white; border-width: 0px" readonly>{{ current_pha_header.insightSummary }}</textarea>
-            </div>
-            <div class="tab-pane" id="strategy" role="tabpanel" aria-labelledby="other-tab">
-                <label for="strategySummary">Defense Strategies:</label>
-                <textarea rows="25" name="strategySummary" id="strategySummary" class="form-control" style="resize: none; background-color: white; border-width: 0px" readonly>{{ current_pha_header.strategySummary }}</textarea>
+
             </div>
         </div>
+
+        <div class="modal" id="assignGroupModal">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title">Assign to Group</h4>
+                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="group-assignment-form">
+                            <!-- Existing Groups -->
+                            <div class="form-group">
+                                <label for="existing_group">Existing Group:</label>
+                                <select class="form-control" id="existing_group" name="existing_group">
+                                    <option value="">Select a Group</option>
+                                    {% for group in all_groups %}
+                                        <option value="{{ group.id }}">{{ group.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <!-- New Group -->
+                            <div class="form-group">
+                                <label for="new_group_name">New Group Name:</label>
+                                <input type="text" class="form-control" id="new_group_name" name="new_group_name">
+                            </div>
+                            <div class="form-group">
+                            <label for="new_group_type">New Group Type:</label>
+                            <select class="form-control" id="new_group_type" name="new_group_type">
+                                {% for type_value, type_name in group_types %}
+                                    <option value="{{ type_value }}">{{ type_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                            <!-- Hidden Field for CyberPHA ID -->
+                            <input type="hidden" name="cyberpha_id" value="{{ current_pha_header.ID }}">
+                            <!-- Submit Button -->
+                            <button type="button" id="assign-group-btn"  class="btn btn-primary">Assign</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+
+     </div>
+     <div class="tab-content" id="tab4">
+        <h3 style="color: white">Investments</h3>
+         <div class="card mb-3 shadow-sm" style="background-color: #5E6266;">
+            <div class="card-body">
+
+                <h5 >Add Cybersecurity Investments</h5>
+
+                <div class="table-responsive">
+
+                  <table class="table" id="investmentTable">
+                    <colgroup>
+                          <col span="1" style="width: 20%;"> <!-- Type -->
+                          <col span="1" style="width: 20%;"> <!-- Vendor Name -->
+                          <col span="1" style="width: 20%;"> <!-- Product Name -->
+                          <col span="1" style="width: 15%;"> <!-- Cost -->
+                          <col span="1" style="width: 15%;"> <!-- Date -->
+                          <col span="1" style="width: 10%;"> <!-- Action -->
+                        </colgroup>
+                    <thead>
+                      <tr>
+                        <th>Type</th>
+                        <th>Vendor Name</th>
+                        <th>Product Name</th>
+                        <th>Cost</th>
+                        <th>Date</th> <!-- New Date Column -->
+                        <th>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                          <td>
+                              <input type="hidden" name="investment_id[]" value="{{ investment.id | default:'' }}" class="form-control">
+                              <select name="investment_type[]" class="form-control">
+                                <option value="Software">Software</option>
+                                <option value="Hardware">Hardware</option>
+                              </select>
+                          </td>
+                          <td><input type="text" name="vendor_name[]" class="form-control" /></td>
+                          <td><input type="text" name="product_name[]" class="form-control" /></td>
+                          <td><input type="number" name="cost[]" class="form-control" step="0.01" /></td>
+                          <td><input type="date" name="date[]" class="form-control" /></td>
+                          <td><button class="btn btn-danger removeRow">Remove</button></td>
+                      </tr>
+                    </tbody>
+
+                  </table>
+                  <button type="button" class="btn btn-primary" id="addRow">Add Row</button>
+
+                </div>
+            </div>
+            <script>
+            $(document).ready(function() {
+              $("#addRow").click(function() {
+            var newRow = `<tr>
+                <td>
+                    <input type="hidden" name="investment_id[]" value="" class="form-control">
+                    <select name="investment_type[]" class="form-control">
+                        <option value="Software">Software</option>
+                        <option value="Hardware">Hardware</option>
+                        <option value="People">People</option> <!-- Assuming you want to add this option -->
+                    </select>
+                </td>
+                <td><input type="text" name="vendor_name[]" class="form-control" /></td>
+                <td><input type="text" name="product_name[]" class="form-control" /></td>
+                <td><input type="number" name="cost[]" class="form-control" step="0.01" /></td>
+                <td><input type="date" name="date[]" class="form-control" /></td>
+                <td><button type="button" class="btn btn-danger removeRow">Remove</button></td>
+            </tr>`;
+            $("#investmentTable tbody").append(newRow);
+        });
+
+
+              $(document).on('click', '.removeRow', function() {
+                $(this).closest('tr').remove();
+              });
+            });
+            </script>
+         </div>
+     </div>
+     <div class="tab-content" id="tab5">
+        <h3 style="color:white">Safety Profile <img src="{% static 'images/osha_safety.png' %}" style="width: 50px" class="img-fluid" alt="Logo"></h3>
+         <br>
+            <div class="form-group">
+            <div id="safetySummaryContainer" class="safety-summary-container"></div>
+            <textarea rows="25" name="txtSafetySummary" id="txtSafetySummary" class="form-control" style="resize: none; background-color: white; border-width: 0px" readonly hidden>{{ current_pha_header.safetySummary }}</textarea>
+
+
+            </div>
+     </div>
+     <div class="tab-content" id="tab6">
+        <h3 style="color:white">Chemical Profile <img src="{% static 'images/osha_chemical.png' %}" style="width: 50px" class="img-fluid" alt="Logo"></h3>
+         <br>
+         <div class="form-group">
+         <div id="chemicalContainer" class="safety-summary-container"></div>
+         <textarea rows="25" name="txtChemical" id="txtChemical" class="form-control" style="resize: none; background-color: white; border-width: 0px" readonly hidden>{{ current_pha_header.chemicalSummary }}</textarea>
+         </div>
+     </div>
+     <div class="tab-content" id="tab7">
+        <h3 style="color:white">Physical Security Profile <img src="{% static 'images/osha_exclamation.png' %}" style="width: 50px" class="img-fluid" alt="Logo"></h3>
+         <br>
+         <div class="form-group">
+         <div id="physicalContainer" class="safety-summary-container"></div>
+                <textarea rows="25" name="txtPhysical" id="txtPhysical" class="form-control" style="resize: none; background-color: white; border-width: 0px" readonly hidden>{{ current_pha_header.physicalSummary }}</textarea>
+             </div>
+     </div>
+     <div class="tab-content" id="tab8">
+        <h3 style="color:white">OT Asset Profile</h3>
+         <br>
+          <div class="form-group">
+         <div id="otherContainer" class="safety-summary-container"></div>
+                <textarea rows="25" name="txtOther" id="txtOther" class="form-control" style="resize: none; background-color: white; border-width: 0px" readonly hidden>{{ current_pha_header.otherSummary }}</textarea>
+          </div>
+     </div>
+     <div class="tab-content" id="tab9">
+        <h3 style="color:white">Compliance Profile </h3>
+         <br>
+         <div class="form-group">
+         <div id="complianceContainer" class="safety-summary-container"></div>
+         <textarea rows="25" name="txtCompliance" id="txtCompliance" hidden class="form-control" style="resize: none; background-color: white; border-width: 0px" readonly hidden>{{ current_pha_header.complianceSummary }}</textarea>
+         </div>
+         </div>
+     <div class="tab-content" id="tab10">
+        <h3 style="color:white">Threat Profile</h3>
+         <br>
+         <div class="form-group">
+         <div id="threatContainer" class="safety-summary-container"></div>
+                <textarea rows="25" name="threatSummary" id="threatSummary" class="form-control" style="resize: none; background-color: white; border-width: 0px" readonly hidden>{{ current_pha_header.threatSummary }}</textarea>
+         </div>
+         </div>
+     <div class="tab-content" id="tab11">
+        <h3 style="color:white">Security Insights</h3>
+         <br>
+         <div class="form-group">
+         <div id="insightContainer" class="safety-summary-container"></div>
+                <textarea rows="25" name="insightSummary" id="insightSummary" class="form-control" style="resize: none; background-color: white; border-width: 0px" readonly hidden>{{ current_pha_header.insightSummary }}</textarea>
+         </div>
+     </div>
+     <div class="tab-content" id="tab12">
+        <h3 style="color:white">OT Cybersecurity Strategy</h3>
+         <br>
+         <div class="form-group">
+         <div id="strategyContainer" class="safety-summary-container"></div>
+                <textarea rows="25" name="strategySummary" id="strategySummary" class="form-control" style="resize: none; background-color: white; border-width: 0px" readonly hidden>{{ current_pha_header.strategySummary }}</textarea>
+         </div>
+         </div>
+
+     </div>
     </div>
+
 </div>
-                </div>
-                </div>
+</div>
 
-        </div>
+<script>
+    $(document).ready(function() {
+    // Hide all tab content by default, except the first one
+    $(".tab-content").not(":first").hide();
+    // Remove 'active' class from all tab contents except the first
+    $(".tab-content").not(":first").removeClass('active');
 
+    // When a tab is clicked
+    $(".sub-menu a").click(function(e) {
+        e.preventDefault(); // Prevent the default link behavior
+
+        // Get the data-tab attribute value of the clicked tab
+        var tabId = $(this).attr("data-tab");
+
+        // Remove 'active' class from all tab contents
+        $(".tab-content").removeClass('active').hide();
+
+        // Add 'active' class to the clicked tab's content and show it
+        $("#" + tabId).addClass('active').fadeIn();
+
+        // Optionally, add 'active' class to the clicked tab and remove from others
+        $(".sub-menu a").removeClass('active'); // Remove active from all tabs
+        $(this).addClass('active'); // Add active to the clicked tab
+    });
+});
+
+</script>
+
+{% if new_record_id %}
     <script>
+        // Set the value of the hidden textbox field
+        document.querySelector('input[name="txtHdnCyberPHAID"]').value = "{{ new_record_id }}";
+
+        // Store the value in the local session storage
+        sessionStorage.setItem('activeCyberPHA', "{{ new_record_id }}");
+    </script>
+
+{% endif %}
+
+
+
+<script>
+drawGauge({{ current_pha_header.pha_score }});
+drawControlGauge(0);
+
 $("#generatePPT").click(function(e) {
     e.preventDefault();  // This prevents the default form submission
 
@@ -1483,6 +1764,25 @@ $(document).ready(function() {
     });
 });
 
+        function populateSummary(containerId, summaryData) {
+
+
+                // Clear existing content
+                $('#' + containerId).empty();
+
+                // Normalize newline characters and split the summary by new lines, filter out empty lines
+                const normalizedData = summaryData.replace(/\r\n|\r|\n/g, '\n'); // Normalize newlines to \n
+                const items = normalizedData.split('\n').filter(item => item.trim() !== '');
+
+                // Iterate over items and create boxes
+                items.forEach(item => {
+                    const box = $('<div class="safety-summary-box"></div>').text(item);
+                    $('#' + containerId).append(box);
+                });
+            }
+
+
+
 
         // AJAX function to call the Django view
         function assessRisk() {
@@ -1527,6 +1827,7 @@ $(document).ready(function() {
 
                     // Write the response data to the textboxes
                     document.getElementById('txtSafetySummary').value = response.safety_summary;
+
                     document.getElementById('txtChemical').value = response.chemical_summary;
                     document.getElementById('txtPhysical').value = response.physical_security_summary;
                     document.getElementById('txtOther').value = response.other_summary;
@@ -1536,10 +1837,29 @@ $(document).ready(function() {
                     document.getElementById('insightSummary').value = response.insightSummary;
                     document.getElementById('hdn_pha_score').value = response.pha_score;
 
+                    populateSummary("safetySummaryContainer", response.safety_summary);
+                    populateSummary("complianceContainer", response.compliance_summary);
+                    populateSummary("physicalContainer", response.physical_security_summary);
+                    populateSummary("otherContainer", response.other_summary);
+                    populateSummary("chemicalContainer", response.chemical_summary);
+                    populateSummary("threatContainer", response.threatSummary);
+                    populateSummary("insightContainer", response.insightSummary);
+                    populateSummary("strategyContainer", response.strategySummary);
 
                     drawGauge(response.pha_score);
 
                      $('#loadingSpinner').hide();
+                      // Expand the Facility Profile submenu if it's not already expanded
+                    // This assumes you have some CSS/JS logic to toggle visibility based on a class like 'expanded'
+                    $('.facility-profile-heading').addClass('expanded');
+                    $('.facility-profile-submenu').show(); // Make sure the submenu is visible
+
+                    // Make tab5 the active and visible tab
+                    // First, remove 'active' class from all tabs to hide them
+                    $('.tab-content').removeClass('active').hide();
+
+                    // Then, add 'active' class to tab5 and show it
+                    $('#tab5').addClass('active').show();
 
                 },
                 error: function (xhr, status, error) {
@@ -1572,24 +1892,6 @@ $(document).ready(function() {
 </div>
 
 
-<div class="row">
-        <div class="col-md-1 " style="background-color: #464748;"></div>
-        <div class="col-md-10 " style="background-color: #464748;">
-         <div class="row" style="background-color: #464748; height: 200px; ">
-             <div class="col-md-1 text-left" style="background-color: #464748;">
-             </div>
-             <div class="col-md-2 text-left" style="background-color: #464748;">
-             </div>
-             <div class="col-md-3 text-left" style="background-color: #464748;"></div>
-            <div class="col-md-6 text-right" style="background-color: #464748;">
-
-
-             </div>
-        </div>
-
-       </div>
-        <div class="col-md-1 " style="background-color: #464748;"></div>
-    </div> <!-- dark grey stripe with submit/reset buttons-->
 
 <!-- Modal -->
 <div class="modal fade" id="moderatorModal" tabindex="-1" role="dialog" aria-labelledby="moderatorModalLabel" aria-hidden="true">
@@ -1642,7 +1944,7 @@ $(document).ready(function() {
 <script>
     $(document).ready(function() {
         var table = $('#headertable').DataTable({
-            "pageLength": 5,
+            "pageLength": 20,
             "lengthChange": false
         });
 
@@ -1710,7 +2012,7 @@ $(document).ready(function() {
     });
 }
 
-function fetchHeaderRecord(recordId) {
+            function fetchHeaderRecord(recordId) {
                  sessionStorage.setItem('activeCyberPHA', recordId);
                  // Set the value of the hidden text field
                  document.getElementById('txtHdnCyberPHAID').value = recordId;
@@ -1723,6 +2025,9 @@ function fetchHeaderRecord(recordId) {
                      success: function (data) {
 
                          $('#txtTitle').val(data.headerrecord.title);
+
+                         $('#lblCyberPHATitle').text(data.headerrecord.title);
+
                          $('#txtLeader').val(data.headerrecord.leader);
                          $('#selIndustry').val(data.headerrecord.industry);
                          $('#txtUnit').val(data.headerrecord.unit);
@@ -1740,6 +2045,7 @@ function fetchHeaderRecord(recordId) {
                          $('#txtStartDate').val(data.headerrecord.startdate);
                          $('#txtEndDate').val(data.headerrecord.enddate);
                          $('#txtSafetySummary').val(data.headerrecord.safetysummary);
+
                          $('#txtChemical').val(data.headerrecord.chemicalsummary);
                          $('#txtPhysical').val(data.headerrecord.physicalsummary);
                          $('#txtOther').val(data.headerrecord.othersummary);
@@ -1762,6 +2068,15 @@ function fetchHeaderRecord(recordId) {
                          drawControlGauge(data.control_effectiveness);
 
                          populateInvestmentTable(data.investments);
+
+                         populateSummary("safetySummaryContainer", data.headerrecord.safetysummary);
+                         populateSummary("complianceContainer", data.headerrecord.compliancesummary);
+                         populateSummary("physicalContainer", data.headerrecord.physicalsummary);
+                         populateSummary("otherContainer", data.headerrecord.othersummary);
+                         populateSummary("chemicalContainer", data.headerrecord.chemicalsummary);
+                         populateSummary("threatContainer", data.headerrecord.threatSummary);
+                         populateSummary("insightContainer", data.headerrecord.insightSummary);
+                         populateSummary("strategyContainer", data.headerrecord.strategySummary);
 
                          sessionStorage.setItem('sessionIndustry', data.headerrecord.industry);
                          sessionStorage.setItem('sessionFacilityType', data.headerrecord.facilitytype);
