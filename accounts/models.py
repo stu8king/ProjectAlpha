@@ -100,6 +100,12 @@ class Organization(models.Model):
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
                                    related_name='organization_creators')
     last_updated = models.DateTimeField(auto_now=True)
+    tax_id = models.TextField(null=True, blank=True)
+    primary_contact = models.TextField(null=True, blank=True)
+    contact_email = models.TextField(null=True, blank=True)
+    contact_phone = models.TextField(null=True, blank=True)
+
+
 
     class Meta:
         db_table = 'organization'

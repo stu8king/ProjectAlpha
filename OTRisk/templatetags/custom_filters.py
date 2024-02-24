@@ -5,6 +5,11 @@ register = template.Library()
 
 
 @register.filter
+def zip_lists(a, b):
+    return zip(a, b)
+
+
+@register.filter
 def currency_format(value):
     if value >= 1000000:
         return f"${value / 1000000:.2f}M"
