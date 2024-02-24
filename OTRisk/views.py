@@ -53,7 +53,7 @@ from .raw_views import qraw, openai_assess_risk, GetTechniquesView, raw_action, 
 from .dashboard_views import dashboardhome
 from .pha_views import iotaphamanager, facility_risk_profile, get_headerrecord, scenario_analysis, phascenarioreport, \
     getSingleScenario, pha_report, scenario_vulnerability, add_vulnerability, get_asset_types, calculate_effectiveness, \
-    generate_ppt, analyze_scenario, assign_cyberpha_to_group, fetch_groups, fetch_all_groups, retrieve_scenario_builder
+    generate_ppt, analyze_scenario, assign_cyberpha_to_group, fetch_groups, fetch_all_groups, retrieve_scenario_builder, facilities, air_quality_index, delete_pha_record
 from .report_views import pha_reports, get_scenario_report_details, qraw_reports, get_qraw_scenario_report_details
 from .forms import CustomConsequenceForm, OrganizationAdmin
 from .models.Model_Scenario import CustomConsequence
@@ -475,7 +475,7 @@ def assessment_questions(request, framework_id):
     )
 
     # if request.method == 'POST' and formset.is_valid():
-    #    print(request.POST)
+
     #    # Create a new SelfAssessment instance
     #    self_assessment = SelfAssessment.objects.create(user=request.user, framework=framework)
 
@@ -604,18 +604,30 @@ def execute_sql(request):
     if not request.user.is_superuser:
         return HttpResponseForbidden("You don't have permission to access this page.")
 
-    results = None
+    results, columns, password_error = None, None, None
     if request.method == 'POST':
         form = SQLQueryForm(request.POST)
         if form.is_valid():
-            query = form.cleaned_data.get('query')
-            with connection.cursor() as cursor:
-                cursor.execute(query)
-                results = cursor.fetchall()
+            entered_password = form.cleaned_data.get('password')
+            correct_password = get_api_key("sql_admin")
+            if entered_password != correct_password:
+                password_error = "Incorrect password."
+            else:
+                query = form.cleaned_data.get('query')
+                with connection.cursor() as cursor:
+                    cursor.execute(query)
+                    results = cursor.fetchall()
+                    columns = [col[0] for col in cursor.description]
     else:
         form = SQLQueryForm()
 
-    return render(request, 'OTRisk/execute_sql.html', {'form': form, 'results': results})
+    context = {
+        'form': form,
+        'results': results,
+        'columns': columns,
+        'password_error': password_error,
+    }
+    return render(request, 'OTRisk/execute_sql.html', context)
 
 
 def edit_user_profile(request, user_id):
@@ -749,7 +761,7 @@ def disable_user(request, user_id):
 
 
 def enable_user(request, user_id):
-    print(request.POST)
+
     try:
         user_to_enable = User.objects.get(pk=user_id)
         if user_to_enable != request.user:
@@ -1333,7 +1345,7 @@ def save_or_update_cyberpha(request):
                 if safeguard_description_key in request.POST and safeguard_type_key in request.POST:
                     safeguard_description = request.POST.get(safeguard_description_key)
                     safeguard_type = request.POST.get(safeguard_type_key)
-                    print(scenario_instance)
+
                     # Create new PHA_Safeguard record
                     PHA_Safeguard.objects.create(
                         scenario=scenario_instance,
@@ -2656,7 +2668,7 @@ def generate_scenario_description(request):
             f"- Facility type: {facility_type}\n\n"
             f"- Industry sector: {industry}\n\n"
         )
-        print(prompt)
+
         # Setting OpenAI API key
         openai.api_key = get_api_key('openai')
 

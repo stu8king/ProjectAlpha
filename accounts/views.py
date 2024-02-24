@@ -19,7 +19,7 @@ from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.utils import timezone
-from django.core.mail import send_mail
+from django.core.mail import send_mail, get_connection
 import string
 import random
 import phonenumbers
@@ -203,12 +203,23 @@ def two_factor_verify_bak(request):
     return render(request, 'accounts/two_factor_verify.html', {'form': form})
 
 
+import logging
+
+
 @csrf_exempt
 def password_reset_request(request):
+    email_host = get_api_key("email_host")
+    email_port = int(get_api_key("email_port"))
+    email_use_tls = True
+    email_host_user = get_api_key("email_host_user")
+    email_host_password = get_api_key("email_host_password")
+    default_from_email = get_api_key("email_from")
+
     if request.method == "POST":
         form = PasswordResetRequestForm(request.POST)
         if form.is_valid():
             email = form.cleaned_data.get('email')
+
             try:
                 user = User.objects.get(email=email)
                 code = get_random_string(length=6, allowed_chars='0123456789')
@@ -219,16 +230,29 @@ def password_reset_request(request):
                     <strong>Your one-time code is: {code}</strong>.<br><br>
                     Please verify you're really you by entering this 6-digit code when you sign in. Just a heads up, this code will expire in 30 minutes for security reasons.
                 """.format(code=code)
+
                 send_mail(
                     subject,
                     message,
-                    'support@iotarisk.com',
+                    default_from_email,
                     [email],
                     fail_silently=False,
-                    html_message=html_message
+                    html_message=html_message,
+                    auth_user=email_host_user,
+                    auth_password=email_host_password,
+                    connection=get_connection(
+                        host=email_host,
+                        port=email_port,
+                        username=email_host_user,
+                        password=email_host_password,
+                        use_tls=True
+                    )
                 )
+
                 messages.success(request, 'A reset code has been sent to your email.')
                 return redirect(f'/accounts/password_reset/{user.id}/')
+            except Exception as e:
+                messages.error(request, 'Failed to send reset code. Please try again later.')
             except User.DoesNotExist:
                 messages.error(request, 'Email not found.')
     else:
@@ -263,7 +287,7 @@ def password_reset(request, uid):
                 reset_code.delete()
 
                 messages.success(request, 'Password reset successful. You can now login with your new password.')
-                return redirect('login')
+                return redirect('accounts/home.html')
             except PasswordResetCode.DoesNotExist:
                 messages.error(request, 'Invalid reset code. Please check and try again.')
     else:

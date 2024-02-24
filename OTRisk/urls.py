@@ -151,6 +151,9 @@ urlpatterns = [
     path('get_scenario_builder_details/<int:scenario_id>/', views.get_scenario_builder_details, name='get_scenario_builder_details'),
     path('get_analysis_result/', views.get_analysis_result, name='get_analysis_result'),
     path('cleanup_scenariobuilder/', views.cleanup_scenariobuilder, name='cleanup_scenariobuilder'),
+    path('facilities/', views.facilities, name='facilities'),
+    path('air_quality_index/', views.air_quality_index, name='air_quality_index'),
+    path('delete_pha_record/', views.delete_pha_record, name='delete_pha_record'),
 ]
 
 

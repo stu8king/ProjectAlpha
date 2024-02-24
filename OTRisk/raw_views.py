@@ -44,7 +44,7 @@ from .tasks import analyze_scenario_task
 class UpdateRAAction(View):
     def put(self, request, *args, **kwargs):
         # try:
-        print(request.body)
+
         data = json.loads(request.body.decode('utf-8'))
         action_id = data.get('action_id')
         action_due_date = data.get('actionDueDate')

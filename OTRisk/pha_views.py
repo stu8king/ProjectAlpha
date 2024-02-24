@@ -89,7 +89,6 @@ def validate_and_format_date(date_str, default_date='2001-01-01', date_format='%
 
 @login_required
 def iotaphamanager(request, record_id=None):
-    print(request.POST.get('txtHdnCyberPHAID'))
     pha_header = None
     new_record_id = None  # Initialize new_record_id to None
     annual_revenue_str = "$0"
@@ -133,18 +132,53 @@ def iotaphamanager(request, record_id=None):
         pha_header.AssessmentEndDate = validate_and_format_date(end_date_str)
 
         pha_header.facilityAddress = request.POST.get('txtAddress')
-        pha_header.safetySummary = request.POST.get('txtSafetySummary')
-        pha_header.chemicalSummary = request.POST.get('txtChemical')
-        pha_header.physicalSummary = request.POST.get('txtPhysical')
-        pha_header.otherSummary = request.POST.get('txtOther')
-        pha_header.threatSummary = request.POST.get('threatSummary')
-        pha_header.insightSummary = request.POST.get('insightSummary')
-        pha_header.strategySummary = request.POST.get('strategySummary')
-        pha_header.complianceSummary = request.POST.get('txtCompliance')
+
+        if is_new_record:
+            risk_profile_data = facility_risk_profile_newrecord(request.user.id,
+                                                                request.POST.get('selIndustry'),
+                                                                request.POST.get('selFacilityType'),
+                                                                request.POST.get('txtAddress'),
+                                                                request.POST.get('countrySelector'),
+                                                                request.POST.get('txtFacility'),
+                                                                int(request.POST.get('txtEmployees') or 0),
+                                                                request.POST.get('shift_model'),
+                                                                int(request.POST.get('assessment_id') or 0)
+                                                                )
+            pha_header.safetySummary = risk_profile_data['safety_summary']
+            pha_header.chemicalSummary = risk_profile_data['chemical_summary']
+            pha_header.physicalSummary = risk_profile_data['physical_security_summary']
+            pha_header.otherSummary = risk_profile_data['other_summary']
+            pha_header.threatSummary = risk_profile_data['threatSummary']
+            pha_header.insightSummary = risk_profile_data['insightSummary']
+            pha_header.strategySummary = risk_profile_data['strategySummary']
+            pha_header.complianceSummary = risk_profile_data['compliance_summary']
+            pha_header.pha_score = risk_profile_data['pha_score']
+
+        else:
+            pha_header.safetySummary = request.POST.get('txtSafetySummary')
+            pha_header.chemicalSummary = request.POST.get('txtChemical')
+            pha_header.physicalSummary = request.POST.get('txtPhysical')
+            pha_header.otherSummary = request.POST.get('txtOther')
+            pha_header.threatSummary = request.POST.get('threatSummary')
+            pha_header.insightSummary = request.POST.get('insightSummary')
+            pha_header.strategySummary = request.POST.get('strategySummary')
+            pha_header.complianceSummary = request.POST.get('txtCompliance')
+            try:
+                # Attempt to convert the POST value to an integer.
+                pha_header.pha_score = int(request.POST.get('hdn_pha_score', 0))
+            except ValueError:
+                # If conversion fails, set pha_score to 0.
+                pha_header.pha_score = 0
+
         pha_header.country = request.POST.get('countrySelector')
         pha_header.Date = validate_and_format_date(start_date_str)
         pha_header.EmployeesOnSite = int(request.POST.get('txtEmployees') or 0)
-
+        pha_header.facilityAQI = request.POST.get('txthdnAQI')
+        pha_header.facilityCity = request.POST.get('txtCity')
+        pha_header.facilityCode = request.POST.get('zipCode')
+        pha_header.facilityLat = request.POST.get('txthdnLat')
+        pha_header.facilityLong = request.POST.get('txthdnLong')
+        pha_header.facilityState = request.POST.get('txtState')
         pha_header.shift_model = request.POST.get('shift_model')
         try:
             assessment_id = int(request.POST.get('assessment_id')) if request.POST.get('assessment_id') else None
@@ -153,12 +187,6 @@ def iotaphamanager(request, record_id=None):
         pha_header.assessment = assessment_id
 
         pha_header.npm = request.POST.get('npm')
-        try:
-            # Attempt to convert the POST value to an integer.
-            pha_header.pha_score = int(request.POST.get('hdn_pha_score', 0))
-        except ValueError:
-            # If conversion fails, set pha_score to 0.
-            pha_header.pha_score = 0
 
         # Continue with the rest of the processing
 
@@ -395,6 +423,12 @@ def get_headerrecord(request):
         'current_groups': current_groups_data,
         'all_groups': all_groups_data,
         'group_types': CyberPHA_Group.GROUP_TYPES,
+        'facilityAQI': headerrecord.facilityAQI,
+        'facilityCity': headerrecord.facilityCity,
+        'facilityCode': headerrecord.facilityCode,
+        'facilityLat': headerrecord.facilityLat,
+        'facilityLong': headerrecord.facilityLong,
+        'facilityState': headerrecord.facilityState
     }
 
     # Query for moderators associated with this header record
@@ -1045,7 +1079,6 @@ def compliance_map_data(common_content):
         return f"Error: {str(e)}"
 
 
-
 @login_required
 def scenario_analysis(request):
     # Log the user activity
@@ -1215,7 +1248,6 @@ def scenario_analysis(request):
             futures = [executor.submit(get_response, msg) for msg in user_messages]
             # Collect the results in the order the futures were submitted
             responses = [future.result() for future in futures]
-            print(responses[7])
 
         # Now handle the compliance mapping separately
         compliance_data = compliance_map_data(common_content)
@@ -1231,7 +1263,8 @@ def scenario_analysis(request):
             'biaScore': responses[5],
             'projection': responses[6],
             'control_effectiveness': control_effectiveness,
-            'scenario_compliance_data': responses[7]
+            'executive_summary': responses[7],
+            'scenario_compliance_data': responses[8]
         })
 
 
@@ -1750,3 +1783,165 @@ def retrieve_scenario_builder(request, scenario_id):
         return JsonResponse({'error': 'Scenario not found'}, status=404)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+
+
+import requests
+
+
+def get_facilities_by_zip(zip_code):
+    # EPA FRS API endpoint - replace with the actual endpoint and parameters as needed
+    url = f"https://ofmpub.epa.gov/frs_public2/frs_rest_services.get_facilities?zip_code={zip_code}&output=JSON"
+    response = requests.get(url)
+    print("Raw response text:", response.text[:500])  # Print the first 500 characters of the response
+    try:
+        return response.json()
+    except ValueError as e:  # Catch JSON decoding errors
+        print("JSON decoding error:", e)
+        return None
+
+
+def facilities(request):
+    zip_code = request.GET.get('zip')
+    if zip_code:
+        facilities = get_facilities_by_zip(zip_code)
+        if facilities:
+            return JsonResponse({'facilities': facilities}, safe=False)
+        else:
+            return JsonResponse({'error': 'No facilities found or error in API call'}, status=500)
+    else:
+        return JsonResponse({'error': 'No ZIP code provided'}, status=400)
+
+
+def get_coordinates_from_address(address, country, google_maps_api_key):
+    geocode_url = f"https://maps.googleapis.com/maps/api/geocode/json?address={address},+{country}&key={google_maps_api_key}"
+    response = requests.get(geocode_url)
+    data = response.json()
+    if data['status'] == 'OK':
+        latitude = data['results'][0]['geometry']['location']['lat']
+        longitude = data['results'][0]['geometry']['location']['lng']
+        return latitude, longitude
+    else:
+        return None, None
+
+
+def air_quality_index(request):
+    latitude = request.GET.get('lat')
+    longitude = request.GET.get('lon')
+    address = request.GET.get('address')
+    country = request.GET.get('country')
+
+    aqicn_api_key = get_api_key("aqicn")  # Replace with your actual AQICN API key
+
+    # If latitude and longitude are not provided, use address and country to get them
+    if not latitude or not longitude:
+        if address and country:
+            latitude, longitude = get_coordinates_from_address(address, country,
+                                                               "AIzaSyC9z71m0_5oIR2tg4ygvOt61jCL-IgxlBI")
+            if not latitude or not longitude:
+                return JsonResponse({'error': 'Failed to geocode address'}, status=400)
+
+    url = f"https://api.waqi.info/feed/geo:{latitude};{longitude}/?token={aqicn_api_key}"
+
+    try:
+        response = requests.get(url)
+        data = response.json()
+        aqi = data.get('data', {}).get('aqi')
+        return JsonResponse({'aqi': aqi})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+def facility_risk_profile_newrecord(userid, industry, facility_type, address, country, facility, employees,
+                                    shift_model, assessment_id):
+    language = 'en'
+
+    if not industry or not facility_type:
+        error_msg = "Missing industry or facility type. Complete all fields to get an accurate assessment"
+        return JsonResponse({
+            'safety_summary': error_msg,
+            'chemical_summary': error_msg,
+            'physical_security_summary': error_msg,
+            'other_summary': error_msg
+        })
+
+    openai_api_key = get_api_key('openai')
+    openai_model = get_api_key('OpenAI_Model')
+    # openai_api_key = os.environ.get('OPENAI_API_KEY')
+    openai.api_key = openai_api_key
+    context = f"You are an industrial safety and hazard expert. For the {facility} {facility_type} at {address}, {country} in the {industry} industry, with {employees} employees working a {shift_model} shift model,"
+
+    prompts = [
+        f"{context}. List safety hazards, max 100 words. - Specific to facility - Space between bullets. ",
+        f"{context},  List expected chemicals, max 100 words. - Specific to facility - Chemical names only - Space between bullets. ",
+        f"{context}, provide a concise bullet-point list of physical security challenges for the facility. Limit the response to a maximum of 100 words, or less. EXTRA INSTRUCTION: Add a line space between each bullet point.  If {language} is not en then give the response in the language {language} with the english directly underneath",
+        # f"For the {facility} {facility_type} at {address}, {country} in the {Industry} industry, provide a concise bullet point list of other localized risks that are likely to be identified for a {facility_type} at {address}. Limit the response to a maximum of 100 words, or less. Add a line space between each bullet point"
+        f"You are an operational technology (OT) Cybersecurity expert with deep knowledge in the {industry} industry, specifically focusing on {facility_type} facilities. Given the unique operational requirements and processes of a {facility_type} in the {industry} industry located at {address}, provide a concise bullet-point list of specialized OT and IoT devices and equipment that are typically connected to IT networks for monitoring, supervision, and control. These should be devices and systems uniquely relevant to the operations, safety, and efficiency of such facilities. Limit the response to a maximum of 100 words, or less, and focus on providing industry-specific examples that reflect the specialized needs of {facility_type} facilities within the {industry} sector.EXTRA INSTRUCTION: Add a line space between each bullet point. If the response is not in English and {language} is specified, provide the response in {language} with the English translation directly underneath.",
+        f"As a compliance expert specializing in the {industry} industry within {country}, you have an in-depth understanding of regulatory frameworks affecting {facility_type} operations. Given your expertise, identify up to 10 (there can be fewer) of the most current and relevant regulatory compliance requirements specifically applicable to a {facility_type} in {country}, focusing on those that explicitly mandate cybersecurity controls. Please list only the full title of each regulation, without additional commentary or explanation. Ensure there are no repetitions or duplications in the final list. EXTRA INSTRUCTION: Present each regulation as a concise bullet point. If {language} is specified and differs from English, provide the response first in {language}, followed by an English translation directly underneath each bullet point.",
+        f"{context}: You are a safety expert for OSHA. For a {facility_type} in {country}, estimate a detailed and nuanced safety and hazard risk score. Use a scale from 0 to 100, where 0 indicates an absence of safety hazards and 100 signifies the presence of extreme and imminent fatal hazards. Provide a score reflecting the unique risk factors associated with the facility type and its operational context in {country}. Scores should reflect increments of 10, with each decile corresponding to escalating levels of hazard severity and likelihood of occurrence given the expected attention to safety at the facility. Base your score on a typical {facility_type} in {country}, adhering to expected standard safety protocols, equipment conditions, and operational practices. Provide the score as a single, precise number without additional commentary."
+    ]
+
+    responses = []
+
+    # Loop through the prompts and make an API call for each one
+    def fetch_response(prompt):
+        return openai.ChatCompletion.create(
+            # model="gpt-4",
+            model=openai_model,
+            messages=[
+                {"role": "system",
+                 "content": "You are a model trained to provide concise responses. Please provide a concise numbered bullet-point list based on the given statement."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.1,
+            max_tokens=600
+
+        )
+
+        # Use ThreadPoolExecutor to parallelize the API calls
+
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        responses = list(executor.map(fetch_response, prompts))
+
+        # Extract the individual responses
+    safety_summary = responses[0]['choices'][0]['message']['content'].strip()
+    chemical_summary = responses[1]['choices'][0]['message']['content'].strip()
+    physical_security_summary = responses[2]['choices'][0]['message']['content'].strip()
+    other_summary = responses[3]['choices'][0]['message']['content'].strip()
+    compliance_summary = responses[4]['choices'][0]['message']['content'].strip()
+    pha_score = responses[5]['choices'][0]['message']['content'].strip()
+
+    # Call to facility_threat_profile
+    threatSummary, insightSummary, strategySummary = facility_threat_profile(facility, facility_type, country,
+                                                                             industry, safety_summary,
+                                                                             chemical_summary,
+                                                                             physical_security_summary,
+                                                                             other_summary,
+                                                                             compliance_summary,
+                                                                             "")
+
+    return {
+        'safety_summary': safety_summary,
+        'chemical_summary': chemical_summary,
+        'physical_security_summary': physical_security_summary,
+        'other_summary': other_summary,
+        'compliance_summary': compliance_summary,
+        'pha_score': pha_score,
+        'threatSummary': threatSummary,
+        'insightSummary': insightSummary,
+        'strategySummary': strategySummary
+    }
+
+
+@csrf_exempt
+def delete_pha_record(request):
+    if request.method == 'POST':
+        record_id = request.POST.get('id')
+        try:
+            pha_record = tblCyberPHAHeader.objects.get(ID=record_id)
+            pha_record.Deleted = 1
+            pha_record.save()
+
+            return JsonResponse({'deleted': True})
+        except tblCyberPHAHeader.DoesNotExist:
+            return JsonResponse({'deleted': False})
+    return JsonResponse({'deleted': False})

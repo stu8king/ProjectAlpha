@@ -273,6 +273,12 @@ class tblCyberPHAHeader(models.Model):
     Timestamp = models.DateField
     Deleted = models.IntegerField()
     facilityAddress = models.CharField(max_length=255)
+    facilityCity = models.CharField(max_length=100, null=True)
+    facilityState = models.CharField(max_length=100, null=True)
+    facilityCode = models.CharField(max_length=20, null=True)
+    facilityLat = models.CharField(max_length=10, null=True)
+    facilityLong = models.CharField(max_length=10, null=True)
+    facilityAQI = models.IntegerField(null=True)
     title = models.TextField()
     safetySummary = models.TextField()
     chemicalSummary = models.TextField()
@@ -307,6 +313,7 @@ class tblCyberPHAHeader(models.Model):
     insightSummary = models.TextField(default="No Summary Saved", null=True)
     strategySummary = models.TextField(default="No Summary Saved", null=True)
     groups = models.ManyToManyField(CyberPHA_Group, blank=True)
+
 
     def set_workflow_status(self, status):
         WorkflowStatus.objects.create(cyber_pha_header=self, status=status)

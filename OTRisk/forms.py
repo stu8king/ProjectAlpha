@@ -226,6 +226,7 @@ class VulnerabilityAnalysisForm(forms.ModelForm):
 
 class SQLQueryForm(forms.Form):
     query = forms.CharField(widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 5}), label="SQL Query")
+    password = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-control'}), label="Password")
 
 
 class ChangePasswordForm(forms.Form):
