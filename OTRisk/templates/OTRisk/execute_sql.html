@@ -23,21 +23,32 @@
                 {{ form.as_p }}
                 <button type="submit" class="btn btn-primary">Execute</button>
             </form>
-
+    {% if password_error %}
+        <div class="alert alert-danger" role="alert">
+            {{ password_error }}
+        </div>
+    {% endif %}
             {% if results %}
-            <h3>Results:</h3>
-            <table class="table">
-                <tbody>
-                    {% for row in results %}
-                    <tr>
-                        {% for item in row %}
-                        <td>{{ item }}</td>
-                        {% endfor %}
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-            {% endif %}
+    <h3>Results:</h3>
+    <table class="table">
+        <thead>
+            <tr>
+                {% for column in columns %}
+                <th>{{ column }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in results %}
+            <tr>
+                {% for item in row %}
+                <td>{{ item }}</td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endif %}
             {% endblock %}
 </div>
 <div class="col-md-1 bg-black"></div>

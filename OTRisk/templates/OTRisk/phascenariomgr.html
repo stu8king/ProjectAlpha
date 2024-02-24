@@ -211,8 +211,8 @@ svg {
     background-color: #464748; /* Same as body background for seamless integration */
     color: #d3d1cd; /* Text color */
     padding: 10px 20px; /* Adjust as needed */
-    padding-left: 100px; /* Align with the end of the sidebar */
-    width: calc(100% - 200px); /* Adjust based on the actual sidebar width */
+    padding-left: 80px; /* Align with the end of the sidebar */
+    width: calc(100% - 100px); /* Adjust based on the actual sidebar width */
     box-sizing: border-box;
 }
 .page-title {
@@ -321,6 +321,44 @@ svg {
 
 .page-title:hover {
     text-decoration: underline;
+}
+
+
+/* Style for the compliance_map table only */
+#compliance_map {
+    border-collapse: separate;
+    border-spacing: 0 15px; /* Creates space between rows */
+    margin: 20px; /* Adds some space around the table for aesthetics */
+}
+
+#compliance_map thead th {
+    background-color: #004085; /* Dark blue background for headers */
+    color: #fff; /* White text for contrast */
+    text-align: left;
+    font-size: 16px; /* Slightly larger font size for headers */
+    padding: 10px; /* Padding inside header cells */
+}
+
+#compliance_map tbody tr {
+    background-color: #f8f9fa; /* Light background for each row */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Shadow for depth */
+    border-radius: 5px; /* Rounded corners for each row */
+    margin-bottom: 15px; /* Space between rows */
+}
+
+#compliance_map td {
+    padding: 10px; /* Padding inside each cell */
+    vertical-align: middle; /* Aligns content in the middle vertically */
+    border-top: 0; /* Removes the top border from cells */
+}
+
+#compliance_map a {
+    color: #007bff; /* Color for links to make them stand out */
+    text-decoration: none; /* Removes underline from links */
+}
+
+#compliance_map a:hover {
+    text-decoration: underline; /* Adds underline on hover for links */
 }
 
 
@@ -764,6 +802,7 @@ $(document).ready(function() {
                             $("#userscenarioListBody tr").removeClass('highlighted');
                             // Add highlighting to the current clicked row
                             $(row).addClass('highlighted');
+
                         }
 
                             // Function to load the vulnerability table component
@@ -1584,10 +1623,10 @@ $(document).ready(function() {
         </div>
         <div class="tab-content " id="tab8">
             <h2>Compliance Map</h2>
-            <div class="card">
 
-                <div class="card-body">
-                    <table id="compliance_map" class="table table-hover table-bordered small small-font overflow-auto compact" >
+
+                <div class="form-group">
+                    <table id="compliance_map" class=" table-hover small small-font overflow-auto compact" style="width:95%">
                         <thead>
                             <tr>
                                 <th style="width: 33%">Compliance Concern</th>
@@ -1602,7 +1641,7 @@ $(document).ready(function() {
                     <textarea id="compliance_map" name="compliance_map" rows="1" width="1%" readonly style="resize: none; visibility: hidden"></textarea>
 
                 </div>
-            </div>
+
         </div>
 
          <div class="tab-content " id="tab9">
@@ -1652,6 +1691,10 @@ $(document).ready(function() {
         </div>
          <div class="tab-content " id="tab10">
             <h2>Executive Summary</h2>
+             <div class="form-group">
+                 <span id="exec_summary"></span>
+                 <input type="hidden" id="hdnExecSummary" name="hdnExecSummary">
+             </div>
         </div>
          </div>
         </div>
@@ -3534,6 +3577,7 @@ $('#scenarioSelectModal').on('show.bs.modal', function (e) {
                         });
                     } else {
                         $('#loadingSpinner').hide();
+                        console.log(response);
                         document.getElementById('txtRRa').value = response.adjustedRR;
                         document.getElementById('hdnLikelihood').value = response.likelihood;
                         document.getElementById('txtLikelihood').value = response.likelihood + '%';
@@ -3551,6 +3595,8 @@ $('#scenarioSelectModal').on('show.bs.modal', function (e) {
                         document.getElementById('txtProbability').value = response.probability;
 
                         document.getElementById('hdn_control_effectiveness').value = response.control_effectiveness;
+                        document.getElementById("exec_summary").textContent = response.executive_summary;
+                        document.getElementById("hdnExecSummary").value = response.executive_summary;
                         document.getElementById('hdn_bia_score').value = response.biaScore;
 
                         let ale_low = parseFloat(costsArray[0]) * parseFloat(response.frequency);
@@ -3661,7 +3707,8 @@ $('#scenarioSelectModal').on('show.bs.modal', function (e) {
                             "paging": false,  // Enable pagination
                             "pageLength": 10,  // Set the number of rows per page
                             "searching": false,  // Disable the search box
-                            "lengthChange": false  // Disable the page length selection control
+                            "lengthChange": false,  // Disable the page length selection control
+                            "info": false
                         });
                     }
                 },
@@ -4376,7 +4423,8 @@ function clearScenario(){
                 "paging": false,  // Enable pagination
                 "pageLength": 10,  // Set the number of rows per page
                 "searching": false,  // Disable the search box
-                "lengthChange": false  // Disable the page length selection control
+                "lengthChange": false,  // Disable the page length selection control
+                "info": false
             });
         let costs = parseFloat(data.sle); // Assuming response.costs is a string representation of a number
         let formattedCosts = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(costs);
@@ -4512,6 +4560,10 @@ function clearScenario(){
             disableScenarioControls();
         }
          });
+
+
+        $('.tab-content').removeClass('active').hide();
+        $('#tab2').addClass('active').show();
 
     }
 
