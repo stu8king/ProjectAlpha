@@ -810,11 +810,12 @@ def openai_assess_risk(request):
 
         system_message = {
             "role": "system",
-            "content": f"You are an OT Cybersecurity Risk expert and an expert in industrial system engineering for the {industry} industry. Make a risk assessment for {scenario} in a {facility_type} in the {industry} industry. Vulnerability has been rated as {vulnerability}. Physical safeguards are {safeguards}. Annual revenue for the business is {revenue}. Cyber insurance cover to the value of {insurance} and the cyber insurance deductible is {deductable}. {content}"
+            "content": f"You are an OT Cybersecurity Risk expert and an expert in industrial system engineering for the {industry} industry. You must assess the following scenario: {scenario}. The assumed level of vulnerability has been rated  {vulnerability}/10.   {content}"
         }
 
         def query_openai(user_message_content):
 
+            openai_model = get_api_key("OpenAI_Model")
             # Convert dictionary content to string format if necessary
             if isinstance(user_message_content, dict):
                 prompt_parts = []
@@ -834,7 +835,7 @@ def openai_assess_risk(request):
             }
             messages = [system_message, user_message]
             response = openai.ChatCompletion.create(
-                model="gpt-4",
+                model=openai_model,
                 messages=messages,
                 temperature=0.1,
                 max_tokens=550
@@ -873,8 +874,8 @@ def openai_assess_risk(request):
         event_cost_estimate_message = {
             "role": "user",
             "content": (
-                f"Generate a 12-month cost projection for direct costs relating to a hypothetical cybersecurity incident at a  {facility_type}. The scenario is: {scenario}. "
-                f"Base your estimates on historical data from similar OT cybersecurity incidents. Include costs if they apply to the given scenario. Direct costs are those related to incident response, remediation, legal fees, regulatory fines, and other direct expenses. A cybersecurity risk expert completed a business impact assessment and the scores (where 1 is low and 10 is high) to be used in this assessment for each category for the given scenario are: "
+                f"Estimate the direct costs to the {facility_type} of the scenario. Generate a 12-month cost projection to pay for the costs. "
+                f"Consequences of the scenario are assumed to be {consequences}. "
                 f"- Operations impact: {production_impact} out of 10, "
                 f"- Production outage: {outage}, "
                 f"- Length of production outage: {outageLength} hours, "
@@ -885,8 +886,7 @@ def openai_assess_risk(request):
                 f"- Reputation Impact: {reputation_impact} out of 10, "
                 f"- Regulatory Impact: {regulatory_impact} out of 10, "
                 f"- Danger to life Impact: {life_impact} out of 10. "
-                f"- Annual revenue of the facility: {revenue}. "
-                f"Estimate the budget cost for each month so that the Chief Finance Officer for the organization can plan appropriately. Use a pragmatic and realistic monthly estimate. Only consider costs directly related to the cybersecurity incident. (IMPORTANT Give only the cost for each month, NOT an aggregate of previous months plus the current month). You as the estimator should be able to justify why month on month costs increase OR decrease. The expectation is that costs will taper off over the 12 month period but YOU must give the most realistic response.Provide the estimates as a series of 12 integers in the format: Month1|Month2|...|Month12. Each value should represent the cost for that month in US dollars. Remember, only provide the numerical values without any narrative or explanation."
+                f"Estimate the budget cost for each month so that the Chief Finance Officer for the organization can plan appropriately. Use a pragmatic and realistic monthly estimate. Justify the estimates based on the specific impact scores, expecting minimal costs due to the scenario specifics. Only consider costs directly related to given scenario. (IMPORTANT Give only the cost for each month, NOT an aggregate of previous months plus the current month). You as the estimator should be able to justify why month on month costs increase OR decrease. The expectation is that costs will taper off over the 12 month period but YOU must give the most realistic response.Provide the estimates as a series of 12 integers in the format: Month1|Month2|...|Month12. Each value should represent the cost for that month in US dollars. IMPORTANT: only provide the numerical values without any narrative or explanation."
             )
         }
 
@@ -942,6 +942,7 @@ def openai_assess_risk(request):
         combined_message = system_content + ' ' + event_cost_content
 
         event_cost_estimate = query_openai(combined_message)
+        print(event_cost_estimate)
         ###############################
         ###############################
 
@@ -976,12 +977,12 @@ def openai_assess_risk(request):
             "content": (
                 f"As the CISO presenting to the CEO, write a concise executive summary of the cybersecurity risk assessment for the scenario '{scenario}' affecting our {facility_type} in the {industry} industry. "
                 f"Consider the threat source '{threat_source}', tactic '{threat_tactic}', and our vulnerabilities rated {vulnerability}/10. "
-                f"Discuss the impacts on safety ({safety_impact}/10), life ({life_impact}/10), production ({production_impact}/10), financial ({financial_impact}/10), "
-                f"reputation ({reputation_impact}/10), environment ({environment_impact}/10), regulatory ({regulatory_impact}/10), data ({data_impact}/10), "
-                f"and supply chain ({supply_impact}/10). Mention the role of safeguards '{safeguards}', the potential outage ({outage}), "
+                f"Consider the impacts on safety ({safety_impact}/10), danger to life: ({life_impact}/10), production and operations ({production_impact}/10), financial consequences ({financial_impact}/10), "
+                f"organization reputation ({reputation_impact}/10), environmental consequences ({environment_impact}/10), regulatory impact:({regulatory_impact}/10), data and intellectual property ({data_impact}/10), "
+                f"and supply chain impact: ({supply_impact}/10). Mention the role of physical safeguards '{safeguards}' only if there are relevant safeguards mentioned, the potential outage ({outage}), "
                 f"and the estimated direct costs over the next 12 months which are given in order of month in {event_cost_estimate}."
-                f"Conclude with the main strategic considerations the company should focus on. "
-                f"Provide this summary in a concise, executive-friendly format that can be used on a slide. YOu will have less than 3 minutes to present the information so you must be sharp and concise. DO NOT PUT THE WORD 'SLIDE' ON THE SLIDE. INCLUDE THE TOTAL OF THE COSTS NOT THE MONTH BY MONTH BREAKDOWN"
+                f"Conclude with concise and practical recommendations that are specific to the Operational Technology network to minimize the risk of the scenario. STOP AFTER RECOMMENDATIONS. DO NOT PROVIDE ANY FURTHER COMMENTARY OR NARRATIVE. "
+                f"Provide this summary in a tight, concise, executive-friendly format that can be used on a slide. You will have less than 3 minutes to present the information so you must be sharp and concise. DO NOT PUT THE WORD 'SLIDE' ON THE SLIDE. INCLUDE THE TOTAL OF THE COSTS NOT THE MONTH BY MONTH BREAKDOWN"
             )
         }
 
@@ -1611,6 +1612,7 @@ def analyze_raw_scenario(request):
 def get_analysis_result(request):
     user = request.user
     try:
+
         # Fetch the latest analysis result for this user
         latest_result = ScenarioBuilder_AnalysisResult.objects.filter(user=user).latest('created_at')
 
@@ -1635,7 +1637,6 @@ def get_analysis_result(request):
 
 @login_required
 def cleanup_scenariobuilder(request):
-
     if request.method == 'GET':
         user = request.user
         ScenarioBuilder_AnalysisResult.objects.filter(user=user).delete()

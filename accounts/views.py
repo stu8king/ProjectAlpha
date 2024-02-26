@@ -411,6 +411,7 @@ def setup_2fa(request):
                     raise ValidationError("Invalid phone number format")
 
                 phone_number = phonenumbers.format_number(parsed_number, phonenumbers.PhoneNumberFormat.E164)
+
                 user_profile = UserProfile.objects.get(user__id=request.user.id)
                 user_profile.phone_number = phone_number
                 user_profile.save()
@@ -443,7 +444,7 @@ def setup_2fa_bak(request):
 
     totp = pyotp.TOTP(pyotp.random_base32())
     uri = totp.provisioning_uri(name=request.user.email,
-                                issuer_name="iOTa")  # Replace "YourAppName" with your app's name
+                                issuer_name="AnzenOT")  # Replace "YourAppName" with your app's name
 
     # Generate QR code from the URI
     img = qrcode.make(uri)
@@ -571,7 +572,6 @@ def login_view(request):
         form = AuthenticationForm()
 
     return render(request, 'accounts/home.html', {'form': form})
-
 
 def add_user_to_organization(request):
     if request.method == 'POST':

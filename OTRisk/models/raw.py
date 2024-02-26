@@ -214,6 +214,7 @@ class RAWorksheetScenario(models.Model):
 
     class Meta:
         db_table = 'tblRAWorksheetScenario'
+        unique_together = (('RAWorksheetID', 'ScenarioDescription'),)  # Enforce unique combination
 
 
 class QRAW_Safeguard(models.Model):

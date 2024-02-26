@@ -26,6 +26,7 @@ def parse_consequences(text):
 
 @shared_task
 def analyze_scenario_task(user_id, scenario, investments_data, facility_type, industry):
+
     openai_api_key = get_api_key('openai')
     openai.api_key = openai_api_key
     existing_results = ScenarioBuilder_AnalysisResult.objects.filter(user_id=user_id)
@@ -110,7 +111,6 @@ def analyze_scenario_task(user_id, scenario, investments_data, facility_type, in
         )
 
         investment_impact_text = investment_impact_response.choices[0].message.content
-
         ScenarioBuilder_AnalysisResult.objects.create(
             user_id=user_id,
             scenario=scenario,

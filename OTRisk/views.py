@@ -53,7 +53,8 @@ from .raw_views import qraw, openai_assess_risk, GetTechniquesView, raw_action, 
 from .dashboard_views import dashboardhome
 from .pha_views import iotaphamanager, facility_risk_profile, get_headerrecord, scenario_analysis, phascenarioreport, \
     getSingleScenario, pha_report, scenario_vulnerability, add_vulnerability, get_asset_types, calculate_effectiveness, \
-    generate_ppt, analyze_scenario, assign_cyberpha_to_group, fetch_groups, fetch_all_groups, retrieve_scenario_builder, facilities, air_quality_index, delete_pha_record
+    generate_ppt, analyze_scenario, assign_cyberpha_to_group, fetch_groups, fetch_all_groups, retrieve_scenario_builder, \
+    facilities, air_quality_index, delete_pha_record
 from .report_views import pha_reports, get_scenario_report_details, qraw_reports, get_qraw_scenario_report_details
 from .forms import CustomConsequenceForm, OrganizationAdmin
 from .models.Model_Scenario import CustomConsequence
@@ -62,7 +63,7 @@ from accounts.models import UserProfile
 from .forms import UserForm, UserProfileForm, ChangePasswordForm
 import secrets
 import string
-from django.core.mail import send_mail, EmailMultiAlternatives
+from django.core.mail import send_mail, EmailMultiAlternatives, get_connection
 from django.contrib.auth.decorators import user_passes_test
 from django.db import connection, transaction
 from django.urls import reverse
@@ -729,21 +730,55 @@ def generate_password(length=12):
     return password
 
 
-def send_password_email(user_email, password):
-    subject = 'Welcome to iOTa. Your Temporary Password'
-    message = f'Thank you for creating an account on. Your userid is {user_email}. Your temporary password is: {password}   - You will be required to change it upon first login. After setting a password, the first time you log in you will be required to set up two-factor authentication using an Authenticator app (you will need to download and install an authenticator app from the App Store if you do not already have one).  '
-    from_email = 'admin@iotarisk.com'  # Replace with your email
-    recipient_list = [user_email]
-    context = {
-        'password': password,
-        'logo_url': 'https://www.iotarisk.com/staticfiles/images/iota%20-%20white%201.png',
-        'login_url': 'https://www.iotarisk.com'
-    }
-    html_content = render_to_string('OTRisk/welcome_email.html', context)
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
 
-    msg = EmailMultiAlternatives(subject, html_content, from_email, recipient_list)
-    msg.attach_alternative(html_content, "text/html")
-    msg.send()
+
+def send_password_email(username, user_email, password):
+    try:
+        # Fetch email configuration
+        email_host = get_api_key("email_host")
+        email_port = int(get_api_key("email_port"))
+        email_use_tls = True
+        email_host_user = get_api_key("email_host_user")
+        email_host_password = get_api_key("email_host_password")
+        default_from_email = get_api_key("email_from")
+
+        # Prepare email content
+        subject = 'Welcome to AnzenOT. Your Temporary Password'
+        context = {
+            'user_name': username,
+            'password': password,
+            'user_email': user_email,  # Assuming you want to display this in the email
+            'logo_url': 'https://www.iotarisk.com/staticfiles/images/anzen_owl.png',
+            'login_url': 'https://www.iotarisk.com'
+        }
+        html_content = render_to_string('OTRisk/welcome_email.html', context)
+        text_content = strip_tags(html_content)  # Convert HTML to plain text
+
+        # Create email connection
+        email_conn = get_connection(
+            host=email_host,
+            port=email_port,
+            username=email_host_user,
+            password=email_host_password,
+            use_tls=email_use_tls
+        )
+
+        # Send email
+        send_mail(
+            subject,
+            text_content,  # The plain text content
+            default_from_email,
+            [user_email],
+            fail_silently=False,
+            html_message=html_content,  # The HTML content
+            connection=email_conn
+        )
+        return "Email sent successfully."
+
+    except Exception as e:
+        return f"Failed to send email: {e}"
 
 
 @login_required
@@ -761,7 +796,6 @@ def disable_user(request, user_id):
 
 
 def enable_user(request, user_id):
-
     try:
         user_to_enable = User.objects.get(pk=user_id)
         if user_to_enable != request.user:
@@ -836,9 +870,10 @@ def admin_users(request):
                 # Now save the UserProfile model
                 user_profile = profile_form.save(commit=False)
                 user_profile.user = user
+                user_profile.must_change_password = 1
                 user_profile.save()
 
-                send_password_email(user.email, password)
+                send_password_email(user.username, user.email, password)
                 # Redirect to a success page or wherever you want
                 return redirect('/OTRisk/admin_users')
             else:
@@ -2122,6 +2157,7 @@ def save_scenario(request):
         # Handle invalid request method
         return JsonResponse({'success': False, 'message': 'Invalid request method.'})
 
+
 def workshop_setup(request):
     if request.method == 'POST':
         workshop_type = request.POST.get('workshoptype')
@@ -2602,6 +2638,7 @@ def get_cve_details(request):
 
     return JsonResponse({"error": "Invalid request method"})
 
+
 @login_required()
 def scenario_sim(request):  # Changed the function name
     scenario_form = CyberSecurityScenarioForm(request.POST)
@@ -2796,10 +2833,3 @@ def get_scenario_builder_details(request, scenario_id):
         return JsonResponse({'scenario_data': scenario.scenario_data})
     except ScenarioBuilder.DoesNotExist:
         return JsonResponse({'error': 'Scenario not found'}, status=404)
-
-
-
-
-
-
-
