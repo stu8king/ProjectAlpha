@@ -1,3 +1,5 @@
+from urllib.parse import urlparse
+
 import openai
 import os
 
@@ -586,8 +588,18 @@ def get_or_create_org_defaults(org_id):
     return org_defaults
 
 
+from django.urls import reverse
+
+
 @login_required
 def qraw(request):
+    referrer = request.META.get('HTTP_REFERER', '')
+    referrer_path = urlparse(referrer).path
+
+    expected_path = reverse('OTRisk:qraw')
+
+    is_external_referrer = not referrer_path.endswith(expected_path)
+
     # check the organization that the user belong to
     org_id = get_user_organization_id(request)
     saved_worksheet_id = None
@@ -729,7 +741,9 @@ def qraw(request):
                    'scenario_form': scenario_form,
                    'saved_worksheet_id': saved_worksheet_id,
                    'org_defaults': org_defaults,
-                   'potential_approvers': potential_approvers})
+                   'potential_approvers': potential_approvers,
+                   'is_external_referrer': is_external_referrer,
+                   })
 
 
 class GetTechniquesView(View):

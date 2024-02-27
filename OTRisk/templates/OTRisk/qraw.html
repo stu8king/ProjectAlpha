@@ -558,10 +558,10 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                         <i class="bi bi-person-fill"></i> {{ user.first_name }} {{ user.last_name }} | {{ user.userprofile.organization.name }}
                         </a>
                         </li>
-                        <li class="nav-item menu-item">
+                         <li class="nav-item menu-item">
                         <form action="{% url 'logout' %}" method="post">
                         {% csrf_token %}
-                        <button type="submit" class="nav-link" style="background:none; border:none; padding:0; margin:0; color:inherit;">Logout</button>
+                        <button type="submit" class="nav-link" id="btnlogout" style="background:none; border:none; padding:0; margin:0; color:#d3d1cd;">Logout</button>
                     </form>
 
                         </li>
@@ -800,7 +800,7 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                     $('#scenario' + j + '-tab').find('.bi-check-square').remove();
                 }
                 // Enable buttons and set session storage
-                $('#saveBtn, #actionBtn').prop('disabled', false);
+                $('#saveBtn, #actionBtn, #btnlogout').prop('disabled', false);
                 ['editMode', 'addNew', 'rawid'].forEach(key => sessionStorage.setItem(key, key === 'editMode' ? '0' : '1'));
                 enableAllControls();
                 // Reset input fields and enable them
@@ -929,6 +929,7 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
               enableButton.addEventListener('click', function() {
                 $('#saveBtn').prop('disabled', false);
                 $('#actionBtn').prop('disabled', false);
+                $('#btnlogout').prop('disabled', false);
                 sessionStorage.setItem('editMode', '1');
                 sessionStorage.setItem('addNew', '0');
                 document.getElementById("edit_mode").value="1";
@@ -6723,8 +6724,24 @@ $(document).ready(function() {
 
 
                         disableAllControls();
+                        var isExternalReferrer = {{ is_external_referrer|lower }};
+
                         $('.tab-content').removeClass('active').hide();
+
+                        if (!sessionStorage.getItem('handledExternalReferrer')) {
+                        if (isExternalReferrer) {
+                            sessionStorage.setItem('handledExternalReferrer', 'true');
+                            $('#tab1').addClass('active').show();
+                        } else {
+                            // Otherwise, show tab2
+                            $('#tab2').addClass('active').show();
+                        }
+                        // Mark that we've handled the external referrer
+
+                    } else {
+                        // If already handled, default to showing tab2 or other logic
                         $('#tab2').addClass('active').show();
+                    }
 
                          //now load the action items table
                      } else {
@@ -7236,7 +7253,7 @@ $(document).ready(function() {
         });
         document.getElementById('addNewBtn').disabled = false;
         document.getElementById('editBtn').disabled = false;
-
+        document.getElementById('btnlogout').disabled = false;
     }
 
     function enableAllControls() {
