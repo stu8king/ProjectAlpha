@@ -27,7 +27,7 @@
     <script type="text/javascript" src="https://cdn.datatables.net/1.10.2/js/jquery.dataTables.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-beta.1/dist/css/select2.min.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-beta.1/dist/js/select2.min.js"></script>
-    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="{% static 'anychart/dist/js/anychart-bundle.min.js' %}"></script>
     <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
 <script src="//code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
@@ -138,8 +138,8 @@ body {
     background-color: #464748; /* Same as body background for seamless integration */
     color: #d3d1cd; /* Text color */
     padding: 10px 20px; /* Adjust as needed */
-    padding-left: -450px; /* Align with the end of the sidebar */
-    width: calc(100% - 200px); /* Adjust based on the actual sidebar width */
+    padding-left: 80px; /* Align with the end of the sidebar */
+    width: calc(100% - 100px); /* Adjust based on the actual sidebar width */
     box-sizing: border-box;
 }
 
@@ -210,10 +210,10 @@ body {
     padding: 20px; /* Padding around content */
     border: 1px solid #666; /* Border for definition */
     margin-top: 20px; /* Space from the top */
-    width: 80%; /* 80% of the available width to the right */
+    width: 95%; /* 80% of the available width */
     /* height: 80vh; /* 80% of the viewport height */
     position: absolute; /* Positioning relative to its nearest positioned ancestor */
-    left: 350px; /* This should be directly to the right of the sub-menu */
+    left: 150px; /* Adjust based on the total width of the main sidebar and sub-menu */
     top: 0; /* Align with the top of the viewport */
     overflow: auto; /* Add scroll for overflow content */
     box-sizing: border-box; /* Include padding and border in the element's total width and height */
@@ -829,6 +829,17 @@ function drawControlGauge(score) {
     gauge.container('control_gauge').draw();
 }
 
+function showNotification(message, isError = false) {
+    var notificationDiv = document.getElementById('notificationMessage');
+    notificationDiv.innerHTML = message;
+    notificationDiv.style.display = 'block';
+    notificationDiv.className = isError ? 'notification-message error' : 'notification-message';
+
+    // Automatically hide the notification after some time
+    setTimeout(function() {
+        notificationDiv.style.display = 'none';
+    }, 5000); // Hide after 5 seconds
+}
 </script>
 <div class="container-fluid">
 <div class="row">
@@ -904,6 +915,7 @@ function drawControlGauge(score) {
                         </ul>
                 </div>
             </nav>
+<div id="notificationMessage" class="notification-message" style="display: none;"></div>
     <!-- Main content area, including sub-menu and tabs -->
     <div class="col-md-9 col-lg-10">
     <div class="top-strip">
@@ -914,6 +926,11 @@ function drawControlGauge(score) {
             </div>
             <div class="col-md-1">
                 <button type="submit" id="btnformSubmit" class="btn nav-link"> Save</button>
+                <div id="spinnerContainer" style="display: none;">
+                    <div class="spinner-border" role="status">
+                        <span class="sr-only">Loading...</span>
+                    </div>
+                </div>
                 <script>
                 // Add an event listener to the "Save Header" button
                 document.getElementById('btnformSubmit').addEventListener('click', function(event) {
@@ -941,18 +958,26 @@ function drawControlGauge(score) {
                         return; // Exit the function and do not proceed to show the save confirmation
                     }
                     // Show a SweetAlert confirmation dialog
-                    swal({
-                        title: "Confirm Save?",
-                        text: "Are you sure you want to save the header information?",
-                        icon: "warning",
-                        buttons: ["Cancel", "Save"],
-                        dangerMode: true,
-                    })
-                    .then((willSave) => {
+                    Swal.fire({
+                        title: 'Confirm Save?',
+                        text: "Are you sure you want to save the CyberPHA information?",
+                        imageUrl: '/static/images/anzen_owl.png',
+                        imageWidth: 150, // Adjust as necessary
+                        imageHeight: 150, // Adjust as necessary
+                        background: '#000', // Black background
+                        color: '#fff', // Set text color to white
+                        showCancelButton: true,
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: 'Yes',
+                        cancelButtonText: 'Cancel',
+                        customClass: {
+                            popup: 'swal2-custom-border' // Apply custom class to the popup/dialog
+                        }
+                    }).then((willSave) => {
                         if (willSave) {
                             // User confirmed, continue with the form submission
                             document.forms['frmRAW'].submit();
-
                         } else {
                             // User canceled the action
                             // You can add additional code here if needed
@@ -968,13 +993,23 @@ function drawControlGauge(score) {
 $(document).ready(function() {
     $('#resetButton').on('click', function() {
         // SweetAlert confirmation prompt
-        swal({
-            title: 'Are you sure you wish to create a new CyberPHA?',
-            text: "Any unsaved changes to the current records will be lost.",
-            icon: 'warning',
-            buttons: true, // This will enable both buttons
-            dangerMode: true,
-            buttons: ["Cancel", "Yes, proceed"] // Define the buttons
+
+            Swal.fire({
+                title: 'Create new CyberPHA?',
+                text: "Are you sure you want to create a new CyberPHA? Any unsaved data will be lost",
+                imageUrl: '/static/images/anzen_owl.png',
+                imageWidth: 150, // Adjust as necessary
+                imageHeight: 150, // Adjust as necessary
+                background: '#000', // Black background
+                color: '#fff', // Set text color to white
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes',
+                cancelButtonText: 'Cancel',
+                customClass: {
+                    popup: 'swal2-custom-border' // Apply custom class to the popup/dialog
+                }
         }).then((willProceed) => {
             if (willProceed) {
                 // User clicked 'Yes, proceed', so execute the reset actions
@@ -1237,7 +1272,7 @@ $(document).ready(function() {
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title" id="facilitiesModalLabel">Select a Facility</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+        <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
           <span aria-hidden="true">&times;</span>
         </button>
       </div>
@@ -1245,7 +1280,7 @@ $(document).ready(function() {
         <select id="facilitiesDropdown" class="form-control"></select>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
         <button type="button" class="btn btn-primary" id="selectFacility">Select</button>
       </div>
     </div>

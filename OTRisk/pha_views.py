@@ -1,6 +1,8 @@
 import hashlib
 import json
-
+from django.contrib import messages
+import requests
+import logging
 from google.oauth2 import service_account
 from ibm_watson import NaturalLanguageUnderstandingV1
 from ibm_watson.natural_language_understanding_v1 import Features, KeywordsOptions, SummarizationOptions, \
@@ -218,6 +220,7 @@ def iotaphamanager(request, record_id=None):
 
         pha_header.UserID = request.user.id
         pha_header.save()
+        messages.success(request, 'CyberPHA Information has been saved successfully.')
         saved_record_id = pha_header.ID
 
         #### Save investment information
@@ -1785,18 +1788,23 @@ def retrieve_scenario_builder(request, scenario_id):
         return JsonResponse({'error': str(e)}, status=500)
 
 
-import requests
+logger = logging.getLogger(__name__)
 
 
 def get_facilities_by_zip(zip_code):
-    # EPA FRS API endpoint - replace with the actual endpoint and parameters as needed
     url = f"https://ofmpub.epa.gov/frs_public2/frs_rest_services.get_facilities?zip_code={zip_code}&output=JSON"
-    response = requests.get(url)
-    print("Raw response text:", response.text[:500])  # Print the first 500 characters of the response
     try:
-        return response.json()
-    except ValueError as e:  # Catch JSON decoding errors
-        print("JSON decoding error:", e)
+        response = requests.get(url, timeout=20)
+        if response.status_code == 200:
+            return response.json()
+        else:
+            logger.error("HTTP Error %s: %s", response.status_code, response.reason)
+            return None
+    except requests.RequestException as e:
+        logger.error("Request error: %s", e)
+        return None
+    except ValueError as e:
+        logger.error("JSON decoding error: %s", e)
         return None
 
 
