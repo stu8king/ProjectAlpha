@@ -1794,7 +1794,7 @@ logger = logging.getLogger(__name__)
 def get_facilities_by_zip(zip_code):
     url = f"https://ofmpub.epa.gov/frs_public2/frs_rest_services.get_facilities?zip_code={zip_code}&output=JSON"
     try:
-        response = requests.get(url, timeout=20)
+        response = requests.get(url, verify=False, timeout=20)
         if response.status_code == 200:
             return response.json()
         else:
