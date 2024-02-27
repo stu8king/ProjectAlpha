@@ -640,7 +640,7 @@ body {
 .select2-container--default .select2-search--dropdown .select2-search__field {
     border: 1px solid #ced4da; /* Match your form-control border */
 }
-#spinner_facility {
+#spinner_facility #spinnerContainerProfile {
     border: 6px solid #f3f3f3; /* Light grey */
     border-top: 6px solid #3498db; /* Blue */
     border-radius: 50%;
@@ -650,6 +650,8 @@ body {
     margin: auto;
     display: block;
 }
+
+
 
 @keyframes spin {
     0% { transform: rotate(0deg); }
@@ -1056,6 +1058,11 @@ $(document).ready(function() {
             </div>
             <div class="col-md-1">
                 <button type="button" id="risk-assessment-btn" class="btn nav-link" >Profile</button></div>
+                <div id="spinnerContainerProfile" style="display: none;">
+                    <div class="spinner-border" role="status">
+                        <span class="sr-only">Loading...</span>
+                    </div>
+                </div>
 
             <div class="col-md-1">
                  <button id="generatePPT" class="btn nav-link"><i class="bi bi-printer"></i> Print</button>
@@ -2200,15 +2207,28 @@ $(document).ready(function() {
         // Check if employeeCount is a number and greater than 0
         if ($.isNumeric(employeeCount) && parseInt(employeeCount) > 0) {
             // Prompt the user for confirmation
-            swal({
+            Swal.fire({
                 title: 'Warning',
                 text: 'Generating the assessment profile can take up to a minute. Proceed?',
-                icon: 'warning',
-                buttons: true,
+                imageUrl: '/static/images/anzen_owl.png',
+                imageWidth: 150, // Adjust as necessary
+                imageHeight: 150, // Adjust as necessary
+                background: '#000', // Black background
+                color: '#fff', // Set text color to white
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes',
+                cancelButtonText: 'Cancel',
+                customClass: {
+                    popup: 'swal2-custom-border' // Apply custom class to the popup/dialog
+                }
+
             }).then((result) => {
                 if (result) {
-                    // If the user confirms, call the function to assess the risk
+                     // Show spinner
                     assessRisk();
+
                 }
             });
         } else {
@@ -2243,7 +2263,7 @@ $(document).ready(function() {
 
         // AJAX function to call the Django view
         function assessRisk() {
-            $('#loadingSpinner').show();
+            $('#spinnerContainerProfile').show();
             // Gather the necessary data for the AJAX request (impact scores and scenario information)
             let address = document.getElementById('txtAddress').value;
             let facilityType = document.getElementById('selFacilityType').value;
@@ -2253,6 +2273,7 @@ $(document).ready(function() {
             let facility = document.getElementById('txtFacility').value;
             let shift_model = document.getElementById('shift_model').value;
             let employees = document.getElementById('txtEmployees').value;
+            let AQI = document.getElementById('txthdnAQI').value;
             let investments = [];
             $('#investmentTable tbody tr').each(function() {
                 let investment = {
@@ -2278,6 +2299,7 @@ $(document).ready(function() {
                     shift_model: shift_model,
                     employees: employees,
                     assessment_id: assessment_id,
+                    aqi: AQI,
                     investments: JSON.stringify(investments)
                  },
                 success: function (response) {
@@ -2305,7 +2327,7 @@ $(document).ready(function() {
 
                     drawGauge(response.pha_score);
 
-                     $('#loadingSpinner').hide();
+                     $('#spinnerContainerProfile').hide();
                       // Expand the Facility Profile submenu if it's not already expanded
                     // This assumes you have some CSS/JS logic to toggle visibility based on a class like 'expanded'
                     $('.facility-profile-heading').addClass('expanded');
@@ -2322,7 +2344,7 @@ $(document).ready(function() {
                 error: function (xhr, status, error) {
                     // Handle any errors that occur during the AJAX call
                     console.error(error);
-                    $('#loadingSpinner').hide();
+                   $('#spinnerContainerProfile').hide();
                 },
             });
         }

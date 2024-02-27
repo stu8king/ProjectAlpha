@@ -641,6 +641,7 @@ def facility_risk_profile(request):
         shift_model = request.GET.get('shift_model')
         assessment_id = request.GET.get('assessment_id')
         investments_data = request.GET.get('investments')
+        aqi = request.GET.get('aqi')
         if investments_data:
             investments = json.loads(investments_data)
         else:
@@ -673,7 +674,7 @@ def facility_risk_profile(request):
         openai_model = get_api_key('OpenAI_Model')
         # openai_api_key = os.environ.get('OPENAI_API_KEY')
         openai.api_key = openai_api_key
-        context = f"You are an industrial safety and hazard expert. For the {facility} {facility_type} at {address}, {country} in the {Industry} industry, with {employees} employees working a {shift_model} shift model,"
+        context = f"You are an industrial safety and hazard expert. For the {facility} {facility_type} at {address}, {country} in the {Industry} industry, with {employees} employees working a {shift_model} shift model. The local Air Quality Index is {aqi}.  "
 
         prompts = [
             f"{context}. List safety hazards, max 100 words. - Specific to facility - Space between bullets. ",
