@@ -1,5 +1,6 @@
 from collections import defaultdict
 
+from django.http import JsonResponse
 from django.shortcuts import render
 from django.core.serializers import serialize
 from django.template.loader import render_to_string
@@ -8,7 +9,7 @@ from OTRisk.models.raw import RAWorksheet, RAWorksheetScenario, RAActions
 from django.contrib.auth.decorators import login_required
 from OTRisk.models.Model_CyberPHA import tblCyberPHAHeader, tblCyberPHAScenario, OrganizationDefaults, auditlog, \
     CyberPHAModerators, CyberPHA_Group
-from django.db.models import Count, Sum, Q
+from django.db.models import Count, Sum, Q, Case, When, Value, CharField
 from django.db.models import Avg
 from accounts.models import Organization, UserProfile
 
@@ -29,6 +30,7 @@ def get_organization_users(organization_id):
 
 @login_required()
 def dashboardhome(request):
+
     user_organization_id = get_user_organization_id(request)
 
     organization_users = get_organization_users(user_organization_id)
@@ -308,6 +310,7 @@ def dashboardhome(request):
         # Only append the group if it has associated tblCyberPHAHeader records within the organization
         if cyberphas.exists():
             groups_with_cyberphas.append({
+                'id': group.id,
                 'group_name': group.name,
                 'cyberphas': [{'facility_name': cyberpha.FacilityName} for cyberpha in cyberphas]
             })
@@ -321,7 +324,7 @@ def dashboardhome(request):
         worksheets_to_approve_list = list(worksheets_to_approve.values('ID', 'RATitle', 'RADate', 'StatusFlag'))
     else:
         worksheets_to_approve_list = "No approvals for action"
-
+    print(groups_with_cyberphas);
     context = {
         'records_by_business_unit_type': list(records_by_business_unit_type),
         'records_by_status_flag': list(records_by_status_flag),
@@ -350,7 +353,7 @@ def dashboardhome(request):
         'phas': phas,
         'last_100_logs': last_100_logs,
         'moderation_tasks': moderation_details,
-        'groups_with_cyberphas':groups_with_cyberphas,
+        'groups_with_cyberphas': groups_with_cyberphas,
         'worksheets_to_approve': worksheets_to_approve_list
     }
 
@@ -500,3 +503,77 @@ def get_current_user_organization_id(user):
     except UserProfile.DoesNotExist:
         # Return None or handle it as per your application's requirement
         return None
+
+
+def get_group_report(request):
+    group_id = request.GET.get('group_id')
+    group = CyberPHA_Group.objects.get(id=group_id)
+    cyberphas = tblCyberPHAHeader.objects.filter(groups=group)
+
+    # Fetch the required fields for each tblCyberPHAHeader in the selected group
+    cyberphas_details = cyberphas.values(
+        'title', 'FacilityName', 'FacilityType', 'Industry', 'EmployeesOnSite'
+    )
+
+    # Get IDs of tblCyberPHAHeader objects to filter tblCyberPHAScenario
+    cyberpha_ids = cyberphas.values_list('ID', flat=True)
+
+    scenarios = tblCyberPHAScenario.objects.filter(CyberPHA_id__in=cyberpha_ids)
+    avg_imageSafety = scenarios.aggregate(Avg('impactSafety'))['impactSafety__avg'] or 0
+    avg_impactDanger = scenarios.aggregate(Avg('impactDanger'))['impactDanger__avg'] or 0
+    avg_impactProduction = scenarios.aggregate(Avg('impactProduction'))['impactProduction__avg'] or 0
+    return JsonResponse({
+        'cyberphas': list(cyberphas_details),
+        'avg_imageSafety': avg_imageSafety,
+        'avg_impactDanger': avg_impactDanger,
+        'avg_impactProduction': avg_impactProduction,
+    })
+
+
+def get_likelihood_category(likelihood):
+    if likelihood < 20:
+        return "Low"
+    elif likelihood < 40:
+        return "Low/Medium"
+    elif likelihood < 60:
+        return "Medium"
+    elif likelihood < 80:
+        return "Medium/High"
+    elif likelihood <= 95:
+        return "High"
+    else:
+        return "Very High"
+
+
+def get_heatmap_records(request):
+    x = request.GET.get('x')  # Likelihood category
+    y = request.GET.get('y')  # RRa
+
+    user_organization_id = get_user_organization_id(request)
+    organization_users = get_organization_users(user_organization_id)
+    # Filter scenarios based on the RRa and the likelihood category
+    scenarios = tblCyberPHAScenario.objects.filter(RRa=y, userID__in=organization_users).annotate(
+        likelihood_category=Case(
+            When(likelihood__lt=20, then=Value('Low')),
+            When(likelihood__lt=40, then=Value('Low/Medium')),
+            When(likelihood__lt=60, then=Value('Medium')),
+            When(likelihood__lt=80, then=Value('Medium/High')),
+            When(likelihood__lte=95, then=Value('High')),
+            default=Value('Very High'),
+            output_field=CharField(),
+        )
+    ).filter(likelihood_category=x)
+
+    # Prepare the data to be returned
+    data = []
+    for scenario in scenarios:
+        header = scenario.CyberPHA
+        data.append({
+            'tblCyberPHAHeader_ID': header.ID,
+            'title': header.title,
+            'FacilityName': header.FacilityName,
+            'scenario': scenario.Scenario,
+            'RRA': scenario.RRa
+        })
+
+    return JsonResponse({'data': data})

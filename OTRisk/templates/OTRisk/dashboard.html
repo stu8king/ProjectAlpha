@@ -33,8 +33,92 @@
      {% load django_bootstrap5 %}
      {% bootstrap_css %}
      {% bootstrap_javascript %}
-    <style>
+<style>
 
+
+.table th {
+    background-color: #007bff; /* Example color - a shade of blue */
+    color: white;             /* White text color for contrast */
+    text-align: center;       /* Center-align the text */
+    padding: 10px;            /* Add more padding for spacing */
+    font-weight: bold;        /* Make the text bold */
+    border-bottom: 2px solid #0056b3; /* A darker border at the bottom for depth */
+    text-transform: uppercase; /* Uppercase letters for a more professional look */
+}
+
+
+.table td {
+padding: 12px; /* More padding for table cells */
+border-bottom: 1px solid #dee2e6;
+}
+
+#headertable {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 15px; /* Creates space between rows */
+}
+#headertable_wrapper .dataTables_info {
+    color: black !important;
+}
+
+#headertable_wrapper .dataTables_paginate .paginate_button {
+    color: black !important;
+}
+
+/* Style each table row */
+#headertable tr.selectable-row {
+    background-color: #f0f0f0; /* Light grey background */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Adds shadow to each row */
+    border-radius: 5px; /* Rounds the corners of each row */
+}
+
+/* Style the cells (td) of each row */
+#headertable tr.selectable-row td {
+    border: none;
+    padding: 10px; /* Adds padding inside each cell */
+    background-color: #fff; /* White background for contrast with the row's shadow */
+    border-radius: 5px; /* Ensure the rounded corners apply to cells as well */
+}
+
+/* Ensure hidden inputs do not affect layout */
+#headertable tr.selectable-row input[type="hidden"] {
+    display: none;
+}
+
+/* Additional styling for headers to match the row aesthetics */
+#headertable th {
+    background-color: #2c2c2c;
+    color: white;
+    padding: 10px;
+    border-radius: 5px; /* Optional: Rounds the corners of the header cells */
+}
+/* Style for selected rows */
+#headertable tr.selectable-row.selected {
+    background-color: #007bff; /* Example: a blue background for selected rows */
+    color: black; /* White text color for contrast */
+}
+
+/* Ensure text within selected rows is also white for contrast */
+#headertable tr.selectable-row.selected td {
+    color: black;
+}
+
+.card-body {
+    background-color: #464748; /* Dark background */
+}
+
+.card-body .custom-table-style th,
+.card-body .custom-table-style td {
+    color: white; /* White text */
+}
+
+.card-body .custom-table-style .thead-dark th {
+    background-color: #464748; /* Dark background for table header */
+}
+
+    #checklistContainer {
+    color: white; /* White text color */
+}
 .doughnut_container {
         width: 100%;
         height: 100%;
@@ -43,7 +127,89 @@
         border-radius: 4px; /* rounded corners (optional) */
     }
 
+/* Style for the text next to checkboxes */
+#checklistContainer div {
+    font-size: 0.8em; /* Smaller font size */
+}
+    .custom-checkbox {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    width: 1em;
+    height: 1em;
+    border: 1px solid #000; /* Black border */
+    border-radius: 0.15em;
+    outline: none;
+    cursor: pointer;
+    position: relative;
+}
 
+.custom-checkbox:checked {
+    background-color: #000; /* Black background when checked */
+}
+
+.custom-checkbox:checked:after {
+    content: '';
+    position: absolute;
+    top: 0.15em;
+    left: 0.45em;
+    width: 0.2em;
+    height: 0.6em;
+    border: solid white;
+    border-width: 0 0.15em 0.15em 0;
+    transform: rotate(45deg);
+}
+/* Modal styles */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 9999;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgb(0,0,0);
+  background-color: rgba(0,0,0,0.4);
+  padding-top: 60px;
+}
+
+.modal-content {
+  background-color: #fefefe;
+  margin: 5% auto;
+  padding: 20px;
+  border: 1px solid #888;
+  width: 80%;
+  box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
+}
+
+.close {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+  color: black;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+
+    .form-group {
+    border: 1px solid #464748; /* Border color */
+    box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.5); /* Outer shadow */
+    background-color: #5E6266; /* Lighter shade of #464748 */
+    padding: 15px; /* Optional: for internal spacing */
+}
+
+
+     body {
+        background-color: #464748;
+        color: #d3d1cd;
+    }
     .sidebar {
         height: 100vh;
         background-color: #2D2E30; /* Darker shade for sidebar */
@@ -94,6 +260,90 @@
     min-height: 100vh; /* Ensure it fills the viewport height */
 }
 
+
+@media (min-width: 992px) { /* Adjusting for Bootstrap's large devices breakpoint */
+    .custom-main-content {
+        width: calc(100% - 200px);
+        max-width: calc(90vw - 200px);
+        margin-left: 100px;
+    }
+}
+.form-sim .form-control {
+    max-width: 100%; /* Ensures select does not exceed container width */
+    width: auto; /* Optional: Ensures select width is based on content up to max-width */
+}
+.group-container {
+    background: linear-gradient(to bottom right, #464748, #57595b); /* Gradient background */
+    border: 1px solid #666; /* Darker border */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5); /* Box shadow */
+    padding: 25px;
+    margin-bottom: 30px; /* Increased space between containers */
+    border-radius: 10px; /* Rounded corners */
+}
+
+.group-header {
+    color: #d3d1cd; /* Lighter color for contrast */
+    font-weight: bold;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #777; /* Subtle bottom border */
+    font-size: 1.2em; /* Larger font size */
+}
+
+.group-body {
+    color: #e0e0e0; /* Slightly lighter text color */
+    font-family: 'Arial', sans-serif; /* Modern font */
+}
+.cube-icon {
+    width: 20px; /* Adjust size as needed */
+    height: 20px; /* Adjust size as needed */
+    margin-right: 10px;
+}
+#scenarioSelectionModal .modal-body .list-group {
+    max-height: 400px; /* Adjust this value based on your needs */
+    overflow-y: auto; /* Enables vertical scrolling */
+}
+@media (max-width: 768px) {
+  .modal-lg {
+    max-width: 90%; /* Adjust based on preference */
+  }
+}
+
+.investment-box {
+    fill: #eee; /* Light background for the boxes */
+    stroke: #666; /* Dark border for the boxes */
+}
+
+.investment-text {
+    fill: #000; /* Black text color */
+    font-size: 12px; /* Adjust as needed */
+}
+
+svg {
+    display: block;
+    margin: 0 auto; /* Center the SVG in its container */
+    overflow: visible;
+}
+
+path.connection {
+    stroke: #333;
+    stroke-width: 2;
+    fill: none;
+}
+
+#investmentImpactVisualization {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+}
+
+
+/* Adjustments may be needed based on the exact layout and spacing */
+.custom-main-content .container {
+    width: 100%; /* Ensure the container fills the custom-main-content */
+    max-width: none; /* Override Bootstrap's max-width for containers if necessary */
+}
 .top-strip {
     background-color: #464748; /* Same as body background for seamless integration */
     color: #d3d1cd; /* Text color */
@@ -107,14 +357,6 @@
     margin: 0; /* Remove default margins */
     font-size: 1.5rem; /* Adjust size as needed */
 }
-@media (min-width: 992px) { /* Adjusting for Bootstrap's large devices breakpoint */
-    .custom-main-content {
-        width: calc(100% - 200px);
-        max-width: calc(90vw - 200px);
-        margin-left: 100px;
-    }
-}
-
 
 @media (max-width: 992px) {
     .top-strip {
@@ -131,10 +373,10 @@
     padding: 20px; /* Padding around content */
     border: 1px solid #666; /* Border for definition */
     margin-top: 20px; /* Space from the top */
-    width: 80%; /* 80% of the available width to the right */
-    height: 80vh; /* 80% of the viewport height */
+    width: 95%; /* 80% of the available width */
+    /* height: 80vh; /* 80% of the viewport height */
     position: absolute; /* Positioning relative to its nearest positioned ancestor */
-    left: 350px; /* This should be directly to the right of the sub-menu */
+    left: 150px; /* Adjust based on the total width of the main sidebar and sub-menu */
     top: 0; /* Align with the top of the viewport */
     overflow: auto; /* Add scroll for overflow content */
     box-sizing: border-box; /* Include padding and border in the element's total width and height */
@@ -150,87 +392,62 @@
         margin-left: 100px; /* Adjust based on the sub-menu width on smaller screens */
     }
 }
-.form-sim .form-control {
-    max-width: 100%; /* Ensures select does not exceed container width */
-    width: auto; /* Optional: Ensures select width is based on content up to max-width */
+/* Sub-menu styles */
+.sub-menu {
+    position: fixed; /* Fixed position to stay in view */
+    top: 0; /* Align with the top of the viewport */
+    left: 200px; /* Adjust based on the width of the main sidebar */
+    width: 150px; /* Width of the sub-menu */
+    height: 100vh; /* Full viewport height */
+    background-color: #333; /* Sub-menu background color */
+    color: #fff; /* Text color */
+    padding: 20px 10px; /* Padding */
+    box-sizing: border-box; /* Include padding in width calculation */
 }
-.form-group {
-    border: 1px solid #464748; /* Border color */
-    box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.5); /* Outer shadow */
-    background-color: #5E6266; /* Lighter shade of #464748 */
-    padding: 15px; /* Optional: for internal spacing */
+
+.sub-menu ul {
+    list-style: none; /* Remove default list styling */
+    padding: 0; /* Remove default padding */
+    margin: 0; /* Remove default margin */
 }
-.form-sim {
-    max-width: 100%; /* Ensures select does not exceed container width */
-    width: auto; /* Optional: Ensures select width is based on content up to max-width */
+
+.sub-menu li a {
+    color: #d3d1cd; /* Link color */
+    text-decoration: none; /* Remove underline */
+    display: block; /* Make the links fill the container */
+    padding: 10px 0; /* Padding for touch targets */
+    transition: background-color 0.3s; /* Smooth transition for hover effect */
+}
+
+.sub-menu li a:hover, .sub-menu li a.active {
+    background-color: #57595b; /* Hover/active background color */
+}
+.tab-content {
+    display: none; /* Hide all tab content by default */
+    padding: 20px; /* Padding around content */
+    border: 1px solid #666; /* Border for definition */
+    margin-top: 20px; /* Space from the top */
+}
+
+.tab-content.active {
+    display: block; /* Only the active tab is displayed */
+}
+.tab-content {
+    display: none; /* Hide all tab content by default */
+    padding: 20px; /* Padding around content */
+    border: 1px solid #666; /* Border for definition */
+    margin-top: 20px; /* Space from the top */
+    width: 95%; /* 80% of the available width */
+    /* height: 80vh; /* 80% of the viewport height */
+    position: absolute; /* Positioning relative to its nearest positioned ancestor */
+    left: 150px; /* Adjust based on the total width of the main sidebar and sub-menu */
+    top: 0; /* Align with the top of the viewport */
+    overflow: auto; /* Add scroll for overflow content */
+    box-sizing: border-box; /* Include padding and border in the element's total width and height */
 }
 
 
-.custom-table-style th,
-.custom-table-style td {
-    color: white;
-}
-
-.custom-table-style .thead-dark th {
-    background-color: #464748;
-}
-.card-body {
-    background-color: #464748; /* Dark background */
-}
-
-.card-body .custom-table-style th,
-.card-body .custom-table-style td {
-    color: white; /* White text */
-}
-
-.card-body .custom-table-style .thead-dark th {
-    background-color: #464748; /* Dark background for table header */
-}
-.group-container {
-    background: linear-gradient(to bottom right, #464748, #57595b); /* Gradient background */
-    border: 1px solid #666; /* Darker border */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5); /* Box shadow */
-    padding: 15px;
-    margin-bottom: 20px; /* Increased space between containers */
-    border-radius: 5px; /* Rounded corners */
-}
-
-.group-header {
-    color: #d3d1cd; /* Lighter color for contrast */
-    font-weight: bold;
-    margin-bottom: 15px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid #777; /* Subtle bottom border */
-    font-size: 1.2em; /* Larger font size */
-}
-
-.group-body {
-    color: #e0e0e0; /* Slightly lighter text color */
-    font-family: 'Arial', sans-serif; /* Modern font */
-}
-
-.cyberpha-item {
-    display: flex;
-    align-items: center;
-    margin-bottom: 10px;
-}
-.cyberpha-item:hover {
-    background-color: #3a3c3e; /* Hover effect */
-    border-radius: 3px;
-    padding: 5px;
-}
-.cube-icon {
-    width: 20px; /* Adjust size as needed */
-    height: 20px; /* Adjust size as needed */
-    margin-right: 10px;
-}
-
-.facility-name {
-    font-size: 0.9em;
-}
-
-
-    </style>
+</style>
 </head>
 <body style="background-color: #464748">
 <script>
@@ -238,8 +455,6 @@
     localStorage.clear();
 
 </script>
-
-
 <div class="container-fluid">
 
     <div class="row">
@@ -307,7 +522,7 @@
                         <li class="nav-item menu-item">
                         <form action="{% url 'logout' %}" method="post">
                         {% csrf_token %}
-                        <button type="submit" class="nav-link" style="background:none; border:none; padding:0; margin:0; color:#d3d1cd;">Logout</button>
+                        <button type="submit" class="nav-link" style="background:none; border:none; padding:0; margin:0; color:inherit;">Logout</button>
                     </form>
 
                         </li>
@@ -316,27 +531,39 @@
             </nav>
         <!-- Main content area, including sub-menu and tabs -->
         <div class="col-md-9 col-lg-10">
+            <!-- Top Strip -->
             <div class="top-strip">
                 <div class="row">
                     <div class="col-md-2"></div>
                     <div class="col-md-3">
                     <h1 class="page-title">Dashboard@AnzenOT</h1>
                     </div>
+
                     <div class="col-md-7"></div>
                 </div>
             </div>
+        <div class="sub-menu">
+            <br><br><br><br><br><br><br><br><br><br>
+        <ul>
+            <li><a href="#" data-tab="tab1">Heatmap</a></li>
+            <li><a href="#" data-tab="tab2">KPIs</a></li>
+            <li><a href="#" data-tab="tab3">CyberPHA</a></li>
+            <li><a href="#" data-tab="tab4" id="scenarioTabLink">Risk Groups</a></li>
 
-            <div class="row" style="height: 10px">
-                <div class="col-md-1 " ></div>
-                <div class="col-md-10 ">
-            </div>
-                <div class="col-md-1 "></div>
-            </div>
+            <li><a href="#" data-tab="tab5">QRAW</a></li>
+            <li><a href="#" data-tab="tab6">Moderator Queue</a></li>
+            <li><a href="#" data-tab="tab7"></a></li>
+            <li><a href="#" data-tab="tab8"></a></li>
+        </ul>
+    </div>
 
-<div class="row" >
-    <div class="col-md-1"></div>
 
-    <div class="col-md-5 ">
+    <div class="custom-main-content" >
+
+
+
+    <div class="tab-content tab-link active"  id="tab1">
+        <h2>Heatmap</h2>
         <div class="form-group form-sim" >
             <div id="heatmapContainer" style="width:100%; height:400px;"></div>
         </div>
@@ -431,10 +658,132 @@
 
              // Initiate drawing the chart
              chart.draw();
+             chart.listen("pointClick", function(e){
+                var x = e.point.get("x");
+                var y = e.point.get("y");
+                var value = e.point.get("value");
+                if(value > 0) { // Check if the cell value is greater than 0
+                    // Make AJAX call to fetch related tblCyberPHAHeader records
+                    fetchRelatedRecords(x, y);
+                }
+            });
          });
+        function fetchRelatedRecords(x, y) {
+            $.ajax({
+                url: '/OTRisk/get_heatmap_records', // Update this to the path of your Django view
+                type: 'GET',
+                data: {
+                    'x': x,
+                    'y': y
+                },
+                success: function(response) {
+                    // Handle the response. For example, display the data in a modal or a new div
+                    console.log(response); // For debugging
+                    // You can call a function here to display the data
+                    displayData(response);
+                },
+                error: function(error) {
+                    console.log(error); // For debugging
+                }
+            });
+        }
+
+        function displayData(response) {
+    // Assuming the actual data array is nested under the 'data' property of the response object
+    var data = response.data; // Adjust this line to correctly reference the array
+
+    // Find the container where the table will be displayed
+    var container = document.getElementById('heatmapTableContainer');
+
+    // Clear previous contents
+    container.innerHTML = '';
+
+    // Create a table element with the specified classes
+    var table = document.createElement('table');
+    table.className = 'table small-font compact'; // Adjusted class names to match the provided styles
+    table.id = 'headertable';
+
+    // Create the header row
+    var thead = document.createElement('thead');
+    var headerRow = document.createElement('tr');
+
+    // Define the headers
+    var headers = ['ID', 'Title', 'Facility', 'Scenario', 'Residual Risk'];
+    headers.forEach(headerText => {
+        var header = document.createElement('th');
+        header.textContent = headerText;
+        header.className = 'th'; // Apply class to header as per provided styles
+        headerRow.appendChild(header);
+    });
+
+    thead.appendChild(headerRow);
+    table.appendChild(thead);
+
+    // Create the body of the table
+    var tbody = document.createElement('tbody');
+    tbody.style.fontSize = "10px"; // Apply font size as per provided styles
+
+    // Add rows for each record
+    data.forEach(item => {
+        var row = document.createElement('tr');
+        row.className = "selectable-row"; // Apply class to row as per provided styles
+
+        // Create a cell for each piece of data
+        var cellHeaderID = document.createElement('td');
+        cellHeaderID.textContent = item.tblCyberPHAHeader_ID;
+        row.appendChild(cellHeaderID);
+
+        var cellTitle = document.createElement('td');
+        cellTitle.textContent = item.title;
+        row.appendChild(cellTitle);
+
+        var cellFacilityName = document.createElement('td');
+        cellFacilityName.textContent = item.FacilityName;
+        row.appendChild(cellFacilityName);
+
+        var cellScenario = document.createElement('td');
+        cellScenario.textContent = item.scenario;
+        row.appendChild(cellScenario);
+
+        var cellRRA = document.createElement('td');
+        cellRRA.textContent = item.RRA;
+        row.appendChild(cellRRA);
+
+        // Append the row to the tbody
+        tbody.appendChild(row);
+    });
+
+    // Append the tbody to the table
+    table.appendChild(tbody);
+
+    // Append the table to the container
+    container.appendChild(table);
+
+    // Show the tab containing the heatmap table
+    $('.tab-content').removeClass('active').hide();
+    $('#tab8').addClass('active').show();
+}
+
+
 
         </script>
-        <br>
+        <div class="form-group">
+            <div class="row" style="height:250px">
+                <div class="col-md-4">
+                   <div id="raw_bia_container" style="width:100%; height:100%;" class="doughnut_container"></div>
+                </div>
+                <div class="col-md-4">
+                    <div id="residual_risk_container" style="width:100%; height:100%;" class="doughnut_container"></div>
+                </div>
+                <div class="col-md-4">
+                    <div id="pha_bia_container" style="width:100%; height:100%;" class="doughnut_container"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-content tab-link " id="tab2">
+        <h2>KPIs</h2>
         <div class="form-group">
             <div class="row" >
                 <div class="col-md-3 ">
@@ -539,71 +888,32 @@
                 </div>
             </div>
         </div>
-        <br>
-        <div class="form-group">
-            <div class="row" style="height:250px">
-                <div class="col-md-4">
-                   <div id="raw_bia_container" style="width:100%; height:100%;" class="doughnut_container"></div>
-                </div>
-                <div class="col-md-4">
-                    <div id="residual_risk_container" style="width:100%; height:100%;" class="doughnut_container"></div>
-                </div>
-                <div class="col-md-4">
-                    <div id="pha_bia_container" style="width:100%; height:100%;" class="doughnut_container"></div>
-                </div>
-            </div>
-        </div>
-
     </div>
-    <div class="col-md-5 ">
-        <div class="form-group">
-            <!-- Worksheets Approval Section -->
-            <div class="card shadow flex-fill">
-                <div class="card-body">
-                <div class="worksheets-approval-section">
-                    <h4 style="color: white">Worksheets for Moderation</h4>
-                    {% if worksheets_to_approve == "No moderations waiting" %}
-                        <p>No approvals for action.</p>
-                    {% else %}
-                        <ul>
-                            {% for worksheet in worksheets_to_approve %}
-                                <li style="color: white">
-                                    <strong>Title:</strong> {{ worksheet.RATitle }}<br>
-                                    <strong>Date:</strong> {{ worksheet.RADate }}<br>
-                                    <strong>Status:</strong> {{ worksheet.StatusFlag }}<br>
-                                    <!-- Add link to view or approve the worksheet -->
 
-                                </li>
-                            {% endfor %}
-                        </ul>
-                    {% endif %}
-                </div>
-                </div>
-            </div>
-
-        </div>
-
+    <!-- Tab 2 Content -->
+    <div class="tab-content tab-link" id="tab3">
+        <h2>CyberPHA</h2>
         <div class="form-group form-sim" >
             <div class="card shadow flex-fill">
                 <div class="card-body">
                     <label for="headertable" class="form-label">CyberPHA Assessments</label>
-                    <table id="phaTable" class="table small-font" style="background-color: #464748">
-                    <thead class="thead-dark">
+                    <table id="headertable" class="table small-font" style="border-collapse: separate; border-spacing: 0 15px;">
+                    <thead>
                         <tr>
-                        <th>ID</th>
+                        <th class="th">ID</th>
                         <th>Site</th>
                         <th>Unit</th>
                         <th>Zone</th>
                         <th>PHA Score</th>
                         </tr>
                     </thead>
-                    <tbody style="background-color: #464748">
+                    <tbody style="font-size: 10px;">
                         {% for pha in phas %}
-                        <tr style="background-color: #464748">
-                        <td style="color: white">{{ pha.ID }}</td>
-                        <td style="color: white"><a href="/OTRisk/iotaphamanager/{{ pha.ID }}/" style="color: white">{{ pha.FacilityName }}</a></td>
-                        <td style="color: white">{{ pha.AssessmentUnit }}</td>
-                        <td style="color: white">{{ pha.AssessmentZone }}</td>
+                        <tr class="selectable-row" data-id="{{ pha.ID }}" style="background-color: #f0f0f0; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); border-radius: 5px;">
+                        <td >{{ pha.ID }}</td>
+                        <td ><a href="/OTRisk/iotaphamanager/{{ pha.ID }}/" >{{ pha.FacilityName }}</a></td>
+                        <td>{{ pha.AssessmentUnit }}</td>
+                        <td>{{ pha.AssessmentZone }}</td>
                          <td>
                             {% if pha.pha_score <= 16 %}
                                 <div style="background-color: green; border-radius: 20px; text-align: center; color: black">Low</div>
@@ -642,8 +952,12 @@
                 </div>
             </div>
         </div>
+    </div>
 
-<div class="form-group">
+    <!-- Tab 3 Content -->
+    <div class="tab-content tab-link" id="tab4">
+        <h2>Risk Groups</h2>
+        <div class="form-group">
     <div class="row">
         <div class="col-md-1"></div>
         <div class="col text-center text-white">
@@ -654,209 +968,284 @@
     </div>
     <br>
     <div class="row">
-        {% for group in groups_with_cyberphas %}
-        <div class="col-md-4">
-            <div class="group-container">
-                <div class="group-header">
-                    {{ group.group_name }}
+   {% for group in groups_with_cyberphas %}
+<div class="col-md-4">
+    <div class="group-container" data-group-id="{{ group.id }}" onclick="getGroupReport(this.getAttribute('data-group-id'))">
+        <div class="group-header">
+            {{ group.group_name }}
+        </div>
+        <div class="group-body">
+            {% for cyberpha in group.cyberphas %}
+                <div class="cyberpha-item">
+                    <img src="{% static 'images/redcube.png' %}" class="cube-icon" alt="Red Cube">
+                    <span class="facility-name">{{ cyberpha.facility_name }}</span>
                 </div>
-                <div class="group-body">
-                    {% for cyberpha in group.cyberphas %}
-                        <div class="cyberpha-item">
-                            <img src="{% static 'images/redcube.png' %}" class="cube-icon" alt="Red Cube">
-                            <span class="facility-name">{{ cyberpha.facility_name }}</span>
-                        </div>
-                    {% endfor %}
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% empty %}
+    <p>No groups found.</p>
+{% endfor %}
+
+
+    </div>
+</div>
+<script>
+function getGroupReport(groupId) {
+    $.ajax({
+        url: '/OTRisk/get_group_report',  // Update with the actual URL
+        data: { 'group_id': groupId },
+        success: function(data) {
+            // Create a table for the CyberPHAs with the specific styling
+            var tableHtml = '<table id="headertable" class="table small-font compact"><thead><tr><th class="th">Title</th><th>Facility Name</th><th>Facility Type</th><th>Industry</th><th>Employees On Site</th></tr></thead><tbody style="font-size: 10px">';
+            data.cyberphas.forEach(function(cyberpha) {
+                tableHtml += '<tr class="selectable-row">' +
+                             '<td>' + cyberpha.title + '</td>' +
+                             '<td>' + cyberpha.FacilityName + '</td>' +
+                             '<td>' + cyberpha.FacilityType + '</td>' +
+                             '<td>' + cyberpha.Industry + '</td>' +
+                             '<td>' + cyberpha.EmployeesOnSite + '</td>' +
+                             '</tr>';
+            });
+            tableHtml += '</tbody></table>';
+
+            // Ensure the table container is specifically targeted and not overwritten by averages content
+            $('#cyberphasTableContainer').html(tableHtml);
+
+            // Create content for the averages and append it separately
+            var averagesContent = '<div>Average Image Safety: ' + data.avg_imageSafety +
+                                  ', Average Impact Danger: ' + data.avg_impactDanger +
+                                  ', Average Impact Production: ' + data.avg_impactProduction + '</div>';
+
+            // Append the averages content next to the table container within tab7
+            $('#tab7').append(averagesContent);
+
+            // Make sure tab7 is displayed
+            $('.tab-content').removeClass('active').hide();
+            $('#tab7').addClass('active').show();
+        }
+    });
+}
+
+</script>
+
+    </div>
+
+    <!-- Tab 4 Content -->
+    <div class="tab-content tab-link" id="tab5">
+        <h2>QRAW</h2>
+
+    </div>
+
+    <div class="tab-content tab-link" id="tab6">
+        <h2>Moderator Queue</h2>
+          <div class="form-group">
+            <!-- Worksheets Approval Section -->
+            <div class="card shadow flex-fill">
+                <div class="card-body">
+                <div class="worksheets-approval-section">
+                    <h4 style="color: white">Worksheets for Moderation</h4>
+                    {% if worksheets_to_approve == "No moderations waiting" %}
+                        <p>No approvals for action.</p>
+                    {% else %}
+                        <ul>
+                            {% for worksheet in worksheets_to_approve %}
+                                <li style="color: white">
+                                    <strong>Title:</strong> {{ worksheet.RATitle }}<br>
+                                    <strong>Date:</strong> {{ worksheet.RADate }}<br>
+                                    <strong>Status:</strong> {{ worksheet.StatusFlag }}<br>
+                                    <!-- Add link to view or approve the worksheet -->
+
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
                 </div>
             </div>
-        </div>
-        {% empty %}
-            <p>No groups found.</p>
-        {% endfor %}
-    </div>
-</div>
-    </div>
-</div>
+
         </div>
     </div>
+     <div class="tab-content tab-link"  id="tab7">
+        <h2>Group Report</h2>
+         <div id="cyberphasTableContainer"></div>
+
+     </div>
+    <div class="tab-content tab-link" id="tab8">
+        <h2>Heatmap Report</h2>
+         <div id="heatmapTableContainer"></div>
+
+     </div>
 </div>
+</div>
+    </div>
+</div>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // Select all tab links within the sub-menu
+    const tabLinks = document.querySelectorAll('.sub-menu a[data-tab]');
+
+    tabLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+
+            // Get the ID of the tab content to show
+            const targetTab = link.getAttribute('data-tab');
+
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(tabContent => {
+                tabContent.style.display = 'none';
+            });
+
+            // Remove 'active' class from all tab links
+            tabLinks.forEach(link => {
+                link.classList.remove('active');
+            });
+
+            // Show the target tab content and add 'active' class to the clicked tab link
+            document.getElementById(targetTab).style.display = 'block';
+            link.classList.add('active');
+        });
+    });
+
+    // Optionally, automatically click the first tab to show it on page load
+    if(tabLinks.length > 0) {
+        tabLinks[0].click();
+    }
+});
+</script>
 
 <script>
 $(document).ready(function() {
     $('.group-container').hide().fadeIn(1000);
 });
+
+
+function formatCurrency(value) {
+    value = parseInt(value);
+    if (value >= 1000000) {
+    return `$${(value / 1000000).toFixed(1)}m`;
+    } else if (value >= 1000) {
+    return `$${(value / 1000).toFixed(1)}k`;
+    } else {
+    return `$${value}`;
+    }
+}
+
+
+document.addEventListener('DOMContentLoaded', (event) => {
+    const sleCells = document.querySelectorAll('.sle-cell');
+    sleCells.forEach(cell => {
+        cell.textContent = formatCurrency(cell.textContent);
+    });
+});
 </script>
 
-
-    </div>
-
-    <div class="col-md-1"></div>
-</div>
-
-
-
-
 <script>
-
-        function formatCurrency(value) {
-        value = parseInt(value);
-        if (value >= 1000000) {
-            return `$${(value / 1000000).toFixed(1)}m`;
-            } else if (value >= 1000) {
-            return `$${(value / 1000).toFixed(1)}k`;
-            } else {
-            return `$${value}`;
-        }
+anychart.onDocumentReady(function() {
+    var pie_data = {{ bia_summary|safe }};
+    let chart_data = [];
+    for (let [key, value] of Object.entries(pie_data)) {
+        chart_data.push({x: key, value: value});
     }
 
+    if (chart_data.length === 0) {
+        document.getElementById('raw_bia_container').innerHTML = 'No QRAW Assessments';
+    } else {
+        var chart = anychart.pie(chart_data);
+        var colors = {
+            'Low': 'green',
+            'Low/Medium': '#ADFF2F', // Green-yellow
+            'Medium': '#ffcc00',
+            'Medium/High': '#FFA500', // Orange
+            'High': '#c7471e',
+            'Very High': '#ef4710'
+        };
+        var chartColors = [];
+        for (let item of chart_data) {
+            chartColors.push(colors[item.x]);
+        }
+        chart.background().fill("#464748");
+        chart.palette(chartColors);
+        chart.labels().format("{%Value}");
+        chart.labels().fontSize(16);
+        chart.title("QRAW BIA Summary");
+        chart.innerRadius("40%");
+        var credits = chart.credits();
+        credits.enabled(false);
+        chart.bounds(0, 0, "100%", "100%");
+        chart.container("raw_bia_container");
+        chart.draw();
+    }
+});
 
-    document.addEventListener('DOMContentLoaded', (event) => {
-        const sleCells = document.querySelectorAll('.sle-cell');
-        sleCells.forEach(cell => {
-            cell.textContent = formatCurrency(cell.textContent);
-        });
-    });
-</script>
-<br>
-<div class="row d-flex" style="height:100%;">
-    <div class="col-md-1 " style="background-color: white"></div>
-        <div class="col-md-5 d-flex" style="display: flex; flex-direction: column;">
+anychart.onDocumentReady(function() {
+    var pie_data = {{ pha_risk_summary|safe }};
+    let chart_data = [];
+    for (let [key, value] of Object.entries(pie_data)) {
+        chart_data.push({x: key, value: value});
+    }
 
-</div>  <!-- cyberpha assessment table -->
-        <div class="col-md-5 d-flex" style="display: flex; flex-direction: column;">
+    var chart = anychart.pie(chart_data);
+    var colors = {
+        'Low': 'green',
+        'Low/Medium': '#ADFF2F',  // Green-yellow
+        'Medium': '#ffcc00',
+        'Medium/High': '#FFA500',  // Orange
+        'High': '#c7471e',
+        'Very High': '#ef4710'
+    };
+    var chartColors = [];
+    for (let item of chart_data) {
+        chartColors.push(colors[item.x]);
+    }
+    chart.background().fill("#464748");
+    chart.palette(chartColors);
+    chart.labels().format("{%Value}");
+     chart.labels().fontSize(16);
+    chart.title("CyberPHA Residual Risks");
+    chart.innerRadius("30%");
+    var credits = chart.credits();
+    credits.enabled(false);
+    chart.container("residual_risk_container");
+    chart.draw();
 
-        </div>  <!-- cyberpha scenario table -->
+});
 
-    <div class="col-md-1 " style="background-color: white">
-</div>
+anychart.onDocumentReady(function() {
+    var pie_data = {{ pha_bia_summary|safe }};
+    let chart_data = [];
+    for (let [key, value] of Object.entries(pie_data)) {
+        chart_data.push({x: key, value: value});
+    }
 
-<div class="row" style="height: 10px">
-    <div class="col"></div>
-</div>
+    var chart = anychart.pie(chart_data);
+    var colors = {
+        'Low': 'green',
+        'Low/Medium': '#ADFF2F',  // Green-yellow
+        'Medium': '#ffcc00',
+        'Medium/High': '#FFA500',  // Orange
+        'High': '#c7471e',
+        'Very High': '#ef4710'
+    };
+    var chartColors = [];
+    for (let item of chart_data) {
+        chartColors.push(colors[item.x]);
+    }
+    chart.background().fill("#464748");
+    chart.palette(chartColors);
+    chart.labels().format("{%Value}");
+     chart.labels().fontSize(16);
+    chart.title("CyberPHA BIA Summary");
+    chart.innerRadius("30%");
+    var credits = chart.credits();
+    credits.enabled(false);
+    chart.container("pha_bia_container");
+    chart.draw();
 
+});
 
-
-
-                <script>
-                anychart.onDocumentReady(function() {
-                    var pie_data = {{ bia_summary|safe }};
-                    let chart_data = [];
-                    for (let [key, value] of Object.entries(pie_data)) {
-                        chart_data.push({x: key, value: value});
-                    }
-
-                    if (chart_data.length === 0) {
-                        document.getElementById('raw_bia_container').innerHTML = 'No QRAW Assessments';
-                    } else {
-                        var chart = anychart.pie(chart_data);
-                        var colors = {
-                            'Low': 'green',
-                            'Low/Medium': '#ADFF2F', // Green-yellow
-                            'Medium': '#ffcc00',
-                            'Medium/High': '#FFA500', // Orange
-                            'High': '#c7471e',
-                            'Very High': '#ef4710'
-                        };
-                        var chartColors = [];
-                        for (let item of chart_data) {
-                            chartColors.push(colors[item.x]);
-                        }
-                        chart.background().fill("#464748");
-                        chart.palette(chartColors);
-                        chart.labels().format("{%Value}");
-                        chart.labels().fontSize(16);
-                        chart.title("QRAW BIA Summary");
-                        chart.innerRadius("40%");
-                        var credits = chart.credits();
-                        credits.enabled(false);
-                        chart.bounds(0, 0, "100%", "100%");
-                        chart.container("raw_bia_container");
-                        chart.draw();
-                    }
-                });
-            </script>
-
-
-                <script>
-                    anychart.onDocumentReady(function() {
-                        var pie_data = {{ pha_risk_summary|safe }};
-                        let chart_data = [];
-                        for (let [key, value] of Object.entries(pie_data)) {
-                            chart_data.push({x: key, value: value});
-                        }
-
-                        var chart = anychart.pie(chart_data);
-                        var colors = {
-                            'Low': 'green',
-                            'Low/Medium': '#ADFF2F',  // Green-yellow
-                            'Medium': '#ffcc00',
-                            'Medium/High': '#FFA500',  // Orange
-                            'High': '#c7471e',
-                            'Very High': '#ef4710'
-                        };
-                        var chartColors = [];
-                        for (let item of chart_data) {
-                            chartColors.push(colors[item.x]);
-                        }
-                        chart.background().fill("#464748");
-                        chart.palette(chartColors);
-                        chart.labels().format("{%Value}");
-                         chart.labels().fontSize(16);
-                        chart.title("CyberPHA Residual Risks");
-                        chart.innerRadius("30%");
-                        var credits = chart.credits();
-                        credits.enabled(false);
-                        chart.container("residual_risk_container");
-                        chart.draw();
-
-                    });
-                </script>
-
-
-
-                <script>
-                    anychart.onDocumentReady(function() {
-                        var pie_data = {{ pha_bia_summary|safe }};
-                        let chart_data = [];
-                        for (let [key, value] of Object.entries(pie_data)) {
-                            chart_data.push({x: key, value: value});
-                        }
-
-                        var chart = anychart.pie(chart_data);
-                        var colors = {
-                            'Low': 'green',
-                            'Low/Medium': '#ADFF2F',  // Green-yellow
-                            'Medium': '#ffcc00',
-                            'Medium/High': '#FFA500',  // Orange
-                            'High': '#c7471e',
-                            'Very High': '#ef4710'
-                        };
-                        var chartColors = [];
-                        for (let item of chart_data) {
-                            chartColors.push(colors[item.x]);
-                        }
-                        chart.background().fill("#464748");
-                        chart.palette(chartColors);
-                        chart.labels().format("{%Value}");
-                         chart.labels().fontSize(16);
-                        chart.title("CyberPHA BIA Summary");
-                        chart.innerRadius("30%");
-                        var credits = chart.credits();
-                        credits.enabled(false);
-                        chart.container("pha_bia_container");
-                        chart.draw();
-
-                    });
-                </script>
-
-
-
-
-
-
-
-
-<script>
 
 $(document).ready( function () {
     $('#myTable').DataTable({
@@ -865,26 +1254,16 @@ $(document).ready( function () {
 } );
 
 
-function getAssessment(id) {
-    // Your code here
-    console.log(id);
-}
-function getPHA(id) {
-    // Your code here
-    console.log(id);
-}
-
-
-    $(document).ready(function() {
-        $('#dataTable').DataTable({
-            "pageLength": 5, // Set the length of the pagination
-            "searching": false // Disable searching
-        });
+$(document).ready(function() {
+    $('#dataTable').DataTable({
+        "pageLength": 5, // Set the length of the pagination
+        "searching": false // Disable searching
     });
+});
 
 
 </script>
 
-</div>
+
 </body>
 </html>

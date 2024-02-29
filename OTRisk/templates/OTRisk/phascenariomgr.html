@@ -101,6 +101,28 @@ $(function () {
 })
 </script>
 <style>
+
+.recommendation-box {
+    margin: 10px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+    border-radius: 5px;
+    background-color: #f9f9f9;
+}
+
+.recommendation-text {
+    font-size: 14px;
+    margin-bottom: 5px;
+    color: #000;
+}
+
+.nist-reference {
+    font-size: 12px;
+    text-align: right;
+    color: #666;
+}
+
     .form-group {
     border: 1px solid #464748; /* Border color */
     box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.5); /* Outer shadow */
@@ -292,10 +314,10 @@ svg {
     padding: 20px; /* Padding around content */
     border: 1px solid #666; /* Border for definition */
     margin-top: 20px; /* Space from the top */
-    width: 80%; /* 80% of the available width */
+    width: 95%; /* 80% of the available width */
     /* height: 80vh; /* 80% of the viewport height */
     position: absolute; /* Positioning relative to its nearest positioned ancestor */
-    left: 350px; /* Adjust based on the total width of the main sidebar and sub-menu */
+    left: 150px; /* Adjust based on the total width of the main sidebar and sub-menu */
     top: 0; /* Align with the top of the viewport */
     overflow: auto; /* Add scroll for overflow content */
     box-sizing: border-box; /* Include padding and border in the element's total width and height */
@@ -475,9 +497,7 @@ document.addEventListener("DOMContentLoaded", function() {
                         <a class="page-title" style="color: #d3d1cd" href="#" id="cyberPHALink">CyberPHA Scenario Analysis - <span id="facilityName"></span></a>
                         <h6 style="visibility: hidden">Industry set to: <span id="facilityName2" class="text-decoration-underline text-body-emphasis" data-bs-toggle="tooltip" data-bs-placement="top" title="If the incorrect industry is displayed, return to the 'CyberPHA Manager' screen and select the 'Edit' button for this assessment from the table. Select the correct industry in the Assessment Setup form and save the record before re-selecting it to return to this screen"></span> </h6>
                             <h6 style="visibility: hidden"> <span id="user_role" class="text-decoration-underline text-body-emphasis"></span></h6>
-
-
-                            <script>
+                          <script>
                             $(document).ready(function() {
                             // Get the activeCyberPHA value from the session storage
                             let activeCyberPHA = sessionStorage.getItem('activeCyberPHA');
@@ -569,17 +589,15 @@ document.addEventListener("DOMContentLoaded", function() {
                         </div>
                     </div>
                     <div class="col-md-1">
-
-
                     </div>
                 </div>
 
-            </div>
+                </div>
 
-                    <div class="text-label" style="padding-left: 150px; font-size: 20px;">
-                        <!-- Adjust the inline styles as needed -->
-                        <label id="echo_scenario" style="word-wrap: normal;font-size: small"></label>
-                    </div>
+            <div class="text-label" style="padding-left: 250px; font-size: 20px;">
+                <label id="echo_scenario" class="form-group"  style="word-wrap: normal;font-size: small; width: 50%; "></label>
+
+                </div>
                 <div class="sub-menu sub-menu-container small-font">
             <br><br><br><br><br><br><br><br><br><br><br><br>
             Click the tab headings
@@ -594,7 +612,7 @@ document.addEventListener("DOMContentLoaded", function() {
             <li><a href="#" data-tab="tab7" class="tab-link">Financial Analysis</a></li>
             <li><a href="#" data-tab="tab8" class="tab-link">Compliance Map</a></li>
             <li><a href="#" data-tab="tab9" class="tab-link">Attack Tree</a></li>
-            <li><a href="#" data-tab="tab10" class="tab-link" >Executive Summary</a></li>
+            <li><a href="#" data-tab="tab10" class="tab-link" >Recommendations</a></li>
         </ul>
     </div>
 
@@ -881,56 +899,56 @@ $(document).ready(function() {
                 <script>
 
                 function convertSVGToPNG(svgElement, scale = 1) {
-    var xmlSerializer = new XMLSerializer();
-    var svgString = xmlSerializer.serializeToString(svgElement);
+                                        var xmlSerializer = new XMLSerializer();
+                                        var svgString = xmlSerializer.serializeToString(svgElement);
 
-    var canvas = document.createElement('canvas');
-    canvas.width = svgElement.getBoundingClientRect().width * scale;
-    canvas.height = svgElement.getBoundingClientRect().height * scale;
-    var ctx = canvas.getContext('2d');
-    ctx.scale(scale, scale); // Apply scaling
+                                        var canvas = document.createElement('canvas');
+                                        canvas.width = svgElement.getBoundingClientRect().width * scale;
+                                        canvas.height = svgElement.getBoundingClientRect().height * scale;
+                                        var ctx = canvas.getContext('2d');
+                                        ctx.scale(scale, scale); // Apply scaling
 
-    var DOMURL = window.URL || window.webkitURL || window;
-    var img = new Image();
-    var svgBlob = new Blob([svgString], {type: 'image/svg+xml;charset=utf-8'});
-    var url = DOMURL.createObjectURL(svgBlob);
+                                        var DOMURL = window.URL || window.webkitURL || window;
+                                        var img = new Image();
+                                        var svgBlob = new Blob([svgString], {type: 'image/svg+xml;charset=utf-8'});
+                                        var url = DOMURL.createObjectURL(svgBlob);
 
-    img.onload = function () {
-        ctx.drawImage(img, 0, 0);
-        DOMURL.revokeObjectURL(url);
+                                        img.onload = function () {
+                                            ctx.drawImage(img, 0, 0);
+                                            DOMURL.revokeObjectURL(url);
 
-        var imgURI = canvas.toDataURL('image/png');
+                                            var imgURI = canvas.toDataURL('image/png');
 
-        // Hide the SVG
-        svgElement.style.display = 'none';
+                                            // Hide the SVG
+                                            svgElement.style.display = 'none';
 
-        // Target the container
-        var container = document.getElementById('attack_tree');
-        if (container) {
-            // Clear previous content
-            container.innerHTML = '';
+                                            // Target the container
+                                            var container = document.getElementById('attack_tree');
+                                            if (container) {
+                                                // Clear previous content
+                                                container.innerHTML = '';
 
-            // Apply styles to center the image within the container
-            container.style.display = 'flex';
-            container.style.justifyContent = 'center';
-            container.style.alignItems = 'center';
-            container.style.height = '100%'; // Ensure the container has a defined height
+                                                // Apply styles to center the image within the container
+                                                container.style.display = 'flex';
+                                                container.style.justifyContent = 'center';
+                                                container.style.alignItems = 'center';
+                                                container.style.height = '100%'; // Ensure the container has a defined height
 
-            // Create an img element for the PNG image
-            var pngImage = new Image();
-            pngImage.src = imgURI;
-            pngImage.style.maxWidth = '100%'; // Ensure the image scales within the container
-            pngImage.style.maxHeight = '100%';
+                                                // Create an img element for the PNG image
+                                                var pngImage = new Image();
+                                                pngImage.src = imgURI;
+                                                pngImage.style.maxWidth = '100%'; // Ensure the image scales within the container
+                                                pngImage.style.maxHeight = '100%';
 
-            // Append the image to the container
-            container.appendChild(pngImage);
-        } else {
-            console.error('Container for the PNG image not found.');
-        }
-    };
+                                                // Append the image to the container
+                                                container.appendChild(pngImage);
+                                            } else {
+                                                console.error('Container for the PNG image not found.');
+                                            }
+                                        };
 
-    img.src = url;
-}
+                                        img.src = url;
+                                }
 
 
 
@@ -1634,7 +1652,7 @@ $(document).ready(function() {
                                 <th style="width: 33%">URL</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody style="color: black">
                                 <!-- Rows will be added dynamically by JavaScript -->
                          </tbody>
                     </table>
@@ -1690,39 +1708,15 @@ $(document).ready(function() {
                 </script>
         </div>
          <div class="tab-content " id="tab10">
-            <h2>Executive Summary</h2>
+            <h2>Recommendations</h2>
              <div class="form-group">
-                 <span id="exec_summary"></span>
-                 <input type="hidden" id="hdnExecSummary" name="hdnExecSummary">
+                 <span id="span_recommendations"></span>
+                 <input type="hidden" id="hdnRecommendations" name="hdnRecommendations">
              </div>
         </div>
          </div>
         </div>
     </div>
-
-
-
-<div class="row small-font">
-    <div class="col-md-1" style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%;">
-
-    </div>
-
-    <div class="col-md-10">
-        <div class="row">
-        </div>
-        <div class="form-group">
-        <div class ="row" style="border: 1px solid #000000; box-shadow: 0 4px 8px rgba(0,0,0,0.1); padding: 20px; background-color: lightgrey">
-            <div class="col-md-1 d-flex justify-content-center align-items-center"></div>
-
-
-
-            <div class="col-md-1 d-flex justify-content-center align-items-center"></div>
-            <div class="col-md-1" style="background-color: white"></div>
-        </div> <!-- scenario list table -->
-        </div>
-        <div class="form-group">
-            <div class="row">
-
 
         <input type="hidden" id="hdnID" name="hdnID" >
         <input type="hidden" id="hdnScenario" name="hdnScenario" value = {{ scenarioID }}>
@@ -1734,13 +1728,6 @@ $(document).ready(function() {
 
         </script>
 
-    </div>
-        </div>
-</div>
-
-
-
-<br><br>
 
 <!-- vulnerability assessment table -->
 <div class="row" style="visibility: hidden">
@@ -1765,52 +1752,6 @@ $(document).ready(function() {
 <input type="text" id="frequency" name="frequency" class="form-control text-center" style="font-size: 20px; color: #0a53be; visibility: hidden"  readonly>
 
 
-    </div>
-
-<div class="row" style="height: 10px">
-    <div class="col"></div>
-</div>
-
-
-
-
-
-    <div class="col-md-1 " style="background-color: white"></div>
-</div>
-   <br>
-
-
-<label for="txtScenarioAnalysis" class="small-font" style="visibility: hidden">Recommendations will align with selected standards:</label>
-<textarea id="txtScenarioAnalysis" name="txtScenarioAnalysis" class="form-control border border-danger small-font" rows="15"  style="resize: none; border: 3px #97979A; border-radius: 10px; box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5);  padding: 20px; background-color: white; visibility: hidden"></textarea>
-
-
-
-<div class="row">
-    <div class="col-md-1" style="background-color: white"></div>
-    <div class="col-md-5" style="background-color: white">
-        <div class="row  rounded p-3 ">
-
-        </div>
-
-    </div>
-    <div class="col-md-5" style="background-color: white">
-        <div class="row  rounded p-3 ">
-
-        </div>
-
-    </div>
-     <div class="col-md-1" style="background-color: white"></div>
-</div>
-<div class="row" style="height: 10px">
-    <div class="col-md-1" style="background-color: white"></div>
-    <div class="col-md-10 " style="background-color: white; height: 10px"></div>
-    <div class="col-md-1 " style="background-color: white"></div>
-</div> <!-- white stripe -->
-<div class="row" style="height: 10px">
-    <div class="col-md-1" style="background-color: white"></div>
-    <div class="col-md-10 " style="background-color: darkgray; height: 10px"></div>
-    <div class="col-md-1 " style="background-color: white"></div>
-</div> <!-- dark grey stripe -->
 
 <div class="row" hidden="hidden">
     <div class="col-md-1" style="background-color: white"></div>
@@ -2086,7 +2027,7 @@ $(document).ready(function() {
                   const rru = document.getElementById('rru_range').value;
                   const sl = document.getElementById('sl_range').value;
                   const cyberpha = sessionStorage.getItem('activeCyberPHA')
-                  const recommendations = document.getElementById('txtScenarioAnalysis').valu
+                  const recommendations = document.getElementById('hdnRecommendations').value;
                   const likelihood = document.getElementById('hdnLikelihood').value
                   const rra = document.getElementById('txtResidualRisk').value
                   const justifySafety = document.getElementById('txtsafetyJustify').value
@@ -2271,6 +2212,7 @@ $(document).ready(function() {
                   saveOrUpdateCyberPHA(formData);
 
                   $('#loadingSpinner').hide();
+                  processFormData
               }
           }
     </script>
@@ -3581,7 +3523,7 @@ $('#scenarioSelectModal').on('show.bs.modal', function (e) {
                         document.getElementById('txtRRa').value = response.adjustedRR;
                         document.getElementById('hdnLikelihood').value = response.likelihood;
                         document.getElementById('txtLikelihood').value = response.likelihood + '%';
-                        // document.getElementById('txtScenarioAnalysis').value = response.recommendations;
+
                         let costsString = response.costs;
                         let costsArray = costsString.split('|');
                         let sle_low = costsArray.length > 0 && costsArray[0] ? `$${parseInt(costsArray[0]).toLocaleString()}` : "$0";
@@ -3595,8 +3537,10 @@ $('#scenarioSelectModal').on('show.bs.modal', function (e) {
                         document.getElementById('txtProbability').value = response.probability;
 
                         document.getElementById('hdn_control_effectiveness').value = response.control_effectiveness;
-                        document.getElementById("exec_summary").textContent = response.executive_summary;
-                        document.getElementById("hdnExecSummary").value = response.executive_summary;
+                        displayRecommendations(response.recommendations);
+
+
+                        document.getElementById("hdnRecommendations").value = response.recommendations;
                         document.getElementById('hdn_bia_score').value = response.biaScore;
 
                         let ale_low = parseFloat(costsArray[0]) * parseFloat(response.frequency);
@@ -3755,6 +3699,39 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     });
 });
+
+function displayRecommendations(recommendations) {
+
+    try {
+        $("#span_recommendations").empty();
+        let recommendationsArray = recommendations.split('\n').filter(r => r.trim() !== '');
+        recommendationsArray.forEach((rec, index) => {
+            let parts = rec.split('[');
+            let recommendationText = parts[0].trim();
+            let nistReference = parts[1].replace(']', '').trim();
+
+            let boxHtml = `
+                <div class="recommendation-box" id="recBox${index}">
+                    <div class="recommendation-text">${recommendationText}</div>
+                    <div class="nist-reference">${nistReference}</div>
+                </div>
+            `;
+
+            $("#span_recommendations").append(boxHtml);
+        });
+    } catch (error){
+    // Optionally, you can display a user-friendly error message on the UI as well
+    $("#span_recommendations").append(`<div class="error-message">Error displaying recommendations. Please try again later.</div>`);
+}
+}
+
+
+
+
+function createActionItem(recBoxId) {
+    console.log(`Create action item for ${recBoxId}`);
+    $(".custom-context-menu").hide();
+}
 
     function createEffectivenessGauge(score) {
 
@@ -4020,9 +3997,9 @@ var scaleBar = gauge.scaleBar(0);
 
    // add a marker pointer
    var marker = gauge.marker(0);
-    marker.width(15);
+    marker.width(7.5);
    // set the offset of the pointer as a percentage of the gauge width
-   marker.offset('30%');
+   marker.offset('27%');
 
    // set the marker type
    marker.type('triangle-left');
@@ -4031,6 +4008,16 @@ var scaleBar = gauge.scaleBar(0);
     // set the zIndex of the marker
    marker.zIndex(10);
 
+   // Adjust label positioning to place it inside the column next to the pointer
+    var label = gauge.label();
+
+    label.text(data.toString())
+         .position({x: '50%', y: '95%'})
+         .anchor('centerBottom')
+         .offsetX('50%') // Adjust this value to position the label next to the marker
+         .offsetY(-15) // Manually adjust based on the gauge's scale and layout
+         .hAlign('center')
+         .zIndex(20);
    // configure the scale
    var scale = gauge.scale();
    scale.minimum(0);
@@ -4067,7 +4054,7 @@ function createFrequencyGauge(rating) {
 
     var data = rating;
     var gauge = anychart.gauges.linear();
-    gauge.layout('vertical'); // Set the layout to horizontal
+    gauge.layout('vertical');
 
     var credits = gauge.credits();
     credits.enabled(false);
@@ -4087,16 +4074,27 @@ function createFrequencyGauge(rating) {
     scaleBar.colorScale(scaleBarColorScale);
 
     var marker = gauge.marker(0);
-    marker.width(15);
-    marker.offset('30%');
+    marker.width(7.5);
+    marker.offset('27%');
     marker.type('triangle-left');
     marker.color('black');
     marker.zIndex(10);
 
+    // Adjust label positioning to place it inside the column next to the pointer
+    var label = gauge.label();
+
+    label.text(data.toString())
+         .position({x: '50%', y: '95%'})
+         .anchor('centerBottom')
+         .offsetX('50%') // Adjust this value to position the label next to the marker
+         .offsetY(-15) // Manually adjust based on the gauge's scale and layout
+         .hAlign('center')
+         .zIndex(20);
+
     var scale = gauge.scale();
     scale.minimum(0);
     scale.maximum(5);
-    scale.ticks().interval(0.5); // Adjust tick interval
+    scale.ticks().interval(0.5);
 
     var axis = gauge.axis();
     axis.minorTicks(true);
@@ -4105,20 +4103,22 @@ function createFrequencyGauge(rating) {
     axis.offset('5%');
     axis.orientation('left');
 
-    // Format axis labels to show specific intervals
     axis.labels().format(function() {
         if (this.value % 0.5 === 0) {
-            return this.value.toFixed(1);  // Show labels at 0.5 intervals
+            return this.value.toFixed(1);
         }
-        return "";  // Hide other labels
+        return "";
     });
 
-    gauge.height('95%'); // Set height for vertical layout
+    gauge.height('95%');
     gauge.layout();
-    gauge.padding([15, 0, 0, 15]); // Adjust padding for vertical layout
+    gauge.padding([15, 0, 0, 15]);
 
     gauge.container('gaugeFrequency').draw();
 }
+
+
+
 
 
 function resetformcontrols() {
@@ -4175,7 +4175,7 @@ function resetformcontrols() {
       document.getElementById('RRMrange').value = 0;
       document.getElementById('SArange').value = 0;
       document.getElementById('MELarange').value = 0;
-      document.getElementById('txtScenarioAnalysis').value = 0;
+
       document.getElementById('txtLikelihood').value = 0;
       document.getElementById('hdnLikelihood').value = 0;
       document.getElementById('txtRRa').value = 0;
@@ -4258,7 +4258,7 @@ function clearScenario(){
       document.getElementById('RRMrange').value = 0;
       document.getElementById('SArange').value = 0;
       document.getElementById('MELarange').value = 0;
-      document.getElementById('txtScenarioAnalysis').value = 0;
+
       document.getElementById('txtLikelihood').value = 0;
       document.getElementById('hdnLikelihood').value = 0;
       document.getElementById('txtRRa').value = 0;
@@ -4325,11 +4325,20 @@ function clearScenario(){
 
          $('#risk-category').val(data.RiskCategory);
          $('#risk-category').val(data.RiskCategory);
+
+         $('.tab-link[data-tab="tab4"]').click();
+
          $('#range_safety').val(data.impactSafety);
          $('#range_life').val(data.impactDanger);
          $('#range_production').val(data.impactProduction);
          $('#range_finance').val(data.impactFinance);
          $('#range_reputation').val(data.impactReputation);
+
+         $('#range_environment').val(data.impactEnvironment);
+         $('#range_regulation').val(data.impactRegulation);
+         $('#range_data').val(data.impactData);
+        $('#range_supply').val(data.impactSupply);
+
          $('#scenarioStatusSelect').val(data.scenario_status);
 
          $('#env_contaminant').val(data.env_contaminant);
@@ -4338,12 +4347,17 @@ function clearScenario(){
          $('#env_population').val(data.env_population);
          $('#env_wildlife').val(data.env_wildlife);
 
+        $('.tab-link[data-tab="tab2"]').click();
 
-         $('#range_regulation').val(data.impactRegulation);
-         $('#range_data').val(data.impactData);
+
+
          // $('#selStandards').val(data.RiskCategory);
 
-        $('#txtScenarioAnalysis').val(data.recommendations);
+        $('#hdnRecommendations').val(data.recommendations);
+        savedRecommendations = data.recommendations;
+        if (savedRecommendations) {
+            displayRecommendations(savedRecommendations);
+        }
         $('#SMrange').val(data.SM);
         $('#MELrange').val(data.MEL);
         $('#RRMrange').val(data.RRM);
@@ -4637,21 +4651,7 @@ function clearScenario(){
     // Or to disable specific buttons:
     // $('#someButtonId').prop('disabled', true);
 }
-function updaterSliderColor(slider) {
-    let value = parseInt(slider.value);
-    let max = parseInt(slider.max);
-    let hue;
 
-    if (value <= max * 0.5) {
-        // Transition from red (0) to yellow (60) for the first half
-        hue = 60 * (value / (0.5 * max));
-    } else {
-        // Transition from yellow (60) to green (120) for the second half
-        hue = 60 + 60 * ((value - 0.5 * max) / (0.5 * max));
-    }
-
-    slider.style.setProperty('--thumb-color', 'hsl(' + hue + ', 100%, 50%)');
-}
 
 
 function clearContainer(containerId) {
@@ -4660,32 +4660,6 @@ function clearContainer(containerId) {
         container.removeChild(container.firstChild);
     }
 }
-
-
-$(document).ready(function() {
-            $('#toggleButton').on('click', function() {
-                var isHidden = $('#toggleRow').children().not('#toggleButton').is(':hidden');
-                $('#toggleRow').children().not('#toggleButton').toggle();
-                if (isHidden) {
-                    $('#toggleIcon').attr('src', '{% static 'images/close.png' %}');
-                } else {
-                    $('#toggleIcon').attr('src', '{% static 'images/open.png' %}');
-                }
-            });
-        });
-
-
-        $(document).ready(function() {
-            $('#toggleButton2').on('click', function() {
-                var isHidden = $('#ra_container').children().not('#toggleButton2').is(':hidden');
-                $('#ra_container').children().not('#toggleButton2').toggle();
-                if (isHidden) {
-                    $('#toggleIcon2').attr('src', '{% static 'images/close.png' %}');
-                } else {
-                    $('#toggleIcon2').attr('src', '{% static 'images/open.png' %}');
-                }
-            });
-        });
 
 $(document).ready(function() {
     // Check if there are any rows in the table
@@ -4705,7 +4679,6 @@ $(document).ready(function() {
 <input type="text" id="txtProbability" name="txtProbability" class="form-control text-center" readonly style="visibility: hidden">
 <input type="text" id="txtLikelihood" name="txtLikelihood" class="form-control text-center" readonly style="visibility: hidden">
 <input type="text" id="txtResidualRisk" name="txtResidualRisk" class="form-control text-center" readonly style="visibility: hidden">
-<!-- Modal -->
 
 
 

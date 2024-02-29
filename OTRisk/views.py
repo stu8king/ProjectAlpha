@@ -50,7 +50,7 @@ from .raw_views import qraw, openai_assess_risk, GetTechniquesView, raw_action, 
     raw_from_walkdown, save_ra_action, get_rawactions, ra_actions_view, UpdateRAAction, reports, reports_pha, \
     create_or_update_raw_scenario, analyze_raw_scenario, analyze_sim_scenario, generate_sim_attack_tree, \
     analyze_sim_consequences, update_workflow, get_analysis_result, cleanup_scenariobuilder
-from .dashboard_views import dashboardhome
+from .dashboard_views import dashboardhome, get_group_report, get_heatmap_records
 from .pha_views import iotaphamanager, facility_risk_profile, get_headerrecord, scenario_analysis, phascenarioreport, \
     getSingleScenario, pha_report, scenario_vulnerability, add_vulnerability, get_asset_types, calculate_effectiveness, \
     generate_ppt, analyze_scenario, assign_cyberpha_to_group, fetch_groups, fetch_all_groups, retrieve_scenario_builder, \
@@ -2758,6 +2758,18 @@ def save_scenario_builder(request):
                 'tableData': tableData,  # Updated line
                 'cost_projection': data.get('cost_projection'),
                 'investment_projection': data.get('investment_projection'),
+                'industry': data.get('industry'),
+                'facility': data.get('facility'),
+                'country': data.get('country'),
+                'org': data.get('org'),
+                'regs': data.get('regs'),
+                'attacker': data.get('attacker'),
+                'vector': data.get('vector'),
+                'target': data.get('target'),
+                'effect': data.get('effect'),
+                'network': data.get('network'),
+                'impact': data.get('impact'),
+                'motivation': data.get('motivation'),
                 'costs': {
                     'bestCase': data.get('bestCaseCost'),
                     'mostLikelyCase': data.get('mostLikelyCaseCost'),

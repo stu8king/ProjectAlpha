@@ -154,6 +154,8 @@ urlpatterns = [
     path('facilities/', views.facilities, name='facilities'),
     path('air_quality_index/', views.air_quality_index, name='air_quality_index'),
     path('delete_pha_record/', views.delete_pha_record, name='delete_pha_record'),
+    path('get_group_report/', views.get_group_report, name='get_group_report'),
+    path('get_heatmap_records/', views.get_heatmap_records, name='get_heatmap_records'),
 ]
 
 

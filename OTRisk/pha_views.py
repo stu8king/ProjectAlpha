@@ -1142,58 +1142,52 @@ def scenario_analysis(request):
         # Split the string into a list, using semicolon as the separator
         validated_consequences_list = validated_consequences_str.split(';')
 
-        # get the effectiveness of controls for the given cyberPHA
-        try:
-            cyber_pha_header = tblCyberPHAHeader.objects.get(ID=cyberPHAID)
+        cyber_pha_header = tblCyberPHAHeader.objects.get(ID=cyberPHAID)
 
-            # Get the assessment id from the tblCyberPHAHeader instance
-            assessment_id = cyber_pha_header.assessment
-
-            investments = CyberSecurityInvestment.objects.filter(cyber_pha_header=cyber_pha_header).values(
-                'investment_type', 'vendor_name', 'product_name', 'cost', 'date'
-            )
-
-            if investments.exists():
-                # Generate the text statement for investments
-                investment_statement = "OT Cybersecurity Investments listed here:\n"
-                for idx, investment in enumerate(investments, start=1):
-                    investment_date = investment['date'].strftime('%Y-%m-%d') if investment['date'] else 'N/A'
-                    investment_statement += f"{idx}: Investment Type: {investment['investment_type']}, Vendor: {investment['vendor_name']}, Product: {investment['product_name']}, Cost: {investment['cost']}, Investment date: {investment_date}.\n"
-            else:
-                # Return an empty string if there are no investment records
-                investment_statement = ""
-
-            # Retrieve the corresponding SelfAssessment instance using the assessment_id
-            if assessment_id is not None:
-                self_assessment = SelfAssessment.objects.get(id=assessment_id)
-                control_effectiveness = self_assessment.score_effective
-            else:
-                # Handle the case where assessment_id is None
-                control_effectiveness = 0  # Default value
-
-        except tblCyberPHAHeader.DoesNotExist:
-            # Handle the case where tblCyberPHAHeader with the given ID does not exist
-            control_effectiveness = 0
-
-        # get the compliance summary for the cyberpha
-        compliance = cyber_pha_header.complianceSummary
-
-        # get relevant financial data
-        # net profit margin
-        net_profit_margin = cyber_pha_header.npm
-        # cost per operating hour
-        cost_op_hour = cyber_pha_header.coho
-        annual_revenue = cyber_pha_header.annual_revenue
-
-        openai.api_key = get_api_key('openai')
-        # Define the common part of the user message
-        common_content = f"Act as an Insurance actuary and an expert in OT cybersecurity risk. Analyse a scenario for a {facility_type} in the {industry} industry in {country}:  {scenario}. (IMPORTANT CONTEXT: Systems in scope for the scenario are exposed to the Internet with a public IP address: {exposed_system}. Systems in scope for the scenario have weak or default credentials: {weak_credentials}).  Consider the business impact scores provided (safety: {safetyimpact}, life danger: {lifeimpact}, production: {productionimpact} (production outage: {production_outage}: length of production outage {production_outage_length} hours), company reputation: {reputationimpact}, environmental impact: {environmentimpact}, regulatory: {regulatoryimpact}, supply chain : {supplyimpact}  data and intellectual property: {dataimpact}). Current OT Cybersecurity controls are {control_effectiveness}% effective (NOTE if 0% then control effectiveness has not been assessed) : Mitigated severity with current controls estimated: {severitymitigated}/10, risk exposure to the scenario mitigated estimated: {mitigatedexposure}/10,   residual risk estimated: {residualrisk}/10. The amount of unmitigated rate without controls is estimated: {uel}/10. ESSENTIAL:  {physical_safeguards_str} . Physical security controls are assumed to be effective. ({investment_statement})"
-
+        ####### Audit Write ########
         write_to_audit(
             request.user,
             f'Executed a scenario analysis for {cyber_pha_header.title} and scenario: {scenario}',
             get_client_ip(request)
         )
+        ###########################
+
+        # Get the assessment id from the tblCyberPHAHeader instance
+        assessment_id = cyber_pha_header.assessment
+
+        investments = CyberSecurityInvestment.objects.filter(cyber_pha_header=cyber_pha_header).values(
+            'investment_type', 'vendor_name', 'product_name', 'cost', 'date'
+        )
+
+        if investments.exists():
+            # Generate the text statement for investments
+            investment_statement = "OT Cybersecurity Investments listed here:\n"
+            for idx, investment in enumerate(investments, start=1):
+                investment_date = investment['date'].strftime('%Y-%m-%d') if investment['date'] else 'N/A'
+                investment_statement += f"{idx}: Investment Type: {investment['investment_type']}, Vendor: {investment['vendor_name']}, Product: {investment['product_name']}, Cost: {investment['cost']}, Investment date: {investment_date}.\n"
+        else:
+            # Return an empty string if there are no investment records
+            investment_statement = ""
+
+        employees_on_site = cyber_pha_header.EmployeesOnSite
+        # get the compliance summary for the cyberpha
+        compliance = cyber_pha_header.complianceSummary
+        net_profit_margin = cyber_pha_header.npm
+        cost_op_hour = cyber_pha_header.coho
+        annual_revenue = cyber_pha_header.annual_revenue
+
+        # Retrieve the corresponding SelfAssessment instance using the assessment_id
+        if assessment_id is not None:
+            self_assessment = SelfAssessment.objects.get(id=assessment_id)
+            control_effectiveness = self_assessment.score_effective
+        else:
+            # Handle the case where assessment_id is None
+            control_effectiveness = 0  # Default value
+
+        openai.api_key = get_api_key('openai')
+        # Define the common part of the user message
+        common_content = f"Act as an Insurance actuary and an expert in OT cybersecurity risk. Analyse a scenario for a {facility_type} in the {industry} industry in {country}:  {scenario}. (IMPORTANT CONTEXT: Systems in scope for the scenario are exposed to the Internet with a public IP address: {exposed_system}. Systems in scope for the scenario have weak or default credentials: {weak_credentials}).  Consider the business impact scores provided (safety: {safetyimpact}, life danger: {lifeimpact}, production: {productionimpact} (production outage: {production_outage}: length of production outage {production_outage_length} hours), company reputation: {reputationimpact}, environmental impact: {environmentimpact}, regulatory: {regulatoryimpact}, supply chain : {supplyimpact}  data and intellectual property: {dataimpact}). Current OT Cybersecurity controls are {control_effectiveness}% effective (NOTE if 0% then control effectiveness has not been assessed) : Mitigated severity with current controls estimated: {severitymitigated}/10, risk exposure to the scenario mitigated estimated: {mitigatedexposure}/10,   residual risk estimated: {residualrisk}/10. The amount of unmitigated rate without controls is estimated: {uel}/10. ESSENTIAL:  {physical_safeguards_str} . Physical security controls are assumed to be effective. ({investment_statement})"
+
         # Define the refined user messages
         user_messages = [
 
@@ -1224,16 +1218,39 @@ def scenario_analysis(request):
                 "role": "user",
                 "content": f"{common_content}. Hypothesize the business impact score from 0 to 100 in the event of a successful attack resulting in the given scenario. Consequences of the scenario are given as follows: {validated_consequences_list}. A score of 1 would mean minimal business impact while a score of 100 would indicate catastrophic business impact without the ability to continue operations. Your answer should be given as an integer. Do NOT include any other words, sentences, or explanations."
             },
+            # former event cost estimation query{
+            #     "role": "user",
+            #     "content": f"{common_content} Provide a 12-month direct cost projection for the scenario, focusing on incident response, remediation, legal fees, regulatory fines, and other direct expenses covered by cybersecurity insurance. "
+            #                f"Base your estimates on historical data from similar cybersecurity incidents in OT and IT. Present the budget as a series of 12 integers, each representing the cost for that month in US dollars, without narrative or explanation. "
+            #                f"Format the output as: Month1|Month2|...|Month12. Ensure each value reflects a realistic, pragmatic monthly estimate, justifying the trend of costs decreasing over time. "
+            #                f"IMPORTANT: List only the monthly costs individually, not as cumulative totals. Provide the most realistic monthly estimates, anticipating costs to taper off over the 12-month period."
+            # },
+            {"role": "user",
+             "content": f"I am a CISO at a {industry} company with approximately {employees_on_site} employees, operating primarily in {country}. We are assessing our cybersecurity posture and need to estimate the potential costs associated with a {scenario} that has consequences of {validated_consequences_list}."
+                        f"Given the scenario, please provide an estimate of the direct and indirect costs we might incur, including but not limited to:"
+                        f"1. Immediate Response Costs: Costs associated with the initial response to the incident, such as emergency IT support, forensic analysis, and legal consultations."
+                        f"2. Remediation Costs: Expenses related to remediating the cybersecurity breach, including software updates, hardware replacements, and strengthening of security measures."
+                        f"3. Regulatory and Compliance Costs: Potential fines and penalties for non-compliance with relevant data protection and privacy regulations, as well as costs associated with compliance audits and reporting requirements post-incident."
+                        f"4. Reputation and Brand Impact: Estimated impact on our brand and customer trust, potentially leading to loss of business and decreased revenue."
+                        f"5. Operational Disruption: Costs associated with operational disruptions or downtime, including loss of productivity and impact on service delivery."
+                        f"6. Legal and Settlement Costs: Expenses related to legal actions taken against the company and any settlements or compensations paid out to affected parties."
+                        f"7. Long-term Costs: Any long-term costs such as increased insurance premiums, ongoing monitoring and security measures, and potential loss of intellectual property."
+                        f"Please consider the specifics of our industry, size, and the nature of the assets involved in this scenario to provide a comprehensive cost estimate.  Please reference industry-specific data from the latest Verizon DBIR, applicable regulations from CISA, and standards from the NIST Cybersecurity Framework in your analysis."
+                        f"OUTPUT INSTRUCTION: Provide a 12-month direct cost projection for the scenario. Format the output as: Month1|Month2|...|Month12. Ensure each value reflects a realistic, pragmatic monthly estimate, justifying the trend of costs decreasing over time.IMPORTANT: List only the monthly costs individually, not as cumulative totals. Provide the most realistic monthly estimates, anticipating costs to taper off over the 12-month period.Present the data as a series of 12 integers, each representing the cost for that month in US dollars, without any narrative or explanation. ONLY THE OUTPUT IN THE FORMAT AS DESCRIBED"
+             },
             {
                 "role": "user",
-                "content": f"{common_content} Provide a 12-month direct cost projection for the scenario, focusing on incident response, remediation, legal fees, regulatory fines, and other direct expenses covered by cybersecurity insurance. "
-                           f"Base your estimates on historical data from similar cybersecurity incidents in OT and IT. Present the budget as a series of 12 integers, each representing the cost for that month in US dollars, without narrative or explanation. "
-                           f"Format the output as: Month1|Month2|...|Month12. Ensure each value reflects a realistic, pragmatic monthly estimate, justifying the trend of costs decreasing over time. "
-                           f"IMPORTANT: List only the monthly costs individually, not as cumulative totals. Provide the most realistic monthly estimates, anticipating costs to taper off over the 12-month period."
-            },
-            {
-                "role": "user",
-                "content": f"{common_content}. Write a concise executive summary for the CEO of the affected organization. Provide this summary in a concise, executive-friendly format that can be used on a slide. YOu will have less than 3 minutes to present the information so you must be sharp and concise. DO NOT PUT THE WORD 'SLIDE' ON THE SLIDE. INCLUDE THE TOTAL OF THE COSTS NOT THE MONTH BY MONTH BREAKDOWN"
+                "content": f"""{common_content}
+                            
+                            Based only on the provided scenario and facility details, generate a concise numbered bullet point list of OT/ICS cybersecurity risk mitigation recommendations. Each recommendation should be directly aligned with the latest versions of NIST 800-82 and the NIST CSF. Include the relevant NIST reference in brackets at the end of each recommendation. The output should strictly adhere to the following format:
+                            
+                            Example Format:
+                            1. Example recommendation related to OT cybersecurity. [NIST Reference]
+                            2. Another example recommendation focused on OT cybersecurity risk mitigation. [NIST Reference]
+                            
+                            Following this example format, provide the recommendations specific to the given scenario without any additional narrative, description, advice, or guidance. The recommendations should be clear and easily parsable within an HTML page.
+                            """
+
             },
         ]
 
@@ -1267,7 +1284,7 @@ def scenario_analysis(request):
             'biaScore': responses[5],
             'projection': responses[6],
             'control_effectiveness': control_effectiveness,
-            'executive_summary': responses[7],
+            'recommendations': responses[7],
             'scenario_compliance_data': responses[8]
         })
 
@@ -1747,6 +1764,20 @@ def retrieve_scenario_builder(request, scenario_id):
         attack_tree_data = scenario_data.get('attackTree')
         scenario_description = scenario_data.get('scenario')
         investment_projection = scenario_data.get('investment_projection')
+
+        industry = scenario_data.get('industry')
+        facility = scenario_data.get('facility')
+        country = scenario_data.get('country')
+        org = scenario_data.get('org')
+        regs = scenario_data.get('regs')
+        attacker = scenario_data.get('attacker')
+        vector = scenario_data.get('vector')
+        target = scenario_data.get('target')
+        effect = scenario_data.get('effect')
+        network = scenario_data.get('network')
+        impact = scenario_data.get('impact')
+        motivation = scenario_data.get('motivation')
+
         # Correctly process consequences to ensure each starts with a single dash
         raw_consequences = scenario_data.get('consequences', '')
         # Split by any known delimiter and ensure each consequence starts with a dash
@@ -1755,7 +1786,6 @@ def retrieve_scenario_builder(request, scenario_id):
                         for line in consequences_list if line.strip()]
         # Join the consequences with a line break between each
         formatted_consequences = '\n'.join(consequences)
-
         table_data = scenario_data.get('tableData')
 
         costs = scenario_data.get('costs')
@@ -1780,7 +1810,19 @@ def retrieve_scenario_builder(request, scenario_id):
             'factors': factors,
             'costs': costs,
             'cost_projection': cost_projection,
-            'investment_projection': investment_projection
+            'investment_projection': investment_projection,
+            'industry': industry,
+            'facility': facility,
+            'country': country,
+            'org': org,
+            'regs': regs,
+            'attacker': attacker,
+            'vector': vector,
+            'target': target,
+            'effect': effect,
+            'network': network,
+            'impact': impact,
+            'motivation': motivation
         })
 
     except ScenarioBuilder.DoesNotExist:

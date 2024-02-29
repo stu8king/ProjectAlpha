@@ -535,7 +535,7 @@ class tblCyberPHAScenario(models.Model):
     MELA = models.IntegerField()
     RRa = models.TextField()
     sl = models.IntegerField()
-    recommendations = models.CharField(max_length=1000)
+    recommendations = models.TextField(null=True)
     Deleted = models.IntegerField()
     timestamp = models.DateTimeField()
     aro = models.IntegerField()

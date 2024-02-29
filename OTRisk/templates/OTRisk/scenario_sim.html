@@ -3,9 +3,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>AnzenOT</title>
-
-<link rel="icon" href="{% static 'images/iota - white 1.png' %}" type="image/x-icon">
+<title>AnzenOT - GRC for OT</title>
+    <link rel="icon" href="{% static 'images/anzen_owl.png' %}" type="image/x-icon">
 <!-- FontAwesome CDN -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"/>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
@@ -380,9 +379,6 @@ path.connection {
     box-sizing: border-box; /* Include padding and border in the element's total width and height */
 }
 
-.tab-content.active {
-    display: block; /* Only the active tab is displayed */
-}
 
 </style>
 </head>
@@ -610,6 +606,7 @@ document.addEventListener("DOMContentLoaded", function() {
             <input type="checkbox" id="analyzeScenarioCheckbox" class="custom-checkbox" disabled> Business Impact Analysis
         </div>
     </div>
+
     <div class="tab-content active" id="tab1">
         <h2>Instructions</h2>
         <div class="form-group">
@@ -961,7 +958,7 @@ document.addEventListener("DOMContentLoaded", function() {
         </div>
     </div>
 </div>
- </div>
+</div>
 
 
 
@@ -1535,8 +1532,19 @@ function loadScenarioDetails(scenarioId) {
             $('#txtWorstCase').val(costs.worstCase); // Set worst case cost
             var decodedText = atob(response.investment_projection);
             $('#txthdninvestmentstring').val(response.investment_projection);
-
-            renderInvestmentImpact(decodedText);
+            $('#selIndustry').val(response.industry).trigger('change');
+            $('#selFacilityType').val(response.facility).trigger('change');
+            $('#countrySelector').val(response.country).trigger('change');
+            $('#selOrganizationSize').val(response.org).trigger('change');
+            $('#selRegulatoryEnvironment').val(response.regs).trigger('change');
+            $('#selThreats').val(response.attacker);
+            $('#selVectors').val(response.vector);
+            $('#targetComponent').val(response.target);
+            $('#attackEffect').val(response.effect);
+            $('#targetSystem').val(response.network);
+            $('#impact').val(response.impact);
+            $('#motivation').val(response.motivation);
+        renderInvestmentImpact(decodedText);
 
             var costArray = response.cost_projection.split('|').map(Number);
             createCostChart('monthly_cost_chart', costArray);
@@ -1827,7 +1835,19 @@ function saveScenario(scenarioName) {
     mostLikelyCaseCost: document.getElementById('txtMostLikelyCase').value,
     worstCaseCost: document.getElementById('txtWorstCase').value,
     cost_projection: document.getElementById('scenario_12month_costs').value,
-    investment_projection: document.getElementById('txthdninvestmentstring').value
+    investment_projection: document.getElementById('txthdninvestmentstring').value,
+    industry: document.getElementById('selIndustry').value,
+    facility: document.getElementById('selFacilityType').value,
+    country: document.getElementById('countrySelector').value,
+    org: document.getElementById('selOrganizationSize').value,
+    regs: document.getElementById('selRegulatoryEnvironment').value,
+    attacker: document.getElementById('selThreats').value,
+    vector: document.getElementById('selVectors').value,
+    target: document.getElementById('targetComponent').value,
+    effect: document.getElementById('attackEffect').value,
+    network: document.getElementById('targetSystem').value,
+    impact: document.getElementById('impact').value,
+    motivation: document.getElementById('motivation').value,
     };
 
     $.ajax({
