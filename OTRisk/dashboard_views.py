@@ -324,7 +324,7 @@ def dashboardhome(request):
         worksheets_to_approve_list = list(worksheets_to_approve.values('ID', 'RATitle', 'RADate', 'StatusFlag'))
     else:
         worksheets_to_approve_list = "No approvals for action"
-    print(groups_with_cyberphas);
+
     context = {
         'records_by_business_unit_type': list(records_by_business_unit_type),
         'records_by_status_flag': list(records_by_status_flag),
