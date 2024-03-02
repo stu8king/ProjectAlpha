@@ -101,6 +101,88 @@ $(function () {
 })
 </script>
 <style>
+/* Modal Background */
+.modal-content {
+    background-color: #ffffff; /* Light background for the modal */
+    border-radius: 8px; /* Rounded corners for the modal */
+    border: 1px solid #dee2e6; /* Subtle border around the modal */
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2); /* Shadow for depth */
+}
+
+/* Modal Header */
+.modal-header {
+    background-color: #007bff; /* Blue background for the header */
+    color: #ffffff; /* White text color */
+    border-bottom: 2px solid #0056b3; /* Darker blue border at the bottom */
+    border-top-left-radius: 8px; /* Rounded top left corner */
+    border-top-right-radius: 8px; /* Rounded top right corner */
+}
+
+/* Modal Title */
+.modal-title {
+    font-weight: bold;
+}
+
+/* Close Button */
+.btn-close {
+    filter: invert(1); /* Invert color for better visibility on dark backgrounds */
+}
+
+/* Modal Body */
+.modal-body {
+    padding: 20px; /* Increased padding for more space */
+}
+
+/* Form Controls Enhancement */
+.form-control {
+    border-radius: 5px; /* Rounded corners for form inputs */
+    border: 1px solid #ced4da; /* Subtle border color */
+}
+
+/* Buttons */
+.btn-primary {
+    background-color: #0069d9; /* Slightly darker blue for primary buttons */
+    border-color: #0062cc;
+}
+
+.btn-secondary {
+    background-color: #6c757d; /* Dark gray for secondary buttons */
+    border-color: #6c757d;
+}
+
+.btn-primary:hover, .btn-secondary:hover {
+    opacity: 0.85; /* Slight opacity change on hover for feedback */
+}
+
+/* Custom Card inside Modal */
+.card.mb-3.shadow-sm {
+    background-color: #f8f9fa; /* Lighter background for cards */
+    border: none; /* Remove border */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+}
+
+.card-body {
+    padding: 15px; /* Adjust padding */
+}
+
+/* Adjustments for range inputs */
+input[type="range"].custom-range {
+    cursor: pointer; /* Change cursor to pointer for better UX */
+}
+
+/* Enhancements for select dropdown */
+.select.form-control {
+    appearance: none; /* Remove default browser appearance */
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor"><path d="M7.247 14.86l-4.95-4.95.703-.703L7.95 13.457l5.997-5.996.703.703-5.95 5.95a.5.5 0 0 1-.703 0z"/></svg>'); /* Custom dropdown arrow */
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 16px 12px;
+}
+
+/* Ensure the modal stands out */
+.modal-backdrop.show {
+    opacity: 0.75; /* Darker backdrop for better focus on the modal */
+}
 
 .recommendation-box {
     margin: 10px;
@@ -2879,97 +2961,7 @@ $(document).ready(function() {
                         </div>
                     </div>
                 </div>
-                <!-- Action Assets -->
-                <div class="mb-3">
-                    <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                        <div class="card-body">
-                            <div class="row justify-content-center">
-                                <div class="col-md-12">
-                                <p class="justify-content-center">Expected Risk Mitigation from Action</p>
-                                </div>
-                            </div>
-                            <div class="row justify-content-center">
-                                <div class="col-md-4">
-                                    <label for="safetyMitigation">Safety: <span id="safetyMitigationValue"></span></label>
-                                    <input type="range" class="form-control custom-range" id="safetyMitigation" name="safetyMitigation" min="0" max="100" value="0">
-                                </div>
-                                <div class="col-md-4">
-                                    <label for="lifeMitigation">Life: <span id="lifeMitigationValue"></span></label>
-                                    <input type="range" class="form-control custom-range" id="lifeMitigation" name="lifeMitigation" min="0" max="100" value="0">
-                                </div>
-                                <div class="col-md-4">
-                                    <label for="productionMitigation">Production: <span id="productionMitigationValue"></span></label>
-                                    <input type="range" class="form-control custom-range" id="productionMitigation" name="productionMitigation" min="0" max="100" value="0">
-                                </div>
-                            </div>
-                            <div class="row justify-content-center mt-4">
-                                <div class="col-md-4">
-                                    <label for="financeMitigation">Finance: <span id="financeMitigationValue"></span></label>
-                                    <input type="range" class="form-control custom-range" id="financeMitigation" name="financeMitigation" min="0" max="100" value="0">
-                                </div>
 
-                                <div class="col-md-4">
-                                    <label for="reputationMitigation">Reputation: <span id="reputationMitigationValue"></span></label>
-                                    <input type="range" class="form-control custom-range" id="reputationMitigation" name="reputationMitigation" min="0" max="100" value="0">
-                                </div>
-                                <div class="col-md-4">
-                                    <label for="environmentMitigation">Environment: <span id="environmentMitigationValue"></span></label>
-                                    <input type="range" class="form-control custom-range" id="environmentMitigation" name="environmentMitigation" min="0" max="100" value="0">
-                                </div>
-                            </div>
-                            <div class="row justify-content-center mt-4">
-                                <div class="col-md-4">
-                                    <label for="regulationMitigation">Regulation: <span id="regulationMitigationValue"></span></label>
-                                    <input type="range" class="form-control custom-range" id="regulationMitigation" name="regulationMitigation" min="0" max="100" value="0">
-                                </div>
-                                <div class="col-md-4">
-                                    <label for="dataMitigation">Data: <span id="dataMitigationValue"></span></label>
-                                    <input type="range" class="form-control custom-range" id="dataMitigation" name="dataMitigation" min="0" max="100" value="0">
-                                </div>
-
-                                <div class="col-md-4">
-                                    <label for="supplyMitigation">Supply: <span id="supplyMitigationValue"></span></label>
-                                    <input type="range" class="form-control custom-range" id="supplyMitigation" name="supplyMitigation" min="0" max="100" value="0">
-                                </div>
-                            </div>
-                            <div class="row justify-content-center mt-4">
-                                <div class="col-md-4">
-                                    <label for="threatMitigation">Threat: <span id="threatMitigationValue"></span></label>
-                                    <input type="range" class="form-control custom-range" id="threatMitigation" name="threatMitigation" min="0" max="100" value="0">
-                                </div>
-                                <div class="col-md-4">
-                                    <label for="vulnerabilityMitigation">Vulnerability: <span id="vulnerabilityMitigationValue"></span></label>
-                                    <input type="range" class="form-control custom-range" id="vulnerabilityMitigation" name="vulnerabilityMitigation" min="0" max="100" value="0">
-                                </div>
-                            </div>
-                            <script>
-                            document.addEventListener('DOMContentLoaded', (event) => {
-                              // This function updates the span displaying the value of the slider
-                              function updateSliderValue(slider) {
-                                const valueDisplayId = slider.id + 'Value';
-                                const valueDisplay = document.getElementById(valueDisplayId);
-                                if (valueDisplay) {
-                                  valueDisplay.textContent = slider.value + '%'; // Add the '%' symbol
-                                } else {
-                                  // console.error('No element found with id:', valueDisplayId);
-                                }
-                              }
-
-                              // Get all range inputs on the form
-                              const sliders = document.querySelectorAll('input[type="range"]');
-
-                              // Initialize the display values and add event listeners to each slider
-                              sliders.forEach(slider => {
-                                updateSliderValue(slider); // Initialize the display value
-                                slider.addEventListener('input', () => updateSliderValue(slider));
-                              });
-                            });
-
-                            </script>
-                        </div>
-
-                    </div>
-                </div>
 
                 <div class="row">
                     <div class="col-md-4">
@@ -4680,6 +4672,97 @@ $(document).ready(function() {
 <input type="text" id="txtLikelihood" name="txtLikelihood" class="form-control text-center" readonly style="visibility: hidden">
 <input type="text" id="txtResidualRisk" name="txtResidualRisk" class="form-control text-center" readonly style="visibility: hidden">
 
+<!-- Action Assets -->
+                <div class="mb-3" style="visibility: hidden">>
+                    <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                        <div class="card-body">
+                            <div class="row justify-content-center" style="visibility: hidden">
+                                <div class="col-md-12">
+                                <p class="justify-content-center">Expected Risk Mitigation from Action</p>
+                                </div>
+                            </div>
+                            <div class="row justify-content-center" style="visibility: hidden">
+                                <div class="col-md-4">
+                                    <label for="safetyMitigation">Safety: <span id="safetyMitigationValue"></span></label>
+                                    <input type="range" class="form-control custom-range" id="safetyMitigation" name="safetyMitigation" min="0" max="100" value="0">
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="lifeMitigation">Life: <span id="lifeMitigationValue"></span></label>
+                                    <input type="range" class="form-control custom-range" id="lifeMitigation" name="lifeMitigation" min="0" max="100" value="0">
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="productionMitigation">Production: <span id="productionMitigationValue"></span></label>
+                                    <input type="range" class="form-control custom-range" id="productionMitigation" name="productionMitigation" min="0" max="100" value="0">
+                                </div>
+                            </div>
+                            <div class="row justify-content-center mt-4" style="visibility: hidden">
+                                <div class="col-md-4">
+                                    <label for="financeMitigation">Finance: <span id="financeMitigationValue"></span></label>
+                                    <input type="range" class="form-control custom-range" id="financeMitigation" name="financeMitigation" min="0" max="100" value="0">
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label for="reputationMitigation">Reputation: <span id="reputationMitigationValue"></span></label>
+                                    <input type="range" class="form-control custom-range" id="reputationMitigation" name="reputationMitigation" min="0" max="100" value="0">
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="environmentMitigation">Environment: <span id="environmentMitigationValue"></span></label>
+                                    <input type="range" class="form-control custom-range" id="environmentMitigation" name="environmentMitigation" min="0" max="100" value="0">
+                                </div>
+                            </div>
+                            <div class="row justify-content-center mt-4" style="visibility: hidden">
+                                <div class="col-md-4">
+                                    <label for="regulationMitigation">Regulation: <span id="regulationMitigationValue"></span></label>
+                                    <input type="range" class="form-control custom-range" id="regulationMitigation" name="regulationMitigation" min="0" max="100" value="0">
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="dataMitigation">Data: <span id="dataMitigationValue"></span></label>
+                                    <input type="range" class="form-control custom-range" id="dataMitigation" name="dataMitigation" min="0" max="100" value="0">
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label for="supplyMitigation">Supply: <span id="supplyMitigationValue"></span></label>
+                                    <input type="range" class="form-control custom-range" id="supplyMitigation" name="supplyMitigation" min="0" max="100" value="0">
+                                </div>
+                            </div>
+                            <div class="row justify-content-center mt-4" style="visibility: hidden">
+                                <div class="col-md-4">
+                                    <label for="threatMitigation">Threat: <span id="threatMitigationValue"></span></label>
+                                    <input type="range" class="form-control custom-range" id="threatMitigation" name="threatMitigation" min="0" max="100" value="0">
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="vulnerabilityMitigation">Vulnerability: <span id="vulnerabilityMitigationValue"></span></label>
+                                    <input type="range" class="form-control custom-range" id="vulnerabilityMitigation" name="vulnerabilityMitigation" min="0" max="100" value="0">
+                                </div>
+                            </div>
+                            <script>
+                            document.addEventListener('DOMContentLoaded', (event) => {
+                              // This function updates the span displaying the value of the slider
+                              function updateSliderValue(slider) {
+                                const valueDisplayId = slider.id + 'Value';
+                                const valueDisplay = document.getElementById(valueDisplayId);
+                                if (valueDisplay) {
+                                  valueDisplay.textContent = slider.value + '%'; // Add the '%' symbol
+                                } else {
+                                  // console.error('No element found with id:', valueDisplayId);
+                                }
+                              }
+
+                              // Get all range inputs on the form
+                              const sliders = document.querySelectorAll('input[type="range"]');
+
+                              // Initialize the display values and add event listeners to each slider
+                              sliders.forEach(slider => {
+                                updateSliderValue(slider); // Initialize the display value
+                                slider.addEventListener('input', () => updateSliderValue(slider));
+                              });
+                            });
+
+                            </script>
+                        </div>
+
+                    </div>
+                </div>
 
 
 </body>

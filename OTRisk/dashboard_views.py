@@ -116,6 +116,16 @@ def dashboardhome(request):
     life_scores_list = list(RAWorksheetScenario.objects.filter(RAWorksheetID__organization=user_organization_id).values(
         'lifeScore').annotate(count=Count('ID')).order_by('lifeScore'))
 
+    # Query RAWorksheets along with a count of related RAWorksheetScenario records
+    ra_worksheets_with_scenario_count = RAWorksheet.objects.filter(**filters).annotate(
+        scenario_count=Count('raworksheetscenario')
+    ).values(
+        'RATitle', 'StatusFlag', 'RATrigger', 'scenario_count'
+    )
+
+    # Convert QuerySet to a list of dictionaries for the context
+    ra_worksheets_with_scenario_count_list = list(ra_worksheets_with_scenario_count)
+
     pha_safety_scores_list = list(
         tblCyberPHAScenario.objects.filter(userID__in=organization_users)
         .values('impactSafety')
@@ -354,7 +364,8 @@ def dashboardhome(request):
         'last_100_logs': last_100_logs,
         'moderation_tasks': moderation_details,
         'groups_with_cyberphas': groups_with_cyberphas,
-        'worksheets_to_approve': worksheets_to_approve_list
+        'worksheets_to_approve': worksheets_to_approve_list,
+        'ra_worksheets_with_scenario_count': ra_worksheets_with_scenario_count_list
     }
 
     return render(request, 'dashboard.html', context)

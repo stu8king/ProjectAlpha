@@ -77,59 +77,81 @@
     background-color: #5E6266; /* Lighter shade of #464748 */
     padding: 15px; /* Optional: for internal spacing */
 }
-.navbar {
-    background-color: #464748;
-    border-bottom: 1px solid #000;
-    height: 50px; /* Fixed height */
-    position: relative;
+
+    .sidebar {
+        height: 100vh;
+        background-color: #2D2E30; /* Darker shade for sidebar */
+        padding: 20px 0;
+        width: 200px; /* Reduced width */
+    }
+    .sidebar-logo {
+        padding: 10px 15px;
+        text-align: center;
+    }
+    .nav-sidebar {
+        display: flex;
+        flex-direction: column;
+        padding-left: 0;
+        list-style: none;
+    }
+    .nav-sidebar .nav-item {
+        padding: 5px 10px;
+        /* border-bottom: 1px solid  #fac330; /* Light orange line */
+        margin: 0 10%;
+    }
+    .nav-sidebar .nav-link {
+        color: #d3d1cd;
+        border-radius: 0;
+        transition: color 0.3s ease-in-out;
+        font-size: 0.8em;
+    }
+    .nav-sidebar .nav-link:hover, .nav-sidebar .nav-link.active {
+        background-color: #3A5F5F;
+        color: #E0E0E0;
+    }
+    /* Enhance dropdown menu */
+    .dropdown-menu {
+        background-color: #d3d1cd;
+        border: none;
+    }
+    .dropdown-item:hover, .dropdown-item:focus {
+        background-color: #fac330; /* Light orange background for hovered dropdown items */
+        color: #2D2E30;
+    }
+    .content {
+        padding: 20px;
+    }
+   .custom-main-content {
+    position: relative; /* Adjust if necessary */
+    width: calc(100% - 200px); /* Adjust based on the actual sidebar width */
+    max-width: calc(90vw - 200px); /* 90% of the viewport width minus sidebar width */
+    margin-left: 200px; /* Push content to the right of the sidebar */
 }
 
-.owl-logo {
-    height: 60px; /* Set a fixed height for the image */
-    width: auto; /* Maintain aspect ratio */
-    position: relative;
-    top: 50%; /* Center vertically in the navbar */
-    transform: translateY(-30%); /* Adjust vertical position */
-    margin-bottom: -20px; /* Negative margin to overlap */
+@media (min-width: 992px) { /* Adjusting for Bootstrap's large devices breakpoint */
+    .custom-main-content {
+        width: calc(100% - 200px);
+        max-width: calc(90vw - 200px);
+        margin-left: 100px;
+    }
 }
 
-.navbar-brand, .nav-link {
-    color: #d3d1cd !important; /* White text for clear visibility on initial view */
+.custom-main-content .container {
+    width: 100%; /* Ensure the container fills the custom-main-content */
+    max-width: none; /* Override Bootstrap's max-width for containers if necessary */
 }
 
-.menu-item {
-    border-right: 1px solid #4B6B6B; /* Subtle line between items */
-    font-size: 14px; /* Adjust font size */
+.page-title {
+    margin: 0; /* Remove default margins */
+    font-size: 1.5rem; /* Adjust size as needed */
 }
 
-.menu-item:last-child {
-    border-right: none; /* Remove border for the last item */
+@media (max-width: 992px) {
+    .top-strip {
+        padding-left: 0;
+        width: 100%;
+    }
 }
-
-.menu-item:hover, .dropdown-item:hover {
-    background-color: #3A5F5F; /* Slightly lighter grey on hover */
-    color: #E0E0E0; /* Light grey text on hover */
-}
-
-.nav-link:hover, .dropdown-item {
-    color: #E0E0E0; /* Light grey text on hover */
-}
-
-.dropdown-menu {
-    background-color: #464748; /* Dark Slate Grey */
-    border: none;
-}
-
-.dropdown-item {
-    color: #FFFFFF; /* White text for clear visibility */
-}
-
-.dropdown-item:hover {
-    background-color: #3A5F5F; /* Slightly lighter grey on hover */
-    color: #E0E0E0;
-}
-
-
      .small-font {
         font-size: 0.8rem; /* adjust as needed */
    }
@@ -142,507 +164,528 @@
 
 
 </head>
-<body>
+<body style="background-color: #464748">
+<div class="container-fluid">
+    <div class="row">
+        <nav class="col-md-3 col-lg-2 d-md-block sidebar collapse" id="sidebarMenu">
+                <div class="sidebar-sticky">
+                    <div class="sidebar-logo">
+                        <img src="{% static 'images/anzen_owl.png' %}" class="img-fluid" alt="Logo">
+                    </div>
+                    <ul class="nav flex-column nav-sidebar">
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'OTRisk:dashboardhome' %}">Dashboard</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'OTRisk:qraw' %}">QRAW</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'OTRisk:iotaphamanager' %}">CyberPHA</a>
+                        </li>
+                        <li class="nav-item menu-item">
+                            <a class="nav-link" href="{% url 'OTRisk:scenario_sim' %}">Scenario Builder</a>
+                        </li>
+                        <li class="nav-item menu-item">
+                            <a class="nav-link" href="{% url 'OTRisk:ra_actions_view_default' %}">Actions</a>
+                        </li>
+                        <li class="nav-item menu-item">
+                            <a class="nav-link" href="{% url 'OTRisk:risk_register' %}">Risk Register</a>
+                        </li>
+                        <li class="nav-item menu-item">
+                            <a class="nav-link" href="{% url 'OTRisk:list_frameworks' %}">Assessments</a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Admin
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
 
-<nav class="navbar navbar-expand-lg navbar-scroll shadow-0 border-bottom rounded">
-    <div class="container-fluid d-flex justify-content-between">
-        <a class="navbar-brand" href="{% url 'OTRisk:dashboardhome' %}">
-            &nbsp; &nbsp; &nbsp; &nbsp;
-            <img src="{% static 'images/anzen_owl.png' %}" class="owl-logo" style="width: 18%; height: 18%">
-        </a>
-        <h6 class="my-auto text-center flex-grow-1 navbar-brand"><img src="{% static 'images/anzen_noowl.png' %}" style="width: 15%; height: 15%" alt=""> Action Items</h6>
-        <div class="collapse navbar-collapse" id="navbarSupportedContent">
-            <ul class="navbar-nav ms-auto">
-                <li class="nav-item menu-item">
-                    <a class="nav-link" href="{% url 'OTRisk:qraw' %}"><i class="bi bi-calculator"></i> QRAW</a>
-                </li>
-                <li class="nav-item menu-item">
-                    <a class="nav-link" href="{% url 'OTRisk:iotaphamanager' %}"><i class="bi bi-journal-text"></i> CyberPHA</a>
-                </li>
-                <li class="nav-item menu-item">
-                    <a class="nav-link" href="{% url 'OTRisk:scenario_sim' %}"><i class="bi bi-bricks"></i> Scenario Builder</a>
-                </li>
-                <li class="nav-item menu-item">
-                    <a class="nav-link" href="{% url 'OTRisk:ra_actions_view_default' %}"><i class="bi-file-earmark-easel"></i> Actions</a>
-                </li>
-                <li class="nav-item menu-item">
-                    <a class="nav-link" href="{% url 'OTRisk:risk_register' %}"><i class="bi-file-earmark-easel"></i> Risk Register</a>
-                </li>
-                <li class="nav-item menu-item">
-                    <a class="nav-link" href="{% url 'OTRisk:list_frameworks' %}"><i class="bi-file-earmark-easel"></i> Assessments</a>
-                </li>
-    <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="font-size: 12px;">
-                <i class="bi bi-diagram-3"></i> Admin
-              </a>
-              <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-
-                    <li><a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:setup_org' %}">Set Defaults</a></li>
-                  <li><a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:admin_users' %}">Admin Users</a></li>
-              <li><a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:upload_questionnaire' %}">Upload Questionnaires</a></li>
-                  {% if user.is_staff %}
-                    <!-- Links visible only to superusers -->
-                    <li><a class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:user_admin' %}">User Administration</a></li>
-                      <li><a class="dropdown-item"  style="font-size: 12px;" href="{% url 'OTRisk:organization_form' %}">Manage Organizations</a></li>
-
-                      <li><a class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:execute_sql' %}">Execute SQL</a></li>
-                    {% endif %}
-
-              </ul>
-
-        </li>
-    <li class="nav-item menu-item">
-    <a class="nav-link" href="{% url 'accounts:profile' %}">
-    <i class="bi bi-person-fill"></i> {{ user.first_name }} {{ user.last_name }} | {{ user.userprofile.organization.name }}
-    </a>
-    </li>
-    <li class="nav-item menu-item">
-    <a class="nav-link" href="{% url 'logout' %}">
-    <i class="bi bi-box-arrow-right"></i> Logout
-    </a>
-    </li>
-    </ul>
-    </div>
-    </div>
-    </nav>
-
-<div class="row" style="height: 20px;">
-    <div class="col-md-1" style="background-color: white"></div>
-    <div class="col-md-1" style="background-color: white"></div>
-    <div class="col-md-8 " ></div>
-    <div class="col-md-1" style="background-color: white"></div>
-    <div class="col-md-1 " style="background-color: white"></div>
-</div> <!-- dark grey stripe -->
-
-
-<div class="row">
-    <div class="col-md-1" style="background-color: white"></div>
-    <div class="col-md-10 " >
-        {% block content %}
-            <form method="post" action="" id="actionForm">
-
-                {% csrf_token %}
-                <input type="hidden" name="action_id" id="actionId">
-                <table id="dataTable" class="display small-font">
-                <thead>
-                    <tr>
-                        <th>Source</th>
-                        <th>Title</th>
-                        <th>Owner</th>
-                        <th>Effort</th>
-                        <th>Difficulty</th>
-                        <th>Cost</th>
-                        <th>Status</th>
-                        <th>Description</th>
-                        <th>Due Date</th>
-
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for record in ra_actions %}
-                       <tr data-id="{{ record.ID }}" class="action-row">
-                            <td>
-                                {% if record.phaID == 0 %}
-                                    QRAW
-                                {% else %}
-                                    CyberPHA
+                                <li>
+                                    <a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:setup_org' %}">Set Defaults</a>
+                                </li>
+                                <li>
+                                    <a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:admin_users' %}">Admin Users</a>
+                                </li>
+                                <li>
+                                    <a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:upload_questionnaire' %}">Upload Questionnaires</a>
+                                </li>
+                                {% if user.is_staff %}
+                                <!-- Links visible only to superusers -->
+                                <li>
+                                    <a class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:user_admin' %}">User Administration</a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item"  style="font-size: 12px;" href="{% url 'OTRisk:organization_form' %}">Manage Organizations</a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:execute_sql' %}">Execute SQL</a>
+                                </li>
                                 {% endif %}
-                            </td>
-                            <td>{{ record.actionTitle  }}</td>
-                            <td>{{ record.actionOwner  }}</td>
-                            <td>{{ record.actionEffort  }}</td>
-                            <td>{{ record.actionDifficulty  }}</td>
-                            <td>{{ record.actionCost  }}</td>
-                            <td>{{ record.actionStatus  }}</td>
-                            <td>{{ record.actionDescription  }}</td>
-                            <td>{{ record.actionDueDate  }}</td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+                            </ul>
+                         </li>
+                    <li class="nav-item menu-item">
+                        <a class="nav-link" href="{% url 'accounts:profile' %}">
+                        <i class="bi bi-person-fill"></i> {{ user.first_name }} {{ user.last_name }} | {{ user.userprofile.organization.name }}
+                        </a>
+                        </li>
+                        <li class="nav-item menu-item">
+                        <form action="{% url 'logout' %}" method="post">
+                        {% csrf_token %}
+                        <button type="submit" class="nav-link" style="background:none; border:none; padding:0; margin:0; color:inherit;">Logout</button>
+                    </form>
 
-        </form>
-    {% endblock %}
-        </div>
-    <div class="col-md-1 " style="background-color: white"></div>
-</div>
+                        </li>
+                        </ul>
+                </div>
+            </nav>
 
-<div class="row small-font">
-    <div class="col-md-1" style="background-color: white"></div>
-    <div class="col-md-10" style="background-color: white">
-    <!-- Display selected action details -->
-    {% if selected_action %}
-        <div class="row small-font">
-            <div class="col-md-12">
-                <h4>Assessment Title: {{ ra_title }}</h4>
+            <main role="main" class="col-md-10 ml-sm-auto col-lg-12  custom-main-content" >
+            <div class="top-strip">
+                <h1 class="page-title">Actions@AnzenOT (Beta)</h1>
             </div>
-        </div>
-        <div class="row small-font">
-            <div class="col-md-4">
-                <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                    <div class="card-body">
-                        <label for="txtTitle">Title</label>
-                        <input type="text" class="form-control" name="txtTitle" id="txtTitle" required value="{{ selected_action.actionTitle }}">
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                    <div class="card-body">
-                        <label for="txtOwner">Owner</label>
-                        <input type="text" class="form-control" name="txtOwner" id="txtOwner" required value="{{ selected_action.actionOwner }}" readonly>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                    <div class="card-body">
-                        <label for="selectStatus">Status (Click to change)</label>
-                        <Select class="form-control" name="selectStatus" id="selectStatus">
-                            <option value="" {% if not selected_action.actionStatus %}selected{% endif %}>-- Select Status --</option>
-                            <option value="Closed" {% if selected_action.actionStatus == "Closed" %}selected{% endif %}>Closed</option>
-                            <option value="In Progress" {% if selected_action.actionStatus == "In Progress" %}selected{% endif %}>In Progress</option>
-                            <option value="On Hold" {% if selected_action.actionStatus == "On Hold" %}selected{% endif %}>On Hold</option>
-                            <option value="Open" {% if selected_action.actionStatus == "Open" %}selected{% endif %}>Open</option>
-                        </Select>
+             <div class="container mt-5" >
 
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="row small-font">
-            <div class="col-md-6">
-                <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                    <div class="card-body">
-                        <label for="txtDescription">Description</label>
-                        <textarea class="form-control" name="txtDescription" id="txtDescription" rows="2"  style="resize: none" readonly>{{ selected_action.actionDescription }}</textarea>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                    <div class="card-body">
-                        <label for="txtHistory">Action History</label>
-                        <textarea class="form-control" name="txtHistory" id="txtHistory" rows="2" readonly style="resize: none;">{{ selected_action.history }}</textarea>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="row small-font">
-            <div class="col-md-3">
-                <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                    <div class="card-body">
-                        <label for="txtEffort">Effort</label>
-                        <input type="text" class="form-control" name="txtEffort" id="txtEffort" required value="{{ selected_action.actionEffort }}" readonly>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                    <div class="card-body">
-                        <label for="txtDifficulty">Difficulty</label>
-                        <input type="text" class="form-control" name="txtDifficulty" id="txtDifficulty" required value="{{ selected_action.actionDifficulty }}">
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                    <div class="card-body">
-                        <label for="txtCost">Cost</label>
-                        <input type="text" class="form-control" name="txtCost" id="txtCost" required value="{{ selected_action.actionCost }}" readonly>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                    <div class="card-body">
-                        <label for="txtDueDate">Due Date</label>
-                        <input type="date" class="form-control" name="txtDueDate" id="txtDueDate" required value="{{ selected_action.actionDueDate|date:"Y-m-d" }}" >
-                    </div>
-                </div>
-            </div>
+                        <div class="row" style="height: 20px;">
+                            <div class="col-md-1" style="background-color: white"></div>
+                            <div class="col-md-1" style="background-color: white"></div>
+                            <div class="col-md-8 " ></div>
+                            <div class="col-md-1" style="background-color: white"></div>
+                            <div class="col-md-1 " style="background-color: white"></div>
+                        </div> <!-- dark grey stripe -->
 
 
-        </div>
-        <div class="row small-font">
-            <div class="col-md-2">
-                <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                    <div class="card-body">
-                        <label for="txt_outageSIS">Safety Outage</label>
-                        <input type="text" class="form-control" name="txt_outageSIS" id="txt_outageSIS" required value="{{ selected_action.outageSIS }}" readonly>
+            <div class="row">
+                <div class="col-md-1" style="background-color: white"></div>
+                <div class="col-md-10 " >
+                    {% block content %}
+                        <form method="post" action="" id="actionForm">
+
+                            {% csrf_token %}
+                            <input type="hidden" name="action_id" id="actionId">
+                            <table id="dataTable" class="display small-font">
+                            <thead>
+                                <tr>
+                                    <th>Source</th>
+                                    <th>Title</th>
+                                    <th>Owner</th>
+                                    <th>Effort</th>
+                                    <th>Difficulty</th>
+                                    <th>Cost</th>
+                                    <th>Status</th>
+                                    <th>Description</th>
+                                    <th>Due Date</th>
+
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for record in ra_actions %}
+                                   <tr data-id="{{ record.ID }}" class="action-row">
+                                        <td>
+                                            {% if record.phaID == 0 %}
+                                                QRAW
+                                            {% else %}
+                                                CyberPHA
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ record.actionTitle  }}</td>
+                                        <td>{{ record.actionOwner  }}</td>
+                                        <td>{{ record.actionEffort  }}</td>
+                                        <td>{{ record.actionDifficulty  }}</td>
+                                        <td>{{ record.actionCost  }}</td>
+                                        <td>{{ record.actionStatus  }}</td>
+                                        <td>{{ record.actionDescription  }}</td>
+                                        <td>{{ record.actionDueDate  }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+
+                    </form>
+                {% endblock %}
                     </div>
-                </div>
+                <div class="col-md-1 " style="background-color: white"></div>
             </div>
-            <div class="col-md-2">
-                <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                    <div class="card-body">
-                        <label for="txt_outageICS">ICS Outage</label>
-                        <input type="text" class="form-control" name="txt_outageICS" id="txt_outageICS" required value="{{ selected_action.outageICS }}" readonly>
+
+            <div class="row small-font">
+                <div class="col-md-1" style="background-color: white"></div>
+                <div class="col-md-10" style="background-color: white">
+                <!-- Display selected action details -->
+                {% if selected_action %}
+                    <div class="row small-font">
+                        <div class="col-md-12">
+                            <h4>Assessment Title: {{ ra_title }}</h4>
+                        </div>
                     </div>
-                </div>
-            </div>
-            <div class="col-md-2">
-                <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                    <div class="card-body">
-                        <label for="txt_outageEMS">EMS Outage</label>
-                        <input type="text" class="form-control" name="txt_outageEMS" id="txt_outageEMS" required value="{{ selected_action.outageEMS }}" readonly>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-2">
-                <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                    <div class="card-body">
-                        <label for="txt_outageIT">IT Outage</label>
-                        <input type="text" class="form-control" name="txt_outageIT" id="txt_outageIT" required value="{{ selected_action.outageIT }}" readonly>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-2">
-                <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                    <div class="card-body">
-                        <label for="txt_outagePS">PS Outage</label>
-                        <input type="text" class="form-control" name="txt_outagePS" id="txt_outagePS" required value="{{ selected_action.outagePS }}" readonly>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-2">
-                <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                    <div class="card-body">
-                        <label for="txt_outageWWW">Internet Outage</label>
-                        <input type="text" class="form-control" name="txt_outageWWW" id="txt_outageWWW" required value="{{ selected_action.outageWWW }}" readonly>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="row small-font">
-        <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                        <div class="card-body">
-                            <div class="row justify-content-center">
-                                <div class="col-md-12">
-                                <p class="justify-content-center">Expected Risk Mitigation from Action</p>
+                    <div class="row small-font">
+                        <div class="col-md-4">
+                            <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                                <div class="card-body">
+                                    <label for="txtTitle">Title</label>
+                                    <input type="text" class="form-control" name="txtTitle" id="txtTitle" required value="{{ selected_action.actionTitle }}">
                                 </div>
                             </div>
-                            <div class="row justify-content-center">
-                                <div class="col-md-4">
-                                    <label for="safetyMitigation">Safety: <span id="safetyMitigationValue">{{ selected_action.safetyMitigation }}</span>%</label>
-                                    <input type="range" class="form-control slider" id="safetyMitigation" name="safetyMitigation" min="0" max="100" value="{{ selected_action.safetyMitigation }}">
-                                </div>
-                                <div class="col-md-4">
-                                    <label for="lifeMitigation">Life: <span id="lifeMitigationValue">{{ selected_action.lifeMitigation }}</span>%</label>
-                                    <input type="range" class="form-control slider" id="lifeMitigation" name="lifeMitigation" min="0" max="100" value="{{ selected_action.lifeMitigation }}">
-                                </div>
-                                <div class="col-md-4">
-                                    <label for="productionMitigation">Production: <span id="productionMitigationValue">{{ selected_action.productionMitigation }}</span>%</label>
-                                    <input type="range" class="form-control slider" id="productionMitigation" name="productionMitigation" min="0" max="100" value="{{ selected_action.productionMitigation }}">
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                                <div class="card-body">
+                                    <label for="txtOwner">Owner</label>
+                                    <input type="text" class="form-control" name="txtOwner" id="txtOwner" required value="{{ selected_action.actionOwner }}" readonly>
                                 </div>
                             </div>
-                            <div class="row justify-content-center mt-4">
-                                <div class="col-md-4">
-                                    <label for="financeMitigation">Finance: <span id="financeMitigationValue">{{ selected_action.financeMitigation }}</span>%</label>
-                                    <input type="range" class="form-control slider" id="financeMitigation" name="financeMitigation" min="0" max="100" value="{{ selected_action.financeMitigation }}">
-                                </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                                <div class="card-body">
+                                    <label for="selectStatus">Status (Click to change)</label>
+                                    <Select class="form-control" name="selectStatus" id="selectStatus">
+                                        <option value="" {% if not selected_action.actionStatus %}selected{% endif %}>-- Select Status --</option>
+                                        <option value="Closed" {% if selected_action.actionStatus == "Closed" %}selected{% endif %}>Closed</option>
+                                        <option value="In Progress" {% if selected_action.actionStatus == "In Progress" %}selected{% endif %}>In Progress</option>
+                                        <option value="On Hold" {% if selected_action.actionStatus == "On Hold" %}selected{% endif %}>On Hold</option>
+                                        <option value="Open" {% if selected_action.actionStatus == "Open" %}selected{% endif %}>Open</option>
+                                    </Select>
 
-                                <div class="col-md-4">
-                                    <label for="reputationMitigation">Reputation: <span id="reputationMitigationValue">{{ selected_action.reputationMitigation }}</span>%</label>
-                                    <input type="range" class="form-control slider" id="reputationMitigation" name="reputationMitigation" min="0" max="100" value="{{ selected_action.reputationMitigation }}">
-                                </div>
-                                <div class="col-md-4">
-                                    <label for="environmentMitigation">Environment: <span id="environmentMitigationValue">{{ selected_action.environmentMitigation }}</span>%</label>
-                                    <input type="range" class="form-control slider" id="environmentMitigation" name="environmentMitigation" min="0" max="100" value="{{ selected_action.environmentMitigation }}">
                                 </div>
                             </div>
-                            <div class="row justify-content-center mt-4">
-                                <div class="col-md-4">
-                                    <label for="regulationMitigation">Regulation: <span id="regulationMitigationValue">{{ selected_action.productionMitigation }}</span>%</label>
-                                    <input type="range" class="form-control slider" id="regulationMitigation" name="regulationMitigation" min="0" max="100" value="{{ selected_action.productionMitigation }}">
-                                </div>
-                                <div class="col-md-4">
-                                    <label for="dataMitigation">Data: <span id="dataMitigationValue">{{ selected_action.dataMitigation }}</span>%</label>
-                                    <input type="range" class="form-control slider" id="dataMitigation" name="dataMitigation" min="0" max="100" value="{{ selected_action.dataMitigation }}">
-                                </div>
-
-                                <div class="col-md-4">
-                                    <label for="supplyMitigation">Supply: <span id="supplyMitigationValue">{{ selected_action.supplyMitigation }}</span>%</label>
-                                    <input type="range" class="form-control slider" id="supplyMitigation" name="supplyMitigation" min="0" max="100" value="{{ selected_action.supplyMitigation }}">
+                        </div>
+                    </div>
+                    <div class="row small-font">
+                        <div class="col-md-6">
+                            <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                                <div class="card-body">
+                                    <label for="txtDescription">Description</label>
+                                    <textarea class="form-control" name="txtDescription" id="txtDescription" rows="2"  style="resize: none" readonly>{{ selected_action.actionDescription }}</textarea>
                                 </div>
                             </div>
-                            <div class="row justify-content-center mt-4">
-                                <div class="col-md-4">
-                                    <label for="threatMitigation">Threat: <span id="threatMitigationValue">{{ selected_action.threatMitigation }}</span>%</label>
-                                    <input type="range" class="form-control slider" id="threatMitigation" name="threatMitigation" min="0" max="100" value="{{ selected_action.threatMitigation }}">
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                                <div class="card-body">
+                                    <label for="txtHistory">Action History</label>
+                                    <textarea class="form-control" name="txtHistory" id="txtHistory" rows="2" readonly style="resize: none;">{{ selected_action.history }}</textarea>
                                 </div>
-                                <div class="col-md-4">
-                                    <label for="vulnerabilityMitigation">Vulnerability: <span id="vulnerabilityMitigationValue">{{ selected_action.vulnerabilityMitigation }}</span>%</label>
-                                    <input type="range" class="form-control slider" id="vulnerabilityMitigation" name="vulnerabilityMitigation" min="0" max="100" value="{{ selected_action.vulnerabilityMitigation }}">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row small-font">
+                        <div class="col-md-3">
+                            <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                                <div class="card-body">
+                                    <label for="txtEffort">Effort</label>
+                                    <input type="text" class="form-control" name="txtEffort" id="txtEffort" required value="{{ selected_action.actionEffort }}" readonly>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                                <div class="card-body">
+                                    <label for="txtDifficulty">Difficulty</label>
+                                    <input type="text" class="form-control" name="txtDifficulty" id="txtDifficulty" required value="{{ selected_action.actionDifficulty }}">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                                <div class="card-body">
+                                    <label for="txtCost">Cost</label>
+                                    <input type="text" class="form-control" name="txtCost" id="txtCost" required value="{{ selected_action.actionCost }}" readonly>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                                <div class="card-body">
+                                    <label for="txtDueDate">Due Date</label>
+                                    <input type="date" class="form-control" name="txtDueDate" id="txtDueDate" required value="{{ selected_action.actionDueDate|date:"Y-m-d" }}" >
                                 </div>
                             </div>
                         </div>
 
-        </div>
-        <script>
-        document.querySelectorAll('input[type="range"]').forEach(slider => {
-        slider.addEventListener('input', function() {
-            let displaySpan = document.getElementById(this.id + 'Value');
-            displaySpan.textContent = this.value;
-        });
-        });
 
-        </script>
-
-
-
-        <div class="row small-font">
-            <div class="col-md-4"></div>
-            <div class="col-md-2">
-                <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                    <div class="card-body">
-                        <button class="form-control btn-primary" type="button" id="actionBtn">Save Changes</button>
-                        <button class="form-control btn-primary" type="button" id="exportCsvBtn">Export as .csv</button>
                     </div>
+                    <div class="row small-font">
+                        <div class="col-md-2">
+                            <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                                <div class="card-body">
+                                    <label for="txt_outageSIS">Safety Outage</label>
+                                    <input type="text" class="form-control" name="txt_outageSIS" id="txt_outageSIS" required value="{{ selected_action.outageSIS }}" readonly>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                                <div class="card-body">
+                                    <label for="txt_outageICS">ICS Outage</label>
+                                    <input type="text" class="form-control" name="txt_outageICS" id="txt_outageICS" required value="{{ selected_action.outageICS }}" readonly>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                                <div class="card-body">
+                                    <label for="txt_outageEMS">EMS Outage</label>
+                                    <input type="text" class="form-control" name="txt_outageEMS" id="txt_outageEMS" required value="{{ selected_action.outageEMS }}" readonly>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                                <div class="card-body">
+                                    <label for="txt_outageIT">IT Outage</label>
+                                    <input type="text" class="form-control" name="txt_outageIT" id="txt_outageIT" required value="{{ selected_action.outageIT }}" readonly>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                                <div class="card-body">
+                                    <label for="txt_outagePS">PS Outage</label>
+                                    <input type="text" class="form-control" name="txt_outagePS" id="txt_outagePS" required value="{{ selected_action.outagePS }}" readonly>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-2">
+                            <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                                <div class="card-body">
+                                    <label for="txt_outageWWW">Internet Outage</label>
+                                    <input type="text" class="form-control" name="txt_outageWWW" id="txt_outageWWW" required value="{{ selected_action.outageWWW }}" readonly>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row small-font">
+                    <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                                    <div class="card-body">
+                                        <div class="row justify-content-center">
+                                            <div class="col-md-12">
+                                            <p class="justify-content-center">Expected Risk Mitigation from Action</p>
+                                            </div>
+                                        </div>
+                                        <div class="row justify-content-center">
+                                            <div class="col-md-4">
+                                                <label for="safetyMitigation">Safety: <span id="safetyMitigationValue">{{ selected_action.safetyMitigation }}</span>%</label>
+                                                <input type="range" class="form-control slider" id="safetyMitigation" name="safetyMitigation" min="0" max="100" value="{{ selected_action.safetyMitigation }}">
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label for="lifeMitigation">Life: <span id="lifeMitigationValue">{{ selected_action.lifeMitigation }}</span>%</label>
+                                                <input type="range" class="form-control slider" id="lifeMitigation" name="lifeMitigation" min="0" max="100" value="{{ selected_action.lifeMitigation }}">
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label for="productionMitigation">Production: <span id="productionMitigationValue">{{ selected_action.productionMitigation }}</span>%</label>
+                                                <input type="range" class="form-control slider" id="productionMitigation" name="productionMitigation" min="0" max="100" value="{{ selected_action.productionMitigation }}">
+                                            </div>
+                                        </div>
+                                        <div class="row justify-content-center mt-4">
+                                            <div class="col-md-4">
+                                                <label for="financeMitigation">Finance: <span id="financeMitigationValue">{{ selected_action.financeMitigation }}</span>%</label>
+                                                <input type="range" class="form-control slider" id="financeMitigation" name="financeMitigation" min="0" max="100" value="{{ selected_action.financeMitigation }}">
+                                            </div>
+
+                                            <div class="col-md-4">
+                                                <label for="reputationMitigation">Reputation: <span id="reputationMitigationValue">{{ selected_action.reputationMitigation }}</span>%</label>
+                                                <input type="range" class="form-control slider" id="reputationMitigation" name="reputationMitigation" min="0" max="100" value="{{ selected_action.reputationMitigation }}">
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label for="environmentMitigation">Environment: <span id="environmentMitigationValue">{{ selected_action.environmentMitigation }}</span>%</label>
+                                                <input type="range" class="form-control slider" id="environmentMitigation" name="environmentMitigation" min="0" max="100" value="{{ selected_action.environmentMitigation }}">
+                                            </div>
+                                        </div>
+                                        <div class="row justify-content-center mt-4">
+                                            <div class="col-md-4">
+                                                <label for="regulationMitigation">Regulation: <span id="regulationMitigationValue">{{ selected_action.productionMitigation }}</span>%</label>
+                                                <input type="range" class="form-control slider" id="regulationMitigation" name="regulationMitigation" min="0" max="100" value="{{ selected_action.productionMitigation }}">
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label for="dataMitigation">Data: <span id="dataMitigationValue">{{ selected_action.dataMitigation }}</span>%</label>
+                                                <input type="range" class="form-control slider" id="dataMitigation" name="dataMitigation" min="0" max="100" value="{{ selected_action.dataMitigation }}">
+                                            </div>
+
+                                            <div class="col-md-4">
+                                                <label for="supplyMitigation">Supply: <span id="supplyMitigationValue">{{ selected_action.supplyMitigation }}</span>%</label>
+                                                <input type="range" class="form-control slider" id="supplyMitigation" name="supplyMitigation" min="0" max="100" value="{{ selected_action.supplyMitigation }}">
+                                            </div>
+                                        </div>
+                                        <div class="row justify-content-center mt-4">
+                                            <div class="col-md-4">
+                                                <label for="threatMitigation">Threat: <span id="threatMitigationValue">{{ selected_action.threatMitigation }}</span>%</label>
+                                                <input type="range" class="form-control slider" id="threatMitigation" name="threatMitigation" min="0" max="100" value="{{ selected_action.threatMitigation }}">
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label for="vulnerabilityMitigation">Vulnerability: <span id="vulnerabilityMitigationValue">{{ selected_action.vulnerabilityMitigation }}</span>%</label>
+                                                <input type="range" class="form-control slider" id="vulnerabilityMitigation" name="vulnerabilityMitigation" min="0" max="100" value="{{ selected_action.vulnerabilityMitigation }}">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                    </div>
+                    <script>
+                    document.querySelectorAll('input[type="range"]').forEach(slider => {
+                    slider.addEventListener('input', function() {
+                        let displaySpan = document.getElementById(this.id + 'Value');
+                        displaySpan.textContent = this.value;
+                    });
+                    });
+
+                    </script>
+
+
+
+                    <div class="row small-font">
+                        <div class="col-md-4"></div>
+                        <div class="col-md-2">
+                            <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                                <div class="card-body">
+                                    <button class="form-control btn-primary" type="button" id="actionBtn">Save Changes</button>
+                                    <button class="form-control btn-primary" type="button" id="exportCsvBtn">Export as .csv</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4"></div>
+                    </div>
+                {% endif %}
                 </div>
+
+            <div class="col-md-1 " style="background-color: white"></div>
             </div>
-            <div class="col-md-4"></div>
-        </div>
-    {% endif %}
-    </div>
-
-<div class="col-md-1 " style="background-color: white"></div>
-</div>
 
 
-<script>
-    $(document).ready(function() {
-        $('#dataTable').DataTable({
-            "pageLength": 5
-        });
+            <script>
+                $(document).ready(function() {
+                    $('#dataTable').DataTable({
+                        "pageLength": 5
+                    });
 
-        // Add click event to each action row
-        $('#dataTable').on('click', '.action-row', function() {
-        const actionId = this.getAttribute('data-id');
-        sessionStorage.setItem('selectedActionId', actionId);
-        document.getElementById('actionId').value = actionId;
-        document.getElementById('actionForm').submit();
-        });
+                    // Add click event to each action row
+                    $('#dataTable').on('click', '.action-row', function() {
+                    const actionId = this.getAttribute('data-id');
+                    sessionStorage.setItem('selectedActionId', actionId);
+                    document.getElementById('actionId').value = actionId;
+                    document.getElementById('actionForm').submit();
+                    });
 
 
 
-        $('#actionBtn').on('click', function() {
-            const actionStatus = $('#selectStatus').val();
-            let confirmMessage = "Do you want to save the changes?";
-            let closeAction = 0; // Default to 0, indicating the action is not closed
+                    $('#actionBtn').on('click', function() {
+                        const actionStatus = $('#selectStatus').val();
+                        let confirmMessage = "Do you want to save the changes?";
+                        let closeAction = 0; // Default to 0, indicating the action is not closed
 
-            // If the action status is 'Closed', modify the confirmation message
-            if (actionStatus === "Closed") {
-                confirmMessage = "Do you want to mark the action as Closed and create a new snapshot?";
-                closeAction = 1; // Set to 1 if the user wants to close the action
-            }
+                        // If the action status is 'Closed', modify the confirmation message
+                        if (actionStatus === "Closed") {
+                            confirmMessage = "Do you want to mark the action as Closed and create a new snapshot?";
+                            closeAction = 1; // Set to 1 if the user wants to close the action
+                        }
 
-            // Prompt the user for confirmation with the appropriate message
-            const isConfirmed = confirm(confirmMessage);
-            if (!isConfirmed) {
-                return; // Exit if the user does not confirm
-            }
-            const actionDueDate = $('#txtDueDate').val();
-            const actionTitle = $('#txtTitle').val();
-            const actionDescription = $('#txtDescription').val();
-            const selectedActionId = sessionStorage.getItem('selectedActionId');
-            const dataMitigation = $('#dataMitigation').val();
-            const environmentMitigation = $('#environmentMitigation').val();
-            const financeMitigation = $('#financeMitigation').val();
-            const lifeMitigation = $('#lifeMitigation').val();
-            const productionMitigation = $('#productionMitigation').val();
-            const regulationMitigation = $('#regulationMitigation').val();
-            const reputationMitigation = $('#reputationMitigation').val();
-            const safetyMitigation = $('#safetyMitigation').val();
-            const supplyMitigation = $('#supplyMitigation').val();
-            const threatMitigation = $('#threatMitigation').val();
-            const vulnerabilityMitigation = $('#vulnerabilityMitigation').val();
+                        // Prompt the user for confirmation with the appropriate message
+                        const isConfirmed = confirm(confirmMessage);
+                        if (!isConfirmed) {
+                            return; // Exit if the user does not confirm
+                        }
+                        const actionDueDate = $('#txtDueDate').val();
+                        const actionTitle = $('#txtTitle').val();
+                        const actionDescription = $('#txtDescription').val();
+                        const selectedActionId = sessionStorage.getItem('selectedActionId');
+                        const dataMitigation = $('#dataMitigation').val();
+                        const environmentMitigation = $('#environmentMitigation').val();
+                        const financeMitigation = $('#financeMitigation').val();
+                        const lifeMitigation = $('#lifeMitigation').val();
+                        const productionMitigation = $('#productionMitigation').val();
+                        const regulationMitigation = $('#regulationMitigation').val();
+                        const reputationMitigation = $('#reputationMitigation').val();
+                        const safetyMitigation = $('#safetyMitigation').val();
+                        const supplyMitigation = $('#supplyMitigation').val();
+                        const threatMitigation = $('#threatMitigation').val();
+                        const vulnerabilityMitigation = $('#vulnerabilityMitigation').val();
 
-            // Get CSRF token
-            const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+                        // Get CSRF token
+                        const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
-            $.ajax({
-                url: '/OTRisk/update_ra_action/',  // Update this URL to your backend endpoint
-                type: 'PUT',
-                headers: {
-                    "X-CSRFToken": csrftoken  // Include CSRF token in the request header
-                },
-                data: JSON.stringify({
-                    'action_id': selectedActionId,
-                    'actionDueDate': actionDueDate,
-                    'actionStatus': actionStatus,
-                    'actionTitle': actionTitle,
-                    'actionDescription': actionDescription,
-                    'dataMitigation': dataMitigation,
-                    'environmentMitigation': environmentMitigation,
-                    'financeMitigation': financeMitigation,
-                    'lifeMitigation': lifeMitigation,
-                    'productionMitigation': productionMitigation,
-                    'regulationMitigation': regulationMitigation,
-                    'reputationMitigation': reputationMitigation,
-                    'safetyMitigation': safetyMitigation,
-                    'supplyMitigation': supplyMitigation,
-                    'threatMitigation': threatMitigation,
-                    'vulnerabilityMitigation': vulnerabilityMitigation,
-                    'closeAction': closeAction
-                }),
-                contentType: 'application/json',
+                        $.ajax({
+                            url: '/OTRisk/update_ra_action/',  // Update this URL to your backend endpoint
+                            type: 'PUT',
+                            headers: {
+                                "X-CSRFToken": csrftoken  // Include CSRF token in the request header
+                            },
+                            data: JSON.stringify({
+                                'action_id': selectedActionId,
+                                'actionDueDate': actionDueDate,
+                                'actionStatus': actionStatus,
+                                'actionTitle': actionTitle,
+                                'actionDescription': actionDescription,
+                                'dataMitigation': dataMitigation,
+                                'environmentMitigation': environmentMitigation,
+                                'financeMitigation': financeMitigation,
+                                'lifeMitigation': lifeMitigation,
+                                'productionMitigation': productionMitigation,
+                                'regulationMitigation': regulationMitigation,
+                                'reputationMitigation': reputationMitigation,
+                                'safetyMitigation': safetyMitigation,
+                                'supplyMitigation': supplyMitigation,
+                                'threatMitigation': threatMitigation,
+                                'vulnerabilityMitigation': vulnerabilityMitigation,
+                                'closeAction': closeAction
+                            }),
+                            contentType: 'application/json',
 
-                success: function(response) {
-                    if (response.success) {
-                        alert('Changes saved successfully!');
-                } else {
-                        alert('Error saving changes. Please try again.');
-                    }
-                },
-                error: function() {
-                    alert('Error saving changes. Please try again.');
+                            success: function(response) {
+                                if (response.success) {
+                                    alert('Changes saved successfully!');
+                            } else {
+                                    alert('Error saving changes. Please try again.');
+                                }
+                            },
+                            error: function() {
+                                alert('Error saving changes. Please try again.');
+                            }
+                        });
+                    });
+                });
+
+                document.getElementById("exportCsvBtn").addEventListener("click", function() {
+                    exportToCsv();
+                });
+
+                function exportToCsv() {
+                    // Get the record details
+                    const record = {
+                        title: document.getElementById("txtTitle").value,
+                        description: document.getElementById("txtDescription").value,
+                        effort: document.getElementById("txtEffort").value,
+                        difficulty: document.getElementById("txtDifficulty").value,
+                        cost: document.getElementById("txtCost").value,
+                        outage_sis: document.getElementById("txt_outageSIS").value,
+                        outage_ics: document.getElementById("txt_outageICS").value,
+                        outage_ems: document.getElementById("txt_outageEMS").value,
+                        outage_ps: document.getElementById("txt_outagePS").value,
+                        outage_www: document.getElementById("txt_outageWWW").value,
+                        outage_it: document.getElementById("txt_outageIT").value,
+                        owner: document.getElementById("txtOwner").value,
+                        // Add more fields as needed
+                    };
+
+                    const csvData = Object.keys(record).map(key => [key, record[key]]);
+                    // Convert the CSV data to CSV format
+                    const csv = csvData.map(row => row.map(cell => `"${cell}"`).join(",")).join("\n");
+                    // Create a Blob with the CSV data
+                    const blob = new Blob([csv], { type: "text/csv" });
+
+                    // Create a download link and trigger the download
+                    const a = document.createElement("a");
+                    a.href = URL.createObjectURL(blob);
+                    a.download = "record_details.csv";
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
                 }
-            });
-        });
-    });
-
-    document.getElementById("exportCsvBtn").addEventListener("click", function() {
-        exportToCsv();
-    });
-
-    function exportToCsv() {
-        // Get the record details
-        const record = {
-            title: document.getElementById("txtTitle").value,
-            description: document.getElementById("txtDescription").value,
-            effort: document.getElementById("txtEffort").value,
-            difficulty: document.getElementById("txtDifficulty").value,
-            cost: document.getElementById("txtCost").value,
-            outage_sis: document.getElementById("txt_outageSIS").value,
-            outage_ics: document.getElementById("txt_outageICS").value,
-            outage_ems: document.getElementById("txt_outageEMS").value,
-            outage_ps: document.getElementById("txt_outagePS").value,
-            outage_www: document.getElementById("txt_outageWWW").value,
-            outage_it: document.getElementById("txt_outageIT").value,
-            owner: document.getElementById("txtOwner").value,
-            // Add more fields as needed
-        };
-
-        const csvData = Object.keys(record).map(key => [key, record[key]]);
-        // Convert the CSV data to CSV format
-        const csv = csvData.map(row => row.map(cell => `"${cell}"`).join(",")).join("\n");
-        // Create a Blob with the CSV data
-        const blob = new Blob([csv], { type: "text/csv" });
-
-        // Create a download link and trigger the download
-        const a = document.createElement("a");
-        a.href = URL.createObjectURL(blob);
-        a.download = "record_details.csv";
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-    }
 
 
 
-</script>
+            </script>
 
+
+            </div>
+             </div>
+            </main>
 
 </body>
 </html>

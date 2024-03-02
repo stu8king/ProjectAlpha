@@ -435,13 +435,14 @@ body {
     font-size: 0.8rem; /* adjust as needed */
 }
 
-    .spinner {
-    border: 16px solid #f3f3f3;
-    border-top: 16px solid #3498db;
+.spinner {
+    border: 6px solid #f3f3f3; /* Light grey */
+    border-top: 6px solid #3498db; /* Blue */
     border-radius: 50%;
-    width: 50px;
-    height: 50px;
+    width: 30px;
+    height: 30px;
     animation: spin 2s linear infinite;
+    margin: auto;
     display: none; /* Initially hidden */
 }
 
@@ -924,7 +925,7 @@ function showNotification(message, isError = false) {
         <div class="row">
             <div class="col-md-1"></div>
             <div class="col-md-3">
-            <h1 class="page-title">CyberPHA@AnzenOT</h1>
+            <h1 class="page-title">CyberPHA@AnzenOT (Beta)</h1>
             </div>
             <div class="col-md-1">
                 <button type="submit" id="btnformSubmit" class="btn nav-link"> Save</button>
@@ -1058,11 +1059,7 @@ $(document).ready(function() {
             </div>
             <div class="col-md-1">
                 <button type="button" id="risk-assessment-btn" class="btn nav-link" >Profile</button></div>
-                <div id="spinnerContainerProfile" style="display: none;">
-                    <div class="spinner-border" role="status">
-                        <span class="sr-only">Loading...</span>
-                    </div>
-                </div>
+
 
             <div class="col-md-1">
                  <button id="generatePPT" class="btn nav-link"><i class="bi bi-printer"></i> Print</button>
@@ -1071,10 +1068,13 @@ $(document).ready(function() {
         </div>
         <<div class="row">
             <div class="col-md-1"></div>
-            <div class="col-md-3">
-                <label id="lblCyberPHATitle" style="font-size: 18px"></label>
+            <div class="col-md-5">
+                <label id="lblCyberPHATitle" style="font-size: 18px; background-color: #F2BB13; color:#000"></label>
+                <div id="spinnerContainerProfile" class="spinner"  style="display: none;">
+
+                </div>
             </div>
-            <div class="col-md-8"></div>
+            <div class="col-md-6"></div>
         </div>
     </div>
     <div id="notificationMessage" class="notification-message" style="display: none;"></div>
@@ -1219,7 +1219,8 @@ $(document).ready(function() {
 
                  let recordId = $(this).data('id');  // get the ID of the clicked row
                  let title = $(this).find('td:nth-child(2)').text();
-                 document.getElementById("lblCyberPHATitle").textContent = title;
+                 let facility = $(this).find('td:nth-child(3)').text();
+                 document.getElementById("lblCyberPHATitle").textContent = title + '@' + facility ;
                  fetchHeaderRecord(recordId);
              });
 
@@ -2263,7 +2264,7 @@ $(document).ready(function() {
 
         // AJAX function to call the Django view
         function assessRisk() {
-            $('#spinnerContainerProfile').show();
+            $('#spinnerContainerProfile').css('display', 'block');
             // Gather the necessary data for the AJAX request (impact scores and scenario information)
             let address = document.getElementById('txtAddress').value;
             let facilityType = document.getElementById('selFacilityType').value;
@@ -2274,6 +2275,7 @@ $(document).ready(function() {
             let shift_model = document.getElementById('shift_model').value;
             let employees = document.getElementById('txtEmployees').value;
             let AQI = document.getElementById('txthdnAQI').value;
+            let sl = document.getElementById('selSL').value;
             let investments = [];
             $('#investmentTable tbody tr').each(function() {
                 let investment = {
@@ -2300,6 +2302,7 @@ $(document).ready(function() {
                     employees: employees,
                     assessment_id: assessment_id,
                     aqi: AQI,
+                    sl: sl,
                     investments: JSON.stringify(investments)
                  },
                 success: function (response) {
@@ -2505,7 +2508,7 @@ $(document).ready(function() {
 
                          $('#txtTitle').val(data.headerrecord.title);
 
-                         $('#lblCyberPHATitle').text(data.headerrecord.title);
+                         $('#lblCyberPHATitle').text(data.headerrecord.title + '@' + data.headerrecord.facility) ;
 
                          $('#txtLeader').val(data.headerrecord.leader);
                          $('#selIndustry').val(data.headerrecord.industry);

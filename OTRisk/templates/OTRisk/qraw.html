@@ -578,7 +578,7 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                     <div class="row">
                     <div class="col-md-1"></div>
                     <div class="col-md-4">
-                        <a class="page-title" style="color: #d3d1cd" id="cyberPHALink">QRAW@AnzenOT </a>
+                        <a class="page-title" style="color: #d3d1cd" id="cyberPHALink">QRAW@AnzenOT (Beta) </a>
 
                     </div>
                     <div class="col-md-1" >
@@ -6394,11 +6394,12 @@ $(document).ready(function() {
                             riskText = "Very High";
                         }
 
-                         document.getElementById("lblinherentRisk_2").textContent = riskText;
-
-                          var costArray = scenarios[1].fields.scenario_12month_costs.split('|').map(Number);
-                          createCostChart('monthly_cost_chart_2', costArray);
-
+                       document.getElementById("lblinherentRisk_2").textContent = riskText;
+                       try {
+                           var costArray = scenarios[1].fields.scenario_12month_costs.split('|').map(Number);
+                           createCostChart('monthly_cost_chart_2', costArray);
+                       }
+                       catch (e){}
 
                           // Assuming 'safeguards' is the variable holding the safeguards data received from the server
                         var scenarioId = scenarios[1].pk; // The ID of the currently selected scenario

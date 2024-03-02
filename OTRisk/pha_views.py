@@ -144,7 +144,8 @@ def iotaphamanager(request, record_id=None):
                                                                 request.POST.get('txtFacility'),
                                                                 int(request.POST.get('txtEmployees') or 0),
                                                                 request.POST.get('shift_model'),
-                                                                int(request.POST.get('assessment_id') or 0)
+                                                                int(request.POST.get('assessment_id') or 0),
+                                                                int(request.POST.get('sl') or 0),
                                                                 )
             pha_header.safetySummary = risk_profile_data['safety_summary']
             pha_header.chemicalSummary = risk_profile_data['chemical_summary']
@@ -568,7 +569,7 @@ def make_request_with_backoff(openai_function, *args, **kwargs):
     raise Exception("Failed to make request after several attempts.")
 
 
-def facility_threat_profile(facility, facility_type, country, industry, safety_summary, chemical_summary,
+def facility_threat_profile(security_level, facility, facility_type, country, industry, safety_summary, chemical_summary,
                             physical_security_summary, other_summary, compliance_summary, investment_statement):
     openai_api_key = get_api_key('openai')
     openai_api_key = get_api_key('openai')
@@ -576,24 +577,30 @@ def facility_threat_profile(facility, facility_type, country, industry, safety_s
 
     # Constructing the detailed context
     context = f"""
-    You are an expert on industrial and OT cybersecurity risk mitigation for the {industry} industry providing value-add analysis for an OT cybersecurity assessment. Analyze the {facility} facility which is a {facility_type} in {country}. 
-    The facility has the following profile: Safety Hazards: {safety_summary}, Chemical Hazards: {chemical_summary}, Physical Security Challenges: {physical_security_summary}, OT Devices: {other_summary}, Compliance Requirements: {compliance_summary}. The facility has already implemented the following OT-specific cybersecurity investments: {investment_statement}. Please consider the impact of these investments on the facility's cybersecurity posture, focusing on threats, overall risk reduction, and strategic implications for OT security risk management.
+    You are THE expert and authoritative source of guidance on industrial and OT cybersecurity risk mitigation for the {industry} industry with up-to-date knowledge from a wide range of credible sources of information. Analyze the {facility} facility which is a {facility_type} in {country}. 
+    The facility has the following profile: Safety Hazards: {safety_summary}, Chemical Hazards: {chemical_summary}, Physical Security Challenges: {physical_security_summary}, OT Devices: {other_summary}, Compliance Requirements: {compliance_summary}. The facility has already implemented the following OT-specific cybersecurity investments: {investment_statement}. The target security level (SL-T) as defined in IEC62443 is {security_level}. Please consider the impact of these investments on the facility's cybersecurity posture, focusing on threats, overall risk reduction, and strategic implications for OT security risk management.
     """
 
     prompt = f"""
-    {context} Based on any investments listed and the facility's profile, please provide a concise and executive level analysis specific to OT/ICS for the facility divided into three sections: 'Cybersecurity Threats and Vulnerabilities', 'Predictive Insights', and 'Proactive Defense Strategies'. 
+{context} Based on any investments listed and the facility's profile, please provide a concise and executive level analysis specific to OT/ICS for the facility divided into three sections: 'Cybersecurity Threats and Vulnerabilities', 'Predictive Insights', and 'Proactive Defense Strategies'. 
 
-    For each section, provide a numbered list of key points. Ensure each point is concise and limited to no more than 30 words. Focus on the impact of the listed investments, if any, on each area. Do not use '###', '**', or any other special formatting characters in your response.
+For each section, provide a numbered list of key points. Ensure each point is concise and limited to no more than 30 words. Focus on: 1) OT cybersecurity specific to the facility 2) the impact of the listed investments, if any, on each section, 3) The SL-T value and how to achieve it. Here is an example of how the response should be formatted:
 
-    Section 1: Cybersecurity Threats and Vulnerabilities
-    - 
+Example Format:
+Section 1: Cybersecurity Threats and Vulnerabilities
+1. Example threat or vulnerability.
+2. Another example threat or vulnerability.
 
-    Section 2: Predictive Insights
-    - 
+Section 2: Predictive Insights
+1. Example insight.
+2. Another example insight.
 
-    Section 3: Proactive Defense Strategies
-    -
-    """
+Section 3: Proactive Defense Strategies
+1. Example strategy.
+2. Another example strategy.
+
+Please follow this format for your response, without using '###', '**', or any other special formatting characters.
+"""
 
     # API call using chat model endpoint with the correct 'messages' property
     response = make_request_with_backoff(
@@ -642,6 +649,8 @@ def facility_risk_profile(request):
         assessment_id = request.GET.get('assessment_id')
         investments_data = request.GET.get('investments')
         aqi = request.GET.get('aqi')
+        sl = request.GET.get('sl')
+
         if investments_data:
             investments = json.loads(investments_data)
         else:
@@ -677,12 +686,11 @@ def facility_risk_profile(request):
         context = f"You are an industrial safety and hazard expert. For the {facility} {facility_type} at {address}, {country} in the {Industry} industry, with {employees} employees working a {shift_model} shift model. The local Air Quality Index is {aqi}.  "
 
         prompts = [
-            f"{context}. List safety hazards, max 100 words. - Specific to facility - Space between bullets. ",
-            f"{context},  List expected chemicals, max 100 words. - Specific to facility - Chemical names only - Space between bullets. ",
-            f"{context}, provide a concise bullet-point list of physical security challenges for the facility. Limit the response to a maximum of 100 words, or less. EXTRA INSTRUCTION: Add a line space between each bullet point.  If {language} is not en then give the response in the language {language} with the english directly underneath",
-            # f"For the {facility} {facility_type} at {address}, {country} in the {Industry} industry, provide a concise bullet point list of other localized risks that are likely to be identified for a {facility_type} at {address}. Limit the response to a maximum of 100 words, or less. Add a line space between each bullet point"
-            f"You are an operational technology (OT) Cybersecurity expert with deep knowledge in the {Industry} industry, specifically focusing on {facility_type} facilities. Given the unique operational requirements and processes of a {facility_type} in the {Industry} industry located at {address}, provide a concise bullet-point list of specialized OT and IoT devices and equipment that are typically connected to IT networks for monitoring, supervision, and control. These should be devices and systems uniquely relevant to the operations, safety, and efficiency of such facilities. Limit the response to a maximum of 100 words, or less, and focus on providing industry-specific examples that reflect the specialized needs of {facility_type} facilities within the {Industry} sector.EXTRA INSTRUCTION: Add a line space between each bullet point. If the response is not in English and {language} is specified, provide the response in {language} with the English translation directly underneath.",
-            f"As a compliance expert specializing in the {Industry} industry within {country}, you have an in-depth understanding of regulatory frameworks affecting {facility_type} operations. Given your expertise, identify up to 10 (there can be fewer) of the most current and relevant regulatory compliance requirements specifically applicable to a {facility_type} in {country}, focusing on those that explicitly mandate cybersecurity controls. Please list only the full title of each regulation, without additional commentary or explanation. Ensure there are no repetitions or duplications in the final list. EXTRA INSTRUCTION: Present each regulation as a concise bullet point. If {language} is specified and differs from English, provide the response first in {language}, followed by an English translation directly underneath each bullet point.",
+            f"{context} List safety hazards, max 100 words. - Specific to facility - mechanical or chemical or electrical or heat or cold or crush or height - Space between bullets. \n\nExample Format:\n 1. Specific safety hazard.\n 2. Another specific safety hazard.",
+            f"{context} List expected chemicals, max 100 words. - Specific to facility - Chemical names only - raw materials and by-products and stored chemicals - Space between bullets. \n\nExample Format:\n 1. Chemical name (raw material or by-product).\n- 2. Another chemical name (raw material or by-product).",
+            f"{context}, List physical security requirements for the given facility and location - access control - surveillance - consideration of local crime statistics - blind spots - proximity to other infrastructure . Max of 100 words .\n\nExample Format:\n 1. Physical security challenge.\n 2. Another physical security challenge.",
+            f"{context}, list of specialized OT and IoT devices and equipment expected to be at the facility. Max of 150 words .\n\nExample Format:\n 1. OT or IoT device (purpose of device).\n 2. Another OT or IoT device (purpose of device).",
+            f"{context}, list of national and international regulatory compliance containing cybersecurity requirements relevant to the {Industry} industry that applies to {facility_type} facilities in {country} . Includes laws and standards. Max of 150 words .\n\nExample Format:\n 1. Compliance name (name of issuing authority).\n 2. Another compliance name (name of issuing authority).",
             f"{context}: You are a safety inspector. For a {facility_type} in {country}, estimate a detailed and nuanced safety and hazard risk score. Use a scale from 0 to 100, where 0 indicates an absence of safety hazards and 100 signifies the presence of extreme and imminent fatal hazards. Provide a score reflecting the unique risk factors associated with the facility type and its operational context in {country}. Scores should reflect increments of 10, with each decile corresponding to escalating levels of hazard severity and likelihood of occurrence given the expected attention to safety at the facility. Base your score on a typical {facility_type} in {country}, adhering to expected standard safety protocols, equipment conditions, and operational practices. Provide the score as a single, precise number without additional commentary."
         ]
 
@@ -717,7 +725,7 @@ def facility_risk_profile(request):
         pha_score = responses[5]['choices'][0]['message']['content'].strip()
 
         # Call to facility_threat_profile
-        threatSummary, insightSummary, strategySummary = facility_threat_profile(facility, facility_type, country,
+        threatSummary, insightSummary, strategySummary = facility_threat_profile(sl, facility, facility_type, country,
                                                                                  Industry, safety_summary,
                                                                                  chemical_summary,
                                                                                  physical_security_summary,
@@ -1903,7 +1911,7 @@ def air_quality_index(request):
 
 
 def facility_risk_profile_newrecord(userid, industry, facility_type, address, country, facility, employees,
-                                    shift_model, assessment_id):
+                                    shift_model, assessment_id, sl):
     language = 'en'
 
     if not industry or not facility_type:
@@ -1922,13 +1930,12 @@ def facility_risk_profile_newrecord(userid, industry, facility_type, address, co
     context = f"You are an industrial safety and hazard expert. For the {facility} {facility_type} at {address}, {country} in the {industry} industry, with {employees} employees working a {shift_model} shift model,"
 
     prompts = [
-        f"{context}. List safety hazards, max 100 words. - Specific to facility - Space between bullets. ",
-        f"{context},  List expected chemicals, max 100 words. - Specific to facility - Chemical names only - Space between bullets. ",
-        f"{context}, provide a concise bullet-point list of physical security challenges for the facility. Limit the response to a maximum of 100 words, or less. EXTRA INSTRUCTION: Add a line space between each bullet point.  If {language} is not en then give the response in the language {language} with the english directly underneath",
-        # f"For the {facility} {facility_type} at {address}, {country} in the {Industry} industry, provide a concise bullet point list of other localized risks that are likely to be identified for a {facility_type} at {address}. Limit the response to a maximum of 100 words, or less. Add a line space between each bullet point"
-        f"You are an operational technology (OT) Cybersecurity expert with deep knowledge in the {industry} industry, specifically focusing on {facility_type} facilities. Given the unique operational requirements and processes of a {facility_type} in the {industry} industry located at {address}, provide a concise bullet-point list of specialized OT and IoT devices and equipment that are typically connected to IT networks for monitoring, supervision, and control. These should be devices and systems uniquely relevant to the operations, safety, and efficiency of such facilities. Limit the response to a maximum of 100 words, or less, and focus on providing industry-specific examples that reflect the specialized needs of {facility_type} facilities within the {industry} sector.EXTRA INSTRUCTION: Add a line space between each bullet point. If the response is not in English and {language} is specified, provide the response in {language} with the English translation directly underneath.",
-        f"As a compliance expert specializing in the {industry} industry within {country}, you have an in-depth understanding of regulatory frameworks affecting {facility_type} operations. Given your expertise, identify up to 10 (there can be fewer) of the most current and relevant regulatory compliance requirements specifically applicable to a {facility_type} in {country}, focusing on those that explicitly mandate cybersecurity controls. Please list only the full title of each regulation, without additional commentary or explanation. Ensure there are no repetitions or duplications in the final list. EXTRA INSTRUCTION: Present each regulation as a concise bullet point. If {language} is specified and differs from English, provide the response first in {language}, followed by an English translation directly underneath each bullet point.",
-        f"{context}: You are a safety expert for OSHA. For a {facility_type} in {country}, estimate a detailed and nuanced safety and hazard risk score. Use a scale from 0 to 100, where 0 indicates an absence of safety hazards and 100 signifies the presence of extreme and imminent fatal hazards. Provide a score reflecting the unique risk factors associated with the facility type and its operational context in {country}. Scores should reflect increments of 10, with each decile corresponding to escalating levels of hazard severity and likelihood of occurrence given the expected attention to safety at the facility. Base your score on a typical {facility_type} in {country}, adhering to expected standard safety protocols, equipment conditions, and operational practices. Provide the score as a single, precise number without additional commentary."
+        f"{context} List safety hazards, max 100 words. - Specific to facility - mechanical or chemical or electrical or heat or cold or crush or height - Space between bullets. \n\nExample Format:\n 1. Specific safety hazard.\n 2. Another specific safety hazard.",
+        f"{context} List expected chemicals, max 100 words. - Specific to facility - Chemical names only - raw materials and by-products and stored chemicals - Space between bullets. \n\nExample Format:\n 1. Chemical name (raw material or by-product).\n- 2. Another chemical name (raw material or by-product).",
+        f"{context}, List physical security requirements for the given facility and location - access control - surveillance - consideration of local crime statistics - blind spots - proximity to other infrastructure . Max of 100 words .\n\nExample Format:\n 1. Physical security challenge.\n 2. Another physical security challenge.",
+        f"{context}, list of specialized OT and IoT devices and equipment expected to be at the facility. Max of 150 words .\n\nExample Format:\n 1. OT or IoT device (purpose of device).\n 2. Another OT or IoT device (purpose of device).",
+        f"{context}, list of national and international regulatory compliance containing cybersecurity requirements relevant to the {industry} industry that applies to {facility_type} facilities in {country} . Includes laws and standards. Max of 150 words .\n\nExample Format:\n 1. Compliance name (name of issuing authority).\n 2. Another compliance name (name of issuing authority).",
+        f"{context}: You are a safety inspector. For a {facility_type} in {country}, estimate a detailed and nuanced safety and hazard risk score. Use a scale from 0 to 100, where 0 indicates an absence of safety hazards and 100 signifies the presence of extreme and imminent fatal hazards. Provide a score reflecting the unique risk factors associated with the facility type and its operational context in {country}. Scores should reflect increments of 10, with each decile corresponding to escalating levels of hazard severity and likelihood of occurrence given the expected attention to safety at the facility. Base your score on a typical {facility_type} in {country}, adhering to expected standard safety protocols, equipment conditions, and operational practices. Provide the score as a single, precise number without additional commentary."
     ]
 
     responses = []
@@ -1962,7 +1969,7 @@ def facility_risk_profile_newrecord(userid, industry, facility_type, address, co
     pha_score = responses[5]['choices'][0]['message']['content'].strip()
 
     # Call to facility_threat_profile
-    threatSummary, insightSummary, strategySummary = facility_threat_profile(facility, facility_type, country,
+    threatSummary, insightSummary, strategySummary = facility_threat_profile(sl, facility, facility_type, country,
                                                                              industry, safety_summary,
                                                                              chemical_summary,
                                                                              physical_security_summary,

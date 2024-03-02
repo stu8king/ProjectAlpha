@@ -2,8 +2,8 @@
 <!DOCTYPE html>
 <html lang="">
 <head>
-    <title>AnzenOT</title>
-    <link rel="icon" href="{% static 'images/iota - white 1.png' %}" type="image/x-icon">
+    <title>AnzenOT - GRC for OT</title>
+    <link rel="icon" href="{% static 'images/AnzenOTIconBlack.png' %}" type="image/x-icon">
 
 
     <!-- Bootstrap CSS -->
@@ -536,7 +536,7 @@ path.connection {
                 <div class="row">
                     <div class="col-md-2"></div>
                     <div class="col-md-3">
-                    <h1 class="page-title">Dashboard@AnzenOT</h1>
+                    <h1 class="page-title">Dashboard@AnzenOT (Beta)</h1>
                     </div>
 
                     <div class="col-md-7"></div>
@@ -1034,9 +1034,35 @@ function getGroupReport(groupId) {
 
     <!-- Tab 4 Content -->
     <div class="tab-content tab-link" id="tab5">
-        <h2>QRAW</h2>
-
+    <h2>QRAW</h2>
+    <div class="table-responsive">
+        <table id="headertable" class="table small-font compact" style="width: 100%; border-collapse: separate; border-spacing: 0 15px;">
+            <thead>
+                <tr>
+                    <th class="th">Title</th>
+                    <th>Status</th>
+                    <th>Trigger</th>
+                    <th>Scenario Count</th>
+                </tr>
+            </thead>
+            <tbody style="font-size: 10px;">
+                {% for worksheet in ra_worksheets_with_scenario_count %}
+                    <tr style="background-color: #f0f0f0; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); border-radius: 5px;">
+                        <td>{{ worksheet.RATitle }}</td>
+                        <td>{{ worksheet.StatusFlag }}</td>
+                        <td>{{ worksheet.RATrigger }}</td>
+                        <td>{{ worksheet.scenario_count }}</td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="4">No records found.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
+</div>
+
 
     <div class="tab-content tab-link" id="tab6">
         <h2>Moderator Queue</h2>
