@@ -46,10 +46,23 @@ $('select').selectpicker();
     display: block;
 }
 .sidebar {
-height: 100vh;
-background-color: #2D2E30; /* Darker shade for sidebar */
-padding: 20px 0;
-width: 220px; /* Reduced width */
+    height: 200vh;
+    background-color: #2D2E30; /* Darker shade for sidebar */
+    padding: 20px 1vw;
+    width: 10vw; /* Sidebar width */
+}
+
+/* Adjusted sub-menu position to be adjacent to the sidebar */
+.sub-menu {
+    position: fixed; /* Fixed position to stay in view */
+    top: 0; /* Align with the top of the viewport */
+    left: 10vw; /* Position the sub-menu right next to the sidebar */
+    width: 150px; /* Width of the sub-menu */
+    height: 100vh; /* Full viewport height */
+    background-color: #333; /* Sub-menu background color */
+    color: #fff; /* Text color */
+    padding: 20px 10px; /* Padding */
+    box-sizing: border-box; /* Include padding in width calculation */
 }
 .sidebar-logo {
 padding: 10px 15px;
@@ -66,6 +79,10 @@ padding: 5px 10px;
 /* border-bottom: 1px solid  #fac330; /* Light orange line */
 margin: 0 10%;
 }
+.nav-sidebar .nav-link, .sub-menu li a {
+    font-size: calc(0.5em + 0.5vw); /* Adjust font size based on viewport width */
+}
+
 .nav-sidebar .nav-link {
 color: #d3d1cd;
 border-radius: 0;
@@ -145,7 +162,7 @@ font-weight: lighter;
 }
 .form-control.custom-textarea {
     flex: 1; /* Make textarea flexible within its container */
-    font-size: 14px;
+    font-size: 12px;
     color: #0a53be;
     resize: none; /* Prevent resizing */
 }
@@ -296,7 +313,7 @@ font-weight: lighter;
 .custom-main-content {
     position: relative; /* Needed for absolute positioning of tabs */
     margin-left: 10px; /* Adjust to account for both sidebars */
-    width: calc(100% - 350px); /* Adjust based on the total width of the sidebars */
+    width: calc(100% - 20vw); /* Adjust based on the total width of the sidebars */
     min-height: 100vh; /* Ensure it fills the viewport height */
 }
 
@@ -317,8 +334,8 @@ font-weight: lighter;
     background-color: #464748; /* Same as body background for seamless integration */
     color: #d3d1cd; /* Text color */
     padding: 10px 20px; /* Adjust as needed */
-    padding-left: 80px; /* Align with the end of the sidebar */
-    width: calc(100% - 100px); /* Adjust based on the actual sidebar width */
+    padding-left: calc(10vw); /* Align with the end of the sidebar */
+    width: calc(100% - 10vw); /* Adjust based on the actual sidebar width */
     box-sizing: border-box;
 }
 .page-title {
@@ -343,17 +360,7 @@ font-weight: lighter;
     }
 }
 /* Sub-menu styles */
-.sub-menu {
-    position: fixed; /* Fixed position to stay in view */
-    top: 0; /* Align with the top of the viewport */
-    left: 200px; /* Adjust based on the width of the main sidebar */
-    width: 150px; /* Width of the sub-menu */
-    height: 100vh; /* Full viewport height */
-    background-color: #333; /* Sub-menu background color */
-    color: #fff; /* Text color */
-    padding: 20px 10px; /* Padding */
-    box-sizing: border-box; /* Include padding in width calculation */
-}
+
 .sub-menu ul {
     list-style: none; /* Remove default list styling */
     padding: 0; /* Remove default padding */
@@ -576,13 +583,13 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                     <div id="notificationMessage" class="notification-message" style="display: none;"></div>
                     <div class="top-strip">
                     <div class="row">
-                    <div class="col-md-1"></div>
+                    <div class="col-md-2"></div>
                     <div class="col-md-4">
                         <a class="page-title" style="color: #d3d1cd" id="cyberPHALink">QRAW@AnzenOT (Beta) </a>
 
                     </div>
-                    <div class="col-md-1" >
-                        <button class="form-control" id="addNewBtn" type="button" data-bs-toggle="tooltip" data-bs-placement="top" title="Click this button to clear the form and enter and begin a new risk assessment"><i class="bi bi-folder-plus"></i> New</button>
+                    <div class="col-md-2" >
+                        <button class="btn nav-link" id="addNewBtn" type="button" data-bs-toggle="tooltip" data-bs-placement="top" title="Click this button to clear the form and enter and begin a new risk assessment"><i class="bi bi-folder-plus"></i> New</button>
                         <script>
                             document.addEventListener('DOMContentLoaded', function() {
                             document.getElementById('addNewBtn').addEventListener('click', function() {
@@ -617,25 +624,21 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
 
                         </script>
                     </div>
-                    <div class="col-md-1" >
-                            <button class="form-control" id="editBtn" type="button" data-bs-toggle="tooltip" data-bs-placement="top" title="Click this button to edit the current risk assessment and scenarios"><i class="bi bi-pencil-square"></i> Edit</button>
+                    <div class="col-md-2" >
+                            <button class="btn nav-link" id="editBtn" type="button" data-bs-toggle="tooltip" data-bs-placement="top" title="Click this button to edit the current risk assessment and scenarios"><i class="bi bi-pencil-square"></i> Edit</button>
                     </div>
-                    <div class="col-md-1" >
-                        <button class="form-control" type="button" id="actionBtn" onclick="showRAActionsModal()"><i class="bi bi-subtract"></i> Action</button>
+                    <div class="col-md-2" >
+                        <button class="btn nav-link" type="button" id="actionBtn" onclick="showRAActionsModal()"><i class="bi bi-subtract"></i> Action</button>
                     </div>
-                    <div class="col-md-1"></div>
-                    <div class="col-md-1"></div>
-                    <div class="col-md-1"></div>
-                    <div class="col-md-1"></div>
-                    <div class="col-md-1"></div>
+
                 </div>
                     <div class="row">
+                        <div class="col-md-2"></div>
+                        <div class="col-md-9"  >Risk Assessment Title: <span id="scenario_title" style="background-color: #F2BB13; color:#000"></span></div>
                         <div class="col-md-1"></div>
-                        <div class="col-md-6">Risk Assessment Title: <span id="scenario_title"></span></div>
-                        <div class="col-md-5"></div>
                     </div>
             </div>
-                    <div class="sub-menu sub-menu-container small-font">
+        <div class="sub-menu sub-menu-container small-font">
             <br><br><br><br><br><br><br><br><br><br><br><br>
             Click the tab headings
         <ul>
@@ -1624,7 +1627,7 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
             </div>
         </div>
         <div class="tab-content" id="scenario2">
-            <span id="facilityNameTable"></span> <h2>Scenario 2</h2>
+            <h3 style="color:#fff">Scenario 2</h3>
             <div class="row">
             <div class="col-md-6 small-font">
 
