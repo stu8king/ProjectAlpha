@@ -539,7 +539,7 @@ def login_view(request):
                     #### request.session['verification_code'] = code
                     return redirect('two_factor_verify')
                 except Exception as e:
-                    messages.error(request, f"Error sending verification code: {e}")
+                    messages.error(request, f"Error sending verification code - please check your Internet connection and try again")
                     # Log the error
                     write_to_audit(user, f'Error sending verification code: {e}', ip)
             else:
