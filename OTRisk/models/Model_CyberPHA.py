@@ -4,6 +4,7 @@ from django.conf import settings
 from django.db import models, IntegrityError
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator, MaxValueValidator
+from decimal import Decimal
 from django.db.models import URLField
 
 import OTRisk.models.model_assessment
@@ -325,6 +326,24 @@ class tblCyberPHAHeader(models.Model):
         return self.FacilityName
 
 
+class CyberPHARiskTolerance(models.Model):
+    cyber_pha_header = models.OneToOneField(tblCyberPHAHeader, on_delete=models.CASCADE, primary_key=True)
+    negligible_low = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
+    negligible_high = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
+    minor_low = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
+    minor_high = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
+    moderate_low = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
+    moderate_high = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
+    significant_low = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
+    significant_high = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
+    severe_low = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
+    severe_high = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
+
+    class Meta:
+        db_table = 'cyberpha_risk_tolerance'
+
+    def __str__(self):
+        return f"{self.cyber_pha_header.FacilityName} Risk Tolerance"
 class CyberSecurityInvestment(models.Model):
     TYPE_CHOICES = [
         ('Software', 'Software'),
