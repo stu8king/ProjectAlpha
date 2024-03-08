@@ -1139,7 +1139,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
     // Set the container height to accommodate the tallest box with some padding
     container.selectAll(".investment-box").style("height", maxHeight + "px");
-    document.querySelector('a[data-tab="tab5"]').click();
+    document.querySelector('a[data-tab="tab4"]').click();
 }
 
 
@@ -1520,10 +1520,12 @@ function fetchAndDisplayScenarios() {
 }
 
 function loadScenarioDetails(scenarioId) {
+    isProgrammaticChange = true;
     $.ajax({
         url: `/OTRisk/retrieve_scenario_builder/${scenarioId}`, // Adjust the URL to your backend endpoint
         type: "GET",
         success: function(response) {
+
             $('#txtScenario').val(response.scenario_description);
             $('#txtConsequences').val(response.consequences);
             var costs = response.costs;
@@ -1602,7 +1604,9 @@ function loadScenarioDetails(scenarioId) {
                 }
             });
             // Populate table data, costs, and other fields similarly
+
             alert('Scenario loaded successfully');
+
         },
         error: function(xhr, status, error) {
             console.error('Error loading scenario:', error);
@@ -1716,7 +1720,7 @@ function drawAttackTree(data) {
     attackTreeDiv.style.border = '1px solid #ccc';
     attackTreeDiv.style.boxShadow = '0px 0px 10px rgba(0, 0, 0, 0.5)';
     sessionStorage.setItem('attackTreeDrawn', 'true');
-    document.querySelector('a[data-tab="tab5"]').click();
+    document.querySelector('a[data-tab="tab4"]').click();
 
     // Add export button functionality (if feasible)
     var exportButton = document.getElementById('exportButton');
@@ -1758,10 +1762,13 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
 $(document).ready(function() {
     var tab2Changed = false; // Flag to track changes in Tab 1
+    var isProgrammaticChange = false;
 
     // Attach change listeners to all inputs and selects within Tab 1
     $('#tab2 input, #tab2 select').change(function() {
-        tab2Changed = true;
+        if (!isProgrammaticChange) { // Check if change is not programmatic
+            tab2Changed = true;
+        }
     });
 
     $('.sub-menu a').click(function(e) {

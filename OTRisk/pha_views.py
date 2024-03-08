@@ -569,7 +569,8 @@ def make_request_with_backoff(openai_function, *args, **kwargs):
     raise Exception("Failed to make request after several attempts.")
 
 
-def facility_threat_profile(security_level, facility, facility_type, country, industry, safety_summary, chemical_summary,
+def facility_threat_profile(security_level, facility, facility_type, country, industry, safety_summary,
+                            chemical_summary,
                             physical_security_summary, other_summary, compliance_summary, investment_statement):
     openai_api_key = get_api_key('openai')
     openai_api_key = get_api_key('openai')
@@ -1091,6 +1092,56 @@ def compliance_map_data(common_content):
         return f"Error: {str(e)}"
 
 
+def generate_recommendation_prompt(likelihood, adjustedRR, costs, probability, frequency, biaScore):
+    prompt = f"""
+        Given the cybersecurity risk assessment results:
+        - Likelihood of occurrence: {likelihood}%
+        - Adjusted residual risk: {adjustedRR}
+        - Estimated costs (low|medium|high): {costs}
+        - Probability of a targeted attack being successful: {probability}%
+        - Annual threat event frequency: {frequency}
+        - Business impact score: {biaScore}
+
+        Provide a response structured exactly as follows:
+
+        1. Recommendation: [Insert recommendation here based on the assessment results. For example Mitigate Risk or Accept Risk or Manage Risk or other recommendation  depending on results]
+        2. Rationale: [Insert a concise, executive level, rationale here. Consider the adjusted residual risk, business impact score, estimated costs, annual threat event frequency, and probability of a targeted attack being successful. Structure your rationale in clear, bullet-pointed explanations.]
+        """
+    return prompt
+
+
+
+def get_openai_recommendation(prompt):
+    openai.api_key = get_api_key("openai")  # Ensure this function correctly retrieves your OpenAI API key
+
+    # Prepare the messages for the chat in the expected format
+    messages = [
+        {
+            "role": "system",
+            "content": "You are an expert in OT cybersecurity risk assessment. Provide a recommendation based on the analysis."
+        },
+        {
+            "role": "user",
+            "content": prompt
+        }
+    ]
+
+    response = openai.ChatCompletion.create(
+        model="gpt-4",  # Specify the model you're using, e.g., "gpt-4" if you're using GPT-4
+        messages=messages,
+        temperature=0.5,
+        max_tokens=500
+    )
+
+    # Extract the recommendation from the response
+    if response.choices and len(response.choices) > 0:
+        recommendation = response.choices[0].message['content'].strip()
+    else:
+        recommendation = "No recommendation could be generated."
+
+    return recommendation
+
+
 @login_required
 def scenario_analysis(request):
     # Log the user activity
@@ -1226,13 +1277,7 @@ def scenario_analysis(request):
                 "role": "user",
                 "content": f"{common_content}. Hypothesize the business impact score from 0 to 100 in the event of a successful attack resulting in the given scenario. Consequences of the scenario are given as follows: {validated_consequences_list}. A score of 1 would mean minimal business impact while a score of 100 would indicate catastrophic business impact without the ability to continue operations. Your answer should be given as an integer. Do NOT include any other words, sentences, or explanations."
             },
-            # former event cost estimation query{
-            #     "role": "user",
-            #     "content": f"{common_content} Provide a 12-month direct cost projection for the scenario, focusing on incident response, remediation, legal fees, regulatory fines, and other direct expenses covered by cybersecurity insurance. "
-            #                f"Base your estimates on historical data from similar cybersecurity incidents in OT and IT. Present the budget as a series of 12 integers, each representing the cost for that month in US dollars, without narrative or explanation. "
-            #                f"Format the output as: Month1|Month2|...|Month12. Ensure each value reflects a realistic, pragmatic monthly estimate, justifying the trend of costs decreasing over time. "
-            #                f"IMPORTANT: List only the monthly costs individually, not as cumulative totals. Provide the most realistic monthly estimates, anticipating costs to taper off over the 12-month period."
-            # },
+
             {"role": "user",
              "content": f"I am a CISO at a {industry} company with approximately {employees_on_site} employees, operating primarily in {country}. We are assessing our cybersecurity posture and need to estimate the potential costs associated with a {scenario} that has consequences of {validated_consequences_list}."
                         f"Given the scenario, please provide an estimate of the direct and indirect costs we might incur, including but not limited to:"
@@ -1282,6 +1327,18 @@ def scenario_analysis(request):
         compliance_data = compliance_map_data(common_content)
         responses.append(compliance_data)
 
+        recommendation_prompt = generate_recommendation_prompt(
+            likelihood=responses[0],
+            adjustedRR=responses[1],
+            costs=responses[2],
+            probability=responses[3],
+            frequency=responses[4],
+            biaScore=responses[5]
+        )
+
+        # Get the recommendation from OpenAI
+        rationale = get_openai_recommendation(recommendation_prompt)
+
         # Return the responses as variables
         return JsonResponse({
             'likelihood': responses[0],
@@ -1293,7 +1350,8 @@ def scenario_analysis(request):
             'projection': responses[6],
             'control_effectiveness': control_effectiveness,
             'recommendations': responses[7],
-            'scenario_compliance_data': responses[8]
+            'scenario_compliance_data': responses[8],
+            'rationale': rationale
         })
 
 

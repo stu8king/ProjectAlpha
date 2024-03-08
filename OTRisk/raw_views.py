@@ -956,7 +956,7 @@ def openai_assess_risk(request):
         combined_message = system_content + ' ' + event_cost_content
 
         event_cost_estimate = query_openai(combined_message)
-        print(event_cost_estimate)
+
         ###############################
         ###############################
 
