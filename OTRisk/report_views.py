@@ -444,6 +444,8 @@ def get_qraw_scenario_report_details(request):
         'threat_source': scenario.threatSource,
         'controls': list(controls),
         'consequences': scenario.raw_consequences,
+        'executive_summary': scenario.executive_summary,
+        'scenario_damage': scenario.scenario_damage
 
     }
     return JsonResponse(data)

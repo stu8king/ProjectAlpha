@@ -36,11 +36,12 @@ from OTRisk.models.Model_CyberPHA import tblCyberPHAHeader, tblRiskCategories, \
     tblThreatIntelligence, tblMitigationMeasures, tblScenarios, tblSafeguards, tblThreatSources, tblThreatActions, \
     tblNodes, tblUnits, tblZones, tblCyberPHAScenario, tblIndustry, auditlog, tblStandards, MitreControlAssessment, \
     CyberPHAScenario_snapshot, Audit, PHAControlList, SECURITY_LEVELS, OrganizationDefaults, scenario_compliance, \
-    ScenarioConsequences, APIKey, ScenarioBuilder, PHA_Safeguard, OpenAIAPILog
+    ScenarioConsequences, APIKey, ScenarioBuilder, PHA_Safeguard, OpenAIAPILog, CybersecurityDefaults
 from django.shortcuts import render, redirect
 from .dashboard_views import get_user_organization_id
 from django.contrib.auth.decorators import login_required
-from .forms import LoginForm, OrganizationDefaultsForm, CyberSecurityScenarioForm, scenario_sim
+from .forms import LoginForm, OrganizationDefaultsForm, CyberSecurityScenarioForm, scenario_sim, \
+    CybersecurityDefaultsForm
 from datetime import date, datetime
 import json
 import openai, math
@@ -1081,6 +1082,8 @@ def save_or_update_cyberpha(request):
         attack_tree_text = request.POST.get('attack_tree_text')
         scenario_status = request.POST.get('scenario_status')
         cost_projection = request.POST.get('cost_projection')
+        risk_rationale = request.POST.get('rationale_Rationale')
+        risk_recommendation = request.POST.get('rationale_recommendation')
 
         if ai_bia_score in ('NaN', ''):
             ai_bia_score = 0
@@ -1250,7 +1253,9 @@ def save_or_update_cyberpha(request):
                 dangerScope=dangerScope,
                 compliance_map=compliance_map,
                 attack_tree_text=attack_tree_text,
-                cost_projection=cost_projection
+                cost_projection=cost_projection,
+                risk_rationale=risk_rationale,
+                risk_recommendation=risk_recommendation
 
             )
             snapshot_record.save()
@@ -1332,8 +1337,9 @@ def save_or_update_cyberpha(request):
                 'compliance_map': compliance_map,
                 'attack_tree_text': attack_tree_text,
                 'scenario_status': scenario_status,
-                'cost_projection': cost_projection
-
+                'cost_projection': cost_projection,
+                'risk_recommendation': risk_recommendation,
+                'risk_rationale': risk_rationale
             }
 
             # If scenario_id is '0', create a new record, otherwise update the existing one
@@ -2845,3 +2851,66 @@ def get_scenario_builder_details(request, scenario_id):
         return JsonResponse({'scenario_data': scenario.scenario_data})
     except ScenarioBuilder.DoesNotExist:
         return JsonResponse({'error': 'Scenario not found'}, status=404)
+
+
+@login_required
+def cybersecurity_defaults_view(request):
+    user_profile = UserProfile.objects.get(user=request.user)
+    organization = user_profile.organization
+
+    try:
+        cybersecurity_defaults = CybersecurityDefaults.objects.get(organization=organization)
+    except CybersecurityDefaults.DoesNotExist:
+        cybersecurity_defaults = None
+
+    if request.method == 'POST':
+        form = CybersecurityDefaultsForm(request.POST, instance=cybersecurity_defaults)
+        if form.is_valid():
+            cybersecurity_defaults = form.save(commit=False)
+            cybersecurity_defaults.organization = organization
+            cybersecurity_defaults.save()
+            messages.success(request, "Insurance details saved successfully.")
+            return redirect('OTRisk:cybersecurity_defaults_view')
+    else:
+        form = CybersecurityDefaultsForm(instance=cybersecurity_defaults)
+
+    context = {
+        'form': form
+    }
+    return render(request, 'org_insure.html', context)
+
+
+@login_required
+def fetch_insurance_defaults(request):
+
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        user_profile = UserProfile.objects.get(user=request.user)
+        organization = user_profile.organization
+        try:
+            defaults = CybersecurityDefaults.objects.get(organization=organization)
+            data = {
+                'overall_aggregate_limit': str(defaults.overall_aggregate_limit),
+                'per_claim_limit': str(defaults.per_claim_limit),
+                'deductible_amount': str(defaults.deductible_amount),
+                'first_party_coverage': defaults.first_party_coverage,
+                'third_party_coverage': defaults.third_party_coverage,
+                'security_event_liability': defaults.security_event_liability,
+                'privacy_regulatory_actions': defaults.privacy_regulatory_actions,
+                'cyber_extortion_coverage': defaults.cyber_extortion_coverage,
+                'data_breach_response_coverage': defaults.data_breach_response_coverage,
+                'business_interruption_coverage': defaults.business_interruption_coverage,
+                'dependent_business_coverage': defaults.dependent_business_coverage,
+                'data_recovery': defaults.data_recovery,
+                'hardware_replacement': defaults.hardware_replacement,
+                'reputation_harm': defaults.reputation_harm,
+                'media_liability': defaults.media_liability,
+                'pci_dss': defaults.pci_dss,
+                'premium_base': str(defaults.premium_base),
+                'notification_period_days': defaults.notification_period_days,
+                'cancellation_terms_days': defaults.cancellation_terms_days,
+            }
+            return JsonResponse(data)
+        except CybersecurityDefaults.DoesNotExist:
+            return JsonResponse({'error': 'Defaults not found'}, status=404)
+    else:
+        return JsonResponse({'error': 'Invalid request'}, status=400)

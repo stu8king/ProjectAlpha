@@ -164,6 +164,26 @@ $(function () {
 .card-body {
     padding: 15px; /* Adjust padding */
 }
+.card-header {
+    background-color: #007bff;
+    color: white;
+    font-size: 1.25rem;
+}
+
+.card-title {
+    font-size: 1.1rem;
+    font-weight: bold;
+}
+
+.card-text, #rationalePoints {
+    font-size: 0.95rem;
+    color: #464748;
+}
+
+#rationalePoints li {
+    margin-bottom: 0.5rem;
+}
+
 
 /* Adjustments for range inputs */
 input[type="range"].custom-range {
@@ -472,8 +492,8 @@ svg {
 <form id="cyberpha-form">
 {% csrf_token %}
 <script>
-    anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
-        const links = document.querySelectorAll('.sub-menu a');
+anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
+const links = document.querySelectorAll('.sub-menu a');
 
 document.addEventListener("DOMContentLoaded", function() {
     const links = document.querySelectorAll('.sub-menu a');
@@ -530,6 +550,10 @@ document.addEventListener("DOMContentLoaded", function() {
 
                                 <li>
                                     <a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:setup_org' %}">Set Defaults</a>
+                                </li>
+                            <li>
+                                    <a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:cybersecurity_defaults_view' %}">Cyber Insurance</a>
+
                                 </li>
                                 <li>
                                     <a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:admin_users' %}">Admin Users</a>
@@ -1602,7 +1626,8 @@ $(document).ready(function() {
                                 });
                             });
                             </script>
-
+                            <input type="hidden" id="hdnrationale_recommendation">
+                            <input type="hidden" id="hdnrationale_Rationale">
                     </div>
                 </div>
 
@@ -1670,13 +1695,20 @@ $(document).ready(function() {
 
             </div>
              <div class="row">
-                 <div class="card mb-3 shadow-sm w-100">
-                     <div class="card-body" >
-                         <textarea id="txtrationale"class=form-control style="rows:10; resize:none" readonly></textarea>
-                     </div>
-                 </div>
-
-             </div>
+                <div class="col-lg-12">
+                    <div class="card mb-3 shadow-sm">
+                        <div class="card-header">
+                            Cybersecurity Risk Assessment Recommendation
+                        </div>
+                        <div class="card-body">
+                            <h5 class="card-title" id="recommendationTitle">Recommendation</h5>
+                            <p class="card-text" id="recommendationText"></p>
+                            <h5 class="card-title" id="rationaleTitle">Rationale</h5>
+                            <ul id="rationalePoints"></ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
         </div>
         <div class="tab-content " id="tab7">
@@ -2028,8 +2060,11 @@ $(document).ready(function() {
 
           // Send the request with the form data
           xhr.send(formData);
+
+
           showNotification('Scenario saved successfully: ' + response.message);
           $('#confirmationModal').modal('hide');
+
 
         }
 
@@ -2050,6 +2085,7 @@ $(document).ready(function() {
           // Event listener for form submission
           function processFormData() {
               // Check the value of the local session variable named "ls"
+
               var lsValue = sessionStorage.getItem("ls");
               var riskSnapshotCheckbox = document.getElementById('risk_snapshot');
 
@@ -2162,6 +2198,8 @@ $(document).ready(function() {
                   const attack_tree_text = document.getElementById('attack_tree_text').value;
                   const scenario_status = document.getElementById('scenarioStatusSelect').value;
                   const cost_projection = document.getElementById('scenario_12month_costs').value;
+                  const rationale_recommendation = document.getElementById('hdnrationale_recommendation').value;
+                  const rationale_Rationale = document.getElementById('hdnrationale_Rationale').value;
                   // If outage is "yes", get the values for outageDuration and outageCost
                   let outageDuration = 0;
                   let outageCost = 0;
@@ -2262,6 +2300,9 @@ $(document).ready(function() {
                   formData.append('attack_tree_text', attack_tree_text);
                   formData.append('scenario_status', scenario_status);
                   formData.append('cost_projection', cost_projection);
+                  formData.append('rationale_recommendation', rationale_recommendation);
+                  formData.append('rationale_Rationale', rationale_Rationale);
+
                     // Check if snapshot should be created
                   let snapshot = 0
                   const riskSnapshotCheckbox = document.getElementById('risk_snapshot');
@@ -2304,8 +2345,10 @@ $(document).ready(function() {
 
                   $('#loadingSpinner').hide();
                   processFormData
-              }
-          }
+
+
+                          }
+                      }
     </script>
 
 <div class="modal fade custom-modal" id="safetyModal" tabindex="-1" aria-labelledby="safetyModal" aria-hidden="true">
@@ -3533,7 +3576,13 @@ $('#scenarioSelectModal').on('show.bs.modal', function (e) {
                         document.getElementById('txtEventCosts').value = sle_medium;
                         document.getElementById('txtEventCosts_low').value = sle_low;
                         document.getElementById('txtEventCosts_high').value = sle_high;
-                        document.getElementById('txtrationale').value = response.rationale;
+                        document.getElementById('hdnrationale_recommendation').value = response.rationale.Recommendation;
+                        document.getElementById('hdnrationale_Rationale').value = response.rationale.Rationale;
+                         $("#recommendationTitle").text("Recommendation");
+                        $("#recommendationText").text(response.rationale.Recommendation);
+                        $("#rationaleTitle").text("Rationale");
+                        $("#rationalePoints").html("<li>" + response.rationale.Rationale.replace(/\n/g, "</li><li>") + "</li>");
+
                         document.getElementById('frequency').value = response.frequency;
                         document.getElementById('txtProbability').value = response.probability;
 
@@ -4203,7 +4252,7 @@ function resetformcontrols() {
         clearContainer('gaugeResidualRisk');
         clearContainer('gaugeFrequency');
         clearContainer('gaugeBIAContainer');
-
+     $('#table_safeguards tbody').empty();
       sessionStorage.setItem('ls', '0');
       sessionStorage.setItem('sid', 0);
         $('.tab-content').removeClass('active').hide();
@@ -4286,7 +4335,7 @@ function clearScenario(){
         clearContainer('gaugeResidualRisk');
         clearContainer('gaugeFrequency');
         clearContainer('gaugeBIAContainer');
-
+    $('#table_safeguards tbody').empty();
       sessionStorage.setItem('ls', '0');
       sessionStorage.setItem('sid', 0);
 
@@ -4294,6 +4343,7 @@ function clearScenario(){
 }
 
  function fillScenario(scenarioId) {
+    clearScenario();
     sessionStorage.setItem('sid', scenarioId);
 
     sessionStorage.setItem('attackTreeDrawn', 'false');
@@ -4465,7 +4515,15 @@ function clearScenario(){
         document.getElementById('txtResidualRisk').value= data.RRa;
         document.getElementById('txtProbability').value= data.probability;
         document.getElementById('hdn_control_effectiveness').value= data.control_effectiveness;
-         document.getElementById('hdn_bia_score').value= data.ai_bia_score;
+        document.getElementById('hdn_bia_score').value= data.ai_bia_score;
+        document.getElementById('hdnrationale_recommendation').value = data.risk_recommendation;
+        document.getElementById('hdnrationale_Rationale').value = data.risk_rationale;
+         $("#recommendationTitle").text("Recommendation");
+        $("#recommendationText").text(data.risk_recommendation);
+        $("#rationaleTitle").text("Rationale");
+        $("#rationalePoints").html("<li>" + data.risk_rationale.replace(/\n/g, "</li><li>") + "</li>");
+
+
          // Populate the scenario_consequences table
         var tableBody = $('#consequenceTable tbody');
         tableBody.empty(); // Clear existing rows
@@ -4667,7 +4725,7 @@ $(document).ready(function() {
     var rows = $("#userscenarioListBody tr");
     if (rows.length > 0) {
         // If there are rows, trigger a click on the first one
-        rows.first().click();
+        //rows.first().click();
     }
 });
 

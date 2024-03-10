@@ -19,7 +19,8 @@ from django.views.decorators.http import require_POST
 from OTRisk.models.Model_CyberPHA import tblIndustry, tblCyberPHAHeader, tblZones, tblStandards, \
     tblCyberPHAScenario, vulnerability_analysis, tblAssetType, tblMitigationMeasures, MitreControlAssessment, \
     cyberpha_safety, SECURITY_LEVELS, ScenarioConsequences, user_scenario_audit, auditlog, CyberPHAModerators, \
-    WorkflowStatus, APIKey, CyberPHA_Group, ScenarioBuilder, PHA_Safeguard, CyberSecurityInvestment, UserScenarioHash
+    WorkflowStatus, APIKey, CyberPHA_Group, ScenarioBuilder, PHA_Safeguard, CyberSecurityInvestment, UserScenarioHash, \
+    CyberPHARiskTolerance, CyberPHACybersecurityDefaults
 from OTRisk.models.raw import SecurityControls
 from OTRisk.models.raw import MitreICSMitigations, RAActions
 from OTRisk.models.questionnairemodel import FacilityType
@@ -38,6 +39,7 @@ from django.db.models import Avg, Sum, F, Count, Subquery, OuterRef, Case, When,
 import concurrent.futures
 import os
 import math
+from decimal import Decimal, InvalidOperation
 
 from ProjectAlpha import settings
 from ProjectAlpha.settings import BASE_DIR
@@ -264,6 +266,70 @@ def iotaphamanager(request, record_id=None):
 
         #### End save investments
 
+        ##### save risk tolerance data
+        risk_tolerance_data = {
+            'negligible_low': request.POST.get('negligible_low'),
+            'negligible_high': request.POST.get('negligible_high'),
+            'minor_low': request.POST.get('minor_low'),
+            'minor_high': request.POST.get('minor_high'),
+            'moderate_low': request.POST.get('moderate_low'),
+            'moderate_high': request.POST.get('moderate_high'),
+            'significant_low': request.POST.get('significant_low'),
+            'significant_high': request.POST.get('significant_high'),
+            'severe_low': request.POST.get('severe_low'),
+            'severe_high': request.POST.get('severe_high'),
+        }
+
+        # Convert string values to Decimal, handling empty strings
+        for key, value in risk_tolerance_data.items():
+            risk_tolerance_data[key] = Decimal(value) if value else Decimal('0.00')
+
+        # Check if a CyberPHARiskTolerance record already exists for this header
+        risk_tolerance, created = CyberPHARiskTolerance.objects.update_or_create(
+            cyber_pha_header=pha_header,
+            defaults=risk_tolerance_data
+        )
+
+        #### End save risk tolerance data
+        print(request.POST.get('premium_base'))
+        # After saving pha_header, handle CyberPHACybersecurityDefaults
+        if request.method == 'POST':
+            # Assuming pha_header is the instance of tblCyberPHAHeader you've just created or updated
+            defaults_data = {
+                'overall_aggregate_limit': request.POST.get('overall_aggregate_limit'),
+                'per_claim_limit': request.POST.get('per_claim_limit'),
+                'deductible_amount': request.POST.get('deductible_amount'),
+                'first_party_coverage': request.POST.get('first_party_coverage') == 'on',
+                'third_party_coverage': request.POST.get('third_party_coverage') == 'on',
+                'security_event_liability': request.POST.get('security_event_liability') == 'on',
+                'privacy_regulatory_actions': request.POST.get('privacy_regulatory_actions') == 'on',
+                'cyber_extortion_coverage': request.POST.get('cyber_extortion_coverage') == 'on',
+                'data_breach_response_coverage': request.POST.get('data_breach_response_coverage') == 'on',
+                'business_interruption_coverage': request.POST.get('business_interruption_coverage') == 'on',
+                'dependent_business_coverage': request.POST.get('dependent_business_coverage') == 'on',
+                'data_recovery': request.POST.get('data_recovery') == 'on',
+                'hardware_replacement': request.POST.get('hardware_replacement') == 'on',
+                'reputation_harm': request.POST.get('reputation_harm') == 'on',
+                'media_liability': request.POST.get('media_liability') == 'on',
+                'pci_dss': request.POST.get('pci_dss') == 'on',
+                'premium_base': request.POST.get('premium_base'),
+                'notification_period_days': request.POST.get('notification_period_days'),
+                'cancellation_terms_days': request.POST.get('cancellation_terms_days'),
+            }
+
+            # Convert string values to appropriate types
+            for key in ['overall_aggregate_limit', 'per_claim_limit', 'deductible_amount', 'premium_base']:
+                defaults_data[key] = float(defaults_data[key]) if defaults_data[key] else 0.0
+            for key in ['notification_period_days', 'cancellation_terms_days']:
+                defaults_data[key] = int(defaults_data[key]) if defaults_data[key] else 0
+
+            # Update or create CyberPHACybersecurityDefaults instance
+            defaults_instance, created = CyberPHACybersecurityDefaults.objects.update_or_create(
+                cyber_pha=pha_header,
+                defaults=defaults_data
+            )
+
+
         if is_new_record:
             pha_header.set_workflow_status('Started')
         # Save Workflow Status
@@ -391,6 +457,7 @@ def get_headerrecord(request):
     # Serialize all_groups
     all_groups = CyberPHA_Group.objects.all()
     all_groups_data = serialize('json', all_groups)
+    # Retrieve the CyberPHARiskTolerance record associated with this header record
 
     # create a dictionary with the record data
     headerrecord_data = {
@@ -398,7 +465,7 @@ def get_headerrecord(request):
         'facility': headerrecord.FacilityName,
         'leader': headerrecord.PHALeader,
         'leaderemail': headerrecord.PHALeaderEmail,
-        'industry': headerrecord.Industry,
+        'Industry': headerrecord.Industry,
         'facilitytype': headerrecord.FacilityType,
         'unit': headerrecord.AssessmentUnit,
         'zone': headerrecord.AssessmentZone,
@@ -480,6 +547,50 @@ def get_headerrecord(request):
         'id', 'investment_type', 'vendor_name', 'product_name', 'cost', 'date'
     )
     investments_data = list(investments)
+    try:
+        risk_tolerance = CyberPHARiskTolerance.objects.get(cyber_pha_header=headerrecord)
+        risk_tolerance_data = {
+            'negligible_low': risk_tolerance.negligible_low,
+            'negligible_high': risk_tolerance.negligible_high,
+            'minor_low': risk_tolerance.minor_low,
+            'minor_high': risk_tolerance.minor_high,
+            'moderate_low': risk_tolerance.moderate_low,
+            'moderate_high': risk_tolerance.moderate_high,
+            'significant_low': risk_tolerance.significant_low,
+            'significant_high': risk_tolerance.significant_high,
+            'severe_low': risk_tolerance.severe_low,
+            'severe_high': risk_tolerance.severe_high,
+        }
+    except CyberPHARiskTolerance.DoesNotExist:
+        risk_tolerance_data = {}
+
+    try:
+        # Retrieve the related CyberPHACybersecurityDefaults instance
+        cyber_defaults = CyberPHACybersecurityDefaults.objects.get(cyber_pha=headerrecord)
+        # Serialize the CyberPHACybersecurityDefaults data
+        cyber_defaults_data = {
+            'overall_aggregate_limit': str(cyber_defaults.overall_aggregate_limit),
+            'per_claim_limit': str(cyber_defaults.per_claim_limit),
+            'deductible_amount': str(cyber_defaults.deductible_amount),
+            'first_party_coverage': cyber_defaults.first_party_coverage,
+            'third_party_coverage': cyber_defaults.third_party_coverage,
+            'security_event_liability': cyber_defaults.security_event_liability,
+            'privacy_regulatory_actions': cyber_defaults.privacy_regulatory_actions,
+            'cyber_extortion_coverage': cyber_defaults.cyber_extortion_coverage,
+            'data_breach_response_coverage': cyber_defaults.data_breach_response_coverage,
+            'business_interruption_coverage': cyber_defaults.business_interruption_coverage,
+            'dependent_business_coverage': cyber_defaults.dependent_business_coverage,
+            'data_recovery': cyber_defaults.data_recovery,
+            'hardware_replacement': cyber_defaults.hardware_replacement,
+            'reputation_harm': cyber_defaults.reputation_harm,
+            'media_liability': cyber_defaults.media_liability,
+            'pci_dss': cyber_defaults.pci_dss,
+            'premium_base': str(cyber_defaults.premium_base),
+            'notification_period_days': cyber_defaults.notification_period_days,
+            'cancellation_terms_days': cyber_defaults.cancellation_terms_days,
+        }
+    except CyberPHACybersecurityDefaults.DoesNotExist:
+        cyber_defaults_data = {}
 
     response_data = {
         'headerrecord': headerrecord_data,
@@ -488,8 +599,9 @@ def get_headerrecord(request):
         'organization_moderators': organization_moderators_data,  # All moderators in the organization
         'current_moderators': moderators_data,  # Moderators for the specific header record
         'moderator_ids': moderator_ids,  # IDs of Moderators for the specific header record
-        'investments': investments_data
-
+        'investments': investments_data,
+        'risk_tolerance': risk_tolerance_data,
+        'cyber_defaults': cyber_defaults_data
     }
 
     return JsonResponse(response_data)
@@ -993,7 +1105,9 @@ def getSingleScenario(request):
         'attack_tree_text': scenario.attack_tree_text,
         'scenario_status': scenario.scenario_status,
         'cost_projection': scenario.cost_projection,
-        'user_role': user_role
+        'user_role': user_role,
+        'risk_rationale': scenario.risk_rationale,
+        'risk_recommendation': scenario.risk_recommendation
     }
     # Retrieve the related PHAControlList records
     control_list = []
@@ -1112,34 +1226,38 @@ def generate_recommendation_prompt(likelihood, adjustedRR, costs, probability, f
 
 
 def get_openai_recommendation(prompt):
-    openai.api_key = get_api_key("openai")  # Ensure this function correctly retrieves your OpenAI API key
+    openai.api_key = get_api_key("openai")  # Ensure this retrieves your OpenAI API key correctly
 
-    # Prepare the messages for the chat in the expected format
     messages = [
-        {
-            "role": "system",
-            "content": "You are an expert in OT cybersecurity risk assessment. Provide a recommendation based on the analysis."
-        },
-        {
-            "role": "user",
-            "content": prompt
-        }
+        {"role": "system", "content": "You are an expert in OT cybersecurity risk assessment. Provide a recommendation based on the analysis."},
+        {"role": "user", "content": prompt}
     ]
 
     response = openai.ChatCompletion.create(
-        model="gpt-4",  # Specify the model you're using, e.g., "gpt-4" if you're using GPT-4
+        model="gpt-4",
         messages=messages,
         temperature=0.5,
         max_tokens=500
     )
 
-    # Extract the recommendation from the response
     if response.choices and len(response.choices) > 0:
-        recommendation = response.choices[0].message['content'].strip()
-    else:
-        recommendation = "No recommendation could be generated."
+        # Assuming the response follows the structured format: "1. Recommendation: ... 2. Rationale: ..."
+        text = response.choices[0].message['content'].strip()
+        # Splitting the response into Recommendation and Rationale parts
+        parts = text.split("2. Rationale:")
+        recommendation = parts[0].replace("1. Recommendation:", "").strip()
+        rationale = parts[1].strip() if len(parts) > 1 else ""
 
-    return recommendation
+        # Structuring the response for JSON
+        structured_response = {
+            "Recommendation": recommendation,
+            "Rationale": rationale
+        }
+    else:
+        structured_response = {"Recommendation": "No recommendation could be generated.", "Rationale": ""}
+
+    return structured_response
+
 
 
 @login_required

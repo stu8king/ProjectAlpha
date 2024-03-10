@@ -22,6 +22,41 @@ class user_scenario_audit(models.Model):
     session_id = models.CharField(max_length=256)
 
 
+class CybersecurityDefaults(models.Model):
+    organization = models.OneToOneField(
+        Organization,
+        on_delete=models.CASCADE,
+        primary_key=True,
+        related_name='cybersecurity_defaults'
+    )
+    overall_aggregate_limit = models.DecimalField(max_digits=12, decimal_places=2, default=1000000.00)
+    per_claim_limit = models.DecimalField(max_digits=12, decimal_places=2, default=500000.00)
+    deductible_amount = models.DecimalField(max_digits=12, decimal_places=2, default=10000.00)
+    first_party_coverage = models.BooleanField(default=True)
+    third_party_coverage = models.BooleanField(default=True)
+    security_event_liability = models.BooleanField(default=True)
+    privacy_regulatory_actions = models.BooleanField(default=True)
+    cyber_extortion_coverage = models.BooleanField(default=True)
+    data_breach_response_coverage = models.BooleanField(default=True)
+    business_interruption_coverage = models.BooleanField(default=True)
+    dependent_business_coverage = models.BooleanField(default=True)
+    data_recovery = models.BooleanField(default=True)
+    hardware_replacement = models.BooleanField(default=True)
+    reputation_harm = models.BooleanField(default=True)
+    media_liability = models.BooleanField(default=True)
+    pci_dss = models.BooleanField(default=True)
+    premium_base = models.DecimalField(max_digits=12, decimal_places=2, default=5000.00)
+    notification_period_days = models.IntegerField(default=30)
+    cancellation_terms_days = models.IntegerField(default=30)
+
+    class Meta:
+        db_table = 'cybersecurity_defaults'
+        managed = True
+
+    def __str__(self):
+        return f"{self.organization.name} Cybersecurity Defaults"
+
+
 class OrganizationDefaults(models.Model):
     LANGUAGE_CHOICES = [
         ('en', 'English'),
@@ -315,7 +350,6 @@ class tblCyberPHAHeader(models.Model):
     strategySummary = models.TextField(default="No Summary Saved", null=True)
     groups = models.ManyToManyField(CyberPHA_Group, blank=True)
 
-
     def set_workflow_status(self, status):
         WorkflowStatus.objects.create(cyber_pha_header=self, status=status)
 
@@ -324,6 +358,36 @@ class tblCyberPHAHeader(models.Model):
 
     def __str__(self):
         return self.FacilityName
+
+from django.db import models
+
+class CyberPHACybersecurityDefaults(models.Model):
+    cyber_pha = models.OneToOneField(tblCyberPHAHeader, on_delete=models.CASCADE, related_name='cybersecurity_defaults')
+    overall_aggregate_limit = models.DecimalField(max_digits=12, decimal_places=2, default=1000000.00)
+    per_claim_limit = models.DecimalField(max_digits=12, decimal_places=2, default=500000.00)
+    deductible_amount = models.DecimalField(max_digits=12, decimal_places=2, default=10000.00)
+    first_party_coverage = models.BooleanField(default=True)
+    third_party_coverage = models.BooleanField(default=True)
+    security_event_liability = models.BooleanField(default=True)
+    privacy_regulatory_actions = models.BooleanField(default=True)
+    cyber_extortion_coverage = models.BooleanField(default=True)
+    data_breach_response_coverage = models.BooleanField(default=True)
+    business_interruption_coverage = models.BooleanField(default=True)
+    dependent_business_coverage = models.BooleanField(default=True)
+    data_recovery = models.BooleanField(default=True)
+    hardware_replacement = models.BooleanField(default=True)
+    reputation_harm = models.BooleanField(default=True)
+    media_liability = models.BooleanField(default=True)
+    pci_dss = models.BooleanField(default=True)
+    premium_base = models.DecimalField(max_digits=12, decimal_places=2, default=5000.00)
+    notification_period_days = models.IntegerField(default=30)
+    cancellation_terms_days = models.IntegerField(default=30)
+
+    class Meta:
+        db_table = 'cyber_pha_cybersecurity_defaults'
+
+    def __str__(self):
+        return f"{self.cyber_pha.FacilityName} Cybersecurity Defaults"
 
 
 class CyberPHARiskTolerance(models.Model):
@@ -344,6 +408,8 @@ class CyberPHARiskTolerance(models.Model):
 
     def __str__(self):
         return f"{self.cyber_pha_header.FacilityName} Risk Tolerance"
+
+
 class CyberSecurityInvestment(models.Model):
     TYPE_CHOICES = [
         ('Software', 'Software'),
@@ -634,6 +700,8 @@ class tblCyberPHAScenario(models.Model):
     attack_tree_text = models.TextField(null=True)
     executive_summary = models.TextField(null=True)
     cost_projection = models.TextField(null=True)
+    risk_rationale = models.TextField(null=True)
+    risk_recommendation = models.TextField(null=True)
 
     class Meta:
         db_table = 'tblCyberPHAScenario'
@@ -898,6 +966,8 @@ class CyberPHAScenario_snapshot(models.Model):
     attack_tree_text = models.TextField(null=True)
     executive_summary = models.TextField(null=True)
     cost_projection = models.TextField(null=True)
+    risk_rationale = models.TextField(null=True)
+    risk_recommendation = models.TextField(null=True)
 
 
 class PHA_Safeguard(models.Model):

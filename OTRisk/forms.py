@@ -1,9 +1,10 @@
 from django import forms
+from django.core.validators import MaxValueValidator
 from django.forms import BaseModelFormSet, modelformset_factory
 
 from OTRisk.models.RiskScenario import RiskScenario
 from OTRisk.models.Model_CyberPHA import vulnerability_analysis, tblAssetType, tblMitigationMeasures, \
-    OrganizationDefaults, tblIndustry, tblCyberPHAHeader
+    OrganizationDefaults, tblIndustry, tblCyberPHAHeader, CybersecurityDefaults
 from .models.raw import RAWorksheet, RAActions, MitreICSMitigations, RAWorksheetScenario, MitreICSTechniques
 from .models.Model_Scenario import CustomConsequence
 from .models.model_assessment import AssessmentFramework, AssessmentAnswer
@@ -89,6 +90,61 @@ class EditAssessmentAnswerForm(forms.Form):
 
         if question_id is not None:
             self.fields['response'].widget.attrs.update({'name': f'response_{question_id}'})
+
+
+class CybersecurityDefaultsForm(forms.ModelForm):
+    class Meta:
+        model = CybersecurityDefaults
+        fields = [
+            'overall_aggregate_limit',
+            'per_claim_limit',
+            'deductible_amount',
+            'first_party_coverage',
+            'third_party_coverage',
+            'security_event_liability',
+            'privacy_regulatory_actions',
+            'cyber_extortion_coverage',
+            'data_breach_response_coverage',
+            'business_interruption_coverage',
+            'dependent_business_coverage',
+            'data_recovery',
+            'hardware_replacement',
+            'reputation_harm',
+            'media_liability',
+            'pci_dss',
+            'premium_base',
+            'notification_period_days',
+            'cancellation_terms_days',
+        ]
+        widgets = {
+            'overall_aggregate_limit': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'per_claim_limit': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'deductible_amount': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'premium_base': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'notification_period_days': forms.NumberInput(attrs={'class': 'form-control'}),
+            'cancellation_terms_days': forms.NumberInput(attrs={'class': 'form-control'}),
+            'first_party_coverage': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'third_party_coverage': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'cyber_extortion_coverage': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'data_breach_response_coverage': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'business_interruption_coverage': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'privacy_regulatory_actions': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'security_event_liability': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'dependent_business_coverage': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'data_recovery': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'hardware_replacement': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'reputation_harm': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'media_liability': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'pci_dss': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+
+        }
+        validators = {
+            'overall_aggregate_limit': [MaxValueValidator(999999999)],
+            'per_claim_limit': [MaxValueValidator(999999999)],
+            'deductible_amount': [MaxValueValidator(999999999)],
+            'premium_base': [MaxValueValidator(999999999)],
+            # Add validators for other numerical fields as necessary
+        }
 
 
 class OrganizationDefaultsForm(forms.ModelForm):
@@ -262,7 +318,6 @@ class UserForm(forms.ModelForm):
     class Meta:
         model = User
         fields = ['username', 'first_name', 'last_name', 'email', 'is_superuser', 'is_active']
-
 
 
 class CustomConsequenceForm(forms.ModelForm):

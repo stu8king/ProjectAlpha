@@ -156,6 +156,8 @@ urlpatterns = [
     path('delete_pha_record/', views.delete_pha_record, name='delete_pha_record'),
     path('get_group_report/', views.get_group_report, name='get_group_report'),
     path('get_heatmap_records/', views.get_heatmap_records, name='get_heatmap_records'),
+    path('cybersecurity_defaults_view/', views.cybersecurity_defaults_view, name='cybersecurity_defaults_view'),
+    path('fetch_insurance_defaults/', views.fetch_insurance_defaults, name='fetch_insurance_defaults'),
 ]
 
 

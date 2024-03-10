@@ -888,7 +888,7 @@ def openai_assess_risk(request):
         event_cost_estimate_message = {
             "role": "user",
             "content": (
-                f"Estimate the direct costs to the {facility_type} of the scenario. Generate a 12-month cost projection to pay for the costs. "
+                f" Your task is to assess the specific given scenario. Based on this scenario, you need to project the direct financial impact over the next 12 months. Estimate the direct costs of the scenario to the {facility_type}. Generate a 12-month cost projection for the direct financial impact over the next 12 months. Your projections should be grounded in the specifics of the scenario and the impacts you've identified."
                 f"Consequences of the scenario are assumed to be {consequences}. "
                 f"- Operations impact: {production_impact} out of 10, "
                 f"- Production outage: {outage}, "
@@ -900,7 +900,13 @@ def openai_assess_risk(request):
                 f"- Reputation Impact: {reputation_impact} out of 10, "
                 f"- Regulatory Impact: {regulatory_impact} out of 10, "
                 f"- Danger to life Impact: {life_impact} out of 10. "
-                f"Estimate the budget cost for each month so that the Chief Finance Officer for the organization can plan appropriately. Use a pragmatic and realistic monthly estimate. Justify the estimates based on the specific impact scores, expecting minimal costs due to the scenario specifics. Only consider costs directly related to given scenario. (IMPORTANT Give only the cost for each month, NOT an aggregate of previous months plus the current month). You as the estimator should be able to justify why month on month costs increase OR decrease. The expectation is that costs will taper off over the 12 month period but YOU must give the most realistic response.Provide the estimates as a series of 12 integers in the format: Month1|Month2|...|Month12. Each value should represent the cost for that month in US dollars. IMPORTANT: only provide the numerical values without any narrative or explanation."
+                f"Your cost projections should include but not be limited to: "
+                f"repair and replacement costs, increased operational costs due to inefficiencies, legal and compliance costs, public relations efforts to manage reputation, and any investments in cybersecurity improvements to prevent future incidents. "
+                f"Provide a pragmatic and realistic monthly estimate, justifying the costs based on the specific impact scores. "
+                f"Estimate the budget cost for each month so that the Chief Finance Officer can plan appropriately. "
+                f"Present your estimates as a series of 12 integers in the format: Month1|Month2|...|Month12, representing the cost for each month in US dollars. "
+                f"IMPORTANT: only provide the numerical values without any narrative or explanation"
+                f"The expectation is that costs will taper off over the 12-month period, but provide the most realistic response based on the scenario specifics."
             )
         }
 
@@ -970,7 +976,7 @@ def openai_assess_risk(request):
         damage_repair_estimate_message = {
             "role": "user",
             "content": (
-                f"You are an expert in OT cybersecurity risk management and must provide an accurate and pragmatic damage analysis to an insurance underwriter. Given the scenario {scenario} in a {facility_type} within the {industry} industry, estimate the potential damage and repair effort specific to the scenario. Do not consider finances, outages or other outcomes unrelated to damage - only refer to the physical and product damage that the given scenario might result in."
+                f"You are an expert in engineering and the deployment and maintenance of industrial control systems. You are participating in an OT Cybersecurity risk assessment and must provide an accurate and pragmatic damage analysis of the following: Scenario: {scenario} in a {facility_type} within the {industry} industry. Estimate the potential damage and repair effort specific to the scenario. Do not consider finances, outages or other outcomes unrelated to damage - only refer to the physical and product damage that the given scenario might result in."
                 f"Provide a concise estimate in less than 50 words, focusing specifically on the scenario's impact and necessary repair efforts."
             )
         }
@@ -986,7 +992,7 @@ def openai_assess_risk(request):
         # Add the new estimate to the result array
         result_array.append(damage_repair_estimate)
 
-        executive_summary_message = {
+        executive_summary_message2 = {
             "role": "user",
             "content": (
                 f"As the CISO presenting to the CEO, write a concise executive summary of the cybersecurity risk assessment for the scenario '{scenario}' affecting our {facility_type} in the {industry} industry. "
@@ -998,6 +1004,20 @@ def openai_assess_risk(request):
                 f"Conclude with concise and practical recommendations that are specific to the Operational Technology network to minimize the risk of the scenario. STOP AFTER RECOMMENDATIONS. DO NOT PROVIDE ANY FURTHER COMMENTARY OR NARRATIVE. "
                 f"Provide this summary in a tight, concise, executive-friendly format that can be used on a slide. You will have less than 3 minutes to present the information so you must be sharp and concise. DO NOT PUT THE WORD 'SLIDE' ON THE SLIDE. INCLUDE THE TOTAL OF THE COSTS NOT THE MONTH BY MONTH BREAKDOWN"
             )
+        }
+        executive_summary_message = {
+            "role": "user",
+            "content": (f"""
+                   Consider a scenario described as: {scenario}, occurring at a {facility_type} in the {industry} industry.
+                   Based only on the provided scenario and facility details, generate a concise numbered bullet point list of OT/ICS cybersecurity risk mitigation recommendations. Each recommendation should be directly aligned with the latest versions of NIST 800-82 and the NIST CSF. Include the relevant NIST reference in brackets at the end of each recommendation. The output should strictly adhere to the following format:
+
+                   Example Format:
+                   1. Example recommendation related to OT cybersecurity. [NIST Reference]
+                   2. Another example recommendation focused on OT cybersecurity risk mitigation. [NIST Reference]
+
+                   Following this example format, provide the recommendations specific to the given scenario without any additional narrative, description, advice, or guidance. The recommendations should be clear and easily parsable within an HTML page.
+                   """
+                        )
         }
 
         # Generate the executive summary

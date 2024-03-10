@@ -19,7 +19,15 @@
     <!-- Bootstrap JS -->
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.bundle.min.js">
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC9z71m0_5oIR2tg4ygvOt61jCL-IgxlBI"></script>
+    <script>
+    function initMap() {
+        // Placeholder function for async loading
+    }
+</script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC9z71m0_5oIR2tg4ygvOt61jCL-IgxlBI&&loading=async&callback=initMap"></script>
+
+
+
      <!-- Bootstrap Select JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.1/js/bootstrap-select.min.js"></script>
     <script src="https://d3js.org/d3.v7.min.js"></script>
@@ -458,7 +466,7 @@ background-color: #f5f5f5;  /* Optional: to give a slight background change on h
 
 .highlighted {
     background-color: #f3dc47 !important;
-    color: white !important;
+    color: blue !important;
 }
 body {
     font-size: 12px;
@@ -884,6 +892,10 @@ function showNotification(message, isError = false) {
                                     <a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:setup_org' %}">Set Defaults</a>
                                 </li>
                                 <li>
+                                    <a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:cybersecurity_defaults_view' %}">Cyber Insurance</a>
+
+                                </li>
+                                <li>
                                     <a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:admin_users' %}">Admin Users</a>
                                 </li>
                                 <li>
@@ -1092,7 +1104,8 @@ $(document).ready(function() {
         <li><a href="#" data-tab="tab1">CyberPHA List</a></li>
         <li><a href="#" data-tab="tab2">Facility</a></li>
         <li><a href="#" data-tab="tab3">Admin</a></li>
-        <li><a href="#" data-tab="tab4">Investments</a></li>
+        <li><a href="#" data-tab="tab13">Risk Tolerance</a></li>
+        <li><a href="#" data-tab="tab4">Tools & Software</a></li>
         <br>
         <!-- Facility Profile Heading -->
         <li class="facility-profile-heading">Facility Profile
@@ -1128,7 +1141,7 @@ $(document).ready(function() {
 
         <div class="form-group">
 
-        <label for="headertable" class="form-label" style="color:white">Select a record in the table to view and edit the CyberPHA</label>
+        <label class="form-label" style="color:white">Select a record in the table to view and edit the CyberPHA</label>
         <table id="headertable" class="table small-font compact">
         <thead >
             <tr>
@@ -1158,6 +1171,7 @@ $(document).ready(function() {
                     <td>{{ pha_header_records.AssessmentStartDate|date:"m/d/Y" }}</td>
                      <input type="hidden" name="AssessmentUnit_{{ pha_header_records.ID }}" value="{{ pha_header_records.AssessmentUnit }}">
                     <input type="hidden" name="AssessmentZone_{{ pha_header_records.ID }}" value="{{ pha_header_records.AssessmentZone }}">
+                    <input type="hidden" name="Industry_{{ pha_header_records.ID }}" value="{{ pha_header_records.Industry }}">
                      <td style="background-color:
                         {% if pha_header_records.bia_scenarios == None %}
                             white  <!-- Default color for null or None values -->
@@ -1213,7 +1227,7 @@ $(document).ready(function() {
              // Event handler for clicking on a table row
              $('#headertable').on('click', 'tbody tr.selectable-row', function () {
                  // Remove 'highlighted' class from all other rows
-                  $(this).toggleClass('selected');
+                 $(this).toggleClass('selected');
                  $('tr.selectable-row').removeClass('highlighted');
 
 
@@ -1265,13 +1279,13 @@ $(document).ready(function() {
             <div class="col-md-6">
                 <form id="zipForm">
                     <div class="row">
-                        <div class="col-md-4">
+                        <div class="col-md-6">
                             <div class="form-group">
                                 <label for="countrySelector" style="color: white">Country:</label>
                                 <select id="countrySelector" name="countrySelector" style="width: 400px;"></select>
                             </div>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-6">
                             <div class="form-group">
                                 <label for="zipCode" style="color: white">Zip/Post Code:</label>
                             <input type="text" class="form-control" id="zipCode" name="zipCode" placeholder="Enter ZIP Code">
@@ -1296,56 +1310,58 @@ $(document).ready(function() {
 </div>
                             </div>
                         </div>
-                        <div class="col-md-4" style="background-color: #464748; align-items: center">
-                            <div class="form-group">
-                            <button type="button" class="form-control" id="searchButton" >Search</button>
-                            <div id="spinner_facility" style="display: none;"></div>
-                            </div>
-                        </div>
-
 
                     </div>
                 </form>
             <script>
                 var mapPopulated = false;
 
-                function drawGoogleMap(latitude, longitude, address, country) {
+               function drawGoogleMap(latitude, longitude, address, country) {
                     var mapElement = document.getElementById('facility_map');
 
                     // Function to create map and marker
-                    var createMap = function(lat, lng, title) {
-                        var latLng = new google.maps.LatLng(lat, lng);
-                        var map = new google.maps.Map(mapElement, {
-                            center: latLng,
-                            zoom: 18, // Adjust zoom level as needed
-                            mapTypeId: google.maps.MapTypeId.SATELLITE
-                        });
-                        var marker = new google.maps.Marker({
-                            position: latLng,
-                            map: map,
-                            title: title || 'Selected Facility'
-                        });
-                        mapPopulated = true;
-                    };
+                   var createMap = function(lat, lng, title) {
+                    var latLng = new google.maps.LatLng(lat, lng);
+                    var map = new google.maps.Map(mapElement, {
+                        center: latLng,
+                        zoom: 18, // Adjust zoom level as needed
+                        mapTypeId: google.maps.MapTypeId.SATELLITE
+                    });
 
-                    if (latitude && longitude) {
-                        // If latitude and longitude are provided, draw the map directly
-                        createMap(parseFloat(latitude), parseFloat(longitude), 'Facility Location');
-                    } else if (address && country) {
-                        // If address and country are provided, use Geocoding API to find the location
-                        var geocoder = new google.maps.Geocoder();
-                        geocoder.geocode({ 'address': address + ', ' + country }, function(results, status) {
-                            if (status === 'OK') {
-                                var location = results[0].geometry.location;
-                                createMap(location.lat(), location.lng(), results[0].formatted_address);
-                            } else {
-                                console.error('Geocode was not successful for the following reason: ' + status);
-                            }
-                        });
-                    } else {
-                        console.error('Insufficient data provided to draw the map.');
+                    if (!google.maps.marker || !google.maps.marker.AdvancedMarkerElement) {
+                        console.error('google.maps.marker.AdvancedMarkerElement is not available. Make sure you have loaded the Maps JavaScript API properly.');
+                        return;
                     }
-                }
+
+                    var marker = new google.maps.marker.AdvancedMarkerElement({
+                        position: latLng,
+                        map: map,
+                        title: title || 'Selected Facility'
+                    });
+                    mapPopulated = true;
+                };
+
+
+
+    if (latitude && longitude) {
+        // If latitude and longitude are provided, draw the map directly
+        createMap(parseFloat(latitude), parseFloat(longitude), 'Facility Location');
+    } else if (address && country) {
+        // If address and country are provided, use Geocoding API to find the location
+        var geocoder = new google.maps.Geocoder();
+        geocoder.geocode({ 'address': address + ', ' + country }, function(results, status) {
+            if (status === 'OK') {
+                var location = results[0].geometry.location;
+                createMap(location.lat(), location.lng(), results[0].formatted_address);
+            } else {
+                console.error('Geocode was not successful for the following reason: ' + status);
+            }
+        });
+    } else {
+        console.error('Insufficient data provided to draw the map.');
+    }
+}
+
 
                 $(document).ready(function() {
                         function attemptMapPopulation() {
@@ -1532,10 +1548,6 @@ $(document).ready(function() {
                         }
                     });
 
-                    function initMap() {
-                            // Placeholder function for async loading
-                        }
-
                 </script>
                 <div class="form-group">
                     <label for="txtFacility" style="color: white">Facility:</label>
@@ -1667,7 +1679,7 @@ $(document).ready(function() {
                     <input type="hidden" id="txthdnLong">
                 </div>
                 <div class="form-group">
-                <label for="aqiGlobe" style="color: white">Air Quality Index (AQI):</label>
+                <label style="color: white">Air Quality Index (AQI):</label>
                 <div id="aqiGlobe" class="aqi-globe">--</div>
                     <input type="hidden" id="txthdnAQI">
             </div>
@@ -1970,12 +1982,10 @@ updateGroupList();
 
      </div>
      <div class="tab-content" id="tab4">
-        <h3 style="color: white">Investments</h3>
+        <h3 style="color: white">OT Tools & Software</h3>
          <div class="card mb-3 shadow-sm" style="background-color: #5E6266;">
             <div class="card-body">
-
-                <h5 >Add Cybersecurity Investments</h5>
-
+                <label style="color:white">List tools and software purchased to mitigate OT cybersecurity risks</label>
                 <div class="table-responsive">
 
                   <table class="table" id="investmentTable">
@@ -2108,17 +2118,383 @@ updateGroupList();
      </div>
      <div class="tab-content" id="tab12">
         <h3 style="color:white">OT Cybersecurity Strategy</h3>
-         <br>
-         <div class="form-group">
-         <div id="strategyContainer" class="safety-summary-container"></div>
-                <textarea rows="25" name="strategySummary" id="strategySummary" class="form-control" style="resize: none; background-color: white; border-width: 0px" readonly hidden>{{ current_pha_header.strategySummary }}</textarea>
-         </div>
+        <br>
+        <div class="form-group">
+            <div id="strategyContainer" class="safety-summary-container"></div>
+            <textarea rows="25" name="strategySummary" id="strategySummary" class="form-control" style="resize: none; background-color: white; border-width: 0px" readonly hidden>{{ current_pha_header.strategySummary }}</textarea>
+        </div>
+     </div>
+     <div class="tab-content" id="tab13">
+        <h3 style="color:white">Risk Tolerance Levels</h3>
+        <p style="color:white">Specify the risk tolerance levels for each severity category. Values should be entered in USD.</p>
+
+         <div class="row">
+             <div class="col-md-6">
+                <div class="form-group row">
+                    <div class="col-md-6">
+                        <label style="color:white">Negligible Low Value ($):</label>
+                        <input type="number" class="form-control" id="negligible_low" name="negligible_low" placeholder="0.00" min="0" step="0.01" style="max-width: 250px;">
+                    </div>
+                    <div class="col-md-6">
+                        <label style="color:white">Negligible High Value ($):</label>
+                        <input type="number" class="form-control" id="negligible_high" name="negligible_high" placeholder="0.00" min="0" step="0.01" style="max-width: 250px;">
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <div class="col-md-6">
+                        <label style="color:white">Minor Low Value ($):</label>
+                        <input type="number" class="form-control" id="minor_low" name="minor_low" placeholder="0.00" min="0" step="0.01" style="max-width: 250px;">
+                    </div>
+                    <div class="col-md-6">
+                        <label style="color:white">Minor High Value ($):</label>
+                        <input type="number" class="form-control" id="minor_high" name="minor_high" placeholder="0.00" min="0" step="0.01" style="max-width: 250px;">
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <div class="col-md-6">
+                        <label style="color:white">Moderate Low Value ($):</label>
+                        <input type="number" class="form-control" id="moderate_low" name="moderate_low" placeholder="0.00" min="0" step="0.01" style="max-width: 250px;">
+                    </div>
+                    <div class="col-md-6">
+                        <label style="color:white">Moderate High Value ($):</label>
+                        <input type="number" class="form-control" id="moderate_high" name="moderate_high" placeholder="0.00" min="0" step="0.01" style="max-width: 250px;">
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <div class="col-md-6">
+                        <label style="color:white">Significant Low Value ($):</label>
+                        <input type="number" class="form-control" id="significant_low" name="significant_low" placeholder="0.00" min="0" step="0.01" style="max-width: 250px;">
+                    </div>
+                    <div class="col-md-6">
+                        <label style="color:white">Significant High Value ($):</label>
+                        <input type="number" class="form-control" id="significant_high" name="significant_high" placeholder="0.00" min="0" step="0.01" style="max-width: 250px;">
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <div class="col-md-6">
+                        <label style="color:white">Severe Low Value ($):</label>
+                        <input type="number" class="form-control" id="severe_low" name="severe_low" placeholder="0.00" min="0" step="0.01" style="max-width: 250px;">
+                    </div>
+                    <div class="col-md-6">
+                        <label style="color:white">Severe High Value ($):</label>
+                        <input type="number" class="form-control" id="severe_high" name="severe_high" placeholder="0.00" min="0" step="0.01" style="max-width: 250px;">
+                    </div>
+                </div>
+
+             </div>
+             <div class="col-md-6">
+                 <div class="form-group">
+                 <div id="riskHeatMap" style="width: 100%; height: 400px;"></div>
+                 </div>
+             </div>
          </div>
 
-     </div>
-    </div>
+        <h3 style="color:white">Cybersecurity Insurance Cover</h3>
+        <p style="color:white">Specific cybersecurity insurance policy coverage if relevant or load previously saved defaults.</p>
+        <div class="row">
+             <div class="col-md-6" style="color:white">
+                <div class="form-group row">
+                        <div class="col-md-3">
+                            <label class="form-check-label" for="useOrgDefaults">
+                                Use organization defaults
+                            </label>
+                        </div>
+                        <div class="col-md-3">
+                            <input class="form-check-input" type="checkbox" id="useOrgDefaults" name="useOrgDefaults">
+                        </div>
+                        <div class="col-md-6">
+
+                        </div>
+                    </div>
+                 <div class="form-group row">
+                        <div class="col-md-3">
+                            <label for="first_party_coverage">First Party Coverage:</label>
+                        </div>
+                        <div class="col-md-1">
+                            <input type="checkbox" class="form-check-input" id="first_party_coverage" name="first_party_coverage">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="third_party_coverage">Third Party Coverage:</label>
+                        </div>
+                        <div class="col-md-1">
+                            <input type="checkbox" class="form-check-input" id="third_party_coverage" name="third_party_coverage">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="security_event_liability">Security Event Liability:</label>
+                        </div>
+                        <div class="col-md-1">
+                            <input type="checkbox" class="form-check-input" id="security_event_liability" name="security_event_liability">
+                        </div>
+                    </div>
+                <div class="form-group row">
+                        <div class="col-md-3">
+                             <label for="privacy_regulatory_actions">Privacy Regulatory Actions:</label>
+                        </div>
+                        <div class="col-md-1">
+                            <input type="checkbox" class="form-check-input" id="privacy_regulatory_actions" name="privacy_regulatory_actions">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="cyber_extortion_coverage">Cyber Extortion Coverage:</label>
+                        </div>
+                        <div class="col-md-1">
+                            <input type="checkbox" class="form-check-input" id="cyber_extortion_coverage" name="cyber_extortion_coverage">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="data_breach_response_coverage">Data Breach Response Coverage:</label>
+                        </div>
+                        <div class="col-md-1">
+                            <input type="checkbox" class="form-check-input" id="data_breach_response_coverage" name="data_breach_response_coverage">
+                        </div>
+                    </div>
+                 <div class="form-group row">
+                        <div class="col-md-3">
+                              <label for="business_interruption_coverage">Business Interruption Coverage:</label>
+                        </div>
+                        <div class="col-md-1">
+                           <input type="checkbox" class="form-check-input" id="business_interruption_coverage" name="business_interruption_coverage">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="dependent_business_coverage">Dependent Business Coverage:</label>
+                        </div>
+                        <div class="col-md-1">
+                            <input type="checkbox" class="form-check-input" id="dependent_business_coverage" name="dependent_business_coverage">
+                        </div>
+                        <div class="col-md-3">
+                           <label for="data_recovery">Data Recovery:</label>
+                        </div>
+                        <div class="col-md-1">
+                            <input type="checkbox" class="form-check-input" id="data_recovery" name="data_recovery">
+                        </div>
+                    </div>
+                  <div class="form-group row">
+                        <div class="col-md-3">
+                                <label for="hardware_replacement">Hardware Replacement:</label>
+                        </div>
+                        <div class="col-md-1">
+                             <input type="checkbox" class="form-check-input" id="hardware_replacement" name="hardware_replacement">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="reputation_harm">Reputation Harm:</label>
+                        </div>
+                        <div class="col-md-1">
+                            <input type="checkbox" class="form-check-input" id="reputation_harm" name="reputation_harm">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="media_liability">Media Liability:</label>
+                        </div>
+                        <div class="col-md-1">
+                           <input type="checkbox" class="form-check-input" id="media_liability" name="media_liability">
+                        </div>
+                    </div>
+                 <div class="form-group row">
+                        <div class="col-md-3">
+                            <label for="pci_dss">PCI DSS:</label>
+                        </div>
+                        <div class="col-md-1">
+                            <input type="checkbox" class="form-check-input" id="pci_dss" name="pci_dss">
+                        </div>
+                        <div class="col-md-3">
+
+                        </div>
+                        <div class="col-md-1">
+
+                        </div>
+                        <div class="col-md-3">
+
+                        </div>
+                        <div class="col-md-1">
+
+                        </div>
+                    </div>
+                 <div class="form-group row">
+                        <div class="col-md-3">
+                            <label for="overall_aggregate_limit">Overall Aggregate Limit ($):</label>
+                        </div>
+                        <div class="col-md-3">
+                            <input type="number" class="form-control" id="overall_aggregate_limit" name="overall_aggregate_limit" placeholder="0.00" min="0" max="999999999" step="0.01" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="per_claim_limit">Per Claim Limit ($):</label>
+                        </div>
+                        <div class="col-md-3">
+                            <input type="number" class="form-control" id="per_claim_limit" name="per_claim_limit" placeholder="0" min="0" max="365" required>
+                        </div>
+
+                    </div>
+                 <div class="form-group row">
+                        <div class="col-md-3">
+                            <label for="deductible_amount">Deductible ($):</label>
+                        </div>
+                        <div class="col-md-3">
+                            <input type="number" class="form-control" id="deductible_amount" name="deductible_amount" placeholder="0.00" min="0" max="999999999" step="0.01" required>
+                        </div>
+                        <div class="col-md-3">
+                           <label for="cancellation_terms_days">Cancellation Terms (Days):</label>
+                        </div>
+                        <div class="col-md-3">
+                             <input type="number" class="form-control" id="cancellation_terms_days" name="cancellation_terms_days" placeholder="0" min="0" max="365" required>
+                        </div>
+
+                    </div>
+                 <div class="form-group row">
+                        <div class="col-md-3">
+                            <label for="premium_base">Premium Base ($):</label>
+                        </div>
+                        <div class="col-md-3">
+                            <input type="number" class="form-control" id="premium_base" name="premium_base" placeholder="0.00" min="0" max="999999999" step="0.01" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="notification_period_days">Notification Period (Days):</label>
+                        </div>
+                        <div class="col-md-3">
+                            <input type="number" class="form-control" id="notification_period_days" name="notification_period_days" placeholder="0" min="0" max="365" required>
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+
+<script>
+anychart.onDocumentReady(function () {
+    // Define the matrix data
+    var data = [
+    // Negligible
+    {x: "Negligible", y: "Very Likely", heat: 5, label: 'Low Med'},
+    {x: "Negligible", y: "Likely", heat: 4, label: 'Low'},
+    {x: "Negligible", y: "Possible", heat: 3, label: 'Low'},
+    {x: "Negligible", y: "Unlikely", heat: 2, label: 'Low'},
+    {x: "Negligible", y: "Very Unlikely", heat: 1, label: 'Low'},
+    // Minor
+    {x: "Minor", y: "Very Likely", heat: 6, label: 'Med'},
+    {x: "Minor", y: "Likely", heat: 5, label: 'Low Med'},
+    {x: "Minor", y: "Possible", heat: 4, label: 'Low Med'},
+    {x: "Minor", y: "Unlikely", heat: 3, label: 'Low Med'},
+    {x: "Minor", y: "Very Unlikely", heat: 2, label: 'Low'},
+    // Moderate
+    {x: "Moderate", y: "Very Likely", heat: 7, label: 'Med Hi'},
+    {x: "Moderate", y: "Likely", heat: 6, label: 'Med'},
+    {x: "Moderate", y: "Possible", heat: 5, label: 'Med'},
+    {x: "Moderate", y: "Unlikely", heat: 4, label: 'Low Med'},
+    {x: "Moderate", y: "Very Unlikely", heat: 3, label: 'Low Med'},
+    // Significant
+    {x: "Significant", y: "Very Likely", heat: 8, label: 'High'},
+    {x: "Significant", y: "Likely", heat: 7, label: 'Med Hi'},
+    {x: "Significant", y: "Possible", heat: 6, label: 'Med Hi'},
+    {x: "Significant", y: "Unlikely", heat: 5, label: 'Med'},
+    {x: "Significant", y: "Very Unlikely", heat: 4, label: 'Med'},
+    // Severe
+    {x: "Severe", y: "Very Likely", heat: 9, label: 'High'},
+    {x: "Severe", y: "Likely", heat: 8, label: 'High'},
+    {x: "Severe", y: "Possible", heat: 7, label: 'Med Hi'},
+    {x: "Severe", y: "Unlikely", heat: 6, label: 'Med Hi'},
+    {x: "Severe", y: "Very Unlikely", heat: 5, label: 'Med'},
+];
+
+
+
+
+    // Create a heat map chart
+    var chart = anychart.heatMap(data);
+
+    // Configure the color scale
+    chart.colorScale(anychart.scales.linearColor());
+    chart.colorScale().colors(["#00FF00", "#FFFF00", "#FFA500", "#FF0000"]);
+    chart.labels().enabled(true);
+    chart.labels().format(function() {
+        return this.getData('label'); // Use the 'label' property for the cell text
+    });
+    // Set the titles for the axes
+    chart.xAxis().title("Severity Levels");
+    chart.yAxis().title("Likelihood");
+    chart.title("Risk Severity Heat Map");
+    chart.container("riskHeatMap");
+    chart.draw();
+
+    // Function to update x-axis labels based on severity levels' low/high values
+    window.updateSeverityLabels = function(severityData) {
+        chart.xAxis().labels().format(function() {
+        var severityLevel = this.value;
+        var lowHigh = severityData[severityLevel]; // Fetch the low/high value
+        return severityLevel + " (" + lowHigh + ")"; // Combine for the label
+    });
+    chart.draw(); // Redraw to apply updates
+    };
+});
+
+// Example severity data, replace with dynamic data as needed
+var severityData = {
+    "Negligible": "0/1",
+    "Minor": "1/2",
+    "Moderate": "2/3",
+    "Significant": "3/4",
+    "Severe": "4/5"
+};
+
+// Call this function when you need to update the labels, e.g., after fetching data
+//updateSeverityLabels(severityData);
+</script>
+
+
 
 </div>
+
+
+<div id="cyberPHADefaultsForm">
+    <!-- CyberPHACybersecurityDefaults form fields will be loaded here -->
+</div>
+
+<script>
+$(document).ready(function() {
+    $('#useOrgDefaults').change(function() {
+        if (this.checked) {
+            fetchOrgDefaults();
+        } else {
+            $('#cyberPHADefaultsForm .form-control').val(''); // Clear all input fields if the checkbox is deselected
+        }
+    });
+
+    function fetchOrgDefaults() {
+        $.ajax({
+            url: '/OTRisk/fetch_insurance_defaults/',
+            type: 'GET',
+            dataType: 'json',
+            success: function(data) {
+                populateForm(data);
+            },
+            error: function(xhr, status, error) {
+                console.error('Error:', error);
+            }
+        });
+    }
+
+    function populateForm(data) {
+    $.each(data, function(key, value) {
+        var element = $('#' + key);
+        if (element.attr('type') === 'checkbox') {
+            // For checkboxes, set 'checked' property based on boolean value
+            element.prop('checked', value);
+        } else {
+            // For other input types, use the 'val' method
+            element.val(value);
+        }
+    });
+}
+
+});
+</script>
+
+
+
+
+    </div>
+
+
 </div>
 
 <script>
@@ -2511,7 +2887,8 @@ $(document).ready(function() {
                          $('#lblCyberPHATitle').text(data.headerrecord.title + '@' + data.headerrecord.facility) ;
 
                          $('#txtLeader').val(data.headerrecord.leader);
-                         $('#selIndustry').val(data.headerrecord.industry);
+                         $('#selIndustry').val(data.headerrecord.Industry);
+                          $('#selIndustry').val(data.headerrecord.Industry).trigger('change');
                          $('#txtUnit').val(data.headerrecord.unit);
                          $('#txtFacility').val(data.headerrecord.facility);
                          $('#txtLeaderEmail').val(data.headerrecord.leaderemail);
@@ -2553,6 +2930,7 @@ $(document).ready(function() {
                          $('#txtState').val(data.headerrecord.facilityState);
                          $('#zipCode').val(data.headerrecord.facilityCode);
 
+
                          var lat = data.headerrecord.facilityLat;
                          var long = data.headerrecord.facilityLong;
                          var address = data.headerrecord.address + ', ' + data.headerrecord.facilityCity + ', ' + data.headerrecord.facilityCode;
@@ -2573,7 +2951,44 @@ $(document).ready(function() {
                          populateSummary("threatContainer", data.headerrecord.threatSummary);
                          populateSummary("insightContainer", data.headerrecord.insightSummary);
                          populateSummary("strategyContainer", data.headerrecord.strategySummary);
+                          if (data.cyber_defaults) {
+                            $('#overall_aggregate_limit').val(data.cyber_defaults.overall_aggregate_limit);
+                            $('#per_claim_limit').val(data.cyber_defaults.per_claim_limit);
+                            $('#deductible_amount').val(data.cyber_defaults.deductible_amount);
+                            $('#premium_base').val(data.cyber_defaults.premium_base);
+                            $('#notification_period_days').val(data.cyber_defaults.notification_period_days);
+                            $('#cancellation_terms_days').val(data.cyber_defaults.cancellation_terms_days);
 
+                            // Populate checkbox fields
+                            $('#first_party_coverage').prop('checked', data.cyber_defaults.first_party_coverage);
+                            $('#third_party_coverage').prop('checked', data.cyber_defaults.third_party_coverage);
+                            $('#security_event_liability').prop('checked', data.cyber_defaults.security_event_liability);
+                            $('#privacy_regulatory_actions').prop('checked', data.cyber_defaults.privacy_regulatory_actions);
+                            $('#cyber_extortion_coverage').prop('checked', data.cyber_defaults.cyber_extortion_coverage);
+                            $('#data_breach_response_coverage').prop('checked', data.cyber_defaults.data_breach_response_coverage);
+                            $('#business_interruption_coverage').prop('checked', data.cyber_defaults.business_interruption_coverage);
+                            $('#dependent_business_coverage').prop('checked', data.cyber_defaults.dependent_business_coverage);
+                            $('#data_recovery').prop('checked', data.cyber_defaults.data_recovery);
+                            $('#hardware_replacement').prop('checked', data.cyber_defaults.hardware_replacement);
+                            $('#reputation_harm').prop('checked', data.cyber_defaults.reputation_harm);
+                            $('#media_liability').prop('checked', data.cyber_defaults.media_liability);
+                            $('#pci_dss').prop('checked', data.cyber_defaults.pci_dss);
+                        }
+                         const riskToleranceFields = [
+                            'negligible_low', 'negligible_high',
+                            'minor_low', 'minor_high',
+                            'moderate_low', 'moderate_high',
+                            'significant_low', 'significant_high',
+                            'severe_low', 'severe_high'
+                        ];
+
+                        riskToleranceFields.forEach(field => {
+                            if (data.risk_tolerance && data.risk_tolerance[field] !== undefined) {
+                                $('#' + field).val(parseFloat(data.risk_tolerance[field]).toFixed(2));
+                            } else {
+                                $('#' + field).val(''); // Clear the field if data is missing
+                            }
+                        });
                          sessionStorage.setItem('sessionIndustry', data.headerrecord.industry);
                          sessionStorage.setItem('sessionFacilityType', data.headerrecord.facilitytype);
                          sessionStorage.setItem('sessionFacility', data.headerrecord.facility);
@@ -2847,6 +3262,11 @@ function unlockControls() {
         })
     }
 </script>
-
+                        <div class="col-md-0" style="background-color: #464748; align-items: center; visibility: hidden">
+                            <div class="form-group">
+                            <button type="button" class="form-control" id="searchButton" >Search</button>
+                            <div id="spinner_facility" style="display: none;"></div>
+                            </div>
+                        </div>
 </body>
 </html>

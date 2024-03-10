@@ -45,162 +45,106 @@
      {% load django_bootstrap5 %}
      {% bootstrap_css %}
      {% bootstrap_javascript %}
-    <style>
-
-        .control-item {
-    border: 1px solid #ccc;
-    padding: 10px;
-    margin: 10px 0;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    border-radius: 2px;
-    display: flex;
-    flex-direction: column;  /* This will stack the children vertically */
-    align-items: center;      /* Aligns items to the start (left for LTR languages) */
+<style>
+ .form-group {
+    border: 1px solid #464748; /* Border color */
+    box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.5); /* Outer shadow */
+    background-color: #5E6266; /* Lighter shade of #464748 */
+    padding: 15px; /* Optional: for internal spacing */
 }
 
-.control-slider {
-    align-items: center;
-    margin-top: 2px;
-    width: 95%;             /* Makes the slider take the full width of the container */
-}
-
-
-.control-slider {
-    margin-left: 10px;
-    flex: 1;
-}
-
-    .control-slider {
-    appearance: none;
-    width: 100%;
-    height: 15px;
-    border-radius: 5px;
-    background: #d3d3d3;
-    outline: none;
-    opacity: 0.7;
-    transition: opacity .2s;
-
-}
-
-.control-slider::-webkit-slider-thumb {
-    appearance: none;
-    width: 40px;
-    height: 15px;
-    border-radius: 3px;
-    background: green;
-    cursor: pointer;
-    transition: background .2s;
-     background: var(--thumb-color, grey);  // default to green if --thumb-color is not set
-     background-color: var(--thumb-color);
-}
-
-.control-slider::-moz-range-thumb {
-    width: 40px;
-    height: 15px;
-    border-radius: 3px;
-    background: green;
-    cursor: pointer;
-    transition: background .2s;
-    background: var(--thumb-color, grey);  // default to green if --thumb-color is not set
-     background-color: var(--thumb-color);
-}
-        .no-gap {
-            padding-left: 2px;
-            padding-right: 2px;
-            margin-bottom: 2px;
-        }
-
-        #sunburstcontainer {
-        width: 100%;
-        height: 100%;
-        border: 1px solid #ccc; /* border color */
-        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1); /* shadow effect */
-        border-radius: 4px; /* rounded corners (optional) */
+@media (min-width: 992px) { /* Adjusting for Bootstrap's large devices breakpoint */
+    .custom-main-content {
+        width: calc(100% - 200px);
+        max-width: calc(90vw - 200px);
+        margin-left: 100px;
     }
-        .doughnut_container {
+}
+
+.custom-main-content {
+position: relative; /* Adjust if necessary */
+width: calc(100% - 200px); /* Adjust based on the actual sidebar width */
+max-width: calc(90vw - 200px); /* 90% of the viewport width minus sidebar width */
+margin-left: 200px; /* Push content to the right of the sidebar */
+}
+.top-strip {
+    background-color: #464748; /* Same as body background for seamless integration */
+    color: #d3d1cd; /* Text color */
+    padding: 10px 20px; /* Adjust as needed */
+    padding-left: 100px; /* Align with the end of the sidebar */
+    width: calc(100% - 200px); /* Adjust based on the actual sidebar width */
+    box-sizing: border-box;
+}
+
+.page-title {
+    margin: 0; /* Remove default margins */
+    font-size: 1.5rem; /* Adjust size as needed */
+}
+
+@media (max-width: 992px) {
+    .top-strip {
+        padding-left: 0;
         width: 100%;
-        height: 100%;
-        border: 1px solid #ccc; /* border color */
-        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1); /* shadow effect */
-        border-radius: 4px; /* rounded corners (optional) */
     }
-
-.navbar {
-    background-color: #464748;
-    border-bottom: 1px solid #000;
-    height: 50px; /* Fixed height */
-    position: relative;
 }
 
-.owl-logo {
-    height: 60px; /* Set a fixed height for the image */
-    width: auto; /* Maintain aspect ratio */
-    position: relative;
-    top: 50%; /* Center vertically in the navbar */
-    transform: translateY(-30%); /* Adjust vertical position */
-    margin-bottom: -20px; /* Negative margin to overlap */
+body {
+background-color: #464748;
+color: #d3d1cd;
 }
-
-
-.navbar-brand, .nav-link {
-    color: #d3d1cd; /* White text for clear visibility on initial view */
-}
-
-.menu-item {
-    border-right: 1px solid #4B6B6B; /* Subtle line between items */
-    font-size: 14px; /* Adjust font size */
-}
-
-.menu-item:last-child {
-    border-right: none; /* Remove border for the last item */
-}
-
-.menu-item:hover, .dropdown-item:hover {
-    background-color: #3A5F5F; /* Slightly lighter grey on hover */
-    color: #E0E0E0; /* Light grey text on hover */
-}
+    .sidebar {
+        height: 100vh;
+        background-color: #2D2E30; /* Darker shade for sidebar */
+        padding: 20px 0;
+        width: 200px; /* Reduced width */
+    }
+    .sidebar-logo {
+        padding: 10px 15px;
+        text-align: center;
+    }
+    .nav-sidebar {
+        display: flex;
+        flex-direction: column;
+        padding-left: 0;
+        list-style: none;
+    }
+    .nav-sidebar .nav-item {
+        padding: 5px 10px;
+        /* border-bottom: 1px solid  #fac330; /* Light orange line */
+        margin: 0 10%;
+    }
+    .nav-sidebar .nav-link {
+        color: #d3d1cd;
+        border-radius: 0;
+        transition: color 0.3s ease-in-out;
+        font-size: 0.8em;
+    }
+    .nav-sidebar .nav-link:hover, .nav-sidebar .nav-link.active {
+        background-color: #3A5F5F;
+        color: #E0E0E0;
+    }
 
 .nav-link:hover, .dropdown-item {
     color: #E0E0E0; /* Light grey text on hover */
 }
 
 .dropdown-menu {
-    background-color: #464748; /* Dark Slate Grey */
-    border: none;
-}
+        background-color: #d3d1cd;
+        border: none;
+    }
 
 .dropdown-item {
     color: #FFFFFF; /* White text for clear visibility */
 }
 
-.dropdown-item:hover {
-    background-color: #3A5F5F; /* Slightly lighter grey on hover */
-    color: #E0E0E0;}
-
-     .small-font {
-        font-size: 0.8rem; /* adjust as needed */
-   }
-
-            .col-md-2 {
+.dropdown-item:hover, .dropdown-item:focus {
+        background-color: #fac330; /* Light orange background for hovered dropdown items */
+        color: #2D2E30;
+    }
+    .col-md-2 {
         place-items: center;
     }
 
-     .small-font {
-        font-size: 0.8rem; /* adjust as needed */
-   }
-
-         .stat-card {
-        background-color: lightgrey;
-    }
-    .inner-card {
-        background-color: white;
-        border-radius: 10px;
-        margin: 10px 10px 20px 10px;
-        height: 70%;
-    }
-    .card-title-light {
-        font-weight: lighter;
-    }
 
 .scenario-item {
     width: 100%;
@@ -230,74 +174,29 @@
     color: white;
 }
 
-body {
-    font-size: 12px;
-}
-
-.scrollable-content {
-    max-height: 300px;
-    overflow-y: auto;
-}
-
-#recommendations {
-    border: none;
-    background-color: #fff8e8;
-    font-size: 12px;
-    resize: none; /* Optional: to prevent the user from resizing the textarea */
-}
-
-.border-cell {
-    border: 1px solid black;
-}
-
-.equal-height {
-    display: flex;
-    flex-wrap: wrap;
-}
-
-.equal-card {
-    display: flex;
-    flex-direction: column;
-}
 
 .equal-card .card-body {
     flex: 1; /* This will make sure the content takes up all available space */
 }
 
-.form-group {
-    border: 1px solid #464748; /* Border color */
-    box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.5); /* Outer shadow */
-    background-color: #5E6266; /* Lighter shade of #464748 */
-    padding: 15px; /* Optional: for internal spacing */
-}
-.form-sim {
-    max-width: 100%; /* Ensures select does not exceed container width */
-    width: auto; /* Optional: Ensures select width is based on content up to max-width */
+
+#action_table th, #action_table td {
+    border: 1px solid #ddd;
+    padding: 8px;
 }
 
-                        #action_table {
-                            border-collapse: collapse;
-                            width: 100%;
-                            background-color: #fff8e8;
-                        }
+#action_table th {
+    padding-top: 12px;
+    padding-bottom: 12px;
+    text-align: left;
+    background-color: #f2f2f2;
+    color: black;
+    border-bottom: 3px solid #ddd;
+}
 
-                        #action_table th, #action_table td {
-                            border: 1px solid #ddd;
-                            padding: 8px;
-                        }
-
-                        #action_table th {
-                            padding-top: 12px;
-                            padding-bottom: 12px;
-                            text-align: left;
-                            background-color: #f2f2f2;
-                            color: black;
-                            border-bottom: 3px solid #ddd;
-                        }
-
-                        #action_table tr:hover {
-                            background-color: #f5f5f5;
-                        }
+#action_table tr:hover {
+    background-color: #f5f5f5;
+}
 
                         /* 3D shading effect */
                         #action_table {
@@ -307,139 +206,178 @@ body {
 </head>
 <body style="background-color: #464748">
 <script>anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");</script>
-<nav class="navbar navbar-expand-lg navbar-scroll shadow-0 border-bottom rounded">
-    <div class="container-fluid d-flex justify-content-between">
-        <a class="navbar-brand" href="{% url 'OTRisk:dashboardhome' %}">
-            &nbsp; &nbsp; &nbsp; &nbsp;
-            <img src="{% static 'images/anzen_owl.png' %}" class="owl-logo" style="width: 18%; height: 18%">
-        </a>
-        <h6 class="my-auto text-center flex-grow-1 navbar-brand"><img src="{% static 'images/anzen_noowl.png' %}" style="width: 15%; height: 15%"> Dashboard</h6>
-        <div class="collapse navbar-collapse" id="navbarSupportedContent">
-            <ul class="navbar-nav ms-auto">
-                <li class="nav-item menu-item">
-                    <a class="nav-link" href="{% url 'OTRisk:qraw' %}"><i class="bi bi-calculator"></i> QRAW</a>
-                </li>
-                <li class="nav-item menu-item">
-                    <a class="nav-link" href="{% url 'OTRisk:iotaphamanager' %}"><i class="bi bi-journal-text"></i> CyberPHA</a>
-                </li>
-                <li class="nav-item menu-item">
-                    <a class="nav-link" href="{% url 'OTRisk:scenario_sim' %}"><i class="bi bi-bricks"></i> Scenario Builder</a>
-                </li>
-                <li class="nav-item menu-item">
-                    <a class="nav-link" href="{% url 'OTRisk:ra_actions_view_default' %}"><i class="bi-file-earmark-easel"></i> Actions</a>
-                </li>
-                <li class="nav-item menu-item">
-                    <a class="nav-link" href="{% url 'OTRisk:risk_register' %}"><i class="bi-file-earmark-easel"></i> Risk Register</a>
-                </li>
-                <li class="nav-item menu-item">
-                    <a class="nav-link" href="{% url 'OTRisk:list_frameworks' %}"><i class="bi-file-earmark-easel"></i> Assessments</a>
-                </li>
-    <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                <i class="bi bi-diagram-3"></i> Admin
-              </a>
-              <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
 
-                    <li><a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:setup_org' %}">Set Defaults</a></li>
-                  <li><a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:admin_users' %}">Admin Users</a></li>
-              <li><a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:upload_questionnaire' %}">Upload Questionnaires</a></li>
-                  {% if user.is_staff %}
-                    <!-- Links visible only to superusers -->
-                    <li><a class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:user_admin' %}">User Administration</a></li>
-                      <li><a class="dropdown-item"  style="font-size: 12px;" href="{% url 'OTRisk:organization_form' %}">Manage Organizations</a></li>
-
-                      <li><a class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:execute_sql' %}">Execute SQL</a></li>
-                    {% endif %}
-
-              </ul>
-
-        </li>
-    <li class="nav-item menu-item">
-    <a class="nav-link" href="{% url 'accounts:profile' %}">
-    <i class="bi bi-person-fill"></i> {{ user.first_name }} {{ user.last_name }} | {{ user.userprofile.organization.name }}
-    </a>
-    </li>
-    <li class="nav-item menu-item">
-    <a class="nav-link" href="{% url 'logout' %}">
-    <i class="bi bi-box-arrow-right"></i> Logout
-    </a>
-    </li>
-    </ul>
-    </div>
-    </div>
-    </nav>
-
+<div class="container-fluid">
 <div class="row">
-    <div class="col-md-1"></div>
-        <div class="col-md-10" id="pha_header">
-        <div class="row">
-            <div class="col-md-12">
-                <p>
-                <H4 style="color: white; display: inline-block;">QRAW Title: {{ qraw_header.RATitle }}</H4>
-
-            </div>
-        </div>
-        <div class="row"  style="font-size: 10px">
-
-            <div class="col" style="font-size: 12px; color: white">
-                Facility Type:{{ qraw_header.BusinessUnitType }}<br>
-                Industry: {{ qraw_header.industry }}<br>
-                Status:{{ qraw_header.StatusFlag }}<br>
-                Date:{{ qraw_header.RADate }}
-
-            </div> <!--  BIA summary chart -->
-
-    <div class="col">
-        <div class="row">
-            <div class="col-md-3">
-                <div class="form-group">
-                    <label style="color:white">Estimated Event Costs</label>
-                <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                <div class="card-body">
-                <img src="{% static 'images/bestcase.png' %}" alt="" style="height: 2em; vertical-align: middle; color: #3B6BF9"> Best Case<br>
-                <h4>{{ total_cost_impact_low }}</h4>
+    <nav class="col-md-3 col-lg-2 d-md-block sidebar collapse" id="sidebarMenu">
+            <div class="sidebar-sticky">
+                <div class="sidebar-logo">
+                    <img src="{% static 'images/anzen_owl.png' %}" class="img-fluid" alt="Logo">
                 </div>
-                </div>
-                <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                    <div class="card-body">
-                    <img src="{% static 'images/mostlikely.png' %}" alt="" style="height: 2em; vertical-align: middle;"> Median<br>
-                    <h4>{{ total_cost_impact }}</h4>
-                    </div>
-                    </div>
-                    <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                    <div class="card-body">
-                    <img src="{% static 'images/worstcase.png' %}" alt="" style="height: 2em; vertical-align: middle;"> Worst Case<br>
-                    <h4>{{ total_cost_impact_high }}</h4>
-                    </div>
+                <ul class="nav flex-column nav-sidebar">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'OTRisk:dashboardhome' %}">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'OTRisk:qraw' %}">QRAW</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'OTRisk:iotaphamanager' %}">CyberPHA</a>
+                    </li>
+                    <li class="nav-item menu-item">
+                        <a class="nav-link" href="{% url 'OTRisk:scenario_sim' %}">Scenario Builder</a>
+                    </li>
+                    <li class="nav-item menu-item">
+                        <a class="nav-link" href="{% url 'OTRisk:ra_actions_view_default' %}">Actions</a>
+                    </li>
+                    <li class="nav-item menu-item">
+                        <a class="nav-link" href="{% url 'OTRisk:risk_register' %}">Risk Register</a>
+                    </li>
+                    <li class="nav-item menu-item">
+                        <a class="nav-link" href="{% url 'OTRisk:list_frameworks' %}">Assessments</a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            Admin
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+
+                            <li>
+                                <a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:setup_org' %}">Set Defaults</a>
+                            </li>
+                        <li>
+                                    <a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:cybersecurity_defaults_view' %}">Cyber Insurance</a>
+
+                                </li>
+                            <li>
+                                <a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:admin_users' %}">Admin Users</a>
+                            </li>
+                            <li>
+                                <a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:upload_questionnaire' %}">Upload Questionnaires</a>
+                            </li>
+                            {% if user.is_staff %}
+                            <!-- Links visible only to superusers -->
+                            <li>
+                                <a class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:user_admin' %}">User Administration</a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item"  style="font-size: 12px;" href="{% url 'OTRisk:organization_form' %}">Manage Organizations</a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:execute_sql' %}">Execute SQL</a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                     </li>
+                <li class="nav-item menu-item">
+                    <a class="nav-link" href="{% url 'accounts:profile' %}">
+                    <i class="bi bi-person-fill"></i> {{ user.first_name }} {{ user.last_name }} | {{ user.userprofile.organization.name }}
+                    </a>
+                    </li>
+                    <li class="nav-item menu-item">
+                    <form action="{% url 'logout' %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="nav-link" style="background:none; border:none; padding:0; margin:0; color:inherit;">Logout</button>
+                </form>
+
+                    </li>
+                    </ul>
             </div>
-        </div>
+    </nav>
+    <main role="main" class="col-md-10 ml-sm-auto col-lg-12  custom-main-content" >
+    <div class="top-strip">
+        <h1 class="page-title">QRAW Report@AnzenOT (Beta)</h1>
     </div>
 
-    <div class="col-md-9">
-        <div class="form-group">
+    <div class="row">
+        <div class="col-md-12" id="pha_header"></div>
+        <div class="row">
+        <div class="col-md-12">
+            <p>
+            <H4 style="color: white; display: inline-block;">QRAW Title: {{ qraw_header.RATitle }}</H4>
+        </div>
+    </div>
+    <div class="row"  style="font-size: 10px">
+            <div class="col-md-4">
+                <div class="form-group">
+                    <div class="row">
+                        <div class="col-md-6" style="font-size: 14px; color: white">
+                            <b>Facility Type:</b> {{ qraw_header.BusinessUnitType }}<br>
+                            <b>Industry:</b> {{ qraw_header.industry }}<br>
+                            <b>Business Unit:</b> {{ qraw_header.BusinessUnit }}<br>
+                            <b>Date:</b> {{ qraw_header.RADate }}<br>
+
+                        </div>
+                        <div class="col-md-6" style="font-size: 14px; color: white">
+                            <b>Trigger: </b>{{ qraw_header.RATrigger }}<br>
+                            <b>Risk Assessor: </b>{{ qraw_header.AssessorName }}<br>
+                            <b>Status:</b> {{ qraw_header.StatusFlag }}<br>
+
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <label style="color:white">Estimated Event Costs</label>
+                            <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                            <div class="card-body">
+                            <img src="{% static 'images/bestcase.png' %}" alt="" style="height: 2em; vertical-align: middle; color: #3B6BF9"> Best Case<br>
+                            <h4>{{ total_cost_impact_low }}</h4>
+                            </div>
+                            </div>
+
+                </div>
+                        <div class="col-md-4">
+                            <label style="color:white">Estimated Event Costs</label>
+                            <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                                <div class="card-body">
+                                <img src="{% static 'images/mostlikely.png' %}" alt="" style="height: 2em; vertical-align: middle;"> Median<br>
+                                <h4>{{ total_cost_impact }}</h4>
+                                </div>
+                                </div>
+
+                </div>
+                        <div class="col-md-4">
+                            <label style="color:white">Estimated Event Costs</label>
+                            <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                                <div class="card-body">
+                                <img src="{% static 'images/worstcase.png' %}" alt="" style="height: 2em; vertical-align: middle;"> Worst Case<br>
+                                <h4>{{ total_cost_impact_high }}</h4>
+
+                        </div>
+                    </div>
+                </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2"></div>
+
+    </div>
+
+    <div class="row">
+        <div class="col-md-5">
+            <div class="form-group">
 
             <div id="risk_score_container" style="width: 100%; height: 350px;"></div>
 
+            </div>
         </div>
+        <div class="col-md-5">
+            <div class="form-group">
+            <div id="bia_container" style="width: 100%; height: 350px;"></div>
+            </div>
         </div>
-
-        </div>
+        <div class="col-md-2"></div>
     </div>
-    <div class="col">
-        <div class="form-group">
-        <div id="bia_container" style="width: 100%; height: 350px;"></div>
-        </div>
-    </div>
-</div>
-<div class="row"  style="font-size: 10px">
-</div>
 
-    <div class="col-md-1"></div>
+
 </div> <!-- BIA Summary and profile -->
 <br>
-
 <div class="row">
-    <div class="col-md-1"></div>
     <div class="col-md-3" style="padding-right: 0; padding-left: 0">
         <u><b>Scenario's</b></u><br><br>
         {% for scenario in qraw_scenarios %}
@@ -484,113 +422,47 @@ body {
 
 
     </script>
-    <div class="col-7" style="padding-left: 0; background-color: #fff8e8;">
-
-        <div class="row" style="height: 5px"></div>
+    <div class="col-8" style="padding-left: 0; background-color: #5E6266">
+        <br>
+        <div class="col-md-1"></div>
+        <div class="col-md-12">
+        <div class="form-group">
         <div class="row">
-            <div class="col-md-1"></div>
-
-            <div class="col-md-4">
+            <div class="col-md-6">
                 <b>Scenario Consequences</b>
-                <div id="scenario_consequences" style="font-size: larger"></div>
-                <br><br>
-
-                <b>Recommended Controls</b>
-
-                <div id="controls"></div>
-            </div> <!-- recommended controls -->
-
-            <div class="col-md-7">
-                <div class="row" >
-                    <div class="col-md-1"></div>
-                    <div class="col-md-10 text-center">
-                        <b>Estimated Single Event Costs</b>
-                    </div>
-                    <div class="col-md-1"></div>
-                </div>
-                <div class="row" >
-                    <div class="col-md-1"></div>
-                    <div class="col-md-10 text-center">
-                        <div class="row" >
-                            <div class="col-md-4 text-center">
-                                <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                                    <div class="card-body text-center" style="font-size: 18px">
-                                        <img src="{% static 'images/bestcase.png' %}" alt="" style="height: 2em; vertical-align: middle; color: #3B6BF9"> Best Case<br>
-                                        <h4 style="color: #0a53be"><label id="sle_low"></label></h4>
-                                    </div>
-                                </div>
-
-                            </div>
-                             <div class="col-md-4 text-center">
-                                 <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                                    <div class="card-body text-center" style="font-size: 18px">
-                                        <img src="{% static 'images/mostlikely.png' %}" alt="" style="height: 2em; vertical-align: middle;"> Median<br>
-                                        <h4 style="color: #0a53be"><label id="sle"></label></h4>
-                                    </div>
-                                </div>
-
-                             </div>
-                             <div class="col-md-4 text-center">
-                                 <div class="card mb-3 shadow-sm "> <!-- Bootstrap card with shadow -->
-                                    <div class="card-body text-center" style="font-size: 18px">
-                                        <img src="{% static 'images/worstcase.png' %}" alt="" style="height: 2em; vertical-align: middle;"> Worst Case<br>
-                                        <h4 style="color: #0a53be"><label id="sle_high"></label></h4>
-                                    </div>
-                                </div>
-
-                             </div>
-                        </div>
-                    </div>
-                    <div class="col-md-1"></div>
-                </div>
-
-                <div class = "row ">
-                    <div class="col">
-                        <div id="radarChartContainer" style="width: 100%; height: 400px;"></div>
-                    </div>
-                </div>
-                <div class = "row" >
-                    <div class="col">
+                <div id="scenario_consequences" ></div><br>
+                <div id="radarChartContainer" style="width: 100%; height: 400px;"></div><br>
+                <b>Damage Estimate</b>
+                <div id="scenario_damage" ></div><br>
+            </div>
+            <div class="col-md-6">
+                <b>Recommendations</b>
+                <div id="exec_summary" ></div>
+             </div>
+        </div>
+        </div>
+        <div class="form-group">
+            <div class="row">
+                <div class="col-md-3"></div>
+                <div class="row">
+                    <div class="col-md-12">
                         <div id="riskContainer" style="width: 85%; height: 350px;"></div>
                     </div>
+
                 </div>
+                <div class="col-md-3"></div>
             </div>
-
         </div>
-        <div class="row">
-            <div class="col-md-1"></div>
-
-            <div class="col-md-8">
-
-            </div>
-
-            <div class="col-md-3 d-flex flex-column justify-content-end" style="font-size: 10px;">
-
-
-
-            </div>
-
-        </div>
-        <div class="row">
-            <div class="col-md-1"></div>
-
-            <div class="col-md-5">
-
-            </div>
-            <div class="col-md-4">
-
-            </div>
-            <div class="col-md-2"></div>
-
-        </div>
-
-
-
+    </div>
 
     </div>
     <div class="col-md-1"></div>
 </div>
 
+
+</main>
+</div>
+</div>
 <script>
 anychart.onDocumentReady(function() {
     // Create data for AnyChart
@@ -690,10 +562,9 @@ anychart.onDocumentReady(function() {
 
     function writeScenarioData(data) {
 
-        document.getElementById('sle_low').textContent = data.event_cost_low;
-        document.getElementById('sle').textContent = data.event_cost_median;
-        document.getElementById('sle_high').textContent = data.event_cost_high;
         var consequencesText = data.consequences;
+        var exec_summary = data.executive_summary;
+        var scenario_damage = data.scenario_damage;
 
         // Split the text into an array of bullet points
         // Assuming each bullet point starts with '-'
@@ -712,38 +583,10 @@ anychart.onDocumentReady(function() {
         // Set the formatted HTML as the content of the scenario_consequences element
         document.getElementById('scenario_consequences').innerHTML = formattedHtml;
 
+        document.getElementById('exec_summary').innerText = exec_summary;
+        document.getElementById('scenario_damage').innerText = scenario_damage;
 
-    // Get the controls container
-    var controlsContainer = document.getElementById('controls');
 
-    // Clear any existing controls
-    controlsContainer.innerHTML = '';
-
-    // Loop through the controls and add them to the container
-    data.controls.forEach(function(control) {
-        // Create a new div for the control
-        var controlDiv = document.createElement('div');
-        controlDiv.className = 'control-item';
-
-        // Add the control name
-        var controlName = document.createElement('p');
-        controlName.textContent = control.control;
-        controlDiv.appendChild(controlName);
-
-        // Add the slider
-        var slider = document.createElement('input');
-        slider.type = 'range';
-        slider.min = '0';
-        slider.max = '100';
-        slider.value = control.score;
-        slider.className = 'control-slider';
-        slider.disabled = true;
-        controlDiv.appendChild(slider);
-        setSliderColor(slider)
-
-        // Append the control div to the container
-        controlsContainer.appendChild(controlDiv);
-    });
     }
 
 function setSliderColor(slider) {
@@ -761,7 +604,7 @@ function setSliderColor(slider) {
     }
     slider.style.setProperty("--thumb-color", color);  // Set the color variable
 }
-    function generateRadarChart(data) {
+function generateRadarChart(data) {
     anychart.onDocumentReady(function() {
 
         $('#radarChartContainer').empty();
@@ -782,7 +625,7 @@ function setSliderColor(slider) {
         var credits = chart.credits();
         credits.enabled(false);
         chart.line(seriesData);
-        chart.background().fill("#fff8e8");
+        chart.background().fill("#5e6266");
         chart.yScale().minimum(0).maximum(10);
         chart.xGrid().palette(["gray 0.05", "gray 0.1"]);
         chart.yGrid().palette(["gray 0.05", "gray 0.1"]);
@@ -791,6 +634,11 @@ function setSliderColor(slider) {
         title.orientation("top");
         title.align("center");
         title.enabled(true);
+        title.fontColor("#FFFFFF")
+        chart.xAxis().labels().fontColor("#FFFFFF");
+
+        // Set y-axis labels style to white
+        chart.yAxis().labels().fontColor("#FFFFFF");
         chart.container('radarChartContainer');
         chart.draw();
     });
@@ -813,9 +661,19 @@ function generateRiskBarChart(data) {
         chart.data(barData);
         var credits = chart.credits();
         credits.enabled(false);
-        chart.background().fill("#fff8e8");
+        var title = chart.title();
+        title.text("Scenario Risk Analysis Summary")
+             .fontColor("#FFFFFF"); // Set title color to white
+
+        // Set x-axis labels style to white
+        chart.xAxis().labels().fontColor("#FFFFFF");
+
+        // Set y-axis labels style to white
+        chart.yAxis().labels().fontColor("#FFFFFF");
+
+        chart.background().fill("#5e6266");
         chart.yScale().minimum(0).maximum(10);
-        chart.title("Scenario Risk Analysis Summary");
+
         chart.container("riskContainer");
         chart.draw();
     });

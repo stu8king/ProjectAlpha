@@ -8,6 +8,7 @@
 
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.0.9/dist/umd/popper.min.js"></script>
 
     <!-- Bootstrap Select CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.1/css/bootstrap-select.min.css">
@@ -23,6 +24,7 @@
     <script src="{% static 'bootstrap/dist/js/bootstrap.bundle.min.js' %}"></script>
 
         <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.25/css/jquery.dataTables.css">
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script type="text/javascript" charset="utf8" src="https://code.jquery.com/jquery-3.5.1.js"></script>
     <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.js"></script>
 <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
@@ -126,31 +128,81 @@ color: #d3d1cd;
         background-color: #fac330; /* Light orange background for hovered dropdown items */
         color: #2D2E30;
     }
-    .col-md-2 {
-        place-items: center;
+    body {
+        background-color: #f4f4f4;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        color: #333;
     }
-
-            .col-md-2 {
-        place-items: center;
+    .container {
+        background-color: #fff;
+        padding: 20px 40px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin-top: 20px;
+        max-width: 800px;
     }
-
-     .small-font {
-        font-size: 0.8rem; /* adjust as needed */
-   }
-
-         .stat-card {
-        background-color: lightgrey;
+    .form-control {
+        border-radius: 0.25rem;
+        border: 1px solid #ced4da;
+        width: 100%;
+        max-width: 280px; /* Adjust based on container width */
     }
-    .inner-card {
-        background-color: white;
-        border-radius: 10px;
-        margin: 10px 10px 20px 10px;
-        height: 70%;
+    .form-group, .form-check {
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
     }
-    .card-title-light {
-        font-weight: lighter;
+    .form-check-label {
+        margin-left: 0.5rem;
+        margin-bottom: 0;
     }
-
+    label {
+        font-weight: 600;
+        color: #212529;
+    }
+    .btn-primary {
+        background-color: #007bff;
+        border-color: #007bff;
+        border-radius: 0.25rem;
+        padding: 10px 20px;
+        font-size: 16px;
+        font-weight: 600;
+    }
+    .btn-primary:hover {
+        background-color: #0056b3;
+        border-color: #004085;
+    }
+    .section-title {
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+        border-bottom: 2px solid #eee;
+        color: #007bff;
+        font-size: 24px;
+    }
+    .form-check {
+        justify-content: flex-start;
+    }
+    .form-check-input {
+        width: 20px;
+        height: 20px;
+        margin-right: 10px;
+    }
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .form-control, .form-group, .form-check {
+            width: 100%;
+            max-width: none;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        .form-check-label, .form-check-input {
+            align-self: center;
+        }
+        .form-group label, .form-check label {
+            margin-bottom: 0.5rem;
+        }
+    }
     </style>
 </head>
 <body style="background-color: #464748">
@@ -233,7 +285,7 @@ color: #d3d1cd;
     </nav>
     <main role="main" class="col-md-10 ml-sm-auto col-lg-12  custom-main-content" >
     <div class="top-strip">
-        <h1 class="page-title">QRAW Report@AnzenOT (Beta)</h1>
+        <h1 class="page-title">Cyber Insurance@AnzenOT (Beta)</h1>
     </div>
 
 
@@ -242,121 +294,46 @@ color: #d3d1cd;
     <div class="col"></div>
 </div>
 <div class="container mt-4">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0">Default Settings for {{ user.userprofile.organization.name }}</h4>
+    <h2 class="text-center mb-4">Cyber Insurance Policy Defaults</h2>
+    <form method="post">
+        {% csrf_token %}
+        <div class="section-title">Policy Details</div>
+        {% for field in form %}
+            {% if field.field.widget.input_type != 'checkbox' %}
+                <div class="form-group">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}
+                        <small class="form-text text-muted">{{ field.help_text }}</small>
+                    {% endif %}
+                    {% for error in field.errors %}
+                        <div class="alert alert-danger">{{ error }}</div>
+                    {% endfor %}
                 </div>
-                <div class="card-body">
-                    <form method="post" class="form-horizontal">
-                        {% csrf_token %}
-                        {% for field in form %}
-                            <div class="form-group row mb-3">
-                                <label for="{{ field.id_for_label }}" class="col-sm-4 col-form-label">{{ field.label }}</label>
-                                <div class="col-sm-8">
-                                    {{ field }}
-                                    {% if field.help_text %}
-                                        <small class="form-text text-muted">{{ field.help_text }}</small>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        {% endfor %}
-                        <div class="form-group row">
-                            <div class="col-sm-12 text-center">
-                                <button type="button" class="btn btn-primary" id="submitBtn">Submit</button>
-                            </div>
-                        </div>
-                    </form>
+            {% endif %}
+        {% endfor %}
+
+        <div class="section-title">Coverage Options</div>
+        {% for field in form %}
+            {% if field.field.widget.input_type == 'checkbox' %}
+                <div class="form-check">
+                    {{ field }}
+                    <label for="{{ field.id_for_label }}" class="form-check-label">{{ field.label }}</label>
+                    {% for error in field.errors %}
+                        <div class="alert alert-danger">{{ error }}</div>
+                    {% endfor %}
                 </div>
-            </div>
+            {% endif %}
+        {% endfor %}
+
+        <div class="text-center">
+            <button type="submit" class="btn btn-primary mt-3">Save</button>
         </div>
-    </div>
+    </form>
+        </div>
+
+    </main>
 </div>
-
-<script>
-document.getElementById('submitBtn').addEventListener('click', function(e) {
-    e.preventDefault();
-
-    // Function to reformat currency values to plain numbers
-    function reformatCurrencyFields() {
-        var currencyFields = ['id_annual_revenue', 'id_cyber_insurance', 'id_insurance_deductible'];
-        currencyFields.forEach(function(fieldId) {
-            var field = document.getElementById(fieldId);
-            if (field && field.value) {
-                // Remove non-numeric characters except the decimal point
-                var numericValue = field.value.replace(/[^0-9.]/g, '');
-                field.value = numericValue;
-            }
-        });
-    }
-
-    // Call the reformat function before submitting
-    reformatCurrencyFields();
-
-    swal({
-        title: "Are you sure?",
-        text: "Do you want to proceed with making changes?",
-        icon: "warning",
-        buttons: true,
-        dangerMode: true,
-    })
-    .then((willSubmit) => {
-        if (willSubmit) {
-            document.querySelector('form').submit();
-        }
-    });
-});
-</script>
-
-
- <script type="text/javascript">
-    document.addEventListener('DOMContentLoaded', function() {
-        // Function to format numbers as currency
-        function formatCurrency(value) {
-            return parseFloat(value).toLocaleString('en-US', {
-                style: 'currency',
-                currency: 'USD',
-                minimumFractionDigits: 2
-            });
-        }
-
-        // Format fields on load
-        document.querySelectorAll('input[type="text"][pattern="^\\d+(\\.?\\d{2})?$"]').forEach(function(input) {
-            var value = input.value;
-            if(value) input.value = formatCurrency(value);
-        });
-
-        // Format fields before submitting form
-        document.querySelector('form').addEventListener('submit', function() {
-            document.querySelectorAll('input[type="text"][pattern="^\\d+(\\.?\\d{2})?$"]').forEach(function(input) {
-                var value = input.value.replace(/[^0-9.-]+/g,"");
-                input.value = value; // Convert back to plain number for submission
-            });
-        });
-
-        // Reformat on field blur
-        document.querySelectorAll('input[type="text"][pattern="^\\d+(\\.?\\d{2})?$"]').forEach(function(input) {
-            input.addEventListener('blur', function(e) {
-                var value = e.target.value.replace(/[^0-9.-]+/g,"");
-                e.target.value = formatCurrency(value);
-            });
-        });
-    });
-
-    function formatCurrency() {
-    var currencyFields = ['id_annual_revenue', 'id_cyber_insurance', 'id_insurance_deductible'];
-    currencyFields.forEach(function(fieldId) {
-        var field = document.getElementById(fieldId);
-        if (field && field.value) {
-            field.value = parseFloat(field.value).toLocaleString('en-US', {
-                style: 'currency',
-                currency: 'USD',
-            });
-        }
-    });
-}
-window.onload = formatCurrency;
-</script>
+</div>
 </body>
 </html>
