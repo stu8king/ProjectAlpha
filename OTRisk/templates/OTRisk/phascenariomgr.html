@@ -4257,14 +4257,18 @@ function createFrequencyGauge(rating) {
 
 
 function resetformcontrols() {
-  swal({
+  swal.fire({
     title: "New Scenario",
-    text: "Are you sure you want to begin a new scenario and reset the form? All unsaved changes will be lost.",
-    icon: "warning",
-    buttons: ["No", "Yes"],
-    dangerMode: true,
-  }).then((isConfirmed) => {
-    if (isConfirmed) {
+    html: "Are you sure you want to begin a new scenario and reset the form? All unsaved changes will be lost.",
+    iconHtml: '<img src="/static/images/anzen_owl.png" width="100px">', // Custom image as icon
+    showCancelButton: true, // Show the cancel button
+    confirmButtonText: 'Yes', // Text for the confirm button
+    cancelButtonText: 'No', // Text for the cancel button
+    focusConfirm: false, // Focus on the confirm button by default
+    reverseButtons: true, // Reverse the button positions (if you want "No" to the right of "Yes"
+
+}).then((result) => {
+    if (result.isConfirmed) {
       // Reset form fields here
       sessionStorage.setItem('attackTreeDrawn', 'false');
 
