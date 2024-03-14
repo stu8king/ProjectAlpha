@@ -142,9 +142,10 @@
               <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
 
                     <li><a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:setup_org' %}">Defaults</a></li>
-                  <li><a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:admin_users' %}">Admin Users</a></li>
-              <li><a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:upload_questionnaire' %}">Upload Questionnaires</a></li>
+
                   {% if user.is_staff %}
+                      <li><a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:admin_users' %}">Admin Users</a></li>
+              <li><a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:upload_questionnaire' %}">Upload Questionnaires</a></li>
                     <!-- Links visible only to superusers -->
                     <li><a class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:user_admin' %}">User Administration</a></li>
                       <li><a class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:execute_sql' %}">Execute SQL</a></li>
@@ -312,7 +313,13 @@
                             {{ profile_form.role_moderator.label }}
                         </label>
                     </div>
-
+                    <div class="form-group mb-3">
+                    <label for="{{ profile_form.max_scenario_count.id_for_label }}">{{ profile_form.max_scenario_count.label }}</label>
+                    {{ profile_form.max_scenario_count }}
+                    {% if profile_form.max_scenario_count.help_text %}
+                        <small class="form-text text-muted">{{ profile_form.max_scenario_count.help_text }}</small>
+                    {% endif %}
+                </div>
                     <button type="submit" class="btn btn-primary w-100">Add User</button>
                 </form>
             </div>

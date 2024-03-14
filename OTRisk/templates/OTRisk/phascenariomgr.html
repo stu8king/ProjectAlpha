@@ -22,7 +22,8 @@
 <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.js"></script>
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 <script src="https://cdn.anychart.com/releases/8.10.0/js/anychart-bundle.min.js"></script>
@@ -484,6 +485,10 @@ svg {
 #compliance_map a:hover {
     text-decoration: underline; /* Adds underline on hover for links */
 }
+.tab-link.disabled {
+    pointer-events: none; /* Prevent clicking */
+    opacity: 0.5; /* Visual feedback that the link is disabled */
+}
 
 
 </style>
@@ -555,14 +560,15 @@ document.addEventListener("DOMContentLoaded", function() {
                                     <a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:cybersecurity_defaults_view' %}">Cyber Insurance</a>
 
                                 </li>
-                                <li>
+
+                                {% if user.is_staff %}
+                                <!-- Links visible only to superusers -->
+                                 <li>
                                     <a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:admin_users' %}">Admin Users</a>
                                 </li>
                                 <li>
                                     <a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:upload_questionnaire' %}">Upload Questionnaires</a>
                                 </li>
-                                {% if user.is_staff %}
-                                <!-- Links visible only to superusers -->
                                 <li>
                                     <a class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:user_admin' %}">User Administration</a>
                                 </li>
@@ -642,13 +648,13 @@ document.addEventListener("DOMContentLoaded", function() {
                     <div class="col-md-1" ><button type="button" class="btn nav-link" data-bs-toggle="modal"  data-bs-target="#scenarioSelectModal"><i class="bi bi-box-arrow-down"></i> Load</button></div>
                     <div class="col-md-1">
                 <button id="risk-assessment-btn" type="button" class="btn nav-link" ><i class="bi bi-bullseye"></i>
-                    KPIs <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none;" id="loadingSpinner"></span></button><br>
+                    KPIs </button><br>
 
                             <script>
                             $(document).ready(function () {
                             $("#risk-assessment-btn").click(function () {
                                 // Display the SweetAlert dialog
-                                swal({
+                                swal.fire({
                                     title: "Scenario KPIs",
                                     text: "Scenario KPIs can take up to a minute or longer to calculate. Proceed?",
                                     icon: "warning",
@@ -701,7 +707,12 @@ document.addEventListener("DOMContentLoaded", function() {
                 </div>
 
             <div class="text-label" style="padding-left: 250px; font-size: 20px;">
-                <label id="echo_scenario" class="form-group"  style="word-wrap: normal;font-size: small; width: 50%; "></label>
+                <label id="echo_scenario" class="form-group"  style="word-wrap: normal;font-size: small; width: 50%; "></label><br>
+                <div class="progress" style="display:none;" id="loadingProgressBar">
+                    <div class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" id="progressBarInner"></div>
+                </div>
+                <span id="progressBarMessage" style="display:block; text-align:center; margin-top:5px;"></span> <!-- Adjust styling as needed -->
+
 
                 </div>
                 <div class="sub-menu sub-menu-container small-font">
@@ -908,7 +919,7 @@ $(document).ready(function() {
                                     function checkDeleteCondition() {
                                         var lsValue = sessionStorage.getItem("ls");
                                         if (lsValue === "1") {
-                                            swal("iOTa Scenario Manager", "Changes cannot be made to this scenario because it has been added to the risk register");
+                                            swal.fire("AnzenOT Scenario Manager", "Changes cannot be made to this scenario because it has been added to the risk register");
                                             return false; // Prevent the default action (i.e., following the link)
                                         }
                                         return confirm('Are you sure you want to delete this record? (Note that if you proceed, the record will be virtually deleted and can be recovered if necessary)');
@@ -1059,131 +1070,119 @@ $(document).ready(function() {
 
 
                 function drawAttackTree(data) {
-                        $('#tab9').addClass('active').show();
-                        var container = document.getElementById('attack_tree');
-                        var containerWidth = container.clientWidth;
-                        var svgWidth = containerWidth * 0.8;
-                        var margin = { top: 20, right: 120, bottom: 20, left: 280 };
-                        var width = svgWidth - margin.left - margin.right;
-                        var height = 800; // Increased height for better resolution
+    $('#tab9').addClass('active').show();
+    var container = document.getElementById('attack_tree');
+    var containerWidth = container.clientWidth;
+    var svgWidth = containerWidth * 0.8;
+    var margin = { top: 20, right: 120, bottom: 20, left: 280 };
+    var width = svgWidth - margin.left - margin.right;
+    var height = 800; // Increased height for better resolution
 
-                        d3.select(container).selectAll("svg").remove();
+    d3.select(container).selectAll("svg").remove();
 
-                        var svg = d3.select(container).append("svg")
-                            .attr("width", "100%")
-                            .attr("viewBox", "0 0 " + svgWidth + " " + height)
-                            .attr("height", height)
-                            .style("display", "block")
-                            .style("margin", "auto")
-                            .append("g")
-                            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+    var svg = d3.select(container).append("svg")
+        .attr("width", "100%")
+        .attr("viewBox", "0 0 " + svgWidth + " " + height)
+        .attr("height", height)
+        .style("display", "block")
+        .style("margin", "auto")
+        .style("background-color", "#253349C0") // Set the background color
+        .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-                        // Define the arrow marker
-                        svg.append("svg:defs").selectAll("marker")
-                            .data(["end"])
-                            .enter().append("svg:marker")
-                            .attr("id", String)
-                            .attr("viewBox", "0 -5 10 10")
-                            .attr("refX", 25)
-                            .attr("markerWidth", 6)
-                            .attr("markerHeight", 6)
-                            .attr("orient", "auto")
-                            .append("svg:path")
-                            .attr("d", "M0,-5L10,0L0,5");
+    var i = 0,
+        duration = 750,
+        root;
 
-                        var i = 0,
-                            duration = 750,
-                            root;
+    var treemap = d3.tree()
+        .size([height, width - margin.left - margin.right])
+        .separation(function(a, b) { return (a.parent == b.parent ? 1 : 2); });
 
-                        var treemap = d3.tree()
-                            .size([height, width - margin.left - margin.right])
-                            .separation(function(a, b) { return (a.parent == b.parent ? 1 : 2); });
+    root = d3.hierarchy(data, function(d) { return d.children; });
+    root.x0 = height / 2;
+    root.y0 = 0;
 
-                        root = d3.hierarchy(data, function(d) { return d.children; });
-                        root.x0 = height / 2;
-                        root.y0 = 0;
+    // Color-blind-friendly color scale
+    var colorScale = d3.scaleOrdinal(["#88CCEE", "#DDCC77", "#CC6677", "#882255", "#44AA99", "#117733", "#999933", "#AA4499"]);
 
-                        // Color-blind-friendly color scale
-                        var colorScale = d3.scaleOrdinal(["#88CCEE", "#DDCC77", "#CC6677", "#882255", "#44AA99", "#117733", "#999933", "#AA4499"]);
+    update(root);
 
-                        update(root);
+    function update(source) {
+        var treeData = treemap(root);
 
-                        function update(source) {
-                            var treeData = treemap(root);
+        var nodes = treeData.descendants(),
+            links = treeData.descendants().slice(1);
 
-                            var nodes = treeData.descendants(),
-                                links = treeData.descendants().slice(1);
+        nodes.forEach(function(d) { d.y = d.depth * 180 });
 
-                            nodes.forEach(function(d) { d.y = d.depth * 180 });
+        var node = svg.selectAll('g.node')
+            .data(nodes, function(d) { return d.id || (d.id = ++i); });
 
-                            var node = svg.selectAll('g.node')
-                                .data(nodes, function(d) { return d.id || (d.id = ++i); });
+        var nodeEnter = node.enter().append('g')
+            .attr('class', 'node')
+            .attr("transform", function(d) { return "translate(" + d.y + "," + d.x + ")"; });
 
-                            var nodeEnter = node.enter().append('g')
-                                .attr('class', 'node')
-                                .attr("transform", function(d) { return "translate(" + d.y + "," + d.x + ")"; });
+        nodeEnter.append('circle')
+            .attr('r', 10)
+            .style("stroke", "black")
+            .style("stroke-width", 1.5)
+            .style("fill", function(d) { return colorScale(d.depth); });
 
-                            nodeEnter.append('circle')
-                                .attr('r', 10)
-                                .style("stroke", "black")
-                                .style("stroke-width", 1.5)
-                                .style("fill", function(d) { return colorScale(d.depth); });
+        nodeEnter.append('text')
+            .style("fill", "#FFFFFF") // Set label color to white
+            .style("font-size", "14px")
+            .style("font-weight", "bold")
+            .attr("transform", "rotate(-10)")
+            .attr("dy", ".35em")
+            .attr("x", function(d) { return d.children ? -13 - this.getComputedTextLength() : 13; })
+            .attr("text-anchor", function(d) { return d.children ? "end" : "start"; })
+            .text(function(d) { return d.data.name; });
 
-                            nodeEnter.append('text')
-                                .style("fill", "darkgray")
-                                .style("font-size", "14px")
-                                .style("font-weight", "bold")
-                                .attr("transform", "rotate(-10)")
-                                .attr("dy", ".35em")
-                                .attr("x", function(d) { return d.children ? -13 - this.getComputedTextLength() : 13; })
-                                .attr("text-anchor", function(d) { return d.children ? "end" : "start"; })
-                                .text(function(d) { return d.data.name; });
+        var link = svg.selectAll('path.link')
+            .data(links, function(d) { return d.id; });
 
-                            var link = svg.selectAll('path.link')
-                                .data(links, function(d) { return d.id; });
+        link.enter().insert('path', "g")
+            .attr("class", "link")
+            .style("stroke", "#96C5ECC0") // Set line color
+            .style("stroke-width", 2)
+            .style("fill", "none")
+            // Removed the arrow marker reference
+            .attr('d', function(d) {
+                return "M" + d.y + "," + d.x
+                    + "C" + (d.y + d.parent.y) / 2 + "," + d.x
+                    + " " + (d.y + d.parent.y) / 2 + "," + d.parent.x
+                    + " " + d.parent.y + "," + d.parent.x;
+            });
+    }
 
-                            link.enter().insert('path', "g")
-                                .attr("class", "link")
-                                .style("stroke", function(d) { return colorScale(d.depth); })
-                                .style("stroke-width", 2)
-                                .style("fill", "none")
-                                .attr("marker-end", "url(#end)") // Add the arrow marker
-                                .attr('d', function(d) {
-                                    return "M" + d.y + "," + d.x
-                                        + "C" + (d.y + d.parent.y) / 2 + "," + d.x
-                                        + " " + (d.y + d.parent.y) / 2 + "," + d.parent.x
-                                        + " " + d.parent.y + "," + d.parent.x;
-                                });
-                        }
-
-                            // Add border and shadow to the container
-                            var attackTreeDiv = document.getElementById('attack_tree');
-                            attackTreeDiv.style.display = 'block';
-                            attackTreeDiv.style.border = '1px solid #ccc';
-                            attackTreeDiv.style.boxShadow = '0px 0px 10px rgba(0, 0, 0, 0.5)';
-                            sessionStorage.setItem('attackTreeDrawn', 'true');
-                            var svgElement = container.querySelector('svg');
-                            // Pass it to the convertSVGToPNG function
-                            convertSVGToPNG(svgElement, 0.8); // Adjust the scale as needed
-                            var attackTreeDiv = document.getElementById('attack_tree')
-                            $('.tab-content').removeClass('active').hide();
-                             $('#tab2').addClass('active').show();
-                            // Add export button functionality (if feasible)
-                            var exportButton = document.getElementById('exportButton');
-                            if (exportButton) {
-                                exportButton.addEventListener('click', function() {
-                                    var svgData = new XMLSerializer().serializeToString(document.querySelector('svg'));
-                                    var svgBlob = new Blob([svgData], {type:"image/svg+xml;charset=utf-8"});
-                                    var svgUrl = URL.createObjectURL(svgBlob);
-                                    var downloadLink = document.createElement("a");
-                                    downloadLink.href = svgUrl;
-                                    downloadLink.download = "attack_tree.svg";
-                                    document.body.appendChild(downloadLink);
-                                    downloadLink.click();
-                                    document.body.removeChild(downloadLink);
-                                });
-                            }
-                        }
+            // Add border and shadow to the container
+            var attackTreeDiv = document.getElementById('attack_tree');
+            attackTreeDiv.style.display = 'block';
+            attackTreeDiv.style.border = '1px solid #ccc';
+            attackTreeDiv.style.boxShadow = '0px 0px 10px rgba(0, 0, 0, 0.5)';
+            sessionStorage.setItem('attackTreeDrawn', 'true');
+            var svgElement = container.querySelector('svg');
+            // Pass it to the convertSVGToPNG function
+            convertSVGToPNG(svgElement, 0.8); // Adjust the scale as needed
+            var attackTreeDiv = document.getElementById('attack_tree')
+            $('.tab-content').removeClass('active').hide();
+             $('#tab2').addClass('active').show();
+            // Add export button functionality (if feasible)
+            var exportButton = document.getElementById('exportButton');
+            if (exportButton) {
+                exportButton.addEventListener('click', function() {
+                    var svgData = new XMLSerializer().serializeToString(document.querySelector('svg'));
+                    var svgBlob = new Blob([svgData], {type:"image/svg+xml;charset=utf-8"});
+                    var svgUrl = URL.createObjectURL(svgBlob);
+                    var downloadLink = document.createElement("a");
+                    downloadLink.href = svgUrl;
+                    downloadLink.download = "attack_tree.svg";
+                    document.body.appendChild(downloadLink);
+                    downloadLink.click();
+                    document.body.removeChild(downloadLink);
+                });
+            }
+        }
 
 
                 document.getElementById('analyzeScenarioBtn').addEventListener('click', function() {
@@ -1191,10 +1190,27 @@ $(document).ready(function() {
                 var phaID = document.getElementById('hdnphaID').value;
                 var attackTreeDrawn = sessionStorage.getItem('attackTreeDrawn');
                 var button = this;
-                var spinner = document.getElementById('loadingSpinner2');
-                spinner.style.display = 'inline-block';
+                $('#loadingProgressBar').show();
+                $('#progressBarInner').css('width', '0%').attr('aria-valuenow', 0);
+                $('#progressBarMessage').text('').show(); // Initialize and show message
                 button.disabled = true;
+                 $('.tab-link').addClass('disabled');
+                let progress = 0;
+                    let progressBarInterval = setInterval(function() {
+                        progress += 3; // Increment progress by 10% every second
+                        if (progress <= 100) {
+                            $('#progressBarInner').css('width', progress + '%').attr('aria-valuenow', progress);
 
+                            // Update progress bar message based on current progress
+                            if (progress === 6) {
+                                $('#progressBarMessage').text('Analysing consequences...');
+                            } else if (progress === 40) {
+                                $('#progressBarMessage').text('Drawing attack tree...');
+                            }
+                        } else {
+                            clearInterval(progressBarInterval); // Clear interval if progress exceeds 100%
+                        }
+                    }, 1000); // Update progress every second
                 $.ajax({
                     url: "{% url 'OTRisk:analyze_scenario' %}",
                     type: 'POST',
@@ -1205,7 +1221,10 @@ $(document).ready(function() {
                         'csrfmiddlewaretoken': '{{ csrf_token }}'
                     },
                     success: function(response) {
-                        spinner.style.display = 'none';
+                        clearInterval(progressBarInterval);
+                        $('#loadingProgressBar').hide();
+                        $('#progressBarMessage').hide();
+                         $('.tab-link').removeClass('disabled');
                         button.disabled = false;
 
                         var tableBody = document.getElementById('consequenceTable').getElementsByTagName('tbody')[0];
@@ -1229,7 +1248,10 @@ $(document).ready(function() {
 
                     },
                     error: function(xhr, status, error) {
-                        spinner.style.display = 'none';
+                        clearInterval(progressBarInterval);
+                        $('#loadingProgressBar').hide();
+                        $('#progressBarMessage').hide();
+                         $('.tab-link').removeClass('disabled');
                         button.disabled = false;
 
                         // Parse the responseText to JSON if it is in JSON format
@@ -1787,7 +1809,7 @@ $(document).ready(function() {
 
          <div class="tab-content " id="tab9">
             <h2>Attack Tree</h2>
-             <div id="attack_tree" style="width:100%"></div>
+             <div id="attack_tree" style="width:100%; background-color: #253349C0"></div>
 
                 <button id="exportAttackTreeBtn" type="button" class="btn btn-primary" style="display: none">Export as Image</button>
                     <script>
@@ -2091,10 +2113,10 @@ $(document).ready(function() {
 
               if (lsValue === "1") {
                   if (riskSnapshotCheckbox.checked) {
-                      swal({
-                          title: "iOTa Scenario Manager",
+                      swal.fire({
+                          title: "AnzenOT Scenario Manager",
                           text: "The version of this scenario saved to the risk register cannot be changed. You are about to create a snapshot version of the scenario. Do you want to proceed?",
-                          icon: "warning",
+                          iconHtml: '<img src="/static/images/anzen_owl.png" width="100px">', // Custom image as icon,
                           buttons: true,
                           dangerMode: true,
                       })
@@ -2104,7 +2126,7 @@ $(document).ready(function() {
                               }
                           });
                   } else {
-                      swal("iOTa Scenario Manager", "Changes cannot be made to this scenario because it has been added to the risk register");
+                      swal.fire("AnzenOT Scenario Manager", "Changes cannot be made to this scenario because it has been added to the risk register");
                       return; // Exit the function
                   }
               } else {
@@ -3442,7 +3464,31 @@ $('#scenarioSelectModal').on('show.bs.modal', function (e) {
     return true;
 }
         function assessScenario(forceResubmit = false) {
-            $('#loadingSpinner').show();
+            $('#loadingProgressBar').show();
+            $('#progressBarInner').css('width', '0%').attr('aria-valuenow', 0);
+            $('#progressBarMessage').text('').show(); // Initialize and show message
+
+            // Disable tab links
+            $('.tab-link').addClass('disabled');
+
+         let progress = 0;
+    let progressBarInterval = setInterval(function() {
+        progress++;
+        if (progress <= 99) { // Increment progress until 99%
+            $('#progressBarInner').css('width', progress + '%').attr('aria-valuenow', progress);
+
+            // Update progress bar message based on current progress
+            if (progress === 10) {
+                $('#progressBarMessage').text('Calculating risk outcomes...');
+            } else if (progress === 20) {
+                $('#progressBarMessage').text('Preparing financial analysis...');
+            } else if (progress === 35) {
+                $('#progressBarMessage').text('Creating compliance map...');
+            } else if (progress === 60) {
+                $('#progressBarMessage').text('Writing recommendations...');
+            }
+        }
+    }, 1000); // Update progress every second
 
             let cpha = sessionStorage.getItem('activeCyberPHA');
             let scenario = document.getElementById('id_txtScenario').value;
@@ -3545,11 +3591,18 @@ $('#scenarioSelectModal').on('show.bs.modal', function (e) {
                     physical_safeguards: physicalSafeguardsStr
                 },
                 success: function (response) {
-                    $('#loadingSpinner').hide();
-
+                    // On success, set progress to 100% and hide the progress bar
+                    clearInterval(progressBarInterval);
+                    $('#progressBarInner').css('width', '100%').attr('aria-valuenow', 100);
+                    $('#progressBarMessage').text('Complete!').show();
+                    setTimeout(function() { // Briefly show 100% before hiding
+                        $('#loadingProgressBar').hide();
+                        $('#progressBarMessage').hide();
+                    }, 500); // Adjust delay as needed
+                     $('.tab-link').removeClass('disabled');
                     if (response.message === 'Scenario parameters have not changed.') {
                         // Display a SweetAlert notification
-                        swal({
+                        swal.fire({
                             title: "Duplicate Submission",
                             text: "You are submitting a scenario with the same parameters as one previously analyzed. Do you wish to proceed?",
                             icon: "warning",
@@ -3707,9 +3760,27 @@ $('#scenarioSelectModal').on('show.bs.modal', function (e) {
                     }
                 },
                 error: function (xhr, status, error) {
-                    // Handle any errors that occur during the AJAX call
 
-                    $('#loadingSpinner').hide();
+                    // Handle any errors that occur during the AJAX call
+                    if (xhr.status === 403) {
+
+                        swal.fire({
+                            title: 'Allowance Exceeded',
+                            html: 'You have used up all of your allocated scenario risk analysis allowance. Please contact your administrator or AnzenOT at <a href="mailto:support@anzenot.com">support@anzenot.com</a> to increase your allowance.',
+                            iconHtml: '<img src="/static/images/anzen_owl.png" width="100px">', // Custom image as icon
+                            customClass: {
+                                icon: 'no-border' // This class removes the default icon border and background
+                            },
+                            confirmButtonText: 'Ok',
+                            confirmButtonColor: '#3085d6',
+                        });
+                    } else {
+                        // Handle other errors
+                    }
+                    clearInterval(progressBarInterval);
+                    $('#loadingProgressBar').hide();
+                    $('#progressBarMessage').hide();
+                     $('.tab-link').removeClass('disabled');
                 },
             });
         }

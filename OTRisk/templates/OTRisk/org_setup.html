@@ -37,7 +37,26 @@
     background-color: #5E6266; /* Lighter shade of #464748 */
     padding: 15px; /* Optional: for internal spacing */
 }
-
+.form-group, .form-check {
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+ @media (max-width: 768px) {
+        .form-control, .form-group, .form-check {
+            width: 100%;
+            max-width: none;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        .form-check-label, .form-check-input {
+            align-self: center;
+        }
+        .form-group label, .form-check label {
+            margin-bottom: 0.5rem;
+        }
+    }
 @media (min-width: 992px) { /* Adjusting for Bootstrap's large devices breakpoint */
     .custom-main-content {
         width: calc(100% - 200px);
@@ -151,6 +170,14 @@ color: #d3d1cd;
         font-weight: lighter;
     }
 
+       .section-title {
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+        border-bottom: 2px solid #eee;
+        color: #007bff;
+        font-size: 24px;
+    }
+
     </style>
 </head>
 <body style="background-color: #464748">
@@ -196,14 +223,15 @@ color: #d3d1cd;
                                     <a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:cybersecurity_defaults_view' %}">Cyber Insurance</a>
 
                                 </li>
-                            <li>
+
+                            {% if user.is_staff %}
+                            <!-- Links visible only to superusers -->
+                                <li>
                                 <a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:admin_users' %}">Admin Users</a>
                             </li>
                             <li>
                                 <a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:upload_questionnaire' %}">Upload Questionnaires</a>
                             </li>
-                            {% if user.is_staff %}
-                            <!-- Links visible only to superusers -->
                             <li>
                                 <a class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:user_admin' %}">User Administration</a>
                             </li>
@@ -246,14 +274,14 @@ color: #d3d1cd;
         <div class="col-md-8">
             <div class="card">
                 <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0">Default Settings for {{ user.userprofile.organization.name }}</h4>
+                    <h4 class="text-center">Default Settings for {{ user.userprofile.organization.name }}</h4>
                 </div>
                 <div class="card-body">
                     <form method="post" class="form-horizontal">
                         {% csrf_token %}
                         {% for field in form %}
                             <div class="form-group row mb-3">
-                                <label for="{{ field.id_for_label }}" class="col-sm-4 col-form-label">{{ field.label }}</label>
+                                <label for="{{ field.id_for_label }}" >{{ field.label }}</label>
                                 <div class="col-sm-8">
                                     {{ field }}
                                     {% if field.help_text %}

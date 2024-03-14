@@ -678,6 +678,10 @@ body {
     margin: auto;
     font-size: 20px;
 }
+.tab-link.disabled {
+    pointer-events: none; /* Prevent clicking */
+    opacity: 0.5; /* Visual feedback that the link is disabled */
+}
 
 </style>
 </head>
@@ -895,14 +899,15 @@ function showNotification(message, isError = false) {
                                     <a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:cybersecurity_defaults_view' %}">Cyber Insurance</a>
 
                                 </li>
-                                <li>
+
+                                {% if user.is_staff %}
+                                <!-- Links visible only to superusers -->
+                                 <li>
                                     <a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:admin_users' %}">Admin Users</a>
                                 </li>
                                 <li>
                                     <a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:upload_questionnaire' %}">Upload Questionnaires</a>
                                 </li>
-                                {% if user.is_staff %}
-                                <!-- Links visible only to superusers -->
                                 <li>
                                     <a class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:user_admin' %}">User Administration</a>
                                 </li>
@@ -960,7 +965,7 @@ function showNotification(message, isError = false) {
                     var country = document.getElementById('countrySelector').value;
                      // Check if all required fields have values
                     if (!industry || !facilityType || !facilityName || !employees || !address || !country) {
-                        swal({
+                       Swal.fire({
                             icon: 'error',
                             title: 'Missing Information',
                             text: 'Please fill in all required fields before saving.'
@@ -1082,10 +1087,12 @@ $(document).ready(function() {
             <div class="col-md-1"></div>
             <div class="col-md-5">
                 <label id="lblCyberPHATitle" style="font-size: 18px; background-color: #F2BB13; color:#000"></label>
-                <div id="spinnerContainerProfile" class="spinner"  style="display: none;">
-
+                <div id="progressBarContainerProfile" class="progress" style="display: none;">
+                    <div class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" id="progressBarProfile"></div>
                 </div>
+                <span id="progressBarMessageProfile" style="display:block; text-align:center; margin-top:5px;"></span>
             </div>
+
             <div class="col-md-6"></div>
         </div>
     </div>
@@ -1101,23 +1108,23 @@ $(document).ready(function() {
         <br><br><br><br><br><br><br><br><br><br>
 
     <ul>
-        <li><a href="#" data-tab="tab1">CyberPHA List</a></li>
-        <li><a href="#" data-tab="tab2">Facility</a></li>
-        <li><a href="#" data-tab="tab3">Admin</a></li>
-        <li><a href="#" data-tab="tab13">Risk Tolerance</a></li>
-        <li><a href="#" data-tab="tab4">Tools & Software</a></li>
+        <li><a href="#" data-tab="tab1" class="tab-link">CyberPHA List</a></li>
+        <li><a href="#" data-tab="tab2" class="tab-link">Facility</a></li>
+        <li><a href="#" data-tab="tab3" class="tab-link">Admin</a></li>
+        <li><a href="#" data-tab="tab13" class="tab-link">Risk Tolerance</a></li>
+        <li><a href="#" data-tab="tab4" class="tab-link">Tools & Software</a></li>
         <br>
         <!-- Facility Profile Heading -->
         <li class="facility-profile-heading">Facility Profile
             <ul class="facility-profile-submenu">
-                <li><a href="#" data-tab="tab5">Safety</a></li>
-                <li><a href="#" data-tab="tab6">Chemical</a></li>
-                <li><a href="#" data-tab="tab7">Physical Security</a></li>
-                <li><a href="#" data-tab="tab8">OT Assets</a></li>
-                <li><a href="#" data-tab="tab9">Compliance</a></li>
-                <li><a href="#" data-tab="tab10">Threats</a></li>
-                <li><a href="#" data-tab="tab11">Insights</a></li>
-                <li><a href="#" data-tab="tab12">Strategy</a></li>
+                <li><a href="#" data-tab="tab5" class="tab-link">Safety</a></li>
+                <li><a href="#" data-tab="tab6" class="tab-link">Chemical</a></li>
+                <li><a href="#" data-tab="tab7" class="tab-link">Physical Security</a></li>
+                <li><a href="#" data-tab="tab8" class="tab-link">OT Assets</a></li>
+                <li><a href="#" data-tab="tab9" class="tab-link">Compliance</a></li>
+                <li><a href="#" data-tab="tab10" class="tab-link">Threats</a></li>
+                <li><a href="#" data-tab="tab11" class="tab-link">Insights</a></li>
+                <li><a href="#" data-tab="tab12" class="tab-link">Strategy</a></li>
             </ul>
         </li>
     </ul>
@@ -1328,16 +1335,12 @@ $(document).ready(function() {
                         mapTypeId: google.maps.MapTypeId.SATELLITE
                     });
 
-                    if (!google.maps.marker || !google.maps.marker.AdvancedMarkerElement) {
-                        console.error('google.maps.marker.AdvancedMarkerElement is not available. Make sure you have loaded the Maps JavaScript API properly.');
-                        return;
-                    }
-
-                    var marker = new google.maps.marker.AdvancedMarkerElement({
+                    var marker = new google.maps.Marker({
                         position: latLng,
                         map: map,
                         title: title || 'Selected Facility'
                     });
+
                     mapPopulated = true;
                 };
 
@@ -2445,10 +2448,6 @@ var severityData = {
 </div>
 
 
-<div id="cyberPHADefaultsForm">
-    <!-- CyberPHACybersecurityDefaults form fields will be loaded here -->
-</div>
-
 <script>
 $(document).ready(function() {
     $('#useOrgDefaults').change(function() {
@@ -2580,9 +2579,12 @@ $("#generatePPT").click(function(e) {
 $(document).ready(function() {
     $("#risk-assessment-btn").click(function() {
         var employeeCount = $("#txtEmployees").val();
+        var zipCode = $("#zipCode").val().trim(); // Get ZIP Code and trim whitespace
+        var address = $("#txtAddress").val().trim(); // Get Address and trim whitespace
+
 
         // Check if employeeCount is a number and greater than 0
-        if ($.isNumeric(employeeCount) && parseInt(employeeCount) > 0) {
+        if ($.isNumeric(employeeCount) && parseInt(employeeCount) > 0 && zipCode !== "" && address !== "") {
             // Prompt the user for confirmation
             Swal.fire({
                 title: 'Warning',
@@ -2640,7 +2642,47 @@ $(document).ready(function() {
 
         // AJAX function to call the Django view
         function assessRisk() {
-            $('#spinnerContainerProfile').css('display', 'block');
+            $('#progressBarContainerProfile').show();
+            $('#progressBarProfile').css('width', '0%').attr('aria-valuenow', 0);
+            $('#progressBarMessageProfile').text('').show(); // Initialize and show message
+            $('.tab-link').addClass('disabled');
+            let progress = 0;
+            let progressBarInterval = setInterval(function() {
+                progress += 2; // Increment progress by 2% every second
+                if (progress <= 100) {
+            $('#progressBarProfile').css('width', progress + '%').attr('aria-valuenow', progress);
+
+            // Update progress bar message based on current progress
+            switch (true) {
+                case (progress === 4):
+                    $('#progressBarMessageProfile').text('Creating safety profile...');
+                    break;
+                case (progress === 15):
+                    $('#progressBarMessageProfile').text('Creating chemical profile...');
+                    break;
+                case (progress === 30):
+                    $('#progressBarMessageProfile').text('Assessing location for physical security...');
+                    break;
+                case (progress === 40):
+                    $('#progressBarMessageProfile').text('Determining OT assets...');
+                    break;
+                case (progress === 55):
+                    $('#progressBarMessageProfile').text('Retrieving compliance requirements...');
+                    break;
+                case (progress === 65):
+                    $('#progressBarMessageProfile').text('Creating OT Cybersecurity threat profile...');
+                    break;
+                case (progress === 75):
+                    $('#progressBarMessageProfile').text('Providing security insights...');
+                    break;
+                case (progress === 85):
+                    $('#progressBarMessageProfile').text('Suggesting OT cybersecurity strategy');
+                    break;
+            }
+        } else {
+            clearInterval(progressBarInterval); // Clear interval if progress exceeds 100%
+        }
+    }, 1000); // Update progress every second
             // Gather the necessary data for the AJAX request (impact scores and scenario information)
             let address = document.getElementById('txtAddress').value;
             let facilityType = document.getElementById('selFacilityType').value;
@@ -2663,6 +2705,7 @@ $(document).ready(function() {
                 };
                 investments.push(investment);
             });
+
             // Make the AJAX call to the Django view using a separate endpoint for risk assessment
             $.ajax({
                 type: "GET",
@@ -2681,8 +2724,12 @@ $(document).ready(function() {
                     sl: sl,
                     investments: JSON.stringify(investments)
                  },
-                success: function (response) {
 
+                success: function (response) {
+                    clearInterval(progressBarInterval);
+                    $('#progressBarContainerProfile').hide();
+                    $('#progressBarMessageProfile').hide();
+                    $('.tab-link').removeClass('disabled');
                     // Write the response data to the textboxes
                     document.getElementById('txtSafetySummary').value = response.safety_summary;
 
@@ -2722,8 +2769,10 @@ $(document).ready(function() {
                 },
                 error: function (xhr, status, error) {
                     // Handle any errors that occur during the AJAX call
-                    console.error(error);
-                   $('#spinnerContainerProfile').hide();
+                    clearInterval(progressBarInterval);
+                    $('#progressBarContainerProfile').hide();
+                    $('#progressBarMessageProfile').hide();
+                    $('.tab-link').removeClass('disabled');
                 },
             });
         }

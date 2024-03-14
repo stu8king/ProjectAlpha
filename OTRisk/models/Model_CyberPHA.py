@@ -1127,3 +1127,4 @@ class UserScenarioHash(models.Model):
 
     class Meta:
         unique_together = ('user', 'cyberphaID', 'hash_value')
+

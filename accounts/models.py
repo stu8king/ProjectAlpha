@@ -136,7 +136,7 @@ class OrganizationHistory(models.Model):
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    organization = models.ForeignKey(Organization, on_delete=models.CASCADE)
+    organization = models.ForeignKey('Organization', on_delete=models.CASCADE)  # Assuming 'Organization' is another model you have
     must_change_password = models.BooleanField(default=True)
     abuse_flag = models.BooleanField(default=False)
     jobtitle = models.CharField(max_length=100, default='')
@@ -145,6 +145,8 @@ class UserProfile(models.Model):
     phone_number = models.CharField(max_length=15, blank=True, null=True)
     two_factor_confirmed = models.BooleanField(default=False)
     failed_login_attempts = models.IntegerField(null=True, default=0)
+    max_scenario_count = models.IntegerField(default=10)  # Default or set via admin/site setup
+    current_scenario_count = models.IntegerField(default=0)  # Keep track of the current count
 
     class Meta:
         db_table = 'userprofile'

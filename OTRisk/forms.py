@@ -150,7 +150,7 @@ class CybersecurityDefaultsForm(forms.ModelForm):
 class OrganizationDefaultsForm(forms.ModelForm):
     class Meta:
         model = OrganizationDefaults
-        exclude = ('organization',)  # Exclude the organization field from the form
+        exclude = ('organization', 'cyber_insurance', 'insurance_deductible') # Exclude the organization field from the form
 
     industry = forms.ModelChoiceField(
         queryset=tblIndustry.objects.all(),
@@ -261,7 +261,14 @@ class OrganizationDefaultsForm(forms.ModelForm):
         for field_name, field in self.fields.items():
             field.widget.attrs['class'] = 'form-control'
 
-
+    def save(self, commit=True):
+        instance = super(OrganizationDefaultsForm, self).save(commit=False)
+        # Set cyber_insurance and insurance_deductible to 0
+        instance.cyber_insurance = 0
+        instance.insurance_deductible = 0
+        if commit:
+            instance.save()
+        return instance
 class RAWorksheetScenarioForm(forms.ModelForm):
     class Meta:
         model = RAWorksheetScenario
@@ -301,10 +308,15 @@ class UserProfileForm(forms.ModelForm):
         max_length=100,
         required=False  # Set to True if this field is required
     )
-
+    max_scenario_count = forms.IntegerField(
+        widget=forms.NumberInput(attrs={'class': 'form-control'}),
+        required=False,  # Set to True if this field is required
+        initial=10,  # Default value or use a sensible default for your use case
+        help_text='Maximum number of scenario analyses allowed for the user.'
+    )
     class Meta:
         model = UserProfile
-        fields = ['organization', 'must_change_password', 'jobtitle', 'role_moderator', 'role_readonly']
+        fields = ['organization', 'must_change_password', 'jobtitle', 'role_moderator', 'role_readonly', 'max_scenario_count']
 
 
 class UserForm(forms.ModelForm):

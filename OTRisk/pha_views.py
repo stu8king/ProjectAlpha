@@ -1263,6 +1263,14 @@ def get_openai_recommendation(prompt):
 @login_required
 def scenario_analysis(request):
     # Log the user activity
+    user_profile = UserProfile.objects.get(user=request.user)
+
+    # Check if the user has exceeded the maximum scenario analysis count
+    if user_profile.current_scenario_count >= user_profile.max_scenario_count:
+
+        return JsonResponse({
+            'error': 'User has reached the maximum number of scenario assessments'
+        }, status=403)  # 403 Forbidden or another appropriate status code
 
     if request.method == 'GET':
         industry = request.GET.get('industry')
@@ -1457,6 +1465,8 @@ def scenario_analysis(request):
         # Get the recommendation from OpenAI
         rationale = get_openai_recommendation(recommendation_prompt)
 
+        user_profile.current_scenario_count += 1
+        user_profile.save()
         # Return the responses as variables
         return JsonResponse({
             'likelihood': responses[0],
@@ -1762,13 +1772,48 @@ def analyze_scenario(request):
             attack_tree_json = {}
 
             if not attack_tree_drawn:
-                attack_tree_system_message = f"""
-                    Generate a hierarchical structure of a potential attack tree for the given cybersecurity scenario in a machine-readable JSON format. The structure should use 'name' for node labels and 'children' for nested nodes. Each node should represent a step or method in the attack, formatted as: {{'name': 'Node Name', 'children': [{{...}}]}}. EXTRA INSTRUCTION: Output MUST be in JSON format with no additional characters outside of the JSON structure.
+                attack_tree_system_message = """
+                Generate a hierarchical structure of a potential attack tree for the given cybersecurity scenario in a strictly valid JSON format. The structure should use 'name' for node labels and 'children' for nested nodes, where each node represents a step or method in the attack. The attack tree must have at least two main branches, each potentially containing dozens of branches or sub-branches. Ensure the output is in JSON format with no additional characters outside of the JSON structure. The JSON structure should be formatted as: {'name': 'Node Name', 'children': [{...}]}.
+
+                Example of a correctly formatted output:
+                {
+                  "name": "Attack Root",
+                  "children": [
+                    {
+                      "name": "Branch 1",
+                      "children": [
+                        {
+                          "name": "Sub-branch 1.1",
+                          "children": []
+                        },
+                        {
+                          "name": "Sub-branch 1.2",
+                          "children": []
+                        }
+                      ]
+                    },
+                    {
+                      "name": "Branch 2",
+                      "children": [
+                        {
+                          "name": "Sub-branch 2.1",
+                          "children": []
+                        },
+                        {
+                          "name": "Sub-branch 2.2",
+                          "children": []
+                        }
+                      ]
+                    }
+                  ]
+                }
+
+                Please generate a similar structure for the provided cybersecurity scenario, adhering strictly to the JSON format and ensuring at least two main branches are present.
                 """
 
                 # Query OpenAI API for the attack tree
                 attack_tree_response = openai.ChatCompletion.create(
-                    model="gpt-4",
+                    model="gpt-4-0125-preview",
                     messages=[
                         {"role": "system", "content": attack_tree_system_message},
                         {"role": "user", "content": user_message}
@@ -1779,6 +1824,7 @@ def analyze_scenario(request):
 
                 # Process the response for attack tree
                 attack_tree_raw = attack_tree_response['choices'][0]['message']['content']
+                print(attack_tree_raw)
 
                 try:
                     # Parse the raw JSON string into a Python dictionary
