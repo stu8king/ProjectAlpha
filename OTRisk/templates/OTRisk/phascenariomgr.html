@@ -656,18 +656,24 @@ document.addEventListener("DOMContentLoaded", function() {
                                 // Display the SweetAlert dialog
                                 swal.fire({
                                     title: "Scenario KPIs",
-                                    text: "Scenario KPIs can take up to a minute or longer to calculate. Proceed?",
-                                    icon: "warning",
-                                    buttons: true,
-                                    dangerMode: true,
+                                    html: "Scenario KPIs can take up to a minute or longer to calculate. Proceed?",
+                                    iconHtml: '<img src="/static/images/anzen_owl.png" width="100px">', // Custom image as icon
+                                    showCancelButton: true, // Show the cancel button
+                                    confirmButtonText: 'OK', // Text for the confirm button
+                                    cancelButtonText: 'Cancel',
+                                    focusConfirm: false // Focus on the confirm button by default
                                 })
-                                .then((willProceed) => {
-                                    if (willProceed) {
+                                .then((result) => {
+                                    if (result.isConfirmed) {
                                         // If the user clicks "Proceed", call the assessScenario function
                                         assessScenario();
                                     } else {
                                         // If the user clicks "Cancel", do nothing
-                                        swal("Operation cancelled", "Your scenario assessment was not started.", "error");
+                                        swal.fire({
+                                            title: "AnzenOT Scenario Manager",
+                                            text: "Operation Cancelled",
+                                            icon: "error" // Assuming you want to show an error icon
+                                        });
                                     }
                                 });
                             });
@@ -2115,18 +2121,24 @@ $(document).ready(function() {
                   if (riskSnapshotCheckbox.checked) {
                       swal.fire({
                           title: "AnzenOT Scenario Manager",
-                          text: "The version of this scenario saved to the risk register cannot be changed. You are about to create a snapshot version of the scenario. Do you want to proceed?",
-                          iconHtml: '<img src="/static/images/anzen_owl.png" width="100px">', // Custom image as icon,
-                          buttons: true,
-                          dangerMode: true,
+                            html: "The version of this scenario saved to the risk register cannot be changed. You are about to create a snapshot version of the scenario. Do you want to proceed?",
+                            iconHtml: '<img src="/static/images/anzen_owl.png" width="100px">', // Custom image as icon
+                            showCancelButton: true, // Show the cancel button
+                            confirmButtonText: 'OK', // Text for the confirm button
+                            cancelButtonText: 'Cancel',
+                            focusConfirm: false // Focus on the confirm button by default
                       })
-                          .then((willProceed) => {
-                              if (willProceed) {
+                          .then((result) => {
+                              if (result.isConfirmed) {
                                   continueProcessing(true); // Continue with the rest of the function without asking for scenario data save confirmation
                               }
                           });
                   } else {
-                      swal.fire("AnzenOT Scenario Manager", "Changes cannot be made to this scenario because it has been added to the risk register");
+                      swal.fire({
+                        title: "AnzenOT Scenario Manager",
+                        text: "Changes cannot be made to this scenario because it has been added to the risk register",
+                        icon: "error" // Assuming you want to show an error icon
+                    });
                       return; // Exit the function
                   }
               } else {
@@ -3604,12 +3616,14 @@ $('#scenarioSelectModal').on('show.bs.modal', function (e) {
                         // Display a SweetAlert notification
                         swal.fire({
                             title: "Duplicate Submission",
-                            text: "You are submitting a scenario with the same parameters as one previously analyzed. Do you wish to proceed?",
-                            icon: "warning",
-                            buttons: true,
-                            dangerMode: true,
-                        }).then((willProceed) => {
-                            if (willProceed) {
+                            html: "You are submitting a scenario with the same parameters as one previously analyzed. Do you wish to proceed?",
+                            iconHtml: '<img src="/static/images/anzen_owl.png" width="100px">', // Custom image as icon
+                            showCancelButton: true, // Show the cancel button
+                            confirmButtonText: 'OK', // Text for the confirm button
+                            cancelButtonText: 'Cancel',
+                            focusConfirm: false
+                        }).then((result) => {
+                            if (result.isConfirmed) {
                                 // If the user chooses to proceed, call assessScenario again with forceResubmit = true
                                 assessScenario(true);
                             }
