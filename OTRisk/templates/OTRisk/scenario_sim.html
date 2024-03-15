@@ -1763,7 +1763,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
 $(document).ready(function() {
     var tab2Changed = false; // Flag to track changes in Tab 1
-
+    var isProgrammaticChange = false;
 
     // Attach change listeners to all inputs and selects within Tab 1
     $('#tab2 input, #tab2 select').change(function() {
@@ -1783,50 +1783,49 @@ $(document).ready(function() {
         $('#' + tabId).addClass('active');
 
         // Check if the Scenario tab was clicked
-        if ($(this).attr('id') === 'scenarioTabLink' && !isProgrammaticChange) {
-            if (!tab2Changed) {
-                // If no changes were made in Tab 1, do not execute the AJAX call
+        if ($(this).attr('id') === 'scenarioTabLink') {
+             if (tab2Changed && !isProgrammaticChange) {
+                 // Proceed with AJAX call only if changes were made in Tab 1
+                    document.getElementById('spinner').style.display = 'block';
+                    var formData = {
+                        'attacker': $('#selThreats').val(),
+                        'attackVector': $('#selVectors').val(),
+                        'targetComponent': $('#targetComponent').val(),
+                        'attackEffect': $('#attackEffect').val(),
+                        'targetSystem': $('#targetSystem').val(),
+                        'impact': $('#impact').val(),
+                        'motivation': $('#motivation').val(),
+                        'facility_type': $('#selFacilityType').val(),
+                        'industry': $('#selIndustry').val(),
+                        'csrfmiddlewaretoken': '{{ csrf_token }}'
+                    };
 
-                document.getElementById('spinner').style.display = 'none'; // Ensure spinner is hidden
-                return; // Exit the function early
+                    $.ajax({
+                        url: "{% url 'OTRisk:generate_scenario_description' %}",
+                        type: 'POST',
+                        data: formData,
+                        success: function(response) {
+                            if (response.scenario_description) {
+                                $('#txtScenario').val(response.scenario_description);
+                            } else {
+                                $('#txtScenario').val('No scenario description available.');
+                            }
+                            $('#scenarioBuilderModal').modal('hide');
+                        },
+                        error: function(xhr, status, error) {
+                            console.error('Error generating scenario:', error);
+                        },
+                        complete: function() {
+                            // Hide the spinner and reset the flag
+                            document.getElementById('spinner').style.display = 'none';
+                            tab2Changed = false;
+                        }
+                    });
+            } else {
+                document.getElementById('spinner').style.display = 'none';
             }
-
-            // Proceed with AJAX call only if changes were made in Tab 1
-            document.getElementById('spinner').style.display = 'block';
-            var formData = {
-                'attacker': $('#selThreats').val(),
-                'attackVector': $('#selVectors').val(),
-                'targetComponent': $('#targetComponent').val(),
-                'attackEffect': $('#attackEffect').val(),
-                'targetSystem': $('#targetSystem').val(),
-                'impact': $('#impact').val(),
-                'motivation': $('#motivation').val(),
-                'facility_type': $('#selFacilityType').val(),
-                'industry': $('#selIndustry').val(),
-                'csrfmiddlewaretoken': '{{ csrf_token }}'
-            };
-
-            $.ajax({
-                url: "{% url 'OTRisk:generate_scenario_description' %}",
-                type: 'POST',
-                data: formData,
-                success: function(response) {
-                    if (response.scenario_description) {
-                        $('#txtScenario').val(response.scenario_description);
-                    } else {
-                        $('#txtScenario').val('No scenario description available.');
-                    }
-                    $('#scenarioBuilderModal').modal('hide');
-                },
-                error: function(xhr, status, error) {
-                    console.error('Error generating scenario:', error);
-                },
-                complete: function() {
-                    // Hide the spinner and reset the flag
-                    document.getElementById('spinner').style.display = 'none';
-                    tab2Changed = false;
-                }
-            });
+            // Reset tab2Changed to false to prepare for next user action
+            tab2Changed = false;
         }
     });
 });
