@@ -1075,26 +1075,26 @@ $(document).ready(function() {
 
 
 
-                function drawAttackTree(data) {
-    $('#tab9').addClass('active').show();
-    var container = document.getElementById('attack_tree');
-    var containerWidth = container.clientWidth;
-    var svgWidth = containerWidth * 0.8;
-    var margin = { top: 20, right: 120, bottom: 20, left: 280 };
-    var width = svgWidth - margin.left - margin.right;
-    var height = 800; // Increased height for better resolution
+            function drawAttackTree(data) {
+                $('#tab9').addClass('active').show();
+                var container = document.getElementById('attack_tree');
+                var containerWidth = container.clientWidth;
+                var svgWidth = containerWidth * 0.8;
+                var margin = { top: 20, right: 120, bottom: 20, left: 280 };
+                var width = svgWidth - margin.left - margin.right;
+                var height = 800; // Increased height for better resolution
 
-    d3.select(container).selectAll("svg").remove();
+                d3.select(container).selectAll("svg").remove();
 
-    var svg = d3.select(container).append("svg")
-        .attr("width", "100%")
-        .attr("viewBox", "0 0 " + svgWidth + " " + height)
-        .attr("height", height)
-        .style("display", "block")
-        .style("margin", "auto")
-        .style("background-color", "#253349C0") // Set the background color
-        .append("g")
-        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+                var svg = d3.select(container).append("svg")
+                    .attr("width", "100%")
+                    .attr("viewBox", "0 0 " + svgWidth + " " + height)
+                    .attr("height", height)
+                    .style("display", "block")
+                    .style("margin", "auto")
+                    .style("background-color", "#253349C0") // Set the background color
+                    .append("g")
+                    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
     var i = 0,
         duration = 750,

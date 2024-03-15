@@ -539,11 +539,16 @@ document.addEventListener("DOMContentLoaded", function() {
                                         document.getElementById('txtBestCase').value = ''; // Clear Event Costs tab content
                                         document.getElementById('txtMostLikelyCase').value = '';
                                         document.getElementById('txtWorstCase').value = '';
+                                        $('#monthly_cost_chart').empty();
+                                        $('#bia_groups').empty();
+                                        $('#investmentImpactVisualization').empty();
+                                        $('#attack_tree').empty();
                                         // Add more lines as needed for other inputs you wish to clear
 
                                         swal("The data has been cleared!", {
                                             icon: "success",
                                         });
+                                        document.querySelector('a[data-tab="tab1"]').click();
                                     } else {
                                         // User pressed "Cancel", do nothing
                                         swal("Your data is safe!");
@@ -1620,39 +1625,26 @@ function loadScenarioDetails(scenarioId) {
 }
 
 
-function drawAttackTree(data) {
+ function drawAttackTree(data) {
+                $('#tab9').addClass('active').show();
+                var container = document.getElementById('attack_tree');
+                var containerWidth = container.clientWidth;
+                var svgWidth = containerWidth * 0.8;
+                var margin = { top: 20, right: 120, bottom: 20, left: 280 };
+                var width = svgWidth - margin.left - margin.right;
+                var height = 800; // Increased height for better resolution
 
-    $('#tab9').addClass('active').show();
-    var container = document.getElementById('attack_tree');
-    var containerWidth = container.clientWidth;
-    var svgWidth = containerWidth * 0.8;
-    var margin = { top: 20, right: 120, bottom: 20, left: 280 };
-    var width = svgWidth - margin.left - margin.right;
-    var height = 800; // Increased height for better resolution
+                d3.select(container).selectAll("svg").remove();
 
-    d3.select(container).selectAll("svg").remove();
-
-    var svg = d3.select(container).append("svg")
-        .attr("width", "100%")
-        .attr("viewBox", "0 0 " + svgWidth + " " + height)
-        .attr("height", height)
-        .style("display", "block")
-        .style("margin", "auto")
-        .append("g")
-        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-    // Define the arrow marker
-    svg.append("svg:defs").selectAll("marker")
-        .data(["end"])
-        .enter().append("svg:marker")
-        .attr("id", String)
-        .attr("viewBox", "0 -5 10 10")
-        .attr("refX", 25)
-        .attr("markerWidth", 6)
-        .attr("markerHeight", 6)
-        .attr("orient", "auto")
-        .append("svg:path")
-        .attr("d", "M0,-5L10,0L0,5");
+                var svg = d3.select(container).append("svg")
+                    .attr("width", "100%")
+                    .attr("viewBox", "0 0 " + svgWidth + " " + height)
+                    .attr("height", height)
+                    .style("display", "block")
+                    .style("margin", "auto")
+                    .style("background-color", "#253349C0") // Set the background color
+                    .append("g")
+                    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
     var i = 0,
         duration = 750,
@@ -1693,7 +1685,7 @@ function drawAttackTree(data) {
             .style("fill", function(d) { return colorScale(d.depth); });
 
         nodeEnter.append('text')
-            .style("fill", "darkgray")
+            .style("fill", "#FFFFFF") // Set label color to white
             .style("font-size", "14px")
             .style("font-weight", "bold")
             .attr("transform", "rotate(-10)")
@@ -1707,10 +1699,10 @@ function drawAttackTree(data) {
 
         link.enter().insert('path', "g")
             .attr("class", "link")
-            .style("stroke", function(d) { return colorScale(d.depth); })
+            .style("stroke", "#96C5ECC0") // Set line color
             .style("stroke-width", 2)
             .style("fill", "none")
-            .attr("marker-end", "url(#end)") // Add the arrow marker
+            // Removed the arrow marker reference
             .attr('d', function(d) {
                 return "M" + d.y + "," + d.x
                     + "C" + (d.y + d.parent.y) / 2 + "," + d.x
@@ -1719,30 +1711,34 @@ function drawAttackTree(data) {
             });
     }
 
-    // Add border and shadow to the container
-    var attackTreeDiv = document.getElementById('attack_tree');
-    attackTreeDiv.style.display = 'block';
-    attackTreeDiv.style.border = '1px solid #ccc';
-    attackTreeDiv.style.boxShadow = '0px 0px 10px rgba(0, 0, 0, 0.5)';
-    sessionStorage.setItem('attackTreeDrawn', 'true');
-    document.querySelector('a[data-tab="tab4"]').click();
-
-    // Add export button functionality (if feasible)
-    var exportButton = document.getElementById('exportButton');
-    if (exportButton) {
-        exportButton.addEventListener('click', function() {
-            var svgData = new XMLSerializer().serializeToString(document.querySelector('svg'));
-            var svgBlob = new Blob([svgData], {type:"image/svg+xml;charset=utf-8"});
-            var svgUrl = URL.createObjectURL(svgBlob);
-            var downloadLink = document.createElement("a");
-            downloadLink.href = svgUrl;
-            downloadLink.download = "attack_tree.svg";
-            document.body.appendChild(downloadLink);
-            downloadLink.click();
-            document.body.removeChild(downloadLink);
-        });
-    }
-}
+            // Add border and shadow to the container
+            var attackTreeDiv = document.getElementById('attack_tree');
+            attackTreeDiv.style.display = 'block';
+            attackTreeDiv.style.border = '1px solid #ccc';
+            attackTreeDiv.style.boxShadow = '0px 0px 10px rgba(0, 0, 0, 0.5)';
+            sessionStorage.setItem('attackTreeDrawn', 'true');
+            var svgElement = container.querySelector('svg');
+            // Pass it to the convertSVGToPNG function
+            convertSVGToPNG(svgElement, 0.8); // Adjust the scale as needed
+            var attackTreeDiv = document.getElementById('attack_tree')
+            $('.tab-content').removeClass('active').hide();
+             $('#tab2').addClass('active').show();
+            // Add export button functionality (if feasible)
+            var exportButton = document.getElementById('exportButton');
+            if (exportButton) {
+                exportButton.addEventListener('click', function() {
+                    var svgData = new XMLSerializer().serializeToString(document.querySelector('svg'));
+                    var svgBlob = new Blob([svgData], {type:"image/svg+xml;charset=utf-8"});
+                    var svgUrl = URL.createObjectURL(svgBlob);
+                    var downloadLink = document.createElement("a");
+                    downloadLink.href = svgUrl;
+                    downloadLink.download = "attack_tree.svg";
+                    document.body.appendChild(downloadLink);
+                    downloadLink.click();
+                    document.body.removeChild(downloadLink);
+                });
+            }
+        }
 
 
 

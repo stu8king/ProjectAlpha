@@ -1824,7 +1824,7 @@ def analyze_scenario(request):
 
                 # Process the response for attack tree
                 attack_tree_raw = attack_tree_response['choices'][0]['message']['content']
-                print(attack_tree_raw)
+
 
                 try:
                     # Parse the raw JSON string into a Python dictionary
