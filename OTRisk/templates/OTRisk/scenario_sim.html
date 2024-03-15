@@ -386,7 +386,7 @@ path.connection {
 <script>
 
 anychart.licenseKey("{{ anychart_key }}");
-
+var isProgrammaticChange = false;
 
 
 fetch('https://restcountries.com/v3.1/all')
@@ -1527,7 +1527,7 @@ function fetchAndDisplayScenarios() {
 function loadScenarioDetails(scenarioId) {
     isProgrammaticChange = true;
     $.ajax({
-        url: `/OTRisk/retrieve_scenario_builder/${scenarioId}`, // Adjust the URL to your backend endpoint
+        url: `/OTRisk/retrieve_scenario_builder/${scenarioId}`,
         type: "GET",
         success: function(response) {
 
@@ -1551,7 +1551,7 @@ function loadScenarioDetails(scenarioId) {
             $('#targetSystem').val(response.network);
             $('#impact').val(response.impact);
             $('#motivation').val(response.motivation);
-        renderInvestmentImpact(decodedText);
+            renderInvestmentImpact(decodedText);
 
             var costArray = response.cost_projection.split('|').map(Number);
             createCostChart('monthly_cost_chart', costArray);
@@ -1609,7 +1609,7 @@ function loadScenarioDetails(scenarioId) {
                 }
             });
             // Populate table data, costs, and other fields similarly
-
+            isProgrammaticChange = false;
             alert('Scenario loaded successfully');
 
         },
@@ -1767,7 +1767,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
 $(document).ready(function() {
     var tab2Changed = false; // Flag to track changes in Tab 1
-    var isProgrammaticChange = false;
+
 
     // Attach change listeners to all inputs and selects within Tab 1
     $('#tab2 input, #tab2 select').change(function() {
@@ -1787,7 +1787,7 @@ $(document).ready(function() {
         $('#' + tabId).addClass('active');
 
         // Check if the Scenario tab was clicked
-        if ($(this).attr('id') === 'scenarioTabLink') {
+        if ($(this).attr('id') === 'scenarioTabLink' && !isProgrammaticChange) {
             if (!tab2Changed) {
                 // If no changes were made in Tab 1, do not execute the AJAX call
 
