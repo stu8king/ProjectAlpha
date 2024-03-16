@@ -379,6 +379,14 @@ path.connection {
     box-sizing: border-box; /* Include padding and border in the element's total width and height */
 }
 
+#attack_tree {
+    display: flex; /* Use flexbox for centering */
+    justify-content: center; /* Center horizontally */
+    align-items: center; /* Center vertically */
+    overflow: hidden; /* Hide overflow */
+    background-color: #253349; /* Match the image's background color */
+    height: 100%; /* Adjust based on your layout needs */
+}
 
 </style>
 </head>
@@ -1621,20 +1629,69 @@ function loadScenarioDetails(scenarioId) {
     });
 }
 
+function convertSVGToPNG(svgElement, scale = 0.5) {
+    var xmlSerializer = new XMLSerializer();
+    var svgString = xmlSerializer.serializeToString(svgElement);
 
- function drawAttackTree(data) {
-                $('#tab9').addClass('active').show();
+    var canvas = document.createElement('canvas');
+    var ctx = canvas.getContext('2d');
+
+    var devicePixelRatio = window.devicePixelRatio || 1;
+    // No need to adjust scale here since we're fitting the image to the container
+    canvas.width = svgElement.getBoundingClientRect().width * devicePixelRatio;
+    canvas.height = svgElement.getBoundingClientRect().height * devicePixelRatio;
+
+    // Adjust the drawing scale for device pixel ratio to enhance clarity
+    ctx.scale(devicePixelRatio, devicePixelRatio);
+
+    var DOMURL = window.URL || window.webkitURL || window;
+    var img = new Image();
+    var svgBlob = new Blob([svgString], {type: 'image/svg+xml;charset=utf-8'});
+    var url = DOMURL.createObjectURL(svgBlob);
+
+    img.onload = function () {
+        ctx.drawImage(img, 0, 0);
+        DOMURL.revokeObjectURL(url);
+
+        var imgURI = canvas.toDataURL('image/png');
+
+        var container = document.getElementById('attack_tree');
+        if (container) {
+            container.innerHTML = ''; // Clear previous content
+
+            var pngImage = new Image();
+            pngImage.src = imgURI;
+            // Ensure the image fits within the container
+            pngImage.style.maxWidth = '100%';
+            pngImage.style.maxHeight = '100%';
+            pngImage.style.objectFit = 'contain'; // Image will be scaled to maintain its aspect ratio
+
+            container.appendChild(pngImage);
+        } else {
+            console.error('Container for the PNG image not found.');
+        }
+    };
+
+    img.src = url;
+}
+
+
+
+function drawAttackTree(data) {
+
+                //$('#tab9').addClass('active').show();
+                document.querySelector('a[data-tab="tab9"]').click();
                 var container = document.getElementById('attack_tree');
                 var containerWidth = container.clientWidth;
                 var svgWidth = containerWidth * 0.8;
-                var margin = { top: 20, right: 120, bottom: 20, left: 280 };
+                var margin = { top: 20, right: 120, bottom: 20, left: 320 };
                 var width = svgWidth - margin.left - margin.right;
                 var height = 800; // Increased height for better resolution
 
                 d3.select(container).selectAll("svg").remove();
 
                 var svg = d3.select(container).append("svg")
-                    .attr("width", "100%")
+                    .attr("width", "95%")
                     .attr("viewBox", "0 0 " + svgWidth + " " + height)
                     .attr("height", height)
                     .style("display", "block")
@@ -1643,9 +1700,9 @@ function loadScenarioDetails(scenarioId) {
                     .append("g")
                     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-    var i = 0,
-        duration = 750,
-        root;
+                var i = 0,
+                    duration = 750,
+                    root;
 
     var treemap = d3.tree()
         .size([height, width - margin.left - margin.right])
@@ -1716,25 +1773,10 @@ function loadScenarioDetails(scenarioId) {
             sessionStorage.setItem('attackTreeDrawn', 'true');
             var svgElement = container.querySelector('svg');
             // Pass it to the convertSVGToPNG function
-            convertSVGToPNG(svgElement, 0.8); // Adjust the scale as needed
+            convertSVGToPNG(svgElement, 0.5); // Adjust the scale as needed
             var attackTreeDiv = document.getElementById('attack_tree')
-            $('.tab-content').removeClass('active').hide();
-             $('#tab2').addClass('active').show();
-            // Add export button functionality (if feasible)
-            var exportButton = document.getElementById('exportButton');
-            if (exportButton) {
-                exportButton.addEventListener('click', function() {
-                    var svgData = new XMLSerializer().serializeToString(document.querySelector('svg'));
-                    var svgBlob = new Blob([svgData], {type:"image/svg+xml;charset=utf-8"});
-                    var svgUrl = URL.createObjectURL(svgBlob);
-                    var downloadLink = document.createElement("a");
-                    downloadLink.href = svgUrl;
-                    downloadLink.download = "attack_tree.svg";
-                    document.body.appendChild(downloadLink);
-                    downloadLink.click();
-                    document.body.removeChild(downloadLink);
-                });
-            }
+
+
         }
 
 
