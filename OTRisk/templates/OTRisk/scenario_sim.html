@@ -1169,11 +1169,11 @@ function analyzeScenario(scenarioText, industry, facility_type, investments) {
             },
             success: function(response) {
                 document.getElementById('analyzeScenarioCheckbox').checked = true;
-                console.log("Scenario analysis initiated. Polling for results...");
+
                 resolve(response);
             },
             error: function(xhr, status, error) {
-                console.error('Error analyzing scenario:', error);
+
                 reject(error);
             }
         });
@@ -1196,13 +1196,13 @@ function generateAttackTree(scenarioText) {
                     drawAttackTree(attackTreeResponse);
                     resolve(attackTreeResponse);
                 } else {
-                    console.error('Attack tree data not available or invalid response');
+
                     reject('Attack tree data not available or invalid response');
                 }
 
             },
             error: function(xhr, status, error) {
-                console.error('Error fetching attack tree:', error);
+
                 reject(error);
             }
         });
@@ -1370,8 +1370,40 @@ document.getElementById('analyzeScenarioBtn').addEventListener('click', function
     });
 });
 
+function updateUIWithResults(data) {
+    document.getElementById('spinnerContainer').style.display = 'none';
+    // Update the consequences table
+    var tableContainer = document.getElementById('table_scenario');
+    var biaGroupsContainer = document.getElementById('bia_groups');
+    var investmentImpactInput = document.getElementById('txthdninvestmentstring');
+
+    if (!tableContainer || !biaGroupsContainer || !investmentImpactInput) {
+        // If any of the elements are not found, silently return without updating the UI or logging errors
+        return;
+    }
+
+    clearTable(tableContainer); // Clear existing table if present
+    createConsequencesTable(tableContainer, data.consequences);
+    biaGroupsContainer.innerHTML = '';
 
 
+    data.consequences.forEach(function(consequence, index) {
+        // Assuming you have a function to create and append each consequence group
+        appendConsequenceGroup(biaGroupsContainer, consequence, index);
+    });
+
+    // Handle investment impact data
+    if (data.investment_impact && data.investment_impact.trim() !== '') {
+        // Directly display the investment impact data without encoding/decoding
+        document.getElementById('txthdninvestmentstring').value = btoa(data.investment_impact);
+
+        renderInvestmentImpact(data.investment_impact); // Directly pass the raw data
+    } else {
+        document.getElementById('spinnerContainer').style.display = 'none';
+        // Handle the case where investment impact data is not available
+    }
+
+}
 
 function appendConsequenceGroup(container, consequence, index) {
     // Ensure the container exists
@@ -1416,41 +1448,6 @@ function appendConsequenceGroup(container, consequence, index) {
 
     // Append the group container to the row
     row.appendChild(groupContainer);
-}
-
-function updateUIWithResults(data) {
-    document.getElementById('spinnerContainer').style.display = 'none';
-    // Update the consequences table
-    var tableContainer = document.getElementById('table_scenario');
-    var biaGroupsContainer = document.getElementById('bia_groups');
-    var investmentImpactInput = document.getElementById('txthdninvestmentstring');
-
-    if (!tableContainer || !biaGroupsContainer || !investmentImpactInput) {
-        // If any of the elements are not found, silently return without updating the UI or logging errors
-        return;
-    }
-
-    clearTable(tableContainer); // Clear existing table if present
-    createConsequencesTable(tableContainer, data.consequences);
-    biaGroupsContainer.innerHTML = '';
-
-
-    data.consequences.forEach(function(consequence, index) {
-        // Assuming you have a function to create and append each consequence group
-        appendConsequenceGroup(biaGroupsContainer, consequence, index);
-    });
-
-    // Handle investment impact data
-    if (data.investment_impact && data.investment_impact.trim() !== '') {
-        // Directly display the investment impact data without encoding/decoding
-        document.getElementById('txthdninvestmentstring').value = btoa(data.investment_impact);
-
-        renderInvestmentImpact(data.investment_impact); // Directly pass the raw data
-    } else {
-        document.getElementById('spinnerContainer').style.display = 'none';
-        // Handle the case where investment impact data is not available
-    }
-
 }
 
 function clearTable(tableContainer) {
