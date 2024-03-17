@@ -965,8 +965,30 @@ var map;
                     var employees = document.getElementById('txtEmployees').value.trim();
                     var address = document.getElementById('txtAddress').value.trim();
                     var country = document.getElementById('countrySelector').value;
+
+                    var fields = [industry, facilityType, facilityName, employees, address, country];
+                    var isValid = true; // Flag to keep track of validity
+
+                    function highlightField(field) {
+                            field.style.borderColor = 'red'; // Change as needed
+                        }
+
+                        // Function to reset field highlight
+                        function resetFieldHighlight(field) {
+                            field.style.borderColor = ''; // Reset to default or specific color
+                        }
+
+                        // Check each field and highlight if empty
+                        fields.forEach(function(field) {
+                            resetFieldHighlight(field); // Reset highlight before checking
+                            if (!field.value.trim()) {
+                                highlightField(field);
+                                isValid = false;
+                            }
+                        });
+
                      // Check if all required fields have values
-                    if (!industry || !facilityType || !facilityName || !employees || !address || !country) {
+                    if (!isValid) {
                        Swal.fire({
                             icon: 'error',
                             title: 'Missing Information',
