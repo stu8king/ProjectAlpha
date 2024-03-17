@@ -392,8 +392,7 @@ path.connection {
 </head>
 <body style="background-color: #464748">
 <script>
-
-anychart.licenseKey("{{ anychart_key }}");
+anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
 var isProgrammaticChange = false;
 
 
@@ -1414,6 +1413,7 @@ function updateUIWithResults(data) {
 }
 
 function appendConsequenceGroup(container, consequence, index) {
+
     // Ensure the container exists
     if (!container) {
         console.error('Container not found');
@@ -1445,6 +1445,7 @@ function appendConsequenceGroup(container, consequence, index) {
     icon.alt = 'green_cube';
     groupHeader.appendChild(icon);
     var headerText = document.createTextNode(consequence.factor);
+
     groupHeader.appendChild(headerText);
     groupContainer.appendChild(groupHeader);
 
@@ -1592,12 +1593,20 @@ function loadScenarioDetails(scenarioId) {
                 groupContainer.className = 'group-container col-md-4';
 
                 // Create the group header
-                var groupHeader = document.createElement('div');
+                 var groupHeader = document.createElement('div');
                 groupHeader.className = 'group-header';
                 var icon = document.createElement('img');
-                icon.src = "{% static 'images/green_cube.png' %}"; // Adjust the path as needed
+                // Determine the icon based on the score
+                var factorData = factors[factor]; // Get the data for this factor
+                if (factorData.score > 7) {
+                    icon.src = "{% static 'images/redcube.png' %}";
+                } else if (factorData.score > 4) {
+                    icon.src = "{% static 'images/yellow_cube.png' %}";
+                } else {
+                    icon.src = "{% static 'images/green_cube.png' %}";
+                }
                 icon.className = 'cube-icon';
-                icon.alt = 'green_cube';
+                icon.alt = 'cube_icon'; // Adjust the alt text as needed
                 groupHeader.appendChild(icon);
                 var headerText = document.createTextNode(factor); // factor is the key from factors object
                 groupHeader.appendChild(headerText);
@@ -1606,8 +1615,12 @@ function loadScenarioDetails(scenarioId) {
                 // Create the group body
                 var groupBody = document.createElement('div');
                 groupBody.className = 'group-body';
-                var factorData = factors[factor]; // Get the data for this factor
-                groupBody.textContent = factorData.score + '. ' + factorData.narrative;
+                // Display the score in bold text out of 10
+                var scoreText = document.createElement('strong');
+                scoreText.textContent = factorData.score + '/10. ';
+                groupBody.appendChild(scoreText);
+                var narrativeText = document.createTextNode(factorData.narrative);
+                groupBody.appendChild(narrativeText);
                 groupContainer.appendChild(groupBody);
 
                 // Add the group container to the current row
@@ -1674,8 +1687,6 @@ function convertSVGToPNG(svgElement, scale = 0.5) {
 
     img.src = url;
 }
-
-
 
 function drawAttackTree(data) {
 
@@ -1778,9 +1789,6 @@ function drawAttackTree(data) {
 
 
         }
-
-
-
 
 $(document).ready(function() {
 document.addEventListener('DOMContentLoaded', (event) => {
@@ -2040,6 +2048,6 @@ $(document).ready(function() {
   });
 });
 </script>
-
+</div>
 </body>
 </html>

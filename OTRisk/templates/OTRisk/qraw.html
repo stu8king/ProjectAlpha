@@ -6744,16 +6744,25 @@ $(document).ready(function() {
                         if (!sessionStorage.getItem('handledExternalReferrer')) {
                         if (isExternalReferrer) {
                             sessionStorage.setItem('handledExternalReferrer', 'true');
+                            $('.tab').removeClass('active').hide(); // Assuming .tab is a common class for tab content
+                            $('.tab-link').removeClass('active'); // Assuming .tab-link is a common class for tab links
                             $('#tab1').addClass('active').show();
+                            $('a[data-tab="tab1"]').addClass('active'); // Highlight tab1 link as active
                         } else {
                             // Otherwise, show tab2
+                            $('.tab').removeClass('active').hide(); // Remove active class and hide all tabs
+                            $('.tab-link').removeClass('active'); // Remove active class from all tab links
                             $('#tab2').addClass('active').show();
+                            $('a[data-tab="tab2"]').addClass('active'); // Highlight tab2 link as active
                         }
                         // Mark that we've handled the external referrer
 
                     } else {
                         // If already handled, default to showing tab2 or other logic
+                        $('.tab').removeClass('active').hide(); // Remove active class and hide all tabs
+                        $('.tab-link').removeClass('active'); // Remove active class from all tab links
                         $('#tab2').addClass('active').show();
+                        $('a[data-tab="tab2"]').addClass('active');
                     }
 
                          //now load the action items table
