@@ -12,6 +12,7 @@ from django.db.models import CharField
 from google.cloud import language_v1
 from django.db.models.functions import Coalesce
 from django.forms import model_to_dict, CharField
+from django.utils import timezone
 from django.utils.dateparse import parse_datetime, parse_date
 from django.core.serializers import serialize
 from django.views.decorators.http import require_POST
@@ -71,24 +72,28 @@ def get_api_key(service_name):
 
 def validate_and_format_date(date_str, default_date='2001-01-01', date_format='%Y-%m-%d'):
     """
-    Validates and formats a date string.
+    Validates and formats a date string into a timezone-aware datetime object.
 
     :param date_str: The date string to validate and format.
     :param default_date: The default date to return if date_str is invalid or empty.
     :param date_format: The format to which the date string should be formatted.
-    :return: A string representing the validated and formatted date.
+    :return: A timezone-aware datetime object representing the validated and formatted date.
     """
     if date_str:
         try:
             # Attempt to parse the date string using the specified format
             valid_date = datetime.strptime(date_str, date_format)
-            return valid_date.strftime(date_format)
+            # Make the datetime object timezone-aware
+            timezone_aware_date = timezone.make_aware(valid_date, timezone.get_default_timezone())
+            return timezone_aware_date
         except ValueError:
-            # If parsing fails, return the default date
-            return default_date
+            # If parsing fails, return the default date as a timezone-aware datetime object
+            default_datetime = datetime.strptime(default_date, date_format)
+            return timezone.make_aware(default_datetime, timezone.get_default_timezone())
     else:
-        # If the date string is empty, return the default date
-        return default_date
+        # If the date string is empty, return the default date as a timezone-aware datetime object
+        default_datetime = datetime.strptime(default_date, date_format)
+        return timezone.make_aware(default_datetime, timezone.get_default_timezone())
 
 
 @login_required
@@ -291,7 +296,6 @@ def iotaphamanager(request, record_id=None):
         )
 
         #### End save risk tolerance data
-        print(request.POST.get('premium_base'))
         # After saving pha_header, handle CyberPHACybersecurityDefaults
         if request.method == 'POST':
             # Assuming pha_header is the instance of tblCyberPHAHeader you've just created or updated
@@ -328,7 +332,6 @@ def iotaphamanager(request, record_id=None):
                 cyber_pha=pha_header,
                 defaults=defaults_data
             )
-
 
         if is_new_record:
             pha_header.set_workflow_status('Started')
@@ -676,7 +679,7 @@ def make_request_with_backoff(openai_function, *args, **kwargs):
             return openai_function(*args, **kwargs)
         except openai.error.ServiceUnavailableError:
             sleep_time = base_delay * (2 ** attempt)
-            print(f"Service unavailable. Retrying in {sleep_time} seconds...")
+
             time.sleep(sleep_time)
     raise Exception("Failed to make request after several attempts.")
 
@@ -1509,7 +1512,7 @@ def get_recommended_controls(scenario, threat_source):
         return response.choices[0].text.strip()
     except Exception as e:
         # Handle exceptions (e.g., API errors)
-        print(f"Error: {e}")
+
         return None
 
 
