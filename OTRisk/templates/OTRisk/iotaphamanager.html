@@ -21,7 +21,7 @@
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script>
     function initMap() {
-        // Placeholder function for async loading
+
     }
 </script>
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC9z71m0_5oIR2tg4ygvOt61jCL-IgxlBI&&loading=async&callback=initMap"></script>
@@ -855,6 +855,8 @@ function showNotification(message, isError = false) {
         notificationDiv.style.display = 'none';
     }, 5000); // Hide after 5 seconds
 }
+
+var map;
 </script>
 <div class="container-fluid">
 <div class="row">
@@ -1035,7 +1037,7 @@ $(document).ready(function() {
                 // User clicked 'Yes, proceed', so execute the reset actions
                 // Reset textboxes and textareas
                 $('#txtTitle, #txtLeader, #txtUnit, #txtStartDate, #txtAddress, #txtFacility, #txtLeaderEmail, #txtEndDate, #txtSafetySummary, #txtChemical, #txtPhysical, #txtEmployees, #annual_revenue, #cyber_insurance, #shift_model, #txtOther, #txtCompliance, #strategySummary, #insightSummary, #threatSummary, #zipCode, #txtCity, #txtState ').val('');
-
+                $('#negligible_low, #negligible_high, #minor_low, #minor_high,#moderate_low, #moderate_high, #significant_low, #significant_high, #severe_low, #severe_high').val(0);
                 // Reset select dropdowns
                 $('#selIndustry, #selFacilityType, #assessment_id, #selZone, #selSL').prop('selectedIndex', 0);
                 $('#investmentTable tbody').empty();
@@ -1050,8 +1052,11 @@ $(document).ready(function() {
                 document.getElementById('otherContainer').innerHTML = '';
                 document.getElementById('complianceContainer').innerHTML = '';
                 document.getElementById('threatContainer').innerHTML = '';
+                document.getElementById('chemicalContainer').innerHTML = '';
                 document.getElementById('insightContainer').innerHTML = '';
                 document.getElementById('strategyContainer').innerHTML = '';
+                document.getElementById("lblCyberPHATitle").textContent = '@';
+                document.getElementById("facility_map").innerHTML = '';
                 //reset session variables
                 sessionStorage.setItem('activeCyberPHA', '0');
                 // Set the value of the hidden text field
@@ -1324,25 +1329,27 @@ $(document).ready(function() {
                 var mapPopulated = false;
 
                function drawGoogleMap(latitude, longitude, address, country) {
+
                     var mapElement = document.getElementById('facility_map');
 
-                    // Function to create map and marker
-                   var createMap = function(lat, lng, title) {
-                    var latLng = new google.maps.LatLng(lat, lng);
-                    var map = new google.maps.Map(mapElement, {
-                        center: latLng,
-                        zoom: 18, // Adjust zoom level as needed
-                        mapTypeId: google.maps.MapTypeId.SATELLITE
-                    });
+                    var createMap = function(lat, lng, title) {
+                        setTimeout(function() { // Introduce a delay
+                            var latLng = new google.maps.LatLng(lat, lng);
+                            var map = new google.maps.Map(mapElement, {
+                                center: latLng,
+                                zoom: 18,
+                                mapTypeId: google.maps.MapTypeId.SATELLITE
+                            });
 
-                    var marker = new google.maps.Marker({
-                        position: latLng,
-                        map: map,
-                        title: title || 'Selected Facility'
-                    });
+                            var marker = new google.maps.Marker({
+                                position: latLng,
+                                map: map,
+                                title: title || 'Selected Facility'
+                            });
 
-                    mapPopulated = true;
-                };
+                            mapPopulated = true;
+                        }, 100); // Delay in milliseconds, adjust as needed
+                    };
 
 
 
@@ -1368,6 +1375,7 @@ $(document).ready(function() {
 
                 $(document).ready(function() {
                         function attemptMapPopulation() {
+
                             var country = $('#countrySelector').val();
                             var city = $('#txtCity').val().trim();
                             var address = $('#txtAddress').val().trim();
@@ -1387,6 +1395,7 @@ $(document).ready(function() {
                                     url: '/OTRisk/air_quality_index/',  // Update with the correct path to your Django view
                                     data: { 'lat': latitude, 'lon': longitude, 'address': address, 'country': country },
                                     success: function(response) {
+
                                         if (response.aqi !== undefined) {
                                             $('#txthdnAQI').val(response.aqi);
                                             var aqiValue = response.aqi;
@@ -1610,30 +1619,30 @@ $(document).ready(function() {
                                     <label for="annual_revenue" style="color: white">Facility Annual Revenue:</label>
                                     <input type="text" class="form-control currency-input" name="annual_revenue" id="annual_revenue" value="{{ annual_revenue_str|default:'0' }}" oninput="checkMaxValue(this)" required>
                                     <script>
-                    document.addEventListener("DOMContentLoaded", function() {
-                        const currencyInput = document.getElementById('annual_revenue');
+                                        document.addEventListener("DOMContentLoaded", function() {
+                                            const currencyInput = document.getElementById('annual_revenue');
 
-                        currencyInput.addEventListener('input', function(e) {
-                            // Strip any non-digit characters
-                            let value = e.target.value.replace(/\D/g, '');
+                                            currencyInput.addEventListener('input', function(e) {
+                                                // Strip any non-digit characters
+                                                let value = e.target.value.replace(/\D/g, '');
 
-                            // Convert the number to a currency format
-                            e.target.value = parseInt(value).toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 });
-                        });
-                    });
+                                                // Convert the number to a currency format
+                                                e.target.value = parseInt(value).toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 });
+                                            });
+                                        });
 
-                    function checkMaxValue(input) {
-                        // Remove any non-digit characters (e.g., currency symbols, commas)
-                        var numericValue = input.value.replace(/[^0-9]/g, '');
+                                        function checkMaxValue(input) {
+                                            // Remove any non-digit characters (e.g., currency symbols, commas)
+                                            var numericValue = input.value.replace(/[^0-9]/g, '');
 
-                        if (parseInt(numericValue) > 999999999) {
-                            input.value = '$999,999,999';
-                        } else {
-                            // Optionally, re-add currency formatting
-                            input.value = '$' + numericValue.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-                        }
-                    }
-                </script>
+                                            if (parseInt(numericValue) > 999999999) {
+                                                input.value = '$999,999,999';
+                                            } else {
+                                                // Optionally, re-add currency formatting
+                                                input.value = '$' + numericValue.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                                            }
+                                        }
+                                    </script>
 
                                 </div>
                             </div>
@@ -1644,17 +1653,17 @@ $(document).ready(function() {
                                     <label for="coho" style="color: white">Operating Cost/Hour:</label>
                                     <input type="text" class="form-control currency-input" name="coho" id="coho" value="{{ coho_str|default:'0' }}" oninput="checkMaxValue(this)" required>
                                     <script>
-                    document.addEventListener("DOMContentLoaded", function() {
-                        const currencyInput = document.getElementById('coho');
+                                        document.addEventListener("DOMContentLoaded", function() {
+                                            const currencyInput = document.getElementById('coho');
 
-                        currencyInput.addEventListener('input', function(e) {
-                            // Strip any non-digit characters
-                            let value = e.target.value.replace(/\D/g, '');
+                                            currencyInput.addEventListener('input', function(e) {
+                                                // Strip any non-digit characters
+                                                let value = e.target.value.replace(/\D/g, '');
 
-                            // Convert the number to a currency format
-                            e.target.value = parseInt(value).toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 });
-                        });
-                    });
+                                                // Convert the number to a currency format
+                                                e.target.value = parseInt(value).toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 });
+                                            });
+                                        });
 
 
                 </script>
@@ -2136,55 +2145,55 @@ updateGroupList();
                 <div class="form-group row">
                     <div class="col-md-6">
                         <label style="color:white">Negligible Low Value ($):</label>
-                        <input type="number" class="form-control" id="negligible_low" name="negligible_low" placeholder="0.00" min="0" step="0.01" style="max-width: 250px;">
+                        <input type="number" class="form-control" id="negligible_low" name="negligible_low" placeholder="0.00" min="0" step="1000" style="max-width: 250px;">
                     </div>
                     <div class="col-md-6">
                         <label style="color:white">Negligible High Value ($):</label>
-                        <input type="number" class="form-control" id="negligible_high" name="negligible_high" placeholder="0.00" min="0" step="0.01" style="max-width: 250px;">
+                        <input type="number" class="form-control" id="negligible_high" name="negligible_high" placeholder="0.00" min="0" step="1000" style="max-width: 250px;">
                     </div>
                 </div>
 
                 <div class="form-group row">
                     <div class="col-md-6">
                         <label style="color:white">Minor Low Value ($):</label>
-                        <input type="number" class="form-control" id="minor_low" name="minor_low" placeholder="0.00" min="0" step="0.01" style="max-width: 250px;">
+                        <input type="number" class="form-control" id="minor_low" name="minor_low" placeholder="0.00" min="0" step="1000" style="max-width: 250px;">
                     </div>
                     <div class="col-md-6">
                         <label style="color:white">Minor High Value ($):</label>
-                        <input type="number" class="form-control" id="minor_high" name="minor_high" placeholder="0.00" min="0" step="0.01" style="max-width: 250px;">
+                        <input type="number" class="form-control" id="minor_high" name="minor_high" placeholder="0.00" min="0" step="1000" style="max-width: 250px;">
                     </div>
                 </div>
 
                 <div class="form-group row">
                     <div class="col-md-6">
                         <label style="color:white">Moderate Low Value ($):</label>
-                        <input type="number" class="form-control" id="moderate_low" name="moderate_low" placeholder="0.00" min="0" step="0.01" style="max-width: 250px;">
+                        <input type="number" class="form-control" id="moderate_low" name="moderate_low" placeholder="0.00" min="0" step="1000" style="max-width: 250px;">
                     </div>
                     <div class="col-md-6">
                         <label style="color:white">Moderate High Value ($):</label>
-                        <input type="number" class="form-control" id="moderate_high" name="moderate_high" placeholder="0.00" min="0" step="0.01" style="max-width: 250px;">
+                        <input type="number" class="form-control" id="moderate_high" name="moderate_high" placeholder="0.00" min="0" step="1000" style="max-width: 250px;">
                     </div>
                 </div>
 
                 <div class="form-group row">
                     <div class="col-md-6">
                         <label style="color:white">Significant Low Value ($):</label>
-                        <input type="number" class="form-control" id="significant_low" name="significant_low" placeholder="0.00" min="0" step="0.01" style="max-width: 250px;">
+                        <input type="number" class="form-control" id="significant_low" name="significant_low" placeholder="0.00" min="0" step="1000" style="max-width: 250px;">
                     </div>
                     <div class="col-md-6">
                         <label style="color:white">Significant High Value ($):</label>
-                        <input type="number" class="form-control" id="significant_high" name="significant_high" placeholder="0.00" min="0" step="0.01" style="max-width: 250px;">
+                        <input type="number" class="form-control" id="significant_high" name="significant_high" placeholder="0.00" min="0" step="1000" style="max-width: 250px;">
                     </div>
                 </div>
 
                 <div class="form-group row">
                     <div class="col-md-6">
                         <label style="color:white">Severe Low Value ($):</label>
-                        <input type="number" class="form-control" id="severe_low" name="severe_low" placeholder="0.00" min="0" step="0.01" style="max-width: 250px;">
+                        <input type="number" class="form-control" id="severe_low" name="severe_low" placeholder="0.00" min="0" step="1000" style="max-width: 250px;">
                     </div>
                     <div class="col-md-6">
                         <label style="color:white">Severe High Value ($):</label>
-                        <input type="number" class="form-control" id="severe_high" name="severe_high" placeholder="0.00" min="0" step="0.01" style="max-width: 250px;">
+                        <input type="number" class="form-control" id="severe_high" name="severe_high" placeholder="0.00" min="0" step="1000" style="max-width: 250px;">
                     </div>
                 </div>
 
