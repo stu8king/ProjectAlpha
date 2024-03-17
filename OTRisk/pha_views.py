@@ -1267,7 +1267,7 @@ def get_openai_recommendation(prompt):
         parts = text.split("2. Rationale:")
         recommendation = parts[0].replace("1. Recommendation:", "").strip()
         rationale = parts[1].strip() if len(parts) > 1 else ""
-        print(rationale)
+
         # Structuring the response for JSON
         structured_response = {
             "Recommendation": recommendation,
