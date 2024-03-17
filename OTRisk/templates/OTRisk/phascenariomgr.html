@@ -1246,10 +1246,20 @@ $(document).ready(function() {
                         });
 
                         if (sessionStorage.getItem('attackTreeDrawn') === 'false') {
-                            document.getElementById('attack_tree_text').value = JSON.stringify(response.attack_tree);
+                            var attackTreeData = response.attack_tree;
 
-                            drawAttackTree(response.attack_tree);
+                            // Check if the attackTreeData does not contain the error key
+                            if (!attackTreeData.error) {
+                                document.getElementById('attack_tree_text').value = JSON.stringify(attackTreeData);
+
+                                drawAttackTree(attackTreeData);
+                            } else {
+                                // Handle the error case, e.g., display a message to the user
+                                console.error(attackTreeData.error);
+                                // Optionally, display the error message to the user in a user-friendly manner
+                            }
                         }
+
 
 
                     },
@@ -1726,7 +1736,7 @@ $(document).ready(function() {
                 <div class="col-lg-12">
                     <div class="card mb-3 shadow-sm">
                         <div class="card-header">
-                            Cybersecurity Risk Assessment Recommendation
+                            Risk Outcome Explanation
                         </div>
                         <div class="card-body">
                             <h5 class="card-title" id="recommendationTitle">Recommendation</h5>

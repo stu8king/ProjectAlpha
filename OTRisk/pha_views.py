@@ -1209,27 +1209,43 @@ def compliance_map_data(common_content):
         return f"Error: {str(e)}"
 
 
-def generate_recommendation_prompt(likelihood, adjustedRR, costs, probability, frequency, biaScore):
+def generate_recommendation_prompt(likelihood, adjustedRR, costs, probability, frequency, biaScore, cyberphaID):
+    # Attempt to fetch the related CyberPHARiskTolerance record
+    try:
+        risk_tolerance = CyberPHARiskTolerance.objects.get(cyber_pha_header_id=cyberphaID)
+        risk_tolerance_str = f"""
+        - Risk Tolerance Levels:
+            - Negligible: {risk_tolerance.negligible_low} to {risk_tolerance.negligible_high}
+            - Minor: {risk_tolerance.minor_low} to {risk_tolerance.minor_high}
+            - Moderate: {risk_tolerance.moderate_low} to {risk_tolerance.moderate_high}
+            - Significant: {risk_tolerance.significant_low} to {risk_tolerance.significant_high}
+            - Severe: {risk_tolerance.severe_low} to {risk_tolerance.severe_high}
+        """
+    except ObjectDoesNotExist:
+        risk_tolerance_str = "\n        - Risk Tolerance Levels: Not specified"
+
     prompt = f"""
-        Given the cybersecurity risk assessment results:
+        Given the cybersecurity risk assessment results for a given OT cybersecurity scenario:
         - Likelihood of occurrence: {likelihood}%
         - Adjusted residual risk: {adjustedRR}
         - Estimated costs (low|medium|high): {costs}
         - Probability of a targeted attack being successful: {probability}%
         - Annual threat event frequency: {frequency}
-        - Business impact score: {biaScore}
+        - Business impact score: {biaScore}{risk_tolerance_str}
 
         Provide a response structured exactly as follows:
 
-        1. Recommendation: [Insert recommendation here based on the assessment results. For example Mitigate Risk or Accept Risk or Manage Risk or other recommendation  depending on results]
-        2. Rationale: [Insert a concise, executive level, rationale here. Consider the adjusted residual risk, business impact score, estimated costs, annual threat event frequency, and probability of a targeted attack being successful. Structure your rationale in clear, bullet-pointed explanations.]
+        1. Recommendation: [Insert recommendation here based on the assessment results. For example, Mitigate Risk, Accept Risk, Manage Risk, or another recommendation depending on results]
+        2. Rationale: [Insert a concise, executive-level rationale here. Consider the likelihood of occurrence (values under 10 should be considered negligible), adjusted residual risk, business impact score, estimated costs, annual threat event frequency, probability of a targeted attack being successful, and risk tolerance levels. Structure your rationale in clear, bullet-pointed explanations.]
         """
     return prompt
 
 
 
 def get_openai_recommendation(prompt):
+
     openai.api_key = get_api_key("openai")  # Ensure this retrieves your OpenAI API key correctly
+    model = get_api_key("OpenAI_Model")
 
     messages = [
         {"role": "system", "content": "You are an expert in OT cybersecurity risk assessment. Provide a recommendation based on the analysis."},
@@ -1237,25 +1253,27 @@ def get_openai_recommendation(prompt):
     ]
 
     response = openai.ChatCompletion.create(
-        model="gpt-4",
+        model= model,
         messages=messages,
-        temperature=0.5,
-        max_tokens=500
+        temperature=0.2,
+        max_tokens=600
     )
 
     if response.choices and len(response.choices) > 0:
         # Assuming the response follows the structured format: "1. Recommendation: ... 2. Rationale: ..."
         text = response.choices[0].message['content'].strip()
+        text = text.replace("**", "")
         # Splitting the response into Recommendation and Rationale parts
         parts = text.split("2. Rationale:")
         recommendation = parts[0].replace("1. Recommendation:", "").strip()
         rationale = parts[1].strip() if len(parts) > 1 else ""
-
+        print(rationale)
         # Structuring the response for JSON
         structured_response = {
             "Recommendation": recommendation,
             "Rationale": rationale
         }
+
     else:
         structured_response = {"Recommendation": "No recommendation could be generated.", "Rationale": ""}
 
@@ -1462,7 +1480,8 @@ def scenario_analysis(request):
             costs=responses[2],
             probability=responses[3],
             frequency=responses[4],
-            biaScore=responses[5]
+            biaScore=responses[5],
+            cyberphaID=cyberPHAID
         )
 
         # Get the recommendation from OpenAI
@@ -1759,7 +1778,7 @@ def analyze_scenario(request):
 
             # Query OpenAI API
             response = openai.ChatCompletion.create(
-                model="gpt-4",
+                model="gpt-4-0125-preview",
                 messages=[
                     {"role": "system", "content": system_message},
                     {"role": "user", "content": user_message}
