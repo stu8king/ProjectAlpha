@@ -682,6 +682,15 @@ body {
     pointer-events: none; /* Prevent clicking */
     opacity: 0.5; /* Visual feedback that the link is disabled */
 }
+.tab-inactive {
+    color: #ccc; /* Light grey color; adjust as needed */
+    pointer-events: none; /* Prevents clicking */
+    cursor: default;
+}
+.nav-link.disabled {
+    pointer-events: none; /* Prevent clicking */
+    opacity: 0.5; /* Visual feedback that the link is disabled */
+}
 
 </style>
 </head>
@@ -1060,22 +1069,22 @@ $(document).ready(function() {
 
     <ul>
         <li><a href="#" data-tab="tab1" class="tab-link">CyberPHA List</a></li>
-        <li><a href="#" data-tab="tab2" class="tab-link">Facility</a></li>
-        <li><a href="#" data-tab="tab3" class="tab-link">Admin</a></li>
-        <li><a href="#" data-tab="tab13" class="tab-link">Risk Tolerance</a></li>
-        <li><a href="#" data-tab="tab4" class="tab-link">Tools & Software</a></li>
+        <li><a href="#" data-tab="tab2" class="tab-link tab-inactive">Facility Details</a></li>
+        <li><a href="#" data-tab="tab3" class="tab-link tab-inactive">CyberPHA Setup</a></li>
+        <li><a href="#" data-tab="tab13" class="tab-link tab-inactive">Risk Tolerance</a></li>
+        <li><a href="#" data-tab="tab4" class="tab-link tab-inactive">Tools & Software</a></li>
         <br>
         <!-- Facility Profile Heading -->
         <li class="facility-profile-heading">Facility Profile
             <ul class="facility-profile-submenu">
-                <li><a href="#" data-tab="tab5" class="tab-link">Safety</a></li>
-                <li><a href="#" data-tab="tab6" class="tab-link">Chemical</a></li>
-                <li><a href="#" data-tab="tab7" class="tab-link">Physical Security</a></li>
-                <li><a href="#" data-tab="tab8" class="tab-link">OT Assets</a></li>
-                <li><a href="#" data-tab="tab9" class="tab-link">Compliance</a></li>
-                <li><a href="#" data-tab="tab10" class="tab-link">Threats</a></li>
-                <li><a href="#" data-tab="tab11" class="tab-link">Insights</a></li>
-                <li><a href="#" data-tab="tab12" class="tab-link">Strategy</a></li>
+                <li><a href="#" data-tab="tab5" class="tab-link tab-inactive">Safety</a></li>
+                <li><a href="#" data-tab="tab6" class="tab-link tab-inactive">Chemical</a></li>
+                <li><a href="#" data-tab="tab7" class="tab-link tab-inactive">Physical Security</a></li>
+                <li><a href="#" data-tab="tab8" class="tab-link tab-inactive">OT Assets</a></li>
+                <li><a href="#" data-tab="tab9" class="tab-link tab-inactive">Compliance</a></li>
+                <li><a href="#" data-tab="tab10" class="tab-link tab-inactive">Threats</a></li>
+                <li><a href="#" data-tab="tab11" class="tab-link tab-inactive">Insights</a></li>
+                <li><a href="#" data-tab="tab12" class="tab-link tab-inactive">Strategy</a></li>
             </ul>
         </li>
     </ul>
@@ -1086,12 +1095,20 @@ $(document).ready(function() {
 </div>
 <script>
 $(document).ready(function() {
-    $(".facility-profile-heading").click(function() {
-        // Toggle the display of the submenu
-        $(".facility-profile-submenu").slideToggle();
+    // Toggle the display of the submenu when the Facility Profile heading is clicked
+    $('.facility-profile-heading').click(function(e) {
+        e.preventDefault(); // Prevent the default anchor behavior
+        // Toggle the submenu visibility
+        $(this).children('.facility-profile-submenu').slideToggle('fast');
+    });
+
+    // Prevent the submenu from hiding when its items are clicked
+    $('.facility-profile-submenu a').click(function(e) {
+        e.stopPropagation(); // Stop the click event from propagating to the parent
     });
 });
 </script>
+
      <div class="custom-main-content" >
 
      <div class="tab-content active" id="tab1">
@@ -1122,7 +1139,7 @@ $(document).ready(function() {
             {% for pha_header_records in pha_header_records %}
                 <tr data-id="{{ pha_header_records.ID }}" class="selectable-row">
                     <td>{{ pha_header_records.ID }}</td>
-                    <td>{{ pha_header_records.title }}</td>
+                    <td style="font-size: 14px; font-weight: bold">{{ pha_header_records.title }}</td>
                     <td>{{ pha_header_records.FacilityName }}</td>
                     <td>{{ pha_header_records.FacilityType }}</td>
                     <td>{{ pha_header_records.PHALeader }}</td>
@@ -1193,6 +1210,8 @@ $(document).ready(function() {
                  let title = $(this).find('td:nth-child(2)').text();
                  let facility = $(this).find('td:nth-child(3)').text();
                  document.getElementById("lblCyberPHATitle").textContent = title + '@' + facility ;
+                 //make all the sub menu tabs active
+                 $('.tab-link.tab-inactive').removeClass('tab-inactive');
                  fetchHeaderRecord(recordId);
              });
 
@@ -2018,7 +2037,8 @@ updateGroupList();
      </div>
      <div class="tab-content" id="tab5">
         <h3 style="color:white">Safety Profile <img src="{% static 'images/osha_safety.png' %}" style="width: 50px" class="img-fluid" alt="Logo"></h3>
-         <br>
+         <p style="color:white">Safety considerations for the facility</p>
+
             <div class="form-group">
             <div id="safetySummaryContainer" class="safety-summary-container"></div>
             <textarea rows="25" name="txtSafetySummary" id="txtSafetySummary" class="form-control" style="resize: none; background-color: white; border-width: 0px" readonly hidden>{{ current_pha_header.safetySummary }}</textarea>
@@ -2028,7 +2048,7 @@ updateGroupList();
      </div>
      <div class="tab-content" id="tab6">
         <h3 style="color:white">Chemical Profile <img src="{% static 'images/osha_chemical.png' %}" style="width: 50px" class="img-fluid" alt="Logo"></h3>
-         <br>
+        <p style="color:white">Chemical storage and by-product profile for the facility</p>
          <div class="form-group">
          <div id="chemicalContainer" class="safety-summary-container"></div>
          <textarea rows="25" name="txtChemical" id="txtChemical" class="form-control" style="resize: none; background-color: white; border-width: 0px" readonly hidden>{{ current_pha_header.chemicalSummary }}</textarea>
@@ -2036,7 +2056,7 @@ updateGroupList();
      </div>
      <div class="tab-content" id="tab7">
         <h3 style="color:white">Physical Security Profile <img src="{% static 'images/osha_exclamation.png' %}" style="width: 50px" class="img-fluid" alt="Logo"></h3>
-         <br>
+        <p style="color:white">Physical security considerations for the location of the facility</p>
          <div class="form-group">
          <div id="physicalContainer" class="safety-summary-container"></div>
                 <textarea rows="25" name="txtPhysical" id="txtPhysical" class="form-control" style="resize: none; background-color: white; border-width: 0px" readonly hidden>{{ current_pha_header.physicalSummary }}</textarea>
@@ -2044,7 +2064,7 @@ updateGroupList();
      </div>
      <div class="tab-content" id="tab8">
         <h3 style="color:white">OT Asset Profile</h3>
-         <br>
+        <p style="color:white">OT devices most likely to be present within the facility</p>
           <div class="form-group">
          <div id="otherContainer" class="safety-summary-container"></div>
                 <textarea rows="25" name="txtOther" id="txtOther" class="form-control" style="resize: none; background-color: white; border-width: 0px" readonly hidden>{{ current_pha_header.otherSummary }}</textarea>
@@ -2052,7 +2072,7 @@ updateGroupList();
      </div>
      <div class="tab-content" id="tab9">
         <h3 style="color:white">Compliance Profile </h3>
-         <br>
+         <p style="color:white">Regulatory compliance requirements most likely to apply for this facility</p>
          <div class="form-group">
          <div id="complianceContainer" class="safety-summary-container"></div>
          <textarea rows="25" name="txtCompliance" id="txtCompliance" hidden class="form-control" style="resize: none; background-color: white; border-width: 0px" readonly hidden>{{ current_pha_header.complianceSummary }}</textarea>
@@ -2060,7 +2080,7 @@ updateGroupList();
          </div>
      <div class="tab-content" id="tab10">
         <h3 style="color:white">Threat Profile</h3>
-         <br>
+        <p style="color:white">OT Cybersecurity threats most relevant to this facility</p>
          <div class="form-group">
          <div id="threatContainer" class="safety-summary-container"></div>
                 <textarea rows="25" name="threatSummary" id="threatSummary" class="form-control" style="resize: none; background-color: white; border-width: 0px" readonly hidden>{{ current_pha_header.threatSummary }}</textarea>
@@ -2068,7 +2088,7 @@ updateGroupList();
          </div>
      <div class="tab-content" id="tab11">
         <h3 style="color:white">Security Insights</h3>
-         <br>
+        <p style="color:white">Relevant OT Cybersecurity insights to consider for the facility</p>
          <div class="form-group">
          <div id="insightContainer" class="safety-summary-container"></div>
                 <textarea rows="25" name="insightSummary" id="insightSummary" class="form-control" style="resize: none; background-color: white; border-width: 0px" readonly hidden>{{ current_pha_header.insightSummary }}</textarea>
@@ -2076,7 +2096,7 @@ updateGroupList();
      </div>
      <div class="tab-content" id="tab12">
         <h3 style="color:white">OT Cybersecurity Strategy</h3>
-        <br>
+        <p style="color:white">OT Cybersecurity strategy most relevant to this facility</p>
         <div class="form-group">
             <div id="strategyContainer" class="safety-summary-container"></div>
             <textarea rows="25" name="strategySummary" id="strategySummary" class="form-control" style="resize: none; background-color: white; border-width: 0px" readonly hidden>{{ current_pha_header.strategySummary }}</textarea>
@@ -2601,6 +2621,8 @@ $(document).ready(function() {
             $('#progressBarProfile').css('width', '0%').attr('aria-valuenow', 0);
             $('#progressBarMessageProfile').text('').show(); // Initialize and show message
             $('.tab-link').addClass('disabled');
+            $('.nav-link').addClass('disabled');
+
             let progress = 0;
             let progressBarInterval = setInterval(function() {
                 progress += 2; // Increment progress by 2% every second
@@ -2685,6 +2707,7 @@ $(document).ready(function() {
                     $('#progressBarContainerProfile').hide();
                     $('#progressBarMessageProfile').hide();
                     $('.tab-link').removeClass('disabled');
+                    $('.nav-link').removeClass('disabled');
                     // Write the response data to the textboxes
                     document.getElementById('txtSafetySummary').value = response.safety_summary;
 
@@ -2718,6 +2741,7 @@ $(document).ready(function() {
                     // First, remove 'active' class from all tabs to hide them
                     $('.tab-content').removeClass('active').hide();
 
+
                     // Then, add 'active' class to tab5 and show it
                     $('#tab5').addClass('active').show();
 
@@ -2728,6 +2752,7 @@ $(document).ready(function() {
                     $('#progressBarContainerProfile').hide();
                     $('#progressBarMessageProfile').hide();
                     $('.tab-link').removeClass('disabled');
+                    $('.nav-link').removeClass('disabled');
                 },
             });
         }

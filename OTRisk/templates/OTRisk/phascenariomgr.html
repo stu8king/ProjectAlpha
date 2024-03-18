@@ -490,7 +490,19 @@ svg {
     opacity: 0.5; /* Visual feedback that the link is disabled */
 }
 
-
+.tab-link.disabled {
+    pointer-events: none; /* Prevent clicking */
+    opacity: 0.5; /* Visual feedback that the link is disabled */
+}
+.tab-inactive {
+    color: #ccc; /* Light grey color; adjust as needed */
+    pointer-events: none; /* Prevents clicking */
+    cursor: default;
+}
+.nav-link.disabled {
+    pointer-events: none; /* Prevent clicking */
+    opacity: 0.5; /* Visual feedback that the link is disabled */
+}
 </style>
 </head>
 <body style="background-color: #464748">
@@ -1199,6 +1211,8 @@ $(document).ready(function() {
                 $('#loadingProgressBar').show();
                 $('#progressBarInner').css('width', '0%').attr('aria-valuenow', 0);
                 $('#progressBarMessage').text('').show(); // Initialize and show message
+                $('.tab-link').addClass('disabled');
+                $('.nav-link').addClass('disabled');
                 button.disabled = true;
                  $('.tab-link').addClass('disabled');
                 let progress = 0;
@@ -1230,6 +1244,8 @@ $(document).ready(function() {
                         clearInterval(progressBarInterval);
                         $('#loadingProgressBar').hide();
                         $('#progressBarMessage').hide();
+                        $('.tab-link').removeClass('disabled');
+                        $('.nav-link').removeClass('disabled');
                          $('.tab-link').removeClass('disabled');
                         button.disabled = false;
 
@@ -1268,6 +1284,7 @@ $(document).ready(function() {
                         $('#loadingProgressBar').hide();
                         $('#progressBarMessage').hide();
                          $('.tab-link').removeClass('disabled');
+                        $('.nav-link').removeClass('disabled');
                         button.disabled = false;
 
                         // Parse the responseText to JSON if it is in JSON format
@@ -1739,9 +1756,9 @@ $(document).ready(function() {
                             Risk Outcome Explanation
                         </div>
                         <div class="card-body">
-                            <h5 class="card-title" id="recommendationTitle">Recommendation</h5>
+                            <h5 class="card-title" id="recommendationTitle" style="color: #007bff">Recommendation</h5>
                             <p class="card-text" id="recommendationText"></p>
-                            <h5 class="card-title" id="rationaleTitle">Rationale</h5>
+                            <h5 class="card-title" id="rationaleTitle" style="color: #007bff">Rationale</h5>
                             <ul id="rationalePoints"></ul>
                         </div>
                     </div>
@@ -3489,7 +3506,7 @@ $('#scenarioSelectModal').on('show.bs.modal', function (e) {
             $('#loadingProgressBar').show();
             $('#progressBarInner').css('width', '0%').attr('aria-valuenow', 0);
             $('#progressBarMessage').text('').show(); // Initialize and show message
-
+            $('.nav-link').addClass('disabled');
             // Disable tab links
             $('.tab-link').addClass('disabled');
 
@@ -3620,8 +3637,11 @@ $('#scenarioSelectModal').on('show.bs.modal', function (e) {
                     setTimeout(function() { // Briefly show 100% before hiding
                         $('#loadingProgressBar').hide();
                         $('#progressBarMessage').hide();
+                         $('.tab-link').removeClass('disabled');
+                        $('.nav-link').removeClass('disabled');
                     }, 500); // Adjust delay as needed
                      $('.tab-link').removeClass('disabled');
+                     $('.nav-link').removeClass('disabled');
                     if (response.message === 'Scenario parameters have not changed.') {
                         // Display a SweetAlert notification
                         swal.fire({
@@ -3805,6 +3825,7 @@ $('#scenarioSelectModal').on('show.bs.modal', function (e) {
                     $('#loadingProgressBar').hide();
                     $('#progressBarMessage').hide();
                      $('.tab-link').removeClass('disabled');
+                    $('.nav-link').removeClass('disabled');
                 },
             });
         }
@@ -4355,6 +4376,7 @@ function resetformcontrols() {
       sessionStorage.setItem('ls', '0');
       sessionStorage.setItem('sid', 0);
         $('.tab-content').removeClass('active').hide();
+        $('.nav-link').removeClass('disabled');
         $('#tab2').addClass('active').show();
         document.querySelector('a[data-tab="tab2"]').click();
 
@@ -4617,11 +4639,14 @@ function clearScenario(){
         document.getElementById('hdn_bia_score').value= data.ai_bia_score;
         document.getElementById('hdnrationale_recommendation').value = data.risk_recommendation;
         document.getElementById('hdnrationale_Rationale').value = data.risk_rationale;
-         $("#recommendationTitle").text("Recommendation");
+        $("#recommendationTitle").text("Recommendation");
         $("#recommendationText").text(data.risk_recommendation);
         $("#rationaleTitle").text("Rationale");
-        $("#rationalePoints").html("<li>" + data.risk_rationale.replace(/\n/g, "</li><li>") + "</li>");
-
+         try {
+             $("#rationalePoints").html("<li>" + data.risk_rationale.replace(/\n/g, "</li><li>") + "</li>");
+         }
+         catch (e)
+         {}
 
          // Populate the scenario_consequences table
         var tableBody = $('#consequenceTable tbody');
@@ -4735,6 +4760,7 @@ function clearScenario(){
 
 
         $('.tab-content').removeClass('active').hide();
+        $('.nav-link').removeClass('disabled');
         $('#tab2').addClass('active').show();
 
     }
