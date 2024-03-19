@@ -904,8 +904,8 @@ def openai_assess_risk(request):
                 f"repair and replacement costs, increased operational costs due to inefficiencies, legal and compliance costs, public relations efforts to manage reputation, and any investments in cybersecurity improvements to prevent future incidents. "
                 f"Provide a pragmatic and realistic monthly estimate, justifying the costs based on the specific impact scores. "
                 f"Estimate the budget cost for each month so that the Chief Finance Officer can plan appropriately. "
-                f"Present your estimates as a series of 12 integers in the format: Month1|Month2|...|Month12, representing the cost for each month in US dollars. "
-                f"IMPORTANT: only provide the numerical values without any narrative or explanation"
+                f"OUTPUT INSTRUCTION: Present your estimates as a series of 12 integers in the format: Month1|Month2|Month3|Month4|...|Month12, representing the cost for each month in US dollars. "
+                f"IMPORTANT: only provide the numerical values WITHOUT any narrative or explanation"
                 f"The expectation is that costs will taper off over the 12-month period, but provide the most realistic response based on the scenario specifics."
             )
         }
