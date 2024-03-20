@@ -3320,7 +3320,7 @@ function unlockControls() {
                     // Show a SweetAlert confirmation dialog
                     Swal.fire({
                         title: 'Confirm Save?',
-                        text: "Are you sure you want to save the CyberPHA information?",
+                        text: "Are you sure you want to save the CyberPHA information? (Note: The profile is generated the first time a new facility is saved. This can take up to a minute to complete)",
                         imageUrl: '/static/images/anzen_owl.png',
                         imageWidth: 150, // Adjust as necessary
                         imageHeight: 150, // Adjust as necessary
@@ -3334,8 +3334,16 @@ function unlockControls() {
                         customClass: {
                             popup: 'swal2-custom-border' // Apply custom class to the popup/dialog
                         }
-                    }).then((willSave) => {
-                        if (willSave) {
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            Swal.fire({
+                            title: 'Processing...',
+                            html: 'Please wait while we save your information.',
+                            allowOutsideClick: false,
+                            didOpen: () => {
+                                Swal.showLoading(); // This will show a spinner
+                            }
+                            });
                             // User confirmed, continue with the form submission
                             document.forms['frmRAW'].submit();
                         } else {
