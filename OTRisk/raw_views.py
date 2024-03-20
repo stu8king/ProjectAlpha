@@ -1742,7 +1742,7 @@ def generate_sim_attack_tree(request):
     openai.api_key = openai_api_key
     scenario = request.POST.get('scenario')
     attack_tree_system_message = """
-                    Generate a hierarchical structure of a potential attack tree for the given cybersecurity scenario in a strictly valid JSON format. The structure should use 'name' for node labels and 'children' for nested nodes, where each node represents a step or method in the attack. The attack tree must have at least two main branches, each potentially containing dozens of branches or sub-branches. Ensure the output is in JSON format with no additional characters outside of the JSON structure. The JSON structure should be formatted as: {'name': 'Node Name', 'children': [{...}]}.
+                    Generate a hierarchical structure of a potential attack tree for the given cybersecurity scenario in a strictly valid JSON format. The structure should use 'name' for node labels and 'children' for nested nodes, where each node represents a step or method in the attack. The attack tree must have at least two main branches, each potentially containing dozens of branches or sub-branches. CRITICAL INSTRUCTION: Ensure the output is in JSON format WITH NO additional characters outside of the JSON structure. The JSON structure should be formatted as: {'name': 'Node Name', 'children': [{...}]}.
 
                     Example of a correctly formatted output:
                     {
@@ -1777,7 +1777,7 @@ def generate_sim_attack_tree(request):
                       ]
                     }
 
-                    Please generate a similar structure for the provided cybersecurity scenario, adhering strictly to the JSON format and ensuring at least two main branches are present.
+                    Please generate a similar structure for the provided cybersecurity scenario, adhering STRICTLY to the JSON format and ensuring at least two main branches are present.
                     """
 
     # Query OpenAI API for the attack tree
@@ -1790,16 +1790,23 @@ def generate_sim_attack_tree(request):
         max_tokens=800,
         temperature=0.3
     )
+    attack_tree_raw = attack_tree_response['choices'][0]['message']['content']
+    attack_tree_raw = attack_tree_raw.strip()
+
+    match = re.search(r'\{.*\}', attack_tree_raw, re.DOTALL)
+    if match:
+        cleaned_json_str = match.group(0)
+    else:
+        cleaned_json_str = "{}"  # Fallback to empty JSON object if no match
 
     # Process the response for attack tree
-    attack_tree_raw = attack_tree_response['choices'][0]['message']['content']
-
     try:
         # Parse the raw JSON string into a Python dictionary
-        attack_tree_data = json.loads(attack_tree_raw)
+        attack_tree_data = json.loads(cleaned_json_str)
 
         return JsonResponse(attack_tree_data)
     except json.JSONDecodeError:
+
         return JsonResponse({"error": "Invalid JSON format from AI response"}, status=400)
 
 
