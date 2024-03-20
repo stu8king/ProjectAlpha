@@ -277,12 +277,15 @@ class CyberPHA_Group(models.Model):
         ('Country', 'Country'),
         ('Organization', 'Organization'),
     ]
-
+    organization = models.ForeignKey('accounts.Organization', on_delete=models.CASCADE, related_name='cyberpha_groups')
     name = models.CharField(max_length=100)
     group_type = models.CharField(max_length=50, choices=GROUP_TYPES)
 
+    class Meta:
+        unique_together = ('name', 'group_type', 'organization')  # Ensure uniqueness across these fields
+
     def __str__(self):
-        return f"{self.name} ({self.group_type})"
+        return f"{self.name} ({self.group_type}) - {self.organization.name}"
 
 
 class tblCyberPHAHeader(models.Model):

@@ -44,7 +44,7 @@ from decimal import Decimal, InvalidOperation
 
 from ProjectAlpha import settings
 from ProjectAlpha.settings import BASE_DIR
-from accounts.models import UserProfile
+from accounts.models import UserProfile, Organization
 from accounts.views import get_client_ip
 from .dashboard_views import get_user_organization_id, get_organization_users
 from django.contrib.auth.models import User
@@ -1928,11 +1928,13 @@ def assign_cyberpha_to_group(request):
     existing_group_id = request.POST.get('existing_group_id')
     new_group_name = request.POST.get('new_group_name')
     new_group_type = request.POST.get('new_group_type')
+    org_id = get_user_organization_id(request)
 
     try:
         cyberpha = tblCyberPHAHeader.objects.get(pk=cyberpha_id)
 
         if existing_group_id:
+
             group = CyberPHA_Group.objects.get(pk=existing_group_id)
             # Check if the group is already assigned
             if group not in cyberpha.groups.all():
@@ -1942,7 +1944,8 @@ def assign_cyberpha_to_group(request):
 
         elif new_group_name and new_group_type:
             # Check if group with the same name and type already exists
-            group, created = CyberPHA_Group.objects.get_or_create(name=new_group_name, group_type=new_group_type)
+            organization_instance = Organization.objects.get(id=org_id)
+            group, created = CyberPHA_Group.objects.get_or_create(name=new_group_name, group_type=new_group_type, organization=organization_instance)
             if not created:
                 return JsonResponse({'status': 'error', 'message': 'Group with this name and type already exists.'})
             cyberpha.groups.add(group)
