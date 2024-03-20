@@ -34,11 +34,11 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 <!-- SweetAlert -->
-<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 
 <!-- D3.js -->
 <script src="https://d3js.org/d3.v6.min.js"></script>
-<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
 
 <!-- AnyChart -->
 <script src="https://cdn.anychart.com/releases/8.10.0/js/anychart-bundle.min.js"></script>
@@ -388,6 +388,15 @@ path.connection {
     height: 100%; /* Adjust based on your layout needs */
 }
 
+.swal2-custom-border {
+    border: 2px solid #ddd; /* Lighter border */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Shadow */
+}
+
+.nav-link.disabled {
+    pointer-events: none; /* Prevent clicking */
+    opacity: 0.5; /* Visual feedback that the link is disabled */
+}
 </style>
 </head>
 <body style="background-color: #464748">
@@ -530,16 +539,25 @@ document.addEventListener("DOMContentLoaded", function() {
                         <button id="newScenarioBtn" class="btn nav-link">New Scenario</button>
                         <script>
                             document.getElementById('newScenarioBtn').addEventListener('click', function() {
-                                swal({
+                                swal.fire({
                                     title: "Are you sure?",
-                                    text: "Any unsaved changed data will be lost. Proceed?",
-                                    icon: "warning",
-                                    buttons: true,
-                                    dangerMode: true,
-                                    buttons: ["Cancel", "Yes"]
+                                    html: "Any unsaved changed data will be lost. Proceed?",
+                                    iconHtml: '<img src="/static/images/anzen_owl.png" width="100px">',
+                                    imageWidth: 150, // Adjust as necessary
+                                    imageHeight: 150, // Adjust as necessary
+                                    background: '#000', // Black background
+                                    color: '#fff', // Set text color to white
+                                    showCancelButton: true,
+                                    confirmButtonColor: '#3085d6',
+                                    cancelButtonColor: '#d33',
+                                    confirmButtonText: 'Yes',
+                                    cancelButtonText: 'Cancel',
+                                    customClass: {
+                                        popup: 'swal2-custom-border' // Apply custom class to the popup/dialog
+                                    }
                                 })
-                                .then((willDelete) => {
-                                    if (willDelete) {
+                                .then((result) => {
+                                    if (result.isConfirmed) {
                                         // User pressed "Yes", clear the content
                                         document.getElementById('txtScenario').value = ''; // Clear Scenario tab content
                                         document.getElementById('txtConsequences').value = ''; // Clear Consequences tab content
@@ -552,13 +570,21 @@ document.addEventListener("DOMContentLoaded", function() {
                                         $('#attack_tree').empty();
                                         // Add more lines as needed for other inputs you wish to clear
 
-                                        swal("The data has been cleared!", {
-                                            icon: "success",
+                                        swal.fire({
+                                            title: "Data is cleared. Create new scenario!",
+                                            imageUrl: '/static/images/anzen_owl.png',
+                                            imageWidth: 150, // Adjust as necessary
+                                            imageHeight: 150, // Adjust as necessary
+                                            background: '#000', // Black background
+                                            color: '#fff', // Set text color to white
+                                            customClass: {
+                                                popup: 'swal2-custom-border' // Apply custom class to the popup/dialog
+                                            }
                                         });
-                                        document.querySelector('a[data-tab="tab1"]').click();
+                                        document.querySelector('a[data-tab="tab2"]').click();
                                     } else {
                                         // User pressed "Cancel", do nothing
-                                        swal("Your data is safe!");
+
                                     }
                                 });
                             });
@@ -581,13 +607,38 @@ document.addEventListener("DOMContentLoaded", function() {
                        <button id="saveScenarioBtn" class="btn nav-link">Save Scenario</button>
                         <script>
                             document.getElementById('saveScenarioBtn').addEventListener('click', function() {
-                            var scenarioName = prompt("Please enter a name for this scenario:");
-                            if (scenarioName) {
-                                saveScenario(scenarioName);
-                            }
-                        });
+                                Swal.fire({
+                                    title: 'Please enter a name for this scenario:',
+                                    input: 'text',
+                                    iconHtml: '<img src="/static/images/anzen_owl.png" width="100px">',
+                                    imageWidth: 150, // Adjust as necessary
+                                    imageHeight: 150, // Adjust as necessary
+                                    background: '#000', // Black background
+                                    color: '#fff', // Set text color to white
+                                    inputAttributes: {
+                                        autocapitalize: 'off'
+                                    },
+                                    showCancelButton: true,
+                                    confirmButtonText: 'Save',
+                                    showLoaderOnConfirm: true,
+                                    customClass: {
+                                        popup: 'swal2-custom-border' // Apply custom class to the popup/dialog
+                                    },
+                                    preConfirm: (scenarioName) => {
+                                        if (!scenarioName) {
+                                            Swal.showValidationMessage(`Please enter a scenario name.`);
+                                        }
+                                        return scenarioName; // You might want to call saveScenario(scenarioName) here or handle it outside.
+                                    },
+                                    allowOutsideClick: () => !Swal.isLoading()
+                                }).then((result) => {
+                                    if (result.isConfirmed && result.value) {
+                                        saveScenario(result.value);
+                                    }
+                                });
+                            });
+                            </script>
 
-                        </script>
 
                     </div>
                     <div class="col-md-4"></div>
@@ -1262,119 +1313,142 @@ return new Promise(function(resolve, reject) {
 var pollingInterval;
 
 document.getElementById('analyzeScenarioBtn').addEventListener('click', function() {
-    // Disable submenu links and change their color to a lighter shade
-    $('.sub-menu a').css({
-        'pointer-events': 'none',
-        'color': '#000000' // Example of a lighter color (light gray)
-    }).addClass('disabled-link');
 
-    var scenarioText = document.getElementById('txtScenario').value;
-    let facility_type = document.getElementById('selFacilityType').value;
-    let industry = document.getElementById('selIndustry').value;
-    let organization_size = document.getElementById('selOrganizationSize').value;
-    let regulatory_environment = document.getElementById('selRegulatoryEnvironment').value;
-    let country = document.getElementById('countrySelector').value;
-    let investments = [];
-    $('#investmentTable tbody tr').each(function() {
-        let investment = {
-            type: $(this).find('select[name="investment_type[]"]').val(),
-            vendor_name: $(this).find('input[name="vendor_name[]"]').val(),
-            product_name: $(this).find('input[name="product_name[]"]').val(),
-            cost: $(this).find('input[name="cost[]"]').val(),
-            date: $(this).find('input[name="date[]"]').val()
-        };
-        investments.push(investment);
-    });
-    var button = this;
-    var spinnerContainer = document.getElementById('spinnerContainer');
-    button.disabled = true;
-    spinnerContainer.style.display = 'block'; // Show the spinner
-
-    $.ajax({
-        url: "/OTRisk/cleanup_scenariobuilder/", // Update this URL to your cleanup endpoint
-        type: "GET", // or "POST" if you're sending data
-        beforeSend: function(xhr) {
-            xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}"); // Add CSRF token header if needed
-        },
-        success: function(response) {
-
-            //var analyzeScenarioPromise = analyzeScenario(scenarioText, industry, facility_type, investments);
-            var generateAttackTreePromise = generateAttackTree(scenarioText);
-            var analyzeConsequencesPromise = analyzeConsequences(scenarioText, industry, facility_type, organization_size, regulatory_environment, country);
-            Promise.all([ generateAttackTreePromise, analyzeConsequencesPromise])
-                .then(function() {
-                    spinnerContainer.style.display = 'none'; // Hide the spinner
-                    button.disabled = false;
-
-                })
-                .catch(function(error) {
-                    console.error('An error occurred:', error);
-                    spinnerContainer.style.display = 'none'; // Hide the spinner
-                    button.disabled = false;
-                });
-                if (window.pollingInterval) clearInterval(window.pollingInterval);
-
-                    // Start the analysis scenario
-                    $.ajax({
-                        url: "{% url 'OTRisk:analyze_sim_scenario' %}",
-                        type: 'POST',
-                        data: {
-                            'scenario': scenarioText,
-                            'industry': industry,
-                            'facility_type': facility_type,
-                            'investments': JSON.stringify(investments),
-                            'csrfmiddlewaretoken': '{{ csrf_token }}'
-                        },
-                        success: function(response) {
-                            document.getElementById('analyzeScenarioCheckbox').checked = true;
-
-                            // Polling function
-                            function pollForResults() {
-                                $.ajax({
-                                    url: '/OTRisk/get_analysis_result/', // Update this URL to your result checking endpoint
-                                    type: "GET",
-                                    xhrFields: {
-                                        withCredentials: true
-                                    },
-                                    success: function(response) {
-                                        if (response.status === 'success') {
-                                            clearInterval(window.pollingInterval); // Stop polling
-
-                                            updateUIWithResults(response.data); // Update your UI with the results
-                                            // Re-enable submenu links and restore their original color here
-                                            $('.sub-menu a').css({
-                                                'pointer-events': '',
-                                                'color': '' // Assuming you want to revert to the stylesheet-defined color
-                                            }).removeClass('disabled-link');
-
-                                        } else {
-                                            spinnerContainer.style.display = 'block';
-                                        }
-                                    },
-                                    error: function(xhr, status, error) {
-
-                                        clearInterval(window.pollingInterval); // Consider stopping or retrying polling
-                                    }
-                                });
-                            }
-
-                            // Start polling for results every 5 seconds
-                            window.pollingInterval = setInterval(pollForResults, 5000);
-                        },
-                        error: function(xhr, status, error) {
-                            spinnerContainer.style.display = 'none';
-                            button.disabled = false;
-                            alert('Error: ' + error);
-                        }
-                    });
-                },
-                error: function(xhr, status, error) {
-            // Handle error from cleanup_scenariobuilder
-            console.error('Cleanup error:', error);
-            spinnerContainer.style.display = 'none';
-            button.disabled = false;
+     swal.fire({
+        title: 'Are you sure?',
+        html: "The scenario analysis can take up to 2 minutes to complete. Do not navigate away from the page or click any links while execution is in progress. Continue?",
+         iconHtml: '<img src="/static/images/anzen_owl.png" width="100px">',
+        imageWidth: 150, // Adjust as necessary
+        imageHeight: 150, // Adjust as necessary
+        background: '#000', // Black background
+        color: '#fff', // Set text color to white
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes',
+        cancelButtonText: 'Cancel',
+        customClass: {
+            popup: 'swal2-custom-border' // Apply custom class to the popup/dialog
         }
-    });
+    }).then((result) => {
+        if (result.isConfirmed) {
+    // Disable submenu links and change their color to a lighter shade
+        $('.sub-menu a').css({
+            'pointer-events': 'none',
+            'color': '#000000' // Example of a lighter color (light gray)
+        }).addClass('disabled-link');
+        $('.nav-link').addClass('disabled');
+
+        var scenarioText = document.getElementById('txtScenario').value;
+        let facility_type = document.getElementById('selFacilityType').value;
+        let industry = document.getElementById('selIndustry').value;
+        let organization_size = document.getElementById('selOrganizationSize').value;
+        let regulatory_environment = document.getElementById('selRegulatoryEnvironment').value;
+        let country = document.getElementById('countrySelector').value;
+        let investments = [];
+        $('#investmentTable tbody tr').each(function() {
+            let investment = {
+                type: $(this).find('select[name="investment_type[]"]').val(),
+                vendor_name: $(this).find('input[name="vendor_name[]"]').val(),
+                product_name: $(this).find('input[name="product_name[]"]').val(),
+                cost: $(this).find('input[name="cost[]"]').val(),
+                date: $(this).find('input[name="date[]"]').val()
+            };
+            investments.push(investment);
+        });
+        var button = this;
+        var spinnerContainer = document.getElementById('spinnerContainer');
+        button.disabled = true;
+        spinnerContainer.style.display = 'block'; // Show the spinner
+
+        $.ajax({
+            url: "/OTRisk/cleanup_scenariobuilder/", // Update this URL to your cleanup endpoint
+            type: "GET", // or "POST" if you're sending data
+            beforeSend: function(xhr) {
+                xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}"); // Add CSRF token header if needed
+            },
+            success: function(response) {
+
+                //var analyzeScenarioPromise = analyzeScenario(scenarioText, industry, facility_type, investments);
+                var generateAttackTreePromise = generateAttackTree(scenarioText);
+                var analyzeConsequencesPromise = analyzeConsequences(scenarioText, industry, facility_type, organization_size, regulatory_environment, country);
+                Promise.all([ generateAttackTreePromise, analyzeConsequencesPromise])
+                    .then(function() {
+                        spinnerContainer.style.display = 'none'; // Hide the spinner
+                        button.disabled = false;
+
+                    })
+                    .catch(function(error) {
+                        console.error('An error occurred:', error);
+                        spinnerContainer.style.display = 'none'; // Hide the spinner
+                        button.disabled = false;
+                    });
+                    if (window.pollingInterval) clearInterval(window.pollingInterval);
+
+                        // Start the analysis scenario
+                        $.ajax({
+                            url: "{% url 'OTRisk:analyze_sim_scenario' %}",
+                            type: 'POST',
+                            data: {
+                                'scenario': scenarioText,
+                                'industry': industry,
+                                'facility_type': facility_type,
+                                'investments': JSON.stringify(investments),
+                                'csrfmiddlewaretoken': '{{ csrf_token }}'
+                            },
+                            success: function(response) {
+                                document.getElementById('analyzeScenarioCheckbox').checked = true;
+
+                                // Polling function
+                                function pollForResults() {
+                                    $.ajax({
+                                        url: '/OTRisk/get_analysis_result/', // Update this URL to your result checking endpoint
+                                        type: "GET",
+                                        xhrFields: {
+                                            withCredentials: true
+                                        },
+                                        success: function(response) {
+                                            if (response.status === 'success') {
+                                                clearInterval(window.pollingInterval); // Stop polling
+
+                                                updateUIWithResults(response.data); // Update your UI with the results
+                                                // Re-enable submenu links and restore their original color here
+                                                $('.sub-menu a').css({
+                                                    'pointer-events': '',
+                                                    'color': '' // Assuming you want to revert to the stylesheet-defined color
+                                                }).removeClass('disabled-link');
+                                                $('.nav-link').removeClass('disabled');
+
+                                            } else {
+                                                spinnerContainer.style.display = 'block';
+                                            }
+                                        },
+                                        error: function(xhr, status, error) {
+
+                                            clearInterval(window.pollingInterval); // Consider stopping or retrying polling
+                                        }
+                                    });
+                                }
+
+                                // Start polling for results every 5 seconds
+                                window.pollingInterval = setInterval(pollForResults, 5000);
+                            },
+                            error: function(xhr, status, error) {
+                                spinnerContainer.style.display = 'none';
+                                button.disabled = false;
+                                alert('Error: ' + error);
+                            }
+                        });
+                    },
+                    error: function(xhr, status, error) {
+                // Handle error from cleanup_scenariobuilder
+                console.error('Cleanup error:', error);
+                spinnerContainer.style.display = 'none';
+                button.disabled = false;
+            }
+        });
+    }
+ });
 });
 
 function updateUIWithResults(data) {
@@ -1633,7 +1707,18 @@ function loadScenarioDetails(scenarioId) {
             });
             // Populate table data, costs, and other fields similarly
             isProgrammaticChange = false;
-            alert('Scenario loaded successfully');
+            Swal.fire({
+                    title: "Scenario loaded successfully",
+                    imageUrl: '/static/images/anzen_owl.png', // Make sure the path is correct
+                    imageWidth: 150, // Adjust as necessary
+                    imageHeight: 150, // Adjust as necessary
+                    background: '#000', // Black background
+                    color: '#fff', // Set text color to white
+                    customClass: {
+                        popup: 'swal2-custom-border' // Apply custom class to the popup/dialog
+                    }
+                }
+            );
 
         },
         error: function(xhr, status, error) {
@@ -1912,7 +1997,18 @@ function saveScenario(scenarioName) {
         'X-CSRFToken': getCsrfToken()  // Include CSRF token
     },
     success: function(response) {
-        alert('Scenario saved successfully');
+         Swal.fire({
+                    title: "Scenario saved successfully",
+                    imageUrl: '/static/images/anzen_owl.png', // Make sure the path is correct
+                    imageWidth: 150, // Adjust as necessary
+                    imageHeight: 150, // Adjust as necessary
+                    background: '#000', // Black background
+                    color: '#fff', // Set text color to white
+                    customClass: {
+                        popup: 'swal2-custom-border' // Apply custom class to the popup/dialog
+                    }
+                }
+         )
     },
     error: function(xhr, status, error) {
         console.error('Error saving scenario:', error);
