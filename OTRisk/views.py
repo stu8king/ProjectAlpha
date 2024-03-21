@@ -2540,11 +2540,14 @@ def view_snapshots(request, scenario):
     # Retrieve all the records from CyberPHAScenario_snapshot where ScenarioID = scenario
     snapshots = CyberPHAScenario_snapshot.objects.filter(ScenarioID=scenario)
 
+    validated_consequences = ScenarioConsequences.objects.filter(scenario=scenario_record, is_validated=True)
+
     # Pass the datasets to the risk_snapshots template
     context = {
         'scenario_record': scenario_record,
         'snapshots': snapshots,
-        'header_record': header_record
+        'header_record': header_record,
+        'validated_consequences': validated_consequences
     }
     return render(request, 'risk_snapshots.html', context)
 
