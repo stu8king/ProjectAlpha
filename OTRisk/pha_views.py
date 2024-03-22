@@ -1110,7 +1110,8 @@ def getSingleScenario(request):
         'cost_projection': scenario.cost_projection,
         'user_role': user_role,
         'risk_rationale': scenario.risk_rationale,
-        'risk_recommendation': scenario.risk_recommendation
+        'risk_recommendation': scenario.risk_recommendation,
+        'cost_justification': scenario.cost_justification
     }
     # Retrieve the related PHAControlList records
     control_list = []
@@ -1425,19 +1426,21 @@ def scenario_analysis(request):
                 "content": f"{common_content}. Hypothesize the business impact score from 0 to 100 in the event of a successful attack resulting in the given scenario. Consequences of the scenario are given as follows: {validated_consequences_list}. A score of 1 would mean minimal business impact while a score of 100 would indicate catastrophic business impact without the ability to continue operations. Your answer should be given as an integer. Do NOT include any other words, sentences, or explanations."
             },
 
-            {"role": "user",
-             "content": f"I am a CISO at a {industry} company with approximately {employees_on_site} employees, operating primarily in {country}. We are assessing our cybersecurity posture and need to estimate the potential costs associated with a {scenario} that has consequences of {validated_consequences_list}."
-                        f"Given the scenario, please provide an estimate of the direct and indirect costs we might incur, including but not limited to:"
-                        f"1. Immediate Response Costs: Costs associated with the initial response to the incident, such as emergency IT support, forensic analysis, and legal consultations."
-                        f"2. Remediation Costs: Expenses related to remediating the cybersecurity breach, including software updates, hardware replacements, and strengthening of security measures."
-                        f"3. Regulatory and Compliance Costs: Potential fines and penalties for non-compliance with relevant data protection and privacy regulations, as well as costs associated with compliance audits and reporting requirements post-incident."
-                        f"4. Reputation and Brand Impact: Estimated impact on our brand and customer trust, potentially leading to loss of business and decreased revenue."
-                        f"5. Operational Disruption: Costs associated with operational disruptions or downtime, including loss of productivity and impact on service delivery."
-                        f"6. Legal and Settlement Costs: Expenses related to legal actions taken against the company and any settlements or compensations paid out to affected parties."
-                        f"7. Long-term Costs: Any long-term costs such as increased insurance premiums, ongoing monitoring and security measures, and potential loss of intellectual property."
-                        f"Please consider the specifics of our industry, size, and the nature of the assets involved in this scenario to provide a comprehensive cost estimate.  Please reference industry-specific data from the latest Verizon DBIR, applicable regulations from CISA, and standards from the NIST Cybersecurity Framework in your analysis."
-                        f"OUTPUT INSTRUCTION: Provide a 12-month direct cost projection for the scenario. Format the output as: Month1|Month2|...|Month12. Ensure each value reflects a realistic, pragmatic monthly estimate, justifying the trend of costs decreasing over time.IMPORTANT: List only the monthly costs individually, not as cumulative totals. Provide the most realistic monthly estimates, anticipating costs to taper off over the 12-month period.Present the data as a series of 12 integers, each representing the cost for that month in US dollars, without any narrative or explanation. ONLY THE OUTPUT IN THE FORMAT AS DESCRIBED"
-             },
+            {
+                "role": "user",
+                "content": f"I am a CISO at a {industry} company with approximately {employees_on_site} employees, operating primarily in {country}. We are assessing our cybersecurity posture and need to estimate the potential costs associated with a {scenario} that has consequences of {validated_consequences_list}."
+                           "Given the scenario, please provide an estimate of the direct and indirect costs we might incur, including but not limited to:"
+                           "1. Immediate Response Costs: Costs associated with the initial response to the incident, such as emergency IT support, forensic analysis, and legal consultations."
+                           "2. Remediation Costs: Expenses related to remediating the cybersecurity breach, including software updates, hardware replacements, and strengthening of security measures."
+                           "3. Regulatory and Compliance Costs: Potential fines and penalties for non-compliance with relevant data protection and privacy regulations, as well as costs associated with compliance audits and reporting requirements post-incident."
+                           "4. Reputation and Brand Impact: Estimated impact on our brand and customer trust, potentially leading to loss of business and decreased revenue."
+                           "5. Operational Disruption: Costs associated with operational disruptions or downtime, including loss of productivity and impact on service delivery."
+                           "6. Legal and Settlement Costs: Expenses related to legal actions taken against the company and any settlements or compensations paid out to affected parties."
+                           "7. Long-term Costs: Any long-term costs such as increased insurance premiums, ongoing monitoring and security measures, and potential loss of intellectual property."
+                           "Please consider the specifics of our industry, size, and the nature of the assets involved in this scenario to provide a comprehensive cost estimate. Please reference industry-specific data from the latest Verizon DBIR, applicable regulations from CISA, and standards from the NIST Cybersecurity Framework in your analysis."
+                           "OUTPUT INSTRUCTION: First, provide a 12-month direct cost projection for the scenario in the format: COST PROJECTION: Month1value|Month2value|...|Month12value. Each value must be an integer to represent a dollar value wth no other text or narrative included and should reflect a realistic, pragmatic monthly estimate, justifying the trend of costs decreasing over time. Then, provide a concise and conservative executive-level explanation summary, in 150 words or less, specific to the given scenario as JUSTIFICATION: <Your justification here>. Ensure the cost projection and justification are clearly separated by these keywords."
+            },
+
             {
                 "role": "user",
                 "content": f"""{common_content}
@@ -1489,6 +1492,17 @@ def scenario_analysis(request):
 
         user_profile.current_scenario_count += 1
         user_profile.save()
+        cost_projection_with_justification = responses[6]
+
+        # Splitting the response to separate the cost projection and the justification
+        cost_projection_parts = cost_projection_with_justification.split("COST PROJECTION: ")
+        justification_parts = cost_projection_parts[1].split("JUSTIFICATION: ") if len(cost_projection_parts) > 1 else [
+            "", "Justification not provided."]
+
+        cost_projection = justification_parts[0].strip()
+        cost_projection_justification = justification_parts[1].strip() if len(
+            justification_parts) > 1 else "Justification not provided."
+
         # Return the responses as variables
         return JsonResponse({
             'likelihood': responses[0],
@@ -1497,7 +1511,8 @@ def scenario_analysis(request):
             'probability': responses[3],
             'frequency': responses[4],
             'biaScore': responses[5],
-            'projection': responses[6],
+            'projection': cost_projection,
+            'cost_projection_justification': cost_projection_justification,
             'control_effectiveness': control_effectiveness,
             'recommendations': responses[7],
             'scenario_compliance_data': responses[8],

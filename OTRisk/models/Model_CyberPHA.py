@@ -362,7 +362,9 @@ class tblCyberPHAHeader(models.Model):
     def __str__(self):
         return self.FacilityName
 
+
 from django.db import models
+
 
 class CyberPHACybersecurityDefaults(models.Model):
     cyber_pha = models.OneToOneField(tblCyberPHAHeader, on_delete=models.CASCADE, related_name='cybersecurity_defaults')
@@ -705,6 +707,7 @@ class tblCyberPHAScenario(models.Model):
     cost_projection = models.TextField(null=True)
     risk_rationale = models.TextField(null=True)
     risk_recommendation = models.TextField(null=True)
+    cost_justification = models.TextField(null=True)
 
     class Meta:
         db_table = 'tblCyberPHAScenario'
@@ -971,6 +974,7 @@ class CyberPHAScenario_snapshot(models.Model):
     cost_projection = models.TextField(null=True)
     risk_rationale = models.TextField(null=True)
     risk_recommendation = models.TextField(null=True)
+    cost_justification = models.TextField(null=True)
 
 
 class PHA_Safeguard(models.Model):
@@ -1130,4 +1134,3 @@ class UserScenarioHash(models.Model):
 
     class Meta:
         unique_together = ('user', 'cyberphaID', 'hash_value')
-

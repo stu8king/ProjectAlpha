@@ -1084,6 +1084,7 @@ def save_or_update_cyberpha(request):
         cost_projection = request.POST.get('cost_projection')
         risk_rationale = request.POST.get('rationale_Rationale')
         risk_recommendation = request.POST.get('rationale_recommendation')
+        cost_justification = request.POST.get('cost_projection_justification')
 
         if ai_bia_score in ('NaN', ''):
             ai_bia_score = 0
@@ -1255,7 +1256,8 @@ def save_or_update_cyberpha(request):
                 attack_tree_text=attack_tree_text,
                 cost_projection=cost_projection,
                 risk_rationale=risk_rationale,
-                risk_recommendation=risk_recommendation
+                risk_recommendation=risk_recommendation,
+                cost_justification=cost_justification
 
             )
             snapshot_record.save()
@@ -1339,7 +1341,8 @@ def save_or_update_cyberpha(request):
                 'scenario_status': scenario_status,
                 'cost_projection': cost_projection,
                 'risk_recommendation': risk_recommendation,
-                'risk_rationale': risk_rationale
+                'risk_rationale': risk_rationale,
+                'cost_justification': cost_justification
             }
 
             # If scenario_id is '0', create a new record, otherwise update the existing one
