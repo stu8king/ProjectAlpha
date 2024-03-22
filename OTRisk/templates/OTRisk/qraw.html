@@ -63,9 +63,10 @@ border-bottom: 1px solid #dee2e6;
     display: block;
 }
 .sidebar {
-    height: 200vh;
+    display: flex;
+    height: 100vh;
     background-color: #2D2E30; /* Darker shade for sidebar */
-    padding: 20px 1vw;
+    padding: 1vw;
     width: 10vw; /* Sidebar width */
 }
 
@@ -82,19 +83,20 @@ border-bottom: 1px solid #dee2e6;
     box-sizing: border-box; /* Include padding in width calculation */
 }
 .sidebar-logo {
-padding: 10px 15px;
+padding: 1vw;
 text-align: center;
 }
  .nav-sidebar .nav-item {
-        padding: 5px 10px;
+        padding: 0.1vw;
         /* border-bottom: 1px solid  #fac330; /* Light orange line */
         margin: 0 10%;
+        gap: 1rem;
     }
- .nav-sidebar .nav-link {
+  .nav-sidebar .nav-link {
         color: #d3d1cd;
         border-radius: 0;
         transition: color 0.3s ease-in-out;
-        font-size: 0.8em;
+        font-size: 0.7rem;
     }
  .nav-sidebar .nav-link:hover, .nav-sidebar .nav-link.active {
         background-color: #3A5F5F;
@@ -489,6 +491,24 @@ font-weight: lighter;
 .nav-link.disabled {
     pointer-events: none; /* Prevent clicking */
     opacity: 0.5; /* Visual feedback that the link is disabled */
+}
+.nav-sidebar .nav-link img {
+    width: 1.25em; /* Scales with the font size */
+    height: 1.25em; /* Scales with the font size */
+}
+/* Larger icons for tablets */
+@media (min-width: 768px) {
+    .nav-sidebar .nav-link img {
+    width: 1.5em;
+    height: 1.5em;
+    }
+}
+/* Even larger icons for desktops */
+@media (min-width: 992px) {
+    .nav-sidebar .nav-link img {
+    width: 1.75em;
+    height: 1.75em;
+    }
 }
 </style>
 

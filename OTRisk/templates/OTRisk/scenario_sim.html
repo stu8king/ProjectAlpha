@@ -129,13 +129,11 @@
   text-decoration: none;
   cursor: pointer;
 }
-
-
-    .form-group {
-    border: 1px solid #464748; /* Border color */
-    box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.5); /* Outer shadow */
-    background-color: #5E6266; /* Lighter shade of #464748 */
-    padding: 15px; /* Optional: for internal spacing */
+.form-group {
+border: 1px solid #464748; /* Border color */
+box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.5); /* Outer shadow */
+background-color: #5E6266; /* Lighter shade of #464748 */
+padding: 15px; /* Optional: for internal spacing */
 }
 
 
@@ -143,16 +141,17 @@
         background-color: #464748;
         color: #d3d1cd;
     }
-    .sidebar {
-        height: 100vh;
-        background-color: #2D2E30; /* Darker shade for sidebar */
-        padding: 20px 0;
-        width: 200px; /* Reduced width */
-    }
+.sidebar {
+    display: flex;
+    height: 100vh;
+    background-color: #2D2E30; /* Darker shade for sidebar */
+    padding: 1vw;
+    width: 10vw; /* Sidebar width */
+}
     .sidebar-logo {
-        padding: 10px 15px;
-        text-align: center;
-    }
+    padding: 1vw;
+    text-align: center;
+}
     .nav-sidebar {
         display: flex;
         flex-direction: column;
@@ -160,15 +159,16 @@
         list-style: none;
     }
     .nav-sidebar .nav-item {
-        padding: 5px 10px;
+        padding: 0.1vw;
         /* border-bottom: 1px solid  #fac330; /* Light orange line */
         margin: 0 10%;
+        gap: 1rem;
     }
     .nav-sidebar .nav-link {
         color: #d3d1cd;
         border-radius: 0;
         transition: color 0.3s ease-in-out;
-        font-size: 0.8em;
+        font-size: 0.7rem;
     }
     .nav-sidebar .nav-link:hover, .nav-sidebar .nav-link.active {
         background-color: #3A5F5F;
@@ -329,13 +329,14 @@ path.connection {
 .sub-menu {
     position: fixed; /* Fixed position to stay in view */
     top: 0; /* Align with the top of the viewport */
-    left: 200px; /* Adjust based on the width of the main sidebar */
-    width: 150px; /* Width of the sub-menu */
+    left: 10vw; /* Position the sub-menu right next to the sidebar */
+    width: 7vw; /* Width of the sub-menu */
     height: 100vh; /* Full viewport height */
     background-color: #333; /* Sub-menu background color */
     color: #fff; /* Text color */
-    padding: 20px 10px; /* Padding */
+    padding: 1vw ; /* Padding */
     box-sizing: border-box; /* Include padding in width calculation */
+    font-size: 0.8rem;
 }
 
 .sub-menu ul {
@@ -396,6 +397,24 @@ path.connection {
 .nav-link.disabled {
     pointer-events: none; /* Prevent clicking */
     opacity: 0.5; /* Visual feedback that the link is disabled */
+}
+.nav-sidebar .nav-link img {
+    width: 1.25em; /* Scales with the font size */
+    height: 1.25em; /* Scales with the font size */
+}
+/* Larger icons for tablets */
+@media (min-width: 768px) {
+    .nav-sidebar .nav-link img {
+    width: 1.5em;
+    height: 1.5em;
+    }
+}
+/* Even larger icons for desktops */
+@media (min-width: 992px) {
+    .nav-sidebar .nav-link img {
+    width: 1.75em;
+    height: 1.75em;
+    }
 }
 </style>
 </head>
