@@ -1144,7 +1144,7 @@ $(document).ready(function() {
              let savedRecordId = "{{ saved_record_id }}";  // Get the saved_record_id from the Django context
              if (savedRecordId && savedRecordId !== "None") {
                  $('tr[data-id="' + savedRecordId + '"]').addClass('highlighted');
-                 // If a savedRecordId is provided, automatically trigger the AJAX call
+                 $('.tab-link.tab-inactive').removeClass('tab-inactive');
                  fetchHeaderRecord(savedRecordId);
              }
 
@@ -2885,6 +2885,7 @@ $(document).ready(function() {
 }
 
             function fetchHeaderRecord(recordId) {
+
                  sessionStorage.setItem('activeCyberPHA', recordId);
                  // Set the value of the hidden text field
                  document.getElementById('txtHdnCyberPHAID').value = recordId;
@@ -3072,7 +3073,7 @@ $(document).ready(function() {
                          $('#generatePPT').prop('disabled', false);
                          populateModeratorsTable(data.organization_moderators, data.moderator_ids);
                          // Populate current group assignments
-                         console.log(data.all_groups);
+
                          populateCurrentGroups(data.headerrecord.current_groups);
 
                          // Populate all available groups in the dropdown (for the modal)
@@ -3081,6 +3082,7 @@ $(document).ready(function() {
                          updateGroupList();
                         $('.tab-content').removeClass('active').hide();
                         $('#tab2').addClass('active').show();
+
 
                      }
                  });
