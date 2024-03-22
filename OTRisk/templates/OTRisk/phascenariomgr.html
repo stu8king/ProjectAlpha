@@ -666,16 +666,16 @@ document.addEventListener("DOMContentLoaded", function() {
             Click the tab headings
         <ul>
             <li><a href="#" data-tab="tab1" class="tab-link">Scenario Table</a></li>
-            <li><a href="#" data-tab="tab2" class="tab-link">Scenario Detail</a></li>
-            <li><a href="#" data-tab="tab3" class="tab-link">Scenario Parameters</a></li>
-            <li><a href="#" data-tab="tab4" class="tab-link">Business Impact Assessment</a></li>
+            <li><a href="#" data-tab="tab2" class="tab-link tab-inactive">Scenario Detail</a></li>
+            <li><a href="#" data-tab="tab3" class="tab-link tab-inactive">Scenario Parameters</a></li>
+            <li><a href="#" data-tab="tab4" class="tab-link tab-inactive">Business Impact Assessment</a></li>
 
-            <li><a href="#" data-tab="tab5" class="tab-link">Physical Safeguards</a></li>
-            <li><a href="#" data-tab="tab6" class="tab-link">Risk Outcomes</a></li>
-            <li><a href="#" data-tab="tab7" class="tab-link">Financial Analysis</a></li>
-            <li><a href="#" data-tab="tab8" class="tab-link">Compliance Map</a></li>
-            <li><a href="#" data-tab="tab9" class="tab-link">Attack Tree</a></li>
-            <li><a href="#" data-tab="tab10" class="tab-link" >Recommendations</a></li>
+            <li><a href="#" data-tab="tab5" class="tab-link tab-inactive">Physical Safeguards</a></li>
+            <li><a href="#" data-tab="tab6" class="tab-link tab-inactive">Risk Outcomes</a></li>
+            <li><a href="#" data-tab="tab7" class="tab-link tab-inactive">Financial Analysis</a></li>
+            <li><a href="#" data-tab="tab8" class="tab-link tab-inactive">Compliance Map</a></li>
+            <li><a href="#" data-tab="tab9" class="tab-link tab-inactive">Attack Tree</a></li>
+            <li><a href="#" data-tab="tab10" class="tab-link tab-inactive" >Recommendations</a></li>
         </ul>
     </div>
 
@@ -4425,6 +4425,7 @@ function clearScenario(){
 
  function fillScenario(scenarioId) {
     clearScenario();
+    $('.tab-link.tab-inactive').removeClass('tab-inactive');
     sessionStorage.setItem('sid', scenarioId);
 
     sessionStorage.setItem('attackTreeDrawn', 'false');

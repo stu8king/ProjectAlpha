@@ -666,7 +666,7 @@ background-color: #f5f5f5;  /* Optional: to give a slight background change on h
     opacity: 0.5; /* Visual feedback that the link is disabled */
 }
 .tab-inactive {
-    color: #ccc; /* Light grey color; adjust as needed */
+    color: #5e5c5c; /* Light grey color; adjust as needed */
     pointer-events: none; /* Prevents clicking */
     cursor: default;
 }
@@ -1611,6 +1611,60 @@ $(document).ready(function() {
                     </select>
                 </div>
 
+                <div class="form-group">
+                    <div class="row">
+                        <div class="col-md-2">
+                            <label for="ir_plan" style="color: white">OT Cybersecurity Incident Response (OT IR) Plan (Yes/No):</label>
+                        </div>
+                        <div class="col-md-1">
+                            <input type="checkbox" id="ir_plan" name="ir_plan">
+                        </div>
+                        <div class="col-md-2">
+                            <label for="ir_plan_date" style="color: white">Date OT IR Plan Last Tested:</label>
+                        </div>
+                        <div class="col-md-3">
+                            <input type="date" class="form-control" name="ir_plan_date" id="ir_plan_date" value="" >
+                        </div>
+                        <div class="col-md-2">
+                            <label for="ir_plan_ut" style="color: white">OT IR Plan Never Tested (Yes/No):</label>
+                        </div>
+                        <div class="col-md-1">
+                            <input type="checkbox" id="ir_plan_ut" name="ir_plan_ut">
+                        </div>
+                    </div>
+            </div>
+            <script>
+            $(document).ready(function() {
+                // Initially disable the date input and "Plan Never Tested" checkbox
+                $('#ir_plan_date').prop('disabled', true);
+                $('#ir_plan_ut').prop('disabled', true);
+
+                // Event listener for the "OT IR Plan" checkbox
+                $('#ir_plan').change(function() {
+                    if (this.checked) {
+                        // If the "OT IR Plan" checkbox is checked, enable the date input
+                        $('#ir_plan_date').prop('disabled', false);
+                        // Enable the "Plan Never Tested" checkbox only if the date input is empty
+                        $('#ir_plan_ut').prop('disabled', !$('#ir_plan_date').val() == '');
+                    } else {
+                        // If the "OT IR Plan" checkbox is unchecked, disable and clear the date input and disable the "Plan Never Tested" checkbox
+                        $('#ir_plan_date').prop('disabled', true).val('');
+                        $('#ir_plan_ut').prop('disabled', true).prop('checked', false);
+                    }
+                });
+
+                // Event listener for changes to the date input
+                $('#ir_plan_date').change(function() {
+                    if ($(this).val() == '') {
+                        // If the date input is cleared, make the "Plan Never Tested" checkbox selectable
+                        $('#ir_plan_ut').prop('disabled', false).prop('checked', true);
+                    } else {
+                        // If a date is entered, uncheck and disable the "Plan Never Tested" checkbox
+                        $('#ir_plan_ut').prop('checked', false).prop('disabled', true);
+                    }
+                });
+            });
+            </script>
 
                 <div class="form-group">
                     <label for="selSL" style="color: white">Target Security Level (SL-T):</label>
@@ -2596,6 +2650,9 @@ $(document).ready(function() {
             let employees = document.getElementById('txtEmployees').value;
             let AQI = document.getElementById('txthdnAQI').value;
             let sl = document.getElementById('selSL').value;
+            let hasIRPlan = document.getElementById('ir_plan').checked
+            let irPlanDate = document.getElementById('ir_plan_date').value;
+            let irPlanNeverTested = document.getElementById('ir_plan_ut').checked;
             let investments = [];
             $('#investmentTable tbody tr').each(function() {
                 let investment = {
@@ -2624,7 +2681,10 @@ $(document).ready(function() {
                     assessment_id: assessment_id,
                     aqi: AQI,
                     sl: sl,
-                    investments: JSON.stringify(investments)
+                    investments: JSON.stringify(investments),
+                    has_ir_plan: hasIRPlan,
+                    ir_plan_date: irPlanDate,
+                    ir_plan_never_tested: irPlanNeverTested
                  },
 
                 success: function (response) {
@@ -2883,7 +2943,42 @@ $(document).ready(function() {
                          $('#txtCity').val(data.headerrecord.facilityCity);
                          $('#txtState').val(data.headerrecord.facilityState);
                          $('#zipCode').val(data.headerrecord.facilityCode);
+                         // Populate the new incident response planning fields
+                        $('#ir_plan').prop('checked', data.headerrecord.has_incident_response_plan);
+                        $('#ir_plan_date').val(data.headerrecord.plan_last_tested_date);
+                        $('#ir_plan_ut').prop('checked', data.headerrecord.plan_never_tested);
 
+                        // Logic to enable/disable the date field and plan_never_tested checkbox
+                        if (data.headerrecord.has_incident_response_plan) {
+                            $('#ir_plan_date').prop('disabled', false);
+                            if (data.headerrecord.plan_last_tested_date) {
+                                $('#ir_plan_ut').prop('disabled', true).prop('checked', false);
+                            } else {
+                                $('#ir_plan_ut').prop('disabled', false);
+                            }
+                        } else {
+                            $('#ir_plan_date').prop('disabled', true).val('');
+                            $('#ir_plan_ut').prop('disabled', true).prop('checked', false);
+                        }
+
+                        // Add event listeners to dynamically enable/disable fields based on user input
+                        $('#ir_plan').change(function() {
+                            if (this.checked) {
+                                $('#ir_plan_date').prop('disabled', false);
+                                $('#ir_plan_ut').prop('disabled', !$('#ir_plan_date').val());
+                            } else {
+                                $('#ir_plan_date').prop('disabled', true).val('');
+                                $('#ir_plan_ut').prop('disabled', true).prop('checked', false);
+                            }
+                        });
+
+                        $('#ir_plan_date').change(function() {
+                            if ($(this).val()) {
+                                $('#ir_plan_ut').prop('checked', false).prop('disabled', true);
+                            } else {
+                                $('#ir_plan_ut').prop('disabled', false);
+                            }
+                        });
 
                          var lat = data.headerrecord.facilityLat;
                          var long = data.headerrecord.facilityLong;

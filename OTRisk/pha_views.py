@@ -225,7 +225,25 @@ def iotaphamanager(request, record_id=None):
 
         cyber_insurance_value = request.POST.get('cyber_insurance')
         pha_header.cyber_insurance = False if cyber_insurance_value is None else bool(cyber_insurance_value)
+        has_ir_plan = request.POST.get('ir_plan') == 'on'  # Checkbox 'on' if checked
+        ir_plan_date_str = request.POST.get('ir_plan_date')
+        ir_plan_never_tested = request.POST.get('ir_plan_ut') == 'on'
 
+        # Convert ir_plan_date from string to date object, handle empty string
+        if ir_plan_date_str:
+            ir_plan_date = timezone.datetime.strptime(ir_plan_date_str, '%Y-%m-%d').date()
+            pha_header.plan_last_tested_date = ir_plan_date
+            pha_header.plan_never_tested = False  # If a date is provided, plan has been tested
+        else:
+            # If no date provided and plan exists, consider if it's marked as never tested
+            if has_ir_plan:
+                pha_header.plan_never_tested = ir_plan_never_tested
+            else:
+                # If no IR plan, reset related fields
+                pha_header.plan_last_tested_date = None
+                pha_header.plan_never_tested = True
+
+        pha_header.has_incident_response_plan = has_ir_plan
         pha_header.UserID = request.user.id
         pha_header.save()
         messages.success(request, 'CyberPHA Information has been saved successfully.')
@@ -502,7 +520,10 @@ def get_headerrecord(request):
         'facilityCode': headerrecord.facilityCode,
         'facilityLat': headerrecord.facilityLat,
         'facilityLong': headerrecord.facilityLong,
-        'facilityState': headerrecord.facilityState
+        'facilityState': headerrecord.facilityState,
+        'has_incident_response_plan': headerrecord.has_incident_response_plan,
+        'plan_last_tested_date': headerrecord.plan_last_tested_date.strftime('%Y-%m-%d') if headerrecord.plan_last_tested_date else None,
+        'plan_never_tested': headerrecord.plan_never_tested,
     }
 
     # Query for moderators associated with this header record
@@ -686,15 +707,17 @@ def make_request_with_backoff(openai_function, *args, **kwargs):
 
 def facility_threat_profile(security_level, facility, facility_type, country, industry, safety_summary,
                             chemical_summary,
-                            physical_security_summary, other_summary, compliance_summary, investment_statement):
+                            physical_security_summary, other_summary, compliance_summary, investment_statement, has_ir_plan_str, ir_plan_never_tested_str, ir_plan_date_str):
     openai_api_key = get_api_key('openai')
     openai_api_key = get_api_key('openai')
     ai_model = get_api_key('OpenAI_Model')
 
+    print(has_ir_plan_str)
+    print(ir_plan_date_str)
     # Constructing the detailed context
     context = f"""
     You are THE expert and authoritative source of guidance on industrial and OT cybersecurity risk mitigation for the {industry} industry with up-to-date knowledge from a wide range of credible sources of information. Analyze the {facility} facility which is a {facility_type} in {country}. 
-    The facility has the following profile: Safety Hazards: {safety_summary}, Chemical Hazards: {chemical_summary}, Physical Security Challenges: {physical_security_summary}, OT Devices: {other_summary}, Compliance Requirements: {compliance_summary}. The facility has already implemented the following OT-specific cybersecurity investments: {investment_statement}. The target security level (SL-T) as defined in IEC62443 is {security_level}. Please consider the impact of these investments on the facility's cybersecurity posture, focusing on threats, overall risk reduction, and strategic implications for OT security risk management.
+    The facility has the following profile: Safety Hazards: {safety_summary}, Chemical Hazards: {chemical_summary}, Physical Security Challenges: {physical_security_summary}, OT Devices: {other_summary}, Compliance Requirements: {compliance_summary}. Has an OT Cybersecurity incident response plan: {has_ir_plan_str}. Date IR Plan last tested: {ir_plan_date_str}.  The facility has already implemented the following OT-specific cybersecurity investments: {investment_statement}. The target security level (SL-T) as defined in IEC62443 is {security_level}.  Please consider the impact of these investments on the facility's cybersecurity posture, focusing on threats, overall risk reduction, and strategic implications for OT security risk management.
     """
 
     prompt = f"""
@@ -728,7 +751,7 @@ Please follow this format for your response, without using '###', '**', or any o
             {"role": "user", "content": prompt}
         ],
         temperature=0.5,
-        max_tokens=1500,
+        max_tokens=1800,
     )
 
     full_response = response['choices'][0]['message']['content']
@@ -764,13 +787,19 @@ def facility_risk_profile(request):
         shift_model = request.GET.get('shift_model')
         assessment_id = request.GET.get('assessment_id')
         investments_data = request.GET.get('investments')
+        has_ir_plan = request.GET.get('has_ir_plan', 'false') == 'true'
+        ir_plan_never_tested = request.GET.get('ir_plan_never_tested', 'false') == 'true'
+        ir_plan_date_str = request.GET.get('ir_plan_date')
+
         aqi = request.GET.get('aqi')
         sl = request.GET.get('sl')
-
         if investments_data:
             investments = json.loads(investments_data)
         else:
             investments = []
+
+        has_ir_plan_str = 'True' if has_ir_plan else 'False'
+        ir_plan_never_tested_str = 'True' if ir_plan_never_tested else 'False'
 
         # Generate the text statement for investments
         investment_statement = "Investments have been made in:\n"
@@ -847,7 +876,7 @@ def facility_risk_profile(request):
                                                                                  physical_security_summary,
                                                                                  other_summary,
                                                                                  compliance_summary,
-                                                                                 investment_statement)
+                                                                                 investment_statement, has_ir_plan_str, ir_plan_never_tested_str, ir_plan_date_str )
 
         # Return the individual parts as variables in JsonResponse
         return JsonResponse({
@@ -1351,6 +1380,13 @@ def scenario_analysis(request):
 
         cyber_pha_header = tblCyberPHAHeader.objects.get(ID=cyberPHAID)
 
+        has_incident_response_plan = cyber_pha_header.has_incident_response_plan
+        plan_last_tested_date = cyber_pha_header.plan_last_tested_date
+        plan_never_tested = cyber_pha_header.plan_never_tested
+
+        # Convert plan_last_tested_date to string format if it's not None
+        plan_last_tested_date_str = plan_last_tested_date.strftime('%Y-%m-%d') if plan_last_tested_date else None
+
         ####### Audit Write ########
         write_to_audit(
             request.user,
@@ -1393,7 +1429,7 @@ def scenario_analysis(request):
 
         openai.api_key = get_api_key('openai')
         # Define the common part of the user message
-        common_content = f"Act as an Insurance actuary and an expert in OT cybersecurity risk. Analyse a scenario for a {facility_type} in the {industry} industry in {country}:  {scenario}. (IMPORTANT CONTEXT: Systems in scope for the scenario are exposed to the Internet with a public IP address: {exposed_system}. Systems in scope for the scenario have weak or default credentials: {weak_credentials}).  Consider the business impact scores provided (safety: {safetyimpact}, life danger: {lifeimpact}, production: {productionimpact} (production outage: {production_outage}: length of production outage {production_outage_length} hours), company reputation: {reputationimpact}, environmental impact: {environmentimpact}, regulatory: {regulatoryimpact}, supply chain : {supplyimpact}  data and intellectual property: {dataimpact}). Current OT Cybersecurity controls are {control_effectiveness}% effective (NOTE if 0% then control effectiveness has not been assessed) : Mitigated severity with current controls estimated: {severitymitigated}/10, risk exposure to the scenario mitigated estimated: {mitigatedexposure}/10,   residual risk estimated: {residualrisk}/10. The amount of unmitigated rate without controls is estimated: {uel}/10. ESSENTIAL:  {physical_safeguards_str} . Physical security controls are assumed to be effective. ({investment_statement})"
+        common_content = f"Act as an Insurance actuary and an expert in OT cybersecurity risk. Analyse a scenario for a {facility_type} in the {industry} industry in {country}:  {scenario}. (IMPORTANT CONTEXT: Systems in scope for the scenario are exposed to the Internet with a public IP address: {exposed_system}. Systems in scope for the scenario have weak or default credentials: {weak_credentials}). Organization has an OT Cybersecurity Incident Response Plan: {has_incident_response_plan}. If there is an OT Cybersecurity incident Response plan, it was last tested: {plan_last_tested_date_str}. Consider the business impact scores provided (safety: {safetyimpact}, life danger: {lifeimpact}, production: {productionimpact} (production outage: {production_outage}: length of production outage {production_outage_length} hours), company reputation: {reputationimpact}, environmental impact: {environmentimpact}, regulatory: {regulatoryimpact}, supply chain : {supplyimpact}  data and intellectual property: {dataimpact}). Current OT Cybersecurity controls are {control_effectiveness}% effective (NOTE if 0% then control effectiveness has not been assessed) : Mitigated severity with current controls estimated: {severitymitigated}/10, risk exposure to the scenario mitigated estimated: {mitigatedexposure}/10,   residual risk estimated: {residualrisk}/10. The amount of unmitigated rate without controls is estimated: {uel}/10. ESSENTIAL:  {physical_safeguards_str} . Physical security controls are assumed to be effective. ({investment_statement})"
 
         # Define the refined user messages
         user_messages = [

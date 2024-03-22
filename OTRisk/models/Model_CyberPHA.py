@@ -3,6 +3,7 @@ import random
 from django.conf import settings
 from django.db import models, IntegrityError
 from django.contrib.auth.models import User
+from django.utils import timezone
 from django.core.validators import MinValueValidator, MaxValueValidator
 from decimal import Decimal
 from django.db.models import URLField
@@ -352,6 +353,10 @@ class tblCyberPHAHeader(models.Model):
     insightSummary = models.TextField(default="No Summary Saved", null=True)
     strategySummary = models.TextField(default="No Summary Saved", null=True)
     groups = models.ManyToManyField(CyberPHA_Group, blank=True)
+    has_incident_response_plan = models.BooleanField(default=False, verbose_name="Has Incident Response Plan")
+    plan_last_tested_date = models.DateField(default=timezone.now, verbose_name="Plan Last Tested Date", null=True,
+                                             blank=True)
+    plan_never_tested = models.BooleanField(default=True, verbose_name="Plan Never Tested")
 
     def set_workflow_status(self, status):
         WorkflowStatus.objects.create(cyber_pha_header=self, status=status)
