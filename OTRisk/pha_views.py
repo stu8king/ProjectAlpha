@@ -712,8 +712,6 @@ def facility_threat_profile(security_level, facility, facility_type, country, in
     openai_api_key = get_api_key('openai')
     ai_model = get_api_key('OpenAI_Model')
 
-    print(has_ir_plan_str)
-    print(ir_plan_date_str)
     # Constructing the detailed context
     context = f"""
     You are THE expert and authoritative source of guidance on industrial and OT cybersecurity risk mitigation for the {industry} industry with up-to-date knowledge from a wide range of credible sources of information. Analyze the {facility} facility which is a {facility_type} in {country}. 
