@@ -66,56 +66,10 @@
                         </a>
                         </li>
                         <li class="nav-item menu-item">
-                            <a href="#" id="logoutLink" type="button" class="nav-link" onclick="logout();">
-                                <img src="{% static 'images/menu_logout.png' %}" alt=""> Logout
-                            </a>
-
-
-
-                      <script>
-                        function logout() {
-                            // Using SweetAlert2 to confirm logout
-                            swal.fire({
-                                title: "Are you sure you want to log out?",
-                                iconHtml: '<img src="{% static "images/anzen_owl.png" %}" width="100px">', // Custom image as icon
-                                imageWidth: 100,
-                                imageHeight: 100,
-                                background: '#000', // Black background
-                                color: '#fff', // Set text color to white
-                                showCancelButton: true,
-                                confirmButtonColor: '#3085d6',
-                                cancelButtonColor: '#d33',
-                                confirmButtonText: 'Yes, log out',
-                                cancelButtonText: 'Cancel',
-                                customClass: {
-                                    popup: 'swal2-custom-border' // Apply custom class to the popup/dialog
-                                }
-                            }).then((result) => {
-                                if (result.isConfirmed) {
-                                    // User confirmed logout, perform the fetch request
-                                    fetch("{% url 'logout' %}", {
-                                        method: 'POST',
-                                        headers: {
-                                            'X-CSRFToken': '{{ csrf_token }}',
-                                            'Content-Type': 'application/x-www-form-urlencoded',
-                                        },
-                                        credentials: 'same-origin' // Necessary for including CSRF token in request
-                                    }).then(response => {
-                                        if (response.ok) {
-                                            // Logout successful, redirect to home page
-                                            window.location.href = '/';
-                                        } else {
-                                            // Handle errors or unsuccessful logout
-                                            console.error('Logout failed.');
-                                        }
-                                    }).catch(error => {
-                                        // Handle any errors that occur during fetch
-                                        console.error('Error:', error);
-                                    });
-                                }
-                            });
-                        }
-                        </script>
+                            <form action="{% url 'logout' %}" method="post">
+                            {% csrf_token %}
+                            <button type="submit" id="btnlogout" class="nav-link" style="background:none; border:none; padding:0; margin:0; "><img src="{% static 'images/menu_logout.png' %}"  alt=""> Logout</button>
+                            </form>
 
                         </li>
                         </ul>

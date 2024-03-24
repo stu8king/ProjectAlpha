@@ -66,7 +66,7 @@
                         </a>
                         </li>
                         <li class="nav-item menu-item">
-                           <a href="#" id="logoutLink" type="button" class="nav-link" onclick="logout();">
+                           <a href="#" id="btnlogout" type="button" class="nav-link" onclick="logout();">
                                 <img src="{% static 'images/menu_logout.png' %}" alt=""> Logout
                             </a>
 
@@ -87,6 +87,9 @@
                                 cancelButtonColor: '#d33',
                                 confirmButtonText: 'Yes, log out',
                                 cancelButtonText: 'Cancel',
+                                customClass: {
+                                    popup: 'swal2-custom-border' // Apply custom class to the popup/dialog
+                                }
                             }).then((result) => {
                                 if (result.isConfirmed) {
                                     // User confirmed logout, perform the fetch request
