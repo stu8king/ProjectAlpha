@@ -1980,7 +1980,6 @@ def write_to_audit(user_id, user_action, user_ip, cyberPHAID=None, cyberPHAScena
     try:
         user_profile = UserProfile.objects.get(user=user_id)
 
-        print(user_action)
         audit_log = auditlog(
             user=user_id,
             timestamp=timezone.now(),
