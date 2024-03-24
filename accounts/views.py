@@ -521,9 +521,7 @@ def login_view(request):
             user = form.get_user()
             login(request, user)
             user_profile = UserProfile.objects.get(user=user)
-            if not user_profile.eula_accepted:
-                # Redirect to a page where the EULA can be reviewed and accepted
-                return redirect('accounts:eula_accept')
+
             write_to_audit(user, 'Logged in', ip)  # Assuming write_to_audit is a function you have defined
             user_profile.failed_login_attempts = 0
             user_profile.save()
