@@ -1,8 +1,174 @@
+{% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zxx" class="no-js">
+<meta charset="utf-8">
 <head>
+    <!-- Mobile Specific Meta -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <!-- Favicon-->
+    <link rel="shortcut icon" href="{% static 'images/fav.png' %}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+    <!-- meta character set -->
     <meta charset="UTF-8">
-    <title>Title</title>
+    <!-- Site Title -->
+   <title>AnzenOT - GRC for OT</title>
+
+
+<link rel="icon" href="{% static 'images/AnzenOTIconBlack.png' %}" type="image/x-icon">
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <link rel="stylesheet" href="https://a0.awsstatic.com/libra-css/css/1.0.493/style-awsm.css">
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
+    <link href="https://fonts.googleapis.com/css?family=Poppins:100,200,400,300,500,600,700" rel="stylesheet">
+        <!--
+        CSS
+        ============================================= -->
+        <link rel="stylesheet" href="{% static 'css/linearicons.css' %}">
+
+        <link rel="stylesheet" href="{% static 'css/font-awesome.min.css' %}">
+        <link rel="stylesheet" href="{% static 'css/bootstrap.css' %}">
+
+         {% load django_bootstrap5 %}
+        {% bootstrap_css %}
+        {% bootstrap_javascript %}
+<style>
+
+
+.form-group {
+    border: 1px solid #464748; /* Border color */
+    box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.5); /* Outer shadow */
+    background-color: #5E6266; /* Lighter shade of #464748 */
+    padding: 15px; /* Optional: for internal spacing */
+}
+.form-sim .form-control {
+    max-width: 100%; /* Ensures select does not exceed container width */
+    width: auto; /* Optional: Ensures select width is based on content up to max-width */
+}
+.group-container {
+    background: linear-gradient(to bottom right, #464748, #57595b); /* Gradient background */
+    border: 1px solid #666; /* Darker border */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5); /* Box shadow */
+    padding: 25px;
+    margin-bottom: 30px; /* Increased space between containers */
+    border-radius: 10px; /* Rounded corners */
+}
+
+.group-header {
+    color: #d3d1cd; /* Lighter color for contrast */
+    font-weight: bold;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #777; /* Subtle bottom border */
+    font-size: 1.2em; /* Larger font size */
+}
+
+.group-body {
+    color: #e0e0e0; /* Slightly lighter text color */
+    font-family: 'Arial', sans-serif; /* Modern font */
+}
+.cube-icon {
+    width: 20px; /* Adjust size as needed */
+    height: 20px; /* Adjust size as needed */
+    margin-right: 10px;
+}
+.eula-container {
+    padding: 20px;
+    background-color: #ffffff; /* Light background for the content area */
+    border: 1px solid #ddd; /* Subtle border */
+    border-radius: 8px; /* Rounded corners */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Soft shadow for depth */
+    margin-top: 20px; /* Spacing from the top */
+}
+
+.eula-title {
+    color: #333; /* Dark text for contrast */
+    margin-bottom: 15px; /* Spacing below the title */
+    text-align: center; /* Center the title */
+}
+
+.eula-content {
+    color: #666; /* Slightly lighter text for easy reading */
+    line-height: 1.6; /* Improve readability with more line spacing */
+    margin-bottom: 20px; /* Spacing below the content before buttons */
+}
+
+.eula-content p {
+    margin-bottom: 15px; /* Spacing between paragraphs */
+}
+
+/* Adjust button styles if necessary */
+.btn-primary, .btn-secondary {
+    margin: 0 10px; /* Spacing between buttons */
+}
+
+</style>
+    </head>
+
+<body style="background-color: #464748">
+<header id="header" id="home">
+    <div class="header-top">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-6 col-sm-6 col-4 header-top-left no-padding">
+                    <ul>
+                    </ul>
+                </div>
+                <div class="col-lg-6 col-sm-6 col-8 header-top-right no-padding">
+                    <a href="mailto:support@iotarisk.com" style="color: white">support@anzenot.com</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="container main-menu">
+        <div class="row">
+            <div class="col-md-4"></div>
+            <div class="col-md-4">
+              <div id="logo">
+                <a href=""></a><img src="{% static 'images/anzensagelogo1.png' %} "   alt="" title="" /></a>
+              </div>
+            <div class="col-md-4"></div>
+        </div>
+
+
+        </div>
+    </div>
+  </header><!-- #header -->
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="eula-container">
+                <h2 class="eula-title">Privacy Notice</h2>
+                <div class="eula-content">
+                    <h4 class="lb-txt-none lb-h4 lb-title" > Last Updated: March 24, 2024</h4>
+                     <div class="lb-rtxt">
+                         <p>This Privacy Notice describes how we collect and use your personal information in relation to the AnzenOT application.</p></div>
+                    <h4 class="lb-txt-none lb-h4 lb-title" >Personal Information We Collect</h4>
+                    <p>We collect your personal information in the course of providing and operating AnzenOT.</p>
+                    <p>Here are the types of information we gather:</p>
+                    <ul>
+                        <li><b>Information You Give Us: </b>We collect any information you provide in relation to your use of the AnzenOT application.</li>
+                        <li><b>Automatic Information: </b> We automatically collect certain types of information when you interact with AnzenOT.</li>
+                        <ol>
+                            <li>network and connection information, such as the Internet protocol (IP) address used to connect your computer or other device to the Internet and information about your Internet service provider; </li>
+                            <li>computer and device information, such as device, application, or browser type and version, browser plug-in type and version, operating system, or time zone setting; </li>
+                            <li>email addresses and phone numbers used to contact us;</li>
+                        </ol>
+
+                    </ul>
+                    <h4 class="lb-txt-none lb-h4 lb-title" >Use of Personal Information</h4>
+                    <p>We do not share your information with any third parties. Your information is only used for the purpose of providing the AnzenOT application to you.</p>
+                    <h4 class="lb-txt-none lb-h4 lb-title" >How We Secure Information</h4>
+                    <p>AnzenOT is hosted on Amazon Web Services (AWS) and takes advantage of many of the security features offered by AWS. ALL access to AnzenOT services is secured with two-factor authentication. Backend databases are encrypted and all access to AnzenOT is logged.</p>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+      <
 </head>
 <body>
 

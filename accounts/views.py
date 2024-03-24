@@ -521,6 +521,9 @@ def login_view(request):
             user = form.get_user()
             login(request, user)
             user_profile = UserProfile.objects.get(user=user)
+            if not user_profile.eula_accepted:
+                # Redirect to a page where the EULA can be reviewed and accepted
+                return redirect('accounts:eula_accept')
             write_to_audit(user, 'Logged in', ip)  # Assuming write_to_audit is a function you have defined
             user_profile.failed_login_attempts = 0
             user_profile.save()
@@ -539,7 +542,8 @@ def login_view(request):
                     #### request.session['verification_code'] = code
                     return redirect('two_factor_verify')
                 except Exception as e:
-                    messages.error(request, f"Error sending verification code - please check your Internet connection and try again")
+                    messages.error(request,
+                                   f"Error sending verification code - please check your Internet connection and try again")
                     # Log the error
                     write_to_audit(user, f'Error sending verification code: {e}', ip)
             else:
@@ -572,6 +576,7 @@ def login_view(request):
         form = AuthenticationForm()
 
     return render(request, 'accounts/home.html', {'form': form})
+
 
 def add_user_to_organization(request):
     if request.method == 'POST':
@@ -821,6 +826,10 @@ def contact_form(request):
     return render(request, 'accounts/contact.html', {'form': form})
 
 
+def eula(request):
+    return render(request, 'accounts/Terms.html')
+def privacy(request):
+    return render(request, 'accounts/Privacy.html')
 @login_required()
 def get_organization_details(request):
     # Retrieve the organization instance from the user profile
