@@ -1,5 +1,7 @@
 import hashlib
 import json
+from urllib.parse import urljoin
+
 from django.contrib import messages
 import requests
 import logging
@@ -246,8 +248,16 @@ def iotaphamanager(request, record_id=None):
         pha_header.has_incident_response_plan = has_ir_plan
         pha_header.UserID = request.user.id
         pha_header.save()
+
         messages.success(request, 'CyberPHA Information has been saved successfully.')
         saved_record_id = pha_header.ID
+        cyber_pha_instance = tblCyberPHAHeader.objects.get(ID=saved_record_id)
+        write_to_audit(
+            user_id=request.user,
+            user_action=f'Saved cyberPHA header data for {pha_header.title}',
+            user_ip=get_client_ip(request),
+            cyberPHAID=cyber_pha_instance
+        )
 
         #### Save investment information
 
@@ -382,11 +392,6 @@ def iotaphamanager(request, record_id=None):
 
         new_record_id = pha_header.ID
 
-        write_to_audit(
-            request.user,
-            f'Saved cyberPHA header data for {pha_header.title}',
-            get_client_ip(request)
-        )
     organization_id_from_session = request.session.get('user_organization')
 
     users_in_organization = User.objects.filter(userprofile__organization__id=organization_id_from_session)
@@ -544,12 +549,15 @@ def get_headerrecord(request):
         {'id': user.id, 'name': f"{user.first_name} {user.last_name}"}
         for user in organization_moderators
     ]
+    cyber_pha_instance = tblCyberPHAHeader.objects.get(ID=record_id)
     # Log the user activity
     write_to_audit(
-        request.user,
-        f'Viewed cyberPHA: {headerrecord.title}',
-        get_client_ip(request)
+        user_id=request.user,
+        user_action=f'Viewed cyberPHA: {headerrecord.title}',
+        user_ip=get_client_ip(request),
+        cyberPHAID=cyber_pha_instance
     )
+
     control_assessments = MitreControlAssessment.objects.filter(cyberPHA=headerrecord)
     # control_effectiveness = math.ceil(calculate_effectiveness(record_id))
     try:
@@ -808,9 +816,9 @@ def facility_risk_profile(request):
 
         # Log the user activity
         write_to_audit(
-            request.user,
-            f'Generated a cyberPHA risk profile for: {facility}',
-            get_client_ip(request)
+            user_id=request.user,
+            user_action=f'Generated a cyberPHA risk profile for: {facility}',
+            user_ip=get_client_ip(request)
         )
         # Check if Industry or facility_type are empty or None
         if not Industry or not facility_type:
@@ -1174,6 +1182,14 @@ def getSingleScenario(request):
 
     # Add the safeguards list to the scenario dictionary
     scenario_dict['safeguards'] = safeguards_list
+
+    scenario_instance = tblCyberPHAScenario.objects.get(ID=scenario_id)
+    write_to_audit(
+        user_id=request.user,
+        user_action=f'Viewed Scenario',
+        user_ip=get_client_ip(request),
+        cyberPHAScenario=scenario_instance
+    )
     # Return the scenario as a JSON response
     return JsonResponse(scenario_dict)
 
@@ -1687,6 +1703,9 @@ def generate_ppt(request):
         other = request.POST.get('txtOther', '')
         compliance = request.POST.get('txtCompliance', '')
         facility = request.POST.get('FacilityName', '')
+        threatSummary = request.POST.get('threatSummary','')
+        insightSummary = request.POST.get('insightSummary', '')
+        strategySummary = request.POST.get('strategySummary', '')
 
         # Create a new PowerPoint presentation
         prs = Presentation()
@@ -1697,7 +1716,10 @@ def generate_ppt(request):
             (f"{facility} Chemical Profile", chemical),
             (f"{facility} Physical Security Profile", physical),
             (f"{facility} OT Asset Profile", other),
-            (f"{facility} Compliance Profile", compliance)
+            (f"{facility} Compliance Profile", compliance),
+            (f"{facility} Threat Summary", threatSummary),
+            (f"{facility} Security Insights", insightSummary),
+            (f"{facility} Suggested Strategy", strategySummary)
         ]
 
         for title, content in sections:
@@ -1732,7 +1754,7 @@ def generate_ppt(request):
         filepath = os.path.join(os.path.join(BASE_DIR, 'static'), filename)
 
         prs.save(filepath)
-        download_url = os.path.join(settings.STATIC_URL, filename)
+        download_url = urljoin(settings.STATIC_URL, filename)
 
         return JsonResponse({
             'status': 'success',
@@ -1953,16 +1975,21 @@ def is_inappropriate(text):
         return False  # or handle error appropriately
 
 
-def write_to_audit(user_id, user_action, user_ip):
+def write_to_audit(user_id, user_action, user_ip, cyberPHAID=None, cyberPHAScenario=None, qraw=None):
+
     try:
         user_profile = UserProfile.objects.get(user=user_id)
 
+        print(user_action)
         audit_log = auditlog(
             user=user_id,
             timestamp=timezone.now(),
             user_action=user_action,
             user_ipaddress=user_ip,
-            user_profile=user_profile
+            user_profile=user_profile,
+            cyberPHAID=cyberPHAID,
+            cyberPHAScenario=cyberPHAScenario,
+            qraw=qraw
         )
         audit_log.save()
     except UserProfile.DoesNotExist:
@@ -1991,6 +2018,13 @@ def assign_cyberpha_to_group(request):
             else:
                 return JsonResponse({'status': 'error', 'message': 'CyberPHA is already assigned to this group.'})
 
+            write_to_audit(
+                user_id=request.user.id,
+                user_ip=get_client_ip(request),
+                user_action=f'Add CyberPHA to group: {new_group_name}/{new_group_type}',
+                cyberPHAID=cyberpha
+            )
+
         elif new_group_name and new_group_type:
             # Check if group with the same name and type already exists
             organization_instance = Organization.objects.get(id=org_id)
@@ -1998,6 +2032,13 @@ def assign_cyberpha_to_group(request):
             if not created:
                 return JsonResponse({'status': 'error', 'message': 'Group with this name and type already exists.'})
             cyberpha.groups.add(group)
+
+            write_to_audit(
+                user_id=request.user.id,
+                user_ip=get_client_ip(request),
+                user_action=f'Add CyberPHA to group: {new_group_name}/{new_group_type}',
+                cyberPHAID=cyberpha
+            )
 
         return JsonResponse({'status': 'success'})
     except Exception as e:

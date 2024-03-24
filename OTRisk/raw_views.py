@@ -53,17 +53,7 @@ class UpdateRAAction(View):
         action_status = data.get('actionStatus')
         action_title = data.get('actionTitle')
         action_description = data.get('actionDescription')
-        dataMitigation = data.get('dataMitigation')
-        environmentMitigation = data.get('environmentMitigation')
-        financeMitigation = data.get('financeMitigation')
-        lifeMitigation = data.get('lifeMitigation')
-        productionMitigation = data.get('productionMitigation')
-        regulationMitigation = data.get('regulationMitigation')
-        reputationMitigation = data.get('reputationMitigation')
-        safetyMitigation = data.get('safetyMitigation')
-        supplyMitigation = data.get('supplyMitigation')
-        threatMitigation = data.get('threatMitigation')
-        vulnerabilityMitigation = data.get('vulnerabilityMitigation')
+
         closeAction = data.get('closeAction')
 
         ra_action = RAActions.objects.get(ID=action_id)
@@ -71,17 +61,6 @@ class UpdateRAAction(View):
         ra_action.actionStatus = action_status
         ra_action.actionDescription = action_description
         ra_action.actionTitle = action_title
-        ra_action.dataMitigation = dataMitigation
-        ra_action.environmentMitigation = environmentMitigation
-        ra_action.financeMitigation = financeMitigation
-        ra_action.lifeMitigation = lifeMitigation
-        ra_action.productionMitigation = productionMitigation
-        ra_action.regulationMitigation = regulationMitigation
-        ra_action.reputationMitigation = reputationMitigation
-        ra_action.safetyMitigation = safetyMitigation
-        ra_action.supplyMitigation = supplyMitigation
-        ra_action.threatMitigation = threatMitigation
-        ra_action.vulnerabilityMitigation = vulnerabilityMitigation
         current_user_name = request.user.first_name + " " + request.user.last_name
         history_update = f"\n\n{timezone.now()}: {current_user_name} updated the record "
         ra_action.history += history_update

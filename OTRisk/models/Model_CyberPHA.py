@@ -10,7 +10,7 @@ from django.db.models import URLField
 
 import OTRisk.models.model_assessment
 from accounts.models import Organization, UserProfile
-from OTRisk.models.raw import MitreICSMitigations
+from OTRisk.models.raw import MitreICSMitigations, RAWorksheet
 
 
 class user_scenario_audit(models.Model):
@@ -178,21 +178,7 @@ class tblStandards(models.Model):
         db_table = 'tblStandards'
 
 
-class auditlog(models.Model):
-    id = models.AutoField(primary_key=True)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    timestamp = models.DateTimeField(auto_now_add=True)
-    user_action = models.CharField(max_length=100)
-    user_ipaddress = models.CharField(max_length=20)
-    # Add a foreign key to UserProfile to access organization information
-    user_profile = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
 
-    @property
-    def organization_id(self):
-        return self.user_profile.organization_id
-
-    class Meta:
-        db_table = 'tblAuditLog'
 
 
 class tblUnits(models.Model):
@@ -1139,3 +1125,23 @@ class UserScenarioHash(models.Model):
 
     class Meta:
         unique_together = ('user', 'cyberphaID', 'hash_value')
+
+
+class auditlog(models.Model):
+    id = models.AutoField(primary_key=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    user_action = models.CharField(max_length=100)
+    user_ipaddress = models.CharField(max_length=20)
+    # Add a foreign key to UserProfile to access organization information
+    user_profile = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
+    cyberPHAID = models.ForeignKey(tblCyberPHAHeader, on_delete=models.CASCADE, null=True)
+    cyberPHAScenario = models.ForeignKey(tblCyberPHAScenario, on_delete=models.CASCADE, null=True)
+    qraw = models.ForeignKey(RAWorksheet, on_delete=models.CASCADE, null=True)
+
+    @property
+    def organization_id(self):
+        return self.user_profile.organization_id
+
+    class Meta:
+        db_table = 'tblAuditLog'

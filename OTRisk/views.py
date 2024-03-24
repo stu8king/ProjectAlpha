@@ -1410,7 +1410,8 @@ def save_or_update_cyberpha(request):
             write_to_audit(
                 request.user,
                 f'Updated cyberPHA: {cyberpha_header}. Saved scenario: {scenario}',
-                get_client_ip(request)
+                get_client_ip(request),
+                cyberPHAScenario=scenario_instance
             )
 
         # Call the assess_cyberpha function
@@ -2241,7 +2242,7 @@ def walkthrough_questionnaire_details(request, questionnaire_id):
     return render(request, 'OTRisk/walkthroughQuestionnaire.html', {'questionnaire_id': questionnaire_id})
 
 
-def write_to_audit(user_id, user_action, user_ip):
+def write_to_audit(user_id, user_action, user_ip, cyberPHAID=None, cyberPHAScenario=None, qraw=None):
     try:
         user_profile = UserProfile.objects.get(user=user_id)
 
@@ -2250,7 +2251,10 @@ def write_to_audit(user_id, user_action, user_ip):
             timestamp=timezone.now(),
             user_action=user_action,
             user_ipaddress=user_ip,
-            user_profile=user_profile
+            user_profile=user_profile,
+            cyberPHAID=cyberPHAID,
+            cyberPHAScenario=cyberPHAScenario,
+            qraw=qraw
         )
         audit_log.save()
     except UserProfile.DoesNotExist:
