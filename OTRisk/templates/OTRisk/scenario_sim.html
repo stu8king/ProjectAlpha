@@ -945,13 +945,6 @@ document.addEventListener("DOMContentLoaded", function() {
                     <div id="monthly_cost_chart" style="height:300px"></div>
                     <input type="hidden" id="scenario_12month_costs" name="scenario_12month_costs">
                 </div>
-                <div class="group-header">
-
-                </div>
-                <div class="group-body">
-                    <div id="monthly_cost_chart" style="height:300px"></div>
-                    <input type="hidden" id="scenario_12month_costs" name="scenario_12month_costs">
-                </div>
             </div>
     </div>
     <!-- Tab 5 Content -->
@@ -1465,15 +1458,7 @@ function appendConsequenceGroup(container, consequence, index) {
     groupHeader.className = 'group-header';
     var icon = document.createElement('img');
     // Ensure the path to the image is correct
-    if (consequence.score > 7) {
-        icon.src = "{% static 'images/redcube.png' %}";
-    } else if (factorData.score > 4) {
-        icon.src = "{% static 'images/yellow_cube.png' %}";
-    } else {
-        icon.src = "{% static 'images/green_cube.png' %}";
-    }
-
-
+    icon.src = "/static/images/green_cube.png"; // Adjust the path as needed
     icon.className = 'cube-icon';
     icon.alt = 'cube_icon'; // Adjust the alt text as needed
 
@@ -1486,7 +1471,7 @@ function appendConsequenceGroup(container, consequence, index) {
     // Create the group body
     var groupBody = document.createElement('div');
     groupBody.className = 'group-body';
-    groupBody.textContent = `${consequence.score}/10. ${consequence.narrative}`;
+    groupBody.textContent = `${consequence.score} - ${consequence.narrative}`;
     groupContainer.appendChild(groupBody);
 
     // Append the group container to the row
