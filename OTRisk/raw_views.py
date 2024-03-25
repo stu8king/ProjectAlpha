@@ -1790,6 +1790,7 @@ def generate_sim_attack_tree(request):
 
 
 def analyze_sim_consequences(request):
+
     if request.method == 'POST':
         scenario = request.POST.get('scenario')
         facility_type = request.POST.get('facility_type')
@@ -1857,30 +1858,45 @@ def analyze_sim_consequences(request):
         event_cost_estimate_message = {
             "role": "user",
             "content": (
-                f"You are an insurance actuary. Based on known types of cybersecurity incidents and average costs associated with data breaches, malware attacks, and other security events as reported by industry studies, Generate a best-guess 12-month cost projection for direct costs relating to a hypothetical cybersecurity incident at a {organization_size} {facility_type} in the {industry} industry in {country}. Assume the annual revenue is average in the industry for the given facility in the given country. The scenario is: {scenario}. "
-                f"Base estimates on historical data from similar OT and IT cybersecurity incidents. Include costs if they apply to the given scenario. Direct costs are estimated as {most_likely_case_cost}. Direct costs are those related to incident response, remediation, legal fees, regulatory fines, and other direct expenses.  "
-                f"Estimate the budget cost for each month so that the Chief Finance Officer for the organization can plan appropriately. Use a pragmatic and realistic monthly estimate that only covers the direct expenses that would be covered by a cybersecurity insurance policy. Only consider costs directly related to the cybersecurity incident. (IMPORTANT Give only the cost for each month, NOT an aggregate of previous months plus the current month). You as the estimator should be able to justify why month on month costs increase OR decrease. The expectation is that costs will taper off over the 12 month period but YOU must give the most realistic response.Provide the estimates as a series of 12 integers in the format: Month1|Month2|...|Month12. Each value should represent the cost for that month in US dollars. Remember, only provide the numerical values without any narrative or explanation."
+                f"I am a CISO at a {facility_type} in the {industry} industry company of {organization_size} employees, operating primarily in {country}. We are assessing our cybersecurity posture and need to estimate the potential costs associated with a scenario: {scenario}."
+                "Given the scenario, please provide an estimate of the direct and indirect costs we might incur, including but not limited to:"
+                "1. Immediate Response Costs: Costs associated with the initial response to the incident, such as emergency IT support, forensic analysis, and legal consultations."
+                "2. Remediation Costs: Expenses related to remediating the cybersecurity breach, including software updates, hardware replacements, and strengthening of security measures."
+                "3. Regulatory and Compliance Costs: Potential fines and penalties for non-compliance with relevant data protection and privacy regulations, as well as costs associated with compliance audits and reporting requirements post-incident."
+                "4. Reputation and Brand Impact: Estimated impact on our brand and customer trust, potentially leading to loss of business and decreased revenue."
+                "5. Operational Disruption: Costs associated with operational disruptions or downtime, including loss of productivity and impact on service delivery."
+                "6. Legal and Settlement Costs: Expenses related to legal actions taken against the company and any settlements or compensations paid out to affected parties."
+                "7. Long-term Costs: Any long-term costs such as increased insurance premiums, ongoing monitoring and security measures, and potential loss of intellectual property."
+                "Please consider the specifics of our industry, size, and the nature of the assets involved in this scenario to provide a comprehensive cost estimate. Please reference industry-specific data from the latest Verizon DBIR, applicable regulations from CISA, and standards from the NIST Cybersecurity Framework in your analysis."
+                "OUTPUT INSTRUCTION: First, provide a 12-month direct cost projection for the scenario in the format: COST PROJECTION: Month1value|Month2value|...|Month12value. Each value must be an integer to represent a dollar value wth no other text or narrative included and should reflect a realistic, pragmatic monthly estimate, justifying the trend of costs decreasing over time. Then, provide a concise and conservative executive-level explanation summary, in 150 words or less, specific to the given scenario as JUSTIFICATION: <Your justification here>. Ensure the cost projection and justification are clearly separated by these keywords."
             )
         }
         # Query OpenAI API for cost estimation
         projection_response = openai.ChatCompletion.create(
-            model="gpt-4",
+            model="gpt-4-0125-preview",
             messages=[
                 {"role": "system",
-                 "content": "You are an insurance actuary tasked with generating a 12-month cost projection."},
-                event_cost_estimate_message  # This is the user message
+                 "content": event_cost_estimate_message},
             ],
             max_tokens=250,
             temperature=0.1
         )
-        projection_text = projection_response['choices'][0]['message']['content']
+        cost_projection_with_justification = projection_response['choices'][0]['message']['content']
+        cost_projection_parts = cost_projection_with_justification.split("COST PROJECTION: ")
+        justification_parts = cost_projection_parts[1].split("JUSTIFICATION: ") if len(cost_projection_parts) > 1 else [
+            "", "Justification not provided."]
+
+        cost_projection = justification_parts[0].strip()
+        cost_projection_justification = justification_parts[1].strip() if len(
+            justification_parts) > 1 else "Justification not provided."
 
         return JsonResponse({
             'best_case_cost': best_case_cost,
             'worst_case_cost': worst_case_cost,
             'most_likely_case_cost': most_likely_case_cost,
             'consequence': consequence_text,
-            'projection': projection_text
+            'projection': cost_projection,
+            'cost_projection_justification': cost_projection_justification
         })
     else:
         return JsonResponse({'error': 'Invalid request'}, status=400)

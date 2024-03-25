@@ -251,12 +251,19 @@ def iotaphamanager(request, record_id=None):
 
         messages.success(request, 'CyberPHA Information has been saved successfully.')
         saved_record_id = pha_header.ID
+        if is_new_record:
+            user_action = f"Created a new CyberPHA titled {pha_header.title}"
+        else:
+            user_action = f"Amended CyberPHA titled {pha_header.title}"
+
         cyber_pha_instance = tblCyberPHAHeader.objects.get(ID=saved_record_id)
         write_to_audit(
             user_id=request.user,
-            user_action=f'Saved cyberPHA header data for {pha_header.title}',
+            user_action=user_action,
             user_ip=get_client_ip(request),
-            cyberPHAID=cyber_pha_instance
+            cyberPHAID=cyber_pha_instance,
+            cyberPHAScenario=None,
+            qraw=None
         )
 
         #### Save investment information
@@ -1188,8 +1195,9 @@ def getSingleScenario(request):
         user_id=request.user,
         user_action=f'Viewed Scenario',
         user_ip=get_client_ip(request),
-        cyberPHAScenario=scenario_instance
+        cyberPHAScenario=scenario_instance,
     )
+
     # Return the scenario as a JSON response
     return JsonResponse(scenario_dict)
 
@@ -1501,7 +1509,7 @@ def scenario_analysis(request):
                             1. Example recommendation related to OT cybersecurity. [NIST Reference]
                             2. Another example recommendation focused on OT cybersecurity risk mitigation. [NIST Reference]
                             
-                            Following this example format, provide the recommendations specific to the given scenario without any additional narrative, description, advice, or guidance. The recommendations should be clear and easily parsable within an HTML page.
+                            Following this example format, provide the recommendations in order of priority, specific to the given scenario without any additional narrative, description, advice, or guidance. The recommendations should be clear and easily parsable within an HTML page.
                             """
 
             },
