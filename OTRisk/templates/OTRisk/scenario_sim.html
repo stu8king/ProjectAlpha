@@ -949,11 +949,8 @@ document.addEventListener("DOMContentLoaded", function() {
 
                 </div>
                 <div class="group-body">
-                    <div class="card mb-3 shadow-sm w-100 elegant-card">
-                    <div class="card-body">
-                        <textarea id="cost_projection_justification" class="form-control" rows="7" readonly style="resize: none"></textarea>
-                    </div>
-                </div>
+                    <div id="monthly_cost_chart" style="height:300px"></div>
+                    <input type="hidden" id="scenario_12month_costs" name="scenario_12month_costs">
                 </div>
             </div>
     </div>
@@ -1252,8 +1249,6 @@ return new Promise(function(resolve, reject) {
 
                 var costArray = consequenceResponse.projection.split('|').map(Number);
                 createCostChart('monthly_cost_chart', costArray);
-                var formattedText = consequenceResponse.cost_projection_justification.replace(/\. /g, ".\n\n");;
-                document.getElementById('cost_projection_justification').value = formattedText;
 
             },
             error: function(xhr, status, error) {
