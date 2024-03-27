@@ -35,6 +35,89 @@
      {% bootstrap_css %}
      {% bootstrap_javascript %}
 <link rel="stylesheet" type="text/css" href="{% static 'css/otriskstyle.css' %}">
+<style>
+
+
+    /* Base Styles for Modern Look */
+    :root {
+        --font-primary: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        --color-primary: #e3e3e3;
+        --color-secondary: #495057;
+        --color-background: #14547a;
+        --color-link-hover: #000000;
+        --color-text: #343a40;
+        --color-text-light: #6c757d;
+        --border-radius: 8px;
+    }
+
+    body, html {
+        font-family: var(--font-primary);
+    }
+
+    /* News Feed Styles for a Modern, High-Tech Look */
+    .news-header {
+        color: var(--color-primary);
+        font-size: 24px;
+        font-weight: 600;
+        margin-bottom: 24px;
+    }
+
+    .news-container {
+        background-color: var(--color-background);
+        border-radius: var(--border-radius);
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        padding: 20px;
+        max-height: 600px;
+        overflow-y: auto;
+    }
+
+    .news-list {
+        list-style: none;
+        padding: 0;
+    }
+
+    .news-item {
+        border-bottom: 1px solid #e1e4e8;
+        padding-bottom: 15px;
+        margin-bottom: 15px;
+    }
+
+    .news-item:last-child {
+        border-bottom: none;
+    }
+
+    .news-link {
+        color: var(--color-primary);
+        font-weight: 500;
+        font-size: 18px;
+        text-decoration: none;
+        transition: color 0.2s ease-in-out;
+    }
+
+    .news-link:hover {
+        color: var(--color-link-hover);
+        text-decoration: none; /* Consider keeping underlines off for a cleaner look */
+    }
+
+    .news-date {
+        font-size: 14px;
+        color: var(--color-text-light);
+        margin-top: 5px;
+    }
+
+    .news-summary {
+        font-size: 15px;
+        color: var(--color-text);
+        margin-top: 10px;
+        line-height: 1.6;
+    }
+    .news-logo {
+    max-width: 100%; /* Ensures the image does not exceed the container's width */
+    height: auto; /* Keeps the image's aspect ratio intact */
+    display: block; /* Removes any default inline spacing */
+    margin: 0 auto 20px; /* Centers the image and adds some space below */
+}
+</style>
 
 </head>
 <body style="background-color: #464748">
@@ -64,21 +147,21 @@
             <br><br><br><br><br><br><br><br><br><br>
         <ul>
             <li><a href="#" data-tab="tab1">Heatmap</a></li>
-            <li><a href="#" data-tab="tab2">KPIs</a></li>
+            <li><a href="#" data-tab="tab2">KPIs / Compliance</a></li>
             <li><a href="#" data-tab="tab3">CyberPHA</a></li>
             <li><a href="#" data-tab="tab4" id="scenarioTabLink">Risk Groups</a></li>
 
             <li><a href="#" data-tab="tab5">QRAW</a></li>
             <li><a href="#" data-tab="tab6">Moderator Queue</a></li>
-            <li><a href="#" data-tab="tab7"></a></li>
+            <li><a href="#" data-tab="tab7">News Feeds</a></li>
             <li><a href="#" data-tab="tab8"></a></li>
+            <li><a href="#" data-tab="tab9"></a></li>
+            <li><a href="#" data-tab="tab10"></a></li>
         </ul>
     </div>
 
 
     <div class="custom-main-content" >
-
-
 
     <div class="tab-content tab-link active"  id="tab1">
         <div class="form-group form-sim" >
@@ -184,6 +267,19 @@
                     fetchRelatedRecords(x, y);
                 }
             });
+             chart.listen("pointMouseOver", function(e) {
+                    var value = e.point.get('value');
+                    if (value > 0) {
+                        // If value > 0, we want to change the cursor to 'pointer'
+                        heatmapContainer.style.cursor = 'pointer';
+                    }
+                });
+
+            chart.listen("pointMouseOut", function(e) {
+                // Reset the cursor when the mouse leaves a point
+                heatmapContainer.style.cursor = 'default';
+            });
+
          });
         function fetchRelatedRecords(x, y) {
             $.ajax({
@@ -286,7 +382,7 @@
 
     // Show the tab containing the heatmap table
     $('.tab-content').removeClass('active').hide();
-    $('#tab8').addClass('active').show();
+    $('#tab9').addClass('active').show();
 }
 
 
@@ -305,10 +401,11 @@
                 </div>
             </div>
         </div>
+
     </div>
 
     <div class="tab-content tab-link " id="tab2">
-        <h2>KPIs</h2>
+        <h2>KPIs / Compliance</h2>
         <div class="form-group">
             <div class="row" >
                 <div class="col-md-3 ">
@@ -411,6 +508,33 @@
                     </div>
 
                 </div>
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="row" >
+                <div class="col-md-3"></div>
+                <div class="col-md-6">
+                    <table id="complianceTable" class="display">
+    <thead>
+        <tr>
+            <th>Compliance Regulation</th>
+            <th>Relevant Scenario Count</th>
+            <th>URL</th>
+        </tr>
+    </thead>
+    <tbody style="color:#000">
+        {% for item in compliance_summary %}
+            <tr data-regulation="{{ item.regulation|escape }}">
+                <td>{{ item.regulation }}</td>
+                <td>{{ item.count }}</td>
+                <td><a href="{{ item.url }}" target="_blank">Link</a></td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+                </div>
+                <div class="col-md-3"></div>
             </div>
         </div>
     </div>
@@ -543,12 +667,12 @@ function getGroupReport(groupId) {
                                   ', Average Impact Danger: ' + data.avg_impactDanger +
                                   ', Average Impact Production: ' + data.avg_impactProduction + '</div>';
 
-            // Append the averages content next to the table container within tab7
-            $('#tab7').append(averagesContent);
+            // Append the averages content next to the table container within tab8
+            $('#tab8').append(averagesContent);
 
-            // Make sure tab7 is displayed
+            // Make sure tab8 is displayed
             $('.tab-content').removeClass('active').hide();
-            $('#tab7').addClass('active').show();
+            $('#tab8').addClass('active').show();
         }
     });
 }
@@ -618,16 +742,67 @@ function getGroupReport(groupId) {
 
         </div>
     </div>
-     <div class="tab-content tab-link"  id="tab7">
+
+<div class="tab-content tab-link" id="tab7">
+    <h2>News Feeds</h2>
+    <div class="row">
+        <div class="col-md-6">
+        <div class="form-group">
+            <div class="news-container">
+                <ul class="news-list">
+                    <img src="/static/images/SecurityWeek.png" class="news-logo">
+                    {% for item in security_week %}
+                    <li class="news-item">
+                         <a href="{{ item.link }}" class="news-link" target="_blank" rel="noopener noreferrer">{{ item.title|safe }}</a>
+                        <p class="news-date">Published: {{ item.published }}</p>
+                        <p class="news-summary" data-summary-content>{{ item.summary|safe }}</p>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        </div>
+        <div class="col-md-6">
+            <div class="form-group">
+            <div class="news-container">
+                <ul class="news-list">
+                <img src="https://vpnpro.com/wp-content/uploads/darkreading-logo-1024x173.png" class="news-logo">
+                    {% for item in dark_reading %}
+                    <li class="news-item">
+                         <a href="{{ item.link }}" class="news-link" target="_blank" rel="noopener noreferrer">{{ item.title|safe }}</a>
+                        <p class="news-date">Published: {{ item.published }}</p>
+                        <p class="news-summary" data-summary-content>{{ item.summary|safe }}</p>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        </div>
+    </div>
+
+
+</div>
+
+
+
+
+     <div class="tab-content tab-link"  id="tab8">
         <h2>Group Report</h2>
          <div id="cyberphasTableContainer"></div>
 
      </div>
-    <div class="tab-content tab-link" id="tab8">
+    <div class="tab-content tab-link" id="tab9">
         <h2>Heatmap Report</h2>
          <div id="heatmapTableContainer"></div>
 
      </div>
+     <div class="tab-content tab-link" id="tab10">
+        <h2>Scenario Compliance Report for </h2>
+         <div id="scenarioComplianceContainer"></div>
+
+     </div>
+
 </div>
 </div>
     </div>
@@ -811,6 +986,91 @@ $(document).ready(function() {
         "searching": false // Disable searching
     });
 });
+
+$(document).ready(function() {
+    var table = $('#complianceTable').DataTable({
+        "searching": false,
+        "pageLength": 10
+    });
+
+    $('#complianceTable tbody').on('click', 'tr', function(e) {
+        if (!$(e.target).is('a')) { // Exclude clicks on the URL link
+            var regulation = $(this).data('regulation');
+            $.ajax({
+                url: '/OTRisk/get_scenarios_for_regulation/',
+                data: {
+                    'regulation_name': regulation
+                },
+                dataType: 'json',
+                success: function(data) {
+                    var container = document.getElementById('scenarioComplianceContainer');
+                    // Clear previous contents
+                    container.innerHTML = '';
+
+                    // Update the H2 element
+                    document.querySelector('#tab10 h2').textContent = 'Scenario Compliance Report for ' + regulation;
+
+                    // Create a table element with the specified classes
+                    var table = document.createElement('table');
+                    table.className = 'table small-font compact'; // Adjusted class names to match the provided styles
+                    table.id = 'headertable'; // Ensure this ID is unique
+
+                    // Create the header row
+                    var thead = document.createElement('thead');
+                    var headerRow = document.createElement('tr');
+
+                    // Define the headers
+                    var headers = ['CyberPHA ID', 'Title', 'Scenario'];
+                    headers.forEach(headerText => {
+                        var header = document.createElement('th');
+                        header.textContent = headerText;
+                        header.className = 'th'; // Apply class to header as per provided styles
+                        headerRow.appendChild(header);
+                    });
+
+                    thead.appendChild(headerRow);
+                    table.appendChild(thead);
+
+                    // Create the body of the table
+                    var tbody = document.createElement('tbody');
+
+                    // Add rows for each record
+                    data.forEach(item => {
+                        var row = document.createElement('tr');
+                        row.className = "selectable-row"; // Apply class to row as per provided styles
+
+                        // Create a cell for CyberPHA ID, Title, and Scenario
+                        var cellCyberPHAID = document.createElement('td');
+                        cellCyberPHAID.textContent = item.CyberPHA__ID;
+                        row.appendChild(cellCyberPHAID);
+
+                        var cellTitle = document.createElement('td');
+                        cellTitle.textContent = item.CyberPHA__title;
+                        row.appendChild(cellTitle);
+
+                        var cellScenario = document.createElement('td');
+                        cellScenario.textContent = item.Scenario;
+                        row.appendChild(cellScenario);
+                         row.addEventListener('click', function() {
+                            // Construct the URL with the item's tblCyberPHAHeader_ID
+                            var url = `/OTRisk/pha_reports/${item.CyberPHA__ID}/`; // Adjust the URL pattern as needed
+                            window.location.href = url; // Redirect the user to the URL
+                        });
+                        tbody.appendChild(row);
+
+                    });
+
+                    table.appendChild(tbody);
+                    container.appendChild(table);
+                    $('.tab-content').removeClass('active').hide();
+                    $('#tab10').addClass('active').show();
+                }
+
+            });
+        }
+    });
+});
+
 
 
 </script>

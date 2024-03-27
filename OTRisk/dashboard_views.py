@@ -12,8 +12,68 @@ from OTRisk.models.Model_CyberPHA import tblCyberPHAHeader, tblCyberPHAScenario,
 from django.db.models import Count, Sum, Q, Case, When, Value, CharField
 from django.db.models import Avg
 from accounts.models import Organization, UserProfile
-
+import feedparser
+from bs4 import BeautifulSoup
 import json
+
+
+def process_summary_html(summary):
+    # Parse the summary HTML
+    soup = BeautifulSoup(summary, 'html.parser')
+
+    # Find all <a> tags and add the desired attributes
+    for link in soup.find_all('a'):
+        link['target'] = '_blank'
+        link['rel'] = 'noopener noreferrer'
+
+    # Return the modified HTML as a string
+    return str(soup)
+
+
+def fetch_darkreading_news():
+    # RSS feed URL
+    feed_url = 'https://www.darkreading.com/rss.xml'
+
+    # Fetch and parse the feed
+    feed = feedparser.parse(feed_url)
+
+    # Extract and return news items with modified summaries
+    news_items = []
+    for entry in feed.entries:
+        # Process the summary to add target="_blank" and rel="noopener noreferrer" to links
+        processed_summary = process_summary_html(entry.summary)
+
+        news_items.append({
+            'title': entry.title,
+            'link': entry.link,
+            'published': entry.published,  # You might want to format this as needed
+            'summary': processed_summary,
+        })
+
+    return news_items
+
+
+def fetch_securityweek_news():
+    # RSS feed URL
+    feed_url = 'https://feeds.feedburner.com/securityweek'
+
+    # Fetch and parse the feed
+    feed = feedparser.parse(feed_url)
+
+    # Extract and return news items with modified summaries
+    news_items = []
+    for entry in feed.entries:
+        # Process the summary to add target="_blank" and rel="noopener noreferrer" to links
+        processed_summary = process_summary_html(entry.summary)
+
+        news_items.append({
+            'title': entry.title,
+            'link': entry.link,
+            'published': entry.published,  # You might want to format this as needed
+            'summary': processed_summary,
+        })
+
+    return news_items
 
 
 def get_user_organization_id(request):
@@ -28,9 +88,37 @@ def get_organization_users(organization_id):
     return UserProfile.objects.filter(organization_id=organization_id).values_list('user', flat=True)
 
 
+def parse_compliance_map(compliance_maps):
+    """
+    Parses the ComplianceMap strings and aggregates the data for regulation names and URLs.
+    Args:
+        compliance_maps (Iterable[str]): An iterable of compliance map strings.
+    Returns:
+        List of dictionaries: Each dictionary contains {regulation name, count, url}.
+    """
+    regulation_dict = {}
+    for compliance_map in compliance_maps:
+        if compliance_map and compliance_map != "No Compliance Map Saved":
+            items = compliance_map.split("||")
+            for item in items:
+                parts = item.split(">")
+                if len(parts) >= 3:
+                    regulation = parts[1].strip()
+                    url = parts[2].strip()
+                    key = (regulation, url)
+                    if key in regulation_dict:
+                        regulation_dict[key]['count'] += 1
+                    else:
+                        regulation_dict[key] = {'regulation': regulation, 'url': url, 'count': 1}
+
+    # Convert the dictionary to a list of dictionaries and sort by count in descending order
+    sorted_regulation_list = sorted(regulation_dict.values(), key=lambda x: x['count'], reverse=True)
+    return sorted_regulation_list
+
+
+
 @login_required()
 def dashboardhome(request):
-
     user_organization_id = get_user_organization_id(request)
 
     organization_users = get_organization_users(user_organization_id)
@@ -62,6 +150,7 @@ def dashboardhome(request):
 
     scenarios = RAWorksheetScenario.objects.select_related('RAWorksheetID').filter(
         RAWorksheetID__organization_id=user_organization_id)
+
     records_by_risk_score = scenarios.values('RiskScore').annotate(count=Count('ID'))
     scenario_risk_status = scenarios.values('RiskStatus').annotate(count=Count('ID'))
 
@@ -103,7 +192,8 @@ def dashboardhome(request):
         risk_text = pha_risk.RRa
         pha_risk_summary[risk_text] += 1
     pha_risk_summary = json.dumps(dict(pha_risk_summary))
-
+    compliance_maps = pha_risks.values_list('compliance_map', flat=True)
+    compliance_summary = parse_compliance_map(compliance_maps)
     # raw_scenarios = RAWorksheetScenario.objects.all()
     scenarios_count = RAWorksheetScenario.objects.filter(RAWorksheetID__organization=user_organization_id).count()
 
@@ -335,6 +425,9 @@ def dashboardhome(request):
     else:
         worksheets_to_approve_list = "No approvals for action"
 
+    security_week = fetch_securityweek_news()
+    dark_reading = fetch_darkreading_news()
+
     context = {
         'records_by_business_unit_type': list(records_by_business_unit_type),
         'records_by_status_flag': list(records_by_status_flag),
@@ -365,7 +458,10 @@ def dashboardhome(request):
         'moderation_tasks': moderation_details,
         'groups_with_cyberphas': groups_with_cyberphas,
         'worksheets_to_approve': worksheets_to_approve_list,
-        'ra_worksheets_with_scenario_count': ra_worksheets_with_scenario_count_list
+        'ra_worksheets_with_scenario_count': ra_worksheets_with_scenario_count_list,
+        'security_week': security_week,
+        'dark_reading': dark_reading,
+        'compliance_summary': compliance_summary
     }
 
     return render(request, 'dashboard.html', context)
@@ -588,3 +684,23 @@ def get_heatmap_records(request):
         })
 
     return JsonResponse({'data': data})
+
+
+@login_required
+def get_scenarios_for_regulation(request):
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest' and request.method == "GET":
+        regulation_name = request.GET.get('regulation_name', '')
+        user_id_str = str(request.user.id)  # Convert user ID to string
+
+        # Filter scenarios by the current user's ID and the compliance map containing the regulation name
+        scenarios = tblCyberPHAScenario.objects.filter(
+            compliance_map__icontains=regulation_name,
+            CyberPHA__UserID=user_id_str  # Filter by the user ID
+        ).select_related('CyberPHA').values(
+            'CyberPHA__ID', 'CyberPHA__title', 'Scenario'
+        )
+
+        scenarios_list = list(scenarios)
+
+        return JsonResponse(scenarios_list, safe=False)
+    return JsonResponse({"error": "Invalid request"}, status=400)

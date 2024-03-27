@@ -249,7 +249,6 @@ def iotaphamanager(request, record_id=None):
         pha_header.UserID = request.user.id
         pha_header.save()
 
-        messages.success(request, 'CyberPHA Information has been saved successfully.')
         saved_record_id = pha_header.ID
         if is_new_record:
             user_action = f"Created a new CyberPHA titled {pha_header.title}"
@@ -1251,14 +1250,16 @@ def get_response(user_message):
 def compliance_map_data(common_content):
     user_message = {
         "role": "user",
-        "content": f"{common_content}. Based on the provided information, map the current OT security posture to a maximum of 10 of the MOST RELEVANT AND IMPORTANT industry regulatory compliance regulations for this organization in the given country. Use '||' to separate each item and '>' to separate parts within an item. Example format: <Concise Compliance Concern, maximum 30 words> > <Compliance Reference> > <Internet URL>|. Ensure each item is returned in a format that can be easily parsed for display in an HTML table. Output only the line items with NO additional text, header, intro, or narrative."
+        "content": f"{common_content}. Based on the provided information, please map the current OT security posture to a maximum of 10 of the MOST RELEVANT AND IMPORTANT industry regulatory compliance regulations for this organization in the given country. When naming these regulations, use their official titles as recognized by the issuing bodies or as commonly used in official publications. Separate each item with '||' and use '>' to separate parts within an item. Ensure each item's format is concise and can be easily parsed for display in an HTML table. Example format: <Concise Compliance Concern, maximum 30 words> > <Official Compliance Reference> > <Internet URL>. Output only the line items with NO additional text, header, intro, or narrative. Strive for consistency in the naming of compliance regulations to facilitate accurate parsing and display."
     }
 
     try:
         response = get_response(user_message)
+
         return response
     except Exception as e:
         return f"Error: {str(e)}"
+
 
 
 def generate_recommendation_prompt(likelihood, adjustedRR, costs, probability, frequency, biaScore, cyberphaID):

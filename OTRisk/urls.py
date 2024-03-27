@@ -158,6 +158,7 @@ urlpatterns = [
     path('get_heatmap_records/', views.get_heatmap_records, name='get_heatmap_records'),
     path('cybersecurity_defaults_view/', views.cybersecurity_defaults_view, name='cybersecurity_defaults_view'),
     path('fetch_insurance_defaults/', views.fetch_insurance_defaults, name='fetch_insurance_defaults'),
+    path('get_scenarios_for_regulation/', views.get_scenarios_for_regulation, name='get_scenarios_for_regulation'),
 ]
 
 
