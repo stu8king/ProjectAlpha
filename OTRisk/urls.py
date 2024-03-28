@@ -159,6 +159,14 @@ urlpatterns = [
     path('cybersecurity_defaults_view/', views.cybersecurity_defaults_view, name='cybersecurity_defaults_view'),
     path('fetch_insurance_defaults/', views.fetch_insurance_defaults, name='fetch_insurance_defaults'),
     path('get_scenarios_for_regulation/', views.get_scenarios_for_regulation, name='get_scenarios_for_regulation'),
+    path('update_risk_priority/', views.update_risk_priority, name='update_risk_priority'),
+    path('update_risk_owner/', views.update_risk_owner, name='update_risk_owner'),
+    path('update_risk_status/', views.update_risk_status, name='update_risk_status'),
+    path('update_risk_open_date/', views.update_risk_open_date, name='update_risk_open_date'),
+    path('update_risk_close_date/', views.update_risk_close_date, name='update_risk_close_date'),
+    path('generate_risk_treatment_plan/', views.generate_risk_treatment_plan, name='generate_risk_treatment_plan'),
+    path('risk_treatment/<int:risk_id>/', views.risk_treatment, name='risk_treatment'),
+    path('delete_from_risk_register/<int:risk_id>/', views.delete_from_risk_register, name='delete_from_risk_register'),
 ]
 
 

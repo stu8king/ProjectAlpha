@@ -1,5 +1,7 @@
 import decimal
 import os
+
+from django.views.decorators.http import require_POST, require_http_methods
 from pptx import Presentation
 from pptx.util import Inches
 import requests
@@ -74,6 +76,7 @@ from .models.model_assessment import AssessmentFramework, AssessmentQuestion, Se
 import csv
 from django.contrib import messages
 import chardet
+import datetime
 
 app_name = 'OTRisk'
 
@@ -2310,6 +2313,91 @@ def save_control_assessment(request):
     return render(request, 'iotaphamanager.html', {'form': form})
 
 
+@require_POST
+@csrf_exempt
+def update_risk_owner(request):
+    try:
+        risk_id = request.POST.get('id')
+        new_owner = request.POST.get('new_owner')
+        risk = tblCyberPHAScenario.objects.get(ID=risk_id)
+        risk.risk_owner = new_owner
+        risk.save()
+        return JsonResponse({"status": "success"})
+    except tblCyberPHAScenario.DoesNotExist:
+        return JsonResponse({"status": "error", "message": "Risk scenario not found"}, status=404)
+    except Exception as e:
+        return JsonResponse({"status": "error", "message": str(e)}, status=500)
+
+
+@require_POST
+@csrf_exempt
+def update_risk_open_date(request):
+    try:
+        risk_id = request.POST.get('id')
+        new_open_date_str = request.POST.get('new_value')
+        new_open_date = datetime.datetime.strptime(new_open_date_str, '%Y-%m-%d').date()
+        risk = tblCyberPHAScenario.objects.get(ID=risk_id)
+        risk.risk_open_date = new_open_date
+        risk.save()
+        return JsonResponse({"status": "success"})
+    except tblCyberPHAScenario.DoesNotExist:
+        return JsonResponse({"status": "error", "message": "Risk scenario not found"}, status=404)
+    except Exception as e:
+        print(e)
+        return JsonResponse({"status": "error", "message": str(e)}, status=500)
+
+
+@require_POST
+@csrf_exempt
+def update_risk_close_date(request):
+    try:
+        risk_id = request.POST.get('id')
+        new_close_date_str = request.POST.get('new_value')
+        new_close_date = datetime.datetime.strptime(new_close_date_str, '%Y-%m-%d').date()
+        risk = tblCyberPHAScenario.objects.get(ID=risk_id)
+        risk.risk_close_date = new_close_date
+        risk.save()
+        return JsonResponse({"status": "success"})
+    except tblCyberPHAScenario.DoesNotExist:
+        return JsonResponse({"status": "error", "message": "Risk scenario not found"}, status=404)
+    except Exception as e:
+        return JsonResponse({"status": "error", "message": str(e)}, status=500)
+
+
+@csrf_exempt
+def update_risk_status(request):
+    if request.method == 'POST':
+        id = request.POST.get('id')
+        newStatus = request.POST.get('newStatus')
+
+        try:
+            scenario = tblCyberPHAScenario.objects.get(ID=id)
+            scenario.risk_status = newStatus
+            scenario.save()
+            return JsonResponse({'status': 'success'})
+        except tblCyberPHAScenario.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Scenario not found'}, status=404)
+
+    return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
+
+
+@csrf_exempt
+def update_risk_priority(request):
+    if request.method == 'POST':
+        id = request.POST.get('id')
+        newPriority = request.POST.get('newPriority')
+
+        try:
+            scenario = tblCyberPHAScenario.objects.get(ID=id)
+            scenario.risk_priority = newPriority
+            scenario.save()
+            return JsonResponse({'status': 'success'})
+        except tblCyberPHAScenario.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Scenario not found'}, status=404)
+
+    return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
+
+
 @login_required()
 def risk_register(request):
     weights = {
@@ -2373,7 +2461,13 @@ def risk_register(request):
         'business_impact_analysis_score',  # Include the computed score in the returned data
         'business_impact_analysis_code',  # Include the computed code in the returned data
         'snapshots',
-        'CyberPHA__ID'
+        'CyberPHA__ID',
+        'risk_priority',
+        'risk_owner',
+        'risk_response',
+        'risk_status',
+        'risk_open_date',
+        'risk_close_date'
     )
 
     bia_data_with_id = [
@@ -2892,7 +2986,6 @@ def cybersecurity_defaults_view(request):
 
 @login_required
 def fetch_insurance_defaults(request):
-
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
         user_profile = UserProfile.objects.get(user=request.user)
         organization = user_profile.organization
@@ -2924,3 +3017,107 @@ def fetch_insurance_defaults(request):
             return JsonResponse({'error': 'Defaults not found'}, status=404)
     else:
         return JsonResponse({'error': 'Invalid request'}, status=400)
+
+
+# View to handle the risk treatment plan link click
+def risk_treatment(request, risk_id):
+    try:
+        risk = tblCyberPHAScenario.objects.get(ID=risk_id)
+        if risk.risk_treatment_plan:
+            # Plan exists, return it in JSON response
+            return JsonResponse({'risk_treatment_plan': risk.risk_treatment_plan})
+        else:
+            # No plan exists, indicate that creation is possible
+            return JsonResponse({'message': 'No risk treatment plan has been generated. Do you wish to create one?', 'create_plan': True})
+    except tblCyberPHAScenario.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Risk not found'}, status=404)
+
+
+
+@require_POST
+def delete_from_risk_register(request, risk_id):
+    # Use get_object_or_404 to simplify handling of non-existent records
+    risk = get_object_or_404(tblCyberPHAScenario, ID=risk_id)
+
+    try:
+        # Update fields according to the requirement
+        risk.risk_register = False  # Assuming this is a BooleanField
+        risk.risk_priority = 'Unassigned'
+        risk.risk_status = 'Unassigned'  # Assuming there was a typo in the parameter name
+        risk.risk_owner = 'Unassigned'
+        risk.risk_treatment_plan = None
+        risk.risk_response = 'Unassigned'
+        risk.risk_open_date = date(2023, 1, 1)
+        risk.risk_close_date = date(2099, 1, 1)
+
+        # Save the updated record
+        risk.save()
+
+        # Return a success response
+        return JsonResponse({"status": "success", "message": "Record successfully updated."})
+
+    except Exception as e:
+        # Handle unexpected errors
+        return JsonResponse({"status": "error", "message": str(e)}, status=500)
+
+
+@require_POST
+def generate_risk_treatment_plan(request):
+    openai_api_key = get_api_key('openai')
+    openai.api_key = openai_api_key
+    model = get_api_key('OpenAI_Model')
+    risk_id = request.POST.get('risk_id')  # Get risk_id from POST data
+    if not risk_id:
+        return JsonResponse({"status": "error", "message": "Risk ID not provided"}, status=400)
+
+    try:
+        risk = tblCyberPHAScenario.objects.select_related('CyberPHA').get(ID=risk_id)
+        cyber_pha_header = risk.CyberPHA
+        recommendations = risk.recommendations
+        scenario_description = risk.Scenario
+
+        # Fetch additional details from tblCyberPHAHeader
+        facility_type = cyber_pha_header.FacilityType
+        industry = cyber_pha_header.Industry
+        employees_on_site = cyber_pha_header.EmployeesOnSite
+        has_incident_response_plan = "Yes" if cyber_pha_header.has_incident_response_plan else "No"
+        safety_summary = cyber_pha_header.safetySummary
+        ot_summary = cyber_pha_header.otherSummary
+
+        prompt = f"Given the scenario: '{scenario_description}', " \
+                 f"recommendations: '{recommendations}', " \
+                 f"facility type: '{facility_type}', " \
+                 f"industry: '{industry}', " \
+                 f"number of employees on site: '{employees_on_site}', " \
+                 f"existence of an incident response plan: '{has_incident_response_plan}', " \
+                 f"safety summary: '{safety_summary}', " \
+                 f"OT systems: '{ot_summary}', " \
+                 "generate a structured OT/ICS-focused cybersecurity risk treatment plan tailored to these details and in particular with reference to the OT devices most likely to apply in the given scenario, " \
+                 "presented in a simple, plain text format suitable for converting into a flowchart. " \
+                 "Each step should begin with 'Step' followed by the step number, action, and a dash, then a detailed description. " \
+                 "Avoid using special formatting characters like asterisks, brackets, or parentheses. " \
+                 "Format precisely as directed (including the dash characters which are used as delimiters by the client code):\n" \
+                 "- Step 1: Action - Description.\n" \
+                 "- Step 2: Action - Description.\n" \
+                 "Continue with clear, sequentially ordered actions using the precise formatting structure given."
+
+        response = openai.ChatCompletion.create(
+            model=model,
+            messages=[{"role": "system", "content": prompt}],
+            max_tokens=1024,
+            temperature=0.5
+        )
+
+        # Assuming the response is correctly formatted according to the new prompt
+        risk_treatment_plan = response['choices'][0]['message']['content']
+        risk.risk_treatment_plan = risk_treatment_plan
+
+        risk.save()
+
+        return JsonResponse({"status": "success", "risk_treatment_plan": risk_treatment_plan})
+    except tblCyberPHAScenario.DoesNotExist:
+        return JsonResponse({"status": "error", "message": "Risk scenario not found"}, status=404)
+    except Exception as e:
+
+        return JsonResponse({"status": "error", "message": str(e)}, status=500)
+

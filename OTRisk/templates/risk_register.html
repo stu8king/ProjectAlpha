@@ -38,6 +38,8 @@
 <script src="https://cdn.anychart.com/releases/v8/js/anychart-bullet.min.js"></script>
 <script src="https://cdn.anychart.com/releases/8.11.1/js/anychart-base.min.js"></script>
     <script src="https://cdn.anychart.com/releases/8.11.1/js/anychart-cartesian.min.js"></script>
+<script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+
 
 
 
@@ -49,9 +51,58 @@
 
     <title>Assess CyberPHA</title>
     <style>
-    .small-font {
-        font-size: 0.8rem; /* adjust as needed */
-   }
+        #tbl_risk_register td:nth-child(4), /* Residual Risk */
+#tbl_risk_register td:nth-child(7) { /* Probability */
+    text-align: center; /* Center-align the content */
+}
+
+#tbl_risk_register td:first-child {
+    background-color: #b2b5b6; /* Header background color */
+    color: #020202; /* Header text color */
+    font-weight: bold; /* Make header text bold */
+    padding: 0.75rem; /* Larger padding for header */
+    font-size: 1.2em;
+
+}
+#tbl_risk_register td:nth-child(3) { /* Adjust based on actual cell order */
+    font-size: 1.1em; /* Larger font size for scenario text */
+    font-weight: bold; /* Optional: make scenario text bold */
+    color: #333; /* Scenario text color */
+}
+
+
+#tbl_risk_register {
+    border-collapse: separate;
+    border-spacing: 0.5rem; /* Adjust based on your spacing preference */
+    background-color: transparent; /* Remove default table background */
+}
+
+#tbl_risk_register thead {
+    display: none; /* Hide the table header */
+}
+
+#tbl_risk_register tbody tr {
+    display: block;
+    background-color: #f9f9f9; /* Card background color */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Card shadow */
+    border-radius: 0.5rem; /* Card corner rounding */
+    margin-bottom: 0.5rem; /* Space between cards */
+    overflow: hidden; /* Ensures the border radius applies to child elements */
+}
+
+#tbl_risk_register td {
+    display: block; /* Stack cells vertically */
+    padding: 0.5rem; /* Cell padding */
+    border-bottom: 1px solid #ececec; /* Line between cells */
+}
+
+#tbl_risk_register td:last-child {
+    border-bottom: none; /* Remove bottom border for the last cell */
+}
+
+.small-font {
+    font-size: 1rem; /* adjust as needed */
+}
 .form-group {
 border: 1px solid #464748; /* Border color */
 box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.5); /* Outer shadow */
@@ -207,6 +258,144 @@ body {
     height: 1.75em;
     }
 }
+        /* Adjusting the size of the risk circles */
+.risk-circle {
+    font-size: 3em; /* Adjusts the size of the circle */
+    line-height: 1; /* Helps with vertical alignment */
+    display: inline-block; /* Allows setting dimensions */
+    width: 1em; /* Keeps the width proportional to the font size */
+    text-align: center; /* Centers the circle symbol ● */
+}
+
+/* Example CSS for different risk levels */
+.risk-circle.low {
+    color: green;
+}
+
+.risk-circle.low-medium {
+    color: olive;
+}
+
+.risk-circle.medium {
+    color: yellow;
+}
+
+.risk-circle.medium-high {
+    color: orange;
+}
+
+.risk-circle.high {
+    color: red;
+}
+.vertical-align-middle {
+    vertical-align: middle;
+    display: inline-block;
+    line-height: normal; /* Adjust as needed */
+}
+
+.risk-circle {
+    vertical-align: middle; /* Aligns the circle vertically */
+    /* Other properties as defined before */
+}
+.value-container {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 5px;
+    color: #fff;
+    margin-right: 5px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    font-weight: bold;
+}
+
+.best-case {
+    background-color: #4CAF50; /* Green */
+}
+
+.median-case {
+    background-color: #FFEB3B; /* Yellow */
+    color: #000; /* For better contrast */
+}
+
+.worst-case {
+    background-color: #F44336; /* Red */
+}
+
+.value-label {
+    display: block;
+    text-align: center;
+    font-size: 0.75rem;
+    margin-top: 4px;
+}
+
+/* Ensures the container aligns well with table structure */
+.currency-container {
+    display: flex;
+    justify-content: start;
+    align-items: center;
+}
+
+/* Custom modal sizing */
+#riskTreatmentModal .modal-dialog {
+    max-width: 80%;
+    width: auto !important;
+}
+.modal-body {
+    display: flex; /* Enable flexbox */
+    justify-content: center; /* Center content horizontally */
+    align-items: center; /* Center content vertically */
+    text-align: center; /* Ensure text is centered if applicable */
+    max-height: 80vh; /* Set a minimum height to ensure space for centering */
+    overflow-y: auto;
+    margin-top: 20px;
+}
+
+/* Mermaid SVG adjustments for better readability */
+.mermaid svg {
+    max-height: 65vh;  /* Adjust height automatically */
+    width: 100%; /* Ensure it does not exceed the modal width */
+    max-width: 100%; /* Prevent exceeding the modal width */
+    font-size: 1.5em !important; /* Override font size directly */
+    font-family: 'Open Sans', sans-serif;
+    display: block; /* Remove inline styling */
+    overflow: visible;
+}
+.mermaid .node {
+    stroke: #333; /* Border color */
+    fill: #fff; /* Background color */
+}
+.mermaid .node text {
+    fill: #333; /* Text color */
+    font-size: 0.9em; /* Larger text for readability */
+    text-wrap: normal; /* Ensure text wraps */
+}
+.modal-lg {
+    max-width: 95%; /* Or any other max-width that fits your design */
+}
+
+.modal-header {
+    background-color: #007bff; /* Blue background for the header */
+    color: #ffffff; /* White text color */
+    border-bottom: 2px solid #0056b3; /* Darker blue border at the bottom */
+    border-top-left-radius: 8px; /* Rounded top left corner */
+    border-top-right-radius: 8px; /* Rounded top right corner */
+}
+.modal-title {
+    font-weight: bold;
+}
+
+
+.modal-content {
+  background-color: #fefefe;
+  margin: auto;
+  padding: 20px;
+  border: 1px solid #888;
+  max-width: 95%;
+  box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
+}
+.modal-dialog {
+    max-width: 95%; /* Use a maximum width */
+    width: auto; /* Allow it to adjust based on content width */
+}
 </style>
 
 
@@ -214,9 +403,14 @@ body {
 <body style="background-color: #464748">
 
 
-<script>anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");</script>
+<script>
+    anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
+    mermaid.initialize({startOnLoad:true});
+</script>
 
 <div class="container-fluid">
+<!-- Spinner Overlay -->
+
 
     <div class="row">
        {% include 'menu_bar.html' %}
@@ -270,7 +464,13 @@ body {
                       </div>
                 </div>
 
-        <div class="col-md-10">
+        <div class="col-md-6">
+            <!-- Spinner Overlay -->
+            <div id="spinnerOverlay" style="display: none; position: fixed; top: 5vw; left: 20vw; height: 110vh; width: 110vw; background: rgba(0, 0, 0, 0.5); z-index: 1050; justify-content: center; align-items: flex-start; padding-top: 20px;">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="sr-only">Loading...</span>
+                </div>
+            </div>
 
             <div class="form-group">
                 <table class="table table-bordered table-striped compact" id="tbl_risk_register" style="font-size: 10px; width:100%">
@@ -290,44 +490,131 @@ body {
                         {% for item in data %}
                         <tr data-id="{{ item.ID }}">
 
-                            <td><a href="{% url 'OTRisk:iotaphamanager_with_id' item.CyberPHA__ID %}">{{ item.CyberPHA__FacilityName }}</a>
-            </td>
-                            <td>{{ item.CyberPHA__AssessmentUnit }}</td>
+                            <td>
+                                <div class="row align-items-center">
+                                    <div class="col-md-4">
+                                        Facility: <a href="{% url 'OTRisk:iotaphamanager_with_id' item.CyberPHA__ID %}" style="color:#000">{{ item.CyberPHA__FacilityName }}</a>
+                                    </div>
+                                <div class="col-md-1 text-md-right">
+                                    <div class="vertical-align-middle">Risk:</div>
+                                </div>
+                                    <div class="col-md-3">
+                                        <div class="risk_display">
+
+                                             {% if item.RRa == "Low" %}
+                                                <span class="risk-circle low" style="color:green;">●</span>
+                                            {% elif item.RRa == "Low/Medium" %}
+                                                <span class="risk-circle low-medium" style="color:olive;">●</span>
+                                            {% elif item.RRa == "Medium" %}
+                                                <span class="risk-circle medium" style="color:yellow;">●</span>
+                                            {% elif  item.RRa == "Medium/High" %}
+                                                <span class="risk-circle medium-high" style="color:orange;">●</span>
+                                            {% elif item.RRa == "High" %}
+                                                <span class="risk-circle high" style="color:red;">●</span>
+                                            {% endif %}
+                                            {{ item.RRa }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        Priority: <span class="editable-priority" data-id="{{ item.ID }}">{{ item.risk_priority }}</span>
+                                    </div>
+
+                                </div>
+
+                            </td>
+                            <td><b>Assessment Unit:</b> {{ item.CyberPHA__AssessmentUnit }}</td>
                             <td>{{ item.Scenario }}</td>
                             <td>
-                                {% if item.RRa == "Low" %}
-                                    <span style="color:green;">●</span>
-                                {% elif item.RRa == "Low/Medium" %}
-                                    <span style="color:olive;">●</span>
-                                {% elif item.RRa == "Medium" %}
-                                    <span style="color:yellow;">●</span>
-                                {% elif  item.RRa == "Medium/High" %}
-                                    <span style="color:orange;">●</span>
-                                {% elif item.RRa == "High" %}
-                                    <span style="color:red;">●</span>
-                                {% endif %}
-                                {{ item.RRa }}
+
                             </td>
-                            <td>{{ item.business_impact_analysis_score }}({{ item.business_impact_analysis_code }})</td>
-                            <td>${{ item.sle_low|intcomma }}/${{ item.sle|intcomma }}/${{ item.sle_high|intcomma }}</td>
+                            <td>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                         <div class="vertical-align-middle">Business Impact Assessment:
+                                             {% if item.business_impact_analysis_code == "Low" %}
+                                                <span class="risk-circle low" style="color:green;" >●</span>
+                                            {% elif item.business_impact_analysis_code == "Low/Medium" %}
+                                                <span class="risk-circle low-medium" style="color:olive;">●</span>
+                                            {% elif item.business_impact_analysis_code == "Medium" %}
+                                                <span class="risk-circle medium" style="color:yellow;">●</span>
+                                            {% elif  item.business_impact_analysis_code == "Medium/High" %}
+                                                <span class="risk-circle medium-high" style="color:orange;">●</span>
+                                            {% elif item.business_impact_analysis_code == "High" %}
+                                                <span class="risk-circle high" style="color:red;">●</span>
+                                            {% endif %}
+                                            {{ item.business_impact_analysis_code }} ({{ item.business_impact_analysis_score }})
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                         <div class="vertical-align-middle">Attack Success Probability:
+                                              {% if item.probability < 25 %}
+                                                    <span class="risk-circle high" style="color:green;">●</span>
+                                                {% elif item.probability >= 25 and item.probability < 50 %}
+                                                    <span class="risk-circle high" style="color:yellow;">●</span>
+                                                {% elif item.probability >= 50 and item.probability < 75 %}
+                                                    <span class="risk-circle high" style="color:orange;">●</span>
+                                                {% elif item.probability >= 75 %}
+                                                    <span class="risk-circle high" style="color:red;">●</span>
+                                                {% endif %}
+                                                {{ item.probability }}%
+                                         </div>
+                                    </div>
+
+
+
+                                </div>
+                            </td>
+                            <td>
+                                <div class="currency-container">
+                                    <div class="value-container best-case">
+                                        ${{ item.sle_low|intcomma }}
+                                        <span class="value-label">Best Case</span>
+                                    </div>
+                                    <div class="value-container median-case">
+                                        ${{ item.sle|intcomma }}
+                                        <span class="value-label">Median Case</span>
+                                    </div>
+                                    <div class="value-container worst-case">
+                                        ${{ item.sle_high|intcomma }}
+                                        <span class="value-label">Worst Case</span>
+                                    </div>
+                                </div>
+                            </td>
+
 
 
                             <td>
-                                {% if item.probability < 25 %}
-                                    <span style="color:green;">●</span>
-                                {% elif item.probability >= 25 and item.probability < 50 %}
-                                    <span style="color:yellow;">●</span>
-                                {% elif item.probability >= 50 and item.probability < 75 %}
-                                    <span style="color:orange;">●</span>
-                                {% elif item.probability >= 75 %}
-                                    <span style="color:red;">●</span>
-                                {% endif %}
-                                {{ item.probability }}%
+
+                            </td>
+                            <td>
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        Risk Owner: <span class="editable-owner" data-id="{{ item.ID }}">{{ item.risk_owner }}</span>
+                                    </div>
+                                    <div class="col-md-3">
+                                        Status: <span class="editable-status" data-id="{{ item.ID }}">{{ item.risk_status }}</span>
+                                    </div>
+                                    <div class="col-md-3">
+                                        Risk Open Date: <span class="editable-open-date" data-id="{{ item.ID }}">{{ item.risk_open_date }}</span>
+                                    </div>
+                                    <div class="col-md-3">
+                                        Risk Close Date: <span class="editable-close-date" data-id="{{ item.ID }}">{{ item.risk_close_date }}</span>
+                                    </div>
+                                </div>
                             </td>
                             <td>
                                 {% if item.snapshots == 1 %}
                                     <a href="{% url 'OTRisk:view_snapshots' item.ID %}">View Snapshots</a>
                                 {% endif %}
+                            </td>
+                            <td>
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <a href="#" onclick="showOrGenerateRiskTreatmentPlan({{ item.ID }}); return false;"><i class="bi bi-diagram-3"></i> View/Generate Risk Treatment Plan</a>
+                                    </div>
+                                    <div class="col-md-6"></div>
+                                    <div class="col-md-3"><a href="#" onclick="deletefromrr({{ item.ID }}); return false;"><i class="bi bi-trash-fill"></i>Delete from Risk Register</a></div>
+                                </div>
                             </td>
 
                         </tr>
@@ -337,32 +624,18 @@ body {
             </div>
         </div> <!-- risk register table -->
 
-    <div class="row" style="height: 10px"></div>
-                </div>
 </div>
 <script>
 
  $(document).ready(function() {
     $("table tbody tr").click(function() {
-        var scenarioId = $(this).data("id");
-        loadScenarioDetails(scenarioId);
+
+
     });
     $("table tbody tr:first").trigger('click');
 });
 
 
-$(document).ready(function() {
-    $(document).on('click', '#saveRiskData', function() {
-        var formData = $("#riskForm").serialize();
-        $.post("{% url 'OTRisk:save_risk_data' %}", formData, function(response) {
-            if(response.status == 'success') {
-                alert("Data saved successfully!");
-            } else {
-                alert("Error saving data!");
-            }
-        });
-    });
-});
 
 
 
@@ -371,27 +644,16 @@ $(document).ready(function() {
 $(document).ready(function() {
     function updateTable() {
         let selectedRisks = $('input[type="checkbox"]:checked').map(function() {
-            return $(this).val();
-        }).get();
+        return $(this).val();
+    }).get();
 
         $('#tbl_risk_register tbody tr').each(function() {
-            let cellText = $(this).find('td:nth-child(4)').text().trim();
-            let riskText = cellText.replace(/^[^\w]+/, ''); // Clean leading symbols for safety
+            let cellText = $(this).find('.risk_display').clone().children().remove().end().text().trim();
 
-            // Determine if the row should be shown
-            let showRow = false;
-            if (selectedRisks.length === 0) {
-                showRow = true; // No filter selected, show all
-            } else {
-                // Explicitly handle each case
-                if (riskText === "" && selectedRisks.includes("NoValue")) {
-                    showRow = true;
-                } else if (selectedRisks.includes(riskText)) {
-                    showRow = true;
-                }
-            }
+        // Determine if the row should be shown based on the filters applied
+        let showRow = selectedRisks.length === 0 || selectedRisks.includes(cellText) || (cellText === "" && selectedRisks.includes("NoValue"));
 
-            $(this).toggle(showRow);
+        $(this).toggle(showRow);
         });
     }
 
@@ -408,597 +670,466 @@ $(document).ready(function() {
             'NoValue': 0
         };
 
-        $('#tbl_risk_register tbody tr').each(function() {
-            let cellText = $(this).find('td:nth-child(4)').text().trim();
-            let riskText = cellText.replace(/^[^\w]+/, ''); // Clean leading symbols
+         $('#tbl_risk_register tbody tr').each(function() {
+        // Use .find('.risk_display') to get the container
+        // Then, use .clone() to make a copy of it, so original content is not altered
+        // Use .children().remove() to remove child elements from the copy, leaving text only
+        // Finally, use .text().trim() on the modified copy to get clean text
+        let cellText = $(this).find('.risk_display').clone().children().remove().end().text().trim();
 
-            if (riskText === "") {
-                riskValues['NoValue']++;
-            } else if (riskValues.hasOwnProperty(riskText)) {
-                riskValues[riskText]++;
-            }
-        });
-
-        // Update counts in the UI
-        for (let risk in riskValues) {
-            $('#count' + risk.replace(/\//g, '').replace('NoValue', 'NoValue')).text(riskValues[risk]);
+        if (cellText === "") {
+            riskValues['NoValue']++;
+        } else if (riskValues.hasOwnProperty(cellText)) {
+            riskValues[cellText]++;
         }
-    }
+    });
 
+    // Update counts in the UI
+    for (let risk in riskValues) {
+        $('#count' + risk.replace(/\//g, '').replace('NoValue', 'NoValue')).text(riskValues[risk]);
+    }
+}
+
+$(document).ready(function() {
     updateCounts(); // Call this function to update counts on page load
+});
 });
 </script>
 
 
-<div class="row">
-<div class="col-md-2 " ></div>
-<div class="col-md-10 ">
-<div class="form-group">
-<div class="card" style="display: none;" id="scenarioDetailsCard">
-<div class="card-header">
-Scenario Details
-</div>
-<div class="card-body" id="scenarioDetails">
 
-
-<strong>ID:</strong> <span id="detail_ID"></span> <strong>CyberPHA:</strong> <span id="detail_CyberPHA"></span>
-
-
-
-<div class="row">
-    <div class="col-md-4">
-        <div class="card shadow-lg inner-card">
-            <div class="card-body">
-                <div class="row">
-                    <h6 class="card-title text-left card-title-light">Scenario:</h6>
-                </div>
-                <div class="row" style="font-size: 12px">
-                    <span id="scenario_description"></span>
-                </div>
-            </div>
-        </div>
-        <br>
-        <div class="card shadow-lg inner-card">
-            <div class="card-body">
-                <div class="row">
-                    <h6 class="card-title text-left card-title-light">Consequences:</h6>
-                </div>
-                <div class="row" style="font-size: 12px">
-                    <span id="consequence_description"></span>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-8">
-        <div class="row">
-            <div class="col-md-3" style="height:100%">
-                <div class="card shadow-lg inner-card" style="height:100%;">
-                    <div class="card-body">
-                        <div class="row justify-content-center align-items-center" style="font-size: 12px">
-                            Attack Success Probability
-                        </div>
-                        <div class="row justify-content-center align-items-center" style="font-size: 16px">
-                            <div id="gaugeProbContainer"></div>
-                            <br>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-3">
-                <div class="card shadow-lg inner-card">
-                    <div class="card-body">
-                        <div class="row justify-content-center align-items-center" style="font-size: 12px">
-                            Control Effectiveness
-                        </div>
-                        <div class="row justify-content-center align-items-center" style="font-size: 16px">
-                            <div id="gaugeEffectivenessContainer"></div>
-                            <br>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card shadow-lg inner-card">
-                    <div class="card-body">
-                        <div class="row justify-content-center align-items-center" style="font-size: 12px">
-                            Scenario Likelihood
-                        </div>
-                    <div class="row justify-content-center align-items-center" style="font-size: 16px">
-                        <div id="gaugeLikelihoodContainer"></div>
-                        <br>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card shadow-lg inner-card">
-                <div class="card-body">
-                    <div class="row justify-content-center align-items-center" style="font-size: 12px">
-                        Residual Risk
-                    </div>
-                    <div class="row justify-content-center align-items-center" style="font-size: 16px">
-                        <div id="gaugeResidualRisk"></div>
-                        <br>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-</div>
-<div class="row" style="height: 70%">
-
-</div>
-
-</div>
-
-</div>
-<br>
-<div class="row">
-<div class="col-md-4" style="border: 1px solid darkgrey;">
-<!-- user controls -->
-<form id="riskForm">
-{% csrf_token %}
-<br>
-<input type="hidden" id="scenario_id" name="scenario_id" value="${data.ID}">
-<label for="risk_owner" class="form-control" style="border: none;">Risk Owner:</label>
-
-<input type="text" class="form-control" id="risk_owner" name="risk_owner" required>
-<br>
-<label for="risk_priority" class="form-control" style="border: none;">Risk Priority:</label>
-<select id="risk_priority" name="risk_priority" class="form-control">
-<option value="Low">Low</option>
-<option value="Medium">Medium</option>
-<option value="High">High</option>
-<option value="Critical">Critical</option>
-</select>
-<br>
-<label for="risk_response" class="form-control" style="border: none;">Risk Response:</label>
-<select id="risk_response" name="risk_response" class="form-control">
-<option value="Manage">Manage</option>
-<option value="Mitigate">Mitigate</option>
-<option value="Transfer">Transfer</option>
-<option value="Accept">Accept</option>
-</select>
-<br>
-<label for="risk_status" class="form-control" style="border: none;">Risk Status:</label>
-<select id="risk_status" name="risk_status" class="form-control">
-<option value="Open">Open</option>
-<option value="Closed">Closed</option>
-</select>
-<br>
-<label for="risk_open_date" class="form-control" style="border: none;">Risk Open Date:</label>
-<input type="date" class="form-control" id="risk_open_date" name="risk_open_date" required>
-<br>
-<label for="risk_close_date" class="form-control" style="border: none;">Risk Close Date:</label>
-<input type="date" class="form-control" id="risk_close_date" name="risk_close_date" required>
-<br>
-<button type="button"  class="btn btn-primary"  id="saveRiskData">Save</button>
-</form>
-</div>
-<div class="col-md-8">
-
-<div class="row" style="height:50%">
-
-<div class="col-md-6" id="impactChartContainer"></div>
-
-<div class="col-md-6" id="bulletChartContainer"></div>
-</div>
-</div>
-</div>
-
-</div>
-</div>
-    </div>
-</div>
-
-</div>
-
-
-
-
-
-<!-- end of header detail -->
-
-<div class="row">
-    <div class="col-md-1 "></div>
-    <div class="col-md-10 " style="background-color: white">
-        <div class="card" style="display: none;" id="scenarioDetailsCard">
-          <div class="card-header">
-            Scenario Details
-          </div>
-          <div class="card-body" id="scenarioDetails">
-            <!-- Details will be populated here -->
-          </div>
-        </div>
-    </div>
-    <div class="col-md-1 " style="background-color: white"></div>
-</div>
 <script>
 
 
-    $(document).ready(function() {
-    // Initialize DataTable with options
-    $('#tbl_risk_register').DataTable({
-        "paging": false, // Enable pagination
-        "order": [] // Disable initial sorting if needed
+
+
+
+$(document).ready(function() {
+    $('body').on('click', '.editable-status', function() {
+        var currentStatus = $(this).text();
+        var id = $(this).data('id');
+        var selectHtml = `<select class="form-control status-select" data-id="${id}">
+            <option value="Open">Open</option>
+            <option value="Closed">Closed</option>
+
+        </select>`;
+        $(this).replaceWith(selectHtml);
+        $('.status-select').val(currentStatus); // Select the current value
+    });
+
+    $('body').on('change', '.status-select', function() {
+        var newStatus = $(this).val();
+        var id = $(this).data('id');
+        // AJAX call to update the priority
+        $.ajax({
+            url: '/OTRisk/update_risk_status/', // Update with your URL
+            method: 'POST',
+            data: {
+                'id': id,
+                'newStatus': newStatus,
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            },
+            success: function(response) {
+                // On success, replace the select back to span with the new value
+                var spanHtml = `<span class="editable-status" data-id="${id}">${newStatus}</span>`;
+                $('.status-select[data-id="'+id+'"]').replaceWith(spanHtml);
+            },
+            error: function(xhr, status, error) {
+                // Handle any error
+                alert('Error updating status. Please try again.');
+            }
+        });
     });
 });
 
-function loadScenarioDetails(scenarioId) {
-    $.get("{% url 'OTRisk:getSingleScenario' %}", { id: scenarioId }, function(data) {
-        // Populate placeholders with data
-        $('#detail_ID').text(data.ID);
-        $('#detail_CyberPHA').text(data.CyberPHA);
-        $('#scenario_description').text(data.Scenario);
-        $('#consequence_description').text(data.Consequence);
 
-        $('#scenario_probability').text(data.probability);
-        $('#scenario_sis_outage').text(data.sis_outage);
-        $('#scenario_sis_compromise').text(data.sis_compromise);
-        $('#scenario_ThreatClass').text(data.ThreatClass);
-        $('#scenario_standards').text(data.standards);
 
-        $("#scenarioDetailsCard").show(); // Show the card
 
-        clearContainer('bulletChartContainer');
-        clearContainer('impactChartContainer');
-        clearContainer('gaugeProbContainer');
-        clearContainer('gaugeEffectivenessContainer');
-        clearContainer('gaugeLikelihoodContainer');
-        clearContainer('gaugeResidualRisk');
+$(document).ready(function() {
+    $('body').on('click', '.editable-priority', function() {
+        var currentPriority = $(this).text();
+        var id = $(this).data('id');
+        var selectHtml = `<select class="form-control priority-select" data-id="${id}">
+            <option value="Low">Low</option>
+            <option value="Medium">Medium</option>
+            <option value="High">High</option>
+            <option value="Critical">Critical</option>
+        </select>`;
+        $(this).replaceWith(selectHtml);
+        $('.priority-select').val(currentPriority); // Select the current value
+    });
 
-        createProbGauge(data.probability);
-        createEffectivenessGauge(data.control_effectiveness);
-        createLikelihoodGauge(data.likelihood);
-        createResidualRiskGauge(data.RRa);
+    $('body').on('change', '.priority-select', function() {
+        var newPriority = $(this).val();
+        var id = $(this).data('id');
+        // AJAX call to update the priority
+        $.ajax({
+            url: '/OTRisk/update_risk_priority/', // Update with your URL
+            method: 'POST',
+            data: {
+                'id': id,
+                'newPriority': newPriority,
+                'csrfmiddlewaretoken': '{{ csrf_token }}'
+            },
+            success: function(response) {
+                // On success, replace the select back to span with the new value
+                var spanHtml = `<span class="editable-priority" data-id="${id}">${newPriority}</span>`;
+                $('.priority-select[data-id="'+id+'"]').replaceWith(spanHtml);
+            },
+            error: function(xhr, status, error) {
+                // Handle any error
+                alert('Error updating priority. Please try again.');
+            }
+        });
+    });
+});
 
-                var rangeData = [
-            {x: "Best Case", low: 0, high: data.sle_low},
-            {x: "Median Case", low: 0, high: data.sle},
-            {x: "Worst Case", low: 0, high: data.sle_high}
-        ];
+$(document).ready(function() {
 
-        $("#scenarioDetailsCard").show(); // Show the card
+    $('body').on('click', '.editable-owner', function() {
+        var currentOwner = $(this).text();
+        var id = $(this).data('id');
+        var inputHtml = `<input type="text" class="form-control owner-input" data-id="${id}" value="${currentOwner}">`;
+        $(this).replaceWith(inputHtml);
+        $('.owner-input[data-id="' + id + '"]').focus();
+    });
 
-        var riskPriorityValue = data.risk_priority;
-        var riskOwner = data.risk_owner;
-        var riskResponse = data.risk_response;
-        var riskStatus = data.risk_status;
-        var riskOpenDate = data.risk_open_date;
-        var riskCloseDate = data.risk_close_date;
+    $('body').on('blur', '.owner-input', function() {
+        var newOwner = $(this).val();
+        var id = $(this).data('id');
+        // AJAX call to update the owner
+        $.ajax({
+            url: '/OTRisk/update_risk_owner/', // Update with your URL
+            method: 'POST',
+            data: {
+                'id': id,
+                'new_owner': newOwner,
+                'csrfmiddlewaretoken': $('input[name="csrfmiddlewaretoken"]').val()
+            },
+            success: function(response) {
+                // On success, replace the input back to span with the new value
+                var spanHtml = `<span class="editable-owner" data-id="${id}">${newOwner}</span>`;
+                $('.owner-input[data-id="'+id+'"]').replaceWith(spanHtml);
+            },
+            error: function(xhr, status, error) {
+                // Handle any error
+                alert('Error updating risk owner. Please try again.');
+            }
+        });
+    });
 
-        // Set the dropdown to the correct value
-        $("#risk_priority").val(riskPriorityValue);
-        $("#risk_owner").val(riskOwner);
-        $("#risk_response").val(riskResponse);
-        $("#risk_status").val(riskStatus);
-        $("#risk_open_date").val(riskOpenDate);
-        $("#risk_close_date").val(riskCloseDate);
+    $('body').on('click', '.editable-open-date', function() {
+        var currentOpenDate = $(this).text();
+        var id = $(this).data('id');
+        var inputHtml = `<input type="date" class="form-control open-date-input" data-id="${id}" value="${currentOpenDate}">`;
+        $(this).replaceWith(inputHtml);
+    });
 
-        anychart.theme('darkBlue');
+    $('body').on('blur', '.open-date-input', function() {
+        var newOpenDate = $(this).val();
+        var id = $(this).data('id');
+        // AJAX call to update the open date
+        updateDateField(id, newOpenDate, '/OTRisk/update_risk_open_date/', '.editable-open-date');
 
-        var rangechart = anychart.area();
-        var credits = rangechart.credits();
-            credits.enabled(false);
-        var series = rangechart.rangeStepArea(rangeData);
-        var yAxis = rangechart.yAxis();
+    });
 
-        yAxis.labels().format('${%Value}');
-        rangechart.container("bulletChartContainer");
-        rangechart.draw();
+    // Editable Risk Close Date
+    $('body').on('click', '.editable-close-date', function() {
+        var currentCloseDate = $(this).text();
+        var id = $(this).data('id');
+        var inputHtml = `<input type="date" class="form-control close-date-input" data-id="${id}" value="${currentCloseDate}">`;
+        $(this).replaceWith(inputHtml);
+    });
 
-        var chartData = [
-            {x: "Safety", value: data.impactSafety},
-            {x: "Danger", value: data.impactDanger},
-            {x: "Production", value: data.impactProduction},
-            {x: "Finance", value: data.impactFinance},
-            {x: "Reputation", value: data.impactReputation},
-            {x: "Environment", value: data.impactEnvironment},
-            {x: "Regulation", value: data.impactRegulation},
-            {x: "Data", value: data.impactData},
-            {x: "Supply", value: data.impactSupply}
-        ];
+    $('body').on('blur', '.close-date-input', function() {
+        var newCloseDate = $(this).val();
+        var id = $(this).data('id');
+        // AJAX call to update the close date
+        updateDateField(id, newCloseDate, '/OTRisk/update_risk_close_date/', '.editable-close-date');
+    });
+    function updateDateField(id, newValue, url, selectorClass) {
+        $.ajax({
+            url: url,
+            method: 'POST',
+            data: {
+                'id': id,
+                'new_value': newValue,
+                'csrfmiddlewaretoken': $('input[name="csrfmiddlewaretoken"]').val()
+            },
+            success: function(response) {
+                var spanHtml = `<span class="${selectorClass.substr(1)}" data-id="${id}">${newValue}</span>`;
+                $('input[data-id="'+id+'"]').replaceWith(spanHtml);
+            },
+            error: function(xhr, status, error) {
+                alert('Error updating date. Please try again.');
+            }
+        });
+    }
 
-        var chart = anychart.column();
-        chart.data(chartData);
-        chart.title("Impact Analysis");
-        var credits = chart.credits();
-            credits.enabled(false);
-        var yAxisScale = anychart.scales.linear();
-        yAxisScale.minimum(0);
-        yAxisScale.maximum(10);
-        var yAxis_ = chart.yAxis();
-        yAxis_.scale(yAxisScale);
-        var xAxis = chart.xAxis();
-        xAxis.labels().rotation(45);
-        chart.container("impactChartContainer");
-        chart.draw();
+});
+
+// Assuming you're using jQuery to handle the click event on your new link
+$('a.generate-plan').on('click', function(e) {
+    e.preventDefault();
+    var riskId = $(this).data('risk-id');
+    $.get('/OTRisk/risk_treatment/' + riskId, function(data) {
+        if (data.create_plan) {
+            Swal.fire({
+                title: 'Generate Risk Treatment Plan?',
+                text: data.message,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, generate it!',
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Call your generate function
+                    $.post('/OTRisk/generate-risk-treatment-plan/' + riskId, function(data) {
+                        // Show the modal with the generated plan
+                        $('#riskTreatmentModal .modal-body').html(data.risk_treatment_plan);
+                        $('#riskTreatmentModal').modal('show');
+                    });
+                }
+            });
+        } else {
+            // Show the modal directly if the plan exists
+            $('#riskTreatmentModal .modal-body').html(data.risk_treatment_plan);
+            $('#riskTreatmentModal').modal('show');
+        }
+    });
+});
+
+function deletefromrr(riskId) {
+    // Use SweetAlert2 to show a confirmation dialog
+    Swal.fire({
+        title: 'Are you sure?',
+        text: "You won't be able to revert this!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, delete it!',
+        cancelButtonText: 'No, cancel!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // User confirmed the action, proceed with the deletion
+            const csrfToken = getCookie('csrftoken'); // Helper function to get CSRF token
+
+            $.ajax({
+                url: `/OTRisk/delete_from_risk_register/${riskId}/`, // Update URL as necessary
+                type: 'POST',
+                data: {
+                    'risk_id': riskId,
+                },
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                },
+                success: function(response) {
+                    // If successful, reload the risk register page
+                    Swal.fire(
+                        'Deleted!',
+                        'The record has been deleted.',
+                        'success'
+                    ).then(() => {
+                        window.location.href = '/OTRisk/risk_register/'; // Redirect to the risk register view
+                    });
+                },
+                error: function(xhr, status, error) {
+                    // Handle error
+                    Swal.fire(
+                        'Failed!',
+                        'Failed to delete the record. Please try again.',
+                        'error'
+                    );
+                }
+            });
+        }
+        // If result.isConfirmed is false, the user clicked "No, cancel!" and the action is cancelled
     });
 }
 
-function clearContainer(containerId) {
-    var container = document.getElementById(containerId);
-
-    // Check if the container is null before proceeding
-    if (container === null) {
-        return;
-    }
-
-    while (container.firstChild) {
-        container.removeChild(container.firstChild);
-    }
-}
-
-function createProbGauge(score) {
-
-    // Remove the '%' character from the score string
-    var scoreStripped = score.replace('%', '');
-
-    // Convert the stripped string to an integer
-    var scoreInt = parseInt(scoreStripped, 10);
-
-    // Now you can use scoreInt in your function
-    var dataSet = anychart.data.set([scoreInt]);
-
-    // Create a circular gauge chart
-    var gauge = anychart.gauges.circular();
-    var credits = gauge.credits();
-    credits.enabled(false);
-    // Set gauge settings
-    gauge.data(dataSet).padding('4%');
-    gauge.startAngle(270);
-    gauge.sweepAngle(180);
-
-    // Set axis scale settings
-    var scale = gauge.axis().scale();
-    scale.minimum(0)
-        .maximum(100)
-        .ticks()
-        .interval(10);
-
-    var needle=gauge.needle();
-    needle.enabled(true);
-    needle.startRadius("10%");
-    needle.endRadius("80%");
-
-    // Set the look of the bar that presents data
-    gauge.bar(0)
-        .position('i')
-        .fill('#F0673B .9')
-        .stroke('#F0673B')
-        .radius(65);
-
-       gauge.range({
-      from: 0,
-      to: 100,
-      fill: {keys: ["green", "yellow", "orange" , "red"]},
-      position: "inside",
-      radius: 100,
-      endSize: "15%",
-      startSize:"15%",
-      zIndex: 10
-  });
-    // Draw the chart
-    gauge.container('gaugeProbContainer').draw();
-}
-
-function createEffectivenessGauge(score) {
-
-    //clearContainer('gaugeContainer');
-    // Create data set with our score
-    var dataSet = anychart.data.set([score]);
-
-    // Create a circular gauge chart
-    var gauge = anychart.gauges.circular();
-    var credits = gauge.credits();
-    credits.enabled(false);
-    // Set gauge settings
-    gauge.data(dataSet).padding('4%');
-    gauge.startAngle(270);
-    gauge.sweepAngle(180);
-
-    // Set axis scale settings
-    var scale = gauge.axis().scale();
-    scale.minimum(0)
-        .maximum(100)
-        .ticks()
-        .interval(10);
-
-    var needle=gauge.needle();
-    needle.enabled(true);
-    needle.startRadius("10%");
-    needle.endRadius("80%");
-
-    // Set the look of the bar that presents data
-    gauge.bar(0)
-        .position('i')
-        .fill('#F0673B .9')
-        .stroke('#F0673B')
-        .radius(65);
-
-       gauge.range({
-      from: 0,
-      to: 100,
-      fill: {keys: ["red", "orange", "yellow", "green"]},
-      position: "inside",
-      radius: 100,
-      endSize: "15%",
-      startSize:"15%",
-      zIndex: 10
-  });
-    // Draw the chart
-    gauge.container('gaugeEffectivenessContainer').draw();
-}
-
-function createLikelihoodGauge(score) {
-
-    //clearContainer('gaugeContainer');
-    // Create data set with our score
-    var dataSet = anychart.data.set([score]);
-
-    // Create a circular gauge chart
-    var gauge = anychart.gauges.circular();
-    var credits = gauge.credits();
-    credits.enabled(false);
-    // Set gauge settings
-    gauge.data(dataSet).padding('4%');
-    gauge.startAngle(270);
-    gauge.sweepAngle(180);
-
-    // Set axis scale settings
-    var scale = gauge.axis().scale();
-    scale.minimum(0)
-        .maximum(100)
-        .ticks()
-        .interval(10);
-
-    var needle=gauge.needle();
-    needle.enabled(true);
-    needle.startRadius("10%");
-    needle.endRadius("80%");
-
-    // Set the look of the bar that presents data
-    gauge.bar(0)
-        .position('i')
-        .fill('#F0673B .9')
-        .stroke('#F0673B')
-        .radius(65);
-
-       gauge.range({
-      from: 0,
-      to: 100,
-      fill: {keys: ["green", "yellow", "orange" , "red"]},
-      position: "inside",
-      radius: 100,
-      endSize: "15%",
-      startSize:"15%",
-      zIndex: 10
-  });
-    // Draw the chart
-    gauge.container('gaugeLikelihoodContainer').draw();
-}
-
-function createResidualRiskGauge(rating) {
-    // Translate the rating to a numerical value
-    var score;
-    switch (rating) {
-        case "Low":
-            score = 10;
-            break;
-        case "Low/Medium":
-            score = 33;
-            break;
-        case "Medium":
-            score = 50;
-            break;
-        case "Medium/High":
-            score = 66;
-            break;
-        case "High":
-            score = 90;
-            break;
-        default:
-            console.error("Invalid rating value");
-            return;
-    }
 
 
-
-    var data = [score];
-    // set the gauge type
-   var gauge = anychart.gauges.linear();
-   gauge.layout('horizontal'); // Set the layout to horizontal
-        var credits = gauge.credits();
-    credits.enabled(false);
-   // set the data for the gauge
-   gauge.data(data);
-
-   var scaleBarColorScale = anychart.scales.ordinalColor().ranges(
-  [
-    {
-      from: 0,
-      to: 25,
-
-        color: ['#CAD70b', '#2AD62A']
-    },
-    {
-      from: 25,
-      to: 50,
-
-        color: ['#FFD700', '#CAD70b']
-    },
-    {
-      from: 50,
-      to: 75,
-      color: ['#EB7A02', '#FFD700']
-    },
-    {
-      from: 75,
-      to: 100,
-       color: ['#D81E05', '#EB7A02']
-    }
-  ]
-);
-var scaleBar = gauge.scaleBar(0);
-
-   // set the height and offset of the Scale Bar (both as percentages of the gauge height)
-   scaleBar.width('15%');
-   scaleBar.offset('31.5%');
-
-   // use the color scale (defined earlier) as the color scale of the Scale Bar
-   scaleBar.colorScale(scaleBarColorScale);
-
-   // add a marker pointer
-   var marker = gauge.marker(0);
-    marker.width(15);
-   // set the offset of the pointer as a percentage of the gauge width
-   marker.offset('43%');
-
-   // set the marker type
-   marker.type('triangle-up');
-   // set the color of the marker to black
-   marker.color('black');
-    // set the zIndex of the marker
-   marker.zIndex(10);
-
-   // configure the scale
-   var scale = gauge.scale();
-   scale.minimum(0);
-   scale.maximum(100);
-   scale.ticks().interval(10);
-
-    var axis = gauge.axis();
-    axis.minorTicks(true)
-    axis.minorTicks().stroke('#cecece');
-    axis.width('1%');
-    axis.offset('29.5%');
-    axis.orientation('top');
-
-    // format axis labels
-    axis.labels().format(function() {
-        if (this.value == 0) return "Low";
-        else if (this.value == 50) return "Medium";
-        else if (this.value == 100) return "High";
-        else return "";  // This will hide other labels
+function showOrGenerateRiskTreatmentPlan(riskId) {
+    $.ajax({
+        url: '/OTRisk/risk_treatment/' + riskId + '/',
+        method: 'GET',
+        dataType: 'json', // Make sure to expect JSON data
+        success: function(response) {
+            // Check if a plan is returned instead of relying on a 'create_plan' flag
+            if (response.risk_treatment_plan) {
+                // Plan exists, show it
+                var mermaidSyntax = convertToMermaid(response.risk_treatment_plan);
+                $('#riskTreatmentModal .modal-body').html('<div class="mermaid">' + mermaidSyntax + '</div>');
+                $('#riskTreatmentModal').on('shown.bs.modal', function () {
+                    mermaid.initialize(mermaidConfig);
+                    mermaid.init(undefined, '.mermaid');
+                });
+                $('#riskTreatmentModal').modal('show');
+            } else {
+                // No plan exists, prompt to create one
+                Swal.fire({
+                    title: 'No risk treatment plan has been generated. Do you wish to create one?',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes',
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        generateRiskTreatmentPlan(riskId);
+                    }
+                });
+            }
+        },
+        error: function() {
+            alert('Failed to check the risk treatment plan. Please try again.');
+        }
     });
-    gauge.width('100%');
-
-
-    gauge.layout();
-   // set paddings
-   gauge.padding([0, 50]);
-
-
-    // Draw the chart
-    gauge.container('gaugeResidualRisk').draw();
 }
+
+var mermaidConfig = {
+    startOnLoad: true,
+    theme: 'default',
+    flowchart: {
+        useMaxWidth: false,
+        htmlLabels: true,
+        curve: 'linear',
+    },
+    themeVariables: {
+        fontSize: '16px',
+        fontFamily: '"Open Sans", sans-serif',
+        nodeBorder: '2px solid #444',
+        primaryColor: '#4F81BD', // Example of changing the node color
+        primaryBorderColor: '#4F81BD',
+        primaryTextColor: '#ffffff',
+        edgeLabelBackground: '#c3c3c3',
+        clusterBkg: '#ffffff',
+        clusterBorder: '#4F81BD',
+        lineColor: '#4F81BD',
+        arrowheadColor: '#4F81BD',
+        nodeBkg: '#4F81BD',
+        nodeMaxWidth: '240px', // Attempting to standardize node width
+    },
+    er: {
+        useMaxWidth: true,
+    },
+    sequence: {
+        useMaxWidth: true,
+    },
+};
+
+
+function generateRiskTreatmentPlan(riskId) {
+    $('#spinnerOverlay').show();
+
+    const csrfToken = getCookie('csrftoken'); // Get CSRF token from cookies
+    $.ajax({
+        url: '/OTRisk/generate_risk_treatment_plan/', // Update with the correct URL
+        method: 'POST',
+        headers: {'X-CSRFToken': csrfToken}, // Add CSRF token to the request header
+        data: {
+            'risk_id': riskId,
+        },
+        success: function(response) {
+            if (response.status === 'success') {
+                 $('#spinnerOverlay').hide();
+                // Display the new plan in the modal's body
+                var mermaidSyntax = convertToMermaid(response.risk_treatment_plan);
+                // Set the Mermaid syntax to the modal's body
+                $('#riskTreatmentModal .modal-body').html('<div class="mermaid">' + mermaidSyntax + '</div>');
+
+                // Initialize or re-render Mermaid diagrams
+                $('#riskTreatmentModal').on('shown.bs.modal', function () {
+                    mermaid.initialize(mermaidConfig);
+                    mermaid.init(undefined, '.mermaid');
+                });
+
+                $('#riskTreatmentModal').modal('show');
+            } else {
+                alert('An error occurred. Please try again.');
+                 $('#spinnerOverlay').hide();
+            }
+        },
+        error: function() {
+            alert('Failed to generate the risk treatment plan. Please try again.');
+             $('#spinnerOverlay').hide();
+        }
+    });
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = jQuery.trim(cookies[i]);
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+function convertToMermaid(riskTreatmentPlan) {
+    let mermaidSyntax = 'graph TD\n';
+    let steps = riskTreatmentPlan.split('\n').filter(line => line.startsWith('- Step'));
+
+    steps.forEach((step, index) => {
+        let [action, description] = step.split('-').slice(1).join('-').trim().split(': ');
+        let header = action.trim();
+        let body = description.trim();
+
+        let currentNode = `Step${index + 1}`;
+        let nextNode = steps[index + 1] ? `Step${index + 2}` : '';
+
+        // Constructing node content with a header and body. The <br> tag is used for line breaks within the node.
+        let nodeContent = `<b>${sanitizeTextForMermaid(header)}</b><br>${sanitizeTextForMermaid(body)}`;
+
+        mermaidSyntax += `${currentNode}("${nodeContent}")`;
+
+        if (nextNode) {
+            mermaidSyntax += ` --> ${nextNode}`;
+        }
+        mermaidSyntax += '\n';
+    });
+
+    return mermaidSyntax;
+}
+
+
+function sanitizeTextForMermaid(text) {
+    // Basic text sanitization for Mermaid compatibility
+    return text.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+
 </script>
 
+
 </div>
-            </div>
  </main>
     </div>
 </div>
+
+<!-- Risk Treatment Plan Modal -->
+<div class="modal fade" id="riskTreatmentModal" tabindex="-1" aria-labelledby="riskTreatmentModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="riskTreatmentModalLabel">Risk Treatment Plan</h5>
+        <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <!-- Content will be loaded dynamically -->
+      </div>
+      <div class="modal-footer">
+       <button type="button" class="btn btn-secondary mt-3" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
 </body>
 </html>

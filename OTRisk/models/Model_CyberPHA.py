@@ -699,6 +699,7 @@ class tblCyberPHAScenario(models.Model):
     risk_rationale = models.TextField(null=True)
     risk_recommendation = models.TextField(null=True)
     cost_justification = models.TextField(null=True)
+    risk_treatment_plan = models.TextField(null=True, blank=True)
 
     class Meta:
         db_table = 'tblCyberPHAScenario'
