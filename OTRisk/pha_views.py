@@ -2229,6 +2229,7 @@ def get_coordinates_from_address(address, country, google_maps_api_key):
 
 
 def air_quality_index(request):
+
     latitude = request.GET.get('lat')
     longitude = request.GET.get('lon')
     address = request.GET.get('address')
@@ -2240,7 +2241,7 @@ def air_quality_index(request):
     if not latitude or not longitude:
         if address and country:
             latitude, longitude = get_coordinates_from_address(address, country,
-                                                               "AIzaSyC9z71m0_5oIR2tg4ygvOt61jCL-IgxlBI")
+                                                               "AIzaSyBJu4p9r_vFL9g5nzctO4yLbNxjK08q4G0")
             if not latitude or not longitude:
                 return JsonResponse({'error': 'Failed to geocode address'}, status=400)
 
