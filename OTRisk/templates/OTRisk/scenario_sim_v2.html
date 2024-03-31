@@ -7,7 +7,7 @@
     <link rel="icon" href="{% static 'images/anzen_owl.png' %}" type="image/x-icon">
 <!-- FontAwesome CDN -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"/>
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
+
 <script src="https://cdn.anychart.com/releases/8.10.0/js/anychart-bundle.min.js"></script>
 <!-- Bootstrap CSS -->
 <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
@@ -54,6 +54,29 @@
 {% bootstrap_javascript %}
 
 <style>
+#checklistContainer {
+        /* Keep the responsive width adjustments */
+        width: 10vw;
+        max-width: 100%; /* Ensures it doesn't overflow its parent container */
+
+        /* Revert the positioning to the original or desired spot */
+        position: absolute; /* Adjust based on your layout's needs */
+        left: initial; /* Or specify the exact position if needed, e.g., '20px' */
+        right: initial; /* Resetting any previously set right value */
+
+        /* Maintain margin, padding, and optional styles for aesthetics */
+        margin-left: 2vw; /* Adjust as necessary for spacing from the left or surrounding content */
+        padding: 10px;
+
+        /* Optional: Add background, border, and shadow for aesthetics */
+        background-color: #464748;
+        border-radius: 0.1vw;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+
+        /* Ensure it's above other content if necessary */
+        z-index: 1;
+    }
+
     #checklistContainer {
     color: white; /* White text color */
 }
@@ -380,9 +403,9 @@ path.connection {
 
 #attack_tree {
     display: flex; /* Use flexbox for centering */
-    justify-content: center; /* Center horizontally */
+    justify-content: left; /* Center horizontally */
     align-items: center; /* Center vertically */
-    overflow: hidden; /* Hide overflow */
+    overflow: auto; /* Hide overflow */
     background-color: #253349; /* Match the image's background color */
     height: 100%; /* Adjust based on your layout needs */
 }
@@ -414,6 +437,67 @@ path.connection {
     height: 1.75em;
     }
 }
+.switch {
+  position: relative;
+  display: block;
+  width: 60px;
+  height: 34px;
+    margin: 0;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider1 {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+
+.slider1:before {
+  position: absolute;
+  content: "";
+  height: 26px;
+  width: 26px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+
+input:checked + .slider1 {
+  background-color: #2196F3;
+}
+
+input:focus + .slider1 {
+  box-shadow: 0 0 1px #2196F3;
+}
+
+input:checked + .slider1:before {
+  -webkit-transform: translateX(26px);
+  -ms-transform: translateX(26px);
+  transform: translateX(26px);
+}
+
+/* Rounded sliders */
+.slider1.round {
+  border-radius: 34px;
+}
+
+.slider1.round:before {
+  border-radius: 50%;
+}
+
 </style>
 </head>
 <body style="background-color: #464748">
@@ -479,8 +563,8 @@ document.addEventListener("DOMContentLoaded", function() {
                     </div>
                     <div class="col-md-1">
                         <button id="newScenarioBtn" class="btn nav-link">New Scenario</button>
-                        <script>
-                            document.getElementById('newScenarioBtn').addEventListener('click', function() {
+<script>
+document.getElementById('newScenarioBtn').addEventListener('click', function() {
                                 swal.fire({
                                     title: "Are you sure?",
                                     html: "Any unsaved changed data will be lost. Proceed?",
@@ -510,6 +594,12 @@ document.addEventListener("DOMContentLoaded", function() {
                                         $('#bia_groups').empty();
                                         $('#investmentImpactVisualization').empty();
                                         $('#attack_tree').empty();
+                                        document.getElementById('analyzeConsequencesCheckbox').checked = false;
+                                        document.getElementById('analyzeAttackTreeCheckbox').checked = false;
+                                        document.getElementById('analyzeScenarioCheckbox').checked = false;
+                                        document.getElementById('analyzeCostsCheckbox').checked = false;
+                                        document.getElementById('analyzeToolsCheckbox').checked = false;
+                                        document.getElementById('analyzeIncidentsCheckbox').checked = false;
                                         // Add more lines as needed for other inputs you wish to clear
 
                                         swal.fire({
@@ -530,7 +620,374 @@ document.addEventListener("DOMContentLoaded", function() {
                                     }
                                 });
                             });
-                            </script>
+
+function abbreviateValue(value) {
+    var newValue = value;
+    if (value >= 1000 && value < 1000000) {
+        newValue = "$" + (value / 1000).toFixed(1) + "k"; // Thousands
+    } else if (value >= 1000000) {
+        newValue = "$" + (value / 1000000).toFixed(1) + "m"; // Millions
+    } else {
+        newValue = "$" + value; // Less than 1000
+    }
+    return newValue;
+}
+
+function adjustScaleForContainer(svgElement, container) {
+    const svgRect = svgElement.getBoundingClientRect();
+    const containerRect = container.getBoundingClientRect();
+
+    // Find the scaling factor needed to fit the SVG within the container
+    const scaleX = containerRect.width / svgRect.width;
+    const scaleY = containerRect.height / svgRect.height;
+    const scale = Math.min(scaleX, scaleY, 1); // Ensure scale is not more than 1
+
+    return scale;
+}
+
+function convertSVGToPNG(svgElement, scale = 0.5) {
+    var xmlSerializer = new XMLSerializer();
+    var svgString = xmlSerializer.serializeToString(svgElement);
+
+    var canvas = document.createElement('canvas');
+    var ctx = canvas.getContext('2d');
+
+    var devicePixelRatio = window.devicePixelRatio || 1;
+    // No need to adjust scale here since we're fitting the image to the container
+    canvas.width = svgElement.getBoundingClientRect().width * devicePixelRatio;
+    canvas.height = svgElement.getBoundingClientRect().height * devicePixelRatio;
+
+    // Adjust the drawing scale for device pixel ratio to enhance clarity
+    ctx.scale(devicePixelRatio, devicePixelRatio);
+
+    var DOMURL = window.URL || window.webkitURL || window;
+    var img = new Image();
+    var svgBlob = new Blob([svgString], {type: 'image/svg+xml;charset=utf-8'});
+    var url = DOMURL.createObjectURL(svgBlob);
+
+    img.onload = function () {
+        ctx.drawImage(img, 0, 0);
+        DOMURL.revokeObjectURL(url);
+
+        var imgURI = canvas.toDataURL('image/png');
+
+        var container = document.getElementById('attack_tree');
+        if (container) {
+            container.innerHTML = ''; // Clear previous content
+
+            var pngImage = new Image();
+            pngImage.src = imgURI;
+            // Ensure the image fits within the container
+            pngImage.style.maxWidth = '100%';
+            pngImage.style.maxHeight = '100%';
+            pngImage.style.objectFit = 'contain'; // Image will be scaled to maintain its aspect ratio
+
+            container.appendChild(pngImage);
+        } else {
+            console.error('Container for the PNG image not found.');
+        }
+    };
+
+    img.src = url;
+}
+function drawAttackTree(data) {
+
+        //$('#tab9').addClass('active').show();
+        document.querySelector('a[data-tab="tab9"]').click();
+        var container = document.getElementById('attack_tree');
+        var containerWidth = container.clientWidth;
+        var svgWidth = containerWidth * 0.7;
+        var margin = { top: 20, right: 10, bottom: 20, left: 120 };
+        var width = svgWidth - margin.left - margin.right;
+        var height = 800; // Increased height for better resolution
+
+        d3.select(container).selectAll("svg").remove();
+
+        var svg = d3.select(container).append("svg")
+            .attr("width", "100%")
+            .attr("viewBox", "0 0 " + svgWidth + " " + height)
+            .attr("height", height)
+            .style("display", "block")
+            .style("margin", "auto")
+            .style("background-color", "#253349C0") // Set the background color
+            .append("g")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+        var i = 0,
+            duration = 750,
+            root;
+
+    var treemap = d3.tree()
+        .size([height, width - margin.left - margin.right])
+        .separation(function(a, b) { return (a.parent == b.parent ? 1 : 2); });
+
+    root = d3.hierarchy(data, function(d) { return d.children; });
+    root.x0 = height / 2;
+    root.y0 = 0;
+
+    // Color-blind-friendly color scale
+    var colorScale = d3.scaleOrdinal(["#88CCEE", "#DDCC77", "#CC6677", "#882255", "#44AA99", "#117733", "#999933", "#AA4499"]);
+
+    update(root);
+
+    function update(source) {
+        var treeData = treemap(root);
+
+        var nodes = treeData.descendants(),
+            links = treeData.descendants().slice(1);
+
+        nodes.forEach(function(d) { d.y = d.depth * 180 });
+
+        var node = svg.selectAll('g.node')
+            .data(nodes, function(d) { return d.id || (d.id = ++i); });
+
+        var nodeEnter = node.enter().append('g')
+            .attr('class', 'node')
+            .attr("transform", function(d) { return "translate(" + d.y + "," + d.x + ")"; });
+
+        nodeEnter.append('circle')
+            .attr('r', 10)
+            .style("stroke", "black")
+            .style("stroke-width", 1.5)
+            .style("fill", function(d) { return colorScale(d.depth); });
+
+        nodeEnter.append('text')
+            .style("fill", "#FFFFFF") // Set label color to white
+            .style("font-size", "0.8em")
+            .style("font-weight", "bold")
+            .attr("transform", "rotate(-10)")
+            .attr("dy", ".30em")
+            .attr("x", function(d) { return d.children ? -13 - this.getComputedTextLength() : 13; })
+            .attr("text-anchor", function(d) { return d.children ? "end" : "start"; })
+            .text(function(d) { return d.data.name; });
+
+        var link = svg.selectAll('path.link')
+            .data(links, function(d) { return d.id; });
+
+        link.enter().insert('path', "g")
+            .attr("class", "link")
+            .style("stroke", "#96C5ECC0") // Set line color
+            .style("stroke-width", 2)
+            .style("fill", "none")
+            // Removed the arrow marker reference
+            .attr('d', function(d) {
+                return "M" + d.y + "," + d.x
+                    + "C" + (d.y + d.parent.y) / 2 + "," + d.x
+                    + " " + (d.y + d.parent.y) / 2 + "," + d.parent.x
+                    + " " + d.parent.y + "," + d.parent.x;
+            });
+    }
+
+            sessionStorage.setItem('attackTreeDrawn', 'true');
+            var svgElement = container.querySelector('svg');
+            const scale = adjustScaleForContainer(svgElement, document.getElementById('attack_tree'));
+            // Pass it to the convertSVGToPNG function
+            //convertSVGToPNG(svgElement, 0.5); // Adjust the scale as needed
+            var attackTreeDiv = document.getElementById('attack_tree')
+
+
+        }
+
+function createCostChart(containerId, costArray) {
+    var data = [];
+    for (let i = 0; i < costArray.length; i++) {
+        data.push({x: `Month ${i + 1}`, value: costArray[i]});
+    }
+
+    // Ensure the chart library is ready before creating the chart
+    anychart.onDocumentReady(function() {
+        // Clear the container before creating a new chart
+        document.getElementById(containerId).innerHTML = '';
+
+        var chart = anychart.column();
+        chart.data(data);
+
+        // Set the chart title
+        chart.title("Monthly Cost Estimates");
+
+        // Customize the X-axis labels
+        var xAxis = chart.xAxis();
+        xAxis.title("Month");
+        xAxis.labels()
+            .rotation(-70) // Angle the labels
+            .fontSize(10); // Smaller font size
+
+        // Customize the Y-axis
+        var yAxis = chart.yAxis();
+        yAxis.title("Cost in USD");
+
+        var series = chart.getSeries(0);
+        series.labels(true);
+        series.labels()
+            .position("above")
+            .anchor("centerBottom")
+            .fontSize(10)
+            .format(function() {
+                return abbreviateValue(this.value);
+            });
+
+        // Optionally disable credits if needed
+        var credits = chart.credits();
+        credits.enabled(false);
+
+        // Draw the chart in the specified container
+        chart.container(containerId);
+        chart.draw();
+    });
+}
+function loadScenarioDetails(scenarioId) {
+    document.getElementById('analyzeConsequencesCheckbox').checked = false;
+    document.getElementById('analyzeAttackTreeCheckbox').checked = false;
+    document.getElementById('analyzeScenarioCheckbox').checked = false;
+    document.getElementById('analyzeCostsCheckbox').checked = false;
+    document.getElementById('analyzeToolsCheckbox').checked = false;
+    document.getElementById('analyzeIncidentsCheckbox').checked = false;
+    isProgrammaticChange = true;
+    $.ajax({
+        url: `/OTRisk/retrieve_scenario_builder/${scenarioId}`,
+        type: "GET",
+        success: function(response) {
+
+        $('#txtScenario').val(response.scenario_description);
+        $('#txtConsequences').val(response.consequences);
+        var costs = response.costs;
+        $('#txtBestCase').val(costs.bestCase); // Set best case cost
+        $('#txtMostLikelyCase').val(costs.mostLikelyCase); // Set most likely case cost
+        $('#txtWorstCase').val(costs.worstCase); // Set worst case cost
+        var decodedText = atob(response.investment_projection);
+        $('#txthdninvestmentstring').val(response.investment_projection);
+        $('#selIndustry').val(response.industry).trigger('change');
+        $('#selFacilityType').val(response.facility).trigger('change');
+        $('#countrySelector').val(response.country).trigger('change');
+        $('#selOrganizationSize').val(response.org).trigger('change');
+        $('#selRegulatoryEnvironment').val(response.regs).trigger('change');
+        $('#selThreats').val(response.attacker);
+        $('#selVectors').val(response.vector);
+        $('#targetComponent').val(response.target);
+        $('#attackEffect').val(response.effect);
+        $('#targetSystem').val(response.network);
+        $('#impact').val(response.impact);
+        $('#motivation').val(response.motivation);
+        renderInvestmentImpact(decodedText);
+
+        var costArray = response.cost_projection.split('|').map(Number);
+        createCostChart('monthly_cost_chart', costArray);
+
+        $('#hdnAT').val(response.attack_tree_data);
+
+        var jsonObject = JSON.parse(response.attack_tree_data);
+        drawAttackTree(jsonObject);
+
+        // Clear existing BIA groups content
+        var biaGroupsContainer = document.getElementById('bia_groups');
+        biaGroupsContainer.innerHTML = '';
+
+        var factors = response.factors; // Assuming this is the object structure as described
+        var factorKeys = Object.keys(factors); // Get all factor names as an array
+        var rows = []; // To keep track of the rows of BIA groups
+
+        factorKeys.forEach(function(factor, index) {
+        // Create a new row every 3 items
+        if (index % 3 === 0) {
+        var row = document.createElement('div');
+        row.className = 'row';
+        rows.push(row);
+        }
+
+        // Create the group container
+        var groupContainer = document.createElement('div');
+        groupContainer.className = 'group-container col-md-4';
+
+        // Create the group header
+        var groupHeader = document.createElement('div');
+        groupHeader.className = 'group-header';
+        var icon = document.createElement('img');
+        // Determine the icon based on the score
+        var factorData = factors[factor]; // Get the data for this factor
+        if (factorData.score > 7) {
+            icon.src = "{% static 'images/redcube.png' %}";
+        } else if (factorData.score > 4) {
+            icon.src = "{% static 'images/yellow_cube.png' %}";
+        } else {
+            icon.src = "{% static 'images/green_cube.png' %}";
+        }
+        icon.className = 'cube-icon';
+        icon.alt = 'cube_icon'; // Adjust the alt text as needed
+        groupHeader.appendChild(icon);
+        var headerText = document.createTextNode(factor); // factor is the key from factors object
+        groupHeader.appendChild(headerText);
+        groupContainer.appendChild(groupHeader);
+
+        // Create the group body
+        var groupBody = document.createElement('div');
+        groupBody.className = 'group-body';
+        // Display the score in bold text out of 10
+        var scoreText = document.createElement('strong');
+        scoreText.textContent = factorData.score + '/10. ';
+        groupBody.appendChild(scoreText);
+        var narrativeText = document.createTextNode(factorData.narrative);
+        groupBody.appendChild(narrativeText);
+        groupContainer.appendChild(groupBody);
+
+        // Add the group container to the current row
+        rows[rows.length - 1].appendChild(groupContainer);
+
+        // Add the row to the biaGroupsContainer if it's full (3 items) or if it's the last item
+        if ((index + 1) % 3 === 0 || index === factorKeys.length - 1) {
+        biaGroupsContainer.appendChild(rows[rows.length - 1]);
+        }
+        });
+        // Populate table data, costs, and other fields similarly
+        isProgrammaticChange = false;
+        Swal.fire({
+            title: "Scenario loaded successfully",
+            imageUrl: '/static/images/anzen_owl.png', // Make sure the path is correct
+            imageWidth: 150, // Adjust as necessary
+            imageHeight: 150, // Adjust as necessary
+            background: '#000', // Black background
+            color: '#fff', // Set text color to white
+            customClass: {
+            popup: 'swal2-custom-border' // Apply custom class to the popup/dialog
+        }
+        }
+        );
+
+        },
+        error: function(xhr, status, error) {
+        console.error('Error loading scenario:', error);
+        }
+        });
+}
+
+function fetchAndDisplayScenarios() {
+$.ajax({
+url: "/OTRisk/list_scenario_builders/", // Adjust the URL to your backend endpoint
+type: "GET",
+success: function(response) {
+const scenarios = response.scenarios;
+const scenarioList = $('#scenarioList');
+scenarioList.empty(); // Clear existing items
+scenarios.forEach(function(scenario) {
+scenarioList.append(`
+<li class="list-group-item d-flex align-items-center scenario-item" data-id="${scenario.id}">
+<i class="bi bi-file-earmark-text mr-2"></i> ${scenario.scenario_name}
+</li>
+`);
+});
+$('.scenario-item').click(function() {
+const scenarioId = $(this).data('id');
+loadScenarioDetails(scenarioId); // Function to load selected scenario details
+$('#scenarioSelectionModal').modal('hide');
+});
+$('#scenarioSelectionModal').modal('show');
+},
+error: function(xhr, status, error) {
+console.error('Error fetching scenarios:', error);
+}
+});
+}
+
+</script>
 
 
                     </div>
@@ -548,42 +1005,79 @@ document.addEventListener("DOMContentLoaded", function() {
                     <div class="col-md-1">
                        <button id="saveScenarioBtn" class="btn nav-link">Save Scenario</button>
                         <script>
-                            document.getElementById('saveScenarioBtn').addEventListener('click', function() {
+                        document.getElementById('saveScenarioBtn').addEventListener('click', function() {
+                            var scenarioText = document.getElementById('txtScenario').value.trim();
+                            var facility_type = document.getElementById('selFacilityType').value.trim();
+                            var industry = document.getElementById('selIndustry').value.trim();
+                            var threat_actor = document.getElementById('selThreats').value.trim();
+                            var attack_vector = document.getElementById('selVectors').value.trim();
+
+                            // Check for the presence of the necessary values
+                            if (!scenarioText || !facility_type || !industry || !threat_actor || !attack_vector) {
+                                // Inform the user that more information is needed
                                 Swal.fire({
-                                    title: 'Please enter a name for this scenario:',
-                                    input: 'text',
+                                    title: 'Incomplete Data',
+                                    text: 'Please provide a complete scenario, select a facility type, industry, threat actor, and attack vector before saving.',
                                     iconHtml: '<img src="/static/images/anzen_owl.png" width="100px">',
                                     imageWidth: 150, // Adjust as necessary
                                     imageHeight: 150, // Adjust as necessary
                                     background: '#000', // Black background
                                     color: '#fff', // Set text color to white
-                                    inputAttributes: {
-                                        autocapitalize: 'off'
-                                    },
-                                    showCancelButton: true,
-                                    confirmButtonText: 'Save',
-                                    showLoaderOnConfirm: true,
+                                    confirmButtonText: 'OK',
                                     customClass: {
-                                        popup: 'swal2-custom-border' // Apply custom class to the popup/dialog
-                                    },
-                                    preConfirm: (scenarioName) => {
-                                        if (!scenarioName) {
-                                            Swal.showValidationMessage(`Please enter a scenario name.`);
-                                        }
-                                        return scenarioName; // You might want to call saveScenario(scenarioName) here or handle it outside.
-                                    },
-                                    allowOutsideClick: () => !Swal.isLoading()
-                                }).then((result) => {
-                                    if (result.isConfirmed && result.value) {
-                                        saveScenario(result.value);
+                                        popup: 'swal2-custom-border'
                                     }
                                 });
+                                document.querySelector('a[data-tab="tab2"]').click();
+                                return; // Exit the function early
+                            }
+
+
+                            Swal.fire({
+                                title: 'Please enter a name for this scenario:',
+                                input: 'text',
+                                iconHtml: '<img src="/static/images/anzen_owl.png" width="100px">',
+                                imageWidth: 150, // Adjust as necessary
+                                imageHeight: 150, // Adjust as necessary
+                                background: '#000', // Black background
+                                color: '#fff', // Set text color to white
+                                inputAttributes: {
+                                    autocapitalize: 'off'
+                                },
+                                showCancelButton: true,
+                                confirmButtonText: 'Save',
+                                showLoaderOnConfirm: true,
+                                customClass: {
+                                    popup: 'swal2-custom-border' // Apply custom class to the popup/dialog
+                                },
+                                preConfirm: (scenarioName) => {
+                                    if (!scenarioName) {
+                                        Swal.showValidationMessage(`Please enter a scenario name.`);
+                                    }
+                                    return scenarioName; // You might want to call saveScenario(scenarioName) here or handle it outside.
+                                },
+                                allowOutsideClick: () => !Swal.isLoading()
+                            }).then((result) => {
+                                if (result.isConfirmed && result.value) {
+                                    saveScenario(result.value);
+                                }
                             });
-                            </script>
+                        });
+                        </script>
 
 
                     </div>
                     <div class="col-md-4"></div>
+                </div>
+               <div class="row">
+                    <div class="col-md-2"></div>
+                    <div class="col-md-8">
+                        <div class="progress" style="display:none;" id="loadingProgressBar">
+                            <div class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" id="progressBarInner"></div>
+                        </div>
+                        <span id="progressBarMessage" style="display:block; text-align:center; margin-top:5px;"></span> <!-- Adjust styling as needed -->
+                    </div>
+                    <div class="col-md-2"></div>
                 </div>
             </div>
         <div class="sub-menu">
@@ -599,6 +1093,7 @@ document.addEventListener("DOMContentLoaded", function() {
             <li><a href="#" data-tab="tab7">Business Impact</a></li>
             <li><a href="#" data-tab="tab8">Tools/Software Analysis</a></li>
             <li><a href="#" data-tab="tab9">Attack Tree</a></li>
+            <li><a href="#" data-tab="tab10">Related Incidents</a></li>
         </ul>
     </div>
 
@@ -606,15 +1101,27 @@ document.addEventListener("DOMContentLoaded", function() {
     <div class="custom-main-content" >
 
     <div id="checklistContainer">
+         <div class="form-group">
         <div>
             <input type="checkbox" id="analyzeConsequencesCheckbox" class="custom-checkbox" disabled> Analyze Consequences
         </div>
         <div>
-            <input type="checkbox" id="generateAttackTreeCheckbox" class="custom-checkbox" disabled> Generate Attack Tree
+            <input type="checkbox" id="analyzeAttackTreeCheckbox" class="custom-checkbox" disabled> Generate Attack Tree
         </div>
         <div>
             <input type="checkbox" id="analyzeScenarioCheckbox" class="custom-checkbox" disabled> Business Impact Analysis
         </div>
+        <div>
+            <input type="checkbox" id="analyzeCostsCheckbox" class="custom-checkbox" disabled> Estimate Event Costs
+        </div>
+        <div>
+            <input type="checkbox" id="analyzeToolsCheckbox" class="custom-checkbox" disabled> Analyze Tools & Software
+        </div>
+        <div>
+            <input type="checkbox" id="analyzeIncidentsCheckbox" class="custom-checkbox" disabled> Find Related Incidents
+
+        </div>
+         </div>
     </div>
 
     <div class="tab-content active" id="tab1">
@@ -660,7 +1167,7 @@ document.addEventListener("DOMContentLoaded", function() {
                         <div class="card mb-2 shadow-sm">
                             <div class="card-body">
                                 <label for="selIndustry" style="color:black"><img src="{% static 'images/icon_industry.png' %}" alt="" class="align-bottom" style="max-height: 1.5rem; margin-left: 5px;" > Industry</label>
-                                <select class="form-control" name="selIndustry" id="selIndustry" style="color:black">
+                                <select class="form-control" name="selIndustry" id="selIndustry" style="color:black; width:100%">
                                     <option value=""> -- Select Industry -- </option>
                                     {% for industry in industries %}
                                     <option value="{{ industry.Industry }}"
@@ -674,7 +1181,7 @@ document.addEventListener("DOMContentLoaded", function() {
                         <div class="card mb-2 shadow-sm">
                             <div class="card-body">
                                 <label for="selFacilityType" style="color:black"><img src="{% static 'images/function.png' %}" alt="" class="align-bottom" style="max-height: 1.5rem; margin-left: 5px;"> Facility Type</label>
-                                <select class="form-control" name="selFacilityType" id="selFacilityType">
+                                <select class="form-control" name="selFacilityType" id="selFacilityType" style="color:black; width:100%">
                                     <option value=""> -- Select Facility Type -- </option>
                                     {% for facilities in facilities %}
                                         <option value="{{ facilities.FacilityType }}"
@@ -687,13 +1194,13 @@ document.addEventListener("DOMContentLoaded", function() {
                         <div class="card mb-2 shadow-sm">
                             <div class="card-body">
                                 <label for="countrySelector" style="color:black"><img src="{% static 'images/icon_world.png' %}" alt="" class="align-bottom" style="max-height: 1.5rem; margin-left: 5px;"> Country</label>
-                                <select class="form-control" id="countrySelector" name="countrySelector" ></select>
+                                <select class="form-control" id="countrySelector" name="countrySelector" style="color:black; width:100%"></select>
                             </div>
                         </div>
                         <div class="card mb-2 shadow-sm">
                             <div class="card-body">
                                 <label for="selOrganizationSize" style="color:black"><img src="{% static 'images/icon_group.png' %}" alt="" class="align-bottom" style="max-height: 1.5rem; margin-left: 5px;"> Organization Size</label>
-                                <select class="form-control" id="selOrganizationSize" name="selOrganizationSize">
+                                <select class="form-control" id="selOrganizationSize" name="selOrganizationSize" style="color:black; width:100%">
                                     <option value=""> -- Select Organization Size -- </option>
                                     <option value="Small, 50-200 employees">Small, 50-200 employees</option>
                                     <option value="Medium-sized, 200-1000 employees">Medium-sized, 200-1000 employees</option>
@@ -705,7 +1212,7 @@ document.addEventListener("DOMContentLoaded", function() {
                         <div class="card mb-2 shadow-sm">
                                 <div class="card-body">
                                     <label for="selRegulatoryEnvironment" style="color:black"><img src="{% static 'images/icon_regulation.png' %}" alt="" class="align-bottom" style="max-height: 1.5rem; margin-left: 5px;"> Regulatory Environment</label>
-                                    <select class="form-control" id="selRegulatoryEnvironment" name="selRegulatoryEnvironment">
+                                    <select class="form-control" id="selRegulatoryEnvironment" name="selRegulatoryEnvironment" style="color:black; width:100%">
                                         <option value=""> -- Select Regulatory Environment -- </option>
                                         <option value="Strict Regulation">Strict Regulation</option>
                                         <option value="Moderate Regulation">Moderate Regulation</option>
@@ -757,6 +1264,37 @@ document.addEventListener("DOMContentLoaded", function() {
 
             <label for="motivation">Attack Motivation:</label>
             <input type="text" class="form-control" id="motivation" name="motivation">
+                <br>
+
+                <div class="row">
+                <div class="col-md-3">
+                    <div class="form-group">
+                    <label class="switch-label">Active Operations</label>
+                    <label class="switch">
+                    <input for="active_ops" type="checkbox" id="active_ops" name="active_ops">
+                    <span class="slider1 round"></span>
+                    </label>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                    <label class="switch-label">Cyber Insurance Cover</label>
+                    <label class="switch">
+                    <input for="cyber_insurance" type="checkbox" id="cyber_insurance" name="cyber_insurance">
+                    <span class="slider1 round"></span>
+                    </label>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                    <label class="switch-label">Business Continuity Plan</label>
+                    <label class="switch">
+                    <input for="bc_plan" type="checkbox" id="bc_plan" name="bc_plan">
+                    <span class="slider1 round"></span>
+                    </label>
+                    </div>
+                </div>
+                </div>
 
         </form>
             </div>
@@ -771,10 +1309,28 @@ document.addEventListener("DOMContentLoaded", function() {
         <div class="form-group">
             <label style="color:white">List purchases that have been, or are planned to be, made for OT Cybersecurity risk mitigation</label>
             <div class="table-responsive">
+            <script>
+                $(document).ready(function() {
+  $("#addRow").click(function() {
+    var newRow = `<tr>
 
+      <td><input type="text" name="vendor_name[]" class="form-control" /></td>
+      <td><input type="text" name="product_name[]" class="form-control" /></td>
+      <td><input type="number" name="cost[]" class="form-control" step="0.01" /></td>
+      <td><input type="date" name="date[]" class="form-control" /></td>
+      <td><button type="button" class="btn btn-danger removeRow">Remove</button></td>
+    </tr>`;
+    $("#investmentTable tbody").append(newRow);
+  });
+
+  $(document).on('click', '.removeRow', function() {
+    $(this).closest('tr').remove();
+  });
+});
+            </script>
           <table class="table" id="investmentTable">
             <colgroup>
-                  <col span="1" style="width: 10%;"> <!-- Type -->
+
                   <col span="1" style="width: 25%;"> <!-- Vendor Name -->
                   <col span="1" style="width: 25%;"> <!-- Product Name -->
                   <col span="1" style="width: 15%;"> <!-- Cost -->
@@ -783,7 +1339,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 </colgroup>
             <thead>
               <tr>
-                <th>Type</th>
+
                 <th>Vendor Name</th>
                 <th>Product Name</th>
                 <th>Cost</th>
@@ -793,12 +1349,6 @@ document.addEventListener("DOMContentLoaded", function() {
             </thead>
             <tbody>
               <tr>
-
-                <td><select name="investment_type[]" class="form-control">
-                    <option value="Software">Software</option>
-                    <option value="Appliance">Appliance</option>
-                    </select>
-                </td>
 
                 <td><input type="text" name="vendor_name[]" class="form-control" /></td>
                 <td><input type="text" name="product_name[]" class="form-control" /></td>
@@ -825,68 +1375,99 @@ document.addEventListener("DOMContentLoaded", function() {
             <div class="form-group">
             <label for="txtScenario">Review and edit the scenario text then click "Execute Analysis"</label>
             <textarea id="txtScenario" class='form-control' rows=11 placeholder='Enter a detailed cybersecurity scenario or click the button above to use the scenario builder...' style="resize: none; border: 3px #97979A; border-radius: 10px; box-shadow: inset 3px 3px 8px rgba(0, 0, 0, 0.5); padding: 20px; background-color: white"></textarea>
+             <a href="#" id="undoScenario" style="display:none; cursor: pointer; color:#ffffff">Undo</a>
             </div>
-                <script>
+<script>
 
-                // Ensure DOM is fully loaded before executing the script
-                document.addEventListener('DOMContentLoaded', function() {
-                var txtScenarioElement = document.getElementById('id_txtScenario');
-                if (txtScenarioElement) {
-                    txtScenarioElement.addEventListener('input', function() {
-                        provideSuggestions(this.value);
-                    });
-                }
+// Ensure DOM is fully loaded before executing the script
+document.addEventListener('DOMContentLoaded', function() {
+var txtScenarioElement = document.getElementById('id_txtScenario');
+if (txtScenarioElement) {
+    txtScenarioElement.addEventListener('input', function() {
+        provideSuggestions(this.value);
+    });
+}
+});
 
-                function provideSuggestions(inputText) {
-                    var lowerCaseInputText = inputText.toLowerCase(); // Convert input text to lower case
-                    var suggestionsDiv = document.getElementById('suggestions');
-                    suggestionsDiv.innerHTML = ""; // Clear current suggestions
+$(document).ready(function() {
+var tab2Changed = false; // Flag to track changes in Tab 1
+var isProgrammaticChange = false;
 
-                    // Function to add suggestion messages
-                    function addSuggestion(message) {
-                        suggestionsDiv.innerHTML += "<p>" + message + "</p>";
-                    }
+// Attach change listeners to all inputs and selects within Tab 1
+$('#tab2 input, #tab2 select').change(function() {
+    if (!isProgrammaticChange) { // Check if change is not programmatic
+        tab2Changed = true;
+    }
+});
 
-                    // Check for various keywords and add suggestions
-                    if (lowerCaseInputText.includes("malware")) {
-                        addSuggestion("Consider describing the type of malware and its impact on the device.");
-                    }
-                    if (lowerCaseInputText.includes("plc")) {
-                        addSuggestion("Include the vendor and name of the PLC if known.");
-                    }
-                    if (lowerCaseInputText.includes("erp")) {
-                        addSuggestion("Include the name and version of the ERP system.");
-                    }
-                    if (lowerCaseInputText.includes("scada")) {
-                        addSuggestion("Include the name and version of the SCADA system if known.");
-                    }
-                    if (lowerCaseInputText.includes("temperature")) {
-                        addSuggestion("Include relevant temperature ranges or tolerances.");
-                    }
-                    if (lowerCaseInputText.includes("pressure")) {
-                        addSuggestion("Include relevant pressure tolerances and ranges.");
-                    }
-                    if (lowerCaseInputText.includes("software")) {
-                        addSuggestion("Include name and version of software if known.");
-                    }
-                    if (lowerCaseInputText.includes("windows")) {
-                        addSuggestion("Include the version of Windows.");
-                    }
-                    if (lowerCaseInputText.includes("unix")) {
-                        addSuggestion("Include the version of Unix.");
-                    }
-                    if (lowerCaseInputText.includes("sensor")) {
-                        addSuggestion("Include the type of sensor and the parameters that it monitors.");
-                    }
-                    if (lowerCaseInputText.includes("protocol")) {
-                        addSuggestion("Include information aboput the protocol used and the endpoints that are connected.");
-                    }
-                }
+$('.sub-menu a').click(function(e) {
+    e.preventDefault();
 
+    // Remove 'active' class from all tabs
+    $('.tab-content').removeClass('active');
 
+    // Add 'active' class to clicked tab
+    var tabId = $(this).attr('data-tab');
+    $('#' + tabId).addClass('active');
+    var currentScenarioText = $('#txtScenario').val();
+    // Check if the Scenario tab was clicked
+    if ($(this).attr('id') === 'scenarioTabLink') {
+         if (tab2Changed && !isProgrammaticChange) {
+             // Proceed with AJAX call only if changes were made in Tab 1
+                document.getElementById('spinner').style.display = 'block';
+                var formData = {
+                    'attacker': $('#selThreats').val(),
+                    'attackVector': $('#selVectors').val(),
+                    'targetComponent': $('#targetComponent').val(),
+                    'attackEffect': $('#attackEffect').val(),
+                    'targetSystem': $('#targetSystem').val(),
+                    'impact': $('#impact').val(),
+                    'motivation': $('#motivation').val(),
+                    'facility_type': $('#selFacilityType').val(),
+                    'industry': $('#selIndustry').val(),
+                    'regulations': $('#selRegulatoryEnvironment').val(),
+                    'active_ops': $('#active_ops').is(':checked'),
+                    'cyber_insurance': $('#cyber_insurance').is(':checked'),
+                    'bc_plan': $('#bc_plan').is(':checked'),
+                    'csrfmiddlewaretoken': '{{ csrf_token }}'
+                };
+                $('#undoScenario').show().off('click').on('click', function() {
+                // Restore the scenario text and hide the "undo" link
+                $('#txtScenario').val(currentScenarioText);
+                $(this).hide();
+                return false;
+            });
+                $.ajax({
+                    url: "{% url 'OTRisk:generate_scenario_description_v2' %}",
+                    type: 'POST',
+                    data: formData,
+                    success: function(response) {
+                        if (response.scenario_description) {
+                            $('#txtScenario').val(response.scenario_description);
+                        } else {
+                            $('#txtScenario').val('No scenario description available.');
+                        }
+                        $('#scenarioBuilderModal').modal('hide');
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Error generating scenario:', error);
+                    },
+                    complete: function() {
+                        // Hide the spinner and reset the flag
+                        document.getElementById('spinner').style.display = 'none';
+                        tab2Changed = false;
+                    }
                 });
+        } else {
+            document.getElementById('spinner').style.display = 'none';
+        }
 
-    </script>
+        tab2Changed = false;
+    }
+});
+});
+
+</script>
                 </div>
 
 
@@ -902,7 +1483,9 @@ document.addEventListener("DOMContentLoaded", function() {
                     <textarea id="txtConsequences" class='form-control' rows=11 placeholder='' style="resize: none; border: 3px #97979A; border-radius: 10px; box-shadow: inset 3px 3px 8px rgba(0, 0, 0, 0.5); padding: 20px; background-color: white"></textarea>
                 </div>
             </div>
+
         </div>
+
     </div>
 
     <div class="tab-content" id="tab6">
@@ -967,12 +1550,15 @@ document.addEventListener("DOMContentLoaded", function() {
             <div id="attack_tree" style="width:100%"></div>
         </div>
     </div>
+    <div class="tab-content" id="tab10">
+        <h2>Related Incidents</h2>
+        <div class="form-group">
+            <span id="related_incidents"></span>
+            <input type="hidden" id="hdnIncidents">
+        </div>
+    </div>
 </div>
 </div>
-
-
-
-
 
 <script>
     $(document).ready(function() {
@@ -1001,71 +1587,7 @@ document.addEventListener("DOMContentLoaded", function() {
     </div>
     <div class="col-md-1"></div>
 </div>
-<!-- Modal -->
-<div class="modal fade" id="scenarioBuilderModal" tabindex="-1" role="dialog" aria-labelledby="scenarioBuilderModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="scenarioBuilderModalLabel">OT Cybersecurity Scenario Builder</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 
-      </div>
-      <div class="modal-body">
-        <form id="scenarioForm">
-          <div class="form-group">
-            <label for="selThreats" style="color: white">Attacker/Bad Actor:</label>
-            <select class="form-control" name="selThreats" id="selThreats" >
-                <option value=""> -- Select Attacker -- </option>
-                {% for threats in threats %}
-                <option value="{{ threats.ThreatSource }}">
-
-                    {{ threats.ThreatSource }}
-                </option>
-                {% endfor %}
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="selVectors" style="color: white">Attack Vector:</label>
-            <select class="form-control" name="selVectors" id="selVectors" >
-                <option value=""> -- Select Attack Vector -- </option>
-                {% for attack_vectors in attack_vectors %}
-                <option value="{{ attack_vectors.ThreatAction }}">
-
-                    {{ attack_vectors.ThreatAction }}
-                </option>
-                {% endfor %}
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="targetComponent" style="color: white">Target Component/Device:</label>
-            <input type="text" class="form-control" id="targetComponent" name="targetComponent" >
-          </div>
-          <div class="form-group">
-            <label for="attackEffect">Effect of Attack:</label>
-            <input type="text" class="form-control" id="attackEffect" name="attackEffect">
-          </div>
-          <div class="form-group">
-            <label for="targetSystem">Target System/Network:</label>
-            <input type="text" class="form-control" id="targetSystem" name="targetSystem">
-          </div>
-          <div class="form-group">
-            <label for="impact">Potential Impact:</label>
-            <input type="text" class="form-control" id="impact" name="impact">
-          </div>
-          <div class="form-group">
-            <label for="motivation">Attack Motivation:</label>
-            <input type="text" class="form-control" id="motivation" name="motivation">
-          </div>
-
-        </form>
-      </div>
-      <div class="modal-footer">
-
-
-      </div>
-    </div>
-  </div>
-</div>
 
 <!-- Scenario Selection Modal -->
 <div class="modal fade" id="scenarioSelectionModal" tabindex="-1" role="dialog" aria-labelledby="scenarioSelectionModalLabel" aria-hidden="true">
@@ -1095,15 +1617,20 @@ document.addEventListener("DOMContentLoaded", function() {
     </div>
   </div>
 </div>
+</div>
 
-    </div>
 <input type="hidden" id="txthdninvestmentstring" name="txthdninvestmentstring">
 
  <script>
-    function renderInvestmentImpact(investmentImpactText) {
-        $('#tab8').addClass('active').show();
-    var bulletPoints = investmentImpactText.split('\n').filter(bp => bp.trim().length > 0);
+function updateProgressBar(percent, message) {
+    $('#progressBarInner').css('width', percent + '%').attr('aria-valuenow', percent);
+    $('#progressBarMessage').text(message);
+}
 
+function renderInvestmentImpact(investmentImpactText) {
+        $('#tab8').addClass('active').show();
+
+    var bulletPoints = investmentImpactText.split('\n').filter(bp => bp.trim().length > 0);
     // Clear previous content
     $("#investmentImpactVisualization").empty();
 
@@ -1152,248 +1679,316 @@ document.addEventListener("DOMContentLoaded", function() {
     document.querySelector('a[data-tab="tab4"]').click();
 }
 
+function collectInvestments() {
+    var investments = [];
+    $('#investmentTable tbody tr').each(function() {
+        investments.push({
+            vendor_name: $(this).find('input[name="vendor_name[]"]').val(),
+            product_name: $(this).find('input[name="product_name[]"]').val(),
+            cost: $(this).find('input[name="cost[]"]').val(),
+            date: $(this).find('input[name="date[]"]').val()
+        });
+    });
+    return investments;
+}
 
+document.getElementById('analyzeScenarioBtn').addEventListener('click', function() {
+    var scenarioDetails = {
+        scenarioText: document.getElementById('txtScenario').value,
+        facility_type: document.getElementById('selFacilityType').value,
+        industry: document.getElementById('selIndustry').value,
+        organization_size: document.getElementById('selOrganizationSize').value,
+        regulatory_environment: document.getElementById('selRegulatoryEnvironment').value,
+        country: document.getElementById('countrySelector').value,
+        threat_actor: document.getElementById('selThreats').value,
+        attack_vector: document.getElementById('selVectors').value,
+        target: document.getElementById('targetComponent').value,
+        effect: document.getElementById('attackEffect').value,
+        network: document.getElementById('targetSystem').value,
+        impact: document.getElementById('impact').value,
+        motivation: document.getElementById('motivation').value,
+        investments: collectInvestments()
+    };
 
-function analyzeScenario(scenarioText, industry, facility_type, investments) {
+    // Check for the presence of the necessary values
+    if (!scenarioDetails.scenarioText || !scenarioDetails.facility_type || !scenarioDetails.industry || !scenarioDetails.threat_actor || !scenarioDetails.attack_vector) {
+        // Inform the user that more information is needed
+        swal.fire({
+            title: 'Incomplete Data',
+            text: 'Please provide a minimum of a scenario description, facility type, industry, threat actor, and attack vector before proceeding.',
+            iconHtml: '<img src="/static/images/anzen_owl.png" width="100px" alt="">',
+            imageWidth: 150, // Adjust as necessary
+            imageHeight: 150, // Adjust as necessary
+            background: '#000', // Black background
+            color: '#fff', // Set text color to white
+            confirmButtonText: 'OK',
+            customClass: {
+                popup: 'swal2-custom-border'
+            }
+        });
+        document.querySelector('a[data-tab="tab2"]').click();
+        return; // Exit the function early
+    }
 
-    return new Promise(function(resolve, reject) {
+    swal.fire({
+        title: 'Are you sure?',
+        html: "The scenario analysis can take up to 2 minutes to complete. Do not navigate away from the page or click any links while execution is in progress. Continue?",
+        iconHtml: '<img src="/static/images/anzen_owl.png" width="100px" alt="">',
+        imageWidth: 150,
+        imageHeight: 150,
+        background: '#000',
+        color: '#fff',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, proceed',
+        cancelButtonText: 'Cancel',
+        customClass: {
+            popup: 'swal2-custom-border'
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            document.getElementById('analyzeConsequencesCheckbox').checked = false;
+            document.getElementById('analyzeAttackTreeCheckbox').checked = false;
+            document.getElementById('analyzeScenarioCheckbox').checked = false;
+            document.getElementById('analyzeCostsCheckbox').checked = false;
+            document.getElementById('analyzeToolsCheckbox').checked = false;
+            document.getElementById('analyzeIncidentsCheckbox').checked = false;
+            $('#loadingProgressBar').show();
+
+            spinnerContainer.style.display = 'block';
+            let progress = 0;
+            const progressBarInterval = setInterval(() => {
+                if (progress < 90) { // Avoid completing 100% using the interval
+                    progress += 1;
+                    updateProgressBar(progress, 'Processing...');
+                }
+            }, 600);
+
+Promise.all([
+                analyzeScenario(scenarioDetails),
+                generateAttackTree(scenarioDetails),
+                analyzeConsequences(scenarioDetails),
+                relatedIncidents(scenarioDetails)
+            ]).then(responses => {
+                // Ensure this runs only after all promises are resolved
+                clearInterval(progressBarInterval); // Stop the gradual progress
+                updateProgressBar(100, 'All analyses completed.');
+
+                // Schedule hiding the progress bar after a brief moment to show completion
+                setTimeout(() => {
+                    $('#loadingProgressBar').hide();
+                    $('.sub-menu a, .nav-link').css({
+                        'pointer-events': '',
+                        'color': '' // Restore original styles
+                    });
+                }, 1000); // Hide after 1 second to let user see completion
+
+            }).catch(error => {
+                clearInterval(progressBarInterval); // Stop the progress on error
+                console.error('An error occurred:', error);
+                $('#loadingProgressBar').hide();
+                $('.sub-menu a, .nav-link').css({
+                    'pointer-events': '',
+                    'color': '' // Restore original styles on error
+                });
+            });
+        }
+    });
+});
+
+function analyzeScenario(scenarioDetails) {
+    return new Promise((resolve, reject) => {
+        // AJAX request for analyzing the scenario
         $.ajax({
-            url: "{% url 'OTRisk:analyze_sim_scenario' %}",
+            url: "/OTRisk/analyze_sim_scenario_v2/", // Replace with the correct URL mapped in your Django urls.py
             type: 'POST',
+            headers: {
+                "X-CSRFToken": getCsrfToken() // Include CSRF token from cookies
+            },
             data: {
-                'scenario': scenarioText,
-                'industry': industry,
-                'facility_type': facility_type,
-                'investments': JSON.stringify(investments),
-                'csrfmiddlewaretoken': '{{ csrf_token }}'
+                'scenario': scenarioDetails.scenarioText,
+                'industry': scenarioDetails.industry,
+                'facility_type': scenarioDetails.facility_type,
+                'investment_data': JSON.stringify(scenarioDetails.investments), // Assuming investments is an array of objects
+                'csrfmiddlewaretoken': $('input[name="csrfmiddlewaretoken"]').val() // Correct way to get CSRF token value
             },
             success: function(response) {
-                document.getElementById('analyzeScenarioCheckbox').checked = true;
 
-                resolve(response);
+                updateProgressBar(80, 'Scenario analysis completed...');
+
+                // Resetting submenu and nav-link classes without assuming their initial styles
+                $('.sub-menu a').css('pointer-events', '').removeClass('disabled-link');
+                $('.nav-link').removeClass('disabled');
+
+                document.getElementById('analyzeScenarioCheckbox').checked = true;
+                document.getElementById('analyzeToolsCheckbox').checked = true;
+                 updateUIWithResults(response);
+
+
+
+                resolve(response); // Resolve the promise with the AJAX response for chaining
             },
             error: function(xhr, status, error) {
-
-                reject(error);
+                reject(error); // Reject the promise on error
             }
         });
     });
 }
-function generateAttackTree(scenarioText) {
-    return new Promise(function(resolve, reject) {
-    $.ajax({
-            url: "{% url 'OTRisk:generate_sim_attack_tree' %}",
+
+function generateAttackTree(scenarioDetails) {
+    return new Promise((resolve, reject) => {
+
+        // AJAX request for generating the attack tree
+        $.ajax({
+            url: "/OTRisk/generate_sim_attack_tree_v2/", // Ensure the URL is correctly mapped in your Django urls.py
             type: 'POST',
+            headers: {
+                "X-CSRFToken": getCsrfToken() // Include CSRF token from cookies
+            },
             data: {
-                'scenario': scenarioText,
-                'csrfmiddlewaretoken': '{{ csrf_token }}'
+                'scenario': scenarioDetails.scenarioText, // Assuming this is the correct key for your backend
+                'threat_actor': scenarioDetails.threat_actor,
+                'attack_vector': scenarioDetails.attack_vector,
+                'compliance': scenarioDetails.regulatory_environment,
+                'facility_type': scenarioDetails.facility_type,
+                'industry': scenarioDetails.industry,
+                'csrfmiddlewaretoken': $('input[name="csrfmiddlewaretoken"]').val() // Correct way to include CSRF token
             },
             success: function(attackTreeResponse) {
-                document.getElementById('generateAttackTreeCheckbox').checked = true;
+
+                updateProgressBar(45, 'Attack tree generation completed... Preparing for consequence analysis.');
+
                 if (attackTreeResponse && !attackTreeResponse.error) {
                     var attackTreeJson = JSON.stringify(attackTreeResponse);
                     document.getElementById('hdnAT').value = attackTreeJson;
                     drawAttackTree(attackTreeResponse);
-                    resolve(attackTreeResponse);
+                    document.getElementById('analyzeAttackTreeCheckbox').checked = true;
                 } else {
-
-                    reject('Attack tree data not available or invalid response');
+                    console.error('Attack tree data not available or invalid response:', attackTreeResponse.error || "Unknown error");
                 }
 
+                resolve(attackTreeResponse); // Proceed to the next promise in the chain
             },
             error: function(xhr, status, error) {
+                console.error('Error while fetching attack tree:', error);
+                reject(error); // Propagate the error to be handled by the catch block
+            }
+        });
+    });
+}
 
+function analyzeConsequences(scenarioDetails) {
+    return new Promise((resolve, reject) => {
+
+        // AJAX request to analyze the consequences
+        $.ajax({
+            url: "/OTRisk/analyze_sim_consequences_v2/", // Ensure the URL matches your Django urls.py
+            type: 'POST',
+            headers: {
+                "X-CSRFToken": getCsrfToken() // Include CSRF token from cookies
+            },
+            data: {
+                'scenario': scenarioDetails.scenarioText,
+                'industry': scenarioDetails.industry,
+                'facility_type': scenarioDetails.facility_type,
+                'organization_size': scenarioDetails.organization_size,
+                'regulatory_environment': scenarioDetails.regulatory_environment,
+                'country': scenarioDetails.country,
+                'csrfmiddlewaretoken': $('input[name="csrfmiddlewaretoken"]').val() // Correct way to include CSRF token
+            },
+            success: function(consequenceResponse) {
+
+                updateProgressBar(15, 'Consequence analysis completed...');
+
+                // Update the UI based on the response
+                if (consequenceResponse && consequenceResponse.consequence && consequenceResponse.consequence.trim()) {
+                    document.getElementById('txtConsequences').value = consequenceResponse.consequence;
+                } else {
+                    document.getElementById('txtConsequences').value = 'No consequence analysis available.';
+                }
+                document.getElementById('analyzeConsequencesCheckbox').checked = true;
+                // Populate cost estimates
+                document.getElementById('txtBestCase').value = consequenceResponse.best_case_cost || 'N/A';
+                document.getElementById('txtMostLikelyCase').value = consequenceResponse.most_likely_case_cost || 'N/A';
+                document.getElementById('txtWorstCase').value = consequenceResponse.worst_case_cost || 'N/A';
+
+                // Handle 12-month cost projection if available
+                if (consequenceResponse.projection) {
+                    document.getElementById('scenario_12month_costs').value = consequenceResponse.projection;
+                    var costArray = consequenceResponse.projection.split('|').map(Number);
+                    createCostChart('monthly_cost_chart', costArray);
+                }
+                document.getElementById('analyzeCostsCheckbox').checked = true;
+                resolve(consequenceResponse); // Resolve the promise with the consequence analysis response
+            },
+            error: function(xhr, status, error) {
+                console.error('Error fetching consequence analysis:', error);
+                reject(error); // Reject the promise on error
+            }
+        });
+    });
+}
+
+function relatedIncidents(scenarioDetails) {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: "/OTRisk/related_incidents/",  // Adjust the URL as needed
+            type: "POST",
+            headers: {
+                "X-CSRFToken": getCsrfToken()  // Ensure CSRF token is included
+            },
+            data: {
+                scenario: scenarioDetails.scenarioText,  // Send scenario text for analysis
+                // Include any additional data as needed
+            },
+            success: function(response) {
+
+                updateProgressBar(60, 'Research incidents completed. Finalizing...');
+                if (response.generated_summary && response.generated_summary !== 'No related incidents found.') {
+                    // Clear previous contents
+                    $('#related_incidents').empty();
+                    document.getElementById('analyzeIncidentsCheckbox').checked = true;
+                    document.getElementById('hdnIncidents').value = response.generated_summary;
+
+                    // Create a table and append it to the 'related_incidents' container
+                    var table = $('<table class="table table-striped"><thead><tr><th>Title</th><th>Description</th><th>Date</th><th>URL</th></tr></thead><tbody></tbody></table>');
+                    $('#related_incidents').append(table);
+
+                    // Splitting the generated_summary by lines to get individual incidents
+                    var incidents = response.generated_summary.split('\n');
+                    incidents.forEach(function(incident) {
+                        // Splitting each incident into components
+                        var parts = incident.split('|');
+                        if(parts.length === 4) { // Ensure we have all required parts
+                            var row = $('<tr></tr>');
+                            parts.forEach(function(part, index) {
+                                if(index === 3) { // URL part
+                                    var cell = $('<td></td>').html('<a href="' + part + '" target="_blank">Link</a>');
+                                } else {
+                                    var cell = $('<td></td>').text(part);
+                                }
+                                row.append(cell);
+                            });
+                            table.append(row);
+                        }
+                    });
+                } else {
+                    document.getElementById('related_incidents').innerHTML = 'No related incidents found.';
+                }
+                resolve(response);
+            },
+            error: function(xhr, status, error) {
+                $('#related_incidents').text('An error occurred while fetching related incidents.');
                 reject(error);
             }
         });
     });
 }
 
-function analyzeConsequences(scenarioText, industry, facility_type, organization_size, regulatory_environment, country) {
-return new Promise(function(resolve, reject) {
-    $.ajax({
-            url: "{% url 'OTRisk:analyze_sim_consequences' %}",
-            type: 'POST',
-            data: {
-                'scenario': scenarioText,
-                'industry': industry,
-                'facility_type': facility_type,
-                'organization_size': organization_size,
-                'regulatory_environment': regulatory_environment,
-                'country': country,
-                'csrfmiddlewaretoken': '{{ csrf_token }}'
-            },
-            success: function(consequenceResponse) {
-                document.getElementById('analyzeConsequencesCheckbox').checked = true;
-                if (consequenceResponse.consequence && consequenceResponse.consequence.trim()) {
-                    document.getElementById('txtConsequences').value = consequenceResponse.consequence;
-                    resolve(consequenceResponse);
-                } else {
-                    document.getElementById('txtConsequences').value = 'No consequence analysis available.';
-                    reject('No consequence analysis available.');
-                }
-
-                document.getElementById('txtBestCase').value = consequenceResponse.best_case_cost;
-                document.getElementById('txtMostLikelyCase').value = consequenceResponse.most_likely_case_cost;
-                document.getElementById('txtWorstCase').value = consequenceResponse.worst_case_cost;
-                document.getElementById('scenario_12month_costs').value = consequenceResponse.projection;
-
-                var costArray = consequenceResponse.projection.split('|').map(Number);
-                createCostChart('monthly_cost_chart', costArray);
-
-            },
-            error: function(xhr, status, error) {
-                spinnerContainer.style.display = 'none';
-                button.disabled = false;
-                console.error('Error fetching consequence analysis:', error);
-                reject(error);
-            }
-        });
-});
-}
-
-var pollingInterval;
-
-document.getElementById('analyzeScenarioBtn').addEventListener('click', function() {
-
-     swal.fire({
-        title: 'Are you sure?',
-        html: "The scenario analysis can take up to 2 minutes to complete. Do not navigate away from the page or click any links while execution is in progress. Continue?",
-         iconHtml: '<img src="/static/images/anzen_owl.png" width="100px">',
-        imageWidth: 150, // Adjust as necessary
-        imageHeight: 150, // Adjust as necessary
-        background: '#000', // Black background
-        color: '#fff', // Set text color to white
-        showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Yes',
-        cancelButtonText: 'Cancel',
-        customClass: {
-            popup: 'swal2-custom-border' // Apply custom class to the popup/dialog
-        }
-    }).then((result) => {
-        if (result.isConfirmed) {
-    // Disable submenu links and change their color to a lighter shade
-        $('.sub-menu a').css({
-            'pointer-events': 'none',
-            'color': '#000000' // Example of a lighter color (light gray)
-        }).addClass('disabled-link');
-        $('.nav-link').addClass('disabled');
-
-        var scenarioText = document.getElementById('txtScenario').value;
-        let facility_type = document.getElementById('selFacilityType').value;
-        let industry = document.getElementById('selIndustry').value;
-        let organization_size = document.getElementById('selOrganizationSize').value;
-        let regulatory_environment = document.getElementById('selRegulatoryEnvironment').value;
-        let country = document.getElementById('countrySelector').value;
-        let investments = [];
-        $('#investmentTable tbody tr').each(function() {
-            let investment = {
-                type: $(this).find('select[name="investment_type[]"]').val(),
-                vendor_name: $(this).find('input[name="vendor_name[]"]').val(),
-                product_name: $(this).find('input[name="product_name[]"]').val(),
-                cost: $(this).find('input[name="cost[]"]').val(),
-                date: $(this).find('input[name="date[]"]').val()
-            };
-            investments.push(investment);
-        });
-        var button = this;
-        var spinnerContainer = document.getElementById('spinnerContainer');
-        button.disabled = true;
-        spinnerContainer.style.display = 'block'; // Show the spinner
-
-        $.ajax({
-            url: "/OTRisk/cleanup_scenariobuilder/", // Update this URL to your cleanup endpoint
-            type: "GET", // or "POST" if you're sending data
-            beforeSend: function(xhr) {
-                xhr.setRequestHeader("X-CSRFToken", "{{ csrf_token }}"); // Add CSRF token header if needed
-            },
-            success: function(response) {
-
-                //var analyzeScenarioPromise = analyzeScenario(scenarioText, industry, facility_type, investments);
-                var generateAttackTreePromise = generateAttackTree(scenarioText);
-                var analyzeConsequencesPromise = analyzeConsequences(scenarioText, industry, facility_type, organization_size, regulatory_environment, country);
-                Promise.all([ generateAttackTreePromise, analyzeConsequencesPromise])
-                    .then(function() {
-                        spinnerContainer.style.display = 'none'; // Hide the spinner
-                        button.disabled = false;
-
-                    })
-                    .catch(function(error) {
-                        console.error('An error occurred:', error);
-                        spinnerContainer.style.display = 'none'; // Hide the spinner
-                        button.disabled = false;
-                    });
-                    if (window.pollingInterval) clearInterval(window.pollingInterval);
-
-                        // Start the analysis scenario
-                        $.ajax({
-                            url: "{% url 'OTRisk:analyze_sim_scenario' %}",
-                            type: 'POST',
-                            data: {
-                                'scenario': scenarioText,
-                                'industry': industry,
-                                'facility_type': facility_type,
-                                'investments': JSON.stringify(investments),
-                                'csrfmiddlewaretoken': '{{ csrf_token }}'
-                            },
-                            success: function(response) {
-                                document.getElementById('analyzeScenarioCheckbox').checked = true;
-
-                                // Polling function
-                                function pollForResults() {
-                                    $.ajax({
-                                        url: '/OTRisk/get_analysis_result/', // Update this URL to your result checking endpoint
-                                        type: "GET",
-                                        xhrFields: {
-                                            withCredentials: true
-                                        },
-                                        success: function(response) {
-                                            if (response.status === 'success') {
-                                                clearInterval(window.pollingInterval); // Stop polling
-
-                                                updateUIWithResults(response.data); // Update your UI with the results
-                                                // Re-enable submenu links and restore their original color here
-                                                $('.sub-menu a').css({
-                                                    'pointer-events': '',
-                                                    'color': '' // Assuming you want to revert to the stylesheet-defined color
-                                                }).removeClass('disabled-link');
-                                                $('.nav-link').removeClass('disabled');
-
-                                            } else {
-                                                spinnerContainer.style.display = 'block';
-                                            }
-                                        },
-                                        error: function(xhr, status, error) {
-
-                                            clearInterval(window.pollingInterval); // Consider stopping or retrying polling
-                                        }
-                                    });
-                                }
-
-                                // Start polling for results every 5 seconds
-                                window.pollingInterval = setInterval(pollForResults, 5000);
-                            },
-                            error: function(xhr, status, error) {
-                                spinnerContainer.style.display = 'none';
-                                button.disabled = false;
-                                alert('Error: ' + error);
-                            }
-                        });
-                    },
-                    error: function(xhr, status, error) {
-                // Handle error from cleanup_scenariobuilder
-                console.error('Cleanup error:', error);
-                spinnerContainer.style.display = 'none';
-                button.disabled = false;
-            }
-        });
-    }
- });
-});
 
 function updateUIWithResults(data) {
+
     document.getElementById('spinnerContainer').style.display = 'none';
     // Update the consequences table
     var tableContainer = document.getElementById('table_scenario');
@@ -1406,11 +2001,11 @@ function updateUIWithResults(data) {
     }
 
     clearTable(tableContainer); // Clear existing table if present
-    createConsequencesTable(tableContainer, data.consequences);
+    createConsequencesTable(tableContainer, data.consequence);
     biaGroupsContainer.innerHTML = '';
 
 
-    data.consequences.forEach(function(consequence, index) {
+    data.consequence.forEach(function(consequence, index) {
         // Assuming you have a function to create and append each consequence group
         appendConsequenceGroup(biaGroupsContainer, consequence, index);
     });
@@ -1436,6 +2031,9 @@ function appendConsequenceGroup(container, consequence, index) {
         return;
     }
 
+    // Extract numeric score from the string (e.g., "8/10" -> 8)
+    const scoreValue = parseInt(consequence.score.split('/')[0], 10);
+
     // Create a new row for every 3 items or if there are no rows yet
     let row;
     if (index % 3 === 0 || container.children.length === 0) {
@@ -1455,8 +2053,16 @@ function appendConsequenceGroup(container, consequence, index) {
     var groupHeader = document.createElement('div');
     groupHeader.className = 'group-header';
     var icon = document.createElement('img');
-    // Ensure the path to the image is correct
-    icon.src = "/static/images/green_cube.png"; // Adjust the path as needed
+
+    // Set icon source based on scoreValue
+    if (scoreValue > 7) {
+        icon.src = "{% static 'images/redcube.png' %}";
+    } else if (scoreValue > 4) {
+        icon.src = "{% static 'images/yellow_cube.png' %}";
+    } else {
+        icon.src = "{% static 'images/green_cube.png' %}";
+    }
+
     icon.className = 'cube-icon';
     icon.alt = 'cube_icon'; // Adjust the alt text as needed
 
@@ -1523,301 +2129,6 @@ function createConsequencesTable(tableContainer, consequences) {
     });
 }
 
-
-function fetchAndDisplayScenarios() {
-    $.ajax({
-        url: "/OTRisk/list_scenario_builders/", // Adjust the URL to your backend endpoint
-        type: "GET",
-        success: function(response) {
-            const scenarios = response.scenarios;
-            const scenarioList = $('#scenarioList');
-            scenarioList.empty(); // Clear existing items
-            scenarios.forEach(function(scenario) {
-                 scenarioList.append(`
-                  <li class="list-group-item d-flex align-items-center scenario-item" data-id="${scenario.id}">
-                    <i class="bi bi-file-earmark-text mr-2"></i> ${scenario.scenario_name}
-                  </li>
-                `);
-            });
-            $('.scenario-item').click(function() {
-                const scenarioId = $(this).data('id');
-                loadScenarioDetails(scenarioId); // Function to load selected scenario details
-                $('#scenarioSelectionModal').modal('hide');
-            });
-            $('#scenarioSelectionModal').modal('show');
-        },
-        error: function(xhr, status, error) {
-            console.error('Error fetching scenarios:', error);
-        }
-    });
-}
-
-function loadScenarioDetails(scenarioId) {
-    isProgrammaticChange = true;
-    $.ajax({
-        url: `/OTRisk/retrieve_scenario_builder/${scenarioId}`,
-        type: "GET",
-        success: function(response) {
-
-            $('#txtScenario').val(response.scenario_description);
-            $('#txtConsequences').val(response.consequences);
-            var costs = response.costs;
-            $('#txtBestCase').val(costs.bestCase); // Set best case cost
-            $('#txtMostLikelyCase').val(costs.mostLikelyCase); // Set most likely case cost
-            $('#txtWorstCase').val(costs.worstCase); // Set worst case cost
-            var decodedText = atob(response.investment_projection);
-            $('#txthdninvestmentstring').val(response.investment_projection);
-            $('#selIndustry').val(response.industry).trigger('change');
-            $('#selFacilityType').val(response.facility).trigger('change');
-            $('#countrySelector').val(response.country).trigger('change');
-            $('#selOrganizationSize').val(response.org).trigger('change');
-            $('#selRegulatoryEnvironment').val(response.regs).trigger('change');
-            $('#selThreats').val(response.attacker);
-            $('#selVectors').val(response.vector);
-            $('#targetComponent').val(response.target);
-            $('#attackEffect').val(response.effect);
-            $('#targetSystem').val(response.network);
-            $('#impact').val(response.impact);
-            $('#motivation').val(response.motivation);
-            renderInvestmentImpact(decodedText);
-
-            var costArray = response.cost_projection.split('|').map(Number);
-            createCostChart('monthly_cost_chart', costArray);
-
-            $('#hdnAT').val(response.attack_tree_data);
-
-            var jsonObject = JSON.parse(response.attack_tree_data);
-            drawAttackTree(jsonObject);
-
-            // Clear existing BIA groups content
-            var biaGroupsContainer = document.getElementById('bia_groups');
-            biaGroupsContainer.innerHTML = '';
-
-            var factors = response.factors; // Assuming this is the object structure as described
-            var factorKeys = Object.keys(factors); // Get all factor names as an array
-            var rows = []; // To keep track of the rows of BIA groups
-
-            factorKeys.forEach(function(factor, index) {
-                // Create a new row every 3 items
-                if (index % 3 === 0) {
-                    var row = document.createElement('div');
-                    row.className = 'row';
-                    rows.push(row);
-                }
-
-                // Create the group container
-                var groupContainer = document.createElement('div');
-                groupContainer.className = 'group-container col-md-4';
-
-                // Create the group header
-                 var groupHeader = document.createElement('div');
-                groupHeader.className = 'group-header';
-                var icon = document.createElement('img');
-                // Determine the icon based on the score
-                var factorData = factors[factor]; // Get the data for this factor
-                if (factorData.score > 7) {
-                    icon.src = "{% static 'images/redcube.png' %}";
-                } else if (factorData.score > 4) {
-                    icon.src = "{% static 'images/yellow_cube.png' %}";
-                } else {
-                    icon.src = "{% static 'images/green_cube.png' %}";
-                }
-                icon.className = 'cube-icon';
-                icon.alt = 'cube_icon'; // Adjust the alt text as needed
-                groupHeader.appendChild(icon);
-                var headerText = document.createTextNode(factor); // factor is the key from factors object
-                groupHeader.appendChild(headerText);
-                groupContainer.appendChild(groupHeader);
-
-                // Create the group body
-                var groupBody = document.createElement('div');
-                groupBody.className = 'group-body';
-                // Display the score in bold text out of 10
-                var scoreText = document.createElement('strong');
-                scoreText.textContent = factorData.score + '/10. ';
-                groupBody.appendChild(scoreText);
-                var narrativeText = document.createTextNode(factorData.narrative);
-                groupBody.appendChild(narrativeText);
-                groupContainer.appendChild(groupBody);
-
-                // Add the group container to the current row
-                rows[rows.length - 1].appendChild(groupContainer);
-
-                // Add the row to the biaGroupsContainer if it's full (3 items) or if it's the last item
-                if ((index + 1) % 3 === 0 || index === factorKeys.length - 1) {
-                    biaGroupsContainer.appendChild(rows[rows.length - 1]);
-                }
-            });
-            // Populate table data, costs, and other fields similarly
-            isProgrammaticChange = false;
-            Swal.fire({
-                    title: "Scenario loaded successfully",
-                    imageUrl: '/static/images/anzen_owl.png', // Make sure the path is correct
-                    imageWidth: 150, // Adjust as necessary
-                    imageHeight: 150, // Adjust as necessary
-                    background: '#000', // Black background
-                    color: '#fff', // Set text color to white
-                    customClass: {
-                        popup: 'swal2-custom-border' // Apply custom class to the popup/dialog
-                    }
-                }
-            );
-
-        },
-        error: function(xhr, status, error) {
-            console.error('Error loading scenario:', error);
-        }
-    });
-}
-
-function convertSVGToPNG(svgElement, scale = 0.5) {
-    var xmlSerializer = new XMLSerializer();
-    var svgString = xmlSerializer.serializeToString(svgElement);
-
-    var canvas = document.createElement('canvas');
-    var ctx = canvas.getContext('2d');
-
-    var devicePixelRatio = window.devicePixelRatio || 1;
-    // No need to adjust scale here since we're fitting the image to the container
-    canvas.width = svgElement.getBoundingClientRect().width * devicePixelRatio;
-    canvas.height = svgElement.getBoundingClientRect().height * devicePixelRatio;
-
-    // Adjust the drawing scale for device pixel ratio to enhance clarity
-    ctx.scale(devicePixelRatio, devicePixelRatio);
-
-    var DOMURL = window.URL || window.webkitURL || window;
-    var img = new Image();
-    var svgBlob = new Blob([svgString], {type: 'image/svg+xml;charset=utf-8'});
-    var url = DOMURL.createObjectURL(svgBlob);
-
-    img.onload = function () {
-        ctx.drawImage(img, 0, 0);
-        DOMURL.revokeObjectURL(url);
-
-        var imgURI = canvas.toDataURL('image/png');
-
-        var container = document.getElementById('attack_tree');
-        if (container) {
-            container.innerHTML = ''; // Clear previous content
-
-            var pngImage = new Image();
-            pngImage.src = imgURI;
-            // Ensure the image fits within the container
-            pngImage.style.maxWidth = '100%';
-            pngImage.style.maxHeight = '100%';
-            pngImage.style.objectFit = 'contain'; // Image will be scaled to maintain its aspect ratio
-
-            container.appendChild(pngImage);
-        } else {
-            console.error('Container for the PNG image not found.');
-        }
-    };
-
-    img.src = url;
-}
-
-function drawAttackTree(data) {
-
-                //$('#tab9').addClass('active').show();
-                document.querySelector('a[data-tab="tab9"]').click();
-                var container = document.getElementById('attack_tree');
-                var containerWidth = container.clientWidth;
-                var svgWidth = containerWidth * 0.8;
-                var margin = { top: 20, right: 120, bottom: 20, left: 320 };
-                var width = svgWidth - margin.left - margin.right;
-                var height = 800; // Increased height for better resolution
-
-                d3.select(container).selectAll("svg").remove();
-
-                var svg = d3.select(container).append("svg")
-                    .attr("width", "95%")
-                    .attr("viewBox", "0 0 " + svgWidth + " " + height)
-                    .attr("height", height)
-                    .style("display", "block")
-                    .style("margin", "auto")
-                    .style("background-color", "#253349C0") // Set the background color
-                    .append("g")
-                    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-                var i = 0,
-                    duration = 750,
-                    root;
-
-    var treemap = d3.tree()
-        .size([height, width - margin.left - margin.right])
-        .separation(function(a, b) { return (a.parent == b.parent ? 1 : 2); });
-
-    root = d3.hierarchy(data, function(d) { return d.children; });
-    root.x0 = height / 2;
-    root.y0 = 0;
-
-    // Color-blind-friendly color scale
-    var colorScale = d3.scaleOrdinal(["#88CCEE", "#DDCC77", "#CC6677", "#882255", "#44AA99", "#117733", "#999933", "#AA4499"]);
-
-    update(root);
-
-    function update(source) {
-        var treeData = treemap(root);
-
-        var nodes = treeData.descendants(),
-            links = treeData.descendants().slice(1);
-
-        nodes.forEach(function(d) { d.y = d.depth * 180 });
-
-        var node = svg.selectAll('g.node')
-            .data(nodes, function(d) { return d.id || (d.id = ++i); });
-
-        var nodeEnter = node.enter().append('g')
-            .attr('class', 'node')
-            .attr("transform", function(d) { return "translate(" + d.y + "," + d.x + ")"; });
-
-        nodeEnter.append('circle')
-            .attr('r', 10)
-            .style("stroke", "black")
-            .style("stroke-width", 1.5)
-            .style("fill", function(d) { return colorScale(d.depth); });
-
-        nodeEnter.append('text')
-            .style("fill", "#FFFFFF") // Set label color to white
-            .style("font-size", "14px")
-            .style("font-weight", "bold")
-            .attr("transform", "rotate(-10)")
-            .attr("dy", ".35em")
-            .attr("x", function(d) { return d.children ? -13 - this.getComputedTextLength() : 13; })
-            .attr("text-anchor", function(d) { return d.children ? "end" : "start"; })
-            .text(function(d) { return d.data.name; });
-
-        var link = svg.selectAll('path.link')
-            .data(links, function(d) { return d.id; });
-
-        link.enter().insert('path', "g")
-            .attr("class", "link")
-            .style("stroke", "#96C5ECC0") // Set line color
-            .style("stroke-width", 2)
-            .style("fill", "none")
-            // Removed the arrow marker reference
-            .attr('d', function(d) {
-                return "M" + d.y + "," + d.x
-                    + "C" + (d.y + d.parent.y) / 2 + "," + d.x
-                    + " " + (d.y + d.parent.y) / 2 + "," + d.parent.x
-                    + " " + d.parent.y + "," + d.parent.x;
-            });
-    }
-
-            // Add border and shadow to the container
-            var attackTreeDiv = document.getElementById('attack_tree');
-            attackTreeDiv.style.display = 'block';
-            attackTreeDiv.style.border = '1px solid #ccc';
-            attackTreeDiv.style.boxShadow = '0px 0px 10px rgba(0, 0, 0, 0.5)';
-            sessionStorage.setItem('attackTreeDrawn', 'true');
-            var svgElement = container.querySelector('svg');
-            // Pass it to the convertSVGToPNG function
-            convertSVGToPNG(svgElement, 0.5); // Adjust the scale as needed
-            var attackTreeDiv = document.getElementById('attack_tree')
-
-
-        }
-
 $(document).ready(function() {
 document.addEventListener('DOMContentLoaded', (event) => {
     var btn = document.getElementById('myBtn');
@@ -1835,76 +2146,6 @@ document.addEventListener('DOMContentLoaded', (event) => {
     }
 });
 });
-
-$(document).ready(function() {
-    var tab2Changed = false; // Flag to track changes in Tab 1
-    var isProgrammaticChange = false;
-
-    // Attach change listeners to all inputs and selects within Tab 1
-    $('#tab2 input, #tab2 select').change(function() {
-        if (!isProgrammaticChange) { // Check if change is not programmatic
-            tab2Changed = true;
-        }
-    });
-
-    $('.sub-menu a').click(function(e) {
-        e.preventDefault();
-
-        // Remove 'active' class from all tabs
-        $('.tab-content').removeClass('active');
-
-        // Add 'active' class to clicked tab
-        var tabId = $(this).attr('data-tab');
-        $('#' + tabId).addClass('active');
-
-        // Check if the Scenario tab was clicked
-        if ($(this).attr('id') === 'scenarioTabLink') {
-             if (tab2Changed && !isProgrammaticChange) {
-                 // Proceed with AJAX call only if changes were made in Tab 1
-                    document.getElementById('spinner').style.display = 'block';
-                    var formData = {
-                        'attacker': $('#selThreats').val(),
-                        'attackVector': $('#selVectors').val(),
-                        'targetComponent': $('#targetComponent').val(),
-                        'attackEffect': $('#attackEffect').val(),
-                        'targetSystem': $('#targetSystem').val(),
-                        'impact': $('#impact').val(),
-                        'motivation': $('#motivation').val(),
-                        'facility_type': $('#selFacilityType').val(),
-                        'industry': $('#selIndustry').val(),
-                        'csrfmiddlewaretoken': '{{ csrf_token }}'
-                    };
-
-                    $.ajax({
-                        url: "{% url 'OTRisk:generate_scenario_description' %}",
-                        type: 'POST',
-                        data: formData,
-                        success: function(response) {
-                            if (response.scenario_description) {
-                                $('#txtScenario').val(response.scenario_description);
-                            } else {
-                                $('#txtScenario').val('No scenario description available.');
-                            }
-                            $('#scenarioBuilderModal').modal('hide');
-                        },
-                        error: function(xhr, status, error) {
-                            console.error('Error generating scenario:', error);
-                        },
-                        complete: function() {
-                            // Hide the spinner and reset the flag
-                            document.getElementById('spinner').style.display = 'none';
-                            tab2Changed = false;
-                        }
-                    });
-            } else {
-                document.getElementById('spinner').style.display = 'none';
-            }
-            // Reset tab2Changed to false to prepare for next user action
-            tab2Changed = false;
-        }
-    });
-});
-
 
 function saveScenario(scenarioName) {
     var scenarioData = {
@@ -1930,6 +2171,7 @@ function saveScenario(scenarioName) {
     network: document.getElementById('targetSystem').value,
     impact: document.getElementById('impact').value,
     motivation: document.getElementById('motivation').value,
+    incidents: document.getElementById('hdnIncidents').value,
     };
 
     $.ajax({
@@ -1992,66 +2234,6 @@ function getCsrfToken() {
     return cookieValue;
 }
 
-function abbreviateValue(value) {
-    var newValue = value;
-    if (value >= 1000 && value < 1000000) {
-        newValue = "$" + (value / 1000).toFixed(1) + "k"; // Thousands
-    } else if (value >= 1000000) {
-        newValue = "$" + (value / 1000000).toFixed(1) + "m"; // Millions
-    } else {
-        newValue = "$" + value; // Less than 1000
-    }
-    return newValue;
-}
-
-function createCostChart(containerId, costArray) {
-    var data = [];
-    for (let i = 0; i < costArray.length; i++) {
-        data.push({x: `Month ${i + 1}`, value: costArray[i]});
-    }
-
-    // Ensure the chart library is ready before creating the chart
-    anychart.onDocumentReady(function() {
-        // Clear the container before creating a new chart
-        document.getElementById(containerId).innerHTML = '';
-
-        var chart = anychart.column();
-        chart.data(data);
-
-        // Set the chart title
-        chart.title("Monthly Cost Estimates");
-
-        // Customize the X-axis labels
-        var xAxis = chart.xAxis();
-        xAxis.title("Month");
-        xAxis.labels()
-            .rotation(-70) // Angle the labels
-            .fontSize(10); // Smaller font size
-
-        // Customize the Y-axis
-        var yAxis = chart.yAxis();
-        yAxis.title("Cost in USD");
-
-        var series = chart.getSeries(0);
-        series.labels(true);
-        series.labels()
-            .position("above")
-            .anchor("centerBottom")
-            .fontSize(10)
-            .format(function() {
-                return abbreviateValue(this.value);
-            });
-
-        // Optionally disable credits if needed
-        var credits = chart.credits();
-        credits.enabled(false);
-
-        // Draw the chart in the specified container
-        chart.container(containerId);
-        chart.draw();
-    });
-}
-
 $(document).ready(function() {
     // Close button inside the modal header
     $('.close').click(function() {
@@ -2064,28 +2246,23 @@ $(document).ready(function() {
     });
 });
 
-
 $(document).ready(function() {
-  $("#addRow").click(function() {
-    var newRow = `<tr>
-      <td><select name="investment_type[]" class="form-control">
-        <option value="Software">Software</option>
-        <option value="Hardware">Hardware</option>
-        <option value="People">People</option>
-      </select></td>
-      <td><input type="text" name="vendor_name[]" class="form-control" /></td>
-      <td><input type="text" name="product_name[]" class="form-control" /></td>
-      <td><input type="number" name="cost[]" class="form-control" step="0.01" /></td>
-      <td><input type="date" name="date[]" class="form-control" /></td>
-      <td><button type="button" class="btn btn-danger removeRow">Remove</button></td>
-    </tr>`;
-    $("#investmentTable tbody").append(newRow);
-  });
+    $('a[data-tab]').click(function(e) {
+        e.preventDefault(); // Prevent the default anchor behavior
 
-  $(document).on('click', '.removeRow', function() {
-    $(this).closest('tr').remove();
-  });
+        var selectedTab = $(this).attr('data-tab'); // Get the data-tab attribute of the clicked link
+
+        $('.tab-content').hide(); // Hide all tab content
+        $('#' + selectedTab).show(); // Show the selected tab content
+
+        $('a[data-tab]').removeClass('active'); // Remove 'active' class from all tab links
+        $(this).addClass('active'); // Add 'active' class to the clicked tab link
+    });
+
+    // Optionally, trigger click on the first tab to show it by default
+    $('a[data-tab]').first().trigger('click');
 });
+
 </script>
 </div>
 </body>

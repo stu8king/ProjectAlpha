@@ -134,15 +134,22 @@ urlpatterns = [
     path('delete_snapshot/<int:snapshot_id>/<int:scenario_id>/', views.delete_snapshot, name='delete_snapshot'),
     path('organization/form/', views.organization_form_view, name='organization_form'),
     path('scenario_sim/', views.scenario_sim, name='scenario_sim'),
+    path('scenario_sim_v2/', views.scenario_sim_v2, name='scenario_sim_v2'),
     path('update_user_phone_number/', views.update_user_phone_number, name='update_user_phone_number'),
     path('analyze_raw_scenario/', views.analyze_raw_scenario, name='analyze_raw_scenario'),
     path('analyze_sim_scenario/', views.analyze_sim_scenario, name='analyze_sim_scenario'),
+    path('analyze_sim_scenario_v2/', views.analyze_sim_scenario_v2, name='analyze_sim_scenario_v2'),
     path('assign_cyberpha_to_group/', views.assign_cyberpha_to_group, name='assign_cyberpha_to_group'),
     path('fetch_groups/', views.fetch_groups, name='fetch_groups'),
     path('fetch_all_groups/', views.fetch_all_groups, name='fetch_all_groups'),
     path('generate_sim_attack_tree/', views.generate_sim_attack_tree, name='generate_sim_attack_tree'),
+    path('generate_sim_attack_tree_v2/', views.generate_sim_attack_tree_v2, name='generate_sim_attack_tree_v2'),
+
     path('generate_scenario_description/', views.generate_scenario_description, name='generate_scenario_description'),
+    path('generate_scenario_description_v2/', views.generate_scenario_description_v2, name='generate_scenario_description_v2'),
+
     path('analyze_sim_consequences/', views.analyze_sim_consequences, name='analyze_sim_consequences'),
+    path('analyze_sim_consequences_v2/', views.analyze_sim_consequences_v2, name='analyze_sim_consequences_v2'),
     path('save_scenario_builder/', views.save_scenario_builder, name='save_scenario_builder'),
     path('get_saved_scenario_builders/', views.get_saved_scenario_builders, name='get_saved_scenario_builders'),
     path('retrieve_scenario_builder/<int:scenario_id>/', views.retrieve_scenario_builder, name='retrieve_scenario_builder'),
@@ -167,6 +174,7 @@ urlpatterns = [
     path('generate_risk_treatment_plan/', views.generate_risk_treatment_plan, name='generate_risk_treatment_plan'),
     path('risk_treatment/<int:risk_id>/', views.risk_treatment, name='risk_treatment'),
     path('delete_from_risk_register/<int:risk_id>/', views.delete_from_risk_register, name='delete_from_risk_register'),
+    path('related_incidents/', views.related_incidents, name='related_incidents'),
 ]
 
 
