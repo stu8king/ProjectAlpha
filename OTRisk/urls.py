@@ -153,6 +153,7 @@ urlpatterns = [
     path('save_scenario_builder/', views.save_scenario_builder, name='save_scenario_builder'),
     path('get_saved_scenario_builders/', views.get_saved_scenario_builders, name='get_saved_scenario_builders'),
     path('retrieve_scenario_builder/<int:scenario_id>/', views.retrieve_scenario_builder, name='retrieve_scenario_builder'),
+    path('retrieve_scenario_builder_v2/<int:scenario_id>/', views.retrieve_scenario_builder_v2, name='retrieve_scenario_builder_v2'),
     path('update_workflow/', views.update_workflow, name='update_workflow'),
     path('list_scenario_builders/', views.list_scenario_builders, name='list_scenario_builders'),
     path('get_scenario_builder_details/<int:scenario_id>/', views.get_scenario_builder_details, name='get_scenario_builder_details'),

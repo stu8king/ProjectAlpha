@@ -405,9 +405,9 @@ path.connection {
     display: flex; /* Use flexbox for centering */
     justify-content: left; /* Center horizontally */
     align-items: center; /* Center vertically */
-    overflow: auto; /* Hide overflow */
+    overflow: initial;
     background-color: #253349; /* Match the image's background color */
-    height: 100%; /* Adjust based on your layout needs */
+    height: 100%; !important; /* Adjust based on your layout needs */
 }
 
 .swal2-custom-border {
@@ -503,7 +503,8 @@ input:checked + .slider1:before {
 <body style="background-color: #464748">
 <script>
 anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
-var isProgrammaticChange = false;
+let isProgrammaticChange = false;
+let tab2Changed= false;
 
 
 fetch('https://restcountries.com/v3.1/all')
@@ -590,10 +591,26 @@ document.getElementById('newScenarioBtn').addEventListener('click', function() {
                                         document.getElementById('txtBestCase').value = ''; // Clear Event Costs tab content
                                         document.getElementById('txtMostLikelyCase').value = '';
                                         document.getElementById('txtWorstCase').value = '';
+
+                                        $('#selIndustry').val('').trigger('change');
+                                        $('#selFacilityType').val('').trigger('change');
+                                        $('#selOrganizationSize').val('').trigger('change');
+                                        $('#selRegulatoryEnvironment').val('').trigger('change');
+                                        $('#selThreats').val('').trigger('change');
+                                        $('#selVectors').val('').trigger('change');
+                                        document.getElementById('targetComponent').value = '';
+                                        document.getElementById('attackEffect').value = '';
+                                        document.getElementById('targetSystem').value = '';
+                                        document.getElementById('impact').value = '';
+                                        document.getElementById('motivation').value = '';
+                                        document.getElementById('hdnIncidents').value = '';
+
                                         $('#monthly_cost_chart').empty();
                                         $('#bia_groups').empty();
                                         $('#investmentImpactVisualization').empty();
                                         $('#attack_tree').empty();
+                                        $('#related_incidents').html('');
+
                                         document.getElementById('analyzeConsequencesCheckbox').checked = false;
                                         document.getElementById('analyzeAttackTreeCheckbox').checked = false;
                                         document.getElementById('analyzeScenarioCheckbox').checked = false;
@@ -695,9 +712,9 @@ function drawAttackTree(data) {
         //$('#tab9').addClass('active').show();
         document.querySelector('a[data-tab="tab9"]').click();
         var container = document.getElementById('attack_tree');
-        var containerWidth = container.clientWidth;
+        var containerWidth = container.clientWidth * 0.8;
         var svgWidth = containerWidth * 0.7;
-        var margin = { top: 20, right: 10, bottom: 20, left: 120 };
+        var margin = { top: 20, right: 20, bottom: -10, left: 100 };
         var width = svgWidth - margin.left - margin.right;
         var height = 800; // Increased height for better resolution
 
@@ -842,11 +859,18 @@ function loadScenarioDetails(scenarioId) {
     document.getElementById('analyzeCostsCheckbox').checked = false;
     document.getElementById('analyzeToolsCheckbox').checked = false;
     document.getElementById('analyzeIncidentsCheckbox').checked = false;
-    isProgrammaticChange = true;
+    document.getElementById('hdnIncidents').value = '';
+
     $.ajax({
-        url: `/OTRisk/retrieve_scenario_builder/${scenarioId}`,
+        url: `/OTRisk/retrieve_scenario_builder_v2/${scenarioId}`,
         type: "GET",
         success: function(response) {
+
+        $('#monthly_cost_chart').empty();
+        $('#bia_groups').empty();
+        $('#investmentImpactVisualization').empty();
+        $('#attack_tree').empty();
+        $('#related_incidents').html('');
 
         $('#txtScenario').val(response.scenario_description);
         $('#txtConsequences').val(response.consequences);
@@ -868,6 +892,8 @@ function loadScenarioDetails(scenarioId) {
         $('#targetSystem').val(response.network);
         $('#impact').val(response.impact);
         $('#motivation').val(response.motivation);
+        $('#hdnIncidents').val(response.incidents);
+
         renderInvestmentImpact(decodedText);
 
         var costArray = response.cost_projection.split('|').map(Number);
@@ -887,58 +913,81 @@ function loadScenarioDetails(scenarioId) {
         var rows = []; // To keep track of the rows of BIA groups
 
         factorKeys.forEach(function(factor, index) {
-        // Create a new row every 3 items
-        if (index % 3 === 0) {
-        var row = document.createElement('div');
-        row.className = 'row';
-        rows.push(row);
-        }
+            // Create a new row every 3 items
+            if (index % 3 === 0) {
+                var row = document.createElement('div');
+                row.className = 'row';
+                rows.push(row);
+            }
 
-        // Create the group container
-        var groupContainer = document.createElement('div');
-        groupContainer.className = 'group-container col-md-4';
+            // Create the group container
+            var groupContainer = document.createElement('div');
+            groupContainer.className = 'group-container col-md-4';
 
-        // Create the group header
-        var groupHeader = document.createElement('div');
-        groupHeader.className = 'group-header';
-        var icon = document.createElement('img');
-        // Determine the icon based on the score
-        var factorData = factors[factor]; // Get the data for this factor
-        if (factorData.score > 7) {
-            icon.src = "{% static 'images/redcube.png' %}";
-        } else if (factorData.score > 4) {
-            icon.src = "{% static 'images/yellow_cube.png' %}";
-        } else {
-            icon.src = "{% static 'images/green_cube.png' %}";
-        }
-        icon.className = 'cube-icon';
-        icon.alt = 'cube_icon'; // Adjust the alt text as needed
-        groupHeader.appendChild(icon);
-        var headerText = document.createTextNode(factor); // factor is the key from factors object
-        groupHeader.appendChild(headerText);
-        groupContainer.appendChild(groupHeader);
+            // Create the group header
+            var groupHeader = document.createElement('div');
+            groupHeader.className = 'group-header';
+            var icon = document.createElement('img');
+            // Determine the icon based on the score
+            var factorData = factors[factor]; // Get the data for this factor
+            if (factorData.score > 7) {
+                icon.src = "{% static 'images/redcube.png' %}";
+            } else if (factorData.score > 4) {
+                icon.src = "{% static 'images/yellow_cube.png' %}";
+            } else {
+                icon.src = "{% static 'images/green_cube.png' %}";
+            }
+            icon.className = 'cube-icon';
+            icon.alt = 'cube_icon'; // Adjust the alt text as needed
+            groupHeader.appendChild(icon);
+            var headerText = document.createTextNode(factor); // factor is the key from factors object
+            groupHeader.appendChild(headerText);
+            groupContainer.appendChild(groupHeader);
 
-        // Create the group body
-        var groupBody = document.createElement('div');
-        groupBody.className = 'group-body';
-        // Display the score in bold text out of 10
-        var scoreText = document.createElement('strong');
-        scoreText.textContent = factorData.score + '/10. ';
-        groupBody.appendChild(scoreText);
-        var narrativeText = document.createTextNode(factorData.narrative);
-        groupBody.appendChild(narrativeText);
-        groupContainer.appendChild(groupBody);
+            // Create the group body
+            var groupBody = document.createElement('div');
+            groupBody.className = 'group-body';
+            // Display the score in bold text out of 10
+            var scoreText = document.createElement('strong');
+            scoreText.textContent = factorData.score + '/10. ';
+            groupBody.appendChild(scoreText);
+            var narrativeText = document.createTextNode(factorData.narrative);
+            groupBody.appendChild(narrativeText);
+            groupContainer.appendChild(groupBody);
 
-        // Add the group container to the current row
-        rows[rows.length - 1].appendChild(groupContainer);
+            // Add the group container to the current row
+            rows[rows.length - 1].appendChild(groupContainer);
 
-        // Add the row to the biaGroupsContainer if it's full (3 items) or if it's the last item
-        if ((index + 1) % 3 === 0 || index === factorKeys.length - 1) {
-        biaGroupsContainer.appendChild(rows[rows.length - 1]);
-        }
+            // Add the row to the biaGroupsContainer if it's full (3 items) or if it's the last item
+            if ((index + 1) % 3 === 0 || index === factorKeys.length - 1) {
+            biaGroupsContainer.appendChild(rows[rows.length - 1]);
+            }
+        })
+        // Create a table and append it to the 'related_incidents' container
+        var table = $('<table class="table table-striped"><thead><tr><th>Title</th><th>Description</th><th>Date</th><th>URL</th></tr></thead><tbody></tbody></table>');
+        $('#related_incidents').append(table);
+
+        // Splitting the generated_summary by lines to get individual incidents
+        var incidents = response.incidents.split('\n\n');
+
+        incidents.forEach(function(incident) {
+            var parts = incident.split('|');
+            if(parts.length === 4) { // Ensure we have all required parts
+                var row = $('<tr></tr>');
+                parts.forEach(function(part, index) {
+                    if(index === 3) { // URL part
+                        var cell = $('<td></td>').html('<a href="' + part + '" target="_blank">Link</a>');
+                    } else {
+                        var cell = $('<td></td>').text(part);
+                    }
+                    row.append(cell);
+                });
+                table.find('tbody').append(row);
+            }
         });
+
         // Populate table data, costs, and other fields similarly
-        isProgrammaticChange = false;
+        isProgrammaticChange = true;
         Swal.fire({
             title: "Scenario loaded successfully",
             imageUrl: '/static/images/anzen_owl.png', // Make sure the path is correct
@@ -1301,6 +1350,16 @@ console.error('Error fetching scenarios:', error);
             </div>
 
         </div>
+    <script>
+$(document).ready(function() {
+
+    // Listen for any change event within #tab2
+    $('#tab2').find('input, select, textarea').change(function() {
+        tab2Changed = true;
+    });
+});
+</script>
+
     </div>
 
     <!-- Tab 2 Content -->
@@ -1390,12 +1449,12 @@ if (txtScenarioElement) {
 });
 
 $(document).ready(function() {
-var tab2Changed = false; // Flag to track changes in Tab 1
-var isProgrammaticChange = false;
 
 // Attach change listeners to all inputs and selects within Tab 1
 $('#tab2 input, #tab2 select').change(function() {
-    if (!isProgrammaticChange) { // Check if change is not programmatic
+
+    if (isProgrammaticChange) { // Check if change is not programmatic
+
         tab2Changed = true;
     }
 });
@@ -1412,7 +1471,8 @@ $('.sub-menu a').click(function(e) {
     var currentScenarioText = $('#txtScenario').val();
     // Check if the Scenario tab was clicked
     if ($(this).attr('id') === 'scenarioTabLink') {
-         if (tab2Changed && !isProgrammaticChange) {
+         if (tab2Changed) {
+
              // Proceed with AJAX call only if changes were made in Tab 1
                 document.getElementById('spinner').style.display = 'block';
                 var formData = {
@@ -1547,7 +1607,7 @@ $('.sub-menu a').click(function(e) {
     <div class="tab-content" id="tab9">
         <h2>Attack Tree</h2>
         <div class="form-group">
-            <div id="attack_tree" style="width:100%"></div>
+            <div id="attack_tree" style="width:100%;"></div>
         </div>
     </div>
     <div class="tab-content" id="tab10">
@@ -1853,6 +1913,9 @@ function generateAttackTree(scenarioDetails) {
                 'compliance': scenarioDetails.regulatory_environment,
                 'facility_type': scenarioDetails.facility_type,
                 'industry': scenarioDetails.industry,
+                'targeted_system': scenarioDetails.target,
+                'attack_effect': scenarioDetails.effect,
+                'impact': scenarioDetails.impact,
                 'csrfmiddlewaretoken': $('input[name="csrfmiddlewaretoken"]').val() // Correct way to include CSRF token
             },
             success: function(attackTreeResponse) {

@@ -243,7 +243,9 @@ def generate_sim_attack_tree_v2(request):
 
     threat_actor = request.POST.get('threat_actor')
     attack_vector = request.POST.get('attack_vector')
-
+    targeted_system = request.POST.get('targeted_system')
+    attack_effect = request.POST.get('attack_effect')
+    impact = request.POST.get('impact')
     compliance = request.POST.get('compliance')
     facility_type = request.POST.get('facility_type')
     industry = request.POST.get('industry')
@@ -255,10 +257,13 @@ def generate_sim_attack_tree_v2(request):
         Compliance Requirements: {compliance}
         Facility Type: {facility_type}
         Industry: {industry}
+        Targeted System: {targeted_system}
+        Attack Effect: {attack_effect}
+        Attack Impact: {impact}
         """
 
     attack_tree_system_message = """
-                    Generate a hierarchical structure of a potential attack tree for the given cybersecurity scenario in a strictly valid JSON format. The structure should use 'name' for node labels and 'children' for nested nodes, where each node represents a step or method in the attack. The attack tree must have at least two main branches, each potentially containing dozens of branches or sub-branches. CRITICAL INSTRUCTION: Ensure the output is in JSON format WITH NO additional characters outside of the JSON structure. The JSON structure should be formatted as: {'name': 'Node Name', 'children': [{...}]}.
+                    Generate a hierarchical structure of a probable attack tree, based on the MITRE ATT@CK framework for Industrial Control Systems (ICS), applied to and specific to the given OT cybersecurity scenario, in a strictly valid JSON format. Incorporate relevant terminology from ISA 62443-3-2 if applicable. The structure should use 'name' for node labels and 'children' for nested nodes, where each node represents a step or method in the attack. The attack tree must have at least two main branches, each potentially containing dozens of branches or sub-branches. CRITICAL INSTRUCTION: Ensure the output is in JSON format WITH NO additional characters outside of the JSON structure. The JSON structure should be formatted as: {'name': 'Node Name', 'children': [{...}]}.
 
                     Example of a correctly formatted output:
                     {
@@ -569,3 +574,82 @@ def related_incidents(request):
         return JsonResponse({"error": str(e)}, status=500)
 
 
+def retrieve_scenario_builder_v2(request, scenario_id):
+    try:
+        # Retrieve the scenario from the database
+        scenario = ScenarioBuilder.objects.get(id=scenario_id)
+
+        # Parse the stored JSON data
+        scenario_data = json.loads(scenario.scenario_data)
+
+        # Extract elements from the scenario data
+        attack_tree_data = scenario_data.get('attackTree')
+        scenario_description = scenario_data.get('scenario')
+        investment_projection = scenario_data.get('investment_projection')
+
+        industry = scenario_data.get('industry')
+        facility = scenario_data.get('facility')
+        country = scenario_data.get('country')
+        org = scenario_data.get('org')
+        regs = scenario_data.get('regs')
+        attacker = scenario_data.get('attacker')
+        vector = scenario_data.get('vector')
+        target = scenario_data.get('target')
+        effect = scenario_data.get('effect')
+        network = scenario_data.get('network')
+        impact = scenario_data.get('impact')
+        motivation = scenario_data.get('motivation')
+        incidents = scenario_data.get('incidents')
+
+        # Correctly process consequences to ensure each starts with a single dash
+        raw_consequences = scenario_data.get('consequences', '')
+        # Split by any known delimiter and ensure each consequence starts with a dash
+        consequences_list = raw_consequences.replace(',', '\n').split('\n')
+        consequences = [f"- {line.strip()}" if not line.strip().startswith('-') else line.strip()
+                        for line in consequences_list if line.strip()]
+        # Join the consequences with a line break between each
+        formatted_consequences = '\n'.join(consequences)
+        table_data = scenario_data.get('tableData')
+
+        costs = scenario_data.get('costs')
+        # Check if cost_projection is None or not present, and set a default value if so
+        cost_projection = scenario_data.get('cost_projection', '0|0|0|0|0|0|0|0|0|0|0|0')
+        if not cost_projection:
+            cost_projection = '0|0|0|0|0|0|0|0|0|0|0|0'
+
+        # Prepare factors data
+        factors = {}
+        for item in table_data:
+            factor = item.get('factor')
+            score = int(item.get('score').split('/')[0])  # Extract score as integer
+            narrative = item.get('narrative')
+            factors[factor] = {'score': score, 'narrative': narrative}
+
+        # Return the extracted data
+        return JsonResponse({
+            'attack_tree_data': attack_tree_data,
+            'scenario_description': scenario_description,
+            'consequences': formatted_consequences,
+            'factors': factors,
+            'costs': costs,
+            'cost_projection': cost_projection,
+            'investment_projection': investment_projection,
+            'industry': industry,
+            'facility': facility,
+            'country': country,
+            'org': org,
+            'regs': regs,
+            'attacker': attacker,
+            'vector': vector,
+            'target': target,
+            'effect': effect,
+            'network': network,
+            'impact': impact,
+            'motivation': motivation,
+            'incidents': incidents
+        })
+
+    except ScenarioBuilder.DoesNotExist:
+        return JsonResponse({'error': 'Scenario not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
