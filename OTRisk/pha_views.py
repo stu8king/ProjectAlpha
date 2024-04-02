@@ -1452,23 +1452,50 @@ def scenario_analysis(request):
 
         openai.api_key = get_api_key('openai')
         # Define the common part of the user message
-        common_content = f"Act as an Insurance actuary and an expert in OT cybersecurity risk. Analyse a scenario for a {facility_type} in the {industry} industry in {country}:  {scenario}. (IMPORTANT CONTEXT: Systems in scope for the scenario are exposed to the Internet with a public IP address: {exposed_system}. Systems in scope for the scenario have weak or default credentials: {weak_credentials}). Organization has an OT Cybersecurity Incident Response Plan: {has_incident_response_plan}. If there is an OT Cybersecurity incident Response plan, it was last tested: {plan_last_tested_date_str}. Consider the business impact scores provided (safety: {safetyimpact}, life danger: {lifeimpact}, production: {productionimpact} (production outage: {production_outage}: length of production outage {production_outage_length} hours), company reputation: {reputationimpact}, environmental impact: {environmentimpact}, regulatory: {regulatoryimpact}, supply chain : {supplyimpact}  data and intellectual property: {dataimpact}). Current OT Cybersecurity controls are {control_effectiveness}% effective (NOTE if 0% then control effectiveness has not been assessed) : Mitigated severity with current controls estimated: {severitymitigated}/10, risk exposure to the scenario mitigated estimated: {mitigatedexposure}/10,   residual risk estimated: {residualrisk}/10. The amount of unmitigated rate without controls is estimated: {uel}/10. ESSENTIAL:  {physical_safeguards_str} . Physical security controls are assumed to be effective. ({investment_statement})"
+        common_content = f"""
+        
+        Act as both an Insurance Actuary and an OT Cybersecurity Risk Expert. You're tasked with analyzing a specific scenario for a facility in the industry sector, located in a particular country. Your analysis should cover various risk outcomes based on the detailed context provided.
+
+        Scenario Details:
+
+        Facility Type & Industry: A facility in the {industry} industry, located in {country}.
+        Scenario Overview: {scenario}.
+        Critical System Exposures:
+        Internet Exposure: Systems with public IP addresses: {exposed_system}.
+        Credential Security: Systems with weak/default credentials: {weak_credentials}.
+        OT Cybersecurity Incident Response:
+        Presence of an Incident Response Plan: {has_incident_response_plan}.
+        Last Tested Date: {plan_last_tested_date_str}.
+        Estimated Business Impact Scores:
+        Safety: {safetyimpact}, Life Danger: {lifeimpact}
+        Production: {productionimpact}, Production Outage: {production_outage} (Duration: {production_outage_length} hours)
+        Reputation: {reputationimpact}, Environmental: {environmentimpact}
+        Regulatory Compliance: {regulatoryimpact}, Supply Chain: {supplyimpact}
+        Data & Intellectual Property: {dataimpact}
+        Estimated Current OT Cybersecurity Controls:
+        Effectiveness: {control_effectiveness}%
+        Mitigated Severity: {severitymitigated}/10, Risk Exposure: {mitigatedexposure}/10, Residual Risk: {residualrisk}/10
+        Estimated Unmitigated likelihood of all identified threats and vulnerabilities: {uel}/10
+        Physical Security:
+        Physical Safeguards: {physical_safeguards_str} (Assumed effective)
+        Investment Statement: {investment_statement}
+        """
 
         # Define the refined user messages
         user_messages = [
 
             {
                 "role": "user",
-                "content": f" {common_content} . Consider publicly reported cybersecurity incidents over the time scale from 5 years ago to the current day and give ONLY the estimated likelihood (as a whole number percentage) of the given scenario occurring against a {facility_type} in {country}. Answer with a whole number. Do NOT include any other words, sentences, or explanations."
+                "content": f" {common_content} .Task: Given the scenario described and publicly reported cybersecurity incidents over the time scale from 5 years ago to the current day , estimate the likelihood (as a whole number percentage) of the given scenario occurring against a {facility_type} in {country}. Answer with a whole number. Do NOT include any other words, sentences, or explanations."
             },
             {
                 "role": "user",
-                "content": f"{common_content}. Assess the cybersecurity residual risk after all recommended controls and physical security controls have been implemented and are assumed to be at least 75% effective and give an estimated residual risk rating from the following options: Very Low, Low, Low/Medium, Medium, Medium/High, High, Very High.  Provide ONLY one of the given risk ratings without any additional text or explanations."
+                "content": f"{common_content}. Task: Given the scenario described and publicly reported cybersecurity incidents over the time scale from 5 years ago to the current day, assess the cybersecurity residual risk after all recommended controls and physical security controls have been implemented and are assumed to be at least 75% effective. Give an estimated residual risk rating from the following options: Very Low, Low, Low/Medium, Medium, Medium/High, High, Very High.  Provide ONLY one of the given risk ratings without any additional text or explanations."
             },
 
             {
                 "role": "user",
-                "content": f"{common_content}.  Consequences of the scenario are: {validated_consequences_list}. Read and comply with all instructions that follow. Provide an estimate of the DIRECT COSTS of a single loss event (SLE) in US dollars. Provide three cost estimates: best case, worst case, and most likely case. Output these estimates as integers in the specific format: 'low|medium|high', where '|' is the delimiter. Ensure that your estimates are realistic and tailored to the scenario, focusing solely on relevant Direct costs such as incident response, remediation, legal fees, notification costs, regulatory fines, compensations, and increased insurance premiums. The financial impact for this scenario is rated as {financial}/10 in the business impact analysis. (IMPORTANT take into account the  OT Cybersecurity investments that have been made). IMPORTANT: Respond with only three positive integers, representing the low, medium, and high estimates, in the exact order and format specified: 'low|medium|high'. Do not include any additional text, explanations, or commentary."
+                "content": f"{common_content}.  Consequences of the scenario are assumed to be as follows: {validated_consequences_list}. TASK: Read and comply with all instructions that follow. Provide an estimate of the DIRECT COSTS of a single loss event (SLE) in US dollars. Provide three cost estimates: best case, worst case, and most likely case. Output these estimates as integers in the specific format: 'low|medium|high', where '|' is the delimiter. Ensure that your estimates are realistic, taking into account recent (no older than 3 years) industry reports about the cost of cybersecurity incidents, and tailored to the scenario, focusing solely on relevant Direct costs such as incident response, remediation, legal fees, notification costs, regulatory fines, compensations, and increased insurance premiums. The financial impact for this scenario is estimated as {financial}/10 in the business impact analysis. (IMPORTANT take into account the  OT Cybersecurity investments that have been made). IMPORTANT: Respond with only three positive integers, representing the low, medium, and high estimates, in the exact order and format specified: 'low|medium|high'. Do not include any additional text, explanations, or commentary."
             },
 
             {
@@ -1482,7 +1509,7 @@ def scenario_analysis(request):
             },
             {
                 "role": "user",
-                "content": f"{common_content}. Hypothesize the business impact score from 0 to 100 in the event of a successful attack resulting in the given scenario. Consequences of the scenario are given as follows: {validated_consequences_list}. A score of 1 would mean minimal business impact while a score of 100 would indicate catastrophic business impact without the ability to continue operations. Your answer should be given as an integer. Do NOT include any other words, sentences, or explanations."
+                "content": f"{common_content}. TASK: Hypothesize the business impact score from 0 to 100 in the event of a successful attack resulting in the given scenario. Consequences of the scenario are given as follows: {validated_consequences_list}. A score of 1 would mean minimal business impact while a score of 100 would indicate catastrophic business impact without the ability to continue operations. Your answer should be given as an integer. Do NOT include any other words, sentences, or explanations."
             },
 
             {
@@ -1800,6 +1827,12 @@ def analyze_scenario(request):
     if request.method == 'POST':
         scenario = request.POST.get('scenario')
         attack_tree_drawn = request.POST.get('attackTreeDrawn') == 'true'
+        attacker = request.POST.get('attacker')
+        riskCategory = request.POST.get('riskCategory')
+        attack_vector = request.POST.get('attack_vector')
+        exposed_system = request.POST.get('exposed_system')
+        weak_credentials = request.POST.get('weak_credentials')
+
         # Fetch the organization_id from the user's profile
         try:
             user_profile = UserProfile.objects.get(user=request.user)
@@ -1852,7 +1885,12 @@ def analyze_scenario(request):
 
             # Construct a prompt for GPT-4
             system_message = f"""
-            Given a cybersecurity scenario at a {facility_type} in the {industry} industry, located at {address} in {country}, specifically in the {zone} zone and the {unit} unit, described as: {scenario}. Considering the likely presence of these OT devices: {devices}, concisely describe in 50 words in a list format (separated by semicolons) of a maximum of 5 of the most likely direct consequences of the given scenario. The direct consequences should be specific to the facility and the mentioned details. Assume the role of an expert OT Cybersecurity risk advisor. Additional instruction: output ONLY the list items with no text either before or after the list items.
+            TASK: Analyze and consider the following scenario: {scenario} which occurs at a {facility_type} in the {industry} industry, located at {address} in {country}, specifically in the {zone} zone and the {unit} unit. 
+            The attacker is assumed to be: {attacker}. The attack vector is assumed to be {attack_vector}. The risk category is assumed to be {riskCategory}. Vulnerable systems with Internet exposed IP address {exposed_system}. Vulnerable systems with default or weak credentials {weak_credentials}.
+            Considering the likely presence of these OT devices: {devices}, concisely describe in 50 words in a list format (separated by semicolons) of a maximum of 5 of the most likely direct consequences of the given scenario. 
+            The direct consequences should be specific to the facility and the mentioned details. 
+            Assume the role of an expert OT Cybersecurity risk advisor. 
+            Additional instruction: output ONLY the list items with no text either before or after the list items.
             """
             user_message = scenario
 
@@ -1875,43 +1913,47 @@ def analyze_scenario(request):
 
             if not attack_tree_drawn:
                 attack_tree_system_message = """
-                Generate a hierarchical structure of a potential attack tree for the given cybersecurity scenario in a strictly valid JSON format. The structure should use 'name' for node labels and 'children' for nested nodes, where each node represents a step or method in the attack. The attack tree must have at least two main branches, each potentially containing dozens of branches or sub-branches. Ensure the output is in JSON format with no additional characters outside of the JSON structure. The JSON structure should be formatted as: {'name': 'Node Name', 'children': [{...}]}.
+                  Generate a hierarchical structure of a probable attack tree, based on the MITRE ATT@CK framework for Industrial Control Systems (ICS) applied to and specific to the given OT cybersecurity scenario, in a strictly valid JSON format. 
+                  Incorporate relevant terminology from ISA 62443-3-2 if applicable. 
+                  The structure should use 'name' for node labels and 'children' for nested nodes, where each node represents a step or method in the attack. 
+                  The attack tree must have at least two main branches, each potentially containing dozens of branches or sub-branches. 
+                  CRITICAL INSTRUCTION: Ensure the output is in JSON format WITH NO additional characters outside of the JSON structure. The JSON structure should be formatted as: {'name': 'Node Name', 'children': [{...}]}.
 
-                Example of a correctly formatted output:
-                {
-                  "name": "Attack Root",
-                  "children": [
-                    {
-                      "name": "Branch 1",
-                      "children": [
-                        {
-                          "name": "Sub-branch 1.1",
-                          "children": []
-                        },
-                        {
-                          "name": "Sub-branch 1.2",
-                          "children": []
-                        }
-                      ]
-                    },
-                    {
-                      "name": "Branch 2",
-                      "children": [
-                        {
-                          "name": "Sub-branch 2.1",
-                          "children": []
-                        },
-                        {
-                          "name": "Sub-branch 2.2",
-                          "children": []
-                        }
-                      ]
-                    }
-                  ]
-                }
+                  Example of a correctly formatted output:
+                  {
+                    "name": "Attack Root",
+                    "children": [
+                      {
+                        "name": "Branch 1",
+                        "children": [
+                          {
+                            "name": "Sub-branch 1.1",
+                            "children": []
+                          },
+                          {
+                            "name": "Sub-branch 1.2",
+                            "children": []
+                          }
+                        ]
+                      },
+                      {
+                        "name": "Branch 2",
+                        "children": [
+                          {
+                            "name": "Sub-branch 2.1",
+                            "children": []
+                          },
+                          {
+                            "name": "Sub-branch 2.2",
+                            "children": []
+                          }
+                        ]
+                      }
+                    ]
+                  }
 
-                Please generate a similar structure for the provided cybersecurity scenario, adhering strictly to the JSON format and ensuring at least two main branches are present.
-                """
+                  Please generate a similar structure for the provided cybersecurity scenario, adhering STRICTLY to the JSON format and ensuring at least two main branches are present.
+                  """
 
                 # Query OpenAI API for the attack tree
                 attack_tree_response = openai.ChatCompletion.create(
@@ -1920,20 +1962,22 @@ def analyze_scenario(request):
                         {"role": "system", "content": attack_tree_system_message},
                         {"role": "user", "content": user_message}
                     ],
-                    max_tokens=800,
+                    max_tokens=1600,
                     temperature=0.3
                 )
 
                 # Process the response for attack tree
                 attack_tree_raw = attack_tree_response['choices'][0]['message']['content']
+                attack_tree_raw = attack_tree_raw.strip()
 
+                match = re.search(r'\{.*\}', attack_tree_raw, re.DOTALL)
+                if match:
+                    cleaned_json_str = match.group(0)
+                else:
+                    cleaned_json_str = "{}"  # Fallback to empty JSON object if no match
 
-                try:
                     # Parse the raw JSON string into a Python dictionary
-                    attack_tree_json = json.loads(attack_tree_raw)
-                except json.JSONDecodeError:
-                    attack_tree_json = {"error": "Invalid JSON format from AI response"}
-
+                attack_tree_json = json.loads(cleaned_json_str)
             return JsonResponse({'consequence': consequence_list, 'attack_tree': attack_tree_json})
 
 

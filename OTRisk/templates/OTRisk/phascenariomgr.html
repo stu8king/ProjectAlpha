@@ -681,7 +681,7 @@ document.addEventListener("DOMContentLoaded", function() {
         <ul>
             <li><a href="#" data-tab="tab1" class="tab-link">Scenario Table</a></li>
             <li><a href="#" data-tab="tab2" class="tab-link tab-inactive">Scenario Detail</a></li>
-            <li><a href="#" data-tab="tab3" class="tab-link tab-inactive">Scenario Parameters</a></li>
+
             <li><a href="#" data-tab="tab4" class="tab-link tab-inactive">Business Impact Assessment</a></li>
 
             <li><a href="#" data-tab="tab5" class="tab-link tab-inactive">Physical Safeguards</a></li>
@@ -929,18 +929,76 @@ $(document).ready(function() {
         </div>
         </div>
 
-         <div class="tab-content" id="tab2">
+        <div class="tab-content" id="tab2">
+        <h2>Scenario Detail</h2>
+            <div class="form-group">
+                <div class = "row">
+                    <div class="col-md-3">
+                        <br>
+                        <div class="form-group">
+                        <label class="form-label" for="threat-intelligence"><h6>Attacker/Bad Actor:</h6></label>
+                        <select class="form-control small-font" name="threat-intelligence" id="threat-intelligence" style="border: 3px solid #97979A; border-radius: 10px; box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5);  padding: 5px; background-color: white">
+                            <option value="">-- Select a threat source --</option>
+                            {% for threatsource in threatsources %}
+                                <option value="{{ threatsource.ThreatSource }}">{{ threatsource.ThreatSource }}</option>
+                            {% endfor %}
+                        </select>
+                        <br>
+                        <label for="selVectors" style="color: white">Attack Vector:</label>
+                         <!-- store in the threat agent field -->
+                            <select class="form-control" name="selVectors" id="selVectors" >
+                            <option value=""> -- Select Attack Vector -- </option>
+                            {% for threataction in threatactions %}
+                            <option value="{{ threataction.ThreatAction }}">
+                                {{ threataction.ThreatAction }}
+                            </option>
+                            {% endfor %}
+                        </select>
 
-                <h2>Scenario Detail</h2>
-                <div class="form-group">
+                        <br>
+                        <label class="form-label" for="risk-category"><h6>Risk Category</h6></label>
+                        <select class="form-control small-font" name="risk-category" id="risk-category" style="border: 3px solid #97979A; border-radius: 10px; box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5);  padding:5px; background-color: white">
+                            <option value="">Select a risk category</option>
+                            {% for risk_category in risk_categories %}
+                            <option value="{{ risk_category.CategoryName }}">{{ risk_category.CategoryName }}</option>
+                            {% endfor %}
+                        </select>
+
+                        <br>
+                        <label for="selSL" class="small-font d-flex align-items-center " >Security Level Achieved (SL-A)</label>
+
+                        <select class="form-control small-font" name="selSL" id="selSL" style="border: 3px solid #97979A; border-radius: 10px; box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5);  padding: 5px; background-color: white">
+                            <option value=""> -- Select SL-A -- </option>
+                            {% for value, description in SECURITY_LEVELS %}
+                                <option value="{{ value }}">
+                                    {{ description }}</option>
+                            {% endfor %}
+                        </select>
+
+                        <br>
+                        <div class="form-group">
+                            <label class="switch-label"><h6>Internet Exposed IP Address</h6></label>
+                            <label class="switch">
+                            <input for="exposed_system" type="checkbox" id="exposed_system" name="exposed_system">
+                            <span class="slider1 round"></span>
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label class="switch-label"><h6>Default/Weak Credentials</h6></label>
+                            <label for="weak_credentials" class="switch">
+                            <input type="checkbox" id="weak_credentials" name="weak_credentials">
+                            <span class="slider1 round"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-9">
                     <label for="txtScenario"><h6>Scenario</h6></label>
-                        <!-- Render the textarea without the label -->
-                        {{ scenario_form.txtScenario }}
-                        {% if scenario_form.txtScenario.errors %}
-                            <!-- Custom error handling or styling can be done here -->
-                        {% endif %}
-
-
+                    <!-- Render the textarea without the label -->
+                    {{ scenario_form.txtScenario }}
+                    {% if scenario_form.txtScenario.errors %}
+                        <!-- Custom error handling or styling can be done here -->
+                    {% endif %}
                     <script>
 
                     document.addEventListener('DOMContentLoaded', function() {
@@ -951,6 +1009,8 @@ $(document).ready(function() {
                             // Enable the button when the user types in the textarea
                             if (txtScenarioElement) {
                                 txtScenarioElement.addEventListener('input', function() {
+                                    //reset the attacktreedrawn variable becuase if the scenario has changed then the attack tree needs to be redrawn
+                                    sessionStorage.setItem('attackTreeDrawn', 'false');
                                     analyzeScenarioBtn.disabled = this.value.trim() === ''; // Enable only if there's text
                                 });
                             }
@@ -968,11 +1028,39 @@ $(document).ready(function() {
                       });
 
                     </script>
+                    <br>
+                    <div class="form-group">
+                        <div class="row">
+                            <div class="col-md-2">
+                                <label for="consequenceTable"><h6>Consequences</h6></label>
+                            </div>
+                            <div class="col-md-10">
+                                <button id="analyzeScenarioBtn" class="btn btn-primary" type="button" disabled>Update consequence/s >>
+                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none;" id="loadingSpinner2"></span>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col">
+                                <br>
+                                <table id="consequenceTable" class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Consequence</th>
+                                        <th>Validate</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Rows will be added here dynamically -->
+                                </tbody>
+                            </table>
+                            </div>
+                        </div>
+                    </div>
                 </div>
+            </div>
+        </div>
 
-                <button id="analyzeScenarioBtn" class="btn btn-primary" type="button" disabled>Update consequence/s >>
-                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none;" id="loadingSpinner2"></span>
-                </button>
                 <script>
 
                 function convertSVGToPNG(svgElement, scale = 1) {
@@ -1033,8 +1121,8 @@ $(document).ready(function() {
                 $('#tab9').addClass('active').show();
                 var container = document.getElementById('attack_tree');
                 var containerWidth = container.clientWidth;
-                var svgWidth = containerWidth * 0.8;
-                var margin = { top: 20, right: 120, bottom: 20, left: 280 };
+                var svgWidth = containerWidth * 1.2;
+                var margin = { top: 20, right: 120, bottom: 20, left: 450 };
                 var width = svgWidth - margin.left - margin.right;
                 var height = 800; // Increased height for better resolution
 
@@ -1089,14 +1177,17 @@ $(document).ready(function() {
             .style("fill", function(d) { return colorScale(d.depth); });
 
         nodeEnter.append('text')
-            .style("fill", "#FFFFFF") // Set label color to white
-            .style("font-size", "14px")
-            .style("font-weight", "bold")
-            .attr("transform", "rotate(-10)")
-            .attr("dy", ".35em")
-            .attr("x", function(d) { return d.children ? -13 - this.getComputedTextLength() : 13; })
-            .attr("text-anchor", function(d) { return d.children ? "end" : "start"; })
-            .text(function(d) { return d.data.name; });
+    .style("fill", "#FFFFFF") // Set label color to white
+    .style("font-size", "14px")
+    .style("font-weight", "bold")
+    .attr("dy", ".35em")
+    .attr("x", function(d) {
+        return d.children || d._children ? -13 : 13; // Adjust this value or add dynamic calculation based on text length
+    })
+    .attr("text-anchor", function(d) {
+        return d.children || d._children ? "end" : "start";
+    })
+    .text(function(d) { return d.data.name; });
 
         var link = svg.selectAll('path.link')
             .data(links, function(d) { return d.id; });
@@ -1123,7 +1214,7 @@ $(document).ready(function() {
             sessionStorage.setItem('attackTreeDrawn', 'true');
             var svgElement = container.querySelector('svg');
             // Pass it to the convertSVGToPNG function
-            convertSVGToPNG(svgElement, 0.8); // Adjust the scale as needed
+            //convertSVGToPNG(svgElement, 0.8); // Adjust the scale as needed
             var attackTreeDiv = document.getElementById('attack_tree')
             $('.tab-content').removeClass('active').hide();
              $('#tab2').addClass('active').show();
@@ -1149,6 +1240,11 @@ $(document).ready(function() {
                 var scenarioText = document.getElementById('id_txtScenario').value;
                 var phaID = document.getElementById('hdnphaID').value;
                 var attackTreeDrawn = sessionStorage.getItem('attackTreeDrawn');
+                var exposed_system = document.getElementById('exposed_system').checked;
+                var weak_credentials = document.getElementById('weak_credentials').checked;
+                var attacker = document.getElementById('threat-intelligence').value;
+                var riskCategory = document.getElementById('risk-category').value;
+                var attack_vector = document.getElementById('selVectors').value;
                 var button = this;
                 $('#loadingProgressBar').show();
                 $('#progressBarInner').css('width', '0%').attr('aria-valuenow', 0);
@@ -1159,14 +1255,14 @@ $(document).ready(function() {
 
                 let progress = 0;
                     let progressBarInterval = setInterval(function() {
-                        progress += 3; // Increment progress by 10% every second
+                        progress += 2; // Increment progress by 10% every second
                         if (progress <= 100) {
                             $('#progressBarInner').css('width', progress + '%').attr('aria-valuenow', progress);
 
                             // Update progress bar message based on current progress
                             if (progress === 6) {
                                 $('#progressBarMessage').text('Analysing consequences...');
-                            } else if (progress === 40) {
+                            } else if (progress === 42) {
                                 $('#progressBarMessage').text('Drawing attack tree...');
                             }
                         } else {
@@ -1179,8 +1275,13 @@ $(document).ready(function() {
                     data: {
                         'scenario': scenarioText,
                         'phaID': phaID,
-                        'attackTreeDrawn': attackTreeDrawn, // this variable is set to indicate that an attack tree is already drawn for this scenario so another one wont be processed
-                        'csrfmiddlewaretoken': '{{ csrf_token }}'
+                        'attackTreeDrawn': attackTreeDrawn,
+                        'attacker': attacker,
+                        'riskCategory': riskCategory,
+                        'attack_vector': attack_vector,
+                        'exposed_system': exposed_system,
+                       'weak_credentials': weak_credentials,
+                        'csrfmiddlewaretoken': '{{ csrf_token }}',
                     },
                     success: function(response) {
                         clearInterval(progressBarInterval);
@@ -1247,21 +1348,7 @@ $(document).ready(function() {
             });
         </script>
              <p></p>
-                <div class="form-group">
-                <label for="consequenceTable"><h6>Consequences</h6></label>
 
-                <table id="consequenceTable" class="table">
-                    <thead>
-                        <tr>
-                            <th>Consequence</th>
-                            <th>Validate</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Rows will be added here dynamically -->
-                    </tbody>
-                </table>
-                </div>
 
 
 
@@ -1272,157 +1359,22 @@ $(document).ready(function() {
             <h2>Scenario Parameters</h2>
 
             <div class="row">
-                <div class="col-md-3">
-                    <div class="form-group">
-                    <label class="form-label" for="threat-intelligence"><h6>Threat Source</h6></label>
-                    <select class="form-control small-font" name="threat-intelligence" id="threat-intelligence" style="border: 3px solid #97979A; border-radius: 10px; box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5);  padding: 5px; background-color: white">
-                        <option value="">-- Select a threat source --</option>
-                        {% for threat_intelligence in threat_intelligence %}
-                            <option value="{{ threat_intelligence.ThreatDescription }}">{{ threat_intelligence.ThreatDescription }}</option>
-                        {% endfor %}
-                    </select>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="form-group">
-                    <label class="form-label" for="risk-category"><h6>Risk Category</h6></label>
-                <select class="form-control small-font" name="risk-category" id="risk-category" style="border: 3px solid #97979A; border-radius: 10px; box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5);  padding:5px; background-color: white">
-                  <option value="">Select a risk category</option>
-                  {% for risk_category in risk_categories %}
-                    <option value="{{ risk_category.CategoryName }}">{{ risk_category.CategoryName }}</option>
-                  {% endfor %}
-                </select>
-                    </div>
-                </div>
-            </div>
-            <div class="row">
-                <div class="col-md-3">
-                    <div class="form-group">
-                    <label class="switch-label"><h6>Internet Exposed IP Address</h6></label>
-                    <label class="switch">
-                    <input for="exposed_system" type="checkbox" id="exposed_system" name="exposed_system">
-                    <span class="slider1 round"></span>
-                    </label>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="form-group">
-                    <label class="switch-label"><h6>Default/Weak Credentials</h6></label>
-                    <label for="weak_credentials" class="switch">
-                    <input type="checkbox" id="weak_credentials" name="weak_credentials">
-                    <span class="slider1 round"></span>
-                    </label>
+                <div class="col-md-6">
+
+                    <div class="row">
+                        <div class="col">
+
+                        </div>
                     </div>
                 </div>
                 <div class="col-md-6">
-
-
-        </div>
-                </div>
-
-
-
-         <div class="row">
-            <div class="col-md-6">
                 <div class="form-group">
-                <h5>Unmitigated Risk</h5>
-                <h6>(Risk exposure without current controls)</h6>
-                <div class="card mb-3 shadow-sm">
-                    <div class="card-body">
-                        <div class="slider-container d-flex align-items-center">
-                            <div class="col-3">
-                                <label class="small-font d-flex align-items-center clickable-label" data-bs-toggle="modal" data-bs-target="#uelModal" data-bs-placement="top" style="color: #464748">Unmitigated Event Likelihood (UEL)</label></div>
-                            <div class="col-6">
-                              <input type="range" min="1" max="10" value="1" class="slider" id="uel_range" name="uel_range" onchange="initSlider('uel_range','range_uel');">
-                            </div>
-                            <div class="col-3"><h6><label id="range_uel" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
-                        </div>
-                    </div>
-                </div>
 
-                <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-            <div class="card-body">
-                <div class="slider-container d-flex align-items-center">
-                    <div class="col-3">
-                        <label class="small-font d-flex align-items-center clickable-label" data-bs-toggle="modal" data-bs-target="#rruModal" data-bs-placement="top" style="color: #464748">Residual Risk Unmitigated (RRu)</label>
-                    </div>
-                    <div class="col-6">
-                      <input type="range" min="1" max="10" value="1" class="slider" id="rru_range" name="rru_range" onchange="initSlider('rru_range','range_rru');">
-                    </div>
-                    <div class="col-3"><h6><label id="range_rru" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
-                </div>
-            </div>
         </div>
-                    <div class="form-group">
-                <label for="selSL" class="small-font d-flex align-items-center " >Security Level Achieved (SL-A)</label>
-
-                <select class="form-control small-font" name="selSL" id="selSL" style="border: 3px solid #97979A; border-radius: 10px; box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5);  padding: 5px; background-color: white">
-                    <option value=""> -- Select SL-A -- </option>
-                    {% for value, description in SECURITY_LEVELS %}
-                        <option value="{{ value }}">
-                            {{ description }}</option>
-                    {% endfor %}
-                </select>
 
             </div>
-                 </div>
-            </div>
-             <div class="col-md-6">
-                <div class="form-group">
-                <h5>Assessment - Mitigated Risk</h5>
-                <h6>(Risk exposure with current controls)</h6>
-                        <!--slider for UEL - likelihood without controls-->
-                <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                    <div class="card-body">
-                        <div class="slider-container d-flex align-items-center">
-                            <div class="col-3"><label class="small-font d-flex align-items-center " style="color: #000"><img src="{% static 'images/sm.png' %}" alt="" class="align-bottom" style="max-height: 2rem; margin-left: 5px; color: #464748">&nbsp;&nbsp;Severity Mitigated (Sm)</label></div>
-                            <div class="col-6">
-                              <input type="range" min="1" max="10" value="1" class="slider_reversed" id="SMrange" name="SMrange" onchange="initSlider('SMrange','range_SM');">
-                            </div>
-                            <div class="col-3"><h6><label id="range_SM" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
-                        </div>
-                    </div>
-                </div>
-                <!--slider for MEL - Mitigated Exposure Level-->
-                <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                    <div class="card-body">
-                        <div class="slider-container d-flex align-items-center">
-                            <div class="col-3"><label class="small-font d-flex align-items-center " style="color: #000"><img src="{% static 'images/mel.png' %}" alt="" class="align-bottom" style="max-height: 2rem; margin-left: 5px; color: #464748">&nbsp;&nbsp;Mitigated Exposure (MEL)</label></div>
-                            <div class="col-6">
-                              <input type="range" min="1" max="10" value="1" class="slider_reversed" id="MELrange" name="MELrange" onchange="initSlider('MELrange','range_MEL');">
-                            </div>
-                            <div class="col-3"><h6><label id="range_MEL" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
-                        </div>
-                    </div>
-                </div>
-                <!--slider for MEL - Mitigated Exposure Level-->
-                <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                    <div class="card-body">
-                        <div class="slider-container d-flex align-items-center">
-                            <div class="col-3"><label class="small-font d-flex align-items-center " style="color: #000"><img src="{% static 'images/rrm.png' %}" alt="" class="align-bottom" style="max-height: 2rem; margin-left: 5px; color: #464748">&nbsp;&nbsp;Residual Risk (RRm)</label></div>
-                            <div class="col-6">
-                              <input type="range" min="1" max="10" value="1" class="slider" id="RRMrange" name="RRMrange" onchange="initSlider('RRMrange','range_RRM');">
-                            </div>
-                            <div class="col-3"><h6><label id="range_RRM" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
-                        </div>
-                    </div>
-        </div>
-        </div>
             </div>
          </div>
-
-                    <div id="scenarioStatus">
-                            <label for="scenarioStatusSelect" class="form-label">Scenario Status</label>
-                            <select class="form-select" id="scenarioStatusSelect" name="scenario_status">
-                                <option value="0">---Select Scenario Status---</option>
-                                {% for status, status_display in scenario_status %}
-                                <option value="{{ status }}">{{ status_display }}</option>
-                                {% endfor %}
-                            </select>
-
-                    </div>
-        </div>
-
          <div class="tab-content " id="tab4">
             <h2>Business Impact Assessment</h2>
             <div class="row">
@@ -1490,12 +1442,7 @@ $(document).ready(function() {
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                        <div class="form-group">
-                        <!--slider for environment impact rating -->
-                    <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                        <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                         <div class="card-body">
                             <div class="slider-container d-flex align-items-center">
                                 <div class="col-3"><label class="small-font d-flex align-items-center clickable-label" style="color: #000" data-bs-toggle="modal" data-bs-target="#environmentModal" data-bs-placement="top" data-modal-id="environmentModal" data-textarea-id="txtenvironmentJustify"><img src="{% static 'images/environment.png' %}" alt="" class="align-bottom" style="max-height: 2rem; margin-left: 5px;">&nbsp; Environment</label><span id="textIndicator" style="display: none;"><i class="bi bi-journal-text"></i></span></div>
@@ -1543,6 +1490,90 @@ $(document).ready(function() {
                         </div>
                     </div>
                     </div>
+                </div>
+                <div class="col-md-6">
+                     <div class="form-group">
+                      <h5>Assessment - Mitigated Risk</h5>
+                <h6>(Risk exposure with current controls)</h6>
+                        <!--slider for UEL - likelihood without controls-->
+                <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                    <div class="card-body">
+                        <div class="slider-container d-flex align-items-center">
+                            <div class="col-3"><label class="small-font d-flex align-items-center " style="color: #000"><img src="{% static 'images/sm.png' %}" alt="" class="align-bottom" style="max-height: 2rem; margin-left: 5px; color: #464748">&nbsp;&nbsp;Severity Mitigated (Sm)</label></div>
+                            <div class="col-6">
+                              <input type="range" min="1" max="10" value="1" class="slider_reversed" id="SMrange" name="SMrange" onchange="initSlider('SMrange','range_SM');">
+                            </div>
+                            <div class="col-3"><h6><label id="range_SM" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                        </div>
+                    </div>
+                </div>
+                <!--slider for MEL - Mitigated Exposure Level-->
+                <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                    <div class="card-body">
+                        <div class="slider-container d-flex align-items-center">
+                            <div class="col-3"><label class="small-font d-flex align-items-center " style="color: #000"><img src="{% static 'images/mel.png' %}" alt="" class="align-bottom" style="max-height: 2rem; margin-left: 5px; color: #464748">&nbsp;&nbsp;Mitigated Exposure (MEL)</label></div>
+                            <div class="col-6">
+                              <input type="range" min="1" max="10" value="1" class="slider_reversed" id="MELrange" name="MELrange" onchange="initSlider('MELrange','range_MEL');">
+                            </div>
+                            <div class="col-3"><h6><label id="range_MEL" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                        </div>
+                    </div>
+                </div>
+                <!--slider for MEL - Mitigated Exposure Level-->
+                <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                    <div class="card-body">
+                        <div class="slider-container d-flex align-items-center">
+                            <div class="col-3"><label class="small-font d-flex align-items-center " style="color: #000"><img src="{% static 'images/rrm.png' %}" alt="" class="align-bottom" style="max-height: 2rem; margin-left: 5px; color: #464748">&nbsp;&nbsp;Residual Risk (RRm)</label></div>
+                            <div class="col-6">
+                              <input type="range" min="1" max="10" value="1" class="slider" id="RRMrange" name="RRMrange" onchange="initSlider('RRMrange','range_RRM');">
+                            </div>
+                            <div class="col-3"><h6><label id="range_RRM" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                        </div>
+                    </div>
+        </div>
+
+                    </div>
+                    <div class="form-group">
+                <h5>Unmitigated Risk</h5>
+                <h6>(Risk exposure without current controls)</h6>
+                <div class="card mb-3 shadow-sm">
+                    <div class="card-body">
+                        <div class="slider-container d-flex align-items-center">
+                            <div class="col-3">
+                                <label class="small-font d-flex align-items-center clickable-label" data-bs-toggle="modal" data-bs-target="#uelModal" data-bs-placement="top" title="The unmitigated likelihood of all identified threats and vulnerabilities" style="color: #464748">Unmitigated Event Likelihood (UEL)</label></div>
+                            <div class="col-6">
+                              <input type="range" min="1" max="10" value="1" class="slider" id="uel_range" name="uel_range" onchange="initSlider('uel_range','range_uel');">
+                            </div>
+                            <div class="col-3"><h6><label id="range_uel" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
+                <div class="card-body">
+                <div class="slider-container d-flex align-items-center">
+                    <div class="col-3">
+                        <label class="small-font d-flex align-items-center clickable-label" data-bs-toggle="modal" data-bs-target="#rruModal" data-bs-placement="top" style="color: #464748">Residual Risk Unmitigated (RRu)</label>
+                    </div>
+                    <div class="col-6">
+                      <input type="range" min="1" max="10" value="1" class="slider" id="rru_range" name="rru_range" onchange="initSlider('rru_range','range_rru');">
+                    </div>
+                    <div class="col-3"><h6><label id="range_rru" class="form-label text-center d-flex align-items-center justify-content-center small-font "></label></h6></div>
+                </div>
+            </div>
+        </div>
+
+                 </div>
+                     <div id="scenarioStatus">
+                    <label for="scenarioStatusSelect" class="form-label">Scenario Status</label>
+                    <select class="form-select" id="scenarioStatusSelect" name="scenario_status">
+                        <option value="0">---Select Scenario Status---</option>
+                        {% for status, status_display in scenario_status %}
+                        <option value="{{ status }}">{{ status_display }}</option>
+                        {% endfor %}
+                    </select>
+
+            </div>
                 </div>
 
             </div>
@@ -2150,6 +2181,7 @@ $(document).ready(function() {
                   const weak_credentials = document.getElementById('weak_credentials').checked
                   // const consequence = document.getElementById('txtConsequence').value
                   const threatSource = document.getElementById('threat-intelligence').value;
+                  const threatAgent = document.getElementById('selVectors').value;
                   const riskCategory = document.getElementById('risk-category').value;
                   const safety = document.getElementById('range_safety').value;
                   const life = document.getElementById('range_life').value;
@@ -2259,6 +2291,7 @@ $(document).ready(function() {
                   formData.append('weak_credentials',weak_credentials);
                   // formData.append('consequence', consequence);
                   formData.append('threatSource', threatSource);
+                  formData.append('threatAgent', threatAgent);
                   formData.append('riskCategory', riskCategory);
                   formData.append('safety', safety);
                   formData.append('life', life);
@@ -3220,7 +3253,8 @@ function retrieveScenario(scenarioId) {
         clearScenario();
       $('#id_txtScenario').val(response.scenario_description);
       $('#attack_tree_text').val(response.attack_tree_data);
-
+      $('#threat-intelligence').val(response.attacker);
+      $('#selVectors').val(response.vector);
         // Check if data.attack_tree_text is defined, not null, and not an empty string
         if (response.attack_tree_data && response.attack_tree_data.trim() !== '') {
 
@@ -4283,13 +4317,19 @@ function resetformcontrols() {
   swal.fire({
     title: "New Scenario",
     html: "Are you sure you want to begin a new scenario and reset the form? All unsaved changes will be lost.",
-    iconHtml: '<img src="/static/images/anzen_owl.png" width="100px">', // Custom image as icon
+    iconHtml: '<img src="/static/images/anzen_owl.png" width="100px">',
+    imageWidth: 150, // Adjust as necessary
+    imageHeight: 150, // Adjust as necessary
+    background: '#000', // Black background
+    color: '#fff', // Set text color to white
     showCancelButton: true, // Show the cancel button
     confirmButtonText: 'Yes', // Text for the confirm button
     cancelButtonText: 'No', // Text for the cancel button
     focusConfirm: false, // Focus on the confirm button by default
     reverseButtons: true, // Reverse the button positions (if you want "No" to the right of "Yes"
-
+    customClass: {
+            popup: 'swal2-custom-border' // Apply custom class to the popup/dialog
+        }
 }).then((result) => {
     if (result.isConfirmed) {
       // Reset form fields here
@@ -4369,7 +4409,11 @@ function resetformcontrols() {
       sessionStorage.setItem('sid', 0);
         $('.tab-content').removeClass('active').hide();
         $('.nav-link').removeClass('disabled');
+        $('.tab-link.tab-inactive').removeClass('tab-inactive');
+
         $('#tab2').addClass('active').show();
+
+
         document.querySelector('a[data-tab="tab2"]').click();
 
     }
@@ -4482,7 +4526,7 @@ function clearScenario(){
 
         $('#exposed_system').prop('checked', data.exposed_system);
         $('#weak_credentials').prop('checked', data.weak_credentials);
-
+        $('#selVectors').val(data.ThreatAgent);
         //$('#txtConsequence').val(data.Consequence);
         $('#threat-intelligence').val(data.ThreatClass);
         //$('#selStandards').val(data.standards);
@@ -4640,6 +4684,7 @@ function clearScenario(){
         document.getElementById('hdn_bia_score').value= data.ai_bia_score;
         document.getElementById('hdnrationale_recommendation').value = data.risk_recommendation;
         document.getElementById('hdnrationale_Rationale').value = data.risk_rationale;
+        console.write(data.risk+rationale);
         $("#recommendationTitle").text("Recommendation");
         $("#recommendationText").text(data.risk_recommendation);
         $("#rationaleTitle").text("Rationale");

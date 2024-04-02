@@ -1015,6 +1015,7 @@ def save_or_update_cyberpha(request):
         weak_credentials = weak_credentials_value.lower() == 'true'
 
         threatclass = request.POST.get('threatSource')
+        ThreatAgent = request.POST.get('threatAgent')
         threataction = request.POST.get('threatAction')
         countermeasures = request.POST.get('mitigationMeasures')
         riskcategory = request.POST.get('riskCategory')
@@ -1185,6 +1186,7 @@ def save_or_update_cyberpha(request):
                 exposed_system=exposed_system,
                 weak_credentials=weak_credentials,
                 ThreatClass=threatclass,
+                ThreatAgent=ThreatAgent,
                 ThreatAction=' ',
                 Countermeasures=' ',
                 RiskCategory=riskcategory,
@@ -1273,6 +1275,7 @@ def save_or_update_cyberpha(request):
                 'weak_credentials': weak_credentials,
                 'ThreatAction': '',
                 'ThreatClass': ThreatClass,
+                'ThreatAgent': ThreatAgent,
                 'Countermeasures': '',
                 'RiskCategory': riskcategory,
                 'Consequence': '',
