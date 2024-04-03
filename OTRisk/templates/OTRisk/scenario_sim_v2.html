@@ -497,6 +497,10 @@ input:checked + .slider1:before {
 .slider1.round:before {
   border-radius: 50%;
 }
+/* Custom CSS for Select2 dropdown items */
+.select2-results__option {
+    color: black !important; /* Ensure the color applies over default Select2 styles */
+}
 
 </style>
 </head>
@@ -1212,7 +1216,7 @@ console.error('Error fetching scenarios:', error);
         <div class="row">
             <div class="col-md-6">
                 <div class="form-group form-sim" >
-                    <label>Enter parameters for the scenario</label>
+                    <label>Enter details about the facility</label>
                         <div class="card mb-2 shadow-sm">
                             <div class="card-body">
                                 <label for="selIndustry" style="color:black"><img src="{% static 'images/icon_industry.png' %}" alt="" class="align-bottom" style="max-height: 1.5rem; margin-left: 5px;" > Industry</label>
@@ -1274,45 +1278,54 @@ console.error('Error fetching scenarios:', error);
                     </div>
             </div>
             <div class="col-md-6">
-                <div class="form-group">
+                <div class="form-group form-sim">
                 <form id="scenarioForm">
+                    <label>Enter details about the attack</label>
+                    <div class="card mb-2 shadow-sm">
+                        <div class="card-body">
+                            <label for="selThreats" style="color: black">Attacker/Bad Actor:</label>
+                            <select class="form-control" name="selThreats" id="selThreats" >
+                                <option value=""> -- Select Attacker -- </option>
+                                {% for threats in threats %}
+                                <option value="{{ threats.ThreatSource }}">
 
-                    <label for="selThreats" style="color: white">Attacker/Bad Actor:</label>
-                    <select class="form-control" name="selThreats" id="selThreats" >
-                        <option value=""> -- Select Attacker -- </option>
-                        {% for threats in threats %}
-                        <option value="{{ threats.ThreatSource }}">
+                                    {{ threats.ThreatSource }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="card mb-2 shadow-sm">
+                        <div class="card-body">
+                            <label for="selVectors" style="color: black">Attack Vector:</label>
+                            <select class="form-control" name="selVectors" id="selVectors" >
+                                <option value="" > -- Select Attack Vector -- </option>
+                                {% for attack_vectors in attack_vectors %}
+                                <option value="{{ attack_vectors.ThreatAction }}" >
 
-                            {{ threats.ThreatSource }}
-                        </option>
-                        {% endfor %}
-                    </select>
+                                    {{ attack_vectors.ThreatAction }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
 
-                    <label for="selVectors" style="color: white">Attack Vector:</label>
-                    <select class="form-control" name="selVectors" id="selVectors" >
-                        <option value=""> -- Select Attack Vector -- </option>
-                        {% for attack_vectors in attack_vectors %}
-                        <option value="{{ attack_vectors.ThreatAction }}">
+                <div class="form-group">
+                    <label for="targetComponent" style="color: white">Target Component/Device:</label>
+                    <input type="text" class="form-control" id="targetComponent" name="targetComponent" style="width: 100%">
 
-                            {{ attack_vectors.ThreatAction }}
-                        </option>
-                        {% endfor %}
-                    </select>
+                    <label for="attackEffect">Effect of Attack:</label>
+                    <input type="text" class="form-control" id="attackEffect" name="attackEffect" style="width: 100%">
 
-            <label for="targetComponent" style="color: white">Target Component/Device:</label>
-            <input type="text" class="form-control" id="targetComponent" name="targetComponent" >
+                    <label for="targetSystem">Target System/Network:</label>
+                    <input type="text" class="form-control" id="targetSystem" name="targetSystem" style="width: 100%">
 
-            <label for="attackEffect">Effect of Attack:</label>
-            <input type="text" class="form-control" id="attackEffect" name="attackEffect">
+                    <label for="impact">Potential Impact:</label>
+                    <input type="text" class="form-control" id="impact" name="impact" style="width: 100%">
 
-            <label for="targetSystem">Target System/Network:</label>
-            <input type="text" class="form-control" id="targetSystem" name="targetSystem">
-
-            <label for="impact">Potential Impact:</label>
-            <input type="text" class="form-control" id="impact" name="impact">
-
-            <label for="motivation">Attack Motivation:</label>
-            <input type="text" class="form-control" id="motivation" name="motivation">
+                    <label for="motivation">Attack Motivation:</label>
+                    <input type="text" class="form-control" id="motivation" name="motivation" style="width: 100%">
+                </div>
                 <br>
 
                 <div class="row">
@@ -1433,8 +1446,9 @@ $(document).ready(function() {
             </div>
             <div class="form-group">
             <label for="txtScenario">Review and edit the scenario text then click "Execute Analysis"</label>
-            <textarea id="txtScenario" class='form-control' rows=11 placeholder='Enter a detailed cybersecurity scenario or click the button above to use the scenario builder...' style="resize: none; border: 3px #97979A; border-radius: 10px; box-shadow: inset 3px 3px 8px rgba(0, 0, 0, 0.5); padding: 20px; background-color: white"></textarea>
+            <textarea id="txtScenario" class='form-control' rows=11 placeholder='Enter a detailed cybersecurity scenario or click "Parameters" in the menu to use the scenario builder. Then click the "Execute Analysis" link to run the scenario' style="resize: none; border: 3px #97979A; border-radius: 10px; box-shadow: inset 3px 3px 8px rgba(0, 0, 0, 0.5); padding: 20px; background-color: white"></textarea>
              <a href="#" id="undoScenario" style="display:none; cursor: pointer; color:#ffffff">Undo</a>
+
             </div>
 <script>
 
@@ -1624,6 +1638,19 @@ $('.sub-menu a').click(function(e) {
     $(document).ready(function() {
         // Initialize Select2 for all dropdowns
         $('#selIndustry').select2();
+         $('#selVectors').select2({
+            placeholder: "Select an Attack Vector",
+            allowClear: true,
+            width: '100%',
+            dropdownCssClass: 'custom-dropdown-font-color' // Your custom class here
+        });
+        $('#selThreats').select2({
+            placeholder: "Select an Attack Vector",
+            allowClear: true,
+            width: '100%', // This helps ensure Select2 uses the full width of its container
+            dropdownCssClass: 'custom-dropdown-font-color'
+
+        });
         // $('#selAssetValue').select2();
         $('#selFacilityType').select2();
         $('#selOrganizationSize').select2();
@@ -1873,6 +1900,7 @@ function analyzeScenario(scenarioDetails) {
                 'investment_data': JSON.stringify(scenarioDetails.investments), // Assuming investments is an array of objects
                 'csrfmiddlewaretoken': $('input[name="csrfmiddlewaretoken"]').val() // Correct way to get CSRF token value
             },
+            timeout: 300000,
             success: function(response) {
 
                 updateProgressBar(80, 'Scenario analysis completed...');

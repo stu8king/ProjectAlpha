@@ -123,15 +123,15 @@ def analyze_sim_scenario_v2(request):
             organization_id = None  # Or handle the lack of a profile as you see fit
 
         investments_data = request.POST.get('investments')
-        if investments_data:
-            investments = json.loads(investments_data)
-        else:
-            investments = []
+        investments = json.loads(investments_data) if investments_data else []
 
-        # Generate the text statement for investments
-        investment_statement = "Investments have been made in:\n"
-        for idx, investment in enumerate(investments, start=1):
-            investment_statement += f"{idx}: Investment Type:{investment['type']}, Vendor:{investment['vendor_name']}, Product:{investment['product_name']}, Investment date:{investment['date']}.\n"
+        if investments:
+            investment_statement = "Investments have been made in:\n"
+            for idx, investment in enumerate(investments, start=1):
+                investment_statement += f"{idx}: Investment Type:{investment['type']}, Vendor:{investment['vendor_name']}, Product:{investment['product_name']}, Investment date:{investment['date']}.\n"
+        else:
+            investment_statement = "No investments have been specified."
+
 
         # Create a record in user_scenario_audit
         user_scenario_audit.objects.create(
@@ -187,7 +187,7 @@ def analyze_sim_scenario_v2(request):
                 messages=[
                     {"role": "system", "content": system_message}
                 ],
-                max_tokens=500,
+                max_tokens=800,
                 temperature=0.1
             )
 
@@ -196,32 +196,36 @@ def analyze_sim_scenario_v2(request):
             # Parse the response into a structured format
             parsed_consequences = parse_consequences(consequence_text)
 
-            investment_impact_prompt = f"""
-            Given the cybersecurity scenario: '{scenario}' for the {facility_type} and the following investments:
-            {investment_statement}
-            Please provide exactly 6 bullet points summarizing the impact of these investments on:
-            1. Level of risk reduction
-            2. Business impact analysis improvement
-            3. Event costs mitigation
-            4. Operational risks decrease
-            5. Compliance enhancement
-            6. Return on investment or cost savings
+            if investments:
 
-            Each bullet point should contain a concise statement (no more than 30 words) quantifying the impact. EXTRA INSTRUCTION: be cautiously and modestly optimistic.
-            """
+                investment_impact_prompt = f"""
+                Given the cybersecurity scenario: '{scenario}' for the {facility_type} and the following investments:
+                {investment_statement}
+                Please provide exactly 6 bullet points summarizing the impact of these investments on:
+                1. Level of risk reduction
+                2. Business impact analysis improvement
+                3. Event costs mitigation
+                4. Operational risks decrease
+                5. Compliance enhancement
+                6. Return on investment or cost savings
+    
+                Each bullet point should contain a concise statement (no more than 30 words) quantifying the impact. EXTRA INSTRUCTION: be cautiously and modestly optimistic.
+                """
 
-            # Query OpenAI API for investment impact analysis
-            investment_impact_response = openai.ChatCompletion.create(
-                model=get_api_key('OpenAI_Model'),
-                messages=[
-                    {"role": "system", "content": investment_impact_prompt}
-                ],
-                max_tokens=400,  # Adjust token limit based on expected response length
-                temperature=0.1  # Adjust for creativity as needed
-            )
+                # Query OpenAI API for investment impact analysis
+                investment_impact_response = openai.ChatCompletion.create(
+                    model=get_api_key('OpenAI_Model'),
+                    messages=[
+                        {"role": "system", "content": investment_impact_prompt}
+                    ],
+                    max_tokens=400,  # Adjust token limit based on expected response length
+                    temperature=0.1  # Adjust for creativity as needed
+                )
 
-            # Process the investment impact response
-            investment_impact_text = investment_impact_response['choices'][0]['message']['content']
+                # Process the investment impact response
+                investment_impact_text = investment_impact_response['choices'][0]['message']['content']
+            else:
+                investment_impact_text = "No tools or software were submitted for this scenario."
 
             response = {
                 'consequence': parsed_consequences,
