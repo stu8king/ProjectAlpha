@@ -501,7 +501,9 @@ input:checked + .slider1:before {
 .select2-results__option {
     color: black !important; /* Ensure the color applies over default Select2 styles */
 }
-
+.white-text {
+    color: white !important; /* !important ensures the style applies over any existing styles */
+}
 </style>
 </head>
 <body style="background-color: #464748">
@@ -968,7 +970,7 @@ function loadScenarioDetails(scenarioId) {
             }
         })
         // Create a table and append it to the 'related_incidents' container
-        var table = $('<table class="table table-striped"><thead><tr><th>Title</th><th>Description</th><th>Date</th><th>URL</th></tr></thead><tbody></tbody></table>');
+        var table = $('<table class="table table-striped white-text"><thead><tr><th>Title</th><th>Description</th><th>Date</th><th>URL</th></tr></thead><tbody></tbody></table>');
         $('#related_incidents').append(table);
 
         // Splitting the generated_summary by lines to get individual incidents
@@ -980,9 +982,9 @@ function loadScenarioDetails(scenarioId) {
                 var row = $('<tr></tr>');
                 parts.forEach(function(part, index) {
                     if(index === 3) { // URL part
-                        var cell = $('<td></td>').html('<a href="' + part + '" target="_blank">Link</a>');
+                        var cell = $('<td class="white-text"></td>').html('<a href="' + part + '" target="_blank">Link</a>');
                     } else {
-                        var cell = $('<td></td>').text(part);
+                        var cell = $('<td class="white-text"></td>').text(part);
                     }
                     row.append(cell);
                 });
@@ -1047,14 +1049,7 @@ console.error('Error fetching scenarios:', error);
                     <div class="col-md-1">
                     <button type="button" class="btn nav-link" onclick="fetchAndDisplayScenarios()">Load Scenario</button>
                     </div>
-                    <div class="col-md-1">
-                        <button id="analyzeScenarioBtn" class="btn nav-link" type="button">Execute Analysis>></button>
-                        <div id="spinnerContainer" style="display: none;">
-                            <div class="spinner-border" role="status">
-                                <span class="sr-only">Loading...</span>
-                            </div>
-                        </div>
-                    </div>
+
                     <div class="col-md-1">
                        <button id="saveScenarioBtn" class="btn nav-link">Save Scenario</button>
                         <script>
@@ -1120,7 +1115,7 @@ console.error('Error fetching scenarios:', error);
 
 
                     </div>
-                    <div class="col-md-4"></div>
+                    <div class="col-md-5"></div>
                 </div>
                <div class="row">
                     <div class="col-md-2"></div>
@@ -1132,6 +1127,7 @@ console.error('Error fetching scenarios:', error);
                     </div>
                     <div class="col-md-2"></div>
                 </div>
+                <br>
             </div>
         <div class="sub-menu">
             <br><br><br><br><br><br><br><br><br><br>
@@ -1447,9 +1443,22 @@ $(document).ready(function() {
             <div class="form-group">
             <label for="txtScenario">Review and edit the scenario text then click "Execute Analysis"</label>
             <textarea id="txtScenario" class='form-control' rows=11 placeholder='Enter a detailed cybersecurity scenario or click "Parameters" in the menu to use the scenario builder. Then click the "Execute Analysis" link to run the scenario' style="resize: none; border: 3px #97979A; border-radius: 10px; box-shadow: inset 3px 3px 8px rgba(0, 0, 0, 0.5); padding: 20px; background-color: white"></textarea>
-             <a href="#" id="undoScenario" style="display:none; cursor: pointer; color:#ffffff">Undo</a>
-
+            <br>
+                <div class="row">
+                <div class="col-md-2">
+                    <a href="#" id="undoScenario" style="display:none; cursor: pointer; color:#ffffff">Undo</a>
+                </div>
+                <div class="col-md-8"></div>
+                <div class="col-md-2">
+                    <button id="analyzeScenarioBtn" class="btn nav-link" type="button" style="font-weight: bold; color:#ffffff"><i class="bi bi-file-play"></i> Execute Analysis</button>
+                    <div id="spinnerContainer" style="display: none;">
+                        <div class="spinner-border" role="status">
+                            <span class="sr-only">Loading...</span>
+                        </div>
+                    </div>
+                </div>
             </div>
+        </div>
 <script>
 
 // Ensure DOM is fully loaded before executing the script
@@ -2043,7 +2052,7 @@ function relatedIncidents(scenarioDetails) {
                     document.getElementById('hdnIncidents').value = response.generated_summary;
 
                     // Create a table and append it to the 'related_incidents' container
-                    var table = $('<table class="table table-striped"><thead><tr><th>Title</th><th>Description</th><th>Date</th><th>URL</th></tr></thead><tbody></tbody></table>');
+                    var table = $('<table class="table table-striped white-text"><thead><tr><th>Title</th><th>Description</th><th>Date</th><th>URL</th></tr></thead><tbody></tbody></table>');
                     $('#related_incidents').append(table);
 
                     // Splitting the generated_summary by lines to get individual incidents
@@ -2055,9 +2064,9 @@ function relatedIncidents(scenarioDetails) {
                             var row = $('<tr></tr>');
                             parts.forEach(function(part, index) {
                                 if(index === 3) { // URL part
-                                    var cell = $('<td></td>').html('<a href="' + part + '" target="_blank">Link</a>');
+                                    var cell = $('<td class="white-text"></td>').html('<a href="' + part + '" target="_blank">Link</a>');
                                 } else {
-                                    var cell = $('<td></td>').text(part);
+                                    var cell = $('<td class="white-text"></td>').text(part);
                                 }
                                 row.append(cell);
                             });
