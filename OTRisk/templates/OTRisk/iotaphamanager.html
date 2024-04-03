@@ -693,7 +693,7 @@ $(document).ready(function() {
 
                             if (!zipCode || !isValidZip) {
                                 // Show SweetAlert message instead of the default alert
-                                swal("Invalid Input", "Enter a valid ZIP code to search.", "error");
+                                swal.fire("Invalid Input", "Enter a valid ZIP code to search.", "error");
                                 return; // Exit the function if ZIP code is invalid
                             }
 
@@ -1036,10 +1036,12 @@ $(document).ready(function() {
             },
             success: function(response) {
                 // Handle success
+                var assignGroupModal = new bootstrap.Modal(document.getElementById('assignGroupModal'));
+                assignGroupModal.hide();
 
                 updateGroupAssignmentsDisplay(cyberphaId); // Function to refresh group assignments on the page
                 updateGroupList();
-                $('#assignGroupModal').modal('hide');
+
             },
             error: function(error) {
                 // Handle error
@@ -1105,7 +1107,7 @@ document.addEventListener('DOMContentLoaded', function() {
     var workflowSelector = document.getElementById('workflow_selector');
     workflowSelector.addEventListener('change', function() {
         if (this.value === 'Complete') {
-            swal({
+            swal.fire({
                 title: 'CyberPHA Completed?',
                 text: "Once you save the status of this record as 'Complete', you will not be able to make further changes.",
                 icon: 'warning',
@@ -1892,7 +1894,7 @@ $(document).ready(function() {
                 }
             });
         } else {
-            swal({
+            swal.fire({
                 icon: 'error',
                 title: 'Risk Profile Error',
                 text: 'Please enter a valid number of employees greater than 0'

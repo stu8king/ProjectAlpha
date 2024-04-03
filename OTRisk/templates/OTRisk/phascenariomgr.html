@@ -1177,17 +1177,14 @@ $(document).ready(function() {
             .style("fill", function(d) { return colorScale(d.depth); });
 
         nodeEnter.append('text')
-    .style("fill", "#FFFFFF") // Set label color to white
-    .style("font-size", "14px")
-    .style("font-weight", "bold")
-    .attr("dy", ".35em")
-    .attr("x", function(d) {
-        return d.children || d._children ? -13 : 13; // Adjust this value or add dynamic calculation based on text length
-    })
-    .attr("text-anchor", function(d) {
-        return d.children || d._children ? "end" : "start";
-    })
-    .text(function(d) { return d.data.name; });
+            .style("fill", "#FFFFFF") // Set label color to white
+            .style("font-size", "0.8em")
+            .style("font-weight", "bold")
+            .attr("transform", "rotate(-10)")
+            .attr("dy", ".30em")
+            .attr("x", function(d) { return d.children ? -13 - this.getComputedTextLength() : 13; })
+            .attr("text-anchor", function(d) { return d.children ? "end" : "start"; })
+            .text(function(d) { return d.data.name; });
 
         var link = svg.selectAll('path.link')
             .data(links, function(d) { return d.id; });

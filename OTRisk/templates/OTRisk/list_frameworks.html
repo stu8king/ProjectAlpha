@@ -176,7 +176,7 @@
       <td>{{ assessment.date_created }}</td>
       <td>{{ assessment.date_modified }}</td>
       <td>
-        <a href="{% url 'OTRisk:edit_assessment' assessment.id %}" class="btn btn-primary">Assessment</a>
+        <a href="{% url 'OTRisk:edit_assessment' assessment_id=assessment.id %}" class="btn btn-primary">Assessment</a>
         <button type="button" class="btn btn-primary" id="addNameBtn-{{ assessment.id }}">Add/Edit Name</button>
           <a href="{% url 'OTRisk:assessment_report_view' assessment.id %}" class="btn btn-secondary">View Report</a>
 
@@ -257,6 +257,18 @@ function updateAssessmentTable(assessments) {
     tableBody.innerHTML = ''; // Clear existing rows
 
     assessments.forEach(assessment => {
+        // Construct the URL for the "Assessment" button
+        let assessmentEditUrl = `${editAssessmentBaseUrl}/${assessment.id}/`;
+
+        // Replace any instance of '//' with '/'
+        assessmentEditUrl = assessmentEditUrl.replace(/\/\/+/g, '/');
+
+        // Ensure the base part of the URL is correct after replacement
+        if (!assessmentEditUrl.startsWith('/OTRisk/edit_assessment/')) {
+            assessmentEditUrl = '/OTRisk/edit_assessment' + assessmentEditUrl;
+        }
+
+        // Construct the row HTML with the corrected URL
         var row = `
             <tr>
                 <th scope="row">${assessment.id}</th>
@@ -265,13 +277,14 @@ function updateAssessmentTable(assessments) {
                 <td>${assessment.date_created}</td>
                 <td>${assessment.date_modified}</td>
                 <td>
-                    <a href="${editAssessmentBaseUrl}/${assessment.id}" class="btn btn-primary">Assessment</a>
+                    <a href="${assessmentEditUrl}" class="btn btn-primary">Assessment</a>
                     <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addNameModal" onclick="setAssessmentId(${assessment.id})">Add/Edit Name</button>
                 </td>
             </tr>`;
         tableBody.innerHTML += row;
     });
 }
+
 
 // Event listeners for "Add Name" buttons
     {% for assessment in completed_assessments %}
