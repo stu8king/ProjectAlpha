@@ -17,7 +17,7 @@ from django.forms import model_to_dict, CharField
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime, parse_date
 from django.core.serializers import serialize
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_POST, require_http_methods
 
 from OTRisk.models.Model_CyberPHA import tblIndustry, tblCyberPHAHeader, tblZones, tblStandards, \
     tblCyberPHAScenario, vulnerability_analysis, tblAssetType, tblMitigationMeasures, MitreControlAssessment, \
@@ -27,7 +27,7 @@ from OTRisk.models.Model_CyberPHA import tblIndustry, tblCyberPHAHeader, tblZone
 from OTRisk.models.raw import SecurityControls
 from OTRisk.models.raw import MitreICSMitigations, RAActions
 from OTRisk.models.questionnairemodel import FacilityType
-from OTRisk.models.model_assessment import SelfAssessment, AssessmentFramework, AssessmentAnswer
+from OTRisk.models.model_assessment import SelfAssessment, AssessmentFramework, AssessmentAnswer, AssessmentQuestion
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, get_object_or_404, redirect
 from django.utils import timezone
@@ -197,7 +197,9 @@ def iotaphamanager(request, record_id=None):
         except ValueError:
             assessment_id = None
         pha_header.assessment = assessment_id
+        pha_header.last_assessment_score = request.POST.get('last_assessment_score')
 
+        pha_header.last_assessment_summary = request.POST.get('last_assessment_summary')
         pha_header.npm = request.POST.get('npm')
 
         # Continue with the rest of the processing
@@ -520,6 +522,8 @@ def get_headerrecord(request):
         'pha_score': headerrecord.pha_score,
         'sl_t': headerrecord.sl_t,
         'assessment_id': headerrecord.assessment,
+        'last_assessment_score': headerrecord.last_assessment_score,
+        'last_assessment_summary': headerrecord.last_assessment_summary,
         'coho': headerrecord.coho,
         'npm': headerrecord.npm,
         'current_workflow_status': current_workflow_status,
@@ -568,6 +572,7 @@ def get_headerrecord(request):
     # control_effectiveness = math.ceil(calculate_effectiveness(record_id))
     try:
         control_effectiveness = SelfAssessment.objects.get(id=headerrecord.assessment).score_effective
+        # assessment_summary_result = assessment_summary(headerrecord.assessment)
     except SelfAssessment.DoesNotExist:
         control_effectiveness = 0
     # Create a list of dictionaries for control assessments
@@ -2393,3 +2398,74 @@ def delete_pha_record(request):
         except tblCyberPHAHeader.DoesNotExist:
             return JsonResponse({'deleted': False})
     return JsonResponse({'deleted': False})
+
+
+def assessment_summary(assessment_id, facilityType, industry):
+    openai.api_key = get_api_key('openai')  # Ensure the API key is correctly set
+
+    try:
+        assessment = SelfAssessment.objects.get(pk=assessment_id)
+    except SelfAssessment.DoesNotExist:
+        return "Assessment not found."
+
+    # Preparing the chat messages for the conversation with GPT-4
+    messages = []
+
+    # System message to set the context for the AI
+    messages.append({
+        "role": "system",
+        "content": f"This is a cybersecurity assessment summary and scoring task in the context of a {facilityType} in the {industry} industry. Analyze the provided responses to the cybersecurity assessment questions and generate a summary and overall control effectiveness score out of 100."
+    })
+
+    # Adding questions and answers to the conversation
+    framework_questions = AssessmentQuestion.objects.filter(framework=assessment.framework).prefetch_related(
+        'assessmentanswer_set')
+    answered_questions = assessment.answers.all()
+
+    for question in framework_questions:
+        answer = answered_questions.filter(question=question).first()
+        if answer:
+            response_text = "Yes" if answer.response else "No"
+            effectiveness = f"Effectiveness: {answer.effectiveness}%" if answer.response and answer.effectiveness is not None else "Effectiveness not applicable."
+            message_content = f"Question: {question.text} Answer: {response_text}. {effectiveness}"
+        else:
+            message_content = f"Question: {question.text} Answer: Unanswered."
+        messages.append({"role": "user", "content": message_content})
+
+    # Final user message prompting for the summary and score
+    messages.append({
+        "role": "user",
+        "content": "Given the above answers, provide a concise summary in under 100 words of the cybersecurity program's state and an overall score of control effectiveness out of 100. Write the output as two variables in a manner that is easily parsed for display <integer score>|<text summary> "
+    })
+
+    # Sending the chat completion request to OpenAI
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-4",
+            messages=messages,
+            temperature=0.3,
+            max_tokens=4096,  # Adjusted for comprehensive analysis
+        )
+        # Extracting and returning the AI's summary and score
+        result = response.choices[0].message['content']
+
+        return result
+    except Exception as e:
+        return f"Failed to generate assessment due to an API error: {str(e)}"
+
+
+@require_http_methods(["POST"])
+@csrf_exempt  # Consider CSRF protection for production
+def get_assessment_summary(request):
+    assessment_id = request.POST.get('assessment_id')
+    facilityType = request.POST.get('facilityType')
+    industry = request.POST.get('industry')
+    if not assessment_id:
+        return JsonResponse({'error': 'Assessment ID is required'}, status=400)
+
+    result = assessment_summary(assessment_id, facilityType, industry)
+    if "Failed to generate" in result:
+        return JsonResponse({'error': result}, status=500)
+
+    score, summary = result.split('|', 1)  # Splitting based on the expected format
+    return JsonResponse({'score': score, 'summary': summary})

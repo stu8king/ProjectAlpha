@@ -48,6 +48,28 @@
      {% bootstrap_css %}
      {% bootstrap_javascript %}
 <link rel="stylesheet" type="text/css" href="{% static 'css/otriskstyle.css' %}">
+<style>
+#assessment_summary {
+    display: block; /* Make the span behave like a block element */
+    background-color: #f2f2f2; /* Light grey background */
+    border-left: 5px solid #4CAF50; /* Green left border for emphasis */
+    padding: 10px; /* Padding inside the container */
+    margin-top: 20px; /* Margin at the top */
+    margin-bottom: 10px; /* Margin at the bottom */
+    font-family: Arial, sans-serif; /* Font family */
+    font-size: 14px; /* Font size */
+    color: #000; /* Text color */
+    border-radius: 5px; /* Rounded corners */
+}
+
+#assessment_score {
+    display: block; /* Make the span behave like a block element */
+    font-weight: bold; /* Make the text bold */
+    font-size: 16px; /* Larger font size for emphasis */
+    color: #f7f8f7; /* Green color to match the border of the summary */
+    margin-bottom: 20px; /* Bottom margin */
+}
+</style>
 
 </head>
 <body style="background-color: #464748">
@@ -1169,6 +1191,7 @@ updateGroupList();
                     </div>
                 </div>
             </div>
+
             <div class="col-md-6">
                 <div class="form-group">
                     <label for="assessment_id" style="color: white">Control Assessment:</label>
@@ -1180,16 +1203,90 @@ updateGroupList();
                                 {{ assessment.name }}</option>
                         {% endfor %}
                     </select>
+                    <div id="assessmentspinnerContainer" style="display: none;">
+                        <div class="spinner-border" role="status">
+
+                            <span class="sr-only">Loading...</span>
+                            <input type="hidden" id="last_assessment_score" name="last_assessment_score">
+                            <input type="hidden" id="last_assessment_summary" name="last_assessment_summary">
+                        </div>
+                    </div>
                 </div>
+             <!-- Container to display the summary and score -->
+            <span id="assessment_summary" ></span>
+            <br>
+            <span id="assessment_score" ></span>
                 <div class="form-group">
                     <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#moderatorModal">
                         Select CyberPHA Moderators
                     </button>
                 </div>
                 <script>
+
                         $(document).ready(function() {
+
+                            let isUserChange = false;
                             $("#assessment-select").selectmenu().selectmenu("menuWidget").addClass("overflow");
+
+                             $('#assessment_id').change(function() {
+                                  if (!isUserChange) return;
+                            var assessmentId = $(this).val();
+                            var industry = document.getElementById('selIndustry').value;
+                            var facilityType = document.getElementById('selFacilityType').value;
+                            if(assessmentId  && isUserChange) {
+                                $('#assessmentspinnerContainer').show();
+                                $.ajax({
+                                    url: '/OTRisk/get_assessment_summary/',  // Update with the actual URL
+                                    type: 'POST',
+                                    data: { 'assessment_id': assessmentId,
+                                                'industry': industry,
+                                                'facilityType': facilityType,
+                                            'csrfmiddlewaretoken': '{{ csrf_token }}'
+                                    },
+                                    success: function(response) {
+                                        $('#assessmentspinnerContainer').hide();
+                                        if(response.error) {
+                                            alert(response.error);
+                                        } else {
+                                            $('#assessment_summary').text(response.summary);
+                                            $('#assessment_score').text('Score: ' + response.score  + '/100');
+                                            setBorderColorByScore(response.score);
+                                            drawControlGauge(response.score);
+                                            document.getElementById('last_assessment_score').value = response.score;
+                                            document.getElementById('last_assessment_summary').value = response.summary;
+                                        }
+                                    },
+                                    error: function(xhr, errmsg, err) {
+                                        $('#assessmentspinnerContainer').hide();
+                                        alert('AJAX call failed: ' + errmsg);
+                                    }
+                                });
+                            }
+
+                         isUserChange = false;
                         });
+
+                        $('#assessment_id').change(function() {
+                            isUserChange = true; // Set true on any change event
+                        });
+                       function fetchHeaderRecord(recordId) {
+                            isUserChange = false; // Ensure the flag is false before programmatically setting value
+                            $('#assessment_id').val(recordId).trigger('change');
+                            // The flag doesn't need to be reset here as it's handled in the change event
+                        }
+                         function setBorderColorByScore(score) {
+                            var borderColor = '#4CAF50'; // Default color
+                            score = parseInt(score); // Convert score to integer
+
+                            if (score < 30) {
+                                borderColor = 'red';
+                            } else if (score >= 30 && score <= 70) {
+                                borderColor = 'yellow';
+                            } // If score > 70, default green color is used
+
+                            $('#assessment_summary').css('border-left', '5px solid ' + borderColor);
+                        }
+                       });
                     </script>
 
                 <div class="form-group">
@@ -2288,10 +2385,22 @@ function populateSummary(containerId, summaryData) {
         $(this).closest('tr').remove();
     });
 }
+             function setBorderColorByScore_(score) {
+                            var borderColor = '#4CAF50'; // Default color
+                            score = parseInt(score); // Convert score to integer
 
+                            if (score < 30) {
+                                borderColor = 'red';
+                            } else if (score >= 30 && score <= 70) {
+                                borderColor = 'yellow';
+                            } // If score > 70, default green color is used
+
+                            $('#assessment_summary').css('border-left', '5px solid ' + borderColor);
+                        }
             function fetchHeaderRecord(recordId) {
 
                  sessionStorage.setItem('activeCyberPHA', recordId);
+                 isUserChange = false;
                  // Set the value of the hidden text field
                  document.getElementById('txtHdnCyberPHAID').value = recordId;
                  $.ajax({
@@ -2353,7 +2462,10 @@ function populateSummary(containerId, summaryData) {
                         $('#ir_plan').prop('checked', data.headerrecord.has_incident_response_plan);
                         $('#ir_plan_date').val(data.headerrecord.plan_last_tested_date);
                         $('#ir_plan_ut').prop('checked', data.headerrecord.plan_never_tested);
-
+                        $('#assessment_summary').text(data.headerrecord.last_assessment_summary);
+                        $('#assessment_score').text('Score: ' + data.headerrecord.last_assessment_score + '/100');
+                        $('#last_assessment_summary').text(data.headerrecord.last_assessment_summary);
+                        $('#last_assessment_score').text(data.headerrecord.last_assessment_score);
                         // Logic to enable/disable the date field and plan_never_tested checkbox
                         if (data.headerrecord.has_incident_response_plan) {
                             $('#ir_plan_date').prop('disabled', false);
@@ -2384,8 +2496,8 @@ function populateSummary(containerId, summaryData) {
                          drawGoogleMap(lat,long,address,country);
                          aqi(lat,long,address,country);
                          drawGauge(data.headerrecord.pha_score);
-
-                         drawControlGauge(data.control_effectiveness);
+                        setBorderColorByScore_(data.headerrecord.last_assessment_score);
+                         drawControlGauge(data.headerrecord.last_assessment_score);
 
                          populateInvestmentTable(data.investments);
 

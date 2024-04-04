@@ -331,6 +331,8 @@ class tblCyberPHAHeader(models.Model):
     pha_score = models.IntegerField()
     sl_t = models.PositiveSmallIntegerField(choices=SECURITY_LEVELS, default=0)
     assessment = models.IntegerField(null=True, blank=True)
+    last_assessment_score = models.IntegerField(null=True, blank=True)
+    last_assessment_summary = models.TextField(default="No Summary Saved", null=True)
     bia_scenarios = models.IntegerField(null=True, blank=True)  # overall bia score based on all scenarios
     risk_scenarios = models.IntegerField(null=True, blank=True)  # overall cyberPHA risk score based on all scenarios
     coho = models.IntegerField(default=0)  # facility cost per operating hour
@@ -343,6 +345,7 @@ class tblCyberPHAHeader(models.Model):
     plan_last_tested_date = models.DateField(default=timezone.now, verbose_name="Plan Last Tested Date", null=True,
                                              blank=True)
     plan_never_tested = models.BooleanField(default=True, verbose_name="Plan Never Tested")
+
 
     def set_workflow_status(self, status):
         WorkflowStatus.objects.create(cyber_pha_header=self, status=status)

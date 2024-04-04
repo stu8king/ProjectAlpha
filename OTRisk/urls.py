@@ -176,6 +176,7 @@ urlpatterns = [
     path('risk_treatment/<int:risk_id>/', views.risk_treatment, name='risk_treatment'),
     path('delete_from_risk_register/<int:risk_id>/', views.delete_from_risk_register, name='delete_from_risk_register'),
     path('related_incidents/', views.related_incidents, name='related_incidents'),
+    path('get_assessment_summary/', views.get_assessment_summary, name='get_assessment_summary'),
 ]
 
 
