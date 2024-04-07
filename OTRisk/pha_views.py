@@ -23,7 +23,7 @@ from OTRisk.models.Model_CyberPHA import tblIndustry, tblCyberPHAHeader, tblZone
     tblCyberPHAScenario, vulnerability_analysis, tblAssetType, tblMitigationMeasures, MitreControlAssessment, \
     cyberpha_safety, SECURITY_LEVELS, ScenarioConsequences, user_scenario_audit, auditlog, CyberPHAModerators, \
     WorkflowStatus, APIKey, CyberPHA_Group, ScenarioBuilder, PHA_Safeguard, CyberSecurityInvestment, UserScenarioHash, \
-    CyberPHARiskTolerance, CyberPHACybersecurityDefaults
+    CyberPHARiskTolerance, CyberPHACybersecurityDefaults, PHA_Observations
 from OTRisk.models.raw import SecurityControls
 from OTRisk.models.raw import MitreICSMitigations, RAActions
 from OTRisk.models.questionnairemodel import FacilityType
@@ -537,7 +537,8 @@ def get_headerrecord(request):
         'facilityLong': headerrecord.facilityLong,
         'facilityState': headerrecord.facilityState,
         'has_incident_response_plan': headerrecord.has_incident_response_plan,
-        'plan_last_tested_date': headerrecord.plan_last_tested_date.strftime('%Y-%m-%d') if headerrecord.plan_last_tested_date else None,
+        'plan_last_tested_date': headerrecord.plan_last_tested_date.strftime(
+            '%Y-%m-%d') if headerrecord.plan_last_tested_date else None,
         'plan_never_tested': headerrecord.plan_never_tested,
     }
 
@@ -726,7 +727,8 @@ def make_request_with_backoff(openai_function, *args, **kwargs):
 
 def facility_threat_profile(security_level, facility, facility_type, country, industry, safety_summary,
                             chemical_summary,
-                            physical_security_summary, other_summary, compliance_summary, investment_statement, has_ir_plan_str, ir_plan_never_tested_str, ir_plan_date_str):
+                            physical_security_summary, other_summary, compliance_summary, investment_statement,
+                            has_ir_plan_str, ir_plan_never_tested_str, ir_plan_date_str):
     openai_api_key = get_api_key('openai')
     openai_api_key = get_api_key('openai')
     ai_model = get_api_key('OpenAI_Model')
@@ -893,7 +895,9 @@ def facility_risk_profile(request):
                                                                                  physical_security_summary,
                                                                                  other_summary,
                                                                                  compliance_summary,
-                                                                                 investment_statement, has_ir_plan_str, ir_plan_never_tested_str, ir_plan_date_str )
+                                                                                 investment_statement, has_ir_plan_str,
+                                                                                 ir_plan_never_tested_str,
+                                                                                 ir_plan_date_str)
 
         # Return the individual parts as variables in JsonResponse
         return JsonResponse({
@@ -1194,6 +1198,18 @@ def getSingleScenario(request):
     # Add the safeguards list to the scenario dictionary
     scenario_dict['safeguards'] = safeguards_list
 
+    observations = PHA_Observations.objects.filter(scenario=scenario)
+    observations_list = [
+        {
+            'id': observation.id,
+            'observation_description': observation.observation_description,
+
+        } for observation in observations
+    ]
+
+    # Add the safeguards list to the scenario dictionary
+    scenario_dict['observations'] = observations_list
+
     scenario_instance = tblCyberPHAScenario.objects.get(ID=scenario_id)
     write_to_audit(
         user_id=request.user,
@@ -1266,7 +1282,6 @@ def compliance_map_data(common_content):
         return f"Error: {str(e)}"
 
 
-
 def generate_recommendation_prompt(likelihood, adjustedRR, costs, probability, frequency, biaScore, cyberphaID):
     # Attempt to fetch the related CyberPHARiskTolerance record
     try:
@@ -1299,19 +1314,18 @@ def generate_recommendation_prompt(likelihood, adjustedRR, costs, probability, f
     return prompt
 
 
-
 def get_openai_recommendation(prompt):
-
     openai.api_key = get_api_key("openai")  # Ensure this retrieves your OpenAI API key correctly
     model = get_api_key("OpenAI_Model")
 
     messages = [
-        {"role": "system", "content": "You are an expert in OT cybersecurity risk assessment. Provide a recommendation based on the analysis."},
+        {"role": "system",
+         "content": "You are an expert in OT cybersecurity risk assessment. Provide a recommendation based on the analysis."},
         {"role": "user", "content": prompt}
     ]
 
     response = openai.ChatCompletion.create(
-        model= model,
+        model=model,
         messages=messages,
         temperature=0.2,
         max_tokens=600
@@ -1338,7 +1352,6 @@ def get_openai_recommendation(prompt):
     return structured_response
 
 
-
 @login_required
 def scenario_analysis(request):
     # Log the user activity
@@ -1346,7 +1359,6 @@ def scenario_analysis(request):
 
     # Check if the user has exceeded the maximum scenario analysis count
     if user_profile.current_scenario_count >= user_profile.max_scenario_count:
-
         return JsonResponse({
             'error': 'User has reached the maximum number of scenario assessments'
         }, status=403)  # 403 Forbidden or another appropriate status code
@@ -1379,7 +1391,12 @@ def scenario_analysis(request):
         # Retrieve the string of validated consequences
         validated_consequences_str = request.GET.get('validated_consequences', '')
         physical_safeguards_str = request.GET.get('physical_safeguards', '')
+        observations = request.GET.get('observations')
         force_resubmit = request.GET.get('force_resubmit', 'false').lower() == 'true'
+        safetyJustification = request.GET.get('safetyJustification')
+        supplychainJustification = request.GET.get('supplychainJustification')
+        environmentJustification = request.GET.get('environmentJustification')
+        dangerJustification = request.GET.get('dangerJustification')
 
         # Concatenate all GET parameters to form a string
         values_str = '|'.join([request.GET.get(param, '') for param in request.GET])
@@ -1459,7 +1476,7 @@ def scenario_analysis(request):
         # Define the common part of the user message
         common_content = f"""
         
-        Act as both an Insurance Actuary and an OT Cybersecurity Risk Expert. You're tasked with analyzing a specific scenario for a facility in the industry sector, located in a particular country. Your analysis should cover various risk outcomes based on the detailed context provided.
+        Act as both an Insurance Actuary and an OT Cybersecurity HAZOPS Risk Expert. You're tasked with analyzing a specific scenario for a facility in the industry sector, located in a particular country. Your analysis should cover various risk outcomes based on the detailed context provided.
 
         Scenario Details:
 
@@ -1483,7 +1500,13 @@ def scenario_analysis(request):
         Estimated Unmitigated likelihood of all identified threats and vulnerabilities: {uel}/10
         Physical Security:
         Physical Safeguards: {physical_safeguards_str} (Assumed effective)
+        Vulnerability Observations: {observations}
         Investment Statement: {investment_statement}
+        Additional Information if given:
+        Explanation of safety score: {safetyJustification}
+        Explanation of supply chain score: {supplychainJustification}
+        Explanation of environmental score: {environmentJustification}
+        Explanation of life danger score: {dangerJustification}
         """
 
         # Define the refined user messages
@@ -1744,7 +1767,7 @@ def generate_ppt(request):
         other = request.POST.get('txtOther', '')
         compliance = request.POST.get('txtCompliance', '')
         facility = request.POST.get('FacilityName', '')
-        threatSummary = request.POST.get('threatSummary','')
+        threatSummary = request.POST.get('threatSummary', '')
         insightSummary = request.POST.get('insightSummary', '')
         strategySummary = request.POST.get('strategySummary', '')
 
@@ -1890,7 +1913,7 @@ def analyze_scenario(request):
 
             # Construct a prompt for GPT-4
             system_message = f"""
-            TASK: Analyze and consider the following scenario: {scenario} which occurs at a {facility_type} in the {industry} industry, located at {address} in {country}, specifically in the {zone} zone and the {unit} unit. 
+            TASK: Analyze and consider the following scenario as part of an OT/ICS focused Cyber HAZOPS/Layer of Protection Analysis (LOPA) assessment: {scenario} which occurs at a {facility_type} in the {industry} industry, located at {address} in {country}, specifically in the {zone} zone and the {unit} unit. 
             The attacker is assumed to be: {attacker}. The attack vector is assumed to be {attack_vector}. The risk category is assumed to be {riskCategory}. Vulnerable systems with Internet exposed IP address {exposed_system}. Vulnerable systems with default or weak credentials {weak_credentials}.
             Considering the likely presence of these OT devices: {devices}, concisely describe in 50 words in a list format (separated by semicolons) of a maximum of 5 of the most likely direct consequences of the given scenario. 
             The direct consequences should be specific to the facility and the mentioned details. 
@@ -2034,7 +2057,6 @@ def is_inappropriate(text):
 
 
 def write_to_audit(user_id, user_action, user_ip, cyberPHAID=None, cyberPHAScenario=None, qraw=None):
-
     try:
         user_profile = UserProfile.objects.get(user=user_id)
 
@@ -2085,7 +2107,8 @@ def assign_cyberpha_to_group(request):
         elif new_group_name and new_group_type:
             # Check if group with the same name and type already exists
             organization_instance = Organization.objects.get(id=org_id)
-            group, created = CyberPHA_Group.objects.get_or_create(name=new_group_name, group_type=new_group_type, organization=organization_instance)
+            group, created = CyberPHA_Group.objects.get_or_create(name=new_group_name, group_type=new_group_type,
+                                                                  organization=organization_instance)
             if not created:
                 return JsonResponse({'status': 'error', 'message': 'Group with this name and type already exists.'})
             cyberpha.groups.add(group)
@@ -2278,7 +2301,6 @@ def get_coordinates_from_address(address, country, google_maps_api_key):
 
 
 def air_quality_index(request):
-
     latitude = request.GET.get('lat')
     longitude = request.GET.get('lon')
     address = request.GET.get('address')

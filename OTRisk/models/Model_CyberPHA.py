@@ -178,9 +178,6 @@ class tblStandards(models.Model):
         db_table = 'tblStandards'
 
 
-
-
-
 class tblUnits(models.Model):
     id = models.AutoField(primary_key=True)
     PlantUnits = models.CharField(max_length=50)
@@ -345,7 +342,6 @@ class tblCyberPHAHeader(models.Model):
     plan_last_tested_date = models.DateField(default=timezone.now, verbose_name="Plan Last Tested Date", null=True,
                                              blank=True)
     plan_never_tested = models.BooleanField(default=True, verbose_name="Plan Never Tested")
-
 
     def set_workflow_status(self, status):
         WorkflowStatus.objects.create(cyber_pha_header=self, status=status)
@@ -979,6 +975,14 @@ class PHA_Safeguard(models.Model):
 
     class Meta:
         db_table = 'tblPHASafeguard'
+
+
+class PHA_Observations(models.Model):
+    scenario = models.ForeignKey(tblCyberPHAScenario, on_delete=models.CASCADE, related_name='observations')
+    observation_description = models.TextField(max_length=255)
+
+    class Meta:
+        db_table = 'tblPHAObservations'
 
 
 class Audit(models.Model):

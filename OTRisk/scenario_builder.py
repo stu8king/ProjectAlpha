@@ -165,7 +165,7 @@ def analyze_sim_scenario_v2(request):
             industry = request.POST.get('industry')
 
             system_message = f"""
-                Analyze the following cybersecurity scenario at a {facility_type} in the {industry} industry: '{scenario}'. For each factor listed below, provide a score out of 10 for impact severity and a brief narrative. Format your response with clear delimiters as follows: 'Factor: [Factor Name] | Score: X/10 | Narrative: [Explanation]'.
+                In the context of a Cyber HAZOPS assessment, analyze the following cybersecurity scenario at a {facility_type} in the {industry} industry: '{scenario}'. For each factor listed below, provide a score out of 10 for impact severity and a concise narrative in under 50 words per factor. IMPORTANT: NARRATIVE MUST BE IN {request.session.get('organization_defaults', {}).get('language', 'en')}. Format your response with clear delimiters as follows: 'Factor: [Factor Name] | Score: X/10 | Narrative: [Explanation]'.
 
                 Factors:
                 - Safety
@@ -408,7 +408,7 @@ def create_system_messages(details):
 
     # Refining the consequence message for clarity and specificity
     consequence_message = f"""
-    {common_content} As a cybersecurity scenario analyzer, evaluate the described scenario. List up to 8 direct consequences that are most likely to occur as a result of this scenario, in a bullet-point format, limited to 80 words or less.
+    {common_content} As a cybersecurity scenario analyzer, evaluate the described scenario. The context of the evaluation is for a CYBER HAZOPS ASSESSMENT. CONSEQUENCE relating to the physical effects of the scenario are important. List up to 8 direct consequences that are most likely to occur as a result of this scenario, in a bullet-point format, limited to 80 words or less.
     
     The format of the response must be precisely as follows:
     
@@ -485,7 +485,7 @@ def generate_scenario_description_v2(request):
 
         # Constructing the prompt
         prompt = f"""
-        Construct a scenario based on the following details, ensuring the narrative focuses on the sequence of actions and events without detailing the consequences. The scenario MUST illustrate a realistic cybersecurity attack against operational technology (OT) and industrial control systems (ICS) within the specified environment, considering operational context and defensive measures:
+        IMPORTANT: NARRATIVE MUST BE IN {request.session.get('organization_defaults', {}).get('language', 'en')}. Construct a scenario based on the following details, ensuring the narrative focuses on the sequence of actions and events without detailing the consequences. The scenario MUST illustrate a realistic cybersecurity attack against operational technology (OT) and industrial control systems (ICS) within the specified environment, considering operational context and defensive measures. IMPORTANT. The scenario is part of a CYBER HAZOPS assessment using the LOPA methodology. Ensure the scenario description is aligned with this requirement:
 
         - Attacker: {attacker}
         - Attack Vector: {attack_vector}
@@ -493,7 +493,7 @@ def generate_scenario_description_v2(request):
         - Effect of Attack: {attack_effect}
         - Target System/Network: {target_system}
         - Potential Immediate Impact: {impact}
-        - Attacker's Motivation: {motivation}
+        - Hazops Guidewords: {motivation}
         - Facility Type: {facility_type}
         - Industry Sector: {industry}
         - Country {country}
@@ -504,7 +504,8 @@ def generate_scenario_description_v2(request):
         - Is there cyber insurance cover? {'Yes' if cyber_insurance else 'No'}
         - Is there a business continuity plan in place? {'Yes' if bc_plan else 'No'}
 
-        Use this information to generate a concise scenario as a very fact-based technical brief in natural language, under 200 words, formatted as coherent paragraphs. Avoid detailing long-term consequences or broad impacts. Avoid repeating information given in the scenario description. Focus solely on the attack's progression. 
+        Use this information to generate a concise scenario as a very fact-based technical brief , under 200 words, formatted as coherent paragraphs. Avoid detailing long-term consequences or broad impacts. Avoid repeating information given in the scenario description. Focus solely on the attack's progression. 
+        IMPORTANT INSTRUCTIONS: DO not speculate on mitigation. Do not speculate on what the scenario underscores or illustrate. Do not waste words on describing the facility or using descriptive language. Do not use unnecessary description or terms. Use concise HAZOPS terminology. DO NOT LIST THE GUIDEWORDS. ). 
         """
 
         # Setting OpenAI API key
@@ -518,7 +519,7 @@ def generate_scenario_description_v2(request):
                 {"role": "system", "content": prompt}
             ],
             max_tokens=350,
-            temperature=0.2
+            temperature=0.1
         )
         # Extracting the generated scenario
         # The response structure is different for chat completions, so adjust accordingly

@@ -117,6 +117,10 @@
     display: block; /* Removes any default inline spacing */
     margin: 0 auto 20px; /* Centers the image and adds some space below */
 }
+    #impactScore_gauge {
+        height: 30vh; /* Adjust this value based on your needs */
+        width: 100%; /* Ensures the chart container fills the width of its parent */
+    }
 </style>
 
 </head>
@@ -661,14 +665,18 @@ function getGroupReport(groupId) {
 
             // Ensure the table container is specifically targeted and not overwritten by averages content
             $('#cyberphasTableContainer').html(tableHtml);
+            drawGauge(data.avg_pha_Score, 'pha_gauge', 'Group Average PHA Rating /100');
+            drawGauge(data.avg_assessment_Score, 'assessment_gauge', 'Group Average Control Score');
+            drawBarChart(data);
+             var formattedSLE = new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                minimumFractionDigits: 0, // No decimal places
+                maximumFractionDigits: 0, // No decimal places
+            }).format(data.avg_sle);
 
-            // Create content for the averages and append it separately
-            var averagesContent = '<div>Average Image Safety: ' + data.avg_imageSafety +
-                                  ', Average Impact Danger: ' + data.avg_impactDanger +
-                                  ', Average Impact Production: ' + data.avg_impactProduction + '</div>';
-
-            // Append the averages content next to the table container within tab8
-            $('#tab8').append(averagesContent);
+            // Set the formatted value to the container
+            $('#group_sle').text(formattedSLE);
 
             // Make sure tab8 is displayed
             $('.tab-content').removeClass('active').hide();
@@ -789,6 +797,29 @@ function getGroupReport(groupId) {
 
      <div class="tab-content tab-link"  id="tab8">
         <h2>Group Report</h2>
+        <div class="form-group">
+         <div class="row" >
+
+             <div class="col-md-3">
+                 <div id="pha_gauge"></div>
+                 <div id="assessment_gauge"></div>
+             </div>
+
+             <div class="col-md-6">
+                 <div id="impactScore_gauge"></div>
+             </div>
+             <div class="col-md-3">
+                 <div class="group-container">
+                        <div class="group-header" style="font-size: medium">
+                            Group Average Scenario SLE
+                        </div>
+                            <div class="group-body" id="group_sle">
+
+                            </div>
+                        </div>
+             </div>
+                 </div>
+         </div>
          <div id="cyberphasTableContainer"></div>
 
      </div>
@@ -1071,7 +1102,94 @@ $(document).ready(function() {
     });
 });
 
+function drawGauge(score, container, gauge_title) {
 
+    clearContainer(container);
+    // Create data set with our score
+    var dataSet = anychart.data.set([score]);
+
+    // Create a circular gauge chart
+    var gauge = anychart.gauges.circular();
+    anychart.theme('monochrome');
+    var credits = gauge.credits();
+    credits.enabled(false);
+
+    gauge.background().fill("#333");
+
+    // Set gauge settings
+    gauge.data(dataSet).padding('4%');
+    gauge.startAngle(270);
+    gauge.sweepAngle(180);
+
+    // Set axis scale settings
+    var scale = gauge.axis().scale();
+    scale.minimum(0)
+        .maximum(100)
+        .ticks()
+        .interval(10);
+
+    // Set the look of the bar that presents data
+    gauge.bar(0)
+        .position('i')
+        .fill('#F0673B .9')
+        .stroke('#F0673B')
+        .radius(65);
+
+    gauge.title(gauge_title);
+    gauge.title().fontColor("#FFFFFF");
+    gauge.title().fontSize(10);
+
+
+
+    // Draw the chart
+    gauge.container(container).draw();
+}
+
+function clearContainer(containerId) {
+    var container = document.getElementById(containerId);
+    while (container.firstChild) {
+        container.removeChild(container.firstChild);
+    }
+}
+
+// Function to draw a bar chart with AnyChart
+function drawBarChart(data) {
+    clearContainer('impactScore_gauge');
+    // Create an instance of AnyChart and set the type to bar
+    var chart = anychart.column();
+    chart.title("Group Average BIA Scores");
+    chart.palette(anychart.palettes.provence);
+    chart.yScale().minimum(0).maximum(10);
+    // Create a data set with the impact scores
+    var dataSet = anychart.data.set([
+        ['Safety', data.avg_imageSafety],
+        ['Danger', data.avg_impactDanger],
+        ['Production', data.avg_impactProduction],
+        ['Finance', data.avg_imageFinance],
+        ['Reputation', data.avg_impactReputation],
+        ['Environment', data.avg_impactEnvironment],
+        ['Regulation', data.avg_imageRegulation],
+        ['Data', data.avg_impactData],
+        ['Supply', data.avg_impactSupply]
+    ]);
+
+    // Add data
+        chart.data(dataSet);
+        var credits = chart.credits();
+        credits.enabled(false);
+        // Configure the scales
+        chart.yScale().minimum(0).maximum(10);
+        chart.xAxis().labels().rotation(45);
+        // Set the titles for the axes
+        chart.xAxis().title("Impact Factors");
+        chart.yAxis().title("Average Scores");
+
+    // Set the container id for the chart
+    chart.container('impactScore_gauge');
+
+    // Draw the chart
+    chart.draw();
+}
 
 </script>
 

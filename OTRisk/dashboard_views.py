@@ -624,17 +624,35 @@ def get_group_report(request):
 
     # Get IDs of tblCyberPHAHeader objects to filter tblCyberPHAScenario
     cyberpha_ids = cyberphas.values_list('ID', flat=True)
-
+    avg_pha_Score = round(cyberphas.aggregate(Avg('pha_score'))['pha_score__avg'] or 0, 2)
+    avg_assessment_Score = round(cyberphas.aggregate(Avg('assessment'))['assessment__avg'] or 0, 2)
     scenarios = tblCyberPHAScenario.objects.filter(CyberPHA_id__in=cyberpha_ids)
-    avg_imageSafety = scenarios.aggregate(Avg('impactSafety'))['impactSafety__avg'] or 0
-    avg_impactDanger = scenarios.aggregate(Avg('impactDanger'))['impactDanger__avg'] or 0
-    avg_impactProduction = scenarios.aggregate(Avg('impactProduction'))['impactProduction__avg'] or 0
+    avg_imageSafety = round(scenarios.aggregate(Avg('impactSafety'))['impactSafety__avg'] or 0, 2)
+    avg_impactDanger = round(scenarios.aggregate(Avg('impactDanger'))['impactDanger__avg'] or 0, 2)
+    avg_impactProduction = round(scenarios.aggregate(Avg('impactProduction'))['impactProduction__avg'] or 0, 2)
+    avg_imageFinance = round(scenarios.aggregate(Avg('impactFinance'))['impactFinance__avg'] or 0, 2)
+    avg_impactReputation = round(scenarios.aggregate(Avg('impactReputation'))['impactReputation__avg'] or 0, 2)
+    avg_impactEnvironment = round(scenarios.aggregate(Avg('impactEnvironment'))['impactEnvironment__avg'] or 0, 2)
+    avg_imageRegulation = round(scenarios.aggregate(Avg('impactRegulation'))['impactRegulation__avg'] or 0, 2)
+    avg_impactData = round(scenarios.aggregate(Avg('impactData'))['impactData__avg'] or 0, 2)
+    avg_impactSupply = round(scenarios.aggregate(Avg('impactSupply'))['impactSupply__avg'] or 0, 2)
+    avg_sle = round(scenarios.aggregate(Avg('sle'))['sle__avg'] or 0, 0)
+
     return JsonResponse({
-        'cyberphas': list(cyberphas_details),
-        'avg_imageSafety': avg_imageSafety,
-        'avg_impactDanger': avg_impactDanger,
-        'avg_impactProduction': avg_impactProduction,
-    })
+            'cyberphas': list(cyberphas_details),
+            'avg_imageSafety': avg_imageSafety,
+            'avg_impactDanger': avg_impactDanger,
+            'avg_impactProduction': avg_impactProduction,
+            'avg_pha_Score': avg_pha_Score,
+            'avg_assessment_Score': avg_assessment_Score,
+            'avg_imageFinance': avg_imageFinance,
+            'avg_impactReputation': avg_impactReputation,
+            'avg_impactEnvironment': avg_impactEnvironment,
+            'avg_imageRegulation': avg_imageRegulation,
+            'avg_impactData': avg_impactData,
+            'avg_impactSupply': avg_impactSupply,
+            'avg_sle': avg_sle
+        })
 
 
 def get_likelihood_category(likelihood):

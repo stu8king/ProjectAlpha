@@ -683,7 +683,7 @@ document.addEventListener("DOMContentLoaded", function() {
             <li><a href="#" data-tab="tab2" class="tab-link tab-inactive">Scenario Detail</a></li>
 
             <li><a href="#" data-tab="tab4" class="tab-link tab-inactive">Business Impact Assessment</a></li>
-
+            <li><a href="#" data-tab="tab11" class="tab-link tab-inactive">Observations</a></li>
             <li><a href="#" data-tab="tab5" class="tab-link tab-inactive">Physical Safeguards</a></li>
             <li><a href="#" data-tab="tab6" class="tab-link tab-inactive">Risk Outcomes</a></li>
             <li><a href="#" data-tab="tab7" class="tab-link tab-inactive">Financial Analysis</a></li>
@@ -773,7 +773,7 @@ $(document).ready(function() {
                             <td>
                                 {{ saved_scenarios.formatted_id }}
                             </td>
-                            <td>{{ saved_scenarios.Scenario }}</td>
+                            <td>{{ saved_scenarios.Scenario|truncatewords:50 }}</td>
                             <td>
                                 {% if saved_scenarios.impactSafety < 4 %}
                                     <span class="green-circle"></span>
@@ -1372,6 +1372,8 @@ $(document).ready(function() {
             </div>
             </div>
          </div>
+
+
          <div class="tab-content " id="tab4">
             <h2>Business Impact Assessment</h2>
             <div class="row">
@@ -1613,7 +1615,46 @@ $(document).ready(function() {
 
 
         </div>
+        <div class="tab-content" id="tab11">
+            <h2>Risk and Vulnerability Observations</h2>
+            <div class="card mb-3 shadow-sm">
+                <div class="card-body">
+                    <div id="tableVulns" class="mb-2">
+                        <button id="addRowBtn" class="btn btn-primary btn-sm" type="button">Add Row</button>
+                    </div>
+                    <table class="table table-bordered small-font" id="table_vulns">
+                        <thead>
+                            <tr>
+                                <th>Observation</th>
 
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                            <tbody>
+                                <!-- Rows will be added here dynamically -->
+                            </tbody>
+                        </table>
+                        <script>
+                            $(document).ready(function() {
+                                $("#addRowBtn").click(function() {
+                                    var newRow = `<tr>
+                                        <td><textarea class="form-control" maxlength="100"></textarea></td>
+
+                                        <td><button type="button" class="btn btn-danger btn-sm deleteRowBtn">Delete</button></td>
+                                    </tr>`;
+                                    $("#table_vulns tbody").append(newRow);
+                                });
+
+                                // Event delegation to handle dynamically added elements
+                                $("#table_vulns").on("click", ".deleteRowBtn", function() {
+                                    $(this).closest("tr").remove();
+                                });
+                            });
+                            </script>
+
+                    </div>
+                </div>
+        </div>
          <div class="tab-content " id="tab5">
             <h2>Physical Safeguards</h2>
                <div class="card mb-3 shadow-sm">
@@ -2216,7 +2257,7 @@ $(document).ready(function() {
                   const env_contamination = document.getElementById('env_contamination').value
                   const env_population = document.getElementById('env_population').value
                   const env_wildlife = document.getElementById('env_wildlife').value
-                    const justifyRegulation = document.getElementById('txtregulatoryJustify').value
+                  const justifyRegulation = document.getElementById('txtregulatoryJustify').value
                   const justifySupply = document.getElementById('txtsupplyJustify').value
                   const dataRegulation = document.getElementById('txtdataJustify').value
                   //const sle =  document.getElementById('hdn_sle').value
@@ -2257,25 +2298,25 @@ $(document).ready(function() {
                       outageCost = parseInt(document.getElementById('outageCost').value, 10);
                   }
                   var sid = sessionStorage.getItem('sid');
-                    if (!sid) {
-                        sid = 0;
-                    }
+                  if (!sid) {
+                      sid = 0;
+                  }
                   // Add the consequences table
                   const table = document.getElementById('consequenceTable');
                   const rows = table.getElementsByTagName('tbody')[0].rows;
                   let validatedConsequenceExists = false;
-                    for (let i = 0; i < rows.length; i++) {
-                        const isChecked = rows[i].cells[1].getElementsByTagName('input')[0].checked;
-                        if (isChecked) {
-                            validatedConsequenceExists = true;
-                            break;
-                        }
-                    }
+                  for (let i = 0; i < rows.length; i++) {
+                      const isChecked = rows[i].cells[1].getElementsByTagName('input')[0].checked;
+                      if (isChecked) {
+                          validatedConsequenceExists = true;
+                          break;
+                      }
+                  }
 
-                    if (rows.length === 0 || !validatedConsequenceExists) {
-                        alert("No consequences have been added or validated. Please add and validate consequences before proceeding.");
-                        return; // Exit the function
-                    }
+                  if (rows.length === 0 || !validatedConsequenceExists) {
+                      alert("No consequences have been added or validated. Please add and validate consequences before proceeding.");
+                      return; // Exit the function
+                  }
                   // Create a FormData object
                   const formData = new FormData();
                   formData.append('scenarioID', sid);
@@ -2284,8 +2325,8 @@ $(document).ready(function() {
                   formData.append('safety_hazard', safety_hazard);
                   formData.append('dangerScope', dangerScope);
                   formData.append('scenario', scenario);
-                  formData.append('exposed_system',exposed_system);
-                  formData.append('weak_credentials',weak_credentials);
+                  formData.append('exposed_system', exposed_system);
+                  formData.append('weak_credentials', weak_credentials);
                   // formData.append('consequence', consequence);
                   formData.append('threatSource', threatSource);
                   formData.append('threatAgent', threatAgent);
@@ -2352,14 +2393,14 @@ $(document).ready(function() {
                   formData.append('cost_projection', cost_projection);
                   formData.append('rationale_recommendation', rationale_recommendation);
                   formData.append('rationale_Rationale', rationale_Rationale);
-                  formData.append('cost_projection_justification',cost_projection_justification);
+                  formData.append('cost_projection_justification', cost_projection_justification);
 
-                    // Check if snapshot should be created
+                  // Check if snapshot should be created
                   let snapshot = 0
                   const riskSnapshotCheckbox = document.getElementById('risk_snapshot');
                   if (riskSnapshotCheckbox.checked) {
-                        snapshot = 1;
-                    }
+                      snapshot = 1;
+                  }
                   formData.append('snapshot', snapshot);
                   for (let i = 0; i < rows.length; i++) {
                       const row = rows[i];
@@ -2370,27 +2411,47 @@ $(document).ready(function() {
                       }
                   }
                   // Check for safeguards in the table and add them to formData
-                    const safeguardsTable = document.getElementById('table_safeguards');
-                    const safeguard_rows = safeguardsTable.getElementsByTagName('tbody')[0].rows;
-                    let safeguardsAdded = false;
+                  const safeguardsTable = document.getElementById('table_safeguards');
+                  const safeguard_rows = safeguardsTable.getElementsByTagName('tbody')[0].rows;
+                  let safeguardsAdded = false;
 
-                    for (let i = 0; i < safeguard_rows.length; i++) {
-                        const safeguardDescription = safeguard_rows[i].cells[0].getElementsByTagName('textarea')[0].value.trim();
-                        const safeguardType = safeguard_rows[i].cells[1].getElementsByTagName('textarea')[0].value.trim();
+                  for (let i = 0; i < safeguard_rows.length; i++) {
+                      const safeguardDescription = safeguard_rows[i].cells[0].getElementsByTagName('textarea')[0].value.trim();
+                      const safeguardType = safeguard_rows[i].cells[1].getElementsByTagName('textarea')[0].value.trim();
 
-                        // Ignore empty rows
-                        if (safeguardDescription || safeguardType) {
-                            formData.append(`safeguards[${i}][description]`, safeguardDescription);
-                            formData.append(`safeguards[${i}][type]`, safeguardType);
-                            safeguardsAdded = true;
-                        }
-                    }
+                      // Ignore empty rows
+                      if (safeguardDescription || safeguardType) {
+                          formData.append(`safeguards[${i}][description]`, safeguardDescription);
+                          formData.append(`safeguards[${i}][type]`, safeguardType);
+                          safeguardsAdded = true;
+                      }
+                  }
 
-                    // If no safeguards were added (table was empty or all rows were empty), add a dummy row
-                    if (!safeguardsAdded) {
-                        formData.append('safeguards[0][description]', 'No physical safeguards defined');
-                        formData.append('safeguards[0][type]', 'N/A');
-                    }
+                  // If no safeguards were added (table was empty or all rows were empty), add a dummy row
+                  if (!safeguardsAdded) {
+                      formData.append('safeguards[0][description]', 'No physical safeguards defined');
+                      formData.append('safeguards[0][type]', 'N/A');
+                  }
+
+
+                  const vulnTable = document.getElementById('table_vulns');
+                  const vuln_rows = vulnTable.getElementsByTagName('tbody')[0].rows;
+                  let vulnsAdded = false;
+
+                  for (let i = 0; i < vuln_rows.length; i++) {
+                      const vulnDescription = vuln_rows[i].cells[0].getElementsByTagName('textarea')[0].value.trim();
+
+                      if (vulnDescription) {
+                          formData.append(`vuln[${i}][description]`, vulnDescription);
+
+                          vulnsAdded = true;
+                      }
+                  }
+
+                        if (!vulnsAdded) {
+                              formData.append('vuln[0][description]', 'No observations defined');
+                          }
+
                   // Call the saveOrUpdateCyberPHA function
                   saveOrUpdateCyberPHA(formData);
 
@@ -3573,6 +3634,10 @@ $('#scenarioSelectModal').on('show.bs.modal', function (e) {
             const rows = table.getElementsByTagName('tbody')[0].rows;
             let validatedConsequences = [];
             let validatedConsequenceExists = false;
+            let safetyJustification = document.getElementById('txtsafetyJustify').value;
+            let supplychainJustification = document.getElementById('txtsupplyJustify').value;
+            let environmentJustification = document.getElementById('txtenvironmentJustify').value;
+            let dangerJustification = document.getElementById('txtlifeJustify').value;
 
              // Gather Physical Safeguards from the table
             let physicalSafeguards = [];
@@ -3585,6 +3650,19 @@ $('#scenarioSelectModal').on('show.bs.modal', function (e) {
 
             // Format the physical safeguards into a string
             let physicalSafeguardsStr = "Physical security controls. Control:" + physicalSafeguards.join(". Control: ")
+
+            let observations = [];
+            $("#table_vulns tbody tr").each(function() {
+                let observation = $(this).find("td:first textarea").val(); // Assuming the first column contains a textarea
+                if (observation) {
+                    observations.push(observation.trim());
+                }
+            });
+
+            // Format the physical safeguards into a string
+            let observationsStr = "Vulnerability and risk observations made . Observation:" + observations.join(". Observation: ")
+
+
 
             for (let i = 0; i < rows.length; i++) {
                 const isChecked = rows[i].cells[1].getElementsByTagName('input')[0].checked;
@@ -3636,7 +3714,12 @@ $('#scenarioSelectModal').on('show.bs.modal', function (e) {
                     production_outage: production_outage,
                     production_outage_length: production_outage_length,
                     validated_consequences: validatedConsequencesStr,
-                    physical_safeguards: physicalSafeguardsStr
+                    physical_safeguards: physicalSafeguardsStr,
+                    observations: observationsStr,
+                    safetyJustification: safetyJustification,
+                    supplychainJustification: supplychainJustification,
+                    environmentJustification: environmentJustification,
+                    dangerJustification: dangerJustification,
                 },
                 success: function (response) {
                     // On success, set progress to 100% and hide the progress bar
@@ -4704,6 +4787,23 @@ function clearScenario(){
             tableBody.append(row);
         });
 
+    $('#table_vulns tbody').empty();
+    if (data.observations && data.observations.length > 0) {
+        data.observations.forEach(function(observation) {
+            var newRow = `<tr>
+                <td><textarea class="form-control" maxlength="250">${observation.observation_description}</textarea></td>
+                <td><button type="button" class="btn btn-danger btn-sm deleteRowBtn">Delete</button></td>
+            </tr>`;
+            $('#table_vulns tbody').append(newRow);
+        });
+    } else {
+         var newRow = `<tr>
+            <td><textarea class="form-control" maxlength="100">No observations made</textarea></td>
+
+            <td><button type="button" class="btn btn-danger btn-sm deleteRowBtn">Delete</button></td>
+        </tr>`;
+        $('#table_vulns tbody').append(newRow);
+    }
         // Clear existing rows in the safeguards table
     $('#table_safeguards tbody').empty();
 

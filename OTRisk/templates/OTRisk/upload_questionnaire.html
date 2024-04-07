@@ -2,178 +2,454 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <title>AnzenOT - GRC for OT</title>
     <link rel="icon" href="{% static 'images/AnzenOTIconBlack.png' %}" type="image/x-icon">
+    <!-- Load jQuery (only one version) -->
+
+    <!-- Load jQuery (only one version) -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- Bootstrap and related scripts -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.1/font/bootstrap-icons.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+
+<!-- DataTables -->
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.3/css/jquery.dataTables.css">
+<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.js"></script>
+
+<!-- Select2 -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<!-- SweetAlert -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<!-- AnyChart -->
+<script src="https://cdn.anychart.com/releases/8.10.0/js/anychart-bundle.min.js"></script>
+<link href="https://cdn.anychart.com/releases/8.10.0/css/anychart-ui.min.css" rel="stylesheet" type="text/css">
+<script src="https://cdn.anychart.com/releases/8.10.0/js/anychart-exports.min.js"></script>
+<script src="https://cdn.anychart.com/releases/v8/js/anychart-bullet.min.js"></script>
+<script src="https://cdn.anychart.com/releases/8.11.1/js/anychart-base.min.js"></script>
+    <script src="https://cdn.anychart.com/releases/8.11.1/js/anychart-cartesian.min.js"></script>
+<script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
 
 
-    <!-- Bootstrap Select CSS -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.1/css/bootstrap-select.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js"></script>
-
-    <!-- Bootstrap Icons -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.1/font/bootstrap-icons.css" rel="stylesheet">
-
-    <!-- jQuery -->
-        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
-        <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.25/css/jquery.dataTables.css">
-    <script type="text/javascript" charset="utf8" src="https://code.jquery.com/jquery-3.5.1.js"></script>
-    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.js"></script>
 
 
 
+    <script src="{% static 'OTRisk/assesscyberpha.js' %}"></script>
+    {% load django_bootstrap5 %}
+    {% bootstrap_css %}
+    {% bootstrap_javascript %}
 
-
-
-
-     {% load django_bootstrap5 %}
-     {% bootstrap_css %}
-     {% bootstrap_javascript %}
+    <title>Assess CyberPHA</title>
     <style>
-        .no-gap {
-            padding-left: 2px;
-            padding-right: 2px;
-            margin-bottom: 2px;
-        }
+        #tbl_risk_register td:nth-child(4), /* Residual Risk */
+#tbl_risk_register td:nth-child(7) { /* Probability */
+    text-align: center; /* Center-align the content */
+}
 
-        #sunburstcontainer {
-        width: 100%;
-        height: 100%;
-        border: 1px solid #ccc; /* border color */
-        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1); /* shadow effect */
-        border-radius: 4px; /* rounded corners (optional) */
+#tbl_risk_register td:first-child {
+    background-color: #b2b5b6; /* Header background color */
+    color: #020202; /* Header text color */
+    font-weight: bold; /* Make header text bold */
+    padding: 0.75rem; /* Larger padding for header */
+    font-size: 1.2em;
+
+}
+#tbl_risk_register td:nth-child(3) { /* Adjust based on actual cell order */
+    font-size: 1.1em; /* Larger font size for scenario text */
+    font-weight: bold; /* Optional: make scenario text bold */
+    color: #333; /* Scenario text color */
+}
+
+
+#tbl_risk_register {
+    border-collapse: separate;
+    border-spacing: 0.5rem; /* Adjust based on your spacing preference */
+    background-color: transparent; /* Remove default table background */
+}
+
+#tbl_risk_register thead {
+    display: none; /* Hide the table header */
+}
+
+#tbl_risk_register tbody tr {
+    display: block;
+    background-color: #f9f9f9; /* Card background color */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Card shadow */
+    border-radius: 0.5rem; /* Card corner rounding */
+    margin-bottom: 0.5rem; /* Space between cards */
+    overflow: hidden; /* Ensures the border radius applies to child elements */
+}
+
+#tbl_risk_register td {
+    display: block; /* Stack cells vertically */
+    padding: 0.5rem; /* Cell padding */
+    border-bottom: 1px solid #ececec; /* Line between cells */
+}
+
+#tbl_risk_register td:last-child {
+    border-bottom: none; /* Remove bottom border for the last cell */
+}
+
+.small-font {
+    font-size: 1rem; /* adjust as needed */
+}
+.form-group {
+border: 1px solid #464748; /* Border color */
+box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.5); /* Outer shadow */
+background-color: #5E6266; /* Lighter shade of #464748 */
+padding: 15px; /* Optional: for internal spacing */
+}
+body {
+        background-color: #464748;
+        color: #d3d1cd;
     }
-        .doughnut_container {
-        width: 100%;
-        height: 100%;
-        border: 1px solid #ccc; /* border color */
-        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1); /* shadow effect */
-        border-radius: 4px; /* rounded corners (optional) */
-    }
-
-       .navbar-scroll .nav-link,
-        .navbar-scroll .navbar-toggler-icon,
-        .navbar-scroll .navbar-brand {
-          color: #000000;
-        }
-
-        /* Color of the navbar BEFORE scroll */
-        .navbar-scroll {
-          background-color: #ffffff;
-            text-decoration-color: #000000;
-        }
-
-
-        /* Color of the links AFTER scroll */
-        .navbar-scrolled .nav-link,
-        .navbar-scrolled .navbar-toggler-icon,
-        .navbar-scroll .navbar-brand {
-          color: #262626;
-        }
-
-        .navbar-logo {
-        position: absolute;
-        top: 5px; /* Adjust this as needed */
-        left: 5px; /* Adjust this as needed */
-        height: 100px; /* Adjust this as needed */
-        z-index: 10;
-        }
-
-            .col-md-2 {
-        place-items: center;
-        background-color: lightgrey;
-    }
-
-     .small-font {
-        font-size: 0.8rem; /* adjust as needed */
-   }
-
-         .stat-card {
-        background-color: lightgrey;
-    }
-    .inner-card {
-        background-color: white;
-        border-radius: 10px;
-        margin: 10px 10px 20px 10px;
-        height: 70%;
-    }
-    .card-title-light {
-        font-weight: lighter;
-    }
-
-        .border-container {
+.sidebar {
+    display: flex;
+    height: 100vh;
+    background-color: #2D2E30; /* Darker shade for sidebar */
+    padding: 1vw;
+    width: 10vw; /* Sidebar width */
+}
+.sidebar-logo {
+    padding: 1vw;
+    text-align: center;
+}
+    .nav-sidebar {
         display: flex;
         flex-direction: column;
-        padding: 20px;
-        gap: 20px; /* Creates space between the two sections */
+        padding-left: 0;
+        list-style: none;
     }
-    </style>
+    .nav-sidebar .nav-item {
+        padding: 0.1vw;
+        /* border-bottom: 1px solid  #fac330; /* Light orange line */
+        margin: 0 10%;
+        gap: 1rem;
+    }
+   .nav-sidebar .nav-link {
+        color: #d3d1cd;
+        border-radius: 0;
+        transition: color 0.3s ease-in-out;
+        font-size: 0.7rem;
+    }
+    .nav-sidebar .nav-link:hover, .nav-sidebar .nav-link.active {
+        background-color: #3A5F5F;
+        color: #E0E0E0;
+    }
+    /* Enhance dropdown menu */
+    .dropdown-menu {
+        background-color: #d3d1cd;
+        border: none;
+    }
+    .dropdown-item:hover, .dropdown-item:focus {
+        background-color: #fac330; /* Light orange background for hovered dropdown items */
+        color: #2D2E30;
+    }
+    .content {
+        padding: 20px;
+    }
+   .custom-main-content {
+    position: relative; /* Adjust if necessary */
+    width: calc(100% - 200px); /* Adjust based on the actual sidebar width */
+    max-width: calc(90vw - 200px); /* 90% of the viewport width minus sidebar width */
+    margin-left: 200px; /* Push content to the right of the sidebar */
+}
+
+@media (min-width: 992px) { /* Adjusting for Bootstrap's large devices breakpoint */
+    .custom-main-content {
+        width: calc(100% - 200px);
+        max-width: calc(90vw - 200px);
+        margin-left: 100px;
+    }
+}
+
+
+    .table tbody tr:hover {
+    cursor: pointer;
+    }
+
+
+
+    .heatmap {
+        border-collapse: collapse;
+    }
+    .heatmap td {
+        width: 60px;
+        height: 60px;
+        text-align: center;
+        border: 1px solid #ccc;
+    }
+    .Low { background-color: #d8e6d6; }
+    .Low-Medium { background-color: #f7e5a0; }
+    .Medium { background-color: #f9d56e; }
+    .Medium-High { background-color: #f9a56e; }
+    .High { background-color: #f95d6a; }
+
+    .body {
+        font-size: 10px;
+    }
+.custom-main-content .container {
+    width: 100%; /* Ensure the container fills the custom-main-content */
+    max-width: none; /* Override Bootstrap's max-width for containers if necessary */
+}
+.top-strip {
+    background-color: #464748; /* Same as body background for seamless integration */
+    color: #d3d1cd; /* Text color */
+    padding: 10px 20px; /* Adjust as needed */
+    padding-left: 100px; /* Align with the end of the sidebar */
+    width: calc(100% - 200px); /* Adjust based on the actual sidebar width */
+    box-sizing: border-box;
+}
+
+.page-title {
+    margin: 0; /* Remove default margins */
+    font-size: 1.5rem; /* Adjust size as needed */
+}
+
+@media (max-width: 992px) {
+    .top-strip {
+        padding-left: 0;
+        width: 100%;
+    }
+}
+.nav-sidebar .nav-link img {
+    width: 1.25em; /* Scales with the font size */
+    height: 1.25em; /* Scales with the font size */
+}
+/* Larger icons for tablets */
+@media (min-width: 768px) {
+    .nav-sidebar .nav-link img {
+    width: 1.5em;
+    height: 1.5em;
+    }
+}
+/* Even larger icons for desktops */
+@media (min-width: 992px) {
+    .nav-sidebar .nav-link img {
+    width: 1.75em;
+    height: 1.75em;
+    }
+}
+    .nav-sidebar .nav-link img {
+    width: 1.25em; /* Scales with the font size */
+    height: 1.25em; /* Scales with the font size */
+}
+/* Larger icons for tablets */
+@media (min-width: 768px) {
+    .nav-sidebar .nav-link img {
+    width: 1.5em;
+    height: 1.5em;
+    }
+}
+/* Even larger icons for desktops */
+@media (min-width: 992px) {
+    .nav-sidebar .nav-link img {
+    width: 1.75em;
+    height: 1.75em;
+    }
+}
+        /* Adjusting the size of the risk circles */
+.risk-circle {
+    font-size: 3em; /* Adjusts the size of the circle */
+    line-height: 1; /* Helps with vertical alignment */
+    display: inline-block; /* Allows setting dimensions */
+    width: 1em; /* Keeps the width proportional to the font size */
+    text-align: center; /* Centers the circle symbol ● */
+}
+
+/* Example CSS for different risk levels */
+.risk-circle.low {
+    color: green;
+}
+
+.risk-circle.low-medium {
+    color: olive;
+}
+
+.risk-circle.medium {
+    color: yellow;
+}
+
+.risk-circle.medium-high {
+    color: orange;
+}
+
+.risk-circle.high {
+    color: red;
+}
+.vertical-align-middle {
+    vertical-align: middle;
+    display: inline-block;
+    line-height: normal; /* Adjust as needed */
+}
+
+.risk-circle {
+    vertical-align: middle; /* Aligns the circle vertically */
+    /* Other properties as defined before */
+}
+.value-container {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 5px;
+    color: #fff;
+    margin-right: 5px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    font-weight: bold;
+}
+
+.best-case {
+    background-color: #4CAF50; /* Green */
+}
+
+.median-case {
+    background-color: #FFEB3B; /* Yellow */
+    color: #000; /* For better contrast */
+}
+
+.worst-case {
+    background-color: #F44336; /* Red */
+}
+
+.value-label {
+    display: block;
+    text-align: center;
+    font-size: 0.75rem;
+    margin-top: 4px;
+}
+
+/* Ensures the container aligns well with table structure */
+.currency-container {
+    display: flex;
+    justify-content: start;
+    align-items: center;
+}
+
+/* Custom modal sizing */
+#riskTreatmentModal .modal-dialog {
+    max-width: 80%;
+    width: auto !important;
+}
+.modal-body {
+    display: flex; /* Enable flexbox */
+    justify-content: center; /* Center content horizontally */
+    align-items: center; /* Center content vertically */
+    text-align: center; /* Ensure text is centered if applicable */
+    max-height: 80vh; /* Set a minimum height to ensure space for centering */
+    overflow-y: auto;
+    margin-top: 20px;
+}
+
+/* Mermaid SVG adjustments for better readability */
+.mermaid svg {
+    max-height: 65vh;  /* Adjust height automatically */
+    width: 100%; /* Ensure it does not exceed the modal width */
+    max-width: 100%; /* Prevent exceeding the modal width */
+    font-size: 1.5em !important; /* Override font size directly */
+    font-family: 'Open Sans', sans-serif;
+    display: block; /* Remove inline styling */
+    overflow: visible;
+}
+.mermaid .node {
+    stroke: #333; /* Border color */
+    fill: #fff; /* Background color */
+}
+.mermaid .node text {
+    fill: #333; /* Text color */
+    font-size: 0.9em; /* Larger text for readability */
+    text-wrap: normal; /* Ensure text wraps */
+}
+.modal-lg {
+    max-width: 95%; /* Or any other max-width that fits your design */
+}
+
+.modal-header {
+    background-color: #007bff; /* Blue background for the header */
+    color: #ffffff; /* White text color */
+    border-bottom: 2px solid #0056b3; /* Darker blue border at the bottom */
+    border-top-left-radius: 8px; /* Rounded top left corner */
+    border-top-right-radius: 8px; /* Rounded top right corner */
+}
+.modal-title {
+    font-weight: bold;
+}
+
+
+.modal-content {
+  background-color: #fefefe;
+  margin: auto;
+  padding: 20px;
+  border: 1px solid #888;
+  max-width: 95%;
+  box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2), 0 6px 20px 0 rgba(0,0,0,0.19);
+}
+.modal-dialog {
+    max-width: 95%; /* Use a maximum width */
+    width: auto; /* Allow it to adjust based on content width */
+}
+</style>
+
+
 </head>
-<body>
+<body style="background-color: #464748">
+
+<div class="container-fluid">
+<!-- Spinner Overlay -->
 
 
-
-<nav class="navbar navbar-expand-lg navbar-scroll shadow-0 border-bottom border-dark rounded">
-  <div class="container-fluid d-flex justify-content-between">
-   <a class="navbar-brand" href="{% url 'OTRisk:dashboardhome' %}"><img src="{% static 'images/iota - white 1.png' %}" style="height: 140px; width: 140px" class="navbar-logo" alt="">   </a>
-      <h6 class="my-auto text-center flex-grow-1">Custom Assessment Upload</h6>
-
-    <div class="collapse navbar-collapse" id="navbarSupportedContent">
-      <ul class="navbar-nav ms-auto">
-
-        <li class="nav-item">
-          <a class="nav-link"  style="font-size: 12px;" href="{% url 'OTRisk:qraw' %}"><i class="bi bi-journal-text"></i> Risk Assessment</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" style="font-size: 12px;" href="{% url 'OTRisk:iotaphamanager' %}"><i class="bi bi-journal-text"></i> CyberPHA</a>
-        </li>
-          <li class="nav-item">
-          <a class="nav-link" style="font-size: 12px;" href="{% url 'OTRisk:ra_actions_view_default' %}" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Actions</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" style="font-size: 12px;" href="{% url 'OTRisk:risk_register' %}" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Risk Register</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" style="font-size: 12px;" href="{% url 'OTRisk:list_frameworks' %}" tabindex="-1" ><i class="bi-file-earmark-easel"></i> Assessments</a>
-        </li>
-        <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="font-size: 12px;">
-                <i class="bi bi-diagram-3"></i> Admin
-              </a>
-              <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                    <li><a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:setup_org' %}">Defaults</a></li>
-                  <li><a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:admin_users' %}">Admin Users</a></li>
-              <li><a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:list_frameworks' %}">List Frameworks</a></li>
-                  {% if user.is_staff %}
-                    <!-- Links visible only to superusers -->
-                    <li><a class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:user_admin' %}">User Administration</a></li>
-                      <li><a class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:execute_sql' %}">Execute SQL</a></li>
-                    {% endif %}
-
-              </ul>
-
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" href="{% url 'accounts:profile' %}" style="font-size: 12px;">
-                <i class="bi bi-person-fill"></i> {{ user.first_name }} {{ user.last_name }} | {{ user.userprofile.organization.name }}
-            </a>
-        </li>
-
-          <li class="nav-item">
-            <a class="nav-link" href="{% url 'logout' %}">
-                <i class="bi bi-box-arrow-right"></i> Logout
-            </a>
-        </li>
-      </ul>
+    <div class="row">
+       {% include 'menu_bar.html' %}
+        <main role="main" class="col-md-10 ml-sm-auto col-lg-12  custom-main-content" >
+            <div class="top-strip">
+                <h1 class="page-title">Questionnaire Upload@AnzenOT (Beta)</h1>
+            </div>
+            <div class="container mt-5" >
+                <div class="row">
+                    <div class="form-group">
+                    <div class="col">
+                        <form method="post" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            {{ form.as_p }}
+                            <button type="submit"><i class="bi bi-file-arrow-up"></i> Upload</button>
+                        </form>
+                    </div>
+                </div>
+                </div>
+            </div>
+        </main>
     </div>
-  </div>
-
-</nav>
-
-<div class="container mt-5 border-container" style="border: 1px solid #000000; box-shadow: 0 4px 8px rgba(0,0,0,0.1); padding: 20px; background-color: white">
-<form method="post" enctype="multipart/form-data">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Upload</button>
-</form>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const uploadForm = document.querySelector('form');
+    const uploadButton = uploadForm.querySelector('button[type="submit"]');
+
+    uploadButton.addEventListener('click', function(event) {
+        event.preventDefault(); // Prevent the form from submitting immediately
+
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "Do you want to upload the selected file?",
+            imageUrl: '/static/images/anzen_owl.png',
+            imageWidth: 150, // Adjust as necessary
+            imageHeight: 150, // Adjust as necessary
+            background: '#000', // Black background
+            color: '#fff', // Set text color to white
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes',
+            cancelButtonText: 'Cancel',
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // If the user clicked 'Yes', submit the form
+                uploadForm.submit();
+            }
+        });
+    });
+});
+</script>

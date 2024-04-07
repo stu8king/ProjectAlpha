@@ -38,7 +38,7 @@ from OTRisk.models.Model_CyberPHA import tblCyberPHAHeader, tblRiskCategories, \
     tblThreatIntelligence, tblMitigationMeasures, tblScenarios, tblSafeguards, tblThreatSources, tblThreatActions, \
     tblNodes, tblUnits, tblZones, tblCyberPHAScenario, tblIndustry, auditlog, tblStandards, MitreControlAssessment, \
     CyberPHAScenario_snapshot, Audit, PHAControlList, SECURITY_LEVELS, OrganizationDefaults, scenario_compliance, \
-    ScenarioConsequences, APIKey, ScenarioBuilder, PHA_Safeguard, OpenAIAPILog, CybersecurityDefaults
+    ScenarioConsequences, APIKey, ScenarioBuilder, PHA_Safeguard, OpenAIAPILog, CybersecurityDefaults, PHA_Observations
 from django.shortcuts import render, redirect
 from .dashboard_views import get_user_organization_id, get_scenarios_for_regulation
 from django.contrib.auth.decorators import login_required
@@ -1380,9 +1380,24 @@ def save_or_update_cyberpha(request):
                 )
             scenario_id_value = cyberpha_entry.ID
 
+            #attach observations to the scenario
             scenarioID = cyberpha_entry.pk
             scenario_instance = get_object_or_404(tblCyberPHAScenario, pk=scenario_id)
 
+            PHA_Observations.objects.filter(scenario=scenario_instance).delete()
+            observation_index = 0
+            while True:
+                observation_description_key = f'vuln[{observation_index}][description]'
+
+                if observation_description_key in request.POST:
+                    observation_description = request.POST.get(observation_description_key)
+                    PHA_Observations.objects.create(
+                        scenario=scenario_instance,
+                        observation_description=observation_description
+                    )
+                    observation_index += 1
+                else:
+                    break
             # Delete existing safeguards for this scenario
             PHA_Safeguard.objects.filter(scenario=scenario_instance).delete()
 
@@ -1407,6 +1422,7 @@ def save_or_update_cyberpha(request):
                 else:
                     # Break the loop if no more safeguards are found
                     break
+
 
             request.session['cyberPHAID'] = cyberphaid  # Set the session variable
 
