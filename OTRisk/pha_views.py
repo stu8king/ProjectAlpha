@@ -155,6 +155,9 @@ def iotaphamanager(request, record_id=None):
                                                                 request.POST.get('shift_model'),
                                                                 int(request.POST.get('assessment_id') or 0),
                                                                 int(request.POST.get('sl') or 0),
+                                                                request.POST.get('ir_plan'),
+                                                                request.POST.get('ir_plan_ut'),
+                                                                request.POST.get('ir_plan_date')
                                                                 )
             pha_header.safetySummary = risk_profile_data['safety_summary']
             pha_header.chemicalSummary = risk_profile_data['chemical_summary']
@@ -197,9 +200,9 @@ def iotaphamanager(request, record_id=None):
         except ValueError:
             assessment_id = None
         pha_header.assessment = assessment_id
-        pha_header.last_assessment_score = request.POST.get('last_assessment_score')
+        pha_header.last_assessment_score = int(request.POST.get('last_assessment_score') or 0)
 
-        pha_header.last_assessment_summary = request.POST.get('last_assessment_summary')
+        pha_header.last_assessment_summary = request.POST.get('last_assessment_summary') or ''
         pha_header.npm = request.POST.get('npm')
 
         # Continue with the rest of the processing
@@ -2328,8 +2331,18 @@ def air_quality_index(request):
 
 
 def facility_risk_profile_newrecord(userid, industry, facility_type, address, country, facility, employees,
-                                    shift_model, assessment_id, sl):
+                                    shift_model, assessment_id, sl, has_ir_plan, ir_plan_never, ir_plan_tested_date):
     language = 'en'
+
+    if has_ir_plan == 'on':
+        ir_plan = 'true'
+    else:
+        ir_plan = 'false'
+
+    if ir_plan_never == 'on':
+        ir_plan_never_tested = 'true'
+    else:
+        ir_plan_never_tested = 'false'
 
     if not industry or not facility_type:
         error_msg = "Missing industry or facility type. Complete all fields to get an accurate assessment"
@@ -2344,7 +2357,7 @@ def facility_risk_profile_newrecord(userid, industry, facility_type, address, co
     openai_model = get_api_key('OpenAI_Model')
     # openai_api_key = os.environ.get('OPENAI_API_KEY')
     openai.api_key = openai_api_key
-    context = f"You are an industrial safety and hazard expert. For the {facility} {facility_type} at {address}, {country} in the {industry} industry, with {employees} employees working a {shift_model} shift model,"
+    context = f"You are an industrial safety and hazard expert. For the {facility} {facility_type} at {address}, {country} in the {industry} industry, with {employees} employees working a {shift_model} shift model, (NOTE ALSO - has an OT Cybersecurity Incident Response Plan: {has_ir_plan}. Incident response plan never tested: {ir_plan_never_tested}). "
 
     prompts = [
         f"{context} List safety hazards, max 100 words. - Specific to facility - mechanical or chemical or electrical or heat or cold or crush or height - Space between bullets. \n\nExample Format:\n 1. Specific safety hazard.\n 2. Another specific safety hazard.",
@@ -2391,8 +2404,10 @@ def facility_risk_profile_newrecord(userid, industry, facility_type, address, co
                                                                              chemical_summary,
                                                                              physical_security_summary,
                                                                              other_summary,
-                                                                             compliance_summary,
-                                                                             "")
+                                                                             compliance_summary, '',
+                                                                             has_ir_plan, ir_plan_never_tested, ir_plan_tested_date)
+
+
 
     return {
         'safety_summary': safety_summary,

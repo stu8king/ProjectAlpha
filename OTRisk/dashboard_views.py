@@ -141,7 +141,7 @@ def dashboardhome(request):
         request.session['organization_defaults'] = {}
 
     # Filters added to all model queries to respect the organization of the user
-    filters = {'organization_id': user_organization_id}
+    filters = {'organization_id': user_organization_id, 'deleted': 0}
     records_by_business_unit_type = RAWorksheet.objects.filter(**filters).values('BusinessUnitType').annotate(
         count=Count('ID'))
     records_by_status_flag = RAWorksheet.objects.filter(**filters).values('StatusFlag').annotate(count=Count('ID'))
@@ -179,7 +179,7 @@ def dashboardhome(request):
     bia_summary = json.dumps(dict(bia_summary))
 
     pha_bia_summary = defaultdict(int)
-    phas = tblCyberPHAHeader.objects.filter(UserID__in=organization_users)
+    phas = tblCyberPHAHeader.objects.filter(UserID__in=organization_users, Deleted=0)
     for pha in phas:
         business_impact_score = calculate_pha_business_impact_score(pha.ID)
         bia_text = map_score_to_text(business_impact_score)
@@ -187,7 +187,7 @@ def dashboardhome(request):
     pha_bia_summary = json.dumps(dict(pha_bia_summary))
 
     pha_risk_summary = defaultdict(int)
-    pha_risks = tblCyberPHAScenario.objects.filter(userID__in=organization_users)
+    pha_risks = tblCyberPHAScenario.objects.filter(userID__in=organization_users, Deleted=0)
     for pha_risk in pha_risks:
         risk_text = pha_risk.RRa
         pha_risk_summary[risk_text] += 1
@@ -197,8 +197,8 @@ def dashboardhome(request):
     # raw_scenarios = RAWorksheetScenario.objects.all()
     scenarios_count = RAWorksheetScenario.objects.filter(RAWorksheetID__organization=user_organization_id).count()
 
-    cyberpha_count = tblCyberPHAHeader.objects.filter(UserID__in=organization_users).count()
-    cyberpha_scenario_count = tblCyberPHAScenario.objects.filter(userID__in=organization_users).count()
+    cyberpha_count = tblCyberPHAHeader.objects.filter(UserID__in=organization_users, Deleted=0).count()
+    cyberpha_scenario_count = tblCyberPHAScenario.objects.filter(userID__in=organization_users, Deleted=0).count()
 
     safety_scores_list = list(
         RAWorksheetScenario.objects.filter(RAWorksheetID__organization=user_organization_id).values(
@@ -217,70 +217,70 @@ def dashboardhome(request):
     ra_worksheets_with_scenario_count_list = list(ra_worksheets_with_scenario_count)
 
     pha_safety_scores_list = list(
-        tblCyberPHAScenario.objects.filter(userID__in=organization_users)
+        tblCyberPHAScenario.objects.filter(userID__in=organization_users, Deleted=0)
         .values('impactSafety')
         .annotate(count=Count('ID'))
         .order_by('impactSafety')
     )
 
     pha_danger_scores_list = list(
-        tblCyberPHAScenario.objects.filter(userID__in=organization_users)
+        tblCyberPHAScenario.objects.filter(userID__in=organization_users, Deleted=0)
         .values('impactDanger')
         .annotate(count=Count('ID'))
         .order_by('impactDanger')
     )
 
     pha_environment_scores_list = list(
-        tblCyberPHAScenario.objects.filter(userID__in=organization_users)
+        tblCyberPHAScenario.objects.filter(userID__in=organization_users, Deleted=0)
         .values('impactEnvironment')
         .annotate(count=Count('ID'))
         .order_by('impactEnvironment')
     )
 
     pha_finance_scores_list = list(
-        tblCyberPHAScenario.objects.filter(userID__in=organization_users)
+        tblCyberPHAScenario.objects.filter(userID__in=organization_users,Deleted=0)
         .values('impactFinance')
         .annotate(count=Count('ID'))
         .order_by('impactFinance')
     )
 
     pha_production_scores_list = list(
-        tblCyberPHAScenario.objects.filter(userID__in=organization_users)
+        tblCyberPHAScenario.objects.filter(userID__in=organization_users, Deleted=0)
         .values('impactProduction')
         .annotate(count=Count('ID'))
         .order_by('impactProduction')
     )
 
     pha_reputation_scores_list = list(
-        tblCyberPHAScenario.objects.filter(userID__in=organization_users)
+        tblCyberPHAScenario.objects.filter(userID__in=organization_users, Deleted=0)
         .values('impactReputation')
         .annotate(count=Count('ID'))
         .order_by('impactReputation')
     )
 
     pha_regulation_scores_list = list(
-        tblCyberPHAScenario.objects.filter(userID__in=organization_users)
+        tblCyberPHAScenario.objects.filter(userID__in=organization_users, Deleted=0)
         .values('impactRegulation')
         .annotate(count=Count('ID'))
         .order_by('impactRegulation')
     )
 
     pha_data_scores_list = list(
-        tblCyberPHAScenario.objects.filter(userID__in=organization_users)
+        tblCyberPHAScenario.objects.filter(userID__in=organization_users, Deleted=0)
         .values('impactData')
         .annotate(count=Count('ID'))
         .order_by('impactData')
     )
 
     pha_supply_scores_list = list(
-        tblCyberPHAScenario.objects.filter(userID__in=organization_users)
+        tblCyberPHAScenario.objects.filter(userID__in=organization_users, Deleted=0)
         .values('impactSupply')
         .annotate(count=Count('ID'))
         .order_by('impactSupply')
     )
 
     pha_threat_class = (
-        tblCyberPHAScenario.objects.filter(userID__in=organization_users)
+        tblCyberPHAScenario.objects.filter(userID__in=organization_users, Deleted=0)
         .values('ThreatClass')
         .annotate(total=Count('ThreatClass'))
     )

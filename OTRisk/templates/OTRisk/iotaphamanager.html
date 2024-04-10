@@ -320,6 +320,7 @@ $(document).ready(function() {
                 // Set the value of the hidden text field
                 document.getElementById('txtHdnCyberPHAID').value = '0';
                 $('.tab-content').removeClass('active').hide();
+                $('.tab-link.tab-inactive').removeClass('tab-inactive');
                 $('#tab2').addClass('active').show();
             }
         });
@@ -1171,11 +1172,12 @@ updateGroupList();
                     <div class="row">
                         <div class="col-md-6">
                             <label for="txtStartDate" style="color: white">Start Date:</label>
-                            <input type="date" class="form-control" name="txtStartDate" id="txtStartDate"  value="{{ current_pha_header.AssessmentStartDate }}" required>
+                            <input type="date" class="form-control" name="txtStartDate" id="txtStartDate" value="{{ current_pha_header.AssessmentStartDate|date:'Y-m-d' }}" required>
+
                         </div>
                         <div class="col-md-6">
                             <label for="txtEndDate" style="color: white">End Date:</label>
-                            <input type="date" class="form-control" name="txtEndDate" id="txtEndDate" value="{{ current_pha_header.AssessmentEndDate }}" onchange="validateDates()">
+                            <input type="date" class="form-control" name="txtEndDate" id="txtEndDate" value="{{ current_pha_header.AssessmentEndDate|date:'Y-m-d' }}" onchange="validateDates()">
                         </div>
                          <script type="text/javascript">
                         function validateDates() {
