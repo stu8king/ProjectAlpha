@@ -63,8 +63,10 @@ class AssessmentFrameworkForm(forms.ModelForm):
 class NewAssessmentAnswerForm(forms.ModelForm):
     class Meta:
         model = AssessmentAnswer
-        fields = ['response', 'effectiveness', 'weighting']
-
+        fields = ['response', 'effectiveness', 'weighting', 'remarks']
+        widgets = {
+            'remarks': forms.Textarea(attrs={'rows': 4, 'style': 'resize:none;', 'maxlength': '250'}),
+        }
 
 class EditAssessmentAnswerForm(forms.Form):
     response = forms.ChoiceField(

@@ -438,6 +438,12 @@ def iotaphamanager(request, record_id=None):
     assessments = SelfAssessment.objects.filter(
         Q(organization_id=user_organization_id)
     )
+
+    walkdowns = SelfAssessment.objects.filter(
+        organization_id=user_organization_id,
+        framework__name__icontains='Walkdown'
+    )
+
     industries = tblIndustry.objects.all().order_by('Industry')
     facilities = FacilityType.objects.all().order_by('FacilityType')
     zones = tblZones.objects.all().order_by('PlantZone')
@@ -472,6 +478,7 @@ def iotaphamanager(request, record_id=None):
         'selected_record_id': first_record_id,
         'SECURITY_LEVELS': SECURITY_LEVELS,
         'assessments': assessments,
+        'walkdowns': walkdowns,
         'moderators': moderators_in_organization,
         'current_workflow_status': current_workflow_status,
         'workflow_status_choices': WorkflowStatus.STATUS_CHOICES,

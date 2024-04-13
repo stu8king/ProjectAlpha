@@ -216,18 +216,15 @@ def update_bia_scenarios(cyber_pha_id, user):
 #########################
 @login_required
 def assessment_report_view(request, assessment_id):
-    # Get the SelfAssessment object or 404
+    # Get the SelfAssessment object or handle 404
     self_assessment = get_object_or_404(SelfAssessment, pk=assessment_id)
-
-    # Get all answers related to the self assessment
     answers = AssessmentAnswer.objects.filter(selfassessment=self_assessment)
 
-    # Pie Chart Data: Count of 'Yes' and 'No' answers
+    # Data for pie chart and bar graph
     yes_count = answers.filter(response=True).count()
     no_count = answers.filter(response=False).count()
     pie_data = {'Yes': yes_count, 'No': no_count}
 
-    # Bar Graph Data: % of 'Yes' answers for each category
     bar_data = {}
     categories = AssessmentQuestion.objects.filter(
         framework=self_assessment.framework
@@ -243,17 +240,89 @@ def assessment_report_view(request, assessment_id):
         else:
             bar_data[category] = 0
 
-    # Data for 'No' and 'Yes' answer tables
-    no_answers = answers.filter(response=False)
+    # Collecting individual 'Yes' and 'No' answers for table display
     yes_answers = answers.filter(response=True)
+    no_answers = answers.filter(response=False)
 
-    # Pass data to context for rendering in the template
+    # Preparing messages for AI risk and MITRE tactics analysis
+    risk_messages = [
+        {
+            "role": "system",
+            "content": "Analyze the responses to provide a summary of top cybersecurity risks."
+        }
+    ]
+
+    mitre_ics_tactics = [
+        "TA0108 Initial Access",
+        "TA0104 Execution",
+        "TA0110 Persistence",
+        "TA0111 Privilege Escalation",
+        "TA0103 Evasion",
+        "TA0102 Discovery",
+        "TA0109 Lateral Movement",
+        "TA0100 Collection",
+        "TA0101 Command and Control",
+        "TA0107 Inhibit Response Function",
+        "TA0106 Impair Process Control",
+        "TA0105 Impact"
+    ]
+
+    # Create a system instruction for the AI to classify and score based on MITRE ICS tactics
+    mitre_messages = [
+        {
+            "role": "system",
+            "content": "Below are responses from a cybersecurity self-assessment. Please analyze each response then relate them to, and classify them according to the 12 MITRE ICS tactics: Initial Access, Execution, Persistence, Privilege Escalation, Evasion, Discovery, Lateral Movement, Collection, Command and Control, Inhibit Response Function, Impair Process Control, and Impact. Provide a score out of 10 and a brief justification (under 25 words) for each tactic that applies. Present the results in the format <Tactic Reference>|<tactic title>|<Score>|<justification> For example: TA0107|Inhibit Response Function|7|Some controls that might mitigate the risk to safety systems."
+        }
+    ]
+
+    for answer in answers:
+        question_text = answer.question.text
+        response_text = "Yes" if answer.response else "No"
+        effectiveness = f"Effectiveness: {answer.effectiveness}%" if answer.response and answer.effectiveness else "Effectiveness not applicable."
+        common_message = {
+            "role": "user",
+            "content": f"Question: {question_text}, Answer: {response_text}, {effectiveness}"
+        }
+        risk_messages.append(common_message)
+        mitre_messages.append(common_message)
+
+    # Final prompt to AI for MITRE ICS tactics scoring
+    mitre_messages.append({
+        "role": "user",
+        "content": "Based on the above details, classify and score each response under the relevant MITRE ICS tactics. Do not include any additional text, narrative or characters. Only the output as given in the precisely prescribed format"
+    })
+
+    # Send messages to OpenAI's GPT-4 for MITRE ICS tactics analysis
+    try:
+        mitre_response = openai.ChatCompletion.create(
+            model=get_api_key('OpenAI_Model'),
+            messages=mitre_messages,
+            temperature=0.5,
+            max_tokens=1500,
+            api_key=get_api_key('openai')
+        )
+        mitre_tactics_analysis = mitre_response.choices[0].message['content']
+    except Exception as e:
+        mitre_tactics_analysis = f"Failed to generate MITRE ICS tactics analysis due to: {str(e)}"
+    mitre_data = []
+    if mitre_tactics_analysis:
+        for line in mitre_tactics_analysis.strip().split('\n'):
+            parts = line.split('|')
+            if len(parts) >= 4:
+                # Extract the tactic name and the score, assuming the format is:
+                # TAxxxx|Tactic Name|Score|Details
+                tactic_code = parts[1]
+                score = float(parts[2])  # Ensure the score is a float for chart compatibility
+                mitre_data.append((tactic_code, score))
+
+    # Prepare data for template rendering
     context = {
         'self_assessment': self_assessment,
         'pie_data': pie_data,
         'bar_data': bar_data,
-        'no_answers': no_answers,
         'yes_answers': yes_answers,
+        'no_answers': no_answers,
+        'mitre_data': mitre_data  # AI-generated MITRE ICS tactics analysis
     }
 
     return render(request, 'assessment_report.html', context)
@@ -374,6 +443,7 @@ def list_frameworks(request):
 
 @login_required
 def edit_assessment(request, assessment_id):
+
     # Retrieve the existing SelfAssessment or redirect if not found
     self_assessment = get_object_or_404(SelfAssessment, pk=assessment_id, user=request.user,
                                         organization_id=get_user_organization_id(request))
@@ -392,6 +462,7 @@ def edit_assessment(request, assessment_id):
             response_key = f'response_{question.id}'
             effectiveness_key = f'effectiveness_{question.id}'
             weighting_key = f'weighting_{question.id}'
+            remarks_key = f'remarks_{question.id}'
 
             # Get the data from POST request using the unique keys
             response = request.POST.get(response_key) == 'True'
@@ -399,6 +470,7 @@ def edit_assessment(request, assessment_id):
                 request.POST.get(effectiveness_key, '0')) or None
             weighting = request.POST.get(weighting_key, '1').isdigit() and int(
                 request.POST.get(weighting_key, '1')) or 1
+            remarks = request.POST.get(remarks_key)
 
             # Check if an answer already exists
             if question.id in existing_answers:
@@ -406,6 +478,7 @@ def edit_assessment(request, assessment_id):
                 answer.response = response
                 answer.effectiveness = effectiveness
                 answer.weighting = weighting
+                answer.remarks = remarks
             else:
                 # Create a new answer if it does not exist
                 answer = AssessmentAnswer.objects.create(
@@ -413,6 +486,7 @@ def edit_assessment(request, assessment_id):
                     response=response,
                     effectiveness=effectiveness,
                     weighting=weighting,
+                    remarks=remarks,
                 )
                 self_assessment.answers.add(answer)  # Add the new answer to the m2m field
 
@@ -443,6 +517,7 @@ def edit_assessment(request, assessment_id):
         form_data = {
             'effectiveness': answer.effectiveness if answer and answer.response else 0,
             'weighting': answer.weighting if answer else 1,
+            'remarks': answer.remarks if answer else ''
         }
         if answer is not None:
             form_data['response'] = answer.response
@@ -722,7 +797,7 @@ def change_password(request, user_id):
     # Email the new password to the target user
     subject = 'Your new password'
     message = f'Hello {target_user.username},\n\nYour new password is: {password}\n\nPlease login and change it immediately.'
-    send_mail(subject, message, 'support@iotarisk.com', [target_user.email])
+    send_mail(subject, message, 'info@anzenot.ai', [target_user.email])
 
     # Send a confirmation message to the current user/administrator
     message = "Password reset successfully and email sent to user!"
@@ -755,8 +830,8 @@ def send_password_email(username, user_email, password):
             'user_name': username,
             'password': password,
             'user_email': user_email,  # Assuming you want to display this in the email
-            'logo_url': 'https://www.iotarisk.com/staticfiles/images/anzen_owl.png',
-            'login_url': 'https://www.iotarisk.com'
+            'logo_url': 'https://www.anzenot.ai/staticfiles/images/anzen_owl.png',
+            'login_url': 'https://www.anzenot.ai'
         }
         html_content = render_to_string('OTRisk/welcome_email.html', context)
         text_content = strip_tags(html_content)  # Convert HTML to plain text

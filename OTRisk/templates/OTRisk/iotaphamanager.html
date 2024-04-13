@@ -69,6 +69,11 @@
     color: #f7f8f7; /* Green color to match the border of the summary */
     margin-bottom: 20px; /* Bottom margin */
 }
+
+#selIndustry, #selIndustry option {
+    color: black !important; /* Ensures font color is black for both the select and its options */
+}
+
 </style>
 
 </head>
@@ -372,11 +377,11 @@ $(document).ready(function() {
         <br><br><br><br><br><br><br><br><br><br>
 
     <ul>
-        <li><a href="#" data-tab="tab1" class="tab-link">CyberPHA List</a></li>
-        <li><a href="#" data-tab="tab2" class="tab-link tab-inactive">Facility Details</a></li>
-        <li><a href="#" data-tab="tab3" class="tab-link tab-inactive">CyberPHA Setup</a></li>
-        <li><a href="#" data-tab="tab13" class="tab-link tab-inactive">Risk Tolerance</a></li>
-        <li><a href="#" data-tab="tab4" class="tab-link tab-inactive">Tools & Software</a></li>
+        <li><a href="#" data-tab="tab1" class="tab-link" title="View CyberPHA List">CyberPHA List</a></li>
+        <li><a href="#" data-tab="tab2" class="tab-link tab-inactive" title="Facility information">Facility Details</a></li>
+        <li><a href="#" data-tab="tab3" class="tab-link tab-inactive" title="CyberPHA Parameters">CyberPHA Setup</a></li>
+        <li><a href="#" data-tab="tab13" class="tab-link tab-inactive" title="Adjust risk tolerance values and cyber insurance details">Risk Tolerance</a></li>
+        <li><a href="#" data-tab="tab4" class="tab-link tab-inactive" title="Enter details about OT tools and software">Tools & Software</a></li>
         <br>
         <!-- Facility Profile Heading -->
         <li class="facility-profile-heading">Facility Profile
@@ -562,13 +567,13 @@ $(document).ready(function() {
                     <div class="row">
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label for="countrySelector" style="color: white">Country:</label>
-                                <select id="countrySelector" name="countrySelector" style="width: 400px;"></select>
+                                <label for="countrySelector" style="color: white" title="Select country the facility is located in">Country:</label>
+                                <select id="countrySelector" name="countrySelector" style="width: 400px;" ></select>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
-                                <label for="zipCode" style="color: white">Zip/Post Code:</label>
+                                <label for="zipCode" style="color: white" title="Select the zip or postal code for the facility.">Zip/Post Code:</label>
                             <input type="text" class="form-control" id="zipCode" name="zipCode" placeholder="Enter ZIP Code">
                             <div class="modal fade" id="facilitiesModal" tabindex="-1" aria-labelledby="facilitiesModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg">
@@ -831,22 +836,22 @@ $(document).ready(function() {
 
                 </script>
                 <div class="form-group">
-                    <label for="txtFacility" style="color: white">Facility:</label>
+                    <label for="txtFacility" style="color: white" title="Enter the name of the facility (nb. this is what the facility is commonly known as or referred to)">Facility:</label>
                     <input type="text" class="form-control" name="txtFacility" id="txtFacility" value="{{ current_pha_header.FacilityName }}"  maxlength="100"  required>
                 </div>
             <div class="form-group">
-                    <label for="txtAddress" style="color: white">Facility Address:</label>
+                    <label for="txtAddress" style="color: white" title="Enter the address of the facility">Facility Address:</label>
                     <input type="text"  class="form-control"  name="txtAddress" id="txtAddress"  maxlength="500" value="{{ current_pha_header.facilityAddress }}" required>
                     <br>
-                    <label for="txtCity" style="color: white">City:</label>
+                    <label for="txtCity" style="color: white" title="Enter the city of the facility">City:</label>
                     <input type="text"  class="form-control"  name="txtCity" id="txtCity"  maxlength="50" value="" required>
                     <br>
-                    <label for="txtState" style="color: white">State:</label>
+                    <label for="txtState" style="color: white" title="Enter the state (USA), county (UK) etc">State:</label>
                     <input type="text"  class="form-control"  name="txtState" id="txtState"  maxlength="50" value="" required>
             </div>
                 <div class="form-group">
-                    <label for="selIndustry" style="color: white">Industry:</label>
-                    <select class="form-control" name="selIndustry" id="selIndustry">
+                    <label for="selIndustry" style="color: white" title="Select the industry for the facility from the drop-down">Industry:</label>
+                    <select class="form-control" name="selIndustry" id="selIndustry" color="black">
                         <option value=""> -- Select Industry -- </option>
                         {% for industry in industries %}
                             <option value="{{ industry.Industry }}"
@@ -858,12 +863,12 @@ $(document).ready(function() {
                     </div>
 
                     <div class="form-group">
-                    <label for="txtEmployees" style="color: white">Employees on Site:</label>
+                    <label for="txtEmployees" style="color: white" title="Enter the number of employees on site during a normal shift or work period">Employees on Site:</label>
                     <input type="number" class="form-control" name="txtEmployees" id="txtEmployees" value="{{ current_pha_header.EmployeesOnSite }}" max="99999">
                     </div>
 
                     <div class="form-group">
-                    <label for="selFacilityType" style="color: white">Facility Type:</label>
+                    <label for="selFacilityType" style="color: white" title="Select the facility type from the drop-down list">Facility Type:</label>
                     <select class="form-control" name="selFacilityType" id="selFacilityType">
                         <option value=""> -- Select Facility Type -- </option>
                         {% for facilities in facilities %}
@@ -885,7 +890,7 @@ $(document).ready(function() {
                         <div class="col-md-4" style="background-color: #5E6266;">
                             <div class="card mb-3 shadow-sm" style="background-color: #5E6266;"> <!-- Bootstrap card with shadow -->
                                 <div class="card-body">
-                                    <label for="annual_revenue" style="color: white">Facility Annual Revenue:</label>
+                                    <label for="annual_revenue" style="color: white" title="Enter the annual revenue of the facility (if known)">Facility Annual Revenue:</label>
                                     <input type="text" class="form-control currency-input" name="annual_revenue" id="annual_revenue" value="{{ annual_revenue_str|default:'0' }}" oninput="checkMaxValue(this)" required>
                                     <script>
                                         document.addEventListener("DOMContentLoaded", function() {
@@ -919,7 +924,7 @@ $(document).ready(function() {
                         <div class="col-md-4" style="background-color: #5E6266;">
                             <div class="card mb-3 shadow-sm" style="background-color: #5E6266;">
                                 <div class="card-body">
-                                    <label for="coho" style="color: white">Operating Cost/Hour:</label>
+                                    <label for="coho" style="color: white" title="Enter the facility operating cost per hour (if known)">Operating Cost/Hour:</label>
                                     <input type="text" class="form-control currency-input" name="coho" id="coho" value="{{ coho_str|default:'0' }}" oninput="checkMaxValue(this)" required>
                                     <script>
                                         document.addEventListener("DOMContentLoaded", function() {
@@ -941,7 +946,7 @@ $(document).ready(function() {
                             </div>
                         </div>
                         <div class="col-md-4" style="background-color: #5E6266;">
-                            <div class="card mb-3 shadow-sm" style="background-color: #5E6266;">
+                            <div class="card mb-3 shadow-sm" style="background-color: #5E6266;" title="Enter the facility net profit margin percentage (if known)">
                                 <div class="card-body">
                                     <label for="npm" style="color: white">Facility NPM (%):</label>
                                     <input type="number" class="form-control" name="npm" id="npm" value="{{ npm|default:'0' }}" min="0" max="100">
@@ -966,10 +971,10 @@ $(document).ready(function() {
             </div>
 
                 <div class="form-group">
-                    <label for="txtUnit" style="color: white">Unit:</label>
+                    <label for="txtUnit" style="color: white" title="Enter the facility unit, if applicable, that's in scope for the current assessment">Unit:</label>
                     <input type="text" class="form-control" name="txtUnit" id="txtUnit" value="{{ current_pha_header.AssessmentUnit }}" required maxlength="100">
                     <br>
-                    <label for="selZone" style="color: white">Zone:</label>
+                    <label for="selZone" style="color: white" title="Enter the facility zone, if applicable, that's in scope for the current assessment">Zone:</label>
                     <select class="form-control" name="selZone" id="selZone">
                         <option value = ""> -- Select Plant Zone -- </option>
                         {% for zone in zones %}
@@ -981,7 +986,7 @@ $(document).ready(function() {
                 </div>
 
                 <div class="form-group">
-                    <label for="shift_model" style="color: white">Shift Model:</label>
+                    <label for="shift_model" style="color: white" title="Select the normal shift model for the facility ">Shift Model:</label>
                     <select class="form-control" name="shift_model" id="shift_model" required>
                         <option value="">Select Shift Model</option>
                         {% for model in SHIFT_MODELS %}
@@ -994,21 +999,21 @@ $(document).ready(function() {
     <div class="row">
         <div class="col-md-4">
             <div class="form-group d-flex flex-column align-items-center justify-content-center h-100">
-                <label for="ir_plan" style="color: white">OT IR Plan (Yes/No):</label>
+                <label for="ir_plan" style="color: white" title="Check the box if there is an OT Cybersecurity Incident Response Plan for the facility">OT IR Plan (Yes/No):</label>
                 <br>
                 <input type="checkbox" id="ir_plan" name="ir_plan" style="transform: scale(2); margin-right: 5px;">
             </div>
         </div>
         <div class="col-md-4">
             <div class="form-group d-flex flex-column align-items-center justify-content-center h-100">
-                <label for="ir_plan_date" style="color: white">Last Tested Date:</label>
+                <label for="ir_plan_date" style="color: white" title="Enter the date that the Incident Response Plan was last tested">Last Tested Date:</label>
                 <br>
                 <input type="date" class="form-control" name="ir_plan_date" id="ir_plan_date" value="">
             </div>
         </div>
         <div class="col-md-4">
             <div class="form-group d-flex flex-column align-items-center justify-content-center h-100">
-                <label for="ir_plan_ut" style="color: white">Never Tested (Yes/No):</label>
+                <label for="ir_plan_ut" style="color: white" title="Check the box if the OT Cybersecurity Incident Response PLan has never been tested">Never Tested (Yes/No):</label>
                 <br>
                 <input type="checkbox" id="ir_plan_ut" name="ir_plan_ut" style="transform: scale(2); margin-right: 5px;">
             </div>
@@ -1017,7 +1022,7 @@ $(document).ready(function() {
 </div>
 
     <div class="form-group">
-        <label for="selSL" style="color: white">Target Security Level (SL-T):</label>
+        <label for="selSL" style="color: white" title="SL-Ts are the desired level of security for a particular IACS, zone or conduit. Select the targeted security level, if applicable, per ISA-62443-3-2 Annex A">Target Security Level (SL-T):</label>
         <select class="form-control" name="selSL" id="selSL">
         <option value="0"> -- Select SL-T -- </option>
         {% for value, description in SECURITY_LEVELS %}
@@ -1148,15 +1153,15 @@ updateGroupList();
         <div class="row">
             <div class="col-md-6">
                 <div class="form-group">
-                    <label for="txtTitle" style="color: white">CyberPHA Title</label>
+                    <label for="txtTitle" style="color: white" title="Enter a descriptive title for this assessment">CyberPHA Title</label>
                     <input type="text" class="form-control" name="txtTitle" id="txtTitle" value="{{ current_pha_header.title }}" maxlength="100" style="font-size: 16px; font-weight: bold;" required>
                 </div>
                 <div class="form-group">
-                    <label for="txtLeader" style="color: white">CyberPHA Owner:</label>
+                    <label for="txtLeader" style="color: white" title="Enter the name of the person leading this assessment">CyberPHA Owner:</label>
                     <input type="text" class="form-control" name="txtLeader" id="txtLeader" value="{{ current_pha_header.PHALeader }}" maxlength="100"  required>
                 </div>
                 <div class="form-group">
-                    <label for="txtLeaderEmail" style="color: white">CyberPHA Owner Email:</label>
+                    <label for="txtLeaderEmail" style="color: white" title="Enter the email address of the person leading this assessment">CyberPHA Owner Email:</label>
                     <input type="email" class="form-control" name="txtLeaderEmail" id="txtLeaderEmail" value="{{ current_pha_header.PHALeaderEmail }}" required onblur="validateEmail(this)">
                     <script type="text/javascript">
                     function validateEmail(input) {
@@ -1171,12 +1176,12 @@ updateGroupList();
                 <div class="form-group">
                     <div class="row">
                         <div class="col-md-6">
-                            <label for="txtStartDate" style="color: white">Start Date:</label>
+                            <label for="txtStartDate" style="color: white" title="Enter the intended assessment start date">Start Date:</label>
                             <input type="date" class="form-control" name="txtStartDate" id="txtStartDate" value="{{ current_pha_header.AssessmentStartDate|date:'Y-m-d' }}" required>
 
                         </div>
                         <div class="col-md-6">
-                            <label for="txtEndDate" style="color: white">End Date:</label>
+                            <label for="txtEndDate" style="color: white" title="Enter the intended assessment end date">End Date:</label>
                             <input type="date" class="form-control" name="txtEndDate" id="txtEndDate" value="{{ current_pha_header.AssessmentEndDate|date:'Y-m-d' }}" onchange="validateDates()">
                         </div>
                          <script type="text/javascript">
@@ -1196,7 +1201,7 @@ updateGroupList();
 
             <div class="col-md-6">
                 <div class="form-group">
-                    <label for="assessment_id" style="color: white">Control Assessment:</label>
+                    <label for="assessment_id" style="color: white" title="Select the control assessment questionnaire that applies to the facility. If no control assessment has been completed, click on Assessments in the menu to go to the assessments page">Control Assessment:</label>
                     <select class="form-control"   id="assessment_id" name="assessment_id">
                         <option value="">Select an Assessment</option>
                         {% for assessment in assessments %}
@@ -1213,11 +1218,41 @@ updateGroupList();
                             <input type="hidden" id="last_assessment_summary" name="last_assessment_summary">
                         </div>
                     </div>
-                </div>
+
              <!-- Container to display the summary and score -->
             <span id="assessment_summary" ></span>
             <br>
             <span id="assessment_score" ></span>
+                 </div>
+
+                <div class="form-group">
+                    <label for="walkdown_id" style="color: white" title="Select the control assessment questionnaire that applies to the facility. If no control assessment has been completed, click on Assessments in the menu to go to the assessments page">Site Walk-Down Assessment:</label>
+                    <select class="form-control"   id="walkdown_id" name="walkdown_id">
+                        <option value="">Select the site walkdown</option>
+                        {% for walkdown in walkdowns %}
+                            <option value="{{ walkdown.id }}"
+                            {% if current_pha_header.walkdown == walkdown.id %}select{% endif %}>
+                                {{ walkdown.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <div id="walkdownspinnerContainer" style="display: none;">
+                        <div class="spinner-border" role="status">
+
+                            <span class="sr-only">Loading...</span>
+                            <input type="hidden" id="last_walkdown_score" name="last_walkdown_score">
+                            <input type="hidden" id="last_walkdown_summary" name="last_walkdown_summary">
+                        </div>
+                    </div>
+
+             <!-- Container to display the summary and score -->
+            <span id="walkdown_summary" ></span>
+            <br>
+            <span id="walkdown_score" ></span>
+                 </div>
+            <br>
+
+
+
                 <div class="form-group">
                     <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#moderatorModal">
                         Select CyberPHA Moderators
@@ -1248,7 +1283,7 @@ updateGroupList();
                                     success: function(response) {
                                         $('#assessmentspinnerContainer').hide();
                                         if(response.error) {
-                                            alert(response.error);
+                                            console.log(response.error);
                                         } else {
                                             $('#assessment_summary').text(response.summary);
                                             $('#assessment_score').text('Score: ' + response.score  + '/100');

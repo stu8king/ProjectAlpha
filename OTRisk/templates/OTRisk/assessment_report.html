@@ -31,10 +31,11 @@
      {% bootstrap_javascript %}
     <script src="https://cdn.anychart.com/releases/8.10.0/js/anychart-bundle.min.js"></script>
     <style>
-        #pieChart, #barChart {
-            width: 600px;
-            height: 400px;
+        #pieChart, #barChart, #mitre_chart{
+            width: 100%;
+            height: auto;
             margin: auto;
+            aspect-ratio: 16 / 9;
         }
         table {
             width: 100%;
@@ -292,23 +293,27 @@
             </nav>
 
 
-            <main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-4">
+            <main role="main" class="col-md-10 ml-sm-auto col-lg-10 px-4">
 
             <div class="container mt-5">
                 <h4 class="mb-4">{{ self_assessment.framework.name }} Assessment Report  ({{ self_assessment.name }})</h4>
                 <div class="form-group">
                     <div class="row">
+                        <div class="col-md-6 mb-4">
+
+
+                                    <div id="barChart" ></div>
+
+                            </div>
+
                         <div class="col-lg-6 mb-4">
-                            <h3 class="h4">Response Distribution</h3>
-                            <div id="pieChart" class="chart-container print-scale"></div>
-                        </div>
-                        <div class="col-lg-6 mb-4">
-                            <h3 class="h4">Category Analysis</h3>
-                            <div id="barChart" class="chart-container print-scale page-break"></div>
+                            <div id="mitre_chart" ></div>
+
+
                         </div>
                     </div>
                 </div>
-            <br>
+
                 <div class="form-group">
                     <div class="row">
         <div class="col-lg-6 mb-4">
@@ -388,6 +393,31 @@
             barChart.title('Category-wise Yes Response Percentage');
             barChart.container('barChart');
             barChart.draw();
+
+            var mitreData = anychart.data.set([
+            {% for tactic_code, score in mitre_data %}
+                ['{{ tactic_code }}', {{ score }}],
+            {% endfor %}
+        ]);
+
+        var radarChart = anychart.radar();
+        radarChart.yScale().minimum(0).maximum(10);
+        radarChart.yAxis().labels().format('{%Value}%');
+        radarChart.tooltip().format("Effectiveness: {%Value}%");
+
+        var series = radarChart.line(mitreData);
+        series.markers(true);
+
+        // Disable point labels, only use tactic codes as axis labels
+        series.labels().enabled(false);
+
+        radarChart.xAxis().labels().padding(5); // Adds padding to labels
+        radarChart.xAxis().labels().position('outside'); // Ensures labels are only outside
+
+        radarChart.title('MITRE ICS Tactics Effectiveness');
+        radarChart.container('mitre_chart');
+        radarChart.draw();
+
         });
     </script>
 </body>

@@ -30,6 +30,7 @@ class AssessmentAnswer(models.Model):
                                         blank=True)  # Percentage of effectiveness, applicable if response is True
     weighting = models.IntegerField(default=1, validators=[MinValueValidator(1),
                                                            MaxValueValidator(10)])  # Weighting of the control
+    remarks = models.CharField(null=True, blank=True, max_length=250)
 
     def save(self, *args, **kwargs):
         if not self.response:

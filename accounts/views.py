@@ -753,7 +753,7 @@ def payment_view(request):
                 send_mail(
                     'Welcome to iOTa',
                     f'Dear {first_name},\n\nThank you for purchasing iOTa. Your temporary password is: {password}. You will be prompted to change this password the first time you access iOTa.',
-                    'support@iotarisk.com',  # Replace with your email
+                    'info@anzenot.ai',  # Replace with your email
                     [request.session['email']],
                     fail_silently=False,
                 )

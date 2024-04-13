@@ -348,6 +348,9 @@
                                 {{ form.effectiveness.label_tag }} {{ form.effectiveness }}
                             </div>
                             <div class="form-group">
+                                {{ form.remarks.label_tag }} {{ form.remarks }}
+                            </div>
+                            <div class="form-group">
                                 {{ form.weighting.label_tag }} {{ form.weighting }}
                             </div>
                         </div>
@@ -395,6 +398,14 @@
                                  </div>
                              </div>
                         </div>
+                        <div class="form-group">
+                            <label for="remarks_{{ question.id }}">Remarks:</label>
+                            <textarea name="remarks_{{ question.id }}" id="remarks_{{ question.id }}" class="form-control" rows="4" style="resize: none;" maxlength="250" oninput="updateCharacterCount(this, 'char_count_{{ question.id }}')">{{ form.initial.remarks }}</textarea>
+                            <span id="char_count_{{ question.id }}"></span>
+                        </div>
+
+
+
                         <div class="form-group">
                             <label for="weighting_{{ question.id }}">Weighting:</label>
                             <select class="form-control" id="weighting_{{ question.id }}" name="weighting_{{ question.id }}">
@@ -461,6 +472,23 @@ document.querySelectorAll('.response-yes, .response-no').forEach(function(elemen
 
 // Initial stats update
     updateQuestionStats();
+
+    function updateCharacterCount(textarea, counterId) {
+    var maxLength = textarea.getAttribute('maxlength');
+    var currentLength = textarea.value.length;
+    var remaining = maxLength - currentLength;
+
+    document.getElementById(counterId).textContent = `${remaining} characters remaining`;
+}
+
+// Initialize character counts on page load
+window.onload = function() {
+    var textareas = document.querySelectorAll('textarea[maxlength]');
+    textareas.forEach(function(textarea) {
+        var counterId = 'char_count_' + textarea.name.split('_').pop();
+        updateCharacterCount(textarea, counterId);
+    });
+};
 </script>
 
 
