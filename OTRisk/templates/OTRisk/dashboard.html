@@ -5,7 +5,14 @@
     <title>AnzenOT - GRC for OT</title>
     <link rel="icon" href="{% static 'images/AnzenOTIconBlack.png' %}" type="image/x-icon">
 
-
+    <!--<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBJu4p9r_vFL9g5nzctO4yLbNxjK08q4G0&loading=async&callback=initMap"></script>-->
+     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+     crossorigin=""/>
+     <!-- Make sure you put this AFTER Leaflet's CSS -->
+ <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+     crossorigin=""></script>
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css">
 
@@ -25,6 +32,17 @@
     <script src="{% static 'anychart/dist/js/anychart-heatmap.min.js' %}"></script>
     <script src="{% static 'anychart/dist/js/anychart-sunburst.min.js' %}"></script>
     <script src="{% static 'anychart/dist/js/anychart-pie.min.js' %}"></script>
+
+  <script src="https://cdn.anychart.com/releases/v8/js/anychart-base.min.js"></script>
+  <script src="https://cdn.anychart.com/releases/v8/js/anychart-ui.min.js"></script>
+  <script src="https://cdn.anychart.com/releases/v8/js/anychart-exports.min.js"></script>
+
+  <script src="https://cdn.anychart.com/releases/v8/js/anychart-data-adapter.min.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.3.15/proj4.js"></script>
+  <link href="https://cdn.anychart.com/releases/v8/css/anychart-ui.min.css" type="text/css" rel="stylesheet">
+  <link href="https://cdn.anychart.com/releases/v8/fonts/css/anychart-font.min.css" type="text/css" rel="stylesheet">
+
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.25/css/jquery.dataTables.css">
     <script type="text/javascript" charset="utf8" src="https://code.jquery.com/jquery-3.5.1.js"></script>
@@ -141,7 +159,7 @@
                 <div class="row">
                     <div class="col-md-2"></div>
                     <div class="col-md-7">
-                    <h1 class="page-title">Dashboard@AnzenOT (Beta)</h1>
+                    <h1 class="page-title">Dashboard@AnzenOT</h1>
                     </div>
 
                     <div class="col-md-3"></div>
@@ -150,6 +168,7 @@
         <div class="sub-menu">
             <br><br><br><br><br><br><br><br><br><br>
         <ul>
+            <li><a href="#" data-tab="tab11">Locations</a></li>
             <li><a href="#" data-tab="tab1">Heatmap</a></li>
             <li><a href="#" data-tab="tab2">KPIs / Compliance</a></li>
             <li><a href="#" data-tab="tab3">CyberPHA</a></li>
@@ -166,7 +185,71 @@
 
 
     <div class="custom-main-content" >
+    <div class="tab-content tab-link active"  id="tab11">
+        <div class="form-group form-sim" >
+            <!-- Container for the map -->
+ <div id="map-message" style="text-align: center; margin-bottom: 10px;">
+            The location of your CyberPHA assessment facilities will be displayed on the map.
+        </div>
 
+<div id="facility-map" style="width: 100%; height: 75vh;"></div>
+
+<script>
+    window.initMap = function() {
+        // Create the map
+        var map = L.map('facility-map', {
+            attributionControl: false, // Disable the attribution control entirely
+            minZoom: 2,   // Set minimum zoom level to prevent zooming out too far
+            maxZoom: 18   // Maximum zoom level (you can adjust this as needed)
+        }).setView([0, 0], 2); // Center at a generic point with a broad zoom level
+
+        // Add OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 18
+        }).addTo(map);
+
+        const facilities = JSON.parse('{{ facilities_data|safe }}');
+        const validFacilities = facilities.filter(facility => {
+            const lat = parseFloat(facility.facilityLat);
+            const lng = parseFloat(facility.facilityLong);
+            return !isNaN(lat) && !isNaN(lng);
+        });
+
+        // Creating markers for valid facilities
+        validFacilities.forEach(facility => {
+            var marker = L.marker([facility.facilityLat, facility.facilityLong], {
+                title: facility.FacilityName // Tooltip text that appears on hover
+            }).addTo(map)
+                .bindPopup(facility.FacilityName + '<br>Coordinates: ' + facility.facilityLat + ', ' + facility.facilityLong);
+
+
+            // Adding a click event to the marker to redirect to a URL
+            marker.on('click', function() {
+                var url = `/OTRisk/pha_reports/${facility.ID}/`;
+                window.location.href = url; // Redirects the user to the specified URL
+            });
+        });
+
+        if (validFacilities.length > 0) {
+            var group = L.featureGroup(validFacilities.map(facility =>
+                L.marker([parseFloat(facility.facilityLat), parseFloat(facility.facilityLong)]
+            )));
+            map.fitBounds(group.getBounds());
+            document.getElementById('map-message').style.display = 'none'; // Hide the message if there are facilities
+        } else {
+            document.getElementById('map-message').style.display = 'block'; // Show the message if there are no facilities
+        }
+
+
+    };
+
+    document.addEventListener('DOMContentLoaded', initMap);
+</script>
+
+
+
+        </div>
+    </div>
     <div class="tab-content tab-link active"  id="tab1">
         <div class="form-group form-sim" >
             <div id="heatmapContainer" style="width:100%; height:400px;"></div>

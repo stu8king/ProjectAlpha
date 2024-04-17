@@ -192,6 +192,7 @@ def iotaphamanager(request, record_id=None):
         pha_header.facilityCity = request.POST.get('txtCity')
         pha_header.facilityCode = request.POST.get('zipCode')
         pha_header.facilityLat = request.POST.get('txthdnLat')
+        print(request.POST.get('txthdnLat'))
         pha_header.facilityLong = request.POST.get('txthdnLong')
         pha_header.facilityState = request.POST.get('txtState')
         pha_header.shift_model = request.POST.get('shift_model')
@@ -1313,7 +1314,7 @@ def generate_recommendation_prompt(likelihood, adjustedRR, costs, probability, f
         - Adjusted residual risk: {adjustedRR}
         - Estimated costs (low|medium|high): {costs}
         - Probability of a targeted attack being successful: {probability}%
-        - Annual threat event frequency: {frequency}
+        - Annual loss event frequency (as defined by FAIR): {frequency}
         - Business impact score: {biaScore}{risk_tolerance_str}
 
         Provide a response structured exactly as follows:
@@ -1528,7 +1529,7 @@ def scenario_analysis(request):
             },
             {
                 "role": "user",
-                "content": f"{common_content}. Task: Given the scenario described and publicly reported cybersecurity incidents over the time scale from 5 years ago to the current day, assess the cybersecurity residual risk after all recommended controls and physical security controls have been implemented and are assumed to be at least 75% effective. Give an estimated residual risk rating from the following options: Very Low, Low, Low/Medium, Medium, Medium/High, High, Very High.  Provide ONLY one of the given risk ratings without any additional text or explanations."
+                "content": f"{common_content}. The FAIR (Factor Analysis of Information Risk) methodology, which is used to quantify and manage risk, defines residual risk as the amount of risk that remains after controls are applied. Task: Given the scenario described and publicly reported cybersecurity incidents over the time scale from 5 years ago to the current day, assess the cybersecurity residual risk after all recommended controls and physical security controls have been implemented and are assumed to be at least 75% effective. Give an estimated residual risk rating based on the FAIR methodology from the following options: Very Low, Low, Low/Medium, Medium, Medium/High, High, Very High.  Provide ONLY one of the given risk ratings without any additional text or explanations."
             },
 
             {
@@ -1540,9 +1541,14 @@ def scenario_analysis(request):
                 "role": "user",
                 "content": f" {common_content}. Provide ONLY the estimated probability (as a whole number percentage) of a targeted attack of the given scenario being successful. (consider the given investments). Answer with a number followed by a percentage sign (e.g., nn%). Do NOT include any other words, sentences, or explanations."
             },
+            #{
+            #    "role": "user",
+            #    "content": f"{common_content}. Provide an estimate of the annual Threat Event Frequency (TEF) as defined by the Open FAIR Body of Knowledge. TEF is the probable frequency, within a given timeframe, that a threat agent will act against an asset. It reflects the number of attempts by a threat actor to cause harm, regardless of whether these attempts are successful. Your response should reflect an integer or a decimal value representing the estimated number of times per year such a threat event is expected to occur. IMPORTANT: Respond only with the frequency value as an integer or a decimal, without including any additional words, sentences, or explanations. This value should strictly represent the estimated annual occurrence rate of the threat event as per the given scenario."
+            #
+            #},
             {
                 "role": "user",
-                "content": f"{common_content}. Provide an estimate of the annual Threat Event Frequency (TEF) as defined by the Open FAIR Body of Knowledge. TEF is the probable frequency, within a given timeframe, that a threat agent will act against an asset. It reflects the number of attempts by a threat actor to cause harm, regardless of whether these attempts are successful. Your response should reflect an integer or a decimal value representing the estimated number of times per year such a threat event is expected to occur. IMPORTANT: Respond only with the frequency value as an integer or a decimal, without including any additional words, sentences, or explanations. This value should strictly represent the estimated annual occurrence rate of the threat event as per the given scenario."
+                "content": f"{common_content}. Provide an estimate of the annual Loss Event Frequency (LEF) as defined by the Open FAIR Body of Knowledge. LOSS Event Frequency is defined by the technical Open FAIR Body of Knowledge as: The probable frequency, within a given timeframe, that a threat agent will SUCCESSFULLY act against an asset. Your response should reflect an integer or a decimal value representing the estimated number of times per year such a threat event is expected to occur. IMPORTANT: Respond only with the frequency value as an integer or a decimal, without including any additional words, sentences, or explanations. This value should strictly represent the estimated annual occurrence rate of the threat event as per the given scenario."
 
             },
             {

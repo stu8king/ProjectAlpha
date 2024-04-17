@@ -427,6 +427,17 @@ def dashboardhome(request):
 
     security_week = fetch_securityweek_news()
     dark_reading = fetch_darkreading_news()
+    # Fetch facilities data
+    facilities_data = tblCyberPHAHeader.objects.filter(UserID__in=organization_users, Deleted=0).values(
+        'ID', 'FacilityName', 'facilityLat', 'facilityLong', 'facilityAddress',
+        'facilityCity', 'facilityState', 'facilityCode', 'country'
+    )
+
+    # Convert QuerySet to a list of dictionaries
+    facilities_list = list(facilities_data)
+
+    # Serialize data for JavaScript usage using json.dumps
+    facilities_json = json.dumps(facilities_list)
 
     context = {
         'records_by_business_unit_type': list(records_by_business_unit_type),
@@ -461,7 +472,8 @@ def dashboardhome(request):
         'ra_worksheets_with_scenario_count': ra_worksheets_with_scenario_count_list,
         'security_week': security_week,
         'dark_reading': dark_reading,
-        'compliance_summary': compliance_summary
+        'compliance_summary': compliance_summary,
+        'facilities_data': facilities_json,
     }
 
     return render(request, 'dashboard.html', context)
