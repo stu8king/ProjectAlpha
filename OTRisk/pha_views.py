@@ -192,7 +192,7 @@ def iotaphamanager(request, record_id=None):
         pha_header.facilityCity = request.POST.get('txtCity')
         pha_header.facilityCode = request.POST.get('zipCode')
         pha_header.facilityLat = request.POST.get('txthdnLat')
-        print(request.POST.get('txthdnLat'))
+
         pha_header.facilityLong = request.POST.get('txthdnLong')
         pha_header.facilityState = request.POST.get('txtState')
         pha_header.shift_model = request.POST.get('shift_model')
