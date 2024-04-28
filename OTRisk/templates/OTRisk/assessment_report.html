@@ -9,7 +9,7 @@
     <!-- Bootstrap Select CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.1/css/bootstrap-select.min.css">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js"></script>
-
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <!-- Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.1/font/bootstrap-icons.css" rel="stylesheet">
 
@@ -210,8 +210,17 @@
     </style>
 </head>
 <body>
+<input type="hidden" id="csrfToken" value="{{ csrf_token }}">
+
 <script>
-         anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
+     anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
+
+
+window.onbeforeunload = function() {
+    // Clear the session storage if the user leaves the page or closes the tab/browser
+    sessionStorage.removeItem('pageLoaded');
+};
+
 </script>
 <div class="container-fluid">
     <div class="row">
@@ -296,27 +305,63 @@
             <main role="main" class="col-md-10 ml-sm-auto col-lg-10 px-4">
 
             <div class="container mt-5">
-                <h4 class="mb-4">{{ self_assessment.framework.name }} Assessment Report  ({{ self_assessment.name }})</h4>
+
+                <h4 class="mb-4">{{ self_assessment.framework.name }} Assessment Report ({{ self_assessment.name }})</h4>
+                <input type="hidden" id="hdn_assessmentid" name="hdn_assessmentid" value={{ self_assessment.id }}>
+                <input type="hidden" id="currentAssessmentName" value="{{ self_assessment.name }}">
+
                 <div class="form-group">
                     <div class="row">
-                        <div class="col-md-6 mb-4">
+                        <div class="col-md-12 mb-4">
 
 
                                     <div id="barChart" ></div>
 
                             </div>
 
-                        <div class="col-lg-6 mb-4">
+                        <!--<div class="col-lg-6 mb-4">
                             <div id="mitre_chart" ></div>
-
-
-                        </div>
+                        </div>-->
                     </div>
                 </div>
 
                 <div class="form-group">
                     <div class="row">
-        <div class="col-lg-6 mb-4">
+                        <div class="col-md-12 mb-4">
+                            <div class="form-group">
+                             <div id="reportControls">
+                                <label for="frameworkSelector">Select Framework for Gap Analysis:</label>
+                                    <select id="frameworkSelector" class="form-control">
+                                        <option value="">-- Select Framework --</option>
+                                        <option value="NIST CSF 2.0">NIST CSF 2.0</option>
+                                        <option value="NIST 800-53 Rev.5">NIST 800-53 Rev.5</option>
+                                        <option value="NIST 800-82 Rev.3">NIST 800-82 Rev.3</option>
+                                        <option value="ISO 27001:2022">ISO 27001:2022</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+               <div class="form-group">
+                   <div class="row">
+                        <div class="col-lg-12 mb-4">
+                            <div id="gapAnalysisChart" ></div>
+                         </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-12 mb-4">
+                            <div id="gapAnalysisNarrative" ></div>
+                         </div>
+                    </div>
+                </div>
+
+
+
+                <div class="form-group">
+                    <div class="row">
+                        <div class="col-lg-6 mb-4">
             <h3 class="h4">Questions Answered No</h3>
             <table class="table table-hover print-scale" style="color: #d3d1cd">
                 <thead>
@@ -336,7 +381,7 @@
             </table>
         </div>
 
-        <div class="col-lg-6 mb-4">
+                        <div class="col-lg-6 mb-4">
             <h3 class="h4">Questions Answered Yes</h3>
             <table class="table table-hover print-scale" style="color: #d3d1cd">
                 <thead>
@@ -357,15 +402,17 @@
                 </tbody>
             </table>
         </div>
-    </div>
+                    </div>
                 </div>
-    <button class="btn btn-primary no-print" onclick="window.print()">Print Report</button>
-</div>
+                <button class="btn btn-primary no-print" onclick="window.print()">Print Report</button>
+            </div>
+
             </main>
     </div>
 </div>
 
     <script>
+
         anychart.onDocumentReady(function () {
             // Pie Chart for Yes/No answers
             var pieData = anychart.data.set([
@@ -390,11 +437,12 @@
             var bccredits = barChart.credits();
             bccredits.enabled(false);
             barChart.tooltip(false)
-            barChart.title('Category-wise Yes Response Percentage');
+            barChart.title('Assessment Section Results');
             barChart.container('barChart');
             barChart.draw();
+        })
 
-            var mitreData = anychart.data.set([
+       /*      var mitreData = anychart.data.set([
             {% for tactic_code, score in mitre_data %}
                 ['{{ tactic_code }}', {{ score }}],
             {% endfor %}
@@ -402,8 +450,8 @@
 
         var radarChart = anychart.radar();
         radarChart.yScale().minimum(0).maximum(10);
-        radarChart.yAxis().labels().format('{%Value}%');
-        radarChart.tooltip().format("Effectiveness: {%Value}%");
+        radarChart.yAxis().labels().format('{%Value}');
+        radarChart.tooltip().format("Effectiveness: {%Value}");
 
         var series = radarChart.line(mitreData);
         series.markers(true);
@@ -419,6 +467,145 @@
         radarChart.draw();
 
         });
+        */
     </script>
+
+<script>
+document.getElementById('frameworkSelector').addEventListener('change', function() {
+    var frameworkName = this.value;
+    var assessmentId = document.getElementById('hdn_assessmentid').value;
+    var csrfToken = document.getElementById('csrfToken').value;
+
+    Swal.fire({
+        title: 'Processing...',
+        html: 'Please wait while the gap analysis is being generated.',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading()
+        }
+    });
+
+    $.ajax({
+        url: "{% url 'OTRisk:assessment_gap_analysis' %}",
+        type: 'POST',
+        headers: {
+            'X-CSRFToken': csrfToken
+        },
+        data: {
+            'assessment_id': assessmentId,
+            'framework_name': frameworkName
+        },
+        success: function(response) {
+            Swal.close();
+            if (response.gaps && response.gaps.length > 0) {
+                var tableHTML = `<table class="table table-responsive table-bordered" style="margin-top: 20px; background-color: #ffffff; color: #333; box-shadow: 0 4px 8px rgba(0,0,0,0.1); border-collapse: separate; border-spacing: 0; width: 100%; max-width: 100%; margin-bottom: 20px;">
+                <thead style="background-color: #f8f9fa; color: #333;">
+                    <tr>
+                        <th style="padding: 8px; line-height: 1.42857143; vertical-align: top; border-top: 1px solid #ddd; font-weight: bold;">#</th>
+                        <th style="padding: 8px; line-height: 1.42857143; vertical-align: top; border-top: 1px solid #ddd; font-weight: bold;">Gap</th>
+                        <th style="padding: 8px; line-height: 1.42857143; vertical-align: top; border-top: 1px solid #ddd; font-weight: bold;">Description</th>
+                        <th style="padding: 8px; line-height: 1.42857143; vertical-align: top; border-top: 1px solid #ddd; font-weight: bold;">Score</th>
+                    </tr>
+                </thead><tbody>`;
+                var chartData = [];
+                response.gaps.forEach(function(gap) {
+                    tableHTML += `<tr>
+                        <td style="padding: 8px; line-height: 1.42857143; vertical-align: top; border-top: 1px solid #ddd;">${gap.number}</td>
+                        <td style="padding: 8px; line-height: 1.42857143; vertical-align: top; border-top: 1px solid #ddd;">${gap.heading}</td>
+                        <td style="padding: 8px; line-height: 1.42857143; vertical-align: top; border-top: 1px solid #ddd;">${gap.description}</td>
+                        <td style="padding: 8px; line-height: 1.42857143; vertical-align: top; border-top: 1px solid #ddd;">${gap.score}</td>
+                    </tr>`;
+                    chartData.push([gap.heading, gap.score]);
+                });
+                tableHTML += '</tbody></table>';
+                document.getElementById('gapAnalysisNarrative').innerHTML = tableHTML;
+
+                drawGapAnalysisChart(chartData, frameworkName);
+            } else {
+                document.getElementById('gapAnalysisNarrative').innerHTML = 'No gap analysis data available or parsing error.';
+            }
+        },
+        error: function(xhr, status, error) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Oops...',
+                text: 'Something went wrong! Unable to fetch gap analysis data.',
+                footer: 'Error: ' + error
+            });
+            document.getElementById('gapAnalysisNarrative').innerHTML = 'Error fetching gap analysis data.';
+        }
+    });
+});
+
+function drawGapAnalysisChart(chartData, frameworkName) {
+    anychart.onDocumentReady(function() {
+        var chart = anychart.bar();
+         // Clear any existing chart and ensure the container is ready for a new chart
+        var chartContainer = document.getElementById('gapAnalysisChart');
+        var currentAssessmentName = document.getElementById('currentAssessmentName').value;
+        chartContainer.innerHTML = ''; // Clears any existing charts
+        chartContainer.style.height = '50vh';
+        chart.animation(true);
+        chart.padding([10, 40, 5, 20]);
+
+        var title = chart.title();
+        title.text('Gap Analysis Scores');
+        title.fontFamily("Arial, sans-serif");
+        title.fontSize(18);
+        title.fontWeight(600);
+        title.fontColor('#333');
+
+        chartCredits = chart.credits();
+        chartCredits.enabled(false);
+        chart.tooltip(false);
+
+        chart.title(`Gap Analysis: ${currentAssessmentName} vs ${frameworkName}`);
+
+        chart.data(chartData);
+
+        chart.yScale().minimum(0).maximum(10);
+
+        chart.xAxis().title('Gaps');
+        chart.xAxis().labels().fontFamily("Arial, sans-serif").fontSize(12).padding(5);
+
+        chart.yAxis().title('Score');
+        chart.yAxis().labels().fontFamily("Arial, sans-serif").fontSize(12);
+
+        chart.getSeries(0).color('#5a5c9a')
+            .hovered().fill('#4285f4', 0.6)
+            .selected().fill('#4285f4');
+
+        chart.background().fill("#f9f9f9");
+        chart.background().stroke("#fff");
+        chart.background().cornerType("round");
+        chart.background().corners(5);
+
+        chart.yGrid().enabled(true).stroke({color: "#e0e0e0", thickness: 1, dash: '5 5'});
+        chart.xGrid().enabled(false);
+
+        chart.container('gapAnalysisChart');
+        chart.draw();
+    });
+}
+
+// Define the getCookie function to retrieve the CSRF token from cookies
+function getCookie(name) {
+    var cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = jQuery.trim(cookies[i]);
+            // Check if this cookie name starts with the specified name
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+</script>
+
 </body>
 </html>

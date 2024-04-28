@@ -177,7 +177,13 @@ urlpatterns = [
     path('delete_from_risk_register/<int:risk_id>/', views.delete_from_risk_register, name='delete_from_risk_register'),
     path('related_incidents/', views.related_incidents, name='related_incidents'),
     path('get_assessment_summary/', views.get_assessment_summary, name='get_assessment_summary'),
+    path('copy_cyber_pha/<int:pha_id>/', views.copy_cyber_pha, name='copy_cyber_pha'),
+    path('assessment_gap_analysis/', views.assessment_gap_analysis, name='assessment_gap_analysis'),
+    path('assessment_clone/', views.assessment_clone, name='assessment_clone'),
+    path('upload_completed_assessment/', views.upload_completed_assessment, name='upload_completed_assessment'),
+    path('generate-csv/<int:framework_id>/', views.generate_framework_csv, name='generate_framework_csv'),
 ]
+
 
 
 if settings.DEBUG:

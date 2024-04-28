@@ -21,6 +21,7 @@
     <!-- jQuery -->
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
     <!-- Bootstrap JS -->
     <script src="{% static 'bootstrap/dist/js/bootstrap.bundle.min.js' %}"></script>
 
@@ -29,7 +30,6 @@
     <script src="{% static 'anychart/dist/js/anychart-sunburst.min.js' %}"></script>
     <script src="{% static 'anychart/dist/js/anychart-pie.min.js' %}"></script>
         <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.25/css/jquery.dataTables.css">
-    <script type="text/javascript" charset="utf8" src="https://code.jquery.com/jquery-3.5.1.js"></script>
     <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.js"></script>
 
 
@@ -38,13 +38,64 @@
      {% bootstrap_javascript %}
     <style>
 
+.card {
+    background: #fafafa; /* Light grey background to distinguish cards from the white background */
+    border-radius: 8px; /* Rounded corners for modern appearance */
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15); /* Enhanced shadow for depth */
+    margin-bottom: 1.5rem; /* Increased space between cards */
+    border: 1px solid #d6d8db; /* Subtle border for edge definition */
+}
 
+.card-body {
+    padding: 1.5rem; /* Comfortable padding inside the card */
+    color: #333; /* Dark grey text for contrast against the white background */
+}
 
-         .form-group {
-    border: 1px solid #464748; /* Border color */
-    box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.5); /* Outer shadow */
-    background-color: #5E6266; /* Lighter shade of #464748 */
-    padding: 15px; /* Optional: for internal spacing */
+.card-title {
+    font-size: 1.2rem; /* Larger font size for visibility */
+    color: #007BFF; /* Blue color for titles to tie in with the tab's active state */
+    font-weight: bold; /* Bold font weight to make titles stand out */
+    margin-bottom: 0.5rem; /* Space below the title */
+}
+
+.form-group {
+    margin-bottom: 1rem; /* Space between form groups for clarity */
+}
+
+.form-check-label {
+    margin-left: 0.5rem; /* Space after the radio button */
+    font-size: 0.9rem; /* Slightly smaller font size for subtlety */
+    vertical-align: middle; /* Align text vertically for aesthetics */
+}
+
+.form-control, .form-check-input {
+    border-radius: 4px; /* Uniform rounded corners for all form elements */
+}
+
+.input-group-text {
+    background-color: #f1f1f1; /* Light grey background for input group addons */
+    border-radius: 4px; /* Rounded corners for the input group text */
+}
+
+/* Enhance range sliders to fit the modern aesthetic */
+.input-range {
+    cursor: pointer; /* Cursor indicates it's an interactive element */
+}
+
+/* Styling adjustments for the submit button */
+.btn-primary {
+    background-color: #007BFF; /* Consistent blue theme for buttons */
+    border-color: #007BFF; /* Same for border to maintain uniformity */
+    padding: 0.375rem 0.75rem; /* Comfortable padding */
+    font-size: 1rem; /* Readable font size */
+    line-height: 1.5; /* Line height for better text alignment */
+    border-radius: 0.25rem; /* Rounded corners for the button */
+    transition: background-color 0.3s ease-in-out, border-color 0.3s ease-in-out; /* Smooth transition for hover effects */
+}
+
+.btn-primary:hover {
+    background-color: #0056b3; /* Darker blue on hover for visual feedback */
+    border-color: #004085; /* Matching border color for hover state */
 }
      body {
         background-color: #464748;
@@ -93,6 +144,11 @@
     .content {
         padding: 20px;
     }
+    .row {
+    display: flex;
+    flex-wrap: nowrap; /* Prevents wrapping to ensure side-by-side layout */
+}
+
     @media (max-width: 768px) {
         .sidebar {
             width: 100%;
@@ -110,83 +166,63 @@
 
     }
 
-            .col-md-2 {
-        place-items: center;
-        background-color: white;
-    }
+.slider-container {
+    position: relative;
+    width: 100%; /* Container takes full width to properly space internal elements */
+}
 
-     .small-font {
-        font-size: 0.8rem; /* adjust as needed */
-   }
+.form-range {
+    width: 50%; /* Slider only takes up 50% of the container's width */
+    cursor: pointer;
+    transition: opacity 0.2s ease-in-out;
+    -webkit-appearance: none; /* Removes default webkit styles */
+    appearance: none;
+    height: 10px;
+    background: #ddd;
+    border-radius: 5px;
+    outline: none;
+}
 
-         .stat-card {
-        background-color: lightgrey;
-    }
-    .inner-card {
-        background-color: white;
-        border-radius: 10px;
-        margin: 10px 10px 20px 10px;
-        height: 70%;
-    }
-    .card-title-light {
-        font-weight: lighter;
-    }
+.form-range:hover {
+    opacity: 0.9; /* Slightly more opaque on hover for visual feedback */
+}
 
-    .slider-container {
-        margin: 10px 0;
-    }
+.form-range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    background: #4CAF50;
+    border-radius: 50%;
+    cursor: pointer;
+}
 
-    .slider-container input[type=range] {
-        -webkit-appearance: none;
-        width: 100%;
-        height: 10px;
-        background: #ddd;
-        outline: none;
-        opacity: 0.7;
-        -webkit-transition: .2s;
-        transition: opacity .2s;
-        border-radius: 5px;
-    }
+.form-range::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    background: #4CAF50;
+    border-radius: 50%;
+    cursor: pointer;
+}
 
-    .slider-container input[type=range]:hover {
-        opacity: 1;
-    }
+.slider-ticks {
+    position: absolute;
+    width: 50%;
+    bottom: -20px;
+    left: 0; /* Align with the start of the slider */
+    display: flex;
+    justify-content: space-between;
+    padding: 0;
+}
 
-    .slider-container input[type=range]::-webkit-slider-thumb {
-        -webkit-appearance: none;
-        appearance: none;
-        width: 20px;
-        height: 20px;
-        background: #4CAF50;
-        cursor: pointer;
-        border-radius: 50%;
-    }
-
-    .slider-container input[type=range]::-moz-range-thumb {
-        width: 20px;
-        height: 20px;
-        background: #4CAF50;
-        cursor: pointer;
-        border-radius: 50%;
-    }
-
-    .slider-container input[type=range]::-moz-range-track {
-        background: transparent;
-    }
-
-    .slider-ticks {
-        display: flex;
-        justify-content: space-between;
-        padding: 0 10px;
-    }
-
-    .slider-ticks span {
-        position: relative;
-        display: block;
-        width: 1px;
-        height: 10px;
-        background: black;
-    }
+.slider-ticks span {
+    position: absolute;
+    text-align: center;
+    width: 1px;
+    height: 10px;
+    background: black;
+    transform: translateX(-50%);
+}
 
     .response-yes:checked + label {
     background-color: green;
@@ -230,7 +266,98 @@
     height: 1.75em;
     }
 }
-    </style>
+#tabs {
+    font-family: 'Helvetica Neue', Arial, sans-serif; /* Using Helvetica Neue for a more Apple-like look */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+    border: 1px solid #ccc; /* Light border for crisp edge definition */
+    margin: 20px; /* Space around the tabs for better layout */
+}
+
+.tabs-nav {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap; /* Allow multiple rows */
+    align-items: center; /* Align items in the middle vertically */
+    border-bottom: 1px solid #ccc;
+    background: #f8f8f8; /* Slight grey background for the tabs row */
+}
+
+.tab-link {
+    flex-grow: 1; /* Allow tabs to grow evenly */
+    text-align: center; /* Center text inside the tab */
+    box-sizing: border-box;
+    border-right: 1px solid #ccc; /* Define borders between tabs */
+}
+
+.tab-link:last-child {
+    border-right: none; /* Remove border for the last tab */
+}
+
+.tab-link a {
+    display: block; /* Make the anchor fill the tab */
+    padding: 0.75rem 1rem; /* Adjusted padding for better spacing */
+    background-color: #f8f8f8;
+    color: #333;
+    text-decoration: none;
+    transition: background-color 0.3s, color 0.3s;
+    border-bottom: 3px solid transparent; /* Prepare for hover effect */
+}
+
+.tab-link a:hover, .tab-link a:focus {
+    background-color: #fff; /* White background on hover/focus */
+    color: #007BFF; /* Blue color for text to indicate active/hover state */
+    border-bottom: 3px solid #007BFF; /* Blue underline for active state */
+}
+
+.tabs-nav .ui-tabs-active a {
+    font-weight: 600; /* Bold font for active tab */
+    border-bottom: 3px solid #007BFF; /* Blue underline to indicate active tab */
+    background-color: #fff; /* White background for active tab */
+}
+
+.tab-content {
+    padding: 1.5rem; /* More padding for content */
+    background: #fff; /* White background for content area */
+    border-top: none; /* Remove top border to blend with active tab */
+}
+
+/* Smaller font size for tabs */
+.tab-link a {
+    font-size: 0.85rem; /* Smaller font size for a more refined look */
+    letter-spacing: 0.05em; /* Adding letter-spacing for better readability */
+}
+    /* Checked state of the radio button */
+    .form-check-input:checked {
+        background-color: #007BFF; /* Blue background for checked state */
+        border-color: #007BFF; /* Blue border for checked state */
+    }
+
+    /* Focus state of the radio button */
+    .form-check-input:focus {
+        outline: none; /* Remove default focus outline */
+        box-shadow: 0 0 0 0.3em rgba(0,123,255,0.25); /* Custom focus ring using em */
+    }
+
+    /* Checkmark to be shown when selected */
+    .form-check-input:checked::after {
+        content: '';
+        position: absolute;
+        left: 0.3em; /* Positioning the checkmark using em */
+        top: 0.3em; /* Positioning the checkmark using em */
+        width: 0.65em; /* Width of the checkmark using em */
+        height: 0.65em; /* Height of the checkmark using em */
+        background-color: #fff; /* White checkmark */
+    }
+
+    /* Label styling */
+    .form-check-label {
+        margin-left: 0.5em; /* Space between the checkbox and the label using em */
+        vertical-align: middle; /* Align the text vertically */
+        cursor: pointer; /* Pointer cursor on hover */
+    }
+</style>
 </head>
 <body>
 <div id="question-stats" class="stats-floating-box" style="color: #464748">
@@ -327,104 +454,102 @@
                 </div>
             </nav>
 
-        <main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-4">
+        <main role="main" class="col-md-12 col-lg-10">
 
         <div class="container mt-4">
         <div class="row">
-            <div class="col-md-8">
+            <div class="col-md-12">
                 <h2 class="mb-4">{{ framework_description }} Assessment</h2>
                 <form method="post" class="needs-validation" novalidate>
-            {% csrf_token %}
-                {% if is_new_assessment %}
-                    {% for question, form in zipped_questions_forms %}
-                    <div class="card mb-3">
-                        <div class="card-body">
-                            <h5 class="card-title" style="color: #464748">{{ question.text }}</h5>
-                            <input type="hidden" name="{{ form.prefix }}-question" value="{{ question.id }}">
-                            <div class="form-group">
-                                {{ form.response.label_tag }} {{ form.response }}
-                            </div>
-                            <div class="form-group">
-                                {{ form.effectiveness.label_tag }} {{ form.effectiveness }}
-                            </div>
-                            <div class="form-group">
-                                {{ form.remarks.label_tag }} {{ form.remarks }}
-                            </div>
-                            <div class="form-group">
-                                {{ form.weighting.label_tag }} {{ form.weighting }}
-                            </div>
-                        </div>
+                    {% csrf_token %}
+                    <div id="tabs">
+                    <ul class="tabs-nav">
+                          {% for category in categories %}
+                        <li class="tab-link"><a href="#tabs-{{ forloop.counter }}" >{{ category }}</a></li>
+                        {% endfor %}
+                    </ul>
+                    {% for category in categories %}
+                    <div id="tabs-{{ forloop.counter }}" class="tab-content">
+                        {% if is_new_assessment %}
+                            {% for question, form in zipped_questions_forms %}
+                                {% if question.category == category %}
+                                    <div class="card mb-3">
+                                        <div class="card-body">
+                                            <h5 class="card-title" style="color: #464748">{{ forloop.counter }}. {{ question.text }}</h5>
+                                            <input type="hidden" name="{{ form.prefix }}-question" value="{{ question.id }}">
+                                            <div class="form-group">
+                                                {{ form.response.label_tag }} {{ form.response }}
+                                            </div>
+                                            <div class="form-group slider-container" >
+                                                {{ form.effectiveness.label_tag }} {{ form.effectiveness }}
+                                            </div>
+                                            <div class="form-group">
+                                                {{ form.remarks.label_tag }} {{ form.remarks }}
+                                            </div>
+                                            <div class="form-group">
+                                                {{ form.weighting.label_tag }} {{ form.weighting }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+                        {% else %}
+                            {% for question, form in answer_forms %}
+                                {% if question.category == category %}
+                                    <div class="card mb-3">
+                                        <div class="card-body">
+                                            <h5 class="card-title" style="color: #464748">{{ forloop.counter }}. {{ question.text }}</h5>
+                                            <div class="form-group">
+                                                <label class="control-label">Response:</label>
+                                                <div class="form-check form-check-inline">
+                                                    <input class="form-check-input response-yes" type="radio" id="response_yes_{{ question.id }}" name="response_{{ question.id }}" value="True" {% if form.initial.response == True %} checked {% endif %}>
+                                                    <label class="form-check-label" for="response_yes_{{ question.id }}">Yes</label>
+                                                </div>
+                                                <div class="form-check form-check-inline">
+                                                    <input class="form-check-input response-no" type="radio" id="response_no_{{ question.id }}" name="response_{{ question.id }}" value="False" {% if form.initial.response == False %} checked {% endif %}>
+                                                    <label class="form-check-label" for="response_no_{{ question.id }}">No</label>
+                                                </div>
+                                            </div>
+                                            <div class="form-group slider-container">
+                                                <label for="effectiveness_{{ question.id }}">Control Effectiveness:</label>
+                                                <input type="range" class="form-range" id="effectiveness_{{ question.id }}" name="effectiveness_{{ question.id }}" min="0" max="100" value="{{ form.initial.effectiveness }}" step="5" oninput="updateEffectivenessValue(this, 'effectiveness_value_{{ question.id }}')"  style="width: 50%;">
+                                                <span id="effectiveness_value_{{ question.id }}">{{ form.initial.effectiveness }}</span>%
+
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="remarks_{{ question.id }}">Remarks:</label>
+                                                <textarea class="form-control" id="remarks_{{ question.id }}" name="remarks_{{ question.id }}" rows="4" maxlength="250" oninput="updateCharacterCount(this, 'char_count_{{ question.id }}')">{{ form.initial.remarks }}</textarea>
+                                                <span id="char_count_{{ question.id }}"></span>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="weighting_{{ question.id }}">Weighting:</label>
+                                                <select class="form-control" id="weighting_{{ question.id }}" name="weighting_{{ question.id }}">
+                                                    <option value="1" {% if form.initial.weighting == 1 %} selected {% endif %}>Low</option>
+                                                    <option value="2" {% if form.initial.weighting == 2 %} selected {% endif %}>Medium</option>
+                                                    <option value="3" {% if form.initial.weighting == 3 %} selected {% endif %}>High</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+                        {% endif %}
                     </div>
-                {% endfor %}
-
-                 {% else %}
-                    {% for question, form in answer_forms %}
-                <div class="card mb-3">
-                    <div class="card-body">
-                        <h6 style="color: #464748">{{ question.category }}</h6>
-                        <h5 style="color: #464748" class="card-title" title="{{ question.guidance|escape }}">{{ question.section_reference }}: {{ question.text }}</h5>
-                        <div class="form-group">
-                            <label class="control-label">Response:</label>
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input response-yes" type="radio" id="response_yes_{{ question.id }}" name="response_{{ question.id }}" value="True" {% if form.initial.response == True %} checked {% endif %}>
-                                <label class="form-check-label" for="response_yes_{{ question.id }}">Yes</label>
-                            </div>
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input response-no" type="radio" id="response_no_{{ question.id }}" name="response_{{ question.id }}" value="False" {% if form.initial.response == False %} checked {% endif %}>
-                                <label class="form-check-label" for="response_no_{{ question.id }}">No</label>
-                            </div>
-                        </div>
-                         <div class="form-group">
-                            <label for="effectiveness_{{ question.id }}">Effectiveness:</label>
-                             <div class="row">
-                                 <div class="col-md-8">
-                                    <input type="range" class="form-range" id="effectiveness_{{ question.id }}" name="effectiveness_{{ question.id }}" min="0" max="100" value="{{ form.initial.effectiveness }}" oninput="updateEffectivenessValue(this, 'effectiveness_value_{{ question.id }}')">
-                                    <div class="slider-ticks">
-                                        <span></span>
-                                         <span></span>
-                                         <span></span>
-                                         <span></span>
-                                         <span></span>
-                                         <span></span>
-                                         <span></span>
-                                         <span></span>
-                                         <span></span>
-                                         <span></span>
-                                     </div>
-
-                                 </div>
-                                 <div class="col-md-4">
-                                     <span id="effectiveness_value_{{ question.id }}">{{ form.initial.effectiveness }}</span>%
-                                 </div>
-                             </div>
-                        </div>
-                        <div class="form-group">
-                            <label for="remarks_{{ question.id }}">Remarks:</label>
-                            <textarea name="remarks_{{ question.id }}" id="remarks_{{ question.id }}" class="form-control" rows="4" style="resize: none;" maxlength="250" oninput="updateCharacterCount(this, 'char_count_{{ question.id }}')">{{ form.initial.remarks }}</textarea>
-                            <span id="char_count_{{ question.id }}"></span>
-                        </div>
-
-
-
-                        <div class="form-group">
-                            <label for="weighting_{{ question.id }}">Weighting:</label>
-                            <select class="form-control" id="weighting_{{ question.id }}" name="weighting_{{ question.id }}">
-                                <option value="1" {% if form.initial.weighting == 1 %} selected {% endif %}>Low</option>
-                                <option value="2" {% if form.initial.weighting == 2 %} selected {% endif %}>Medium</option>
-                                <option value="3" {% if form.initial.weighting == 3 %} selected {% endif %}>High</option>
-                            </select>
-                        </div>
-                    </div>
+                    {% endfor %}
                 </div>
-            {% endfor %}
-        {% endif %}
-            <button type="submit" class="btn btn-primary">Save</button>
-        </form>
-            </div>
-        <div class="col-md-4">
-        </div>
+                <button type="submit" class="btn btn-primary">Save</button>
+            </form>
         </div>
     </div>
+</div>
+
+
+<script>
+    $(document).ready(function() {
+        $("#tabs").tabs();
+    });
+</script>
+
 <script>
 
     function updateEffectivenessValue(slider, valueId) {

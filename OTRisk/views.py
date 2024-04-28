@@ -57,9 +57,10 @@ from .dashboard_views import dashboardhome, get_group_report, get_heatmap_record
 from .pha_views import iotaphamanager, facility_risk_profile, get_headerrecord, scenario_analysis, phascenarioreport, \
     getSingleScenario, pha_report, scenario_vulnerability, add_vulnerability, get_asset_types, calculate_effectiveness, \
     generate_ppt, analyze_scenario, assign_cyberpha_to_group, fetch_groups, fetch_all_groups, retrieve_scenario_builder, \
-    facilities, air_quality_index, delete_pha_record, get_assessment_summary
+    facilities, air_quality_index, delete_pha_record, get_assessment_summary, copy_cyber_pha, assessment_gap_analysis
 from .report_views import pha_reports, get_scenario_report_details, qraw_reports, get_qraw_scenario_report_details
-from .scenario_builder import scenario_sim_v2, analyze_sim_scenario_v2, generate_sim_attack_tree_v2, analyze_sim_consequences_v2, generate_scenario_description_v2, related_incidents, retrieve_scenario_builder_v2
+from .scenario_builder import scenario_sim_v2, analyze_sim_scenario_v2, generate_sim_attack_tree_v2, \
+    analyze_sim_consequences_v2, generate_scenario_description_v2, related_incidents, retrieve_scenario_builder_v2
 from .forms import CustomConsequenceForm, OrganizationAdmin
 from .models.Model_Scenario import CustomConsequence
 from accounts.models import Organization, OrganizationHistory
@@ -78,7 +79,7 @@ import csv
 from django.contrib import messages
 import chardet
 import datetime
-
+from datetime import datetime
 app_name = 'OTRisk'
 
 
@@ -215,6 +216,7 @@ def update_bia_scenarios(cyber_pha_id, user):
 # Assessment framework Code
 #########################
 @login_required
+@login_required
 def assessment_report_view(request, assessment_id):
     # Get the SelfAssessment object or handle 404
     self_assessment = get_object_or_404(SelfAssessment, pk=assessment_id)
@@ -244,34 +246,27 @@ def assessment_report_view(request, assessment_id):
     yes_answers = answers.filter(response=True)
     no_answers = answers.filter(response=False)
 
-    # Preparing messages for AI risk and MITRE tactics analysis
-    risk_messages = [
-        {
-            "role": "system",
-            "content": "Analyze the responses to provide a summary of top cybersecurity risks."
-        }
-    ]
+    # Prepare data for template rendering
+    context = {
+        'self_assessment': self_assessment,
+        'pie_data': pie_data,
+        'bar_data': bar_data,
+        'yes_answers': yes_answers,
+        'no_answers': no_answers,
+    }
 
-    mitre_ics_tactics = [
-        "TA0108 Initial Access",
-        "TA0104 Execution",
-        "TA0110 Persistence",
-        "TA0111 Privilege Escalation",
-        "TA0103 Evasion",
-        "TA0102 Discovery",
-        "TA0109 Lateral Movement",
-        "TA0100 Collection",
-        "TA0101 Command and Control",
-        "TA0107 Inhibit Response Function",
-        "TA0106 Impair Process Control",
-        "TA0105 Impact"
-    ]
+    return render(request, 'assessment_report.html', context)
 
-    # Create a system instruction for the AI to classify and score based on MITRE ICS tactics
+
+@login_required
+def assessment_mitre_report(request, assessment_id):
+    self_assessment = get_object_or_404(SelfAssessment, pk=assessment_id)
+    answers = AssessmentAnswer.objects.filter(selfassessment=self_assessment)
+
     mitre_messages = [
         {
             "role": "system",
-            "content": "Below are responses from a cybersecurity self-assessment. Please analyze each response then relate them to, and classify them according to the 12 MITRE ICS tactics: Initial Access, Execution, Persistence, Privilege Escalation, Evasion, Discovery, Lateral Movement, Collection, Command and Control, Inhibit Response Function, Impair Process Control, and Impact. Provide a score out of 10 and a brief justification (under 25 words) for each tactic that applies. Present the results in the format <Tactic Reference>|<tactic title>|<Score>|<justification> For example: TA0107|Inhibit Response Function|7|Some controls that might mitigate the risk to safety systems."
+            "content": "Below are responses from a cybersecurity self-assessment. Please analyze each response then relate them to, and classify them according to the 12 MITRE ICS tactics: Initial Access, Execution, Persistence, Privilege Escalation, Evasion, Discovery, Lateral Movement, Collection, Command and Control, Inhibit Response Function, Impair Process Control, and Impact. Provide a score out of 10 and a brief justification (under 25 words) for each tactic that applies. Present the results in the format <Tactic Reference>|<tactic title>|<Score>|<justification>"
         }
     ]
 
@@ -283,49 +278,27 @@ def assessment_report_view(request, assessment_id):
             "role": "user",
             "content": f"Question: {question_text}, Answer: {response_text}, {effectiveness}"
         }
-        risk_messages.append(common_message)
         mitre_messages.append(common_message)
 
     # Final prompt to AI for MITRE ICS tactics scoring
     mitre_messages.append({
         "role": "user",
-        "content": "Based on the above details, classify and score each response under the relevant MITRE ICS tactics. Do not include any additional text, narrative or characters. Only the output as given in the precisely prescribed format"
+        "content": "Based on the above details, classify and score each response under the relevant MITRE ICS tactics."
     })
 
-    # Send messages to OpenAI's GPT-4 for MITRE ICS tactics analysis
     try:
         mitre_response = openai.ChatCompletion.create(
-            model=get_api_key('OpenAI_Model'),
+            model='gpt-4-turbo',
             messages=mitre_messages,
-            temperature=0.5,
+            temperature=0.2,
             max_tokens=1500,
             api_key=get_api_key('openai')
         )
         mitre_tactics_analysis = mitre_response.choices[0].message['content']
     except Exception as e:
         mitre_tactics_analysis = f"Failed to generate MITRE ICS tactics analysis due to: {str(e)}"
-    mitre_data = []
-    if mitre_tactics_analysis:
-        for line in mitre_tactics_analysis.strip().split('\n'):
-            parts = line.split('|')
-            if len(parts) >= 4:
-                # Extract the tactic name and the score, assuming the format is:
-                # TAxxxx|Tactic Name|Score|Details
-                tactic_code = parts[1]
-                score = float(parts[2])  # Ensure the score is a float for chart compatibility
-                mitre_data.append((tactic_code, score))
 
-    # Prepare data for template rendering
-    context = {
-        'self_assessment': self_assessment,
-        'pie_data': pie_data,
-        'bar_data': bar_data,
-        'yes_answers': yes_answers,
-        'no_answers': no_answers,
-        'mitre_data': mitre_data  # AI-generated MITRE ICS tactics analysis
-    }
-
-    return render(request, 'assessment_report.html', context)
+    return HttpResponse(mitre_tactics_analysis, content_type="text/plain")
 
 
 @login_required
@@ -443,13 +416,12 @@ def list_frameworks(request):
 
 @login_required
 def edit_assessment(request, assessment_id):
-
     # Retrieve the existing SelfAssessment or redirect if not found
     self_assessment = get_object_or_404(SelfAssessment, pk=assessment_id, user=request.user,
                                         organization_id=get_user_organization_id(request))
     framework = self_assessment.framework  # Get the associated framework
     questions = AssessmentQuestion.objects.filter(framework=self_assessment.framework)
-
+    categories = questions.values_list('category', flat=True).distinct()
     # Build a dictionary of existing answers for this assessment
     existing_answers = {answer.question.id: answer for answer in self_assessment.answers.all()}
     # Variables to calculate scores
@@ -530,6 +502,7 @@ def edit_assessment(request, assessment_id):
         'assessment_id': assessment_id,
         'answer_forms': answer_forms,
         'framework_description': framework.description,
+        'categories': categories
     }
     return render(request, 'assessment_questions.html', context)
 
@@ -1455,7 +1428,7 @@ def save_or_update_cyberpha(request):
                 )
             scenario_id_value = cyberpha_entry.ID
 
-            #attach observations to the scenario
+            # attach observations to the scenario
             scenarioID = cyberpha_entry.pk
             scenario_instance = get_object_or_404(tblCyberPHAScenario, pk=scenario_id)
 
@@ -1497,7 +1470,6 @@ def save_or_update_cyberpha(request):
                 else:
                     # Break the loop if no more safeguards are found
                     break
-
 
             request.session['cyberPHAID'] = cyberphaid  # Set the session variable
 
@@ -3124,10 +3096,10 @@ def risk_treatment(request, risk_id):
             return JsonResponse({'risk_treatment_plan': risk.risk_treatment_plan})
         else:
             # No plan exists, indicate that creation is possible
-            return JsonResponse({'message': 'No risk treatment plan has been generated. Do you wish to create one?', 'create_plan': True})
+            return JsonResponse({'message': 'No risk treatment plan has been generated. Do you wish to create one?',
+                                 'create_plan': True})
     except tblCyberPHAScenario.DoesNotExist:
         return JsonResponse({'status': 'error', 'message': 'Risk not found'}, status=404)
-
 
 
 @require_POST
@@ -3217,3 +3189,120 @@ def generate_risk_treatment_plan(request):
 
         return JsonResponse({"status": "error", "message": str(e)}, status=500)
 
+
+@csrf_exempt
+@require_POST
+def assessment_clone(request):
+    data = json.loads(request.body)
+    original_assessment_id = data.get('assessmentId')
+    new_name = data.get('name')
+
+    try:
+        original = SelfAssessment.objects.get(id=original_assessment_id)
+        cloned_assessment = SelfAssessment.objects.create(
+            user=original.user,
+            framework=original.framework,
+            name=new_name,
+            organization=original.organization
+        )
+
+        # Cloning all associated answers
+        for answer in original.answers.all():
+            cloned_answer = AssessmentAnswer.objects.create(
+                question=answer.question,
+                response=answer.response,
+                effectiveness=answer.effectiveness,
+                weighting=answer.weighting,
+                remarks=answer.remarks
+            )
+            cloned_assessment.answers.add(cloned_answer)
+
+        cloned_assessment.save()
+        return JsonResponse({'status': 'success', 'message': 'Assessment cloned successfully'})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)})
+
+
+@login_required
+def upload_completed_assessment(request):
+    if request.method == 'POST':
+        file = request.FILES.get('csv_file')
+        framework_id = request.POST.get('framework_id')
+        assessment_name = request.POST.get('assessment_name')
+        organization_id = get_user_organization_id(request)
+
+        framework = get_object_or_404(AssessmentFramework, pk=framework_id)
+        self_assessment = SelfAssessment.objects.create(
+            user=request.user,
+            framework=framework,
+            name=assessment_name,
+            organization_id=organization_id,
+            date_created=datetime.now(),
+            date_modified=datetime.now()
+        )
+
+        try:
+            content = file.read().decode('utf-8')
+            reader = csv.DictReader(content.splitlines())
+            reader.fieldnames = [name.strip().lower() for name in reader.fieldnames]
+
+            questions = list(AssessmentQuestion.objects.filter(framework=framework).order_by('id'))
+
+            for row, question in zip(reader, questions):
+                try:
+                    response = row['response'].strip().lower() == 'true'
+                    effectiveness = int(row['effectiveness'].strip()) if row['effectiveness'].strip() and response else None
+                    remarks = row.get('remarks', '').strip()
+                    weighting = int(row['weighting'].strip()) if row['weighting'].strip() else 1  # Default weighting to 1 if empty
+
+                    # Create the AssessmentAnswer instance
+                    answer = AssessmentAnswer.objects.create(
+                        question=question,
+                        response=response,
+                        effectiveness=effectiveness,
+                        remarks=remarks,
+                        weighting=weighting
+                    )
+                    self_assessment.answers.add(answer)
+
+                except ValueError as e:
+                    print("Error processing row:", e)  # Output errors directly related to row processing
+                    continue
+
+            self_assessment.save()
+            return JsonResponse({'status': 'success', 'message': 'Assessment data uploaded successfully'})
+
+        except Exception as e:
+            print("Error during CSV handling:", e)
+            return JsonResponse({'status': 'error', 'message': 'Error processing CSV: ' + str(e)})
+
+    return JsonResponse({'status': 'error', 'message': 'Invalid request'})
+
+def calculate_scores(self_assessment):
+    answers = self_assessment.answers.all()
+    yes_count = answers.filter(response=True).count()
+    total_questions = answers.count()
+    total_effectiveness = sum(answer.effectiveness for answer in answers if answer.effectiveness)
+
+    score_percent = int((yes_count / total_questions) * 100) if total_questions else 0
+    score_effective = int((total_effectiveness / (total_questions * 100)) * 100) if total_questions else 0
+
+    return yes_count, score_percent, score_effective
+
+
+def generate_framework_csv(request, framework_id):
+    # Create the HttpResponse object with the appropriate CSV header.
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = f'attachment; filename="framework_{framework_id}.csv"'
+
+    writer = csv.writer(response)
+    questions = AssessmentQuestion.objects.filter(framework_id=framework_id)
+
+    # Write CSV headers
+    writer.writerow(['Question Text', 'Guidance', 'Section Reference', 'Category'])
+
+    # Write question data
+    for question in questions:
+        writer.writerow([question.text, question.guidance, question.section_reference, question.category])
+
+    return response

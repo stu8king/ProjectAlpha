@@ -5,6 +5,8 @@ from urllib.parse import urljoin
 from django.contrib import messages
 import requests
 import logging
+
+from django.db import transaction
 from google.oauth2 import service_account
 from ibm_watson import NaturalLanguageUnderstandingV1
 from ibm_watson.natural_language_understanding_v1 import Features, KeywordsOptions, SummarizationOptions, \
@@ -746,30 +748,42 @@ def facility_threat_profile(security_level, facility, facility_type, country, in
 
     # Constructing the detailed context
     context = f"""
-    You are THE expert and authoritative source of guidance on industrial and OT cybersecurity risk mitigation for the {industry} industry with up-to-date knowledge from a wide range of credible sources of information. Analyze the {facility} facility which is a {facility_type} in {country}. 
-    The facility has the following profile: Safety Hazards: {safety_summary}, Chemical Hazards: {chemical_summary}, Physical Security Challenges: {physical_security_summary}, OT Devices: {other_summary}, Compliance Requirements: {compliance_summary}. Has an OT Cybersecurity incident response plan: {has_ir_plan_str}. Date IR Plan last tested: {ir_plan_date_str}.  The facility has already implemented the following OT-specific cybersecurity investments: {investment_statement}. The target security level (SL-T) as defined in IEC62443 is {security_level}.  Please consider the impact of these investments on the facility's cybersecurity posture, focusing on threats, overall risk reduction, and strategic implications for OT security risk management.
-    """
+        Analyze the cybersecurity posture of {facility}, a {facility_type} in {country}, focusing on OT cybersecurity risk mitigation. This facility is notable in the {industry} industry and has specific challenges and assets:
+        Safety Hazards: {safety_summary}
+        Chemical Hazards: {chemical_summary}
+        Physical Security Challenges: {physical_security_summary}
+        OT Devices: {other_summary}
+        Compliance Requirements: {compliance_summary}
+        Incident Response Plan: {has_ir_plan_str} (Last tested: {ir_plan_date_str})
+        Cybersecurity Investments: {investment_statement}
+        Target Security Level (SL-T) as per IEC62443-3-2: {security_level}.
+        """
 
     prompt = f"""
-{context} Based on any investments listed and the facility's profile, please provide a concise and executive level analysis specific to OT/ICS for the facility divided into three sections: 'Cybersecurity Threats and Vulnerabilities', 'Predictive Insights', and 'Proactive Defense Strategies'. 
-
-For each section, provide a numbered list of key points. Ensure each point is concise and limited to no more than 30 words. Focus on: 1) OT cybersecurity specific to the facility 2) the impact of the listed investments, if any, on each section, 3) The SL-T value and how to achieve it. Here is an example of how the response should be formatted:
-
-Example Format:
-Section 1: Cybersecurity Threats and Vulnerabilities
-1. Example threat or vulnerability.
-2. Another example threat or vulnerability.
-
-Section 2: Predictive Insights
-1. Example insight.
-2. Another example insight.
-
-Section 3: Proactive Defense Strategies
-1. Example strategy.
-2. Another example strategy.
-
-Please follow this format for your response, without using '###', '**', or any other special formatting characters.
-"""
+        {context}
+     Based on the facility's profile and investments, provide an executive-level cybersecurity analysis specifically for OT/ICS environments. The analysis should be divided into three sections:
+        
+        1. Cybersecurity Threats: Make an estimate of the main cybersecurity threats and the actors likely to target this facility, considering the operational technology used, country, and industry specifics. EXTRA INSTRUCTION append a probability (as a percentage) of each threat occurring in the next 12 months..
+        2. Predictive Insights: Offer insights on potential future cybersecurity events based on current data and trends.
+        3. Proactive Defense Strategies: Suggest strategies to improve the facility's cybersecurity posture and achieve the target security level.
+        
+        INSTRUCTION: Utilize relevant and credible sources of information and industry reports such as from Dragos, Gartner, Deloitte.
+        
+        Example Format:
+        Section 1: Threats.
+        1. Example threat.
+        2. Another example threat.
+        
+        Section 2: Insights
+        1. Example insight.
+        2. Another example insight.
+        
+        Section 3: Strategies
+        1. Example strategy.
+        2. Another example strategy.
+        
+        Please follow this format for your response, without using '###', '**', or any other special formatting characters.
+        """
 
     # API call using chat model endpoint with the correct 'messages' property
     response = make_request_with_backoff(
@@ -780,12 +794,11 @@ Please follow this format for your response, without using '###', '**', or any o
              "content": "You are a model trained to provide concise and informative responses in a specific format."},
             {"role": "user", "content": prompt}
         ],
-        temperature=0.5,
-        max_tokens=1800,
+        temperature=0.4,
+        max_tokens=2500,
     )
 
     full_response = response['choices'][0]['message']['content']
-
     # Function to extract sections from the full_response
     def extract_section1(full_response1, section_title):
         start_index = full_response1.find(section_title)
@@ -797,9 +810,9 @@ Please follow this format for your response, without using '###', '**', or any o
         return section_text
 
     # Extracting each section based on titles
-    threat_summary = extract_section1(full_response, "Cybersecurity Threats and Vulnerabilities")
-    insight_summary = extract_section1(full_response, "Predictive Insights")
-    strategy_summary = extract_section1(full_response, "Proactive Defense Strategies")
+    threat_summary = extract_section1(full_response, "Threats")
+    insight_summary = extract_section1(full_response, "Insights")
+    strategy_summary = extract_section1(full_response, "Strategies")
 
     return threat_summary, insight_summary, strategy_summary
 
@@ -1273,7 +1286,7 @@ def get_response(user_message):
         model=openai_model,
         messages=message,
         temperature=0.1,
-        max_tokens=800
+        max_tokens=2600
     )
 
     return response['choices'][0]['message']['content']
@@ -1453,6 +1466,8 @@ def scenario_analysis(request):
 
         # Get the assessment id from the tblCyberPHAHeader instance
         assessment_id = cyber_pha_header.assessment
+        last_assessment_score = cyber_pha_header.last_assessment_score
+        last_assessment_summary = cyber_pha_header.last_assessment_summary
 
         investments = CyberSecurityInvestment.objects.filter(cyber_pha_header=cyber_pha_header).values(
             'investment_type', 'vendor_name', 'product_name', 'cost', 'date'
@@ -1474,14 +1489,6 @@ def scenario_analysis(request):
         net_profit_margin = cyber_pha_header.npm
         cost_op_hour = cyber_pha_header.coho
         annual_revenue = cyber_pha_header.annual_revenue
-
-        # Retrieve the corresponding SelfAssessment instance using the assessment_id
-        if assessment_id is not None:
-            self_assessment = SelfAssessment.objects.get(id=assessment_id)
-            control_effectiveness = self_assessment.score_effective
-        else:
-            # Handle the case where assessment_id is None
-            control_effectiveness = 0  # Default value
 
         openai.api_key = get_api_key('openai')
         # Define the common part of the user message
@@ -1506,7 +1513,7 @@ def scenario_analysis(request):
         Regulatory Compliance: {regulatoryimpact}, Supply Chain: {supplyimpact}
         Data & Intellectual Property: {dataimpact}
         Estimated Current OT Cybersecurity Controls:
-        Effectiveness: {control_effectiveness}%
+         OT Cybersecurity Control Effectiveness score: {last_assessment_score}/100.  OT Cybersecurity Control Effectiveness Summary: {last_assessment_summary}.
         Mitigated Severity: {severitymitigated}/10, Risk Exposure: {mitigatedexposure}/10, Residual Risk: {residualrisk}/10
         Estimated Unmitigated likelihood of all identified threats and vulnerabilities: {uel}/10
         Physical Security:
@@ -1539,13 +1546,17 @@ def scenario_analysis(request):
 
             {
                 "role": "user",
-                "content": f" {common_content}. Provide ONLY the estimated probability (as a whole number percentage) of a targeted attack of the given scenario being successful. (consider the given investments). Answer with a number followed by a percentage sign (e.g., nn%). Do NOT include any other words, sentences, or explanations."
+                "content": f"""
+                {common_content}
+                TASK: Assess the likelihood of a successful targeted attack on the specified facility, given the described scenario and cybersecurity investments. Consider the effectiveness of implemented controls and any vulnerabilities due to the facility's internet exposure or weak/default credentials.
+                Provide ONLY the estimated probability of such an attack being successful, expressed as a whole number percentage (e.g., 25%). Do NOT include any additional text, explanations, or commentary.
+                """
             },
-            #{
+            # {
             #    "role": "user",
             #    "content": f"{common_content}. Provide an estimate of the annual Threat Event Frequency (TEF) as defined by the Open FAIR Body of Knowledge. TEF is the probable frequency, within a given timeframe, that a threat agent will act against an asset. It reflects the number of attempts by a threat actor to cause harm, regardless of whether these attempts are successful. Your response should reflect an integer or a decimal value representing the estimated number of times per year such a threat event is expected to occur. IMPORTANT: Respond only with the frequency value as an integer or a decimal, without including any additional words, sentences, or explanations. This value should strictly represent the estimated annual occurrence rate of the threat event as per the given scenario."
             #
-            #},
+            # },
             {
                 "role": "user",
                 "content": f"{common_content}. Provide an estimate of the annual Loss Event Frequency (LEF) as defined by the Open FAIR Body of Knowledge. LOSS Event Frequency is defined by the technical Open FAIR Body of Knowledge as: The probable frequency, within a given timeframe, that a threat agent will SUCCESSFULLY act against an asset. Your response should reflect an integer or a decimal value representing the estimated number of times per year such a threat event is expected to occur. IMPORTANT: Respond only with the frequency value as an integer or a decimal, without including any additional words, sentences, or explanations. This value should strictly represent the estimated annual occurrence rate of the threat event as per the given scenario."
@@ -1559,7 +1570,7 @@ def scenario_analysis(request):
             {
                 "role": "user",
                 "content": f"I am a CISO at a {industry} company with approximately {employees_on_site} employees, operating primarily in {country}. We are assessing our cybersecurity posture and need to estimate the potential costs associated with a {scenario} that has consequences of {validated_consequences_list}."
-                           "Given the scenario, please provide an estimate of the direct and indirect costs we might incur, including but not limited to:"
+                           "Your Task: Given the scenario, please provide an estimate of the direct and indirect costs we might incur, including but not limited to:"
                            "1. Immediate Response Costs: Costs associated with the initial response to the incident, such as emergency IT support, forensic analysis, and legal consultations."
                            "2. Remediation Costs: Expenses related to remediating the cybersecurity breach, including software updates, hardware replacements, and strengthening of security measures."
                            "3. Regulatory and Compliance Costs: Potential fines and penalties for non-compliance with relevant data protection and privacy regulations, as well as costs associated with compliance audits and reporting requirements post-incident."
@@ -1567,19 +1578,19 @@ def scenario_analysis(request):
                            "5. Operational Disruption: Costs associated with operational disruptions or downtime, including loss of productivity and impact on service delivery."
                            "6. Legal and Settlement Costs: Expenses related to legal actions taken against the company and any settlements or compensations paid out to affected parties."
                            "7. Long-term Costs: Any long-term costs such as increased insurance premiums, ongoing monitoring and security measures, and potential loss of intellectual property."
-                           "Please consider the specifics of our industry, size, and the nature of the assets involved in this scenario to provide a comprehensive cost estimate. Please reference industry-specific data from the latest Verizon DBIR, applicable regulations from CISA, and standards from the NIST Cybersecurity Framework in your analysis."
-                           "OUTPUT INSTRUCTION: First, provide a 12-month direct cost projection for the scenario in the format: COST PROJECTION: Month1value|Month2value|...|Month12value. Each value must be an integer to represent a dollar value wth no other text or narrative included and should reflect a realistic, pragmatic monthly estimate, justifying the trend of costs decreasing over time. Then, provide a concise and conservative executive-level explanation summary, in 150 words or less, specific to the given scenario as JUSTIFICATION: <Your justification here>. Ensure the cost projection and justification are clearly separated by these keywords."
+                           "INDUSTRY DATA AND ANALYTICS: Please consider the specifics of our industry, size, and the nature of the assets involved in this scenario to provide a comprehensive cost estimate. Please reference industry-specific data from the latest research and findings relating to the cost of a cybersecurity incident and data breach from Gartner, McKinsey, Dragos, Ponemon Institute, Verizon DBIR, Palo Alto Networks."
+                           "OUTPUT INSTRUCTION: First, provide a 12-month direct cost projection for the scenario in the format: COST PROJECTION: Month1value|Month2value|...|Month12value. Each value must be an integer to represent a dollar value wth no other text or narrative included and should reflect a realistic, pragmatic monthly estimate. Then, provide a concise and conservative executive-level explanation summary, in 150 words or less, specific to the given scenario as JUSTIFICATION: <Your justification here>. Ensure the cost projection and justification are clearly separated by these keywords."
             },
 
             {
                 "role": "user",
                 "content": f"""{common_content}
                             
-                            Based only on the provided scenario and facility details, generate a concise numbered bullet point list of OT/ICS cybersecurity risk mitigation recommendations. Each recommendation should be directly aligned with the latest versions of NIST 800-82 and the NIST CSF. Include the relevant NIST reference in brackets at the end of each recommendation. The output should strictly adhere to the following format:
+                            Based only on the provided scenario and facility details, generate a concise numbered bullet point list of OT/ICS cybersecurity risk mitigation recommendations. Each recommendation should be directly aligned with the latest versions of NIST 800-82 and the NIST CSF. Include the relevant NIST reference in brackets at the end of each recommendation. Include in brackets an estimation of the amount of risk reduction associated with the recommendation as a whole number integer percentage. The output should strictly adhere to the following format:
                             
                             Example Format:
-                            1. Example recommendation related to OT cybersecurity. [NIST Reference]
-                            2. Another example recommendation focused on OT cybersecurity risk mitigation. [NIST Reference]
+                            1. Example recommendation related to OT cybersecurity. (<estimation of risk reduction %>) [NIST Reference] 
+                            2. Another example recommendation focused on OT cybersecurity risk mitigation. (<estimation of risk reduction %>) [NIST Reference] 
                             
                             Following this example format, provide the recommendations in order of priority, specific to the given scenario without any additional narrative, description, advice, or guidance. The recommendations should be clear and easily parsable within an HTML page.
                             """
@@ -1643,7 +1654,7 @@ def scenario_analysis(request):
             'biaScore': responses[5],
             'projection': cost_projection,
             'cost_projection_justification': cost_projection_justification,
-            'control_effectiveness': control_effectiveness,
+            'control_effectiveness': last_assessment_score,
             'recommendations': responses[7],
             'scenario_compliance_data': responses[8],
             'rationale': rationale
@@ -2418,9 +2429,8 @@ def facility_risk_profile_newrecord(userid, industry, facility_type, address, co
                                                                              physical_security_summary,
                                                                              other_summary,
                                                                              compliance_summary, '',
-                                                                             has_ir_plan, ir_plan_never_tested, ir_plan_tested_date)
-
-
+                                                                             has_ir_plan, ir_plan_never_tested,
+                                                                             ir_plan_tested_date)
 
     return {
         'safety_summary': safety_summary,
@@ -2491,7 +2501,7 @@ def assessment_summary(assessment_id, facilityType, industry):
     # Sending the chat completion request to OpenAI
     try:
         response = openai.ChatCompletion.create(
-            model="gpt-4",
+            model=get_api_key('OpenAI_Model'),
             messages=messages,
             temperature=0.3,
             max_tokens=4096,  # Adjusted for comprehensive analysis
@@ -2519,3 +2529,156 @@ def get_assessment_summary(request):
 
     score, summary = result.split('|', 1)  # Splitting based on the expected format
     return JsonResponse({'score': score, 'summary': summary})
+
+
+from django.utils.timezone import make_aware
+
+
+def copy_cyber_pha(request, pha_id):
+    if request.method == 'POST':
+        original_pha = get_object_or_404(tblCyberPHAHeader, ID=pha_id)
+
+        with transaction.atomic():
+            # Get a dictionary of the original PHA excluding many-to-many fields
+            original_data = model_to_dict(original_pha, exclude=['id'])
+            latitude, longitude = get_coordinates_from_address(
+                request.POST.get('facilityAddress') + ',' + request.POST.get('facilityCity') + ', ' + request.POST.get(
+                    'facilityCode'), request.POST.get('country'),
+                "AIzaSyBJu4p9r_vFL9g5nzctO4yLbNxjK08q4G0")
+            update_data = {
+                'FacilityName': request.POST.get('FacilityName'),
+                'facilityAddress': request.POST.get('facilityAddress'),
+                'facilityCity': request.POST.get('facilityCity'),
+                'facilityState': request.POST.get('facilityState'),
+                'facilityCode': request.POST.get('facilityCode'),
+                'country': request.POST.get('country'),
+                'facilityLat': latitude,
+                'facilityLong': longitude
+            }
+
+            original_data.update(update_data)
+            original_data.pop('ID', None)  # Ensure the ID is not included
+
+            # Exclude many-to-many fields explicitly before creating the new instance
+            m2m_fields = {field.name for field in tblCyberPHAHeader._meta.many_to_many}
+            for field in m2m_fields:
+                original_data.pop(field, None)
+
+            # Create the new PHA header
+            new_pha = tblCyberPHAHeader.objects.create(**original_data)
+
+            # Set many-to-many relationships using .set()
+            for field_name in m2m_fields:
+                m2m_manager = getattr(original_pha, field_name)
+                getattr(new_pha, field_name).set(m2m_manager.all())
+
+            # Copy OneToOne and ForeignKey relationships
+            # Assume cybersecurity_defaults is a OneToOneField linked to tblCyberPHAHeader
+            if hasattr(original_pha, 'cybersecurity_defaults'):
+                defaults_data = model_to_dict(original_pha.cybersecurity_defaults, exclude=['id', 'cyber_pha'])
+                CyberPHACybersecurityDefaults.objects.create(cyber_pha=new_pha, **defaults_data)
+
+            # Duplicate related scenarios and their nested related objects
+            scenarios = tblCyberPHAScenario.objects.filter(CyberPHA=original_pha)
+            for scenario in scenarios:
+                scenario_data = model_to_dict(scenario, exclude=['ID', 'CyberPHA', 'userID'])
+                scenario_data['CyberPHA'] = new_pha
+                if scenario.userID:
+                    user_instance = User.objects.get(id=scenario.userID.id)  # Ensure you have the correct user instance
+                    scenario_data['userID'] = user_instance
+                new_scenario = tblCyberPHAScenario.objects.create(**scenario_data)
+
+                # Correctly duplicating related ScenarioConsequences
+                consequences = ScenarioConsequences.objects.filter(scenario=scenario)
+                for consequence in consequences:
+                    consequence_data = model_to_dict(consequence, exclude=['id', 'scenario'])
+                    # Now 'scenario' is not duplicated in consequence_data
+                    ScenarioConsequences.objects.create(scenario=new_scenario, **consequence_data)
+
+                    # Correctly duplicating related PHA_Safeguard
+                    safeguards = PHA_Safeguard.objects.filter(scenario=scenario)
+                    for safeguard in safeguards:
+                        safeguard_data = model_to_dict(safeguard, exclude=['id',
+                                                                           'scenario'])  # Exclude 'scenario' to avoid conflict
+                        PHA_Safeguard.objects.create(scenario=new_scenario, **safeguard_data)
+
+                    # Observations
+                    observations = PHA_Observations.objects.filter(scenario=scenario)
+                    for observation in observations:
+                        observation_data = model_to_dict(observation, exclude=['id', 'scenario'])
+                        PHA_Observations.objects.create(scenario=new_scenario, **observation_data)
+
+        return redirect('OTRisk:iotaphamanager')  # Redirect after successful duplication
+
+    return render(request, 'OTRisk/iotaphamanager.html')
+
+
+def parse_ai_response(ai_response):
+    """Parse the AI response into a structured dictionary with score."""
+    pattern = re.compile(r'^(\d+)\|([^|]+)\|([^|]+)\|(\d+)$', re.MULTILINE)
+    gaps = []
+    for match in pattern.finditer(ai_response):
+        number, heading, description, score = match.groups()
+        cleaned_heading = heading.strip().replace('**', '')
+        gaps.append({
+            'number': number.strip(),
+            'heading': cleaned_heading,
+            'description': description.strip(),
+            'score': int(score.strip())
+        })
+    return gaps
+
+
+@csrf_exempt
+def assessment_gap_analysis(request):
+    # Extract parameters from POST request
+    assessment_id = request.POST.get('assessment_id')
+    framework_name = request.POST.get('framework_name')
+
+    if not assessment_id or not framework_name:
+        return JsonResponse({'error': 'Missing necessary parameters'}, status=400)
+
+    try:
+        assessment = SelfAssessment.objects.get(pk=assessment_id)
+
+    except SelfAssessment.DoesNotExist:
+        return JsonResponse({'error': 'Assessment not found'}, status=404)
+
+    messages = [
+        {
+            "role": "system",
+            "content": f"Given the results of a cybersecurity self-assessment for an operational technology environment, interpret these results in light of the '{framework_name}' standards. Consider the objectives, scope, and requirements of the '{framework_name}' and identify where the assessment results indicate potential deficiencies. Describe each deficiency in a structured format: 'number|heading|description|score', with a subjective severity score out of 10 where 0 is 100% lack of alignment and 10 is 100% complete alignment"
+        }
+    ]
+    # Include assessment answers; ideally from a detailed perspective
+    assessment_answers = assessment.answers.all()
+    for answer in assessment_answers:
+        response_text = "Yes" if answer.response else "No"
+        effectiveness = f"{answer.effectiveness}%" if answer and answer.effectiveness is not None else "Not applicable"
+        messages.append({
+            "role": "user",
+            "content": f"Question: {answer.question.text}, Answer: {response_text}, Effectiveness: {effectiveness}"
+        })
+
+    messages.append({
+        "role": "user",
+        "content": f"Please summarize the principal gaps between the assessment results and the standards of the mentioned framework. INSTRUCTIONS. The principle sections of '{framework_name}' MUST be used as the heading. For example, in NIST 800-53 ACCESS CONTROL is a principle section and AC-1 Policy and Procedures is a sub-section so ACCESS CONTROL will be heading to use. Description must be 20 words. Include a subjective score for the gap relating to each heading. STRICTLY MAINTAIN THE FORMAT number|heading|description|score"
+    })
+    openai.api_key = get_api_key('openai')
+
+    try:
+        response = openai.ChatCompletion.create(
+            model=get_api_key('OpenAI_Model'),
+            messages=messages,
+            temperature=0.2,
+            max_tokens=4000
+        )
+        ai_response = response.choices[0].message['content']
+        gaps = parse_ai_response(ai_response)
+        prompt_tokens = response.usage['prompt_tokens']
+        completion_tokens = response.usage['completion_tokens']
+        total_tokens = response.usage['total_tokens']
+
+        return JsonResponse({'gaps': gaps})  # Send structured data
+    except Exception as e:
+        return JsonResponse({'error': f"API error: {str(e)}"}, status=500)

@@ -132,7 +132,6 @@ def analyze_sim_scenario_v2(request):
         else:
             investment_statement = "No investments have been specified."
 
-
         # Create a record in user_scenario_audit
         user_scenario_audit.objects.create(
             scenario_text=scenario,
@@ -266,7 +265,49 @@ def generate_sim_attack_tree_v2(request):
         Attack Impact: {impact}
         """
 
-    attack_tree_system_message = """
+    if threat_actor.lower() == "natural disaster":
+        # Natural Disaster Tree
+        attack_tree_system_message = """
+                Generate a hierarchical structure for disaster response and preparedness based on the type of natural disaster: {attack_vector}. Include assessment of potential impacts, preparation steps, emergency response actions, and recovery plans. Ensure the tree is in JSON format.
+                
+                Example of a correctly formatted output:
+                    {
+                      "name": type of natural disaster,
+                      "children": [
+                        {
+                          "name": "Branch 1",
+                          "children": [
+                            {
+                              "name": "Sub-branch 1.1",
+                              "children": []
+                            },
+                            {
+                              "name": "Sub-branch 1.2",
+                              "children": []
+                            }
+                          ]
+                        },
+                        {
+                          "name": "Branch 2",
+                          "children": [
+                            {
+                              "name": "Sub-branch 2.1",
+                              "children": []
+                            },
+                            {
+                              "name": "Sub-branch 2.2",
+                              "children": []
+                            }
+                          ]
+                        }
+                      ]
+                    }
+
+                    Please generate a similar structure for the provided natural disaster scenario, adhering STRICTLY to the JSON format and ensuring at least two main branches are present.
+                    """
+    else:
+
+        attack_tree_system_message = """
                     Generate a hierarchical structure of a probable attack tree, based on the MITRE ATT@CK framework for Industrial Control Systems (ICS) applied to and specific to the given OT cybersecurity scenario, in a strictly valid JSON format. Incorporate relevant terminology from ISA 62443-3-2 if applicable. The structure should use 'name' for node labels and 'children' for nested nodes, where each node represents a step or method in the attack. The attack tree must have at least two main branches, each potentially containing dozens of branches or sub-branches. CRITICAL INSTRUCTION: Ensure the output is in JSON format WITH NO additional characters outside of the JSON structure. The JSON structure should be formatted as: {'name': 'Node Name', 'children': [{...}]}.
 
                     Example of a correctly formatted output:
@@ -466,46 +507,38 @@ def generate_scenario_description_v2(request):
         attacker = request.POST.get('attacker', '').strip()
         attack_vector = request.POST.get('attackVector', '').strip()
         target_component = request.POST.get('targetComponent', '').strip()
-        attack_effect = request.POST.get('attackEffect', '').strip()
+        intended_attack_effect = request.POST.get('attackEffect', '').strip()
         target_system = request.POST.get('targetSystem', '').strip()
         impact = request.POST.get('impact', '').strip()
         motivation = request.POST.get('motivation', '').strip()
         country = request.POST.get('country', '').strip()
         industry = request.POST.get('industry', '').strip()
         facility_type = request.POST.get('facility_type', '').strip()
-        regulatory_environment = request.POST.get('regulations', '').strip()
+        # regulatory_environment = request.POST.get('regulations', '').strip()
         severity = request.POST.get('severity', '').strip()
         detection_response = request.POST.get('detectionResponse', '').strip()
         preventive_measures = request.POST.get('preventiveMeasures', '').strip()
 
         # Reading new checkbox values
         active_ops = request.POST.get('active_ops', 'false').lower() == 'true'
-        cyber_insurance = request.POST.get('cyber_insurance', 'false').lower() == 'true'
-        bc_plan = request.POST.get('bc_plan', 'false').lower() == 'true'
+        # cyber_insurance = request.POST.get('cyber_insurance', 'false').lower() == 'true'
+        # bc_plan = request.POST.get('bc_plan', 'false').lower() == 'true'
 
         # Constructing the prompt
         prompt = f"""
-        IMPORTANT: NARRATIVE MUST BE IN {request.session.get('organization_defaults', {}).get('language', 'en')}. Construct a scenario based on the following details, ensuring the narrative focuses on the sequence of actions and events without detailing the consequences. The scenario MUST illustrate a realistic cybersecurity attack against operational technology (OT) and industrial control systems (ICS) within the specified environment, considering operational context and defensive measures. IMPORTANT. The scenario is part of a CYBER HAZOPS assessment using the LOPA methodology. Ensure the scenario description is aligned with this requirement:
+        Construct a focused scenario for a CYBER HAZOPS assessment using LOPA methodology, detailing a credible cybersecurity attack against operational technology and industrial control systems. The narrative must be factual, concise, and limit to 200 words, without detailing the consequences or long-term impacts:
 
         - Attacker: {attacker}
         - Attack Vector: {attack_vector}
         - Target Component: {target_component}
-        - Effect of Attack: {attack_effect}
+        - Intended effect of Attack: {intended_attack_effect}
         - Target System/Network: {target_system}
-        - Potential Immediate Impact: {impact}
-        - Hazops Guidewords: {motivation}
+        - Country: {country}
+        - Industry: {industry}
         - Facility Type: {facility_type}
-        - Industry Sector: {industry}
-        - Country {country}
-        - Regulatory Environment: {regulatory_environment}
+        - Active operations: {'Yes' if active_ops else 'No'}
 
-        Additional Context:
-        - Are active operations underway? {'Yes' if active_ops else 'No'}
-        - Is there cyber insurance cover? {'Yes' if cyber_insurance else 'No'}
-        - Is there a business continuity plan in place? {'Yes' if bc_plan else 'No'}
-
-        Use this information to generate a concise scenario as a very fact-based technical brief , under 200 words, formatted as coherent paragraphs. Avoid detailing long-term consequences or broad impacts. Avoid repeating information given in the scenario description. Focus solely on the attack's progression. 
-        IMPORTANT INSTRUCTIONS: DO not speculate on mitigation. Do not speculate on what the scenario underscores or illustrate. Do not waste words on describing the facility or using descriptive language. Do not use unnecessary description or terms. Use concise HAZOPS terminology. DO NOT LIST THE GUIDEWORDS. ). 
+        Use this information to generate a scenario focusing solely on the attack's progression. Do not speculate on mitigation or describe the facility in detail. Use precise and concise language.
         """
 
         # Setting OpenAI API key

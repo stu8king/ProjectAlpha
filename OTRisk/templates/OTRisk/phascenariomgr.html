@@ -446,6 +446,7 @@ svg {
     height: 1.75em;
     }
 }
+
 </style>
 <script>
 
@@ -666,8 +667,8 @@ document.addEventListener("DOMContentLoaded", function() {
 
                 </div>
 
-            <div class="text-label" style="padding-left: 250px; font-size: 20px;">
-                <label id="echo_scenario" class="form-group"  style="word-wrap: normal;font-size: small; width: 50%; "></label><br>
+            <div class="text-label" style="padding-left: 250px; ">
+                <label id="echo_scenario" class="form-group"  style="word-wrap: normal;width: 98%; visibility: hidden"></label><br>
                 <div class="progress" style="display:none;" id="loadingProgressBar">
                     <div class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" id="progressBarInner"></div>
                 </div>
@@ -682,8 +683,8 @@ document.addEventListener("DOMContentLoaded", function() {
             <li><a href="#" data-tab="tab1" class="tab-link">Scenario Table</a></li>
             <li><a href="#" data-tab="tab2" class="tab-link tab-inactive">Scenario Detail</a></li>
 
-            <li><a href="#" data-tab="tab4" class="tab-link tab-inactive">Business Impact Assessment</a></li>
-            <li><a href="#" data-tab="tab11" class="tab-link tab-inactive">Observations</a></li>
+            <li><a href="#" data-tab="tab3" class="tab-link tab-inactive">Business Impact Assessment</a></li>
+            <li><a href="#" data-tab="tab4" class="tab-link tab-inactive">Observations</a></li>
             <li><a href="#" data-tab="tab5" class="tab-link tab-inactive">Physical Safeguards</a></li>
             <li><a href="#" data-tab="tab6" class="tab-link tab-inactive">Risk Outcomes</a></li>
             <li><a href="#" data-tab="tab7" class="tab-link tab-inactive">Financial Analysis</a></li>
@@ -696,13 +697,14 @@ document.addEventListener("DOMContentLoaded", function() {
 <script>
 function updateEchoScenario() {
         var activeTab = $('.tab-link.active').attr('data-tab');
-        // Check if the active tab is between tab3 and tab10
-        if (activeTab && parseInt(activeTab.replace('tab', '')) > 2) {
+        var txtScenario = $('#id_txtScenario').val();
+         var activeTabIndex = parseInt(activeTab.replace('tab', ''));
+        if (activeTab && activeTabIndex >= 3 && activeTabIndex <= 10 && txtScenario) {
             // Update the echo_scenario label with the content of the id_txtScenario textbox
-            $('#echo_scenario').text($('#id_txtScenario').val());
+            $('#echo_scenario').text(txtScenario).css('visibility', 'visible');
         } else {
             // Clear the echo_scenario label
-            $('#echo_scenario').text('');
+            $('#echo_scenario').text('').css('visibility', 'hidden');
         }
     }
 
@@ -1352,29 +1354,7 @@ $(document).ready(function() {
 
 
         </div>
-         <div class="tab-content " id="tab3">
-            <h2>Scenario Parameters</h2>
-
-            <div class="row">
-                <div class="col-md-6">
-
-                    <div class="row">
-                        <div class="col">
-
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                <div class="form-group">
-
-        </div>
-
-            </div>
-            </div>
-         </div>
-
-
-         <div class="tab-content " id="tab4">
+        <div class="tab-content " id="tab3">
             <h2>Business Impact Assessment</h2>
             <div class="row">
 
@@ -1615,7 +1595,7 @@ $(document).ready(function() {
 
 
         </div>
-        <div class="tab-content" id="tab11">
+        <div class="tab-content" id="tab4">
             <h2>Risk and Vulnerability Observations</h2>
             <div class="card mb-3 shadow-sm">
                 <div class="card-body">
@@ -1829,8 +1809,7 @@ $(document).ready(function() {
             </div>
             <br>
             <div class="row">
-                <div class="col-lg-1 col-md-1 col-sm-1 flex-fill d-flex">
-                </div>
+
                 <div class="col-lg-10 col-md-10 col-sm-10 flex-fill d-flex">
                 <div class="card mb-3 shadow-sm w-100 elegant-card">
                     <div class="card-body">
@@ -1838,16 +1817,13 @@ $(document).ready(function() {
                     </div>
                 </div>
                 </div>
-                <div class="col-lg-1 col-md-1 col-sm-1 flex-fill d-flex">
+
 
                 </div>
             </div>
 
-        </div>
         <div class="tab-content " id="tab8">
             <h2>Compliance Map</h2>
-
-
                 <div class="form-group">
                     <table id="compliance_map" class=" table-hover small small-font overflow-auto compact" style="width:95%">
                         <thead>
@@ -1861,7 +1837,7 @@ $(document).ready(function() {
                                 <!-- Rows will be added dynamically by JavaScript -->
                          </tbody>
                     </table>
-                    <textarea id="compliance_map" name="compliance_map" rows="1" width="1%" readonly style="resize: none; visibility: hidden"></textarea>
+                    <textarea id="compliance_map_text" name="compliance_map_text" rows="1" width="1%" readonly style="resize: none; visibility: hidden"></textarea>
 
                 </div>
 
@@ -2283,7 +2259,7 @@ $(document).ready(function() {
                   // Check if the "yes" option was selected for outage
                   const outageSelector = document.getElementById('outageYes');
                   const outage = outageSelector.value === "yes" ? "yes" : "no";
-                  const compliance_map = document.getElementById('compliance_map').value;
+                  const compliance_map = document.getElementById('compliance_map_text').value;
                   const attack_tree_text = document.getElementById('attack_tree_text').value;
                   const scenario_status = document.getElementById('scenarioStatusSelect').value;
                   const cost_projection = document.getElementById('scenario_12month_costs').value;
@@ -3851,7 +3827,7 @@ $('#scenarioSelectModal').on('show.bs.modal', function (e) {
                             textValue = "High";
                         }
 
-                        document.getElementById('compliance_map').value = response.scenario_compliance_data;
+                        document.getElementById('compliance_map_text').value = response.scenario_compliance_data;
                         // Destroy existing DataTable instance if it exists
                         if ($.fn.DataTable.isDataTable('#compliance_map')) {
                             $('#compliance_map').DataTable().destroy();
@@ -4664,7 +4640,7 @@ function clearScenario(){
 
         $('#sle').val(data.sle);
 
-        $('#compliance_map').val(data.compliance_map);
+        $('#compliance_map_text').val(data.compliance_map);
 
         try {
             var formattedText = data.cost_justification.replace(/\. /g, ".\n\n");
@@ -4931,7 +4907,8 @@ function clearScenario(){
         // Clear the container before creating a new chart
         document.getElementById(containerId).innerHTML = '';
 
-        var chart = anychart.column();
+        // Create a line chart
+        var chart = anychart.line();
         chart.data(data);
 
         // Set the chart title
@@ -4948,7 +4925,17 @@ function clearScenario(){
         var yAxis = chart.yAxis();
         yAxis.title("Cost in USD");
 
-        var series = chart.getSeries(0);
+        // Configure the line series
+        var series = chart.line(data);
+        series.hovered().markers()
+              .enabled(true)       // Enable markers on hover
+              .type('circle')      // Marker type as circle
+              .size(4);            // Marker size
+        series.markers()
+              .enabled(true)       // Enable markers for all points
+              .type('circle')      // Marker type as circle
+              .size(3);            // Marker size
+
         series.labels(true);
         series.labels()
             .position("above")
@@ -4967,6 +4954,7 @@ function clearScenario(){
         chart.draw();
     });
 }
+
 
     function disableScenarioControls() {
     // Disable all input, textarea, button, and select elements except those specified

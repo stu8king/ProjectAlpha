@@ -15,6 +15,32 @@ from accounts.models import Organization, UserProfile
 import feedparser
 from bs4 import BeautifulSoup
 import json
+import requests
+
+
+def fetch_weather_alerts(latitude, longitude, api_key):
+    """Fetch weather alerts for a specific latitude and longitude using OpenWeatherMap API."""
+    url = f"https://api.openweathermap.org/data/2.5/onecall?lat={latitude}&lon={longitude}&appid={api_key}&exclude=current,minutely,daily,hourly"
+    response = requests.get(url)
+    data = response.json()
+    alerts = data.get('alerts', [])
+    return alerts
+
+
+def enhance_facilities_with_alerts(facilities_data, api_key):
+    """Append weather alerts to each facility record after cleaning text fields."""
+    for facility in facilities_data:
+        # Clean each text field in the facility data
+        for key in ['FacilityName', 'facilityAddress', 'facilityCity', 'facilityState', 'facilityCode', 'country']:
+            if key in facility:
+                facility[key] = clean_text(facility[key])
+
+        # Fetch weather alerts for each facility based on its latitude and longitude
+        alerts = fetch_weather_alerts(facility['facilityLat'], facility['facilityLong'], api_key)
+
+        # Add alert information to the facility data
+        facility['WeatherAlerts'] = alerts
+    return facilities_data
 
 
 def process_summary_html(summary):
@@ -115,6 +141,12 @@ def parse_compliance_map(compliance_maps):
     sorted_regulation_list = sorted(regulation_dict.values(), key=lambda x: x['count'], reverse=True)
     return sorted_regulation_list
 
+
+def clean_text(text):
+    """Clean string by escaping problematic characters."""
+    if text is None:
+        return text
+    return text.replace('\n', ' ').replace('\r', ' ').replace('\t', ' ').strip()
 
 
 @login_required()
@@ -238,7 +270,7 @@ def dashboardhome(request):
     )
 
     pha_finance_scores_list = list(
-        tblCyberPHAScenario.objects.filter(userID__in=organization_users,Deleted=0)
+        tblCyberPHAScenario.objects.filter(userID__in=organization_users, Deleted=0)
         .values('impactFinance')
         .annotate(count=Count('ID'))
         .order_by('impactFinance')
@@ -375,10 +407,6 @@ def dashboardhome(request):
             heatmap_data[key[0]] = {}
         heatmap_data[key[0]][key[1]] = value
 
-    sunburst_data = tblCyberPHAHeader.objects.filter(UserID__in=organization_users).values('country', 'Industry',
-                                                                                           'FacilityType')
-    sunburst_processed_data = process_data(sunburst_data)
-
     # Query the last 100 audit logs for this organization
     last_100_logs = auditlog.objects.filter(
         user_profile__organization_id=user_organization_id
@@ -425,8 +453,6 @@ def dashboardhome(request):
     else:
         worksheets_to_approve_list = "No approvals for action"
 
-    security_week = fetch_securityweek_news()
-    dark_reading = fetch_darkreading_news()
     # Fetch facilities data
     facilities_data = tblCyberPHAHeader.objects.filter(UserID__in=organization_users, Deleted=0).values(
         'ID', 'FacilityName', 'facilityLat', 'facilityLong', 'facilityAddress',
@@ -435,10 +461,25 @@ def dashboardhome(request):
 
     # Convert QuerySet to a list of dictionaries
     facilities_list = list(facilities_data)
+    enhanced_facilities = enhance_facilities_with_alerts(facilities_list, '8236a6bcf0f655f403719ef41eeb516b')
+
+    facilities_aggregate = tblCyberPHAHeader.objects.filter(
+        UserID__in=organization_users,
+        Deleted=0
+    ).values('FacilityName').annotate(
+        TotalRevenue=Sum('annual_revenue')
+    ).aggregate(
+        UniqueFacilities=Count('FacilityName', distinct=True),
+        TotalFacilityRevenue=Sum('TotalRevenue')
+    )
+    # Format total revenue in millions with 'm' suffix
+    if facilities_aggregate['TotalFacilityRevenue']:
+        total_facility_revenue = "${:,.0f}m".format(facilities_aggregate['TotalFacilityRevenue'] / 1_000_000)
+    else:
+        total_facility_revenue = "$0m"
 
     # Serialize data for JavaScript usage using json.dumps
-    facilities_json = json.dumps(facilities_list)
-
+    facilities_json = json.dumps(enhanced_facilities)
     context = {
         'records_by_business_unit_type': list(records_by_business_unit_type),
         'records_by_status_flag': list(records_by_status_flag),
@@ -459,7 +500,6 @@ def dashboardhome(request):
         'total_sle': total_sle,
         'total_scenario_cost': total_scenario_cost,
         'heatmap_data': json.dumps(heatmap_data),
-        'sunburst_processed_data': sunburst_processed_data,
         'bia_summary': bia_summary,
         'pha_bia_summary': pha_bia_summary,
         'pha_risk_summary': pha_risk_summary,
@@ -470,10 +510,10 @@ def dashboardhome(request):
         'groups_with_cyberphas': groups_with_cyberphas,
         'worksheets_to_approve': worksheets_to_approve_list,
         'ra_worksheets_with_scenario_count': ra_worksheets_with_scenario_count_list,
-        'security_week': security_week,
-        'dark_reading': dark_reading,
         'compliance_summary': compliance_summary,
         'facilities_data': facilities_json,
+        'unique_facility_count': facilities_aggregate['UniqueFacilities'],
+        'total_facility_revenue': total_facility_revenue
     }
 
     return render(request, 'dashboard.html', context)
@@ -651,20 +691,20 @@ def get_group_report(request):
     avg_sle = round(scenarios.aggregate(Avg('sle'))['sle__avg'] or 0, 0)
 
     return JsonResponse({
-            'cyberphas': list(cyberphas_details),
-            'avg_imageSafety': avg_imageSafety,
-            'avg_impactDanger': avg_impactDanger,
-            'avg_impactProduction': avg_impactProduction,
-            'avg_pha_Score': avg_pha_Score,
-            'avg_assessment_Score': avg_assessment_Score,
-            'avg_imageFinance': avg_imageFinance,
-            'avg_impactReputation': avg_impactReputation,
-            'avg_impactEnvironment': avg_impactEnvironment,
-            'avg_imageRegulation': avg_imageRegulation,
-            'avg_impactData': avg_impactData,
-            'avg_impactSupply': avg_impactSupply,
-            'avg_sle': avg_sle
-        })
+        'cyberphas': list(cyberphas_details),
+        'avg_imageSafety': avg_imageSafety,
+        'avg_impactDanger': avg_impactDanger,
+        'avg_impactProduction': avg_impactProduction,
+        'avg_pha_Score': avg_pha_Score,
+        'avg_assessment_Score': avg_assessment_Score,
+        'avg_imageFinance': avg_imageFinance,
+        'avg_impactReputation': avg_impactReputation,
+        'avg_impactEnvironment': avg_impactEnvironment,
+        'avg_imageRegulation': avg_imageRegulation,
+        'avg_impactData': avg_impactData,
+        'avg_impactSupply': avg_impactSupply,
+        'avg_sle': avg_sle
+    })
 
 
 def get_likelihood_category(likelihood):
