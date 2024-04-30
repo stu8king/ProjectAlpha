@@ -696,17 +696,26 @@ document.addEventListener("DOMContentLoaded", function() {
 
 <script>
 function updateEchoScenario() {
-        var activeTab = $('.tab-link.active').attr('data-tab');
-        var txtScenario = $('#id_txtScenario').val();
-         var activeTabIndex = parseInt(activeTab.replace('tab', ''));
-        if (activeTab && activeTabIndex >= 3 && activeTabIndex <= 10 && txtScenario) {
+    var activeTab = $('.tab-link.active').attr('data-tab');
+    var txtScenario = $('#id_txtScenario').val();
+
+    // Check if activeTab is defined before trying to replace or parse it
+    if (activeTab && txtScenario) {
+        var activeTabIndex = parseInt(activeTab.replace('tab', ''));
+        // Further checks to ensure activeTabIndex falls within the required range
+        if (activeTabIndex >= 3 && activeTabIndex <= 10) {
             // Update the echo_scenario label with the content of the id_txtScenario textbox
             $('#echo_scenario').text(txtScenario).css('visibility', 'visible');
         } else {
-            // Clear the echo_scenario label
+            // Clear the echo_scenario label if the activeTabIndex is not within the range
             $('#echo_scenario').text('').css('visibility', 'hidden');
         }
+    } else {
+        // Clear the echo_scenario label if activeTab or txtScenario is not defined
+        $('#echo_scenario').text('').css('visibility', 'hidden');
     }
+}
+
 
 
 $(document).ready(function() {

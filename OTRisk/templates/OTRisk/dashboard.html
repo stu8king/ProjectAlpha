@@ -139,6 +139,48 @@
         height: 30vh; /* Adjust this value based on your needs */
         width: 100%; /* Ensures the chart container fills the width of its parent */
     }
+
+    #groupLineChartContainer {
+    width: 100%;     /* Takes the full width of its parent */
+    height: 60vh;    /* Adjust based on your layout needs */
+    min-height: 300px; /* Provides a minimum height for smaller screens */
+}
+/* Ensure each column and group container have the same width and height */
+.row .col-md-4 {
+    display: flex;
+    flex-direction: column;
+}
+
+.group-container {
+    background: #495057; /* Light grey background, can be changed */
+    border: 1px solid #ccc; /* Add a subtle border */
+    margin: 8px;
+    flex-grow: 1; /* Allows the container to grow to fill the column if needed */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* Distributes space evenly */
+    height: 100%; /* Full height of the parent column */
+}
+
+.group-header, .group-body {
+    padding: 10px;
+}
+
+.group-body {
+    overflow-y: auto; /* Adds scroll to the body if content exceeds the container height */
+    flex-grow: 1; /* Allows the body to grow and take up available space */
+}
+
+.cyberpha-item {
+    display: flex;
+    align-items: center; /* Centers items vertically */
+    margin-bottom: 5px; /* Adds space between items */
+}
+
+.cube-icon {
+    margin-right: 5px; /* Space between icon and text */
+}
+
 </style>
 
 </head>
@@ -741,44 +783,104 @@
 </div>
 <script>
 function getGroupReport(groupId) {
+    // Fetch detailed data for the selected group
     $.ajax({
-        url: '/OTRisk/get_group_report',  // Update with the actual URL
+        url: '/OTRisk/get_group_report',  // Ensure this URL is correct in your application context
         data: { 'group_id': groupId },
         success: function(data) {
-            // Create a table for the CyberPHAs with the specific styling
-            var tableHtml = '<table id="headertable" class="table small-font compact"><thead><tr><th class="th">Title</th><th>Facility Name</th><th>Facility Type</th><th>Industry</th><th>Employees On Site</th></tr></thead><tbody style="font-size: 10px">';
-            data.cyberphas.forEach(function(cyberpha) {
-                tableHtml += '<tr class="selectable-row">' +
-                             '<td>' + cyberpha.title + '</td>' +
-                             '<td>' + cyberpha.FacilityName + '</td>' +
-                             '<td>' + cyberpha.FacilityType + '</td>' +
-                             '<td>' + cyberpha.Industry + '</td>' +
-                             '<td>' + cyberpha.EmployeesOnSite + '</td>' +
-                             '</tr>';
-            });
-            tableHtml += '</tbody></table>';
 
-            // Ensure the table container is specifically targeted and not overwritten by averages content
-            $('#cyberphasTableContainer').html(tableHtml);
-            drawGauge(data.avg_pha_Score, 'pha_gauge', 'Group Average PHA Rating /100');
-            drawGauge(data.avg_assessment_Score, 'assessment_gauge', 'Group Average Control Score');
-            drawBarChart(data);
-             var formattedSLE = new Intl.NumberFormat('en-US', {
-                style: 'currency',
-                currency: 'USD',
-                minimumFractionDigits: 0, // No decimal places
-                maximumFractionDigits: 0, // No decimal places
-            }).format(data.avg_sle);
+            drawLineChart(data.avg_scores, 'groupLineChartContainer', data.group_name, false);
 
-            // Set the formatted value to the container
-            $('#group_sle').text(formattedSLE);
-
-            // Make sure tab8 is displayed
+            // Show the active tab
             $('.tab-content').removeClass('active').hide();
             $('#tab8').addClass('active').show();
         }
     });
+
+    // Fetch scores for all groups for comparison
+    $.ajax({
+        url: '/OTRisk/get_all_groups_scores',  // This is the new endpoint to fetch average scores for all groups
+        success: function(response) {
+            populateGroupList(response.allGroupsData, groupId);
+        }
+    });
 }
+
+function drawLineChart(data, container, groupName, add) {
+    var chartContainer = document.getElementById(container);
+
+    // Initialize the chart only if it hasn't been already
+    if (!chartContainer.anychartInstance) {
+        var chart = anychart.line();
+        chart.title("Group Business Impact Analysis Comparison");
+
+        // Setting up the scales
+        chart.yScale().minimum(0).maximum(10); // Adjust according to your scale
+
+        // Configure grids
+        // Enable horizontal grid
+        chart.yGrid().enabled(true);
+        chart.yGrid().stroke({ color: "#E0E0E0", thickness: 1, dash: '5 5' }); // Customize the grid line style
+
+        // Enable vertical grid
+        chart.xGrid().enabled(true);
+        chart.xGrid().stroke({ color: "#E0E0E0", thickness: 1, dash: '5 5' }); // Customize the grid line style
+
+        chart.container(container);
+        chart.draw();
+        chart.legend(true); // Enable legend
+
+        // Disable credits
+        var credits = chart.credits();
+        credits.enabled(false);
+
+        // Store the chart instance for future reference
+        chartContainer.anychartInstance = chart;
+    }
+
+    var chart = chartContainer.anychartInstance;
+
+    if (add) {
+        // If we're adding a series to the existing chart
+        var series = chart.line(data.map(item => ({x: item.name, value: item.value})));
+        series.name(groupName);
+    } else {
+        // If we're not adding, clear all series and add a new one
+        chart.removeAllSeries();
+        var series = chart.line(data.map(item => ({x: item.name, value: item.value})));
+        series.name(groupName);
+    }
+}
+
+
+function populateGroupList(groupsData, currentGroupId) {
+    var listContainer = document.getElementById('otherGroupsList');
+    listContainer.innerHTML = '';  // Clear previous entries
+
+    groupsData.forEach(group => {
+        var listItem = document.createElement('div');
+        var label = document.createElement('label');
+        label.textContent = group.group_name + ': ';
+        var selectButton = document.createElement('input');
+        selectButton.type = 'checkbox';
+        selectButton.dataset.groupId = group.id;  // Store group ID in dataset for easy access
+        selectButton.onchange = function() {
+            drawLineChart(group.avg_scores, 'groupLineChartContainer', group.group_name, this.checked);
+        };
+
+        listItem.appendChild(label);
+        listItem.appendChild(selectButton);
+        listContainer.appendChild(listItem);
+
+        // Automatically check the checkbox for the current group but don't redraw the chart
+        if (parseInt(group.id) === parseInt(currentGroupId)) {
+            selectButton.checked = true;
+        }
+    });
+}
+
+
+
 
 </script>
 
@@ -846,34 +948,27 @@ function getGroupReport(groupId) {
         </div>
     </div>
 
-     <div class="tab-content tab-link"  id="tab8">
-        <h2>Group Report</h2>
-        <div class="form-group">
-         <div class="row" >
+    <div class="tab-content tab-link" id="tab8">
+    <h2>Risk Group Report</h2>
+    <div class="form-group">
+        <div class="row">
+            <div class="col-md-3">
 
-             <div class="col-md-3">
-                 <div id="pha_gauge"></div>
-                 <div id="assessment_gauge"></div>
-             </div>
+                <div id="otherGroupsList" style="max-height: 100%; overflow-y: auto;">
+                    <!-- Dynamically filled with JavaScript -->
+                </div>
+            </div>
+            <div class="col-md-9">
+                <div id="groupLineChartContainer">
+                    <!-- Line chart will be rendered here -->
+                </div>
+            </div>
+        </div>
 
-             <div class="col-md-6">
-                 <div id="impactScore_gauge"></div>
-             </div>
-             <div class="col-md-3">
-                 <div class="group-container">
-                        <div class="group-header" style="font-size: medium">
-                            Group Average Scenario SLE
-                        </div>
-                            <div class="group-body" id="group_sle">
+    </div>
+</div>
 
-                            </div>
-                        </div>
-             </div>
-                 </div>
-         </div>
-         <div id="cyberphasTableContainer"></div>
 
-     </div>
     <div class="tab-content tab-link" id="tab9">
         <h2>Heatmap Report</h2>
          <div id="heatmapTableContainer"></div>

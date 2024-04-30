@@ -125,9 +125,12 @@ def iotaphamanager(request, record_id=None):
             is_new_record = True
             pha_header = tblCyberPHAHeader()
 
-        pha_header.title = request.POST.get('txtTitle')
-        pha_header.PHALeader = request.POST.get('txtLeader')
-        pha_header.PHALeaderEmail = request.POST.get('txtLeaderEmail')
+        PHATitle = request.POST.get('txtTitle')
+        pha_header.title = PHATitle if PHATitle else "Not Given"
+        PHALeaderName = request.POST.get('txtLeader')
+        pha_header.PHALeader = PHALeaderName if PHALeaderName else "Not Given"
+        PHALeaderEmail = request.POST.get('txtLeaderEmail')
+        pha_header.PHALeaderEmail = PHALeaderEmail if PHALeaderEmail else "Not Given"
         pha_header.FacilityName = request.POST.get('txtFacility')
         pha_header.Industry = request.POST.get('selIndustry')
         pha_header.FacilityType = request.POST.get('selFacilityType')
@@ -206,7 +209,7 @@ def iotaphamanager(request, record_id=None):
         pha_header.last_assessment_score = int(request.POST.get('last_assessment_score') or 0)
 
         pha_header.last_assessment_summary = request.POST.get('last_assessment_summary') or ''
-        pha_header.npm = request.POST.get('npm')
+        pha_header.npm = int(request.POST.get('npm') or 0)
 
         # Continue with the rest of the processing
 
@@ -235,6 +238,7 @@ def iotaphamanager(request, record_id=None):
 
         cyber_insurance_value = request.POST.get('cyber_insurance')
         pha_header.cyber_insurance = False if cyber_insurance_value is None else bool(cyber_insurance_value)
+        pha_header.is_default = request.POST.get('defaultFacility') == 'on'
         has_ir_plan = request.POST.get('ir_plan') == 'on'  # Checkbox 'on' if checked
         ir_plan_date_str = request.POST.get('ir_plan_date')
         ir_plan_never_tested = request.POST.get('ir_plan_ut') == 'on'
@@ -384,6 +388,7 @@ def iotaphamanager(request, record_id=None):
         # First, remove existing moderators for this PHA record
         CyberPHAModerators.objects.filter(pha_header=pha_header).delete()
         # Get the list of selected moderator IDs from the form
+        print(request.POST.get('targetDate'))
         selected_moderators_ids = request.POST.getlist('moderator')
         # Get the target date from the form
 
@@ -553,6 +558,7 @@ def get_headerrecord(request):
         'plan_last_tested_date': headerrecord.plan_last_tested_date.strftime(
             '%Y-%m-%d') if headerrecord.plan_last_tested_date else None,
         'plan_never_tested': headerrecord.plan_never_tested,
+        'is_default': headerrecord.is_default
     }
 
     # Query for moderators associated with this header record
@@ -2682,3 +2688,66 @@ def assessment_gap_analysis(request):
         return JsonResponse({'gaps': gaps})  # Send structured data
     except Exception as e:
         return JsonResponse({'error': f"API error: {str(e)}"}, status=500)
+
+
+@login_required
+def load_default_facility(request):
+    user_organization_id = get_user_organization_id(request)
+    organization_users = get_organization_users(user_organization_id)
+
+    try:
+
+        default_facility = tblCyberPHAHeader.objects.filter(
+            UserID__in=organization_users,
+            is_default=True,  # Assuming is_default is a BooleanField
+            Deleted=0
+        ).first()
+
+        investments = CyberSecurityInvestment.objects.filter(cyber_pha_header=default_facility).values(
+            'id', 'investment_type', 'vendor_name', 'product_name', 'cost', 'date'
+        )
+        investments_data = list(investments)
+        if not default_facility:
+            return JsonResponse({'error': 'No default facility found.'}, status=404)
+
+        # Serialize facility data
+        facility_data = {
+            'title': default_facility.title,
+            'leader': default_facility.PHALeader,
+            'leaderemail': default_facility.PHALeaderEmail,
+            'unit': default_facility.AssessmentUnit,
+            'facility': default_facility.FacilityName,
+            'facilitytype': default_facility.FacilityType,
+            'assessment_id': default_facility.assessment,
+            'zone': default_facility.AssessmentZone,
+            'sl_t': default_facility.sl_t,
+            'startdate': default_facility.AssessmentStartDate.strftime('%Y-%m-%d') if default_facility.AssessmentStartDate else '',
+            'enddate': default_facility.AssessmentEndDate.strftime('%Y-%m-%d') if default_facility.AssessmentEndDate else '',
+            'safetysummary': default_facility.safetySummary,
+            'chemicalsummary': default_facility.chemicalSummary,
+            'physicalsummary': default_facility.physicalSummary,
+            'othersummary': default_facility.otherSummary,
+            'compliancesummary': default_facility.complianceSummary,
+            'threatSummary': default_facility.threatSummary,
+            'insightSummary': default_facility.insightSummary,
+            'strategySummary': default_facility.strategySummary,
+            'country': default_facility.country,
+            'shift_model': default_facility.shift_model,
+            'EmployeesOnSite': default_facility.EmployeesOnSite,
+            'annual_revenue': default_facility.annual_revenue,
+            'cyber_insurance': default_facility.cyber_insurance,
+            'address': default_facility.facilityAddress,
+            'facilityLat': default_facility.facilityLat,
+            'facilityLong': default_facility.facilityLong,
+            'facilityAQI': default_facility.facilityAQI,
+            'facilityCity': default_facility.facilityCity,
+            'facilityState': default_facility.facilityState,
+            'facilityCode': default_facility.facilityCode,
+        }
+
+        return JsonResponse({'headerrecord': facility_data,
+                             'investments': investments_data,})
+
+    except Exception as e:
+        print(e)
+        return JsonResponse({'error': str(e)}, status=500)

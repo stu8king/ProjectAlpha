@@ -871,117 +871,107 @@ function loadScenarioDetails(scenarioId) {
         url: `/OTRisk/retrieve_scenario_builder_v2/${scenarioId}`,
         type: "GET",
         success: function(response) {
+    $('#monthly_cost_chart').empty();
+    $('#bia_groups').empty();
+    $('#investmentImpactVisualization').empty();
+    $('#attack_tree').empty();
+    $('#related_incidents').html('');
 
-        $('#monthly_cost_chart').empty();
-        $('#bia_groups').empty();
-        $('#investmentImpactVisualization').empty();
-        $('#attack_tree').empty();
-        $('#related_incidents').html('');
+    $('#txtScenario').val(response.scenario_description);
+    $('#txtConsequences').val(response.consequences);
+    var costs = response.costs;
+    $('#txtBestCase').val(costs.bestCase);
+    $('#txtMostLikelyCase').val(costs.mostLikelyCase);
+    $('#txtWorstCase').val(costs.worstCase);
+    var decodedText = atob(response.investment_projection);
+    $('#txthdninvestmentstring').val(response.investment_projection);
+    $('#selIndustry').val(response.industry).trigger('change');
+    $('#selFacilityType').val(response.facility).trigger('change');
+    $('#countrySelector').val(response.country).trigger('change');
+    $('#selOrganizationSize').val(response.org).trigger('change');
+    $('#selRegulatoryEnvironment').val(response.regs).trigger('change');
+    $('#selThreats').val(response.attacker);
+    $('#selVectors').val(response.vector);
+    $('#targetComponent').val(response.target);
+    $('#attackEffect').val(response.effect);
+    $('#targetSystem').val(response.network);
+    $('#impact').val(response.impact);
+    $('#motivation').val(response.motivation);
+    $('#hdnIncidents').val(response.incidents);
 
-        $('#txtScenario').val(response.scenario_description);
-        $('#txtConsequences').val(response.consequences);
-        var costs = response.costs;
-        $('#txtBestCase').val(costs.bestCase); // Set best case cost
-        $('#txtMostLikelyCase').val(costs.mostLikelyCase); // Set most likely case cost
-        $('#txtWorstCase').val(costs.worstCase); // Set worst case cost
-        var decodedText = atob(response.investment_projection);
-        $('#txthdninvestmentstring').val(response.investment_projection);
-        $('#selIndustry').val(response.industry).trigger('change');
-        $('#selFacilityType').val(response.facility).trigger('change');
-        $('#countrySelector').val(response.country).trigger('change');
-        $('#selOrganizationSize').val(response.org).trigger('change');
-        $('#selRegulatoryEnvironment').val(response.regs).trigger('change');
-        $('#selThreats').val(response.attacker);
-        $('#selVectors').val(response.vector);
-        $('#targetComponent').val(response.target);
-        $('#attackEffect').val(response.effect);
-        $('#targetSystem').val(response.network);
-        $('#impact').val(response.impact);
-        $('#motivation').val(response.motivation);
-        $('#hdnIncidents').val(response.incidents);
+    renderInvestmentImpact(decodedText);
 
-        renderInvestmentImpact(decodedText);
+    var costArray = response.cost_projection.split('|').map(Number);
+    createCostChart('monthly_cost_chart', costArray);
 
-        var costArray = response.cost_projection.split('|').map(Number);
-        createCostChart('monthly_cost_chart', costArray);
+    $('#hdnAT').val(response.attack_tree_data);
 
-        $('#hdnAT').val(response.attack_tree_data);
+    var jsonObject = JSON.parse(response.attack_tree_data);
+    drawAttackTree(jsonObject);
 
-        var jsonObject = JSON.parse(response.attack_tree_data);
-        drawAttackTree(jsonObject);
+    // Clear existing BIA groups content
+    var biaGroupsContainer = document.getElementById('bia_groups');
+    biaGroupsContainer.innerHTML = '';
 
-        // Clear existing BIA groups content
-        var biaGroupsContainer = document.getElementById('bia_groups');
-        biaGroupsContainer.innerHTML = '';
+    var factors = response.factors;
+    var factorKeys = Object.keys(factors);
+    var rows = [];
 
-        var factors = response.factors; // Assuming this is the object structure as described
-        var factorKeys = Object.keys(factors); // Get all factor names as an array
-        var rows = []; // To keep track of the rows of BIA groups
+    factorKeys.forEach(function(factor, index) {
+        if (index % 3 === 0) {
+            var row = document.createElement('div');
+            row.className = 'row';
+            rows.push(row);
+        }
 
-        factorKeys.forEach(function(factor, index) {
-            // Create a new row every 3 items
-            if (index % 3 === 0) {
-                var row = document.createElement('div');
-                row.className = 'row';
-                rows.push(row);
-            }
+        var groupContainer = document.createElement('div');
+        groupContainer.className = 'group-container col-md-4';
 
-            // Create the group container
-            var groupContainer = document.createElement('div');
-            groupContainer.className = 'group-container col-md-4';
+        var groupHeader = document.createElement('div');
+        groupHeader.className = 'group-header';
+        var icon = document.createElement('img');
+        var factorData = factors[factor];
+        if (factorData.score > 7) {
+            icon.src = "{% static 'images/redcube.png' %}";
+        } else if (factorData.score > 4) {
+            icon.src = "{% static 'images/yellow_cube.png' %}";
+        } else {
+            icon.src = "{% static 'images/green_cube.png' %}";
+        }
+        icon.className = 'cube-icon';
+        icon.alt = 'cube_icon';
+        groupHeader.appendChild(icon);
+        var headerText = document.createTextNode(factor);
+        groupHeader.appendChild(headerText);
+        groupContainer.appendChild(groupHeader);
 
-            // Create the group header
-            var groupHeader = document.createElement('div');
-            groupHeader.className = 'group-header';
-            var icon = document.createElement('img');
-            // Determine the icon based on the score
-            var factorData = factors[factor]; // Get the data for this factor
-            if (factorData.score > 7) {
-                icon.src = "{% static 'images/redcube.png' %}";
-            } else if (factorData.score > 4) {
-                icon.src = "{% static 'images/yellow_cube.png' %}";
-            } else {
-                icon.src = "{% static 'images/green_cube.png' %}";
-            }
-            icon.className = 'cube-icon';
-            icon.alt = 'cube_icon'; // Adjust the alt text as needed
-            groupHeader.appendChild(icon);
-            var headerText = document.createTextNode(factor); // factor is the key from factors object
-            groupHeader.appendChild(headerText);
-            groupContainer.appendChild(groupHeader);
+        var groupBody = document.createElement('div');
+        groupBody.className = 'group-body';
+        var scoreText = document.createElement('strong');
+        scoreText.textContent = factorData.score + '/10. ';
+        groupBody.appendChild(scoreText);
+        var narrativeText = document.createTextNode(factorData.narrative);
+        groupBody.appendChild(narrativeText);
+        groupContainer.appendChild(groupBody);
 
-            // Create the group body
-            var groupBody = document.createElement('div');
-            groupBody.className = 'group-body';
-            // Display the score in bold text out of 10
-            var scoreText = document.createElement('strong');
-            scoreText.textContent = factorData.score + '/10. ';
-            groupBody.appendChild(scoreText);
-            var narrativeText = document.createTextNode(factorData.narrative);
-            groupBody.appendChild(narrativeText);
-            groupContainer.appendChild(groupBody);
+        rows[rows.length - 1].appendChild(groupContainer);
 
-            // Add the group container to the current row
-            rows[rows.length - 1].appendChild(groupContainer);
-
-            // Add the row to the biaGroupsContainer if it's full (3 items) or if it's the last item
-            if ((index + 1) % 3 === 0 || index === factorKeys.length - 1) {
+        if ((index + 1) % 3 === 0 || index === factorKeys.length - 1) {
             biaGroupsContainer.appendChild(rows[rows.length - 1]);
-            }
-        })
-        // Create a table and append it to the 'related_incidents' container
+        }
+    });
+
+    if (response.incidents) {
         var table = $('<table class="table table-striped white-text"><thead><tr><th>Title</th><th>Description</th><th>Date</th><th>URL</th></tr></thead><tbody></tbody></table>');
         $('#related_incidents').append(table);
 
-        // Splitting the generated_summary by lines to get individual incidents
         var incidents = response.incidents.split('\n\n');
-
         incidents.forEach(function(incident) {
             var parts = incident.split('|');
-            if(parts.length === 4) { // Ensure we have all required parts
+            if (parts.length === 4) {
                 var row = $('<tr></tr>');
                 parts.forEach(function(part, index) {
-                    if(index === 3) { // URL part
+                    if (index === 3) {
                         var cell = $('<td class="white-text"></td>').html('<a href="' + part + '" target="_blank">Link</a>');
                     } else {
                         var cell = $('<td class="white-text"></td>').text(part);
@@ -991,23 +981,23 @@ function loadScenarioDetails(scenarioId) {
                 table.find('tbody').append(row);
             }
         });
+    } else {
+        $('#related_incidents').html('<p>No related incidents data available.</p>');
+    }
 
-        // Populate table data, costs, and other fields similarly
-        isProgrammaticChange = true;
-        Swal.fire({
-            title: "Scenario loaded successfully",
-            imageUrl: '/static/images/anzen_owl.png', // Make sure the path is correct
-            imageWidth: 150, // Adjust as necessary
-            imageHeight: 150, // Adjust as necessary
-            background: '#000', // Black background
-            color: '#fff', // Set text color to white
-            customClass: {
-            popup: 'swal2-custom-border' // Apply custom class to the popup/dialog
+    Swal.fire({
+        title: "Scenario loaded successfully",
+        imageUrl: '/static/images/anzen_owl.png',
+        imageWidth: 150,
+        imageHeight: 150,
+        background: '#000',
+        color: '#fff',
+        customClass: {
+            popup: 'swal2-custom-border'
         }
-        }
-        );
+    });
+},
 
-        },
         error: function(xhr, status, error) {
         console.error('Error loading scenario:', error);
         }

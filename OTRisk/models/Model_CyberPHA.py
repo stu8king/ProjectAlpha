@@ -342,6 +342,7 @@ class tblCyberPHAHeader(models.Model):
     plan_last_tested_date = models.DateField(default=timezone.now, verbose_name="Plan Last Tested Date", null=True,
                                              blank=True)
     plan_never_tested = models.BooleanField(default=True, verbose_name="Plan Never Tested")
+    is_default = models.BooleanField(default=False)
 
     def set_workflow_status(self, status):
         WorkflowStatus.objects.create(cyber_pha_header=self, status=status)

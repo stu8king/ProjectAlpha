@@ -274,61 +274,62 @@ var map;
             </div>
             <div class="col-md-1">
                 <button type="button" class="btn nav-link " id="resetButton"><i class="bi bi-plus-circle"></i> New</button>
-                    <script>
-$(document).ready(function() {
-    $('#resetButton').on('click', function() {
-        // SweetAlert confirmation prompt
+                <script>
+                $(document).ready(function() {
+                    $('#resetButton').on('click', function() {
+                        // SweetAlert confirmation prompt
 
-            Swal.fire({
-                title: 'Create new CyberPHA?',
-                text: "Are you sure you want to create a new CyberPHA? Any unsaved data will be lost",
-                imageUrl: '/static/images/anzen_owl.png',
-                imageWidth: 150, // Adjust as necessary
-                imageHeight: 150, // Adjust as necessary
-                background: '#000', // Black background
-                color: '#fff', // Set text color to white
-                showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Yes',
-                cancelButtonText: 'Cancel',
-                customClass: {
-                    popup: 'swal2-custom-border' // Apply custom class to the popup/dialog
+                    Swal.fire({
+                        title: 'Create new CyberPHA?',
+                        text: "Are you sure you want to create a new CyberPHA? Any unsaved data will be lost",
+                        imageUrl: '/static/images/anzen_owl.png',
+                        imageWidth: 150, // Adjust as necessary
+                        imageHeight: 150, // Adjust as necessary
+                        background: '#000', // Black background
+                        color: '#fff', // Set text color to white
+                        showCancelButton: true,
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: 'Yes',
+                        cancelButtonText: 'Cancel',
+                        customClass: {
+                            popup: 'swal2-custom-border' // Apply custom class to the popup/dialog
+                        }
+                }).then((willProceed) => {
+                if (willProceed) {
+                    // User clicked 'Yes, proceed', so execute the reset actions
+                    // Reset textboxes and textareas
+                    $('#txtTitle, #txtLeader, #txtUnit, #txtStartDate, #txtAddress, #txtFacility, #txtLeaderEmail, #txtEndDate, #txtSafetySummary, #txtChemical, #txtPhysical, #txtEmployees, #annual_revenue, #cyber_insurance, #shift_model, #txtOther, #txtCompliance, #strategySummary, #insightSummary, #threatSummary, #zipCode, #txtCity, #txtState ').val('');
+                    $('#negligible_low, #negligible_high, #minor_low, #minor_high,#moderate_low, #moderate_high, #significant_low, #significant_high, #severe_low, #severe_high').val(0);
+                    // Reset select dropdowns
+                    $('#selIndustry, #selFacilityType, #assessment_id, #selZone, #selSL').prop('selectedIndex', 0);
+                    $('#investmentTable tbody').empty();
+                    // Enable the controls
+                    $('#selectFacility, #facilitiesDropdown, #searchButton, #txtTitle, #txtLeader, #txtUnit, #txtStartDate, #txtAddress, #txtFacility, #txtLeaderEmail, #txtEndDate, #txtSafetySummary, #txtChemical, #txtPhysical, #txtOther, #txtCompliance, #strategySummary, #insightSummary, #threatSummary, #selFacilityType, #selIndustry, #selZone, #selSL, #shift_model, #txtEmployees, #annual_revenue, #cyber_insurance, #countrySelector, #btnformSubmit, #risk-assessment-btn, #zipCode, #txtCity, #txtState').prop('disabled', false);
+                    $('#btnformSubmit').prop('disabled', false);
+                    $('#searchButton').prop('disabled', false);
+                    clearContainer('pha_gauge');
+                    clearContainer('control_gauge');
+                    document.getElementById('safetySummaryContainer').innerHTML = '';
+                    document.getElementById('physicalContainer').innerHTML = '';
+                    document.getElementById('otherContainer').innerHTML = '';
+                    document.getElementById('complianceContainer').innerHTML = '';
+                    document.getElementById('threatContainer').innerHTML = '';
+                    document.getElementById('chemicalContainer').innerHTML = '';
+                    document.getElementById('insightContainer').innerHTML = '';
+                    document.getElementById('strategyContainer').innerHTML = '';
+                    document.getElementById("lblCyberPHATitle").textContent = '@';
+                    $('#defaultFacility').prop('checked', false);
+
+                    //reset session variables
+                    sessionStorage.setItem('activeCyberPHA', '0');
+                    // Set the value of the hidden text field
+                    document.getElementById('txtHdnCyberPHAID').value = '0';
+                    $('.tab-content').removeClass('active').hide();
+                    $('.tab-link.tab-inactive').removeClass('tab-inactive');
+                    $('#tab2').addClass('active').show();
                 }
-        }).then((willProceed) => {
-            if (willProceed) {
-                // User clicked 'Yes, proceed', so execute the reset actions
-                // Reset textboxes and textareas
-                $('#txtTitle, #txtLeader, #txtUnit, #txtStartDate, #txtAddress, #txtFacility, #txtLeaderEmail, #txtEndDate, #txtSafetySummary, #txtChemical, #txtPhysical, #txtEmployees, #annual_revenue, #cyber_insurance, #shift_model, #txtOther, #txtCompliance, #strategySummary, #insightSummary, #threatSummary, #zipCode, #txtCity, #txtState ').val('');
-                $('#negligible_low, #negligible_high, #minor_low, #minor_high,#moderate_low, #moderate_high, #significant_low, #significant_high, #severe_low, #severe_high').val(0);
-                // Reset select dropdowns
-                $('#selIndustry, #selFacilityType, #assessment_id, #selZone, #selSL').prop('selectedIndex', 0);
-                $('#investmentTable tbody').empty();
-                // Enable the controls
-                $('#selectFacility, #facilitiesDropdown, #searchButton, #txtTitle, #txtLeader, #txtUnit, #txtStartDate, #txtAddress, #txtFacility, #txtLeaderEmail, #txtEndDate, #txtSafetySummary, #txtChemical, #txtPhysical, #txtOther, #txtCompliance, #strategySummary, #insightSummary, #threatSummary, #selFacilityType, #selIndustry, #selZone, #selSL, #shift_model, #txtEmployees, #annual_revenue, #cyber_insurance, #countrySelector, #btnformSubmit, #risk-assessment-btn, #zipCode, #txtCity, #txtState').prop('disabled', false);
-                $('#btnformSubmit').prop('disabled', false);
-                $('#searchButton').prop('disabled', false);
-                clearContainer('pha_gauge');
-                clearContainer('control_gauge');
-                document.getElementById('safetySummaryContainer').innerHTML = '';
-                document.getElementById('physicalContainer').innerHTML = '';
-                document.getElementById('otherContainer').innerHTML = '';
-                document.getElementById('complianceContainer').innerHTML = '';
-                document.getElementById('threatContainer').innerHTML = '';
-                document.getElementById('chemicalContainer').innerHTML = '';
-                document.getElementById('insightContainer').innerHTML = '';
-                document.getElementById('strategyContainer').innerHTML = '';
-                document.getElementById("lblCyberPHATitle").textContent = '@';
-
-                //reset session variables
-                sessionStorage.setItem('activeCyberPHA', '0');
-                // Set the value of the hidden text field
-                document.getElementById('txtHdnCyberPHAID').value = '0';
-                $('.tab-content').removeClass('active').hide();
-                $('.tab-link.tab-inactive').removeClass('tab-inactive');
-                $('#tab2').addClass('active').show();
-            }
-        });
+            });
     });
 });
 </script>
@@ -473,7 +474,7 @@ $(document).ready(function() {
         <table id="headertable" class="table small-font compact">
         <thead >
             <tr>
-                <th class="th">ID</th>
+                <th class="th" style="visibility:hidden">ID</th>
                 <th>Title</th>
                 <th>Site</th>
                 <th>Type</th>
@@ -491,8 +492,14 @@ $(document).ready(function() {
         <tbody style="font-size: 10px">
             {% for pha_header_records in pha_header_records %}
                 <tr data-id="{{ pha_header_records.ID }}" class="selectable-row">
-                    <td>{{ pha_header_records.ID }}</td>
-                    <td style="font-size: 14px; font-weight: bold">{{ pha_header_records.title }}</td>
+                    <td style="visibility:hidden">{{ pha_header_records.ID }}</td>
+                    <td style="font-size: 14px; font-weight: bold">
+                    {{ pha_header_records.title }}
+                    {% if pha_header_records.is_default %}
+                        (Default Facility)
+                    {% endif %}
+                </td>
+
                     <td>{{ pha_header_records.FacilityName }}</td>
                     <td>{{ pha_header_records.FacilityType }}</td>
                     <td>{{ pha_header_records.PHALeader }}</td>
@@ -603,8 +610,188 @@ $(document).ready(function() {
      </div>
 
      <div class="tab-content" id="tab2">
-        <h3 style="color:white">Facility Details</h3>
-        <label id="facility_detail_label" style="color:white">Information about the selected facility </label>
+      <h3 style="color:white">Facility Details</h3>
+    <div class="form-group" style="color: white;">
+        <label id="facility_detail_label">Information about the selected facility</label>
+        <!-- Inline checkbox for setting the facility as default -->
+        <label style="margin-left: 10px; font-weight: normal;" title="Make this facility available as the default so that it can be used in other assessments">
+            <input type="checkbox" id="defaultFacility" name="defaultFacility"> Default Facility
+        </label>
+        <a href="#" id="loadDefaultFacilityLink" style="margin-left: 10px; color: white;">Load Default Facility</a>
+        <script>
+    document.getElementById('loadDefaultFacilityLink').addEventListener('click', function(e) {
+    e.preventDefault(); // Prevent default link action
+
+    // Show confirmation dialog
+     Swal.fire({
+            title: 'Do you want to use the default facility?',
+            text: "Loading the default facility will overwrite the current form data.",
+            icon: 'warning',
+            showCancelButton: true, // This enables the cancel button
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, load it!',
+            cancelButtonText: 'No, cancel!',
+            reverseButtons: true // Reverses the order of the buttons
+        })
+    .then((willLoad) => {
+        if (willLoad) {
+            $.ajax({
+                url: '/OTRisk/load_default_facility/', // Adjust the URL to your actual AJAX endpoint
+                type: 'GET',
+                dataType: 'json',
+                success: function(data) {
+                    if(data && data.headerrecord) {
+                        // Assuming data.headerrecord contains all the facility details
+                        $('#selIndustry').val(data.headerrecord.Industry);
+                        $('#selIndustry').val(data.headerrecord.Industry).trigger('change');
+                        $('#txtUnit').val(data.headerrecord.unit);
+                        $('#txtFacility').val(data.headerrecord.facility);
+
+                        $('#selFacilityType').val(data.headerrecord.facilitytype);
+
+                        $('#selFacilityType').val(data.headerrecord.facilitytype).trigger('change');
+
+                        $('#assessment_id').val(data.headerrecord.assessment_id);
+                        $('#assessment_id').val(data.headerrecord.assessment_id).trigger('change');
+
+                        $('#selZone').val(data.headerrecord.zone);
+                        $('#selSL').val(data.headerrecord.sl_t);
+                        $('#txtStartDate').val(data.headerrecord.startdate);
+                        $('#txtEndDate').val(data.headerrecord.enddate);
+                        $('#txtSafetySummary').val(data.headerrecord.safetysummary);
+
+                         $('#txtChemical').val(data.headerrecord.chemicalsummary);
+                         $('#txtPhysical').val(data.headerrecord.physicalsummary);
+                         $('#txtOther').val(data.headerrecord.othersummary);
+                         $('#txtCompliance').val(data.headerrecord.compliancesummary);
+                         $('#threatSummary').val(data.headerrecord.threatSummary);
+                         $('#insightSummary').val(data.headerrecord.insightSummary);
+                         $('#strategySummary').val(data.headerrecord.strategySummary);
+
+                         $('#countrySelector').val(data.headerrecord.country).trigger('change');
+                         $('#shift_model').val(data.headerrecord.shift_model);
+                         $('#txtEmployees').val(data.headerrecord.EmployeesOnSite);
+                         $('#annual_revenue').val(formatAsCurrency(data.headerrecord.annual_revenue));
+                         $('#cyber_insurance').val(data.headerrecord.cyber_insurance);
+                         $('#cyber_insurance').val(data.headerrecord.cyber_insurance).trigger('change');
+                         $('#hdn_pha_score').val(data.headerrecord.pha_score);
+                         $('#npm').val(data.headerrecord.npm);
+                         $('#coho').val(formatAsCurrency(data.headerrecord.coho));
+                         $('#txtAddress').val(data.headerrecord.address);
+                         $('#txthdnLat').val(data.headerrecord.facilityLat);
+                         $('#txthdnLong').val(data.headerrecord.facilityLong);
+                         $('#txthdnAQI').val(data.headerrecord.facilityAQI);
+                         $('#txtCity').val(data.headerrecord.facilityCity);
+                         $('#txtState').val(data.headerrecord.facilityState);
+                         $('#zipCode').val(data.headerrecord.facilityCode);
+                         // Populate the new incident response planning fields
+                        $('#ir_plan').prop('checked', data.headerrecord.has_incident_response_plan);
+                        $('#ir_plan_date').val(data.headerrecord.plan_last_tested_date);
+                        $('#ir_plan_ut').prop('checked', data.headerrecord.plan_never_tested);
+                        $('#assessment_summary').text(data.headerrecord.last_assessment_summary);
+                        $('#assessment_score').text('Score: ' + data.headerrecord.last_assessment_score + '/100');
+                        $('#last_assessment_summary').text(data.headerrecord.last_assessment_summary);
+                        $('#last_assessment_score').text(data.headerrecord.last_assessment_score);
+
+                        if (data.headerrecord.has_incident_response_plan) {
+                            $('#ir_plan_date').prop('disabled', false);
+                            if (data.headerrecord.plan_last_tested_date) {
+                                $('#ir_plan_ut').prop('disabled', true).prop('checked', false);
+                            } else {
+                                $('#ir_plan_ut').prop('disabled', false);
+                            }
+                        } else {
+                            $('#ir_plan_date').prop('disabled', true).val('');
+                            $('#ir_plan_ut').prop('disabled', true).prop('checked', false);
+                        }
+
+                        $('#ir_plan_date').change(function() {
+                    if ($(this).val()) {
+                        $('#ir_plan_ut').prop('checked', false).prop('disabled', true);
+                    } else {
+                        $('#ir_plan_ut').prop('disabled', false);
+                    }
+                });
+
+                         var lat = data.headerrecord.facilityLat;
+                         var long = data.headerrecord.facilityLong;
+                         var address = data.headerrecord.address + ', ' + data.headerrecord.facilityCity + ', ' + data.headerrecord.facilityCode;
+                         var country = data.headerrecord.country
+                         drawGoogleMap(lat,long,address,country);
+                         aqi(lat,long,address,country);
+                         drawGauge(data.headerrecord.pha_score);
+                        setBorderColorByScore_(data.headerrecord.last_assessment_score);
+                        drawControlGauge(data.headerrecord.last_assessment_score);
+
+                        populateInvestmentTable(data.investments);
+
+                         populateSummary("safetySummaryContainer", data.headerrecord.safetysummary);
+                         populateSummary("complianceContainer", data.headerrecord.compliancesummary);
+                         populateSummary("physicalContainer", data.headerrecord.physicalsummary);
+                         populateSummary("otherContainer", data.headerrecord.othersummary);
+                         populateSummary("chemicalContainer", data.headerrecord.chemicalsummary);
+                         populateThreatSummary("threatContainer", data.headerrecord.threatSummary);
+                         populateSummary("insightContainer", data.headerrecord.insightSummary);
+                         populateSummary("strategyContainer", data.headerrecord.strategySummary);
+                        if (data.cyber_defaults) {
+                    $('#overall_aggregate_limit').val(data.cyber_defaults.overall_aggregate_limit);
+                    $('#per_claim_limit').val(data.cyber_defaults.per_claim_limit);
+                    $('#deductible_amount').val(data.cyber_defaults.deductible_amount);
+                    $('#premium_base').val(data.cyber_defaults.premium_base);
+                    $('#notification_period_days').val(data.cyber_defaults.notification_period_days);
+                    $('#cancellation_terms_days').val(data.cyber_defaults.cancellation_terms_days);
+
+                    // Populate checkbox fields
+                    $('#first_party_coverage').prop('checked', data.cyber_defaults.first_party_coverage);
+                    $('#third_party_coverage').prop('checked', data.cyber_defaults.third_party_coverage);
+                    $('#security_event_liability').prop('checked', data.cyber_defaults.security_event_liability);
+                    $('#privacy_regulatory_actions').prop('checked', data.cyber_defaults.privacy_regulatory_actions);
+                    $('#cyber_extortion_coverage').prop('checked', data.cyber_defaults.cyber_extortion_coverage);
+                    $('#data_breach_response_coverage').prop('checked', data.cyber_defaults.data_breach_response_coverage);
+                    $('#business_interruption_coverage').prop('checked', data.cyber_defaults.business_interruption_coverage);
+                    $('#dependent_business_coverage').prop('checked', data.cyber_defaults.dependent_business_coverage);
+                    $('#data_recovery').prop('checked', data.cyber_defaults.data_recovery);
+                    $('#hardware_replacement').prop('checked', data.cyber_defaults.hardware_replacement);
+                    $('#reputation_harm').prop('checked', data.cyber_defaults.reputation_harm);
+                    $('#media_liability').prop('checked', data.cyber_defaults.media_liability);
+                    $('#pci_dss').prop('checked', data.cyber_defaults.pci_dss);
+                }
+                         const riskToleranceFields = [
+                            'negligible_low', 'negligible_high',
+                            'minor_low', 'minor_high',
+                            'moderate_low', 'moderate_high',
+                            'significant_low', 'significant_high',
+                            'severe_low', 'severe_high'
+                        ];
+
+                        riskToleranceFields.forEach(field => {
+                            if (data.risk_tolerance && data.risk_tolerance[field] !== undefined) {
+                                $('#' + field).val(parseFloat(data.risk_tolerance[field]).toFixed(2));
+                            } else {
+                                $('#' + field).val(''); // Clear the field if data is missing
+                            }
+                        });
+                 sessionStorage.setItem('sessionIndustry', data.headerrecord.industry);
+                 sessionStorage.setItem('sessionFacilityType', data.headerrecord.facilitytype);
+                 sessionStorage.setItem('sessionFacility', data.headerrecord.facility);
+                 sessionStorage.setItem('sessionCountry', data.headerrecord.country);
+                 var pha_score = data.headerrecord.pha_score;
+                        // Add other form updates as in your provided code...
+                    } else {
+                        swal("Error", "Failed to load default facility.", "error");
+                    }
+                },
+                error: function(xhr, status, error) {
+                    swal.fire("Error", "An error occurred while loading the default facility: " + error, "error");
+                }
+            });
+        }
+    });
+});
+
+</script>
+    </div>
         <div class="row">
             <div class="col-md-6">
                 <form id="zipForm">
@@ -1954,7 +2141,7 @@ $(document).ready(function() {
 
 
 
-    </div>
+</div>
 
 
 </div>
@@ -2001,10 +2188,10 @@ $(document).ready(function() {
 
 
 <script>
-drawGauge({{ current_pha_header.pha_score }});
-drawControlGauge(0);
+    drawGauge({{ current_pha_header.pha_score }});
+    drawControlGauge(0);
 
-$("#generatePPT").click(function(e) {
+    $("#generatePPT").click(function(e) {
     e.preventDefault();  // This prevents the default form submission
 
     $.ajax({
@@ -2037,9 +2224,7 @@ $("#generatePPT").click(function(e) {
     });
 });
 
-
-
-$(document).ready(function() {
+    $(document).ready(function() {
     $("#risk-assessment-btn").click(function() {
         var employeeCount = $("#txtEmployees").val();
         var zipCode = $("#zipCode").val().trim(); // Get ZIP Code and trim whitespace
@@ -2083,7 +2268,7 @@ $(document).ready(function() {
     });
 });
 
-function populateSummary(containerId, summaryData) {
+    function populateSummary(containerId, summaryData) {
     // Clear existing content
     $('#' + containerId).empty();
 
@@ -2173,7 +2358,7 @@ function populateSummary(containerId, summaryData) {
     });
 }
 
-function populateThreatSummary(containerId, summaryData) {
+    function populateThreatSummary(containerId, summaryData) {
     function renumberAndAttachIcons() {
         $('#' + containerId).find('.safety-summary-box').each((idx, el) => {
             const box = $(el);
@@ -2246,17 +2431,8 @@ function populateThreatSummary(containerId, summaryData) {
         attachRemoveIcon(box, item); // Ensure attachRemoveIcon is defined or this line should be adjusted accordingly.
     });
 }
-
-
-
-
-
-
-
-
-
       // AJAX function to call the Django view
-        function assessRisk() {
+    function assessRisk() {
             $('#progressBarContainerProfile').show();
             $('#progressBarProfile').css('width', '0%').attr('aria-valuenow', 0);
             $('#progressBarMessageProfile').text('').show(); // Initialize and show message
@@ -2417,15 +2593,6 @@ function populateThreatSummary(containerId, summaryData) {
     </script>
     <br>
 
-    </div>
-
-
-
-    <div class="col-md-1" style="background-color: #464748;"></div>
-</div>
-
-
-
 <!-- Modal -->
 <div class="modal fade" id="moderatorModal" tabindex="-1" role="dialog" aria-labelledby="moderatorModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
@@ -2437,8 +2604,8 @@ function populateThreatSummary(containerId, summaryData) {
                 </button>
             </div>
             <div class="modal-body">
-    <form id="moderatorsForm">
-        <div class="form-group">
+
+                <div class="form-group">
                         <label for="targetDate">Target Completion Date:</label>
                         <input type="text" class="form-control" id="targetDate" name="targetDate" placeholder="mm/dd/yy">
                         <script>
@@ -2450,19 +2617,19 @@ function populateThreatSummary(containerId, summaryData) {
                         </script>
 
                     </div>
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Select</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- Moderators will be populated dynamically by JavaScript -->
-            </tbody>
-        </table>
-    </form>
-</div>
+                    <table class="table" >
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Select</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Moderators will be populated dynamically by JavaScript -->
+                        </tbody>
+                    </table>
+
+            </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                 <!-- Add more buttons if needed -->
@@ -2470,9 +2637,9 @@ function populateThreatSummary(containerId, summaryData) {
         </div>
     </div>
 </div>
+ </form>
 
 
-</form>
 
 <script>
     $(document).ready(function() {
@@ -2625,6 +2792,7 @@ function populateThreatSummary(containerId, summaryData) {
                         $('#assessment_score').text('Score: ' + data.headerrecord.last_assessment_score + '/100');
                         $('#last_assessment_summary').text(data.headerrecord.last_assessment_summary);
                         $('#last_assessment_score').text(data.headerrecord.last_assessment_score);
+                        $('#defaultFacility').prop('checked', data.headerrecord.is_default);
                         // Logic to enable/disable the date field and plan_never_tested checkbox
                         if (data.headerrecord.has_incident_response_plan) {
                             $('#ir_plan_date').prop('disabled', false);
@@ -3062,6 +3230,12 @@ function aqi(latitude,longitude,address,country) {
     });
 }
 
+function disableTableInputs(tableId, disable) {
+    var inputs = document.querySelectorAll('#' + tableId + ' input');
+    inputs.forEach(function(input) {
+        input.disabled = disable;
+    });
+}
 
 function unlockControls() {
         // Disable all input, select, and button elements
@@ -3082,21 +3256,32 @@ function unlockControls() {
                     var employees = document.getElementById('txtEmployees').value.trim();
                     var address = document.getElementById('txtAddress').value.trim();
                     var country = document.getElementById('countrySelector').value;
+                    var title = document.getElementById('txtTitle').value.trim();
+
+                    var missingFields = [];
+
+                    if (!industry) missingFields.push('Industry');
+                    if (!facilityType) missingFields.push('Facility Type');
+                    if (!facilityName) missingFields.push('Facility Name');
+                    if (!employees) missingFields.push('Number of Employees');
+                    if (!address) missingFields.push('Address');
+                    if (!country) missingFields.push('Country');
+                    if (!title) missingFields.push('CyberPHA Title');
 
                      // Check if all required fields have values
-                    if (!industry || !facilityType || !facilityName || !employees || !address || !country) {
-                       Swal.fire({
-                            icon: 'error',
-                            title: 'Missing Information',
-                            text: 'Please fill in all required fields before saving.'
-                        }).then(() => {
-                            // After closing the alert, make tab2 active and visible
-                            $('.tab-content').removeClass('active').hide();
-
-                             $('#tab2').addClass('active').show();
-                        });
-                        return; // Exit the function and do not proceed to show the save confirmation
-                    }
+                    if (missingFields.length > 0) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Missing Information',
+                        text: 'Please fill in the following fields before saving: ' + missingFields.join(', ') + '.',
+                        footer: '<b>Note:</b> Highlighted fields are required.'
+                    }).then(() => {
+                        // After closing the alert, make tab2 active and visible
+                        $('.tab-content').removeClass('active').hide();
+                        $('#tab2').addClass('active').show();
+                    });
+                    return; // Exit the function and do not proceed
+                }
                     // Show a SweetAlert confirmation dialog
                     Swal.fire({
                         title: 'Confirm Save?',
@@ -3125,7 +3310,9 @@ function unlockControls() {
                             }
                             });
                             // User confirmed, continue with the form submission
+                             disableTableInputs('headertable', true);
                             document.forms['frmRAW'].submit();
+                             disableTableInputs('headertable', false);
                         } else {
                             // User canceled the action
                             // You can add additional code here if needed
@@ -3140,6 +3327,8 @@ function unlockControls() {
 <div id="spinner_facility" style="display: none;"></div>
 </div>
 </div>
-</div>
+
+    </div>
+
 </body>
 </html>

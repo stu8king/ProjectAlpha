@@ -182,6 +182,8 @@ urlpatterns = [
     path('assessment_clone/', views.assessment_clone, name='assessment_clone'),
     path('upload_completed_assessment/', views.upload_completed_assessment, name='upload_completed_assessment'),
     path('generate-csv/<int:framework_id>/', views.generate_framework_csv, name='generate_framework_csv'),
+    path('load_default_facility/', views.load_default_facility, name='load_default_facility'),
+    path('get_all_groups_scores/', views.get_all_groups_scores, name='get_all_groups_scores'),
 ]
 
 

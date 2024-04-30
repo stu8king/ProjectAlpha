@@ -664,49 +664,6 @@ def get_current_user_organization_id(user):
         return None
 
 
-def get_group_report(request):
-    group_id = request.GET.get('group_id')
-    group = CyberPHA_Group.objects.get(id=group_id)
-    cyberphas = tblCyberPHAHeader.objects.filter(groups=group)
-
-    # Fetch the required fields for each tblCyberPHAHeader in the selected group
-    cyberphas_details = cyberphas.values(
-        'title', 'FacilityName', 'FacilityType', 'Industry', 'EmployeesOnSite'
-    )
-
-    # Get IDs of tblCyberPHAHeader objects to filter tblCyberPHAScenario
-    cyberpha_ids = cyberphas.values_list('ID', flat=True)
-    avg_pha_Score = round(cyberphas.aggregate(Avg('pha_score'))['pha_score__avg'] or 0, 2)
-    avg_assessment_Score = round(cyberphas.aggregate(Avg('assessment'))['assessment__avg'] or 0, 2)
-    scenarios = tblCyberPHAScenario.objects.filter(CyberPHA_id__in=cyberpha_ids)
-    avg_imageSafety = round(scenarios.aggregate(Avg('impactSafety'))['impactSafety__avg'] or 0, 2)
-    avg_impactDanger = round(scenarios.aggregate(Avg('impactDanger'))['impactDanger__avg'] or 0, 2)
-    avg_impactProduction = round(scenarios.aggregate(Avg('impactProduction'))['impactProduction__avg'] or 0, 2)
-    avg_imageFinance = round(scenarios.aggregate(Avg('impactFinance'))['impactFinance__avg'] or 0, 2)
-    avg_impactReputation = round(scenarios.aggregate(Avg('impactReputation'))['impactReputation__avg'] or 0, 2)
-    avg_impactEnvironment = round(scenarios.aggregate(Avg('impactEnvironment'))['impactEnvironment__avg'] or 0, 2)
-    avg_imageRegulation = round(scenarios.aggregate(Avg('impactRegulation'))['impactRegulation__avg'] or 0, 2)
-    avg_impactData = round(scenarios.aggregate(Avg('impactData'))['impactData__avg'] or 0, 2)
-    avg_impactSupply = round(scenarios.aggregate(Avg('impactSupply'))['impactSupply__avg'] or 0, 2)
-    avg_sle = round(scenarios.aggregate(Avg('sle'))['sle__avg'] or 0, 0)
-
-    return JsonResponse({
-        'cyberphas': list(cyberphas_details),
-        'avg_imageSafety': avg_imageSafety,
-        'avg_impactDanger': avg_impactDanger,
-        'avg_impactProduction': avg_impactProduction,
-        'avg_pha_Score': avg_pha_Score,
-        'avg_assessment_Score': avg_assessment_Score,
-        'avg_imageFinance': avg_imageFinance,
-        'avg_impactReputation': avg_impactReputation,
-        'avg_impactEnvironment': avg_impactEnvironment,
-        'avg_imageRegulation': avg_imageRegulation,
-        'avg_impactData': avg_impactData,
-        'avg_impactSupply': avg_impactSupply,
-        'avg_sle': avg_sle
-    })
-
-
 def get_likelihood_category(likelihood):
     if likelihood < 20:
         return "Low"
@@ -774,3 +731,102 @@ def get_scenarios_for_regulation(request):
 
         return JsonResponse(scenarios_list, safe=False)
     return JsonResponse({"error": "Invalid request"}, status=400)
+
+
+from django.contrib.auth.models import User
+
+
+@login_required
+def get_all_groups_scores(request):
+    user = request.user  # Get the currently logged-in user
+    user_organization_id = get_user_organization_id(request)  # Retrieve organization ID using the custom function
+
+    # Fetch all groups that belong to the user's organization
+    all_groups = CyberPHA_Group.objects.filter(organization_id=user_organization_id)
+    all_groups_data = []
+
+    for group in all_groups:
+        # Fetch related tblCyberPHAHeader IDs for the group
+        # Ensuring we are filtering CyberPHA headers based on organization users
+        organization_users = User.objects.filter(userprofile__organization_id=user_organization_id).values_list('id',
+                                                                                                                flat=True)
+        cyberpha_ids = tblCyberPHAHeader.objects.filter(groups=group, UserID__in=organization_users).values_list('ID',
+                                                                                                                 flat=True)
+
+        # Fetch scenarios related to those CyberPHAHeader IDs
+        scenarios = tblCyberPHAScenario.objects.filter(CyberPHA_id__in=cyberpha_ids)
+
+        if scenarios.exists():
+            avg_scores = {
+                'id': group.id,
+                'group_name': group.name,
+                'avg_scores': [
+                    {'name': 'Safety',
+                     'value': round(scenarios.aggregate(Avg('impactSafety'))['impactSafety__avg'] or 0, 2)},
+                    {'name': 'Danger',
+                     'value': round(scenarios.aggregate(Avg('impactDanger'))['impactDanger__avg'] or 0, 2)},
+                    {'name': 'Production',
+                     'value': round(scenarios.aggregate(Avg('impactProduction'))['impactProduction__avg'] or 0, 2)},
+                    {'name': 'Finance',
+                     'value': round(scenarios.aggregate(Avg('impactFinance'))['impactFinance__avg'] or 0, 2)},
+                    {'name': 'Reputation',
+                     'value': round(scenarios.aggregate(Avg('impactReputation'))['impactReputation__avg'] or 0, 2)},
+                    {'name': 'Environment',
+                     'value': round(scenarios.aggregate(Avg('impactEnvironment'))['impactEnvironment__avg'] or 0, 2)},
+                    {'name': 'Regulation',
+                     'value': round(scenarios.aggregate(Avg('impactRegulation'))['impactRegulation__avg'] or 0, 2)},
+                    {'name': 'Data', 'value': round(scenarios.aggregate(Avg('impactData'))['impactData__avg'] or 0, 2)},
+                    {'name': 'Supply',
+                     'value': round(scenarios.aggregate(Avg('impactSupply'))['impactSupply__avg'] or 0, 2)}
+                ]
+            }
+            all_groups_data.append(avg_scores)
+
+    return JsonResponse({'allGroupsData': all_groups_data})
+
+
+def get_group_report(request):
+    group_id = request.GET.get('group_id')
+    group = CyberPHA_Group.objects.get(id=group_id)
+    group_name = group.name
+    cyberphas = tblCyberPHAHeader.objects.filter(groups=group)
+
+    # Fetch the required fields for each tblCyberPHAHeader in the selected group
+    cyberphas_details = cyberphas.values(
+        'title', 'FacilityName', 'FacilityType', 'Industry', 'EmployeesOnSite'
+    )
+
+    # Get IDs of tblCyberPHAHeader objects to filter tblCyberPHAScenario
+    cyberpha_ids = cyberphas.values_list('ID', flat=True)
+    avg_pha_Score = round(cyberphas.aggregate(Avg('pha_score'))['pha_score__avg'] or 0, 2)
+    avg_assessment_Score = round(cyberphas.aggregate(Avg('assessment'))['assessment__avg'] or 0, 2)
+    scenarios = tblCyberPHAScenario.objects.filter(CyberPHA_id__in=cyberpha_ids)
+    avg_impactSafety = round(scenarios.aggregate(Avg('impactSafety'))['impactSafety__avg'] or 0, 2)
+    avg_impactDanger = round(scenarios.aggregate(Avg('impactDanger'))['impactDanger__avg'] or 0, 2)
+    avg_impactProduction = round(scenarios.aggregate(Avg('impactProduction'))['impactProduction__avg'] or 0, 2)
+    avg_impactFinance = round(scenarios.aggregate(Avg('impactFinance'))['impactFinance__avg'] or 0, 2)
+    avg_impactReputation = round(scenarios.aggregate(Avg('impactReputation'))['impactReputation__avg'] or 0, 2)
+    avg_impactEnvironment = round(scenarios.aggregate(Avg('impactEnvironment'))['impactEnvironment__avg'] or 0, 2)
+    avg_impactRegulation = round(scenarios.aggregate(Avg('impactRegulation'))['impactRegulation__avg'] or 0, 2)
+    avg_impactData = round(scenarios.aggregate(Avg('impactData'))['impactData__avg'] or 0, 2)
+    avg_impactSupply = round(scenarios.aggregate(Avg('impactSupply'))['impactSupply__avg'] or 0, 2)
+    avg_sle = round(scenarios.aggregate(Avg('sle'))['sle__avg'] or 0, 0)
+
+    return JsonResponse({
+        'cyberphas': list(cyberphas_details),
+        'avg_scores': [
+            {'name': 'Safety', 'value': avg_impactSafety},
+            {'name': 'Danger', 'value': avg_impactDanger},
+            {'name': 'Production', 'value': avg_impactProduction},
+            {'name': 'Finance', 'value': avg_impactFinance},
+            {'name': 'Reputation', 'value': avg_impactReputation},
+            {'name': 'Environment', 'value': avg_impactEnvironment},
+            {'name': 'Regulation', 'value': avg_impactRegulation},
+            {'name': 'Data', 'value': avg_impactData},
+            {'name': 'Supply', 'value': avg_impactSupply},
+        ],
+        'avg_pha_Score': avg_pha_Score,
+        'avg_sle': avg_sle,
+        'group_name': group_name
+    })
+
