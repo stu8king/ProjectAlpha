@@ -693,7 +693,6 @@ $(document).ready(function() {
                         $('#assessment_score').text('Score: ' + data.headerrecord.last_assessment_score + '/100');
                         $('#last_assessment_summary').text(data.headerrecord.last_assessment_summary);
                         $('#last_assessment_score').text(data.headerrecord.last_assessment_score);
-
                         if (data.headerrecord.has_incident_response_plan) {
                             $('#ir_plan_date').prop('disabled', false);
                             if (data.headerrecord.plan_last_tested_date) {
@@ -723,7 +722,6 @@ $(document).ready(function() {
                          drawGauge(data.headerrecord.pha_score);
                         setBorderColorByScore_(data.headerrecord.last_assessment_score);
                         drawControlGauge(data.headerrecord.last_assessment_score);
-
                         populateInvestmentTable(data.investments);
 
                          populateSummary("safetySummaryContainer", data.headerrecord.safetysummary);
@@ -1443,13 +1441,14 @@ updateGroupList();
                                 {{ assessment.name }}</option>
                         {% endfor %}
                     </select>
+                    <input type="hidden" id="last_assessment_score" name="last_assessment_score">
+                    <input type="hidden" id="last_assessment_summary" name="last_assessment_summary">
+
                     <div id="assessmentspinnerContainer" style="display: none;">
                         <div class="spinner-border" role="status">
 
                             <span class="sr-only">Loading...</span>
-                            <input type="hidden" id="last_assessment_score" name="last_assessment_score">
-                            <input type="hidden" id="last_assessment_summary" name="last_assessment_summary">
-                        </div>
+                             </div>
                     </div>
 
              <!-- Container to display the summary and score -->
@@ -1524,6 +1523,7 @@ updateGroupList();
                                             drawControlGauge(response.score);
                                             document.getElementById('last_assessment_score').value = response.score;
                                             document.getElementById('last_assessment_summary').value = response.summary;
+
                                         }
                                     },
                                     error: function(xhr, errmsg, err) {
@@ -2790,8 +2790,7 @@ $(document).ready(function() {
                         $('#ir_plan_ut').prop('checked', data.headerrecord.plan_never_tested);
                         $('#assessment_summary').text(data.headerrecord.last_assessment_summary);
                         $('#assessment_score').text('Score: ' + data.headerrecord.last_assessment_score + '/100');
-                        $('#last_assessment_summary').text(data.headerrecord.last_assessment_summary);
-                        $('#last_assessment_score').text(data.headerrecord.last_assessment_score);
+
                         $('#defaultFacility').prop('checked', data.headerrecord.is_default);
                         // Logic to enable/disable the date field and plan_never_tested checkbox
                         if (data.headerrecord.has_incident_response_plan) {
@@ -2915,6 +2914,11 @@ $(document).ready(function() {
                          populateAllGroupsDropdown(data.all_groups);
                          updateGroupAssignmentsDisplay(recordId);
                          updateGroupList();
+                         document.getElementById("last_assessment_score").value=data.headerrecord.last_assessment_score;
+                          document.getElementById("last_assessment_summary").value=data.headerrecord.last_assessment_summary;
+                         $('#last_assessment_summary').text(data.headerrecord.last_assessment_summary);
+                        $('#last_assessment_score').text(data.headerrecord.last_assessment_score);
+
                         $('.tab-content').removeClass('active').hide();
                         $('#tab2').addClass('active').show();
 
