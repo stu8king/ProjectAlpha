@@ -80,6 +80,7 @@ from django.contrib import messages
 import chardet
 import datetime
 from datetime import datetime
+from django.db.models import Max
 app_name = 'OTRisk'
 
 
@@ -1582,11 +1583,43 @@ def assess_cyberpha(request, cyberPHAID=None):
     response['Access-Control-Allow-Origin'] = '*'  # Set the CORS header
 
     clicked_row_facility_name = request.session.get('clickedRowFacilityName', None)
+    # Fetching saved scenarios
     saved_scenarios = tblCyberPHAScenario.objects.filter(CyberPHA=active_cyberpha, Deleted=0)
+    scenario_ids = saved_scenarios.values_list('ID', flat=True)
+
+    # Fetching the latest updates from the audit log
+    latest_updates = auditlog.objects.filter(cyberPHAScenario_id__in=scenario_ids).annotate(
+        latest_update=Max('timestamp'),
+        updater_first_name=F('user__first_name'),
+        updater_last_name=F('user__last_name')
+    ).values('cyberPHAScenario_id', 'latest_update', 'updater_first_name', 'updater_last_name')
+
+    # Convert query result into a dictionary for easy lookup
+    latest_updates_dict = {update['cyberPHAScenario_id']: update for update in latest_updates}
+
+    # Iterating over saved scenarios to append additional information
     for scenario in saved_scenarios:
         id_str = str(scenario.ID)
         formatted_id = f"{id_str[:3]}-{id_str[3:6]}-{id_str[6:]}"
         scenario.formatted_id = formatted_id
+
+        # Retrieve update info if available
+        update_info = latest_updates_dict.get(scenario.ID, {})
+
+        # Extract and format the last update timestamp if available
+        if 'latest_update' in update_info:
+            scenario.last_update = update_info['latest_update'].strftime('%m/%d/%Y %H:%M') if update_info[
+                'latest_update'] else ''
+        else:
+            scenario.last_update = ''
+
+        # Concatenate user names if available
+        if 'updater_first_name' in update_info and 'updater_last_name' in update_info:
+            scenario.updater_name = f"{update_info.get('updater_first_name', '')} {update_info.get('updater_last_name', '')}".strip()
+        else:
+            scenario.updater_name = ''
+
+
     MitreControlAssessment_results = MitreControlAssessment.objects.filter(cyberPHA_id=active_cyberpha)
     control_assessments_data = serializers.serialize('json', MitreControlAssessment_results)
     scenario_form = CyberSecurityScenarioForm(request.POST)

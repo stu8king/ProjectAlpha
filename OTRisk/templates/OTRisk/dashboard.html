@@ -54,6 +54,67 @@
      {% bootstrap_javascript %}
 <link rel="stylesheet" type="text/css" href="{% static 'css/otriskstyle.css' %}">
 <style>
+    /* General table styles */
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: Arial, sans-serif; /* Standard web-safe font */
+    color: #333; /* Dark grey text for better readability */
+    background-color: #fff; /* White background for a clean look */
+}
+
+/* Header styles */
+.table th {
+    background-color: #f0f0f2; /* Soft grey background */
+    color: #333; /* Dark grey text */
+    padding: 12px 15px;
+    font-weight: normal; /* Avoid bold to maintain a sleek look */
+    text-transform: none; /* Normal casing for a modern feel */
+    border-bottom: 2px solid #e1e1e1; /* Subtle bottom border */
+    cursor: pointer; /* Indicates the header is clickable for sorting */
+}
+
+/* Hover effect for headers */
+.table th:hover {
+    background-color: #dcdce0; /* Slightly darker on hover for interaction feedback */
+}
+
+/* Row and cell styles */
+.table td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #e1e1e1; /* Light grey border for separation */
+}
+
+/* Hover effect for rows */
+.table tr:hover {
+    background-color: #f9f9fb; /* Very light grey background on hover */
+}
+
+/* Color coding for PHA Score */
+.pha-score {
+    border-radius: 10px;
+    padding: 5px;
+    text-align: center;
+    color: #fff; /* White text for all levels for readability */
+    font-weight: bold;
+}
+
+.low { background-color: #4CAF50; } /* Green */
+.low-medium { background-color: #8BC34A; } /* Light Green */
+.medium { background-color: #FFEB3B; color: #333; } /* Yellow with dark text */
+.medium-high { background-color: #FF9800; } /* Orange */
+.high { background-color: #F44336; } /* Red */
+.very-high { background-color: #D32F2F; } /* Dark Red */
+
+/* Styling for selected rows */
+.selected {
+    background-color: #cce4ff; /* Light blue for selection */
+}
+
+/* Ensure hidden inputs do not affect layout */
+input[type="hidden"] {
+    display: none;
+}
 
 
     /* Base Styles for Modern Look */
@@ -211,12 +272,11 @@
             <br><br><br><br><br><br><br><br><br><br>
         <ul>
             <li><a href="#" data-tab="tab11">Locations</a></li>
+            <li><a href="#" data-tab="tab3">CyberPHA</a></li>
+            <li><a href="#" data-tab="tab5">QRAW</a></li>
+            <li><a href="#" data-tab="tab4" id="scenarioTabLink">Risk Groups</a></li>
             <li><a href="#" data-tab="tab1">Heatmap</a></li>
             <li><a href="#" data-tab="tab2">KPIs / Compliance</a></li>
-            <li><a href="#" data-tab="tab3">CyberPHA</a></li>
-            <li><a href="#" data-tab="tab4" id="scenarioTabLink">Risk Groups</a></li>
-
-            <li><a href="#" data-tab="tab5">QRAW</a></li>
             <li><a href="#" data-tab="tab6">Moderator Queue</a></li>
             <li><a href="#" data-tab="tab8"></a></li>
             <li><a href="#" data-tab="tab9"></a></li>
@@ -682,48 +742,72 @@
 
     <!-- Tab 2 Content -->
     <div class="tab-content tab-link" id="tab3">
-        <h2>CyberPHA</h2>
+        <h2>CyberPHA Assessments</h2>
         <div class="form-group form-sim" >
             <div class="card shadow flex-fill">
                 <div class="card-body">
-                    <label for="headertable" class="form-label">CyberPHA Assessments</label>
-                    <table id="headertable" class="table small-font" style="border-collapse: separate; border-spacing: 0 15px;">
-                    <thead>
-                        <tr>
-                        <th class="th">ID</th>
-                        <th>Site</th>
-                        <th>Unit</th>
-                        <th>Zone</th>
-                        <th title="PHA Score is a nuanced, quantitative evaluation of safety risks, allowing for a standardized assessment that can be used for comparisons, regulatory compliance checks, safety improvements, or operational overviews">PHA Score</th>
-                        </tr>
-                    </thead>
-                    <tbody style="font-size: 10px;">
-                        {% for pha in phas %}
-                        <tr class="selectable-row" data-id="{{ pha.ID }}" style="background-color: #f0f0f0; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); border-radius: 5px;">
-                        <td >{{ pha.ID }}</td>
-                        <td ><a href="/OTRisk/iotaphamanager/{{ pha.ID }}/" >{{ pha.FacilityName }}</a></td>
-                        <td>{{ pha.AssessmentUnit }}</td>
-                        <td>{{ pha.AssessmentZone }}</td>
-                         <td>
-                            {% if pha.pha_score <= 16 %}
-                                <div style="background-color: green; border-radius: 20px; text-align: center; color: black">Low</div>
-                            {% elif pha.pha_score <= 33 %}
-                                <div style="background-color: lightgreen; border-radius: 20px; text-align: center; color: black">Low/Medium</div>
-                            {% elif pha.pha_score <= 50 %}
-                                <div style="background-color: yellow; border-radius: 20px; text-align: center; color: black">Medium</div>
-                            {% elif pha.pha_score <= 66 %}
-                                <div style="background-color: orange; border-radius: 20px; text-align: center; color: black">Medium/High</div>
-                            {% elif pha.pha_score <= 83 %}
-                                <div style="background-color: red; border-radius: 20px; text-align: center; color: black">High</div>
-                            {% else %}
-                                <div style="background-color: darkred; border-radius: 20px; text-align: center; color: black">Very High</div>
-                            {% endif %}
-                        </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                    <table id="headertable1" class="table small-font">
+    <thead>
+        <tr>
+
+            <th>Site</th>
+            <th>Leader</th>
+            <th>Unit</th>
+            <th>Zone</th>
+            <th>Last Update</th>
+            <th>PHA Score</th>
+        </tr>
+    </thead>
+    <tbody style="font-size: 14px;"> <!-- Slightly larger font size for better readability -->
+        {% for pha in phas %}
+        <tr data-id="{{ pha.ID }}">
+
+            <td><a href="/OTRisk/iotaphamanager/{{ pha.ID }}/">{{ pha.FacilityName }}</a></td>
+            <td>{{ pha.PHALeader }}</td>
+            <td>{{ pha.AssessmentUnit }}</td>
+            <td>{{ pha.AssessmentZone }}</td>
+        <td>
+                                 <div>{{ pha.updater_name }}</div><div> {{ pha.last_update }}</div>
+                             </td>
+            <td>
+                <div style="border-radius: 20px; text-align: center; padding: 5px; color: black;
+                    background-color: {% if pha.pha_score <= 16 %}#a0d8ef /* Sky Blue */
+                    {% elif pha.pha_score <= 33 %}#2ca9e1 /* Bluish Green */
+                    {% elif pha.pha_score <= 50 %}#fdfd96 /* Soft Yellow */
+                    {% elif pha.pha_score <= 66 %}#f4c430 /* Sand */
+                    {% elif pha.pha_score <= 83 %}#dc143c /* Crimson */
+                    {% else %}#663399 /* Dark Purple */{% endif %}">
+                    {% if pha.pha_score <= 16 %}Low ( {{ pha.pha_score }} )
+                    {% elif pha.pha_score <= 33 %}Low/Medium ( {{ pha.pha_score }} )
+                    {% elif pha.pha_score <= 50 %}Medium ( {{ pha.pha_score }} )
+                    {% elif pha.pha_score <= 66 %}Medium/High ( {{ pha.pha_score }} )
+                    {% elif pha.pha_score <= 83 %}High ( {{ pha.pha_score }} )
+                    {% else %}Very High ( {{ pha.pha_score }} ) {% endif %}
+                </div>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
                 <script type="text/javascript">
+
+            $(document).ready(function () {
+                if ($.fn.dataTable.isDataTable('#headertable1')) {
+                    $('#headertable1').DataTable().destroy();
+                }
+                $('#headertable1').DataTable({
+                    "paging": true,
+                    "lengthChange": false,
+                    "searching": false,
+                    "ordering": true,
+                    "info": true,
+                    "autoWidth": false,
+                    "pageLength": 15
+                });
+            });
+
+
                 $(document).ready(function () {
                     if ($.fn.dataTable.isDataTable('#phaTable')) {
                         $('#phaTable').DataTable().destroy();
@@ -812,23 +896,29 @@ function drawLineChart(data, container, groupName, add) {
     // Initialize the chart only if it hasn't been already
     if (!chartContainer.anychartInstance) {
         var chart = anychart.line();
-        chart.title("Group Business Impact Analysis Comparison");
+        chart.title("Group Business Impact Analysis Comparison")
+            .title().fontColor('#FFFFFF'); // White title for contrast
+
+        chart.background().fill("#000000"); // Set the background to black
 
         // Setting up the scales
-        chart.yScale().minimum(0).maximum(10); // Adjust according to your scale
+        chart.yScale().minimum(0).maximum(10);
 
         // Configure grids
-        // Enable horizontal grid
         chart.yGrid().enabled(true);
-        chart.yGrid().stroke({ color: "#E0E0E0", thickness: 1, dash: '5 5' }); // Customize the grid line style
+        chart.yGrid().stroke({ color: "#888888", thickness: 1, dash: '5 5' });
 
-        // Enable vertical grid
         chart.xGrid().enabled(true);
-        chart.xGrid().stroke({ color: "#E0E0E0", thickness: 1, dash: '5 5' }); // Customize the grid line style
+        chart.xGrid().stroke({ color: "#888888", thickness: 1, dash: '5 5' });
+
+        // Legend settings
+        chart.legend().enabled(true);
+        chart.legend().fontColor('#FFFFFF');
+        chart.legend().position('top');
+        chart.legend().align('center');
 
         chart.container(container);
         chart.draw();
-        chart.legend(true); // Enable legend
 
         // Disable credits
         var credits = chart.credits();
@@ -836,21 +926,41 @@ function drawLineChart(data, container, groupName, add) {
 
         // Store the chart instance for future reference
         chartContainer.anychartInstance = chart;
+        chartContainer.usedColors = []; // Initialize used colors tracking
+        chartContainer.colorIndex = 0; // Initialize color index
     }
 
     var chart = chartContainer.anychartInstance;
 
+    // Function to get and manage colors
+    function getColor() {
+        var colors = [
+            '#EAD1DC', '#F4D03F', '#5DADE2', '#A569BD', '#58D68D',
+            '#F5B041', '#DC7633', '#85C1E9', '#CD6155', '#EB984E'
+        ];
+        if (chartContainer.colorIndex >= colors.length) {
+            chartContainer.colorIndex = 0; // Reset color index if all colors are used
+        }
+        return colors[chartContainer.colorIndex++];
+    }
+
     if (add) {
-        // If we're adding a series to the existing chart
+        // Adding a series to the existing chart
         var series = chart.line(data.map(item => ({x: item.name, value: item.value})));
-        series.name(groupName);
+        series.name(groupName)
+            .stroke('3px ' + getColor());
     } else {
-        // If we're not adding, clear all series and add a new one
+        // Clear all series and add a new one
         chart.removeAllSeries();
+        chartContainer.colorIndex = 0; // Reset color index when starting fresh
         var series = chart.line(data.map(item => ({x: item.name, value: item.value})));
-        series.name(groupName);
+        series.name(groupName)
+            .stroke('3px ' + getColor());
     }
 }
+
+
+
 
 
 function populateGroupList(groupsData, currentGroupId) {
@@ -888,21 +998,25 @@ function populateGroupList(groupsData, currentGroupId) {
 
     <!-- Tab 4 Content -->
     <div class="tab-content tab-link" id="tab5">
-    <h2>QRAW</h2>
-    <div class="table-responsive">
-        <table id="headertable" class="table small-font compact" style="width: 100%; border-collapse: separate; border-spacing: 0 15px;">
+    <h2>Quick Risk Assessment Worksheets (QRAW)</h2>
+    <div class="card-body">
+        <table id="headertable2" class="table small-font">
             <thead>
                 <tr>
-                    <th class="th">Title</th>
+                    <th>Title</th>
+                    <th>Assessment</th>
+                    <th>Business Unit</th>
                     <th>Status</th>
                     <th>Trigger</th>
                     <th>Scenario Count</th>
                 </tr>
             </thead>
-            <tbody style="font-size: 10px;">
+            <tbody style="font-size: 14px;">
                 {% for worksheet in ra_worksheets_with_scenario_count %}
-                    <tr style="background-color: #f0f0f0; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); border-radius: 5px;">
+                    <tr >
                         <td>{{ worksheet.RATitle }}</td>
+                        <td>{{ worksheet.RADescription }}</td>
+                        <td>{{ worksheet.BusinessUnit }}</td>
                         <td>{{ worksheet.StatusFlag }}</td>
                         <td>{{ worksheet.RATrigger }}</td>
                         <td>{{ worksheet.scenario_count }}</td>
@@ -914,6 +1028,23 @@ function populateGroupList(groupsData, currentGroupId) {
                 {% endfor %}
             </tbody>
         </table>
+        <script type="text/javascript">
+
+            $(document).ready(function () {
+                if ($.fn.dataTable.isDataTable('#headertable2')) {
+                    $('#headertable2').DataTable().destroy();
+                }
+                $('#headertable2').DataTable({
+                    "paging": true,
+                    "lengthChange": false,
+                    "searching": false,
+                    "ordering": true,
+                    "info": true,
+                    "autoWidth": false,
+                    "pageLength": 15
+                });
+            });
+        </script>
     </div>
 </div>
 

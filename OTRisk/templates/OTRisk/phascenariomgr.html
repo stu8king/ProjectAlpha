@@ -758,11 +758,12 @@ $(document).ready(function() {
                     <table id="userscenarioList" class="table table-hover table-bordered overflow-auto" >
                         <thead>
                             <tr>
-                                <th rowspan="2" style="width: 8%">ID</th>
+                                <th rowspan="2" style="width: 8%; display: none">ID</th>
                                 <th rowspan="2" style="width: 30%">Scenario</th>
                                 <th colspan="9">Impact Assessment Scores (Max = 10)</th>
                                 <th rowspan="2">Threat</th>
                                 <th rowspan="2">Risk</th>
+                                <th rowspan="2">Updated</th>
                                 <th rowspan="2"></th>
                             </tr>
                             <tr>
@@ -781,7 +782,7 @@ $(document).ready(function() {
                         <tbody id="userscenarioListBody" style="font-size: 10px">
                           {% for saved_scenarios in saved_scenarios %}
                           <tr onclick="fillScenario({{ saved_scenarios.ID}}); ">
-                            <td>
+                            <td style="display:none">
                                 {{ saved_scenarios.formatted_id }}
                             </td>
                             <td>{{ saved_scenarios.Scenario|truncatewords:50 }}</td>
@@ -881,6 +882,9 @@ $(document).ready(function() {
 
                             <td>{{ saved_scenarios.ThreatClass }}</td>
                             <td>{{ saved_scenarios.RiskCategory }}</td>
+                             <td>
+                                 <div>{{ saved_scenarios.updater_name }}</div><div> {{ saved_scenarios.last_update }}</div>
+                             </td>
                             <td>
                                 <a href="{% url 'OTRisk:deletescenario' saved_scenarios.ID saved_scenarios.CyberPHA.ID %}"
                                    class="btn btn-danger"

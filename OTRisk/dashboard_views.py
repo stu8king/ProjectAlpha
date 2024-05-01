@@ -16,6 +16,7 @@ import feedparser
 from bs4 import BeautifulSoup
 import json
 import requests
+from django.db.models import Max, F
 
 
 def fetch_weather_alerts(latitude, longitude, api_key):
@@ -212,6 +213,40 @@ def dashboardhome(request):
 
     pha_bia_summary = defaultdict(int)
     phas = tblCyberPHAHeader.objects.filter(UserID__in=organization_users, Deleted=0)
+    pha_ids = phas.values_list('ID', flat=True)
+
+    # Fetching the latest updates from the audit log
+    latest_updates = auditlog.objects.filter(cyberPHAID_id__in=pha_ids).annotate(
+        latest_update=Max('timestamp'),
+        updater_first_name=F('user__first_name'),
+        updater_last_name=F('user__last_name')
+    ).values('cyberPHAID_id', 'latest_update', 'updater_first_name', 'updater_last_name')
+
+    # Convert query result into a dictionary for easy lookup
+    latest_updates_dict = {update['cyberPHAID_id']: update for update in latest_updates}
+
+    # Iterating over saved scenarios to append additional information
+    for pha in phas:
+        id_str = str(pha.ID)
+        formatted_id = f"{id_str[:3]}-{id_str[3:6]}-{id_str[6:]}"
+        pha.formatted_id = formatted_id
+
+        # Retrieve update info if available
+        update_info = latest_updates_dict.get(pha.ID, {})
+
+        # Extract and format the last update timestamp if available
+        if 'latest_update' in update_info:
+            pha.last_update = update_info['latest_update'].strftime('%m/%d/%Y %H:%M') if update_info[
+                'latest_update'] else ''
+        else:
+            pha.last_update = ''
+
+        # Concatenate user names if available
+        if 'updater_first_name' in update_info and 'updater_last_name' in update_info:
+            pha.updater_name = f"{update_info.get('updater_first_name', '')} {update_info.get('updater_last_name', '')}".strip()
+        else:
+            pha.updater_name = ''
+
     for pha in phas:
         business_impact_score = calculate_pha_business_impact_score(pha.ID)
         bia_text = map_score_to_text(business_impact_score)
@@ -242,7 +277,7 @@ def dashboardhome(request):
     ra_worksheets_with_scenario_count = RAWorksheet.objects.filter(**filters).annotate(
         scenario_count=Count('raworksheetscenario')
     ).values(
-        'RATitle', 'StatusFlag', 'RATrigger', 'scenario_count'
+        'RATitle', 'StatusFlag', 'RATrigger', 'scenario_count', 'RADescription', 'BusinessUnit'
     )
 
     # Convert QuerySet to a list of dictionaries for the context
@@ -829,4 +864,3 @@ def get_group_report(request):
         'avg_sle': avg_sle,
         'group_name': group_name
     })
-
