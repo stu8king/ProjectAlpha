@@ -388,7 +388,7 @@ def iotaphamanager(request, record_id=None):
         # First, remove existing moderators for this PHA record
         CyberPHAModerators.objects.filter(pha_header=pha_header).delete()
         # Get the list of selected moderator IDs from the form
-        print(request.POST.get('targetDate'))
+
         selected_moderators_ids = request.POST.getlist('moderator')
         # Get the target date from the form
 
