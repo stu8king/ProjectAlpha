@@ -461,7 +461,7 @@
     <div class="card">
         <div class="card-header">Started/Completed Assessments</div>
         <div class="card-body">
-            <table class="table">
+            <table class="table" id="tbllist">
                 <thead>
                     <tr>
                         <th>Framework</th>
@@ -484,7 +484,9 @@
                         <td colspan="5"> <!-- This colspan ensures the row spans the full width of the table -->
                             <div style="display: flex; justify-content: space-around;">
                                 <a href="{% url 'OTRisk:edit_assessment' assessment.id %}" class="action-link">Complete</a>
-                                <a onclick="setAssessmentIdAndShowModal({{ assessment.id }});" class="action-link">Name</a>
+
+                                 <button type="button" class="action-link" id="addNameBtn-{{ assessment.id }}">Add/Edit Name</button>
+
                                 <a href="{% url 'OTRisk:assessment_report_view' assessment.id %}" class="action-link">Report</a>
                                 <a href="javascript:void(0);" onclick="cloneAssessment({{ assessment.id }});" class="action-link">Clone</a>
 
@@ -532,6 +534,10 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", function() {
+
+    var addNameButtons = document.querySelectorAll('.add-name-btn');
+
+
     var saveButton = document.getElementById('saveBtn');
     var nameForm = document.getElementById('nameForm');
     var assessmentIdInput = document.getElementById('assessmentIdInput');
@@ -586,10 +592,17 @@ function updateAssessmentTable(assessments) {
                 <td>${assessment.name}</td>
                 <td>${assessment.date_created}</td>
                 <td>${assessment.date_modified}</td>
-                <td>
-                    <a href="${assessmentEditUrl}" class="btn btn-primary">Assessment</a>
-                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addNameModal" onclick="setAssessmentId(${assessment.id})">Add/Edit Name</button>
-                </td>
+            <td></td>
+                         </tr>
+            <tr>
+               <td colspan="5">
+                    <div style="display: flex; justify-content: space-around;">
+                    <a href="${assessmentEditUrl}" class="action-link">Complete</a>
+                    <button type="button" class="action-link btn btn-primary" data-bs-toggle="modal" data-bs-target="#addNameModal" onclick="setAssessmentId(${assessment.id})">Add/Edit Name</button>
+                    <a href="/OTRisk/assessment_report_view/${assessment.id}/" class="action-link">Report</a>
+                    <a href="javascript:void(0);" onclick="cloneAssessment(${assessment.id});" class="action-link">Clone</a>
+                    </div>
+</td>
             </tr>`;
         tableBody.innerHTML += row;
     });

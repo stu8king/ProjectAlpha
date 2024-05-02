@@ -777,7 +777,8 @@ def get_all_groups_scores(request):
     user_organization_id = get_user_organization_id(request)  # Retrieve organization ID using the custom function
 
     # Fetch all groups that belong to the user's organization
-    all_groups = CyberPHA_Group.objects.filter(organization_id=user_organization_id)
+    all_groups = CyberPHA_Group.objects.filter(organization_id=user_organization_id).distinct()
+    print(all_groups)
     all_groups_data = []
 
     for group in all_groups:
@@ -816,6 +817,7 @@ def get_all_groups_scores(request):
                 ]
             }
             all_groups_data.append(avg_scores)
+            print(all_groups_data)
 
     return JsonResponse({'allGroupsData': all_groups_data})
 
