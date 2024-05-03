@@ -153,8 +153,9 @@ def clean_text(text):
 @login_required()
 def dashboardhome(request):
     user_organization_id = get_user_organization_id(request)
-
+    print(user_organization_id)
     organization_users = get_organization_users(user_organization_id)
+    print(organization_users)
     # Set the session variable
     request.session['user_organization'] = user_organization_id
 
@@ -470,6 +471,7 @@ def dashboardhome(request):
     groups_with_cyberphas = []
     for group in CyberPHA_Group.objects.all():
         cyberphas = group.tblcyberphaheader_set.filter(UserID__in=organization_users)
+
         # Only append the group if it has associated tblCyberPHAHeader records within the organization
         if cyberphas.exists():
             groups_with_cyberphas.append({
@@ -477,6 +479,7 @@ def dashboardhome(request):
                 'group_name': group.name,
                 'cyberphas': [{'facility_name': cyberpha.FacilityName} for cyberpha in cyberphas]
             })
+    print(groups_with_cyberphas)
     worksheets_to_approve = RAWorksheet.objects.filter(
         Q(approver=request.user),
         Q(approval_status='Pending') | Q(approval_status='Rejected')
@@ -776,16 +779,15 @@ def get_all_groups_scores(request):
     user = request.user  # Get the currently logged-in user
     user_organization_id = get_user_organization_id(request)  # Retrieve organization ID using the custom function
 
-    # Fetch all groups that belong to the user's organization
     all_groups = CyberPHA_Group.objects.filter(organization_id=user_organization_id).distinct()
-    print(all_groups)
     all_groups_data = []
 
     for group in all_groups:
         # Fetch related tblCyberPHAHeader IDs for the group
         # Ensuring we are filtering CyberPHA headers based on organization users
         organization_users = User.objects.filter(userprofile__organization_id=user_organization_id).values_list('id',
-                                                                                                                flat=True)
+                                                                                                               flat=True)
+
         cyberpha_ids = tblCyberPHAHeader.objects.filter(groups=group, UserID__in=organization_users).values_list('ID',
                                                                                                                  flat=True)
 

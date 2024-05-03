@@ -264,7 +264,7 @@ var map;
             <h1 class="page-title">CyberPHA@AnzenOT (Beta)</h1>
             </div>
             <div class="col-md-1">
-                <button type="submit" id="btnformSubmit" class="btn nav-link"><i class="bi bi-floppy2-fill"></i> Save</button>
+                <button type="submit" id="btnformSubmit" class="btn nav-link" title="Click here to save the current facility information"><i class="bi bi-floppy2-fill"></i> Save</button>
                 <div id="spinnerContainer" style="display: none;">
                     <div class="spinner-border" role="status">
                         <span class="sr-only">Loading...</span>
@@ -273,7 +273,7 @@ var map;
 
             </div>
             <div class="col-md-1">
-                <button type="button" class="btn nav-link " id="resetButton"><i class="bi bi-plus-circle"></i> New</button>
+                <button type="button" class="btn nav-link " id="resetButton" title="Click here to begin a new CyberPHA"><i class="bi bi-plus-circle"></i> New</button>
                 <script>
                 $(document).ready(function() {
                     $('#resetButton').on('click', function() {
@@ -335,7 +335,7 @@ var map;
 </script>
             </div>
             <div class="col-md-1">
-                <button type="button" class="btn nav-link " id="scenarioButton"><i class="bi bi-pencil-square"></i> Scenarios</button>
+                <button type="button" class="btn nav-link " id="scenarioButton" title="Click here to view scenarios for the currently selected facility "><i class="bi bi-pencil-square"></i> Scenarios</button>
                     <script>
                          $(document).ready(function() {
                             $('#scenarioButton').on('click', function() {
@@ -345,7 +345,7 @@ var map;
                     </script>
             </div>
             <div class="col-md-1">
-                <button type="button" id="risk-assessment-btn" class="btn nav-link" ><i class="bi bi-calculator"></i> Profile</button></div>
+                <button type="button" id="risk-assessment-btn" class="btn nav-link" title="Click here to re-generate the PHA profile for the facility"><i class="bi bi-calculator"></i> Profile</button></div>
                 <script>
                     $(document).ready(function() {
                     // Event handler for the Copy button
@@ -777,7 +777,7 @@ $(document).ready(function() {
                  var pha_score = data.headerrecord.pha_score;
                         // Add other form updates as in your provided code...
                     } else {
-                        swal("Error", "Failed to load default facility.", "error");
+                        swal.fire("Error", "Failed to load default facility.", "error");
                     }
                 },
                 error: function(xhr, status, error) {
