@@ -153,9 +153,7 @@ def clean_text(text):
 @login_required()
 def dashboardhome(request):
     user_organization_id = get_user_organization_id(request)
-    print(user_organization_id)
     organization_users = get_organization_users(user_organization_id)
-    print(organization_users)
     # Set the session variable
     request.session['user_organization'] = user_organization_id
 
@@ -479,7 +477,6 @@ def dashboardhome(request):
                 'group_name': group.name,
                 'cyberphas': [{'facility_name': cyberpha.FacilityName} for cyberpha in cyberphas]
             })
-    print(groups_with_cyberphas)
     worksheets_to_approve = RAWorksheet.objects.filter(
         Q(approver=request.user),
         Q(approval_status='Pending') | Q(approval_status='Rejected')
@@ -819,7 +816,6 @@ def get_all_groups_scores(request):
                 ]
             }
             all_groups_data.append(avg_scores)
-            print(all_groups_data)
 
     return JsonResponse({'allGroupsData': all_groups_data})
 
