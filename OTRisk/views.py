@@ -57,7 +57,8 @@ from .dashboard_views import dashboardhome, get_group_report, get_heatmap_record
 from .pha_views import iotaphamanager, facility_risk_profile, get_headerrecord, scenario_analysis, phascenarioreport, \
     getSingleScenario, pha_report, scenario_vulnerability, add_vulnerability, get_asset_types, calculate_effectiveness, \
     generate_ppt, analyze_scenario, assign_cyberpha_to_group, fetch_groups, fetch_all_groups, retrieve_scenario_builder, \
-    facilities, air_quality_index, delete_pha_record, get_assessment_summary, copy_cyber_pha, assessment_gap_analysis, load_default_facility
+    facilities, air_quality_index, delete_pha_record, get_assessment_summary, copy_cyber_pha, assessment_gap_analysis, \
+    load_default_facility
 from .report_views import pha_reports, get_scenario_report_details, qraw_reports, get_qraw_scenario_report_details
 from .scenario_builder import scenario_sim_v2, analyze_sim_scenario_v2, generate_sim_attack_tree_v2, \
     analyze_sim_consequences_v2, generate_scenario_description_v2, related_incidents, retrieve_scenario_builder_v2
@@ -81,6 +82,10 @@ import chardet
 import datetime
 from datetime import datetime
 from django.db.models import Max
+import urllib3
+from urllib3.exceptions import InsecureRequestWarning
+import networkx as nx
+
 app_name = 'OTRisk'
 
 
@@ -630,7 +635,8 @@ def setup_org(request):
             return redirect('OTRisk:setup_org')
     else:
         form = OrganizationDefaultsForm(instance=defaults_instance)
-    return render(request, 'org_setup.html', {'form': form})
+        exalens_fields = ['exalens_api_key', 'exalens_client_id', 'exalens_ip_address']
+    return render(request, 'org_setup.html', {'form': form, 'exalens_fields': exalens_fields})
 
 
 @login_required
@@ -1149,7 +1155,7 @@ def save_or_update_cyberpha(request):
         except ValueError:
             control_effectiveness = 0
 
-        sl_a = request.POST.get('sl_a')
+        sl_a = request.POST.get('security_level')
 
         if outageDuration in ('NaN', ''):
             outageDuration = 0
@@ -1389,7 +1395,7 @@ def save_or_update_cyberpha(request):
                 'control_effectiveness': control_effectiveness,
                 'likelihood': 0 if likelihood == '' else likelihood,
                 'frequency': decimal.Decimal('0.0') if frequency == '' else frequency,
-                'sl_a': 0 if sl_a == '' else sl_a,
+                'sl_a': sl_a,
                 'dangerScope': dangerScope,
                 'ai_bia_score': 0 if ai_bia_score is None else ai_bia_score,
                 'compliance_map': compliance_map,
@@ -1618,7 +1624,6 @@ def assess_cyberpha(request, cyberPHAID=None):
             scenario.updater_name = f"{update_info.get('updater_first_name', '')} {update_info.get('updater_last_name', '')}".strip()
         else:
             scenario.updater_name = ''
-
 
     MitreControlAssessment_results = MitreControlAssessment.objects.filter(cyberPHA_id=active_cyberpha)
     control_assessments_data = serializers.serialize('json', MitreControlAssessment_results)
@@ -2443,7 +2448,7 @@ def update_risk_open_date(request):
     except tblCyberPHAScenario.DoesNotExist:
         return JsonResponse({"status": "error", "message": "Risk scenario not found"}, status=404)
     except Exception as e:
-        print(e)
+
         return JsonResponse({"status": "error", "message": str(e)}, status=500)
 
 
@@ -3284,9 +3289,11 @@ def upload_completed_assessment(request):
             for row, question in zip(reader, questions):
                 try:
                     response = row['response'].strip().lower() == 'true'
-                    effectiveness = int(row['effectiveness'].strip()) if row['effectiveness'].strip() and response else None
+                    effectiveness = int(row['effectiveness'].strip()) if row[
+                                                                             'effectiveness'].strip() and response else None
                     remarks = row.get('remarks', '').strip()
-                    weighting = int(row['weighting'].strip()) if row['weighting'].strip() else 1  # Default weighting to 1 if empty
+                    weighting = int(row['weighting'].strip()) if row[
+                        'weighting'].strip() else 1  # Default weighting to 1 if empty
 
                     # Create the AssessmentAnswer instance
                     answer = AssessmentAnswer.objects.create(
@@ -3299,17 +3306,18 @@ def upload_completed_assessment(request):
                     self_assessment.answers.add(answer)
 
                 except ValueError as e:
-                    print("Error processing row:", e)  # Output errors directly related to row processing
+
                     continue
 
             self_assessment.save()
             return JsonResponse({'status': 'success', 'message': 'Assessment data uploaded successfully'})
 
         except Exception as e:
-            print("Error during CSV handling:", e)
+
             return JsonResponse({'status': 'error', 'message': 'Error processing CSV: ' + str(e)})
 
     return JsonResponse({'status': 'error', 'message': 'Invalid request'})
+
 
 def calculate_scores(self_assessment):
     answers = self_assessment.answers.all()
@@ -3339,3 +3347,61 @@ def generate_framework_csv(request, framework_id):
         writer.writerow([question.text, question.guidance, question.section_reference, question.category])
 
     return response
+
+
+def get_asset_data(request):
+    urllib3.disable_warnings(InsecureRequestWarning)
+
+    # API endpoint URLs
+    incidents_url = "https://34.136.119.73/api/thirdparty/incident"
+    assets_url = "https://34.136.119.73/api/thirdparty/asset"
+
+    # Headers for authentication
+    headers = {
+        'x-client-id': 'test_api_key',
+        'x-api-key': 'WPaRPsksKbHwL6wXrXtuUyq4sAoIgfeR'
+    }
+
+    try:
+        # Requesting incident data (though not used for graph in this version)
+        incidents_response = requests.get(incidents_url, headers=headers, verify=False)
+        assets_response = requests.get(assets_url, headers=headers, verify=False)
+
+        if incidents_response.status_code == 200 and assets_response.status_code == 200:
+            incidents_data = incidents_response.json().get('data', [])
+            assets_data = assets_response.json().get('data', [])
+
+            if not assets_data:  # Check if asset data is empty
+                return HttpResponse("No asset data available")
+
+            # Prepare nodes and links for D3.js visualization using assets data
+            nodes = set()
+            links = []
+            for asset in assets_data:
+                ip = asset.get('ip', 'Unknown IP')
+                hostname_list = asset.get('hostname_list', [])
+                for hostname in hostname_list:
+                    nodes.add(ip)
+                    nodes.add(hostname)
+                    links.append({"source": ip, "target": hostname, "value": "Network Connection"})
+
+            nodes = [{"id": node, "group": 1} for node in nodes]  # Convert set to list
+
+            graph_data = {
+                "nodes": nodes,
+                "links": links
+            }
+            graph_data_json = json.dumps(graph_data)
+            # Pass both the original incident data and graph data to the template
+            context = {
+                'data': incidents_data,  # This maintains the original list of incidents
+                'graph_data_json': graph_data_json  # This adds the network graph data
+            }
+
+            return render(request, 'display_assets.html', context)
+        else:
+            return HttpResponse(f"Failed to retrieve data: {incidents_response.status_code}, {assets_response.status_code}")
+    except requests.exceptions.RequestException as e:
+        # Handle any errors that occur during the request
+        return HttpResponse(f"An error occurred: {e}")
+

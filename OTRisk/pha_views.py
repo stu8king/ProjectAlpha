@@ -1602,6 +1602,10 @@ def scenario_analysis(request):
                             """
 
             },
+            {
+                "role": "user",
+                "content": f"{common_content}. ISA-62443-3-2 describes five Security Levels SL-1, SL-2, SL-3, SL-4, SL-5. As an OT Cybersecurity risk analyst, assess which security level has been achieved and format your response as follows: 'Security Level: [SL Value], Justification: [Concise Justification, no more than 20 words].'"
+            }
         ]
 
         def get_response_safe(user_message):
@@ -1619,6 +1623,7 @@ def scenario_analysis(request):
             futures = [executor.submit(get_response, msg) for msg in user_messages]
             # Collect the results in the order the futures were submitted
             responses = [future.result() for future in futures]
+
 
         # Now handle the compliance mapping separately
         compliance_data = compliance_map_data(common_content)
@@ -1662,7 +1667,8 @@ def scenario_analysis(request):
             'cost_projection_justification': cost_projection_justification,
             'control_effectiveness': last_assessment_score,
             'recommendations': responses[7],
-            'scenario_compliance_data': responses[8],
+            'select_level': responses[8],
+            'scenario_compliance_data': responses[9],
             'rationale': rationale
         })
 
@@ -2749,5 +2755,5 @@ def load_default_facility(request):
                              'investments': investments_data,})
 
     except Exception as e:
-        print(e)
+
         return JsonResponse({'error': str(e)}, status=500)

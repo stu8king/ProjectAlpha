@@ -165,6 +165,9 @@ class OrganizationDefaults(models.Model):
             MaxValueValidator(5)
         ]
     )
+    exalens_api_key = models.TextField(null=True)
+    exalens_client_id = models.TextField(null=True)
+    exalens_ip_address = models.TextField(null=True)
 
     def __str__(self):
         return f"{self.organization.name} Defaults"
@@ -682,7 +685,7 @@ class tblCyberPHAScenario(models.Model):
     risk_close_date = models.DateField()
     control_effectiveness = models.IntegerField()
     frequency = models.DecimalField(max_digits=4, decimal_places=1)
-    sl_a = models.PositiveSmallIntegerField(choices=SECURITY_LEVELS, default=0)
+    sl_a = models.TextField(null=True)
     dangerScope = models.TextField()
     ai_bia_score = models.IntegerField()
     ale_low = models.IntegerField()

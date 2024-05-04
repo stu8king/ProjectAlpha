@@ -242,7 +242,21 @@ class OrganizationDefaultsForm(forms.ModelForm):
         }),
         required=True
     )
-
+    exalens_api_key = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control'}),
+        label="API Key"
+    )
+    exalens_client_id = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control'}),
+        label="Client ID"
+    )
+    exalens_ip_address = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control'}),
+        label="IP Address"
+    )
     def __init__(self, *args, **kwargs):
         super(OrganizationDefaultsForm, self).__init__(*args, **kwargs)
         self.fields['industry'].label_from_instance = lambda obj: "{}".format(obj.Industry)

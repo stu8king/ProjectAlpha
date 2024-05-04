@@ -446,7 +446,15 @@ svg {
     height: 1.75em;
     }
 }
-
+ #sl-a {
+        color: black; /* Sets font color to black */
+        line-height: 1.5; /* Adds some line spacing */
+        padding: 5px; /* Adds padding around the text for better readability */
+    }
+    .justification {
+        margin-top: 10px; /* Adds space between the Security Level and Justification */
+        display: block; /* Ensures it starts on a new line */
+    }
 </style>
 <script>
 
@@ -979,16 +987,6 @@ $(document).ready(function() {
                             {% endfor %}
                         </select>
 
-                        <br>
-                        <label for="selSL" class="small-font d-flex align-items-center " >Security Level Achieved (SL-A)</label>
-
-                        <select class="form-control small-font" name="selSL" id="selSL" style="border: 3px solid #97979A; border-radius: 10px; box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5);  padding: 5px; background-color: white">
-                            <option value=""> -- Select SL-A -- </option>
-                            {% for value, description in SECURITY_LEVELS %}
-                                <option value="{{ value }}">
-                                    {{ description }}</option>
-                            {% endfor %}
-                        </select>
 
                         <br>
                         <div class="form-group">
@@ -1733,6 +1731,14 @@ $(document).ready(function() {
                 </div>
             </div>
              <div class="row d-flex h-30">
+                 <div class="col-lg-2 col-md-3 col-sm-4 flex-fill d-flex">
+                    <div class="card mb-3 shadow-sm w-100">
+                        <div class="card-body" >
+                            <div id="sl-a"></div>
+                            <input type="hidden" name="security_level" id="security_level">
+                        </div>
+                    </div>
+                 </div>
                 <div class="col-lg-2 col-md-3 col-sm-4 flex-fill d-flex">
                     <div class="card mb-3 shadow-sm w-100">
                         <div class="card-body" >
@@ -2222,7 +2228,7 @@ $(document).ready(function() {
                   const sm = document.getElementById('SMrange').value;
                   const mel = document.getElementById('MELrange').value;
                   const rrm = document.getElementById('RRMrange').value;
-                  const sl_a = document.getElementById('selSL').value;
+                  //const sl_a = document.getElementById('selSL').value;
                   const sa = document.getElementById('SArange').value;
                   const mela = document.getElementById('MELarange').value;
                   const uel = document.getElementById('uel_range').value;
@@ -2249,6 +2255,7 @@ $(document).ready(function() {
                   const justifyRegulation = document.getElementById('txtregulatoryJustify').value
                   const justifySupply = document.getElementById('txtsupplyJustify').value
                   const dataRegulation = document.getElementById('txtdataJustify').value
+                  const security_level = document.getElementById('security_level').value
                   //const sle =  document.getElementById('hdn_sle').value
                   const aleValue = document.getElementById('ale').value;
                   let ale = parseInt(aleValue.replace(/[^0-9]/g, ''), 10);
@@ -2371,10 +2378,10 @@ $(document).ready(function() {
                   formData.append('outageCost', outageCost);
                   formData.append('probability', probability);
                   formData.append('control_effectiveness', control_effectiveness);
-                  //formData.append('standards', standards);
+                  // formData.append('standards', standards);
                   formData.append('risk_register', risk_register);
                   formData.append('likelihood', likelihood);
-                  formData.append('sl_a', sl_a);
+                  formData.append('security_level', security_level);
                   formData.append('ai_bia_score', bia_score);
                   formData.append('compliance_map', compliance_map);
                   formData.append('attack_tree_text', attack_tree_text);
@@ -3525,7 +3532,7 @@ $('#scenarioSelectModal').on('show.bs.modal', function (e) {
                     });
                 })
                 .catch(error => {
-                    console.log('Error fetching mitigation measures:', error);
+
                 });
         }
 
@@ -3608,7 +3615,7 @@ $('#scenarioSelectModal').on('show.bs.modal', function (e) {
             let mel = document.getElementById('MELrange').value;
             let rrm = document.getElementById('RRMrange').value;
             let sa = document.getElementById('SArange').value;
-            let sl_a = document.getElementById('selSL').value;
+            //let sl_a = document.getElementById('selSL').value;
             let mela = document.getElementById('MELarange').value;
             let industry = sessionStorage.getItem('sessionIndustry')
             let facilityType = sessionStorage.getItem('sessionFacilityType')
@@ -3698,7 +3705,6 @@ $('#scenarioSelectModal').on('show.bs.modal', function (e) {
                     uel: uel,
                     financial: financial,
                     cpha: cpha,
-                    sl_a: sl_a,
                     safety_hazard: safety_hazard,
                     production_outage: production_outage,
                     production_outage_length: production_outage_length,
@@ -3749,7 +3755,6 @@ $('#scenarioSelectModal').on('show.bs.modal', function (e) {
                         });
                     } else {
                         $('#loadingSpinner').hide();
-                        console.log(response);
                         document.getElementById('txtRRa').value = response.adjustedRR;
                         document.getElementById('hdnLikelihood').value = response.likelihood;
                         document.getElementById('txtLikelihood').value = response.likelihood + '%';
@@ -3771,6 +3776,25 @@ $('#scenarioSelectModal').on('show.bs.modal', function (e) {
 
                         document.getElementById('frequency').value = response.frequency;
                         document.getElementById('txtProbability').value = response.probability;
+
+
+                        document.getElementById('security_level').value = response.select_level;
+                         if (response['select_level']) {
+                            let sl_a_value = response['select_level'];
+                            let parts = sl_a_value.split(", Justification: ");
+                            if (parts.length === 2) {
+                                let levelPart = parts[0].split("Level: ")[1];
+                                let justificationPart = parts[1];
+
+                                // Update the #sl-a content using new structure with line breaks and classes
+                                $('#sl-a').html(`<span>Security Level: ${levelPart}</span><span class="justification">Justification: ${justificationPart}</span>`);
+                            } else {
+                                $('#sl-a').text("Invalid format for security level data");
+                            }
+                        } else {
+                            $('#sl-a').text("No data available for security level");
+                        }
+
 
                         document.getElementById('hdn_control_effectiveness').value = response.control_effectiveness;
                         displayRecommendations(response.recommendations);
@@ -3954,8 +3978,7 @@ document.addEventListener("DOMContentLoaded", function() {
         // Check on textarea change
 
         textarea.addEventListener('input', function() {
-            console.log(textarea);
-            console.log(indicator);
+
             updateIndicator(textarea, indicator);
         });
     });
@@ -3990,7 +4013,7 @@ function displayRecommendations(recommendations) {
 
 
 function createActionItem(recBoxId) {
-    console.log(`Create action item for ${recBoxId}`);
+
     $(".custom-context-menu").hide();
 }
 
@@ -4424,7 +4447,7 @@ function resetformcontrols() {
       document.getElementById('SMrange').value = 0;
       document.getElementById('MELrange').value = 0;
       document.getElementById('RRMrange').value = 0;
-      document.getElementById('selSL').value = 0;
+      //document.getElementById('selSL').value = 0;
       document.getElementById('SArange').value = 0;
       document.getElementById('MELarange').value = 0;
       document.getElementById('txtsafetyJustify').value = '';
@@ -4512,7 +4535,7 @@ function clearScenario(){
       document.getElementById('SMrange').value = 0;
       document.getElementById('MELrange').value = 0;
       document.getElementById('RRMrange').value = 0;
-      document.getElementById('selSL').value = 0;
+      //document.getElementById('selSL').value = 0;
       document.getElementById('SArange').value = 0;
       document.getElementById('MELarange').value = 0;
       document.getElementById('txtsafetyJustify').value = '';
@@ -4639,7 +4662,28 @@ function clearScenario(){
         $('#SMrange').val(data.SM);
         $('#MELrange').val(data.MEL);
         $('#RRMrange').val(data.RRM);
-        $('#selSL').val(data.sl_a);
+
+        document.getElementById('security_level').value = data.sl_a;
+         if (data['sl_a']) {
+            let sl_a_value = data['sl_a'];
+            let parts = sl_a_value.split(", Justification: ");
+            if (parts.length === 2) {
+                let levelPart = parts[0].split("Level: ")[1];
+                let justificationPart = parts[1];
+
+                // Update the #sl-a content using new structure with line breaks and classes
+                $('#sl-a').html(`<span>Security Level: ${levelPart}</span><span class="justification">Justification: ${justificationPart}</span>`);
+            } else {
+                $('#sl-a').text("Invalid format for security level data");
+            }
+        } else {
+            $('#sl-a').text("No data available for security level");
+        }
+
+
+
+
+
         $('#SArange').val(data.SA);
         $('#MELarange').val(data.MELA);
         $('#uel_range').val(data.UEL);
