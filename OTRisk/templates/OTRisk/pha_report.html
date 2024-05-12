@@ -51,6 +51,16 @@
     box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.5); /* Outer shadow */
     background-color: #5E6266; /* Lighter shade of #464748 */
     padding: 15px; /* Optional: for internal spacing */
+
+}
+ .form-group-a {
+    border: 1px solid #464748; /* Border color */
+    box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.5); /* Outer shadow */
+    background-color: #5E6266; /* Lighter shade of #464748 */
+    padding: 15px; /* Optional: for internal spacing */
+     display: flex;
+     flex-direction: column;
+     height: 45%;
 }
 @media (min-width: 992px) { /* Adjusting for Bootstrap's large devices breakpoint */
     .custom-main-content {
@@ -219,6 +229,37 @@ color: #d3d1cd;
     height: 1.75em;
     }
 }
+ .anychart-credits {
+    display: none !important; /* Hide AnyChart credits */
+}
+ #bia_container {
+    display: flex;
+    flex-direction: column;
+    align-items: start; /* Align items to the start of the flex container */
+    transform: scale(0.75);
+    transform-origin: top left;
+    font-size: 0.7em;
+    width: 133.33%; /* Adjusted for scaling */
+    height: 400px; /* Static height to control the container size */
+    overflow: hidden;
+}
+
+  #pha_gauge {
+        transform: scale(0.75); /* Scale the chart to 75% */
+        transform-origin: top left; /* Ensure the scaling doesn't offset the position */
+        font-size: 0.7em; /* Set the font size for the chart text */
+        width: 133.33%; /* Increase the width to compensate for the scaling */
+        height: auto; /* Maintain the original height aspect ratio */
+        overflow: hidden; /* Hide any overflow caused by scaling */
+    }
+  #score_gauge {
+        transform: scale(0.75); /* Scale the chart to 75% */
+        transform-origin: top left; /* Ensure the scaling doesn't offset the position */
+        font-size: 0.7em; /* Set the font size for the chart text */
+        width: 133.33%; /* Increase the width to compensate for the scaling */
+        height: auto; /* Maintain the original height aspect ratio */
+        overflow: hidden; /* Hide any overflow caused by scaling */
+    }
 </style>
 </head>
 <body style="background-color: #464748">
@@ -237,258 +278,205 @@ color: #d3d1cd;
 
     <div class="col-md-11" id="pha_header">
 
-        <div class="row">
-            <div class="col-md-12">
-                <p>
-                    <H4 style="color: #d3d1cd; display: inline-block;">{{ cyber_pha_header.FacilityName }}</H4>
-                    <h6 style="display: inline-block; color: #d3d1cd"> CyberPHA</h6>
-            </div>
-         </div>
+
         <div class="form-group">
-            <div class="row"  style="font-size: 10px">
-            <div class="col-md-4" style="font-size: 12px">
-                <div class="row">
-                    <div class="col-md-6" style="font-size: 14px; color: #d3d1cd">
-                        Facility Type: {{ cyber_pha_header.FacilityType }}<br>
-                        Industry: {{ cyber_pha_header.Industry }}<br>
-                        Assessment Unit: {{ cyber_pha_header.AssessmentUnit }}<br>
-                        Assessment Zone: {{ cyber_pha_header.AssessmentZone }}<br>
-                        Assessment Start: {{ cyber_pha_header.AssessmentStartDate }} /
-                        Assessment End: {{ cyber_pha_header.AssessmentEndDate }}
-                    </div>
-                    <div class="col-md-6" style="font-size: 12px">
-                        <div class="card mb-3" style="background-color: #5E6266; border: 0px">
-                            <div class="form-group" style="background-color: #464748">
-
-                                <div id="pha_gauge" style="width: 100%; height: 100%;"></div>
-
-                            </div>
-                            <script type="text/javascript">
-                            anychart.onDocumentReady(function() {
-                            // Assume pha_score is a variable holding your PHA score
-                            var pha_score = {{ cyber_pha_header.pha_score }};
-
-                            // Create data for the gauge
-                            var data = anychart.data.set([
-                                ['PHA Score', pha_score]
-                            ]);
-
-                            // Create and configure the gauge chart
-                            var gauge = anychart.gauges.circular();
-                            gauge.data(data);
-
-                            var credits = gauge.credits();
-                            credits.enabled(false);
-                            // Set gauge settings
-                            gauge.data(data).padding('4%');
-                            gauge.startAngle(270);
-                            gauge.sweepAngle(180);
-
-                            // Set axis scale settings
-                            var scale = gauge.axis().scale();
-                            scale.minimum(0)
-                                .maximum(100)
-                                .ticks()
-                                .interval(10);
-
-                            // Set the look of the bar that presents data
-                            gauge.bar(0)
-                                .position('i')
-                                .fill('#F0673B .9')
-                                .stroke('#F0673B')
-                                .radius(65);
-                            gauge.title("PHA Profile Rating (/100)");
-
-                            gauge.container('pha_gauge').draw();
-                        });
-                            </script></div>
-                    </div>
-                </div>
-                <div class="form-group">
-                <div class="row">
-                <div id="bia_container" style="width: 100%; height: 250px;"></div>
-
-
-                     </div>
-                </div>
-
-
-            </div>
-            <div class="col-md-8">
-                <div class="row">
-                    <div class="col">
-                        <div class="form-group">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="form-group-a" >
                         <div class="row">
-                            <div class="col-md-3" style="color: #d3d1cd">
-                                                      Estimated Event Costs
-                                <div class="card mb-3 shadow-sm" style="background-color: #464748;">
-                                    <div class="card-body">
-                                        Low Estimate<br>
-                                        <h6>{{ total_cost_impact_low }}</h6>
-                                    </div>
-                                </div>
-                                <div class="card mb-3 shadow-sm" style="background-color: #464748;">
-                                    <div class="card-body">
-                                        Most Likely<br>
-                                        <h6>{{ total_cost_impact }}</h6>
-                                    </div>
-                                </div>
-                                <div class="card mb-3 shadow-sm" style="background-color: #464748;">
-                                    <div class="card-body">
-                                        Worst Case<br>
-                                        <h6>{{ total_cost_impact_high }}</h6>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-9">
-                                <div class="card mb-2 shadow-sm">
-                                    <div class="card-body text-center" style="color: #464748">
-                                        Facility Profile
-                                        <!-- Nav tabs -->
-                                        <ul class="nav nav-tabs" id="myTabs" role="tablist">
-                                            <li class="nav-item">
-                                                <a class="nav-link active" id="safety-tab" data-toggle="tab" href="#safety" role="tab" aria-controls="safety" aria-selected="true">Safety</a>
-                                            </li> <!-- safety summary -->
-                                            <li class="nav-item">
-                                                <a class="nav-link" id="chemical-tab" data-toggle="tab" href="#chemical" role="tab" aria-controls="chemical" aria-selected="false">Chemical</a>
-                                            </li> <!-- chemical summary -->
-                                            <li class="nav-item">
-                                                <a class="nav-link" id="physical-tab" data-toggle="tab" href="#physical" role="tab" aria-controls="physical" aria-selected="false">Physical</a>
-                                            </li> <!-- physical security summary -->
-                                            <li class="nav-item">
-                                                <a class="nav-link" id="compliance-tab" data-toggle="tab" href="#compliance" role="tab" aria-controls="compliance" aria-selected="false">Compliance</a>
-                                            </li> <!-- compliance summary -->
-                                            <li class="nav-item">
-                                                <a class="nav-link" id="other-tab" data-toggle="tab" href="#other" role="tab" aria-controls="other" aria-selected="false">OT</a>
-                                            </li> <!-- OT controls summary -->
-                                            <li class="nav-item">
-                                                <a class="nav-link" id="threats-tab" data-toggle="tab" href="#threats" role="tab" aria-controls="threats" aria-selected="false">Threats</a>
-                                            </li>
-                                            <li class="nav-item">
-                                                <a class="nav-link" id="insight-tab" data-toggle="tab" href="#insight" role="tab" aria-controls="insight" aria-selected="false">Insight</a>
-                                            </li>
-                                            <li class="nav-item">
-                                                <a class="nav-link" id="strategy-tab" data-toggle="tab" href="#strategy" role="tab" aria-controls="strategy" aria-selected="false">Strategy</a>
-                                            </li>
-                                        </ul>
+                            <div class="col-md-3" style="text-align: right; font-size: 0.7em ">
+                                Title:<br>
+                                Facility:<br>
+                                Address:<br>
 
-                                        <!-- Tab panes -->
-                                        <div class="tab-content">
-                                            <div class="tab-pane active text-left" id="safety" role="tabpanel" aria-labelledby="safety-tab">
-                                            <div class="col scrollable-content">{{ safety_summary_html|safe }}</div>
-                                        </div>
-                                        <div class="tab-pane text-left" id="chemical" role="tabpanel" aria-labelledby="chemical-tab">
-                                            <div class="col scrollable-content">{{ chemical_summary_html|safe }}</div>
-                                        </div>
-                                        <div class="tab-pane text-left" id="physical" role="tabpanel" aria-labelledby="physical-tab">
-                                            <div class="col scrollable-content">{{ physical_summary_html|safe }}</div>
-                                        </div>
-                                        <div class="tab-pane text-left" id="compliance" role="tabpanel" aria-labelledby="compliance-tab">
-                                            <div class="col scrollable-content">{{ compliance_summary_html|safe }}</div>
-                                        </div>
-                                        <div class="tab-pane text-left" id="other" role="tabpanel" aria-labelledby="other-tab">
-                                            <div class="col scrollable-content">{{ other_summary_html|safe }}</div>
-                                        </div>
-                                        <div class="tab-pane text-left" id="threats" role="tabpanel" aria-labelledby="threats-tab">
-                                            <div class="col scrollable-content">{{ threat_summary_html|safe }}</div>
-                                        </div>
-                                        <div class="tab-pane text-left" id="insight" role="tabpanel" aria-labelledby="insight-tab">
-                                            <div class="col scrollable-content">{{ insight_summary_html|safe }}</div>
-                                        </div>
-                                         <div class="tab-pane text-left" id="strategy" role="tabpanel" aria-labelledby="strategy-tab">
-                                            <div class="col scrollable-content">{{ strategy_summary_html|safe }}</div>
-                                        </div>
-                                        </div>
-                                    </div> <!-- facility profile -->
-                                </div>
+                            </div>
+                            <div class="col-md-9" style="font-size: 0.7em">
+                                {{ cyber_pha_header.title }}<br>
+                                {{ cyber_pha_header.FacilityName }}<br>
+                                {{ cyber_pha_header.facilityAddress }}<br>
+                                {{ cyber_pha_header.facilityCity }}<br>
+                                {{ cyber_pha_header.facilityCode }}<br>
+                                {{ cyber_pha_header.country }}
                             </div>
                         </div>
+                    </div>
+                    <br>
+                     <div class="form-group-a">
+                        <div class="row">
+                            <div class="col-md-3" style="text-align: right; font-size: 0.7em ">
+                                Industry:<br>
+                                Type: <br>
+                                Employees: <br>
+                                Shifts:<br>
                             </div>
-                    </div>
-                    <div class="col" style="color: #d3d1cd">
-                        Facility Address: {{ cyber_pha_header.facilityAddress }}, {{ cyber_pha_header.country }}
-                    <div id="map" style="width: 85%; height: 350px;"></div>
-                </div>
-                </div>
-                <div class="form-group">
-                <div class="row">
-                    <div class="col">
-                        <b style="color:white">Open Actions:</b>
-                    <div id="action_container">
-                        <table id="action_table">
-                            <thead>
-                                <tr>
-                                    <th>Action Title</th>
-                                    <th>Action Description</th>
-                                    <th>Due Date</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <!-- Rows will be appended here by the script -->
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <script>
-                        var raActionsData = {{ ra_actions_json|safe }};
-
-                        var tbody = document.querySelector('#action_table tbody');
-
-                        raActionsData.forEach(function(action) {
-                            var row = tbody.insertRow();
-                            var cell1 = row.insertCell(0);
-                            var cell2 = row.insertCell(1);
-                            var cell3 = row.insertCell(2);
-                            cell1.textContent = action.fields.actionTitle;
-                            cell2.textContent = action.fields.actionDescription;
-                            cell3.textContent = action.fields.actionDueDate;
-                        });
-                    </script>
-
+                            <div class="col-md-9" style="font-size: 0.7em">
+                                {{ cyber_pha_header.Industry }}<br>
+                                {{ cyber_pha_header.FacilityType }}<br>
+                                {{ cyber_pha_header.EmployeesOnSite }}<br>
+                                {{ cyber_pha_header.shift_model }}<br>
+                            </div>
+                        </div>
                     </div>
                 </div>
+                <div class="col-md-4">
+                    <div class="form-group-a" >
+                        <div class="row">
+                            <div class="col-md-3" style="text-align: right; font-size: 0.7em ">
+                                Leader:<br>
+                                Start:<br>
+                                End:<br>
+                                Status:
+
+                            </div>
+                            <div class="col-md-9" style="font-size: 0.7em">
+                                {{ cyber_pha_header.PHALeader }}<br>
+                                {{ cyber_pha_header.AssessmentStartDate }}<br>
+                                {{ cyber_pha_header.AssessmentEndDate }}<br>
+                                {{ cyber_pha_header.AssessmentStatus }}
+                            </div>
+                        </div>
+                    </div>
+                    <br>
+                     <div class="form-group-a">
+                        <div class="row">
+                            <div class="col-md-6" style="text-align: right; font-size: 0.7em ">
+                                <div id="pha_gauge" ></div>
+                                <script type="text/javascript">
+                            anychart.onDocumentReady(function() {
+                            // Assume pha_score is a variable holding your PHA score
+                                    var pha_score = {{ cyber_pha_header.pha_score }};
+
+                                    // Create data for the gauge
+                                    var data = anychart.data.set([
+                                        ['PHA Score', pha_score]
+                                    ]);
+
+                                    // Create and configure the gauge chart
+                                    var gauge = anychart.gauges.circular();
+                                    gauge.data(data);
+
+                                    var credits = gauge.credits();
+                                    credits.enabled(false);
+                                    // Set gauge settings
+                                    gauge.data(data).padding('4%');
+                                    gauge.startAngle(270);
+                                    gauge.sweepAngle(180);
+
+                                    // Set axis scale settings
+                                    var scale = gauge.axis().scale();
+                                    scale.minimum(0)
+                                        .maximum(100)
+                                        .ticks()
+                                        .interval(10);
+
+                                    // Set the look of the bar that presents data
+                                    gauge.bar(0)
+                                        .position('i')
+                                        .fill('#F0673B .9')
+                                        .stroke('#F0673B')
+                                        .radius(65);
+                                    gauge.title("PHA Profile Rating (/100)");
+
+                                    gauge.container('pha_gauge').draw();
+                                });
+                            </script>
+                            </div>
+                            <div class="col-md-6" style="text-align: right; font-size: 0.7em ">
+                                <div id="score_gauge" ></div>
+                                <script type="text/javascript">
+                                anychart.onDocumentReady(function() {
+                                    // Assume last_assessment_score is a variable holding the last assessment score
+                                    var last_assessment_score = {{ cyber_pha_header.last_assessment_score }};
+
+                                    // Create data for the gauge
+                                    var data = anychart.data.set([
+                                        ['Last Assessment Score', last_assessment_score]
+                                    ]);
+
+                                    // Create and configure the gauge chart
+                                    var gauge = anychart.gauges.circular();
+                                    gauge.data(data);
+
+                                    var credits = gauge.credits();
+                                    credits.enabled(false);
+                                    // Set gauge settings
+                                    gauge.data(data).padding('4%');
+                                    gauge.startAngle(270);
+                                    gauge.sweepAngle(180);
+
+                                    // Set axis scale settings
+                                    var scale = gauge.axis().scale();
+                                    scale.minimum(0)
+                                        .maximum(100)
+                                        .ticks()
+                                        .interval(10);
+
+                                    // Set the look of the bar that presents data
+                                    gauge.bar(0)
+                                        .position('i')
+                                        .fill('#F0673B .9')
+                                        .stroke('#F0673B')
+                                        .radius(65);
+                                    gauge.title("Control Score (/100)");
+
+
+                                    gauge.container('score_gauge').draw();
+                                });
+                                </script>
+                            </div>
+                        </div>
+                    </div>
                 </div>
+               <div class="col-md-4">
+                    <div class="form-group" >
+                        <div class="row">
+                            <div class="col-md-12" >
+
+                                <div id="bia_container" ></div>
+                                <script>
+                                    anychart.onDocumentReady(function() {
+        // Create data for AnyChart
+        var data = [];
+        {% for field, avg_value in impact_summary.items %}
+            data.push({"x": "{{ field }}", "value": {{ avg_value }}});
+        {% endfor %}
+
+        // Create a chart
+        var chart = anychart.column3d();
+
+        // Add data to the chart
+        chart.data(data);
+        var credits = chart.credits();
+        credits.enabled(false);
+        // Set chart title
+        chart.title("Business Impact Summary");
+        chart.palette(anychart.palettes.provence);
+        chart.yScale().minimum(0).maximum(10);
+
+        var xAxis = chart.xAxis();
+        xAxis.labels().rotation(-70); // Rotates labels to 70 degrees
+         chart.margin(10, 10, 50, 10); // Reduce the top margin to bring the chart upwards
+
+        // Specify the size of the chart to fill the container
+        chart.bounds(0, 0, '100%', '100%'); // This uses the entire container's height and width
+
+        // Draw the chart
+        chart.container("bia_container");
+        chart.draw();
+    });
+                                </script>
+
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                </div>
+
             </div>
-        </div>
-        </div>
-
-        <div class="row"  style="font-size: 10px">
-
-        </div>
-        <script>
-    function initMap() {
-        var geocoder = new google.maps.Geocoder();
-        var address = "{{ cyber_pha_header.facilityAddress }}, {{ cyber_pha_header.country }}";
-
-        geocoder.geocode({ 'address': address }, function(results, status) {
-            if (status == 'OK') {
-                var mapOptions = {
-                    zoom: 18, // Start with maximum zoom
-                    center: results[0].geometry.location,
-                    mapTypeId: google.maps.MapTypeId.SATELLITE
-                };
-
-                var map = new google.maps.Map(document.getElementById('map'), mapOptions);
-
-                var marker = new google.maps.Marker({
-                    map: map,
-                    position: results[0].geometry.location
-                });
 
 
-            } else {
-                alert('Geocode was not successful for the following reason: ' + status);
-            }
-        });
-    }
-
-    google.maps.event.addDomListener(window, 'load', initMap);
-</script>
-
-    </div>
-    <div class="col-md-1"></div>
-</div> <!-- BIA Summary and profile -->
-<br>
 <div class="row">
 
     <div class="col-md-3" style="padding-right: 0; padding-left: 0">
@@ -714,29 +702,7 @@ function renderInvestmentImpact(investmentImpactText) {
     // Set the container height to accommodate the tallest box with some padding
     container.selectAll(".investment-box").style("height", maxHeight + "px");
 }
-    anychart.onDocumentReady(function() {
-        // Create data for AnyChart
-        var data = [];
-        {% for field, avg_value in impact_summary.items %}
-            data.push({"x": "{{ field }}", "value": {{ avg_value }}});
-        {% endfor %}
 
-        // Create a chart
-        var chart = anychart.column3d();
-
-        // Add data to the chart
-        chart.data(data);
-        var credits = chart.credits();
-        credits.enabled(false);
-        // Set chart title
-        chart.title("Business Impact Summary");
-        chart.palette(anychart.palettes.provence);
-        chart.yScale().minimum(0).maximum(10);
-
-        // Draw the chart
-        chart.container("bia_container");
-        chart.draw();
-    });
 
     $(document).ready(function() {
     $(".scenario-link").click(function(e) {

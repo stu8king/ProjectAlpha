@@ -184,6 +184,8 @@ urlpatterns = [
     path('generate-csv/<int:framework_id>/', views.generate_framework_csv, name='generate_framework_csv'),
     path('load_default_facility/', views.load_default_facility, name='load_default_facility'),
     path('get_all_groups_scores/', views.get_all_groups_scores, name='get_all_groups_scores'),
+    path('get_asset_data/', views.get_asset_data, name='get_asset_data'),
+
 ]
 
 
