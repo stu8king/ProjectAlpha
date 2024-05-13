@@ -213,7 +213,7 @@ input[type="hidden"] {
 }
 
 .group-container {
-    background: #495057; /* Light grey background, can be changed */
+    background: #6c757d; /* Light grey background, can be changed */
     border: 1px solid #ccc; /* Add a subtle border */
     margin: 8px;
     flex-grow: 1; /* Allows the container to grow to fill the column if needed */
@@ -225,6 +225,7 @@ input[type="hidden"] {
 
 .group-header, .group-body {
     padding: 10px;
+    font-size: 1em;
 }
 
 .group-body {
@@ -272,12 +273,10 @@ input[type="hidden"] {
             <br><br><br><br><br><br><br><br><br><br>
         <ul>
             <li><a href="#" data-tab="tab11">Locations</a></li>
-            <li><a href="#" data-tab="tab3">CyberPHA</a></li>
             <li><a href="#" data-tab="tab5">QRAW</a></li>
             <li><a href="#" data-tab="tab4" id="scenarioTabLink">Risk Groups</a></li>
-            <li><a href="#" data-tab="tab1">Heatmap</a></li>
-            <li><a href="#" data-tab="tab2">KPIs / Compliance</a></li>
-            <li><a href="#" data-tab="tab6">Moderator Queue</a></li>
+            <li><a href="#" data-tab="tab2">Compliance</a></li>
+            <!-- <li><a href="#" data-tab="tab6">Moderator Queue</a></li> -->
             <li><a href="#" data-tab="tab8"></a></li>
             <li><a href="#" data-tab="tab9"></a></li>
             <li><a href="#" data-tab="tab10"></a></li>
@@ -289,13 +288,174 @@ input[type="hidden"] {
     <div class="tab-content tab-link active"  id="tab11">
         <div class="form-group form-sim" >
             <!-- Container for the map -->
-         <div id="map-message" style="text-align: center; margin-bottom: 10px;">
-            The location of your CyberPHA assessment facilities will be displayed on the map.
-         </div>
+
         <div class="form-group">
             {{ unique_facility_count }} Facilities  {{ total_facility_revenue }} Revenue
         </div>
-        <div id="facility-map" style="width: 100%; height: 75vh;"></div>
+       <div class="row">
+
+            <!-- Bootstrap column for the map -->
+            <div class="col-md-6">
+                <div id="facility-map" style="height: 37vh;"></div>
+            </div>
+            <div class="col-md-6">
+                <div class="card-body" style="height: 37vh; overflow-y: auto;">
+                    <table id="headertable1" class="table small-font" style="transform: scale(1); transform-origin: top left; width: 200%; font-size: 0.8em;">
+
+                    <thead>
+                        <tr>
+
+                            <th>Site</th>
+                            <th>Leader</th>
+                            <th>Unit</th>
+                            <th>Zone</th>
+                            <th>Last Update</th>
+                            <th>PHA Score</th>
+                        </tr>
+                    </thead>
+                    <tbody style="font-size: 0.8em;"> <!-- Slightly larger font size for better readability -->
+                        {% for pha in phas %}
+                        <tr data-id="{{ pha.ID }}">
+
+                            <td><a href="/OTRisk/iotaphamanager/{{ pha.ID }}/">{{ pha.FacilityName }}</a></td>
+                            <td>{{ pha.PHALeader }}</td>
+                            <td>{{ pha.AssessmentUnit }}</td>
+                            <td>{{ pha.AssessmentZone }}</td>
+                        <td>
+                                                 <div>{{ pha.updater_name }}</div><div> {{ pha.last_update }}</div>
+                                             </td>
+                            <td>
+                                <div style="border-radius: 20px; text-align: center; padding: 5px; color: black;
+                                    background-color: {% if pha.pha_score <= 16 %}#a0d8ef /* Sky Blue */
+                                    {% elif pha.pha_score <= 33 %}#2ca9e1 /* Bluish Green */
+                                    {% elif pha.pha_score <= 50 %}#fdfd96 /* Soft Yellow */
+                                    {% elif pha.pha_score <= 66 %}#f4c430 /* Sand */
+                                    {% elif pha.pha_score <= 83 %}#dc143c /* Crimson */
+                                    {% else %}#663399 /* Dark Purple */{% endif %}">
+                                    {% if pha.pha_score <= 16 %}Low ( {{ pha.pha_score }} )
+                                    {% elif pha.pha_score <= 33 %}Low/Medium ( {{ pha.pha_score }} )
+                                    {% elif pha.pha_score <= 50 %}Medium ( {{ pha.pha_score }} )
+                                    {% elif pha.pha_score <= 66 %}Medium/High ( {{ pha.pha_score }} )
+                                    {% elif pha.pha_score <= 83 %}High ( {{ pha.pha_score }} )
+                                    {% else %}Very High ( {{ pha.pha_score }} ) {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+                <script type="text/javascript">
+
+            $(document).ready(function () {
+                if ($.fn.dataTable.isDataTable('#headertable1')) {
+                    $('#headertable1').DataTable().destroy();
+                }
+                $('#headertable1').DataTable({
+                    "paging": true,
+                    "lengthChange": false,
+                    "searching": false,
+                    "ordering": true,
+                    "info": true,
+                    "autoWidth": false,
+                    "pageLength": 15
+                });
+            });
+
+
+                $(document).ready(function () {
+                    if ($.fn.dataTable.isDataTable('#phaTable')) {
+                        $('#phaTable').DataTable().destroy();
+                    }
+                    $('#phaTable').DataTable({
+                        "paging": true,
+                        "lengthChange": false,
+                        "searching": false,
+                        "pageLength": 10
+                        // No need for drawCallback here
+                    });
+                });
+</script>
+
+            </div>
+                </div>
+        </div>
+        <br><br>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <div class="group-header" >
+                                Risk Exposure (CyberPHA)
+                            </div>
+                                <div class="group-body" style="font-size: 1.5em">
+                                    <img src="{% static 'images/bluedollar.png' %}" style="height:2em">  {{ formatted_sle }}
+                                </div>
+                            </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <div class="group-header">
+                                Risk Exposure (QRAW)
+                            </div>
+                                <div class="group-body" style="font-size: 1.5em">
+                                    <img src="{% static 'images/bluedollar.png' %}" style="height:2em"> {{ formatted_scenario_cost }}
+                                </div>
+                            </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                        <div class="group-header">
+                             Open Action Items
+                        </div>
+                            <div class="group-body" style="font-size: 1.5em">
+                                <img src="{% static 'images/orangeaction.png' %}" style="height:2em"> {{ ra_actions_records_count }}
+                        </div>
+                    </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <div class="group-header">
+                             Total CyberPHAs
+                            </div>
+                            <div class="group-body" style="font-size: 1.5em">
+                                <img src="{% static 'images/yellowcount.png' %}" style="height:2em"> {{ cyberpha_count }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                           <div class="group-header">
+                             CyberPHA Scenarios
+                        </div>
+                            <div class="group-body" style="font-size: 1.5em">
+                                <img src="{% static 'images/yellowcount.png' %}" style="height:2em"> {{ cyberpha_scenario_count }}
+                        </div>
+                            </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                        <div class="group-header">
+                             Open Risk Assessments
+                        </div>
+                            <div class="group-body" style="font-size: 1.5em">
+                                <img src="{% static 'images/yellowcount.png' %}" style="height:2em"> {{ open_raws_count }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div id="heatmapContainer" style="width:100%; height:100%;"></div>
+            </div>
+
+        </div>
+
+
+
         <script>
             window.initMap = function() {
                 var map = L.map('facility-map', {
@@ -321,10 +481,10 @@ input[type="hidden"] {
                         var iconColor = facility.WeatherAlerts.length > 0 ? 'red' : 'blue';
                         var icon = new L.Icon({
                             iconUrl: iconUrl,
-                            iconSize: [30, 50],
-                            iconAnchor: [12, 41],
-                            popupAnchor: [1, -34],
-                            shadowSize: [41, 41]
+                            iconSize: [20, 30], // Reduced from [30, 50] to half
+                            iconAnchor: [6, 20.5], // Adjusted to fit the new icon size
+                            popupAnchor: [1, -34], // You might need to adjust this too if the popup positioning looks off
+                            shadowSize: [20.5, 20.5]
                         });
 
                         var marker = L.marker([facility.facilityLat, facility.facilityLong], {
@@ -360,64 +520,59 @@ input[type="hidden"] {
         </script>
 
 
-
-
         </div>
     </div>
     <div class="tab-content tab-link active"  id="tab1">
-        <div class="form-group form-sim" >
-            <div id="heatmapContainer" style="width:100%; height:400px;"></div>
-        </div>
+
         <script>
          anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
          anychart.onDocumentReady(function () {
 
              // create data
              var heatmapStructure = [
-                 {x: "Low", y: "Very High", fill: "#ff4b33", value: 0},
-                 {x: "Low/Medium", y: "Very High", fill: "#ff4b33", value: 0},
-                 {x: "Medium", y: "Very High", fill: "#ff4b33", value: 0},
-                 {x: "Medium/High", y: "Very High", fill: "#ff4b33", value: 0},
-                 {x: "High", y: "Very High", fill: "#ff4b33", value: 0},
-                 {x: "Very High", y: "Very High", fill: "#ff4b33", value: 0},
+    {x: "Low", y: "Very High", fill: "#E69F00", value: 0},  // Orange
+    {x: "Low/Medium", y: "Very High", fill: "#E69F00", value: 0},  // Orange
+    {x: "Medium", y: "Very High", fill: "#E69F00", value: 0},  // Orange
+    {x: "Medium/High", y: "Very High", fill: "#E69F00", value: 0},  // Orange
+    {x: "High", y: "Very High", fill: "#E69F00", value: 0},  // Orange
+    {x: "Very High", y: "Very High", fill: "#E69F00", value: 0},  // Orange
 
-                 {x: "Low", y: "High", fill: "#ff9933", value: 0},
-                 {x: "Low/Medium", y: "High", fill: "#ff9933", value: 0},
-                 {x: "Medium", y: "High", fill: "#ff9933", value: 0},
-                 {x: "Medium/High", y: "High", fill: "#ff4b33", value: 0},
-                  {x: "High", y: "High", fill: "#ff4b33", value: 0},
-                 {x: "Very High", y: "High", fill: "#ff4b33", value: 0},
+    {x: "Low", y: "High", fill: "#56B4E9", value: 0},  // Sky Blue
+    {x: "Low/Medium", y: "High", fill: "#56B4E9", value: 0},  // Sky Blue
+    {x: "Medium", y: "High", fill: "#56B4E9", value: 0},  // Sky Blue
+    {x: "Medium/High", y: "High", fill: "#E69F00", value: 0},  // Orange
+    {x: "High", y: "High", fill: "#E69F00", value: 0},  // Orange
+    {x: "Very High", y: "High", fill: "#E69F00", value: 0},  // Orange
 
-                 {x: "Low", y: "Medium/High", fill: "#ffcc00", value: 0},
-                 {x: "Low/Medium", y: "Medium/High", fill: "#ff9933", value: 0},
-                 {x: "Medium", y: "Medium/High", fill: "#ff9933", value: 0},
-                 {x: "Medium/High", y: "Medium/High", fill: "#ff9933", value: 0},
-                 {x: "High", y: "Medium/High", fill: "#ff4b33", value: 0},
-                  {x: "Very High", y: "Medium/High", fill: "#ff4b33", value: 0},
+    {x: "Low", y: "Medium/High", fill: "#009E73", value: 0},  // Bluish Green
+    {x: "Low/Medium", y: "Medium/High", fill: "#56B4E9", value: 0},  // Sky Blue
+    {x: "Medium", y: "Medium/High", fill: "#56B4E9", value: 0},  // Sky Blue
+    {x: "Medium/High", y: "Medium/High", fill: "#56B4E9", value: 0},  // Sky Blue
+    {x: "High", y: "Medium/High", fill: "#E69F00", value: 0},  // Orange
+    {x: "Very High", y: "Medium/High", fill: "#E69F00", value: 0},  // Orange
 
-                 {x: "Low", y: "Medium", fill: "#ffcc00", value: 0},
-                 {x: "Low/Medium", y: "Medium", fill: "#ffcc00", value: 0},
-                 {x: "Medium", y: "Medium", fill: "#ffcc00", value: 0},
-                 {x: "Medium/High", y: "Medium", fill: "#ff9933", value: 0},
-                 {x: "High", y: "Medium", fill: "#ff9933", value: 0},
-                 {x: "Very High", y: "Medium", fill: "#ff4b33", value: 0},
+    {x: "Low", y: "Medium", fill: "#009E73", value: 0},  // Bluish Green
+    {x: "Low/Medium", y: "Medium", fill: "#009E73", value: 0},  // Bluish Green
+    {x: "Medium", y: "Medium", fill: "#009E73", value: 0},  // Bluish Green
+    {x: "Medium/High", y: "Medium", fill: "#56B4E9", value: 0},  // Sky Blue
+    {x: "High", y: "Medium", fill: "#56B4E9", value: 0},  // Sky Blue
+    {x: "Very High", y: "Medium", fill: "#E69F00", value: 0},  // Orange
 
-                  {x: "Low", y: "Low/Medium", fill: "#5eff00", value: 0},
-                 {x: "Low/Medium", y: "Low/Medium", fill: "#ffcc00", value: 0},
-                 {x: "Medium", y: "Low/Medium", fill: "#ffcc00", value: 0},
-                 {x: "Medium/High", y: "Low/Medium", fill: "#ffcc00", value: 0},
-                 {x: "High", y: "Low/Medium", fill: "#ffcc00", value: 0},
-                 {x: "Very High", y: "Low/Medium", fill: "#ff4b33", value: 0},
+    {x: "Low", y: "Low/Medium", fill: "#F0E442", value: 0},  // Bright Yellow
+    {x: "Low/Medium", y: "Low/Medium", fill: "#009E73", value: 0},  // Bluish Green
+    {x: "Medium", y: "Low/Medium", fill: "#009E73", value: 0},  // Bluish Green
+    {x: "Medium/High", y: "Low/Medium", fill: "#009E73", value: 0},  // Bluish Green
+    {x: "High", y: "Low/Medium", fill: "#009E73", value: 0},  // Bluish Green
+    {x: "Very High", y: "Low/Medium", fill: "#E69F00", value: 0},  // Orange
 
-                  {x: "Low", y: "Low", fill: "#5eff00", value: 0},
-                 {x: "Low/Medium", y: "Low", fill: "#5eff00", value: 0},
-                 {x: "Medium", y: "Low", fill: "#ffcc00", value: 0},
-                 {x: "Medium/High", y: "Low", fill: "#ffcc00", value: 0},
-                 {x: "High", y: "Low", fill: "#ffcc00", value: 0},
-                 {x: "Very High", y: "Low", fill: "#ff4b33", value: 0},
+    {x: "Low", y: "Low", fill: "#F0E442", value: 0},  // Bright Yellow
+    {x: "Low/Medium", y: "Low", fill: "#F0E442", value: 0},  // Bright Yellow
+    {x: "Medium", y: "Low", fill: "#009E73", value: 0},  // Bluish Green
+    {x: "Medium/High", y: "Low", fill: "#009E73", value: 0},  // Bluish Green
+    {x: "High", y: "Low", fill: "#009E73", value: 0},  // Bluish Green
+    {x: "Very High", y: "Low", fill: "#E69F00", value: 0},  // Orange
+];
 
-
-             ];
 
              function updateHeatmapStructure(heatmap_data) {
                 heatmapStructure.forEach(function(cell) {
@@ -432,7 +587,7 @@ input[type="hidden"] {
 
             // Create a chart and set the data
             var chart = anychart.heatMap(heatmapStructure);
-            chart.background().fill("#464748");
+             chart.background().fill("#5E6266");
             var credits = chart.credits();
             credits.enabled(false);
              // Disable tooltips
@@ -453,7 +608,7 @@ input[type="hidden"] {
                 .title().fontColor("white");
              chart.yAxis().labels().fontColor("white");
              chart.yAxis().labels(["Very High", "High", "Medium/High", "Medium", "Low/Medium", "Low"]);
-            chart.labels().fontColor("white");
+            chart.labels().fontColor("black");
              // Set the container id
              chart.container("heatmapContainer");
 
@@ -606,116 +761,13 @@ input[type="hidden"] {
     </div>
 
     <div class="tab-content tab-link " id="tab2">
-        <h2>KPIs / Compliance</h2>
-        <div class="form-group">
-            <div class="row" >
-                <div class="col-md-3 ">
-                    <div class="group-container">
-                        <div class="group-header" >
-                            Open Risk Exposure (CyberPHA)
-                        </div>
-                            <div class="group-body">
-                                <img src="{% static 'images/redcube.png' %}" class="cube-icon" alt="Red Cube">  {{ formatted_sle }}
-                            </div>
-                        </div>
+        <h2>Compliance</h2>
 
-                </div>
-                <div class="col-md-3 ">
-
-                    <div class="group-container">
-                        <div class="group-header">
-                             Open Risk Exposure (QRAW)
-                        </div>
-                            <div class="group-body">
-                                <img src="{% static 'images/redcube.png' %}" class="cube-icon" alt="Red Cube"> {{ formatted_scenario_cost }}
-                            </div>
-                        </div>
-
-
-                </div>
-                <div class="col-md-3 ">
-
-                    <div class="group-container">
-                        <div class="group-header">
-                             Open Action Items
-                        </div>
-                            <div class="group-body">
-                                <img src="{% static 'images/redcube.png' %}" class="cube-icon" alt="Red Cube"> {{ ra_actions_records_count }}
-                        </div>
-                    </div>
-
-
-                </div>
-                <div class="col-md-3 ">
-
-                     <div class="group-container">
-                        <div class="group-header">
-                             Open Risk Assessments
-                        </div>
-                            <div class="group-body">
-                                <img src="{% static 'images/redcube.png' %}" class="cube-icon" alt="Red Cube"> {{ open_raws_count }}
-                        </div>
-                    </div>
-
-                </div>
-            </div>
-            <div class="row" >
-                <div class="col-md-3 ">
-
-                    <div class="group-container">
-                        <div class="group-header">
-                             Total Risk Assessments
-                        </div>
-                            <div class="group-body">
-                                <img src="{% static 'images/redcube.png' %}" class="cube-icon" alt="Red Cube"> {{ raw_count }}
-                        </div>
-                    </div>
-
-                </div>
-                <div class="col-md-3 ">
-
-                    <div class="group-container">
-                        <div class="group-header">
-                             Risk Scenarios
-                        </div>
-                            <div class="group-body">
-                                <img src="{% static 'images/redcube.png' %}" class="cube-icon" alt="Red Cube"> {{ scenarios_count }}
-                        </div>
-                    </div>
-
-
-                </div>
-                <div class="col-md-3 ">
-
-                    <div class="group-container">
-                        <div class="group-header">
-                             Total CyberPHAs
-                        </div>
-                            <div class="group-body">
-                                <img src="{% static 'images/redcube.png' %}" class="cube-icon" alt="Red Cube"> {{ cyberpha_count }}
-                        </div>
-                    </div>
-
-                </div>
-                <div class="col-md-3 ">
-
-                    <div class="group-container">
-                        <div class="group-header">
-                             CyberPHA Scenarios
-                        </div>
-                            <div class="group-body">
-                                <img src="{% static 'images/redcube.png' %}" class="cube-icon" alt="Red Cube"> {{ cyberpha_scenario_count }}
-                        </div>
-                    </div>
-
-                </div>
-            </div>
-        </div>
         <div class="form-group">
             <div class="row" >
                 <div class="col-md-3"></div>
                 <div class="col-md-6">
-                    <table id="complianceTable" class="display">
+                    <table id="complianceTable" class="table small-font" style="transform: scale(1); transform-origin: top left; width: 200%; font-size: 0.8em;">
     <thead>
         <tr>
             <th>Compliance Regulation</th>
@@ -746,81 +798,7 @@ input[type="hidden"] {
         <div class="form-group form-sim" >
             <div class="card shadow flex-fill">
                 <div class="card-body">
-                    <table id="headertable1" class="table small-font">
-    <thead>
-        <tr>
 
-            <th>Site</th>
-            <th>Leader</th>
-            <th>Unit</th>
-            <th>Zone</th>
-            <th>Last Update</th>
-            <th>PHA Score</th>
-        </tr>
-    </thead>
-    <tbody style="font-size: 14px;"> <!-- Slightly larger font size for better readability -->
-        {% for pha in phas %}
-        <tr data-id="{{ pha.ID }}">
-
-            <td><a href="/OTRisk/iotaphamanager/{{ pha.ID }}/">{{ pha.FacilityName }}</a></td>
-            <td>{{ pha.PHALeader }}</td>
-            <td>{{ pha.AssessmentUnit }}</td>
-            <td>{{ pha.AssessmentZone }}</td>
-        <td>
-                                 <div>{{ pha.updater_name }}</div><div> {{ pha.last_update }}</div>
-                             </td>
-            <td>
-                <div style="border-radius: 20px; text-align: center; padding: 5px; color: black;
-                    background-color: {% if pha.pha_score <= 16 %}#a0d8ef /* Sky Blue */
-                    {% elif pha.pha_score <= 33 %}#2ca9e1 /* Bluish Green */
-                    {% elif pha.pha_score <= 50 %}#fdfd96 /* Soft Yellow */
-                    {% elif pha.pha_score <= 66 %}#f4c430 /* Sand */
-                    {% elif pha.pha_score <= 83 %}#dc143c /* Crimson */
-                    {% else %}#663399 /* Dark Purple */{% endif %}">
-                    {% if pha.pha_score <= 16 %}Low ( {{ pha.pha_score }} )
-                    {% elif pha.pha_score <= 33 %}Low/Medium ( {{ pha.pha_score }} )
-                    {% elif pha.pha_score <= 50 %}Medium ( {{ pha.pha_score }} )
-                    {% elif pha.pha_score <= 66 %}Medium/High ( {{ pha.pha_score }} )
-                    {% elif pha.pha_score <= 83 %}High ( {{ pha.pha_score }} )
-                    {% else %}Very High ( {{ pha.pha_score }} ) {% endif %}
-                </div>
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
-
-                <script type="text/javascript">
-
-            $(document).ready(function () {
-                if ($.fn.dataTable.isDataTable('#headertable1')) {
-                    $('#headertable1').DataTable().destroy();
-                }
-                $('#headertable1').DataTable({
-                    "paging": true,
-                    "lengthChange": false,
-                    "searching": false,
-                    "ordering": true,
-                    "info": true,
-                    "autoWidth": false,
-                    "pageLength": 15
-                });
-            });
-
-
-                $(document).ready(function () {
-                    if ($.fn.dataTable.isDataTable('#phaTable')) {
-                        $('#phaTable').DataTable().destroy();
-                    }
-                    $('#phaTable').DataTable({
-                        "paging": true,
-                        "lengthChange": false,
-                        "searching": false,
-                        "pageLength": 10
-                        // No need for drawCallback here
-                    });
-                });
-</script>
 
 
                 </div>
@@ -958,9 +936,6 @@ function drawLineChart(data, container, groupName, add) {
             .stroke('3px ' + getColor());
     }
 }
-
-
-
 
 
 function populateGroupList(groupsData, currentGroupId) {

@@ -599,6 +599,8 @@ def pha_reports(request, cyber_pha_header_id):
     pdf = buffer.getvalue()
     buffer.close()
     response.write(pdf)
+    response = HttpResponse(pdf, content_type='application/pdf')
+    response['Content-Disposition'] = 'inline; filename="CyberPHA.pdf"'
     return response
 
     # Render the pha_report.html template with the context
