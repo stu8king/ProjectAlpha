@@ -346,6 +346,12 @@ class tblCyberPHAHeader(models.Model):
                                              blank=True)
     plan_never_tested = models.BooleanField(default=True, verbose_name="Plan Never Tested")
     is_default = models.BooleanField(default=False)
+    exalens_api = models.TextField(null=True)
+    exalens_client = models.TextField(null=True)
+    exalens_ip = models.TextField(null=True)
+    exalens_status = models.TextField(null=True)
+    exalens_risk = models.TextField(null=True)
+    exalens_score = models.IntegerField(null=True)
 
     def set_workflow_status(self, status):
         WorkflowStatus.objects.create(cyber_pha_header=self, status=status)
@@ -703,6 +709,8 @@ class tblCyberPHAScenario(models.Model):
     risk_recommendation = models.TextField(null=True)
     cost_justification = models.TextField(null=True)
     risk_treatment_plan = models.TextField(null=True, blank=True)
+    asset_name = models.TextField(null=True)
+    asset_purpose = models.TextField(null=True)
 
     class Meta:
         db_table = 'tblCyberPHAScenario'
@@ -970,6 +978,8 @@ class CyberPHAScenario_snapshot(models.Model):
     risk_rationale = models.TextField(null=True)
     risk_recommendation = models.TextField(null=True)
     cost_justification = models.TextField(null=True)
+    asset_name = models.TextField(null=True)
+    asset_purpose = models.TextField(null=True)
 
 
 class PHA_Safeguard(models.Model):

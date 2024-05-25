@@ -1,6 +1,7 @@
 import decimal
 import os
-
+import urllib3
+from urllib3.exceptions import InsecureRequestWarning
 from django.views.decorators.http import require_POST, require_http_methods
 from pptx import Presentation
 from pptx.util import Inches
@@ -16,6 +17,7 @@ from django.utils.crypto import get_random_string
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 from django.db.models import Subquery, OuterRef, Count, IntegerField, Case, When, Value, Prefetch
+from requests import RequestException
 
 import OTRisk.forms
 from OTRisk.models.RiskScenario import RiskScenario
@@ -41,6 +43,7 @@ from OTRisk.models.Model_CyberPHA import tblCyberPHAHeader, tblRiskCategories, \
     ScenarioConsequences, APIKey, ScenarioBuilder, PHA_Safeguard, OpenAIAPILog, CybersecurityDefaults, \
     user_scenario_audit
 from django.shortcuts import render, redirect
+
 from .dashboard_views import get_user_organization_id, get_scenarios_for_regulation
 from django.contrib.auth.decorators import login_required
 from .forms import LoginForm, OrganizationDefaultsForm, CyberSecurityScenarioForm, scenario_sim, \
@@ -103,9 +106,21 @@ def scenario_sim_v2(request):  # Changed the function name
     facilities = FacilityType.objects.all().order_by('FacilityType')
     threatsources = tblThreatSources.objects.all().order_by('ThreatSource')
     attack_vectors = tblThreatActions.objects.all().order_by('ThreatAction')
+
+    asset_data_response = exalens_get_assets()
+    if isinstance(asset_data_response, HttpResponse):  # Check if the function returned an error
+        return asset_data_response  # Return error response directly to the client
+
+    # Filter asset data for dropdown
+    assets_for_dropdown = [
+        {'mac_vendor': asset.get('mac_vendor', 'Unknown'), 'model': asset.get('model', 'Unknown'),
+         'ip': asset.get('ip', 'No IP')}
+        for asset in asset_data_response
+    ]
+
     return render(request, 'OTRisk/scenario_sim_v2.html',
                   {'scenario_form': scenario_form, 'industries': industries, 'facilities': facilities,
-                   'threats': threatsources, 'attack_vectors': attack_vectors})
+                   'threats': threatsources, 'attack_vectors': attack_vectors, 'exalens_assets': assets_for_dropdown})
 
 
 @login_required
@@ -114,6 +129,30 @@ def analyze_sim_scenario_v2(request):
     openai.api_key = openai_api_key
 
     if request.method == 'POST':
+
+        incident_ids_json = request.POST.get('incident_ids', '[]')  # Default to empty list as JSON
+        incident_ids = json.loads(incident_ids_json)
+        user_profile = UserProfile.objects.get(user=request.user)
+        organization_defaults = user_profile.organization.defaults
+        exalens_api_key = organization_defaults.exalens_api_key
+        exalens_client_id = organization_defaults.exalens_client_id
+        exalens_ip_address = organization_defaults.exalens_ip_address
+        incident_prompt = "No incidents"
+        if incident_ids:
+            # Concatenate incident IDs with semicolons for the API call
+            incident_numbers = ";".join(incident_ids)
+            incident_url = f"https://{exalens_ip_address}/api/thirdparty/incident/no/{incident_numbers}"
+            headers = {
+                'x-client-id': exalens_client_id,
+                'x-api-key': exalens_api_key
+            }
+            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+            incident_response = requests.get(incident_url, headers=headers, verify=False)
+            incident_details = incident_response.json()
+            incident_prompt = create_incident_analysis_prompt(incident_details)
+
+        # Log or process incident_ids as needed
+
         scenario = request.POST.get('scenario')
         # Fetch the organization_id from the user's profile
         try:
@@ -150,7 +189,7 @@ def analyze_sim_scenario_v2(request):
         """
 
         validation_response = openai.ChatCompletion.create(
-            model="gpt-4",
+            model="gpt-4o",
             messages=[
                 {"role": "system", "content": validation_prompt}
             ],
@@ -164,7 +203,7 @@ def analyze_sim_scenario_v2(request):
             industry = request.POST.get('industry')
 
             system_message = f"""
-                In the context of a Cyber HAZOPS assessment, analyze the following cybersecurity scenario at a {facility_type} in the {industry} industry: '{scenario}'. For each factor listed below, provide a score out of 10 for impact severity and a concise narrative in under 50 words per factor. IMPORTANT: NARRATIVE MUST BE IN {request.session.get('organization_defaults', {}).get('language', 'en')}. Format your response with clear delimiters as follows: 'Factor: [Factor Name] | Score: X/10 | Narrative: [Explanation]'.
+                In the context of a Cyber HAZOPS assessment, analyze the following cybersecurity scenario at a {facility_type} in the {industry} industry: '{scenario}'. The scenario includes an asset that has the following incidents: {incident_prompt}. For each factor listed below, provide a score out of 10 for impact severity and a concise narrative in under 50 words per factor. IMPORTANT: NARRATIVE MUST BE IN {request.session.get('organization_defaults', {}).get('language', 'en')}. Format your response with clear delimiters as follows: 'Factor: [Factor Name] | Score: X/10 | Narrative: [Explanation]'.
 
                 Factors:
                 - Safety
@@ -182,11 +221,11 @@ def analyze_sim_scenario_v2(request):
 
             # Query OpenAI API
             response = openai.ChatCompletion.create(
-                model=get_api_key('OpenAI_Model'),
+                model='gpt-4o',
                 messages=[
                     {"role": "system", "content": system_message}
                 ],
-                max_tokens=800,
+                max_tokens=2000,
                 temperature=0.1
             )
 
@@ -226,9 +265,21 @@ def analyze_sim_scenario_v2(request):
             else:
                 investment_impact_text = "No tools or software were submitted for this scenario."
 
+            incident_response = openai.ChatCompletion.create(
+                model='gpt-4o',
+                messages=[
+                    {"role": "system", "content": incident_prompt}
+                ],
+                max_tokens=2000,
+                temperature=0.3
+            )
+
+            incident_response_text = incident_response['choices'][0]['message']['content']
+
             response = {
                 'consequence': parsed_consequences,
-                'investment_impact': investment_impact_text
+                'investment_impact': investment_impact_text,
+                'incident_response_text': incident_response_text
             }
 
             return JsonResponse(response)
@@ -385,7 +436,7 @@ def return_api_key(key_name):
 def call_openai_api(system_message, openai_api_key):
     try:
         response = openai.ChatCompletion.create(
-            model="gpt-4-0125-preview",
+            model="gpt-4o",
             messages=[{"role": "system", "content": system_message}],
             max_tokens=350,
             temperature=0.1,
@@ -526,7 +577,8 @@ def generate_scenario_description_v2(request):
 
         # Constructing the prompt
         prompt = f"""
-        Construct a focused scenario for a CYBER HAZOPS assessment using LOPA methodology, detailing a credible cybersecurity attack against operational technology and industrial control systems. The narrative must be factual, concise, and limit to 200 words, without detailing the consequences or long-term impacts:
+        Construct a focused scenario for a CYBER HAZOPS assessment using LOPA methodology, detailing a credible cybersecurity attack against operational technology and industrial control systems. The narrative must be factual, concise, and limit to 200 words, without detailing the consequences or long-term impacts. Guide words, if given, are to be used as a systematic list of
+deviation perspectives in alignment with IEC 61882 which directs that the role of the guide word is to stimulate imaginative thinking, to focus the study and elicit ideas and discussion:
 
         - Attacker: {attacker}
         - Attack Vector: {attack_vector}
@@ -536,6 +588,7 @@ def generate_scenario_description_v2(request):
         - Country: {country}
         - Industry: {industry}
         - Facility Type: {facility_type}
+        - Guide words: {motivation}
         - Active operations: {'Yes' if active_ops else 'No'}
 
         Use this information to generate a scenario focusing solely on the attack's progression. Do not speculate on mitigation or describe the facility in detail. Use precise and concise language.
@@ -547,7 +600,7 @@ def generate_scenario_description_v2(request):
 
         # Querying the OpenAI API
         response = openai.ChatCompletion.create(
-            model=open_ai_model,
+            model='gpt-4o',
             messages=[
                 {"role": "system", "content": prompt}
             ],
@@ -581,7 +634,8 @@ def related_incidents(request):
     # Constructing the prompt for GPT-4
     prompt = f"""
     You are a university research assistant. Given the cybersecurity scenario: '{scenario}',  identify
-    up to three cybersecurity incidents that have been reported anywhere in the world in any language that have details in common with the given scenario. 
+    up to three cybersecurity incidents that have been reported anywhere in the world in any language that have details in common with the given scenario.
+    Useful sources include but not limited to ICS STRIVE, ICS_CERT,CISA   
     For each related incident, provide a brief (english) summary, where it occurred, and include a URL link where information about the incident can be found. 
     Format each incident as follows:
     <Incident title>|<incident description>|<Incident Date>|<incident URL>
@@ -691,3 +745,88 @@ def retrieve_scenario_builder_v2(request, scenario_id):
         return JsonResponse({'error': 'Scenario not found'}, status=404)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+
+
+def exalens_get_assets():
+    urllib3.disable_warnings(InsecureRequestWarning)
+    assets_url = "https://34.136.119.73/api/thirdparty/asset"
+    headers = {
+        'x-client-id': 'test_api_key',
+        'x-api-key': 'WPaRPsksKbHwL6wXrXtuUyq4sAoIgfeR'
+    }
+
+    try:
+        assets_response = requests.get(assets_url, headers=headers, verify=False)
+        if assets_response.status_code == 200:
+            assets_data = assets_response.json().get('data', [])
+            if not assets_data:
+                return []  # Return an empty list if no data is available
+            return assets_data  # Return the list of assets directly
+        else:
+            return []  # Return an empty list in case of non-200 status codes
+    except RequestException as e:
+        return []  # Return an empty list if an exception occurs
+
+
+@login_required()
+def exalens_get_incidents(request, ipaddress):
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+    user_profile = UserProfile.objects.get(user=request.user)
+    organization_defaults = user_profile.organization.defaults
+    exalens_api_key = organization_defaults.exalens_api_key
+    exalens_client_id = organization_defaults.exalens_client_id
+    exalens_ip_address = organization_defaults.exalens_ip_address
+
+    incident_url = f"https://{exalens_ip_address}/api/thirdparty/incident/target_ip/{ipaddress}?incident=1"
+    headers = {
+        'x-client-id': exalens_client_id,
+        'x-api-key': exalens_api_key
+    }
+
+
+
+    try:
+        response = requests.get(incident_url, headers=headers, verify=False)
+
+        if response.status_code == 200:
+            # Directly parse the response as JSON, which is expected to be a list of dictionaries
+            incident_data = response.json()
+            if not incident_data:  # Check if the list is empty
+                return JsonResponse({'message': 'No incidents found for the given IP address.'}, status=404)
+            return JsonResponse(incident_data, safe=False)  # Return the list directly
+        else:
+            # Handle non-200 responses
+            return JsonResponse({'error': f'Failed to fetch incidents, status code: {response.status_code}'},
+                                status=response.status_code)
+    except RequestException as e:
+        # Handle exceptions from the requests library
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+def create_incident_analysis_prompt(incident_details):
+    prompt_parts = []
+    for incident in incident_details:
+        # Extracting relevant information from each incident
+        detection_name = incident.get('detection_name', 'Unknown detection')
+        src = incident.get('src', 'Unknown source')
+        dst = ", ".join(incident.get('dst', []))  # Assuming 'dst' might be a list of IPs
+        first_seen = incident.get('first_seen_utc', 'Not specified')
+        last_seen = incident.get('last_seen_utc', 'Not specified')
+        classification = incident.get('classification', 'Not classified')
+        severity_text = incident.get('severity_text', 'No severity level specified')
+        risk_score = incident.get('risk_score', 'No risk score provided')
+        detection_summary = incident.get('detection_summary', 'No detailed summary provided')
+
+        # Crafting a narrative for each incident focused on cybersecurity implications
+        incident_narrative = f"Incident '{detection_name}' initiated from {src} targeting {dst} was first detected on {first_seen} and last seen on {last_seen}. " \
+                             f"Classified as {classification} with severity '{severity_text}' and a risk score of {risk_score}. " \
+                             f"Summary: {detection_summary}"
+
+        prompt_parts.append(incident_narrative)
+
+        # Combining all incidents into a single prompt asking for an overall assessment
+    full_prompt = "You are a cybersecurity incident analyst. Based on the following incident details that affected one specific asset in the network, provide an analysis focused solely on the effectiveness and state of the organization's cybersecurity controls without including recommendations or summarizing the incidents: " + " ".join(
+        prompt_parts) + \
+                  " Provide a concise executive-level analysis into what these incidents indicate about the cybersecurity controls. DO NOT INCLUDE RECOMMENDATIONS. Use bullet points. Do not include unnecessary text, commentary, or characters such as ** characters."
+    return full_prompt

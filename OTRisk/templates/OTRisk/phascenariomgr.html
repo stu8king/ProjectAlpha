@@ -583,27 +583,15 @@ document.addEventListener("DOMContentLoaded", function() {
                         </script>
 
                     </div>
+                    <div class="col-md-1">
+                    </div>
                     <div class="col-md-1" > <button type="button" id="addScenarioBtn" class="btn nav-link" onclick="resetformcontrols()" ><i class="bi bi-folder-plus"></i> New</button></div>
                     <div class="col-md-1" ><button type="button" class="btn nav-link" data-bs-toggle="modal"  onclick="processFormData()"><i class="bi bi-box-arrow-down"></i> Save</button></div>
-                    <div class="col-md-1" >
-                        <button class="btn nav-link" type="button" id="actionBtn" onclick="showRAActionsModal()" disabled><i class="bi bi-person-plus"></i> Action</button>
 
-                        <script>
-                            function showRAActionsModal() {
-                                var phaid = sessionStorage.getItem('activeCyberPHA');  // Get the value from session storage
-
-                                if (phaid === null || phaid === "") {
-                                    alert("Please select a CyberPHA assessment from the table first before creating an action item.");
-                                } else {
-                                    $('#RAActionsModal').modal('show');  // Show the modal if rawid has a value
-                                }
-                            }
-                        </script>
-                    </div>
                     <div class="col-md-1" ><button type="button" class="btn nav-link" data-bs-toggle="modal"  data-bs-target="#scenarioSelectModal"><i class="bi bi-box-arrow-down"></i> Load</button></div>
                     <div class="col-md-1">
                 <button id="risk-assessment-btn" type="button" class="btn nav-link" ><i class="bi bi-bullseye"></i>
-                    KPIs </button><br>
+                    Execute Assessment  </button><br>
 
                             <script>
                             $(document).ready(function () {
@@ -958,6 +946,45 @@ $(document).ready(function() {
                 <div class = "row">
                     <div class="col-md-3">
                         <br>
+                    <div class="form-group" id="noconnect_asset_group" style="display: {% if assets_data %}none{% endif %};">
+                        <div class="row">
+                            <div class="col">
+                                <label for="noconnect_asset">Targeted Asset (Vendor and Model)</label>
+                                <input type="text" class="form-control" id="noconnect_asset" name="noconnect_asset" style="width: 100%">
+
+                                <label for="asset_purpose">Asset Purpose:</label>
+                                <input type="text" class="form-control" id="noconnectasset_purpose" name="noconnectasset_purpose" style="width: 100%">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!--form group for Exalens assets - will only display if there is an Exalens connector -->
+                   <div class="form-group" id="exalens_asset_group" style="display: {% if not assets_data %}none{% endif %};">
+                        <div class="row">
+                            <div class="col">
+                                <label for="asset_select">Select Asset</label><img src="{% static 'images/exalenslogo.png' %}" alt="" class="align-middle" style="max-height: 1rem; margin-left: 1em">
+                                <select id="asset_select" name="asset_select" class="form-control select2-asset" style="width: 100%">
+                                    {% for asset in assets_data %}
+                                    <option value="{{ asset.ip }}">{{ asset.mac_vendor }} - {{ asset.model }} - {{ asset.ip }}</option>
+                                    {% endfor %}
+                                </select>
+
+                                <label for="asset_purpose">Asset Purpose:</label>
+                                <input type="text" class="form-control" id="asset_purpose" name="asset_purpose" style="width: 100%">
+                            </div>
+                        </div>
+                    </div>
+                    <script>
+                    $(document).ready(function() {
+                        var assetSelect = $('#asset_select');
+                        if (assetSelect.children('option').length === 0) {
+                            $('#exalens_asset_group').hide();
+                        } else {
+                            $('#exalens_asset_group').show();
+                        }
+                    });
+                    </script>
+
                         <div class="form-group">
                         <label class="form-label" for="threat-intelligence"><h6>Attacker/Bad Actor:</h6></label>
                         <select class="form-control small-font" name="threat-intelligence" id="threat-intelligence" style="border: 3px solid #97979A; border-radius: 10px; box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5);  padding: 5px; background-color: white">
@@ -1006,7 +1033,64 @@ $(document).ready(function() {
                     </div>
                 </div>
                 <div class="col-md-9">
-                    <label for="txtScenario"><h6>Scenario</h6></label>
+                    <div class="row">
+                        <div class="col-md-2"><label for="txtScenario"><h6>Scenario</h6></label></div>
+                        <div class="col-md-10"><a href="#" id="generateScenarioText" style="color:white">Generate Scenario</a></div>
+                        <script>
+                            $(document).ready(function() {
+                                $('#generateScenarioText').click(function(event) {
+                                    event.preventDefault(); // Prevent the default link behavior
+                                    var phaID = document.getElementById('hdnphaID').value;
+                                    var attack_vector = document.getElementById('selVectors').value;
+                                    var attacker = document.getElementById('threat-intelligence').value;
+                                    var targetAsset, targetAssetPurpose;
+
+                                    if ($('#noconnect_asset_group').is(':visible')) {
+                                        targetAsset = document.getElementById('noconnect_asset').value;
+                                        targetAssetPurpose = document.getElementById('noconnectasset_purpose').value;
+                                    } else {
+                                        targetAsset = document.getElementById('asset_select').value;
+                                        targetAssetPurpose = document.getElementById('asset_purpose').value;
+                                    }
+                                    Swal.fire({
+                                        title: 'Generating Scenario...',
+                                        text: 'Please wait while the scenario is being generated.',
+                                        allowOutsideClick: false,
+                                        didOpen: () => {
+                                            Swal.showLoading()
+                                        }
+                                    });
+
+                                    $.ajax({
+                                        url: '/OTRisk/generate_cyberpha_scenario_description/',
+                                        type: 'POST',
+                                        data: {
+                                            cyberPHA_ID: phaID,
+                                            attackVector: attack_vector,
+                                            attacker: attacker,
+                                            targetAsset: targetAsset,
+                                            targetAssetPurpose: targetAssetPurpose,
+                                            csrfmiddlewaretoken: '{{ csrf_token }}'  // Ensure CSRF token is included for POST request
+                                        },
+                                        success: function(response) {
+                                            $('#id_txtScenario').val(response.scenario_description);
+                                            $('#analyzeScenarioBtn').prop('disabled', false);
+                                            Swal.close();
+
+                                            },
+                                        error: function(error) {
+                                            Swal.close(); // Close the SweetAlert2 progress dialog
+                                            Swal.fire({
+                                                icon: 'error',
+                                                title: 'Error',
+                                                text: 'An error occurred while generating the scenario.',
+                                            });
+                                        }
+                                    });
+                                });
+                            });
+                            </script>
+                    </div>
                     <!-- Render the textarea without the label -->
                     {{ scenario_form.txtScenario }}
                     {% if scenario_form.txtScenario.errors %}
@@ -1067,6 +1151,30 @@ $(document).ready(function() {
                                     <!-- Rows will be added here dynamically -->
                                 </tbody>
                             </table>
+                                <button id="addRowButton" class="btn btn-primary">Add Row</button>
+                            <script>
+                                document.getElementById('addRowButton').addEventListener('click', function() {
+                                    var tableBody = document.getElementById('consequenceTable').getElementsByTagName('tbody')[0];
+                                    var newRow = tableBody.insertRow();
+
+                                    var consequenceCell = newRow.insertCell(0);
+                                    var validateCell = newRow.insertCell(1);
+
+                                    // Prompt the user to enter the consequence text
+                                    var consequenceText = prompt("Enter consequence:");
+
+                                    if (consequenceText) {
+                                        consequenceCell.innerHTML = consequenceText;
+                                    } else {
+                                        consequenceCell.innerHTML = "User entered consequence"; // Default text if user cancels prompt
+                                    }
+
+                                    var index = tableBody.rows.length - 1; // Get the index of the new row
+
+                                    // Create and check the validation checkbox
+                                    validateCell.innerHTML = '<input type="checkbox" id="validate' + index + '" checked>';
+                                });
+                            </script>
                             </div>
                         </div>
                     </div>
@@ -1611,7 +1719,7 @@ $(document).ready(function() {
             <div class="card mb-3 shadow-sm">
                 <div class="card-body">
                     <div id="tableVulns" class="mb-2">
-                        <button id="addRowBtn" class="btn btn-primary btn-sm" type="button">Add Row</button>
+                        <button id="addObRowBtn" class="btn btn-primary btn-sm" type="button">Add Row</button>
                     </div>
                     <table class="table table-bordered small-font" id="table_vulns">
                         <thead>
@@ -1627,7 +1735,7 @@ $(document).ready(function() {
                         </table>
                         <script>
                             $(document).ready(function() {
-                                $("#addRowBtn").click(function() {
+                                $("#addObRowBtn").click(function() {
                                     var newRow = `<tr>
                                         <td><textarea class="form-control" maxlength="100"></textarea></td>
 
@@ -1669,6 +1777,7 @@ $(document).ready(function() {
                         <script>
                             $(document).ready(function() {
                                 $("#addRowBtn").click(function() {
+
                                     var newRow = `<tr>
                                         <td><textarea class="form-control" maxlength="100"></textarea></td>
                                         <td><textarea class="form-control" maxlength="100"></textarea></td>
@@ -2308,7 +2417,18 @@ $(document).ready(function() {
                           break;
                       }
                   }
+                let asset_name = '';
+                let asset_purpose = '';
 
+                if (document.getElementById('exalens_asset_group').style.display !== 'none') {
+                    const assetSelect = document.getElementById('asset_select');
+                    const selectedAsset = assetSelect.options[assetSelect.selectedIndex].text;
+                    asset_name = selectedAsset;
+                    asset_purpose = document.getElementById('asset_purpose').value;
+                } else {
+                    asset_name = document.getElementById('noconnect_asset').value;
+                    asset_purpose = document.getElementById('noconnectasset_purpose').value;
+                }
                   if (rows.length === 0 || !validatedConsequenceExists) {
                       alert("No consequences have been added or validated. Please add and validate consequences before proceeding.");
                       return; // Exit the function
@@ -2390,6 +2510,8 @@ $(document).ready(function() {
                   formData.append('rationale_recommendation', rationale_recommendation);
                   formData.append('rationale_Rationale', rationale_Rationale);
                   formData.append('cost_projection_justification', cost_projection_justification);
+                  formData.append('asset_name', asset_name);
+                  formData.append('asset_purpose', asset_purpose);
 
                   // Check if snapshot should be created
                   let snapshot = 0
@@ -2567,6 +2689,7 @@ $(document).ready(function() {
         <div class="mt-3" id="outageDurationDiv" style="display: none;">
           <label for="outageDuration">Estimate length of time of the outage (hours):</label>
           <input type="number" id="outageDuration" name="outageDuration" class="form-control" min="1">
+
         </div>
 
         <!-- 3. Text input for cost per hour -->
@@ -3394,20 +3517,52 @@ $('#scenarioSelectModal').on('show.bs.modal', function (e) {
     });
 
     function submitRAActionForm() {
-        $.ajax({
-            type: "POST",
-            url: "{% url 'OTRisk:save_ra_action' %}",
-            data: $("#raActionsForm").serialize(),
-            success: function(response) {
-                if (response.status == "success") {
-                    $("#RAActionsModal").modal('hide');
-                    // Optionally, show a success message or perform other actions.
-                } else {
-                    alert("Error saving data!");
-                }
+    // Show SweetAlert in-progress modal
+    Swal.fire({
+        title: 'Saving...',
+        text: 'Please wait while the action is being saved.',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading()
+        }
+    });
+
+    $.ajax({
+        type: "POST",
+        url: "{% url 'OTRisk:save_ra_action' %}",
+        data: $("#raActionsForm").serialize(),
+        success: function(response) {
+            Swal.close(); // Close the in-progress modal
+            if (response.status == "success") {
+                $("#RAActionsModal").modal('hide');
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Action saved',
+                    text: 'Your action has been successfully saved.'
+                });
+                // Remove the "Add Action Item" button
+                const recIndex = $("#actionTitle").data("rec-index");
+                $(`#recBox${recIndex} .add-action-item-btn`).remove();
+
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Error saving data!'
+                });
             }
-        });
-    }
+        },
+        error: function() {
+            Swal.close(); // Close the in-progress modal
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'An unexpected error occurred. Please try again.'
+            });
+        }
+    });
+}
+
 </script>
 
 
@@ -3634,7 +3789,15 @@ $('#scenarioSelectModal').on('show.bs.modal', function (e) {
             let supplychainJustification = document.getElementById('txtsupplyJustify').value;
             let environmentJustification = document.getElementById('txtenvironmentJustify').value;
             let dangerJustification = document.getElementById('txtlifeJustify').value;
+            var targetAsset, targetAssetPurpose;
 
+            if ($('#noconnect_asset_group').is(':visible')) {
+                targetAsset = document.getElementById('noconnect_asset').value;
+                targetAssetPurpose = document.getElementById('noconnectasset_purpose').value;
+            } else {
+                targetAsset = document.getElementById('asset_select').value;
+                targetAssetPurpose = document.getElementById('asset_purpose').value;
+            }
              // Gather Physical Safeguards from the table
             let physicalSafeguards = [];
             $("#table_safeguards tbody tr").each(function() {
@@ -3715,6 +3878,8 @@ $('#scenarioSelectModal').on('show.bs.modal', function (e) {
                     supplychainJustification: supplychainJustification,
                     environmentJustification: environmentJustification,
                     dangerJustification: dangerJustification,
+                    targetAsset: targetAsset,
+                    targetAssetPurpose: targetAssetPurpose
                 },
                 success: function (response) {
                     // On success, set progress to 100% and hide the progress bar
@@ -3771,6 +3936,7 @@ $('#scenarioSelectModal').on('show.bs.modal', function (e) {
                         document.getElementById('hdnrationale_Rationale').value = response.rationale.Rationale;
                          $("#recommendationTitle").text("Recommendation");
                         $("#recommendationText").text(response.rationale.Recommendation);
+
                         $("#rationaleTitle").text("Rationale");
                         $("#rationalePoints").html("<li>" + response.rationale.Rationale.replace(/\n/g, "</li><li>") + "</li>");
 
@@ -3985,7 +4151,6 @@ document.addEventListener("DOMContentLoaded", function() {
 });
 
 function displayRecommendations(recommendations) {
-
     try {
         $("#span_recommendations").empty();
         let recommendationsArray = recommendations.split('\n').filter(r => r.trim() !== '');
@@ -3993,21 +4158,41 @@ function displayRecommendations(recommendations) {
             let parts = rec.split('[');
             let recommendationText = parts[0].trim();
             let nistReference = parts[1].replace(']', '').trim();
+            // Extract the body text using regex
+            let bodyTextMatch = recommendationText.match(/^\d+\.\s*(.*?)\s*\(\d+%?\)$/);
+            let bodyText = bodyTextMatch ? bodyTextMatch[1] : recommendationText;
 
             let boxHtml = `
                 <div class="recommendation-box" id="recBox${index}">
                     <div class="recommendation-text">${recommendationText}</div>
                     <div class="nist-reference">${nistReference}</div>
+                    <button class="btn btn-primary add-action-item-btn" data-bs-toggle="modal" data-bs-target="#RAActionsModal" data-recommendation="${bodyText}">Add Action Item</button>
                 </div>
             `;
 
             $("#span_recommendations").append(boxHtml);
         });
-    } catch (error){
-    // Optionally, you can display a user-friendly error message on the UI as well
-    $("#span_recommendations").append(`<div class="error-message">Error displaying recommendations. Please try again later.</div>`);
+
+        // Add event listener for the "Add Action Item" buttons
+        $(".add-action-item-btn").on("click", function() {
+            let recommendationText = $(this).data("recommendation");
+             let recIndex = $(this).data("rec-index");
+            $("#actionTitle").val(recommendationText).data("rec-index", recIndex);
+            $("#actionDescription").val(recommendationText);
+             // Get the current date in mm/dd/yyyy format
+            let currentDate = new Date();
+            let year = currentDate.getFullYear();
+            let month = String(currentDate.getMonth() + 1).padStart(2, '0');
+            let day = String(currentDate.getDate()).padStart(2, '0');
+            let formattedDate = `${year}-${month}-${day}`;
+            $("#actionDate").val(formattedDate);
+        });
+    } catch (error) {
+        // Optionally, you can display a user-friendly error message on the UI as well
+        $("#span_recommendations").append(`<div class="error-message">Error displaying recommendations. Please try again later.</div>`);
+    }
 }
-}
+
 
 
 
@@ -4647,6 +4832,20 @@ function clearScenario(){
          $('#env_contamination').val(data.env_contamination);
          $('#env_population').val(data.env_population);
          $('#env_wildlife').val(data.env_wildlife);
+
+          if (document.getElementById('exalens_asset_group').style.display !== 'none') {
+                    const assetSelect = document.getElementById('asset_select');
+                    const assetOptions = Array.from(assetSelect.options);
+                    const selectedAsset = assetOptions.find(option => option.text === data.asset_name);
+
+                    if (selectedAsset) {
+                        assetSelect.value = selectedAsset.value;
+                    }
+                    $('#asset_purpose').val(data.asset_purpose);
+                } else {
+                    $('#noconnect_asset').val(data.asset_name);
+                    $('#noconnectasset_purpose').val(data.asset_purpose);
+                }
 
         $('.tab-link[data-tab="tab2"]').click();
 

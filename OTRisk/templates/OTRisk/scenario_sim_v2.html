@@ -231,10 +231,17 @@ padding: 15px; /* Optional: for internal spacing */
     border: 1px solid #666; /* Darker border */
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5); /* Box shadow */
     padding: 25px;
+    max-width: 100%;
+    flex: 0 0 25%;
     margin-bottom: 30px; /* Increased space between containers */
     border-radius: 10px; /* Rounded corners */
 }
-
+#bia_groups {
+        display: flex;
+        flex-direction: column;
+        align-items: center; /* This centers the child rows horizontally */
+        width: 100%; /* Make sure this spans the full width of its parent */
+    }
 .group-header {
     color: #d3d1cd; /* Lighter color for contrast */
     font-weight: bold;
@@ -377,12 +384,7 @@ path.connection {
 .sub-menu li a:hover, .sub-menu li a.active {
     background-color: #57595b; /* Hover/active background color */
 }
-.tab-content {
-    display: none; /* Hide all tab content by default */
-    padding: 20px; /* Padding around content */
-    border: 1px solid #666; /* Border for definition */
-    margin-top: 20px; /* Space from the top */
-}
+
 
 .tab-content.active {
     display: block; /* Only the active tab is displayed */
@@ -392,10 +394,10 @@ path.connection {
     padding: 20px; /* Padding around content */
     border: 1px solid #666; /* Border for definition */
     margin-top: 20px; /* Space from the top */
-    width: 80%; /* 80% of the available width */
-    height: 80vh; /* 80% of the viewport height */
+    width: 100%;
+    height: 100vh; /* 80% of the viewport height */
     position: absolute; /* Positioning relative to its nearest positioned ancestor */
-    left: 350px; /* Adjust based on the total width of the main sidebar and sub-menu */
+    left: 15vh; /* Adjust based on the total width of the main sidebar and sub-menu */
     top: 0; /* Align with the top of the viewport */
     overflow: auto; /* Add scroll for overflow content */
     box-sizing: border-box; /* Include padding and border in the element's total width and height */
@@ -504,6 +506,63 @@ input:checked + .slider1:before {
 .white-text {
     color: white !important; /* !important ensures the style applies over any existing styles */
 }
+
+.container {
+    width: 100%;
+    overflow-x: auto; /* Ensures the table is scrollable horizontally if it overflows */
+}
+.container-bia .row {
+        display: flex;
+        justify-content: center; /* Center the items horizontally */
+        width: 100%; /* Full width to ensure proper alignment */
+        flex-wrap: wrap; /* Allow items to wrap in the container */
+    }
+
+    .container-bia .group-container {
+        flex: 0 0 30%; /* Adjusts the base width of the columns to fit 3 across */
+        max-width: 30%; /* Maximum width to match flex basis */
+        margin: 0 10px; /* Spacing between the containers */
+        box-sizing: border-box; /* Includes padding and border in the width */
+        transform: scale(0.75); /* Scales the containers to 75% of their original size */
+        transform-origin: top center; /* Ensures the scaling doesn't affect the alignment */
+    }
+.responsive-table {
+    width: 100%; /* Makes the table fill the container */
+    border-collapse: collapse; /* Removes space between borders */
+    table-layout: fixed; /* Ensures consistent column sizing */
+}
+
+.responsive-table th, .responsive-table td {
+    border: 1px solid #ccc; /* Light gray border for readability */
+    padding: 8px; /* Spacing inside cells, ensuring content is not cramped */
+    text-align: left; /* Aligns text to the left */
+}
+
+.responsive-table thead {
+    background-color: #666; /* Darker shade for header for better contrast */
+    color: #fff; /* White text for readability */
+}
+#incident_analysis {
+    background-color: #f9f9f9;
+    padding: 20px;
+    margin-top: 20px;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+    font-size: 16px;
+    color: #333;
+}
+
+#incident_analysis ul {
+    list-style-type: disc;  // Use disc for traditional bullet points
+    padding-left: 20px;  // Proper indentation for bullet points
+}
+
+#incident_analysis li {
+    margin-bottom: 10px;  // Space between bullet points for better readability
+    line-height: 1.5;  // Enhanced line spacing for reading comfort
+    text-align: left;  // Align text to the left for a cleaner look
+}
+
 </style>
 </head>
 <body style="background-color: #464748">
@@ -560,10 +619,10 @@ document.addEventListener("DOMContentLoaded", function() {
     <div class="row">
         {% include 'menu_bar.html' %}
         <!-- Main content area, including sub-menu and tabs -->
-        <div class="col-md-9 col-lg-10">
+        <div class="col-md-12 col-lg-10">
             <!-- Top Strip -->
             <div class="top-strip">
-                <div class="row">
+               <div class="row">
                     <div class="col-md-2"></div>
                     <div class="col-md-3">
                     <h1 class="page-title">Scenario Builder@AnzenOT (Beta)</h1>
@@ -916,6 +975,7 @@ function loadScenarioDetails(scenarioId) {
     var factors = response.factors;
     var factorKeys = Object.keys(factors);
     var rows = [];
+    var chartData = [];
 
     factorKeys.forEach(function(factor, index) {
         if (index % 3 === 0) {
@@ -923,7 +983,7 @@ function loadScenarioDetails(scenarioId) {
             row.className = 'row';
             rows.push(row);
         }
-
+        chartData.push([factor, factors[factor].score]);
         var groupContainer = document.createElement('div');
         groupContainer.className = 'group-container col-md-4';
 
@@ -959,8 +1019,30 @@ function loadScenarioDetails(scenarioId) {
         if ((index + 1) % 3 === 0 || index === factorKeys.length - 1) {
             biaGroupsContainer.appendChild(rows[rows.length - 1]);
         }
-    });
 
+
+    });
+    anychart.onDocumentReady(function() {
+        // Create a chart instance
+        var chart = anychart.line();
+
+        // Set the data
+        chart.data(chartData);
+
+        chart.xAxis().title("Factors");
+        var xAxis = chart.xAxis();
+
+        xAxis.labels()
+            .rotation(-70) // Angle the labels
+            .fontSize(10); // Smaller font size
+        chart.yAxis().title("Score");
+        chart.background().fill("#5E6266");
+        var credits = chart.credits();
+        credits.enabled(false);
+        // Set container and draw the chart
+        chart.container('bia_groups_chart');
+        chart.draw();
+    });
     if (response.incidents) {
         var table = $('<table class="table table-striped white-text"><thead><tr><th>Title</th><th>Description</th><th>Date</th><th>URL</th></tr></thead><tbody></tbody></table>');
         $('#related_incidents').append(table);
@@ -1105,7 +1187,7 @@ console.error('Error fetching scenarios:', error);
 
 
                     </div>
-                    <div class="col-md-5"></div>
+                    <div class="col-md-4"></div>
                 </div>
                <div class="row">
                     <div class="col-md-2"></div>
@@ -1127,9 +1209,9 @@ console.error('Error fetching scenarios:', error);
             <li><a href="#" data-tab="tab3">Tools & Software</a></li>
             <li><a href="#" data-tab="tab4" id="scenarioTabLink">Scenario</a></li>
 
-            <li><a href="#" data-tab="tab5">Consequences</a></li>
-            <li><a href="#" data-tab="tab6">Event Costs</a></li>
-            <li><a href="#" data-tab="tab7">Business Impact</a></li>
+            <li><a href="#" data-tab="tab5">Business Impacts</a></li>
+            <!-- <li><a href="#" data-tab="tab6">Event Costs</a></li>
+            <li><a href="#" data-tab="tab7">Business Impact</a></li> -->
             <li><a href="#" data-tab="tab8">Tools/Software Analysis</a></li>
             <li><a href="#" data-tab="tab9">Attack Tree</a></li>
             <li><a href="#" data-tab="tab10">Related Incidents</a></li>
@@ -1139,7 +1221,7 @@ console.error('Error fetching scenarios:', error);
 
     <div class="custom-main-content" >
 
-    <div id="checklistContainer">
+    <div id="checklistContainer" style="visibility: hidden">
          <div class="form-group">
         <div>
             <input type="checkbox" id="analyzeConsequencesCheckbox" class="custom-checkbox" disabled> Analyze Consequences
@@ -1261,6 +1343,58 @@ console.error('Error fetching scenarios:', error);
                                     </select>
                                 </div>
                             </div>
+                            <div class="form-group">
+                            <div class="row">
+
+                                <div class="col-md-6">
+                                    <label for="asset_select">Select Asset    </label><img src="{% static 'images/exalenslogo.png' %}" alt="" class="align-middle" style="max-height: 1rem; margin-left: 1em">
+                                    <select id="asset_select" name="asset_select" class="form-control select2-asset" style="width: 100%">
+                                        {% for asset in exalens_assets %}
+                                        <option value="{{ asset.ip }}">{{ asset.mac_vendor }} - {{ asset.model }} - {{ asset.ip }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="asset_purpose">Asset Purpose:</label>
+                                        <input type="text" class="form-control" id="asset_purpose" name="asset_purpose" style="width: 100%">
+
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div id="incident_data" style="width:100%; ">Select an IP to see incidents.</div>
+                                </div>
+                            </div>
+                            </div>
+
+                    <script>
+                    $(document).ready(function() {
+                        $('#asset_select').change(function() {
+                            var ipaddress = $(this).val();
+                            $.ajax({
+                                url: `/OTRisk/get-incidents/${ipaddress}/`,
+                                type: 'GET',
+                                dataType: 'json',
+                                success: function(data) {
+                                    var tableHtml = '<table id="incident_table" class="responsive-table"><thead><tr><th style="width:10%">ID</th><th>Detection Name</th><th>Category</th><th>Last Seen</th></tr></thead><tbody>';
+                                    data.forEach(function(incident) {
+                                        tableHtml += `<tr>
+                                            <td>${incident.incident_no}</td>
+                                            <td>${incident.detection_name}</td>
+                                            <td>${incident.category}</td>
+                                           <td>${incident.last_seen_utc}</td>
+                                        </tr>`;
+                                    });
+                                    tableHtml += '</tbody></table>';
+                                    $('#incident_data').html(tableHtml);
+                                },
+                                error: function() {
+                                    $('#incident_data').html('<p>An error has occurred</p>');
+                                }
+                            });
+                        });
+                    });
+                    </script>
                     </div>
             </div>
             <div class="col-md-6">
@@ -1297,8 +1431,8 @@ console.error('Error fetching scenarios:', error);
                     </div>
 
                 <div class="form-group">
-                    <label for="targetComponent" style="color: white">Target Component/Device:</label>
-                    <input type="text" class="form-control" id="targetComponent" name="targetComponent" style="width: 100%">
+
+
 
                     <label for="attackEffect">Effect of Attack:</label>
                     <input type="text" class="form-control" id="attackEffect" name="attackEffect" style="width: 100%">
@@ -1488,6 +1622,7 @@ $('.sub-menu a').click(function(e) {
 
              // Proceed with AJAX call only if changes were made in Tab 1
                 document.getElementById('spinner').style.display = 'block';
+
                 var formData = {
                     'attacker': $('#selThreats').val(),
                     'attackVector': $('#selVectors').val(),
@@ -1548,22 +1683,18 @@ $('.sub-menu a').click(function(e) {
 
     <!-- Tab 4 Content -->
     <div class="tab-content" id="tab5">
-        <h2>Consequences</h2>
-        <div class="form-group">
-        <div class="card mb-2 shadow-sm">
-                <div class="card-body">
-                    <label for="txtConsequences" class="d-flex align-items-center clickable-label"  ><img src="{% static 'images/scenario.png' %}" alt="" class="align-bottom" style="max-height: 2rem; margin-left: 5px;"> &nbsp;Consequences</label>
-                    <textarea id="txtConsequences" class='form-control' rows=11 placeholder='' style="resize: none; border: 3px #97979A; border-radius: 10px; box-shadow: inset 3px 3px 8px rgba(0, 0, 0, 0.5); padding: 20px; background-color: white"></textarea>
+        <h2>Business Impact Assessment</h2>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <div class="card mb-2 shadow-sm">
+                        <div class="card-body">
+                            <label for="txtConsequences" class="d-flex align-items-center clickable-label"  ><img src="{% static 'images/scenario.png' %}" alt="" class="align-bottom" style="max-height: 2rem; margin-left: 5px;"> &nbsp;Consequences</label>
+                            <textarea id="txtConsequences" class='form-control' rows=11 placeholder='' style="resize: none; border: 3px #97979A; border-radius: 10px; box-shadow: inset 3px 3px 8px rgba(0, 0, 0, 0.5); padding: 20px; background-color: white"></textarea>
+                        </div>
+                    </div>
                 </div>
-            </div>
-
-        </div>
-
-    </div>
-
-    <div class="tab-content" id="tab6">
-        <h2>Event Costs</h2>
-        <div class="form-group">
+                <div class="form-group">
         <div class="row">
             <div class="col-md-4">
                 <div class="card mb-3 shadow-sm">
@@ -1591,7 +1722,7 @@ $('.sub-menu a').click(function(e) {
             </div>
         </div>
             </div>
-         <div class="group-container">
+                <div class="group-container">
                 <div class="group-header">
                      Twelve-Month Projection
                 </div>
@@ -1600,18 +1731,37 @@ $('.sub-menu a').click(function(e) {
                     <input type="hidden" id="scenario_12month_costs" name="scenario_12month_costs">
                 </div>
             </div>
+            </div>
+            <div class="col-md-6" >
+
+                    <div class="form-group" >
+                        <div id="bia_groups" class="container-bia">
+                            <!-- Your rows and containers will be generated here -->
+                        </div>
+                        <div id="bia_groups_chart" style="height: 30vh; margin-bottom: 20px;"></div>
+
+                    </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-content" id="tab6">
+        <h2>Event Costs</h2>
+
     </div>
     <!-- Tab 5 Content -->
     <div class="tab-content" id="tab7">
         <h2>Business Impact</h2>
         <div class="form-group">
-        <span id="bia_groups"></span>
+
         </div>
     </div>
 
     <!-- Tab 6 Content -->
     <div class="tab-content" id="tab8">
         <h2>Tools & Software Analysis</h2>
+        <div id="incident_analysis"></div>
         <div class="form-group">
             <div id="investmentImpactVisualization"></div>
         </div>
@@ -1788,7 +1938,7 @@ document.getElementById('analyzeScenarioBtn').addEventListener('click', function
         country: document.getElementById('countrySelector').value,
         threat_actor: document.getElementById('selThreats').value,
         attack_vector: document.getElementById('selVectors').value,
-        target: document.getElementById('targetComponent').value,
+        // target: document.getElementById('targetComponent').value,
         effect: document.getElementById('attackEffect').value,
         network: document.getElementById('targetSystem').value,
         impact: document.getElementById('impact').value,
@@ -1885,7 +2035,10 @@ Promise.all([
 
 function analyzeScenario(scenarioDetails) {
     return new Promise((resolve, reject) => {
-        // AJAX request for analyzing the scenario
+        var incidentIds = [];
+            $('#incident_table tbody tr').each(function() {
+                incidentIds.push($(this).find('td:first').text().trim());
+            });
         $.ajax({
             url: "/OTRisk/analyze_sim_scenario_v2/", // Replace with the correct URL mapped in your Django urls.py
             type: 'POST',
@@ -1896,7 +2049,8 @@ function analyzeScenario(scenarioDetails) {
                 'scenario': scenarioDetails.scenarioText,
                 'industry': scenarioDetails.industry,
                 'facility_type': scenarioDetails.facility_type,
-                'investment_data': JSON.stringify(scenarioDetails.investments), // Assuming investments is an array of objects
+                'investment_data': JSON.stringify(scenarioDetails.investments),
+                'incident_ids': JSON.stringify(incidentIds),
                 'csrfmiddlewaretoken': $('input[name="csrfmiddlewaretoken"]').val() // Correct way to get CSRF token value
             },
             timeout: 300000,
@@ -2110,8 +2264,46 @@ function updateUIWithResults(data) {
         document.getElementById('spinnerContainer').style.display = 'none';
         // Handle the case where investment impact data is not available
     }
+    var incidentSummaryContainer = document.getElementById('incident_analysis');
+    incidentSummaryContainer.style.display = 'none';
 
+    if (data.incident_response_text && data.incident_response_text.trim() !== '') {
+        // Split the incident response text into bullet points based on dashes
+        const bulletPoints = data.incident_response_text.split('- ').filter(point => point.trim() !== '');
+
+        // Create HTML content with list items for each bullet point
+        let listHtml = '<ul>';
+        bulletPoints.forEach(point => {
+            listHtml += `<li>${point.trim()}</li>`;
+        });
+        listHtml += '</ul>';
+
+        incidentSummaryContainer.innerHTML = listHtml;  // Set the inner HTML to the newly created list
+        incidentSummaryContainer.style.display = 'block';  // Display the container with the content
+    } else {
+        incidentSummaryContainer.innerHTML = '<p>No significant cybersecurity implications detected based on the current incident data.</p>';
+        incidentSummaryContainer.style.display = 'block';
+    }
 }
+
+function renderIncidentAnalysis(incidentResponseText) {
+    var incidentAnalysisContainer = document.getElementById('incident_analysis');
+    var rows = incidentResponseText.trim().split('\n');
+
+    var tableHtml = '<table id="table_incident_analysis" style="width: 100%; border-collapse: collapse; margin-top: 20px;"><thead><tr><th>Incident</th><th>Source IP</th><th>Target IPs</th><th>Detection Time</th><th>Classification</th><th>Severity</th><th>Risk Score</th><th>Implications</th></tr></thead><tbody>';
+
+    // Skipping the first line assuming it's an explanatory header and processing subsequent lines
+    for (let i = 1; i < rows.length; i++) {
+        var columns = rows[i].split('|').map(item => item.trim());
+        tableHtml += `<tr>${columns.map(col => `<td>${col}</td>`).join('')}</tr>`;
+    }
+
+    tableHtml += '</tbody></table>';
+    incidentAnalysisContainer.innerHTML = tableHtml;
+}
+
+
+
 
 function appendConsequenceGroup(container, consequence, index) {
 
@@ -2354,6 +2546,16 @@ $(document).ready(function() {
 });
 
 </script>
+
+<script>
+    $(document).ready(function() {
+        $('.select2-asset').select2({
+            placeholder: "Select an asset",
+            allowClear: true
+        });
+    });
+</script>
+
 </div>
 </body>
 </html>

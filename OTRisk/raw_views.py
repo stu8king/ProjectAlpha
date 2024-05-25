@@ -134,6 +134,7 @@ def get_rawactions(request):
 
 
 def save_ra_action(request):
+    print(request.POST)
     if request.method == "POST":
         # Extract data from POST request
         action_title = request.POST.get('actionTitle')
@@ -153,17 +154,17 @@ def save_ra_action(request):
         outageIT = request.POST.get('outageIT')
         outagePS = request.POST.get('outagePS')
         outageWWW = request.POST.get('outageWWW')
-        environmentMitigation = request.POST.get('environmentMitigation')
-        financeMitigation = request.POST.get('financeMitigation')
-        lifeMitigation = request.POST.get('lifeMitigation')
-        productionMitigation = request.POST.get('productionMitigation')
-        regulationMitigation = request.POST.get('regulationMitigation')
-        reputationMitigation = request.POST.get('reputationMitigation')
-        dataMitigation = request.POST.get('dataMitigation')
-        safetyMitigation = request.POST.get('safetyMitigation')
-        supplyMitigation = request.POST.get('supplyMitigation')
-        threatMitigation = request.POST.get('threatMitigation')
-        vulnerabilityMitigation = request.POST.get('vulnerabilityMitigation')
+        environmentMitigation = 0
+        financeMitigation = 0
+        lifeMitigation = 0
+        productionMitigation = 0
+        regulationMitigation = 0
+        reputationMitigation = 0
+        dataMitigation = 0
+        safetyMitigation = 0
+        supplyMitigation = 0
+        threatMitigation = 0
+        vulnerabilityMitigation = 0
         phaID = int(request.POST.get('hdnphaID'))
         RAWorksheetID = int(request.POST.get('hdntxtModalRAW'))
         current_user_organization_id = request.user.userprofile.organization_id

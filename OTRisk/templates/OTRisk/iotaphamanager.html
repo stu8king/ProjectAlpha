@@ -49,6 +49,97 @@
      {% bootstrap_javascript %}
 <link rel="stylesheet" type="text/css" href="{% static 'css/otriskstyle.css' %}">
 <style>
+    /* General table styles */
+#headertable {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: "Segoe UI", Arial, sans-serif;
+    color: #333;
+}
+
+#headertable th {
+    background-color: #333;
+    color: #fff;
+    padding: 12px;
+    text-align: left;
+    font-weight: 600;
+    border: 1px solid #ccc;
+}
+
+#headertable td {
+    padding: 12px;
+    border: 1px solid #ccc;
+    background-color: #fff;
+    color: #333;
+}
+
+#headertable tbody tr {
+    border-bottom: 1px solid #ccc;
+}
+
+#headertable tbody tr:hover {
+    background-color: #f2f2f2;
+}
+
+#headertable .actions {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+#headertable button {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    padding: 8px 12px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.3s;
+}
+
+#headertable button:hover {
+    background-color: #0056b3;
+}
+
+#headertable .second-row td {
+    border-top: none;
+    background-color: #f9f9f9;
+}
+
+/* Additional enhancements */
+#headertable th:first-child,
+#headertable td:first-child {
+    border-left: none;
+}
+
+#headertable th:last-child,
+#headertable td:last-child {
+    border-right: none;
+}
+
+#headertable tr:first-child th {
+    border-top: none;
+}
+
+#headertable tr:last-child td {
+    border-bottom: none;
+}
+
+/* For better accessibility */
+#headertable th, #headertable td {
+    text-align: center;
+}
+
+#headertable th, #headertable td.actions {
+    text-align: left;
+}
+
+/* Ensuring buttons are styled consistently */
+#headertable button {
+    font-size: 14px;
+    line-height: 1.5;
+}
+
 #assessment_summary {
     display: block; /* Make the span behave like a block element */
     background-color: #f2f2f2; /* Light grey background */
@@ -72,6 +163,53 @@
 
 #selIndustry, #selIndustry option {
     color: black !important; /* Ensures font color is black for both the select and its options */
+}
+  #risk_score_container {
+    width: 100%;
+    height: 20vh;
+    margin: 0 auto; /* Center the chart horizontally */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #00274d; /* Dark blue background color */
+    border: 1px solid #ccc; /* Light border */
+    border-radius: 10px; /* Rounded corners */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+    padding: 10px; /* Padding inside the container */
+    box-sizing: border-box; /* Include padding in width and height calculations */
+}
+
+#risk_score_number {
+    font-size: 2em; /* Increase the font size */
+    text-align: center;
+    color: #fff; /* White text color for better contrast */
+    margin-top: 10px; /* Space above the text */
+}
+    #risk_score_chart {
+        width: 70%;
+        height: 70%;
+    }
+    /* Hide the first column */
+.hidden-column {
+    display: none;
+}
+/* Base style for the delete button */
+.delete-btn {
+    background-color: #ff6666 !important; /* Base red color */
+    color: white !important; /* White text */
+    border: none !important; /* Remove default border */
+    border-radius: 4px !important; /* Rounded corners */
+    padding: 10px 20px !important; /* Padding for the button */
+    cursor: pointer !important; /* Pointer cursor on hover */
+    text-align: center !important; /* Center the text */
+    text-decoration: none !important; /* Remove text underline */
+    display: inline-block !important; /* Display inline-block */
+    transition: background-color 0.3s, color 0.3s !important; /* Smooth transition for hover effects */
+}
+
+/* Hover effect for the delete button */
+.delete-btn:hover {
+    background-color: #ff3333 !important; /* Darker shade of red on hover */
 }
 
 </style>
@@ -474,7 +612,7 @@ $(document).ready(function() {
         <table id="headertable" class="table small-font compact">
         <thead >
             <tr>
-                <th class="th" style="visibility:hidden">ID</th>
+                <th class="th hidden-column">ID</th>
                 <th>Title</th>
                 <th>Site</th>
                 <th>Type</th>
@@ -492,7 +630,7 @@ $(document).ready(function() {
         <tbody style="font-size: 10px">
             {% for pha_header_records in pha_header_records %}
                 <tr data-id="{{ pha_header_records.ID }}" class="selectable-row">
-                    <td style="visibility:hidden">{{ pha_header_records.ID }}</td>
+                    <td class="hidden-column">{{ pha_header_records.ID }}</td>
                     <td style="font-size: 14px; font-weight: bold">
                     {{ pha_header_records.title }}
                     {% if pha_header_records.is_default %}
@@ -507,47 +645,46 @@ $(document).ready(function() {
                      <input type="hidden" name="AssessmentUnit_{{ pha_header_records.ID }}" value="{{ pha_header_records.AssessmentUnit }}">
                     <input type="hidden" name="AssessmentZone_{{ pha_header_records.ID }}" value="{{ pha_header_records.AssessmentZone }}">
                     <input type="hidden" name="Industry_{{ pha_header_records.ID }}" value="{{ pha_header_records.Industry }}">
-                     <td style="background-color:
-                        {% if pha_header_records.bia_scenarios == None %}
-                            white  <!-- Default color for null or None values -->
-                        {% elif pha_header_records.bia_scenarios == 0 or pha_header_records.bia_scenarios == 1 or pha_header_records.bia_scenarios == 2 %}
-                            green
-                        {% elif pha_header_records.bia_scenarios == 3 %}
-                            olive
-                        {% elif pha_header_records.bia_scenarios == 4 or pha_header_records.bia_scenarios == 5 %}
-                            yellow
-                        {% elif pha_header_records.bia_scenarios == 6 or pha_header_records.bia_scenarios == 7 %}
-                            orange
-                        {% elif pha_header_records.bia_scenarios == 8 or pha_header_records.bia_scenarios == 9 %}
-                            red
-                        {% elif pha_header_records.bia_scenarios == 10 %}
-                            scarlet
-                        {% else %}
-                            white
-                        {% endif %}
-                ; text-align: center">
-                {{ pha_header_records.bia_scenarios|default_if_none:"N/A" }}  <!-- Display "N/A" if bia_scenarios is None -->
+                     <td style="text-align: center">
+    {% if pha_header_records.bia_scenarios == None %}
+        N/A
+    {% elif pha_header_records.bia_scenarios == 0 or pha_header_records.bia_scenarios == 1 or pha_header_records.bia_scenarios == 2 %}
+        Low
+    {% elif pha_header_records.bia_scenarios == 3 %}
+        Low/Medium
+    {% elif pha_header_records.bia_scenarios == 4 or pha_header_records.bia_scenarios == 5 %}
+        Medium
+    {% elif pha_header_records.bia_scenarios == 6 or pha_header_records.bia_scenarios == 7 %}
+        Medium/High
+    {% elif pha_header_records.bia_scenarios == 8 or pha_header_records.bia_scenarios == 9 %}
+        High
+    {% elif pha_header_records.bia_scenarios == 10 %}
+        Very High
+    {% else %}
+        N/A
+    {% endif %}
+</td>
+
+
+            <td style="text-align: center">{{ pha_header_records.scenario_count }}</td>
+            <td>{{ pha_header_records.latest_workflow_status }}</td>
+             <td style="text-align: center">
+                {% if pha_header_records.ra_action_count > 0 %}
+                    <a href="{% url 'OTRisk:ra_actions_view_pha' pha_id=pha_header_records.ID %}">{{ pha_header_records.ra_action_count }}</a>
+
+                {% else %}
+                    {{ pha_header_records.ra_action_count }}
+                {% endif %}
+            </td>
+            <td>
+                {% if pha_header_records.scenario_count != 0 %}
+                    <button class="report-button" onclick="window.open('{% url 'OTRisk:pha_reports' cyber_pha_header_id=pha_header_records.ID %}', '_blank')">Report</button>
+                {% endif %}
             </td>
 
-                    <td style="text-align: center">{{ pha_header_records.scenario_count }}</td>
-                    <td>{{ pha_header_records.latest_workflow_status }}</td>
-                     <td style="text-align: center">
-                        {% if pha_header_records.ra_action_count > 0 %}
-                            <a href="{% url 'OTRisk:ra_actions_view_pha' pha_id=pha_header_records.ID %}">{{ pha_header_records.ra_action_count }}</a>
-
-                        {% else %}
-                            {{ pha_header_records.ra_action_count }}
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% if pha_header_records.scenario_count != 0 %}
-                            <a class="dropdown-item" href="{% url 'OTRisk:pha_reports'  cyber_pha_header_id=pha_header_records.ID  %}" target="_blank" style="font-weight: bold; color: black">Report</a>
-                        {% else %}
-
-                        {% endif %}
-                    </td>
                     <td>
                     <button type="button" class="delete-btn" data-id="{{ pha_header_records.ID }}">Delete</button>
+
                     </td>
 
                     <!-- Add more <td> elements for each field in the RAWorksheet model -->
@@ -1428,7 +1565,317 @@ updateGroupList();
                     </script>
                     </div>
                 </div>
+
+                <div class="form-group">
+                    <div class="row">
+                        <div class="col">
+                            <label for="connector_select" style="color: white" title="Select the relevant installed internal solution that AnzenOT can connect to">Select Product:</label>
+                            <select class="form-control"   id="connector_select" name="connector_select">
+                                <option value="">Select Connector</option>
+                                <option value="Exalens">Exalens</option>
+                             </select>
+                        </div>
+                        <br><br>
+                         <!-- Exalens configuration fields -->
+                        <div id="exalensConfig" style="display: none;">
+                            <br>
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <img src="{% static 'images/exalenslogo.png' %}" alt="Exalens Logo" class="mb-3" style="width: 100px;">
+                                </div>
+                                <div class="col-md-1">
+                                </div>
+                                <div class="col-3">
+                                    <a href="#" id="useDefaultsLink" style="color:white">Use Defaults</a>
+                                    <script>
+                                    $(document).ready(function() {
+                                        $('#useDefaultsLink').click(function(event) {
+                                            event.preventDefault(); // Prevent the default link behavior
+
+                                            $.ajax({
+                                                url: '/OTRisk/exalens_defaults/',
+                                                type: 'GET',
+                                                success: function(response) {
+                                                    $('#exalensClientId').val(response.exalens_client_id);
+                                                    $('#exalensIpAddress').val(response.exalens_ip_address);
+                                                    $('#exalensApiKey').val(response.exalens_api);
+
+                                                    },
+                                                error: function(error) {
+                                                    console.log('Error fetching Exalens defaults:', error);
+                                                }
+                                            });
+                                        });
+                                    });
+                                    </script>
+                                </div>
+                                <div class="col-5">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="exalensApiKey">Exalens API Key</label>
+                                <input type="text" class="form-control" id="exalensApiKey" name="exalensApiKey" placeholder="Enter Exalens API Key">
+                            </div>
+                            <div class="form-group">
+                                <label for="exalensClientId">Exalens Client ID</label>
+                                <input type="text" class="form-control" id="exalensClientId" name="exalensClientId" placeholder="Enter Exalens Client ID">
+                            </div>
+                            <div class="form-group">
+                                <label for="exalensIpAddress">Exalens IP Address</label>
+                                <input type="text" class="form-control" id="exalensIpAddress" name="exalensIpAddress" placeholder="Enter Exalens IP Address">
+                            </div>
+                            <button id="ExalensConnectionBtn" type="button" class="btn btn-primary">Connect to Exalens</button>
+                            <br><br>
+                            <div id="exalens_risk_status" class="form-group">
+                                <br>
+                                <div class="row" >
+                                    <div class="col-md-6">
+                                        <div id="control_status"></div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div id="risk_statement"></div>
+                                    </div>
+                                </div>
+                                <br>
+
+                                    <div class="row" style="display: flex; align-items: center; justify-content: center">
+                                        <div class="col-md-6">
+                                            <div id="risk_score_container">
+                                                <div id="risk_score_chart"></div>
+                                            </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div id="risk_score_number"></div>
+                                            </div>
+
+                                </div>
+
+                            </div>
+                        </div>
+                        <input type="hidden" id="hdn_exalens_status" name="hdn_exalens_status">
+                        <input type="hidden" id="hdn_exalens_risk" name="hdn_exalens_risk">
+                        <input type="hidden" id="hdn_exalens_score" name="hdn_exalens_score">
+                        <script>
+                        document.getElementById('ExalensConnectionBtn').addEventListener('click', function() {
+                        var exalensIP = document.getElementById('exalensIpAddress').value;
+                        var exalensClientID = document.getElementById('exalensClientId').value;
+                        var exalensAPIKey = document.getElementById('exalensApiKey').value;
+
+                        $.ajax({
+                            url: '/OTRisk/cyberpha_exalens_connection/',
+                            type: 'POST',
+                            data: {
+                                exalens_ip: exalensIP,
+                                client_id: exalensClientID,
+                                api_key: exalensAPIKey,
+                                csrfmiddlewaretoken: $('input[name="csrfmiddlewaretoken"]').val()
+                            },
+                            beforeSend: function() {
+                                Swal.fire({
+                                    title: 'Processing...',
+                                    text: 'Please wait while we retrieve the data.',
+                                    allowOutsideClick: false,
+                                    didOpen: () => {
+                                        Swal.showLoading()
+                                    }
+                                });
+                            },
+                            success: function(response) {
+                                // Update text content
+                                document.getElementById('control_status').innerHTML = "<b>Exalens Status:</b> " + response["Control Status"];
+                                document.getElementById('risk_statement').innerHTML = "<b>Inferred Risk:</b> " + response["Risk Statement"];
+
+                                document.getElementById('risk_score_number').innerText = "Risk Score: " + response["Risk Score"] + "/100";
+                                document.getElementById('hdn_exalens_status').value = response["Control Status"];
+                                document.getElementById('hdn_exalens_risk').value = response["Risk Statement"];
+                                document.getElementById('hdn_exalens_score').value = response["Risk Score"];
+
+                                // Render the Risk Score chart
+                                anychart.onDocumentReady(function() {
+                                    $('#risk_score_chart').empty();
+                                    var gauge = anychart.gauges.circular();
+
+                                    // configure the gauge
+                                    gauge.data([response["Risk Score"]]);
+                                    gauge.fill("#fff")
+                                        .stroke(null)
+                                        .padding(0)
+                                        .margin(0)
+                                        .startAngle(270)
+                                        .sweepAngle(180);
+
+                                    // configure the gauge axis
+                                    var axis = gauge.axis();
+                                    axis.scale()
+                                        .minimum(0)
+                                        .maximum(100)
+                                        .ticks({interval: 10})
+                                        .minorTicks({interval: 1});
+                                    axis.fill("#7c868e")
+                                        .startAngle(270)
+                                        .sweepAngle(180)
+                                        .width(1)
+                                        .ticks({type: "line", length: 4, position: "outside"})
+                                        .minorTicks({type: "line", length: 2, position: "outside"})
+                                        .labels().position("outside").fontColor("white"); ;
+
+                                    // configure the gauge pointer
+                                    gauge.needle()
+                                        .stroke("2 #545f69")
+                                        .startRadius("5%")
+                                        .endRadius("90%")
+                                        .startWidth("1.4%")
+                                        .endWidth("0.8%");
+
+                                    // add range colors
+                                    gauge.range(0, {
+                                        from: 0,
+                                        to: 33,
+                                        position: "inside",
+                                        fill: "green",
+                                        stroke: "1 #545f69",
+                                        radius: 100,
+                                        startSize: 5,
+                                        endSize: 5
+                                    });
+                                    gauge.range(1, {
+                                        from: 34,
+                                        to: 66,
+                                        position: "inside",
+                                        fill: "yellow",
+                                        stroke: "1 #545f69",
+                                        radius: 100,
+                                        startSize: 5,
+                                        endSize: 5
+                                    });
+                                    gauge.range(2, {
+                                        from: 67,
+                                        to: 100,
+                                        position: "inside",
+                                        fill: "red",
+                                        stroke: "1 #545f69",
+                                        radius: 100,
+                                        startSize: 5,
+                                        endSize: 5
+                                    });
+                                    var credits = gauge.credits();
+                                    credits.enabled(false);
+                                    gauge.background().fill("#00274d");
+                                    // set the container id
+                                    gauge.container('risk_score_chart');
+
+                                    // initiate drawing the gauge
+                                    gauge.draw();
+                                });
+                            },
+                            complete: function() {
+                                Swal.close();
+                            },
+                            error: function() {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Error',
+                                    text: 'Failed to retrieve the risk status.'
+                                });
+                            },
+
+                        });
+                    });
+
+
+                        $(document).ready(function() {
+                            $('#connector_select').change(function() {
+                                if ($(this).val() === 'Exalens') {
+                                    $('#exalensConfig').show();
+                                } else {
+                                    $('#exalensConfig').hide();
+                                }
+                            });
+                        });
+
+                        function exalens_risk_score_chart(score){
+                            $('#risk_score_chart').empty();
+                            var gauge = anychart.gauges.circular();
+
+                            // configure the gauge
+                            gauge.data([score]);
+                            gauge.fill("#fff")
+                                .stroke(null)
+                                .padding(0)
+                                .margin(0)
+                                .startAngle(270)
+                                .sweepAngle(180);
+
+                            // configure the gauge axis
+                            var axis = gauge.axis();
+                            axis.scale()
+                                .minimum(0)
+                                .maximum(100)
+                                .ticks({interval: 10})
+                                .minorTicks({interval: 1});
+                            axis.fill("#7c868e")
+                                .startAngle(270)
+                                .sweepAngle(180)
+                                .width(1)
+                                .ticks({type: "line", length: 4, position: "outside"})
+                                .minorTicks({type: "line", length: 2, position: "outside"})
+                                .labels().position("outside").fontColor("white"); ;
+
+                            // configure the gauge pointer
+                            gauge.needle()
+                                .stroke("2 #545f69")
+                                .startRadius("5%")
+                                .endRadius("90%")
+                                .startWidth("1.4%")
+                                .endWidth("0.8%");
+
+                            // add range colors
+                            gauge.range(0, {
+                                from: 0,
+                                to: 33,
+                                position: "inside",
+                                fill: "green",
+                                stroke: "1 #545f69",
+                                radius: 100,
+                                startSize: 5,
+                                endSize: 5
+                            });
+                            gauge.range(1, {
+                                from: 34,
+                                to: 66,
+                                position: "inside",
+                                fill: "yellow",
+                                stroke: "1 #545f69",
+                                radius: 100,
+                                startSize: 5,
+                                endSize: 5
+                            });
+                            gauge.range(2, {
+                                from: 67,
+                                to: 100,
+                                position: "inside",
+                                fill: "red",
+                                stroke: "1 #545f69",
+                                radius: 100,
+                                startSize: 5,
+                                endSize: 5
+                            });
+                            var credits = gauge.credits();
+                            credits.enabled(false);
+                            gauge.background().fill("#00274d");
+                            // set the container id
+                            gauge.container('risk_score_chart');
+
+                            // initiate drawing the gauge
+                            gauge.draw();
+
+                        }
+                        </script>
+                    </div>
             </div>
+            </div>
+
 
             <div class="col-md-6">
                 <div class="form-group">
@@ -2501,6 +2948,16 @@ $(document).ready(function() {
                 };
                 investments.push(investment);
             });
+            let connector_status = '';
+            let connector_risk = '';
+            let connector_score = 0;
+            let exalensScore = parseInt(document.getElementById('hdn_exalens_score').value, 10);
+
+            if (exalensScore > 0){
+                 connector_status = document.getElementById('hdn_exalens_status').value;
+                 connector_risk = document.getElementById('hdn_exalens_risk').value;
+                 connector_score = exalensScore;
+            }
 
             // Make the AJAX call to the Django view using a separate endpoint for risk assessment
             $.ajax({
@@ -2521,7 +2978,10 @@ $(document).ready(function() {
                     investments: JSON.stringify(investments),
                     has_ir_plan: hasIRPlan,
                     ir_plan_date: irPlanDate,
-                    ir_plan_never_tested: irPlanNeverTested
+                    ir_plan_never_tested: irPlanNeverTested,
+                    connector_status: connector_status,
+                    connector_risk: connector_risk,
+                    connector_score: connector_score
                  },
 
                 success: function (response) {
@@ -2790,6 +3250,38 @@ $(document).ready(function() {
                         $('#ir_plan_ut').prop('checked', data.headerrecord.plan_never_tested);
                         $('#assessment_summary').text(data.headerrecord.last_assessment_summary);
                         $('#assessment_score').text('Score: ' + data.headerrecord.last_assessment_score + '/100');
+
+                        if (data.headerrecord.exalens_api) {
+                            $('#exalensConfig').show();
+                            $('#exalensApiKey').val(data.headerrecord.exalens_api);
+                            $('#exalensClientId').val(data.headerrecord.exalens_client);
+                            $('#exalensIpAddress').val(data.headerrecord.exalens_ip);
+
+                            document.getElementById('control_status').innerHTML = "<b>Exalens Status:</b> " + data.headerrecord.exalens_status;
+                            document.getElementById('risk_statement').innerHTML = "<b>Inferred Risk:</b> " + data.headerrecord.exalens_risk;
+
+                            document.getElementById('risk_score_number').innerText = "Risk Score: " + data.headerrecord.exalens_score + "/100";
+                            document.getElementById('hdn_exalens_status').value = data.headerrecord.exalens_status;
+                            document.getElementById('hdn_exalens_risk').value = data.headerrecord.exalens_risk;
+                            document.getElementById('hdn_exalens_score').value = data.headerrecord.exalens_score;
+
+                            exalens_risk_score_chart(data.headerrecord.exalens_score);
+                        } else {
+                            $('#exalensConfig').hide();
+                            $('#exalensApiKey').val('');
+                            $('#exalensClientId').val('');
+                            $('#exalensIpAddress').val('');
+                            document.getElementById('control_status').innerText = '';
+                            document.getElementById('risk_statement').innerText = '';
+                            document.getElementById('risk_score_number').innerText = '';
+                            document.getElementById('hdn_exalens_status').value = '';
+                            document.getElementById('hdn_exalens_risk').value = '';
+                            document.getElementById('hdn_exalens_score').value = '';
+
+                            exalens_risk_score_chart(0);
+                        }
+
+
 
                         $('#defaultFacility').prop('checked', data.headerrecord.is_default);
                         // Logic to enable/disable the date field and plan_never_tested checkbox

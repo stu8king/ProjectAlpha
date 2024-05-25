@@ -16,6 +16,7 @@ from django.utils.crypto import get_random_string
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 from django.db.models import Subquery, OuterRef, Count, IntegerField, Case, When, Value, Prefetch
+from requests import RequestException
 
 import OTRisk.forms
 from OTRisk.models.RiskScenario import RiskScenario
@@ -58,10 +59,11 @@ from .pha_views import iotaphamanager, facility_risk_profile, get_headerrecord, 
     getSingleScenario, pha_report, scenario_vulnerability, add_vulnerability, get_asset_types, calculate_effectiveness, \
     generate_ppt, analyze_scenario, assign_cyberpha_to_group, fetch_groups, fetch_all_groups, retrieve_scenario_builder, \
     facilities, air_quality_index, delete_pha_record, get_assessment_summary, copy_cyber_pha, assessment_gap_analysis, \
-    load_default_facility
+    load_default_facility, exalens_get_cyberpha_assets, generate_cyberpha_scenario_description
 from .report_views import pha_reports, get_scenario_report_details, qraw_reports, get_qraw_scenario_report_details
 from .scenario_builder import scenario_sim_v2, analyze_sim_scenario_v2, generate_sim_attack_tree_v2, \
-    analyze_sim_consequences_v2, generate_scenario_description_v2, related_incidents, retrieve_scenario_builder_v2
+    analyze_sim_consequences_v2, generate_scenario_description_v2, related_incidents, retrieve_scenario_builder_v2, \
+    exalens_get_incidents
 from .forms import CustomConsequenceForm, OrganizationAdmin
 from .models.Model_Scenario import CustomConsequence
 from accounts.models import Organization, OrganizationHistory
@@ -84,6 +86,7 @@ from datetime import datetime
 from django.db.models import Max
 import urllib3
 from urllib3.exceptions import InsecureRequestWarning
+import random
 import networkx as nx
 
 app_name = 'OTRisk'
@@ -1145,6 +1148,8 @@ def save_or_update_cyberpha(request):
         risk_rationale = request.POST.get('rationale_Rationale')
         risk_recommendation = request.POST.get('rationale_recommendation')
         cost_justification = request.POST.get('cost_projection_justification')
+        asset_name = request.POST.get('asset_name')
+        asset_purpose = request.POST.get('asset_purpose')
 
         if ai_bia_score in ('NaN', ''):
             ai_bia_score = 0
@@ -1318,7 +1323,9 @@ def save_or_update_cyberpha(request):
                 cost_projection=cost_projection,
                 risk_rationale=risk_rationale,
                 risk_recommendation=risk_recommendation,
-                cost_justification=cost_justification
+                cost_justification=cost_justification,
+                asset_name=asset_name,
+                asset_purpose=asset_purpose
 
             )
             snapshot_record.save()
@@ -1404,7 +1411,9 @@ def save_or_update_cyberpha(request):
                 'cost_projection': cost_projection,
                 'risk_recommendation': risk_recommendation,
                 'risk_rationale': risk_rationale,
-                'cost_justification': cost_justification
+                'cost_justification': cost_justification,
+                'asset_name': asset_name,
+                'asset_purpose': asset_purpose
             }
 
             # If scenario_id is '0', create a new record, otherwise update the existing one
@@ -1582,6 +1591,7 @@ def assess_cyberpha(request, cyberPHAID=None):
         try:
             # Retrieve the Description value from the database based on the active-cyberpha_id
             description = tblCyberPHAHeader.objects.get(ID=active_cyberpha_id).Description
+
         except tblCyberPHAHeader.DoesNotExist:
             pass
 
@@ -1629,6 +1639,18 @@ def assess_cyberpha(request, cyberPHAID=None):
     control_assessments_data = serializers.serialize('json', MitreControlAssessment_results)
     scenario_form = CyberSecurityScenarioForm(request.POST)
 
+    if active_cyberpha_id is not None:
+        exalens_api = tblCyberPHAHeader.objects.get(ID=active_cyberpha_id).exalens_api
+
+        if exalens_api:
+            # Call the exalens_get_cyberpha_assets function with active_cyberpha_id
+            assets_data = exalens_get_cyberpha_assets(active_cyberpha_id)
+            # Use assets_data as needed
+        else:
+            assets_data = []  # Handle the case where exalens_api is null
+    else:
+        assets_data = []  # Handle the case where active_cyberpha_id is None
+
     return render(request, 'OTRisk/phascenariomgr.html', {
         # 'scenarios': combined_scenarios,
         'control_objectives': control_objectives,
@@ -1645,7 +1667,8 @@ def assess_cyberpha(request, cyberPHAID=None):
         'MitreControlAssessment_results': control_assessments_data,
         'SECURITY_LEVELS': SECURITY_LEVELS,
         'scenario_form': scenario_form,
-        'scenario_status': scenario_status
+        'scenario_status': scenario_status,
+        'assets_data': assets_data
     })
 
 
@@ -3400,8 +3423,115 @@ def get_asset_data(request):
 
             return render(request, 'display_assets.html', context)
         else:
-            return HttpResponse(f"Failed to retrieve data: {incidents_response.status_code}, {assets_response.status_code}")
+            return HttpResponse(
+                f"Failed to retrieve data: {incidents_response.status_code}, {assets_response.status_code}")
     except requests.exceptions.RequestException as e:
         # Handle any errors that occur during the request
         return HttpResponse(f"An error occurred: {e}")
 
+
+def cyberpha_exalens_connection(request):
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+    user_profile = UserProfile.objects.get(user=request.user)
+    organization_defaults = user_profile.organization.defaults
+    exalens_api_key = request.POST.get('api_key')
+    exalens_client_id = request.POST.get('client_id')
+    exalens_ip_address = request.POST.get('exalens_ip')
+
+    incident_url = f"https://{exalens_ip_address}/api/thirdparty/incident"
+    headers = {
+        'x-client-id': exalens_client_id,
+        'x-api-key': exalens_api_key
+    }
+
+    incident_response = requests.get(incident_url, headers=headers, verify=False)
+    incident_response.raise_for_status()  # Raise an error for bad status codes
+    incident_details = incident_response.json().get('data', [])
+
+    # Limit the number of incidents to process
+    max_incidents = 20
+    if len(incident_details) > max_incidents:
+        incident_details = random.sample(incident_details, max_incidents)
+
+    filtered_incidents = []
+    for incident in incident_details:
+        filtered_incident = {
+            "incident_no": incident.get("incident_no"),
+            "detection_name": incident.get("detection_name"),
+            "status": incident.get("status"),
+            "first_seen": incident.get("first_seen"),
+            "last_seen": incident.get("last_seen"),
+            "src": incident.get("src"),
+            "dst": incident.get("dst"),
+            "severity": incident.get("severity"),
+            "severity_text": incident.get("severity_text"),
+            "classification": incident.get("classification"),
+            "risk_score": incident.get("risk_score"),
+            "risk_score_label": incident.get("risk_score_label"),
+            "category": incident.get("category"),
+            "description": incident.get("description"),
+            "detection_artifacts": {
+                "kill_chain": incident.get("detection_artifacts", {}).get("kill_chain"),
+                "mitre_attack": incident.get("detection_artifacts", {}).get("mitre_attack"),
+                "src_ip": incident.get("detection_artifacts", {}).get("src_ip"),
+                "dst_ip": incident.get("detection_artifacts", {}).get("dst_ip"),
+                "service_indicator": incident.get("detection_artifacts", {}).get("service_indicator"),
+                "src_mac": incident.get("detection_artifacts", {}).get("src_mac"),
+                "dst_mac": incident.get("detection_artifacts", {}).get("dst_mac"),
+            },
+            "detection_summary": incident.get("detection_summary"),
+            "notes": incident.get("notes"),
+        }
+        filtered_incidents.append(filtered_incident)
+
+    prompt = (
+        "You are an OT system risk analyst. Based on the following Incidents Data from OT devices analyze and make the following assertions:\n"
+        "1. In 50 words write a concise bullet pointed analysis of network OT cyber-physical controls that can be objectively determined from the incident data. No preamble or additional narrative. \n"
+        "2. In  50 words state what the incidents suggest about OT network cybersecurity risks for the network and the potential impacts for safety and cyber-physical risk.\n"
+        "3. An OT cyber-physical risk score on a scale of 1 to 100 where 1 is best and 100 is worst.\n"
+        "The assertions should be concise and suitable for presentation to an executive leader.\n"
+        "IMPORTANT: Format the output strictly as follows, with each part on a new line:\n"
+        "Control Status: <description of the status of the controls>\n"
+        "Risk Statement: <assertion about risk>\n"
+        "Risk Score: <numeric value displaying the risk score>\n"
+        "Do not include any additional text or formatting.\n"
+        "Incidents Data: {filtered_incidents}"
+    )
+    openai.api_key = get_api_key('openai')
+    response = openai.ChatCompletion.create(
+        model="gpt-4o",
+        messages=[
+            {"role": "system", "content": prompt}
+        ],
+        temperature=0.5
+    )
+
+    # Extract and format the response
+    ai_output = response.choices[0]['message']['content'].strip()
+
+    lines = [line.strip() for line in ai_output.split('\n') if line.strip()]
+    if len(lines) != 3:
+        raise ValueError("The output format is incorrect. Expected exactly three sections each on a new line.")
+
+    result = {
+        "Control Status": lines[0].replace("Control Status: ", "").strip(),
+        "Risk Statement": lines[1].replace("Risk Statement: ", "").strip(),
+        "Risk Score": lines[2].replace("Risk Score: ", "").strip()
+    }
+
+    return JsonResponse(result, status=200)
+
+
+@login_required
+def exalens_defaults(request):
+    user_profile = UserProfile.objects.get(user=request.user)
+    organization_defaults = user_profile.organization.defaults
+
+    response_data = {
+        'exalens_client_id': organization_defaults.exalens_client_id,
+        'exalens_ip_address': organization_defaults.exalens_ip_address,
+        'exalens_api': organization_defaults.exalens_api_key
+    }
+
+    return JsonResponse(response_data)

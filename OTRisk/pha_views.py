@@ -1,7 +1,10 @@
 import hashlib
 import json
 from urllib.parse import urljoin
-
+import urllib3
+from urllib3.exceptions import InsecureRequestWarning
+import requests
+from requests.exceptions import RequestException
 from django.contrib import messages
 import requests
 import logging
@@ -242,6 +245,20 @@ def iotaphamanager(request, record_id=None):
         has_ir_plan = request.POST.get('ir_plan') == 'on'  # Checkbox 'on' if checked
         ir_plan_date_str = request.POST.get('ir_plan_date')
         ir_plan_never_tested = request.POST.get('ir_plan_ut') == 'on'
+        pha_header.exalens_ip = request.POST.get('exalensIpAddress')
+        pha_header.exalens_api = request.POST.get('exalensApiKey')
+        pha_header.exalens_client = request.POST.get('exalensClientId')
+        pha_header.exalens_status = request.POST.get('hdn_exalens_status')
+        pha_header.exalens_risk = request.POST.get('hdn_exalens_risk')
+        exalens_risk_score_string = request.POST.get('hdn_exalens_score')
+        # exalens_risk_score_int = int(exalens_risk_score_string)
+
+        try:
+            exalens_risk_score_int = int(exalens_risk_score_string)
+        except ValueError:  # Handle cases where the input might still not be a valid integer
+            exalens_risk_score_int = 0
+
+        pha_header.exalens_score = exalens_risk_score_int
 
         # Convert ir_plan_date from string to date object, handle empty string
         if ir_plan_date_str:
@@ -558,7 +575,13 @@ def get_headerrecord(request):
         'plan_last_tested_date': headerrecord.plan_last_tested_date.strftime(
             '%Y-%m-%d') if headerrecord.plan_last_tested_date else None,
         'plan_never_tested': headerrecord.plan_never_tested,
-        'is_default': headerrecord.is_default
+        'is_default': headerrecord.is_default,
+        'exalens_api': headerrecord.exalens_api,
+        'exalens_client': headerrecord.exalens_client,
+        'exalens_ip': headerrecord.exalens_ip,
+        'exalens_risk': headerrecord.exalens_risk,
+        'exalens_score': headerrecord.exalens_score,
+        'exalens_status': headerrecord.exalens_status
     }
 
     # Query for moderators associated with this header record
@@ -747,7 +770,8 @@ def make_request_with_backoff(openai_function, *args, **kwargs):
 def facility_threat_profile(security_level, facility, facility_type, country, industry, safety_summary,
                             chemical_summary,
                             physical_security_summary, other_summary, compliance_summary, investment_statement,
-                            has_ir_plan_str, ir_plan_never_tested_str, ir_plan_date_str):
+                            has_ir_plan_str, ir_plan_never_tested_str, ir_plan_date_str, connector_risk,
+                            connector_status, connector_score):
     openai_api_key = get_api_key('openai')
     openai_api_key = get_api_key('openai')
     ai_model = get_api_key('OpenAI_Model')
@@ -764,14 +788,18 @@ def facility_threat_profile(security_level, facility, facility_type, country, in
         Cybersecurity Investments: {investment_statement}
         Target Security Level (SL-T) as per IEC62443-3-2: {security_level}.
         """
-
+    connector_score = int(connector_score)
+    if connector_score > 0:
+        context = context + f""" 
+            The facility has invested in and deployed an OT Cybersecurity advanced threat detection and monitoring solution - Exalens - to monitor the OT network. The assessment of risk based on output from Exalens is: {connector_risk} and a risk score of {connector_score}/100. The risk status is described as {connector_status} 
+       """
     prompt = f"""
         {context}
-     Based on the facility's profile and investments, provide an executive-level cybersecurity analysis specifically for OT/ICS environments. The analysis should be divided into three sections:
+     Based on the facility's profile, and investments, provide an executive-level cybersecurity analysis specifically for OT/ICS environments. The analysis should be divided into three sections:
         
-        1. Cybersecurity Threats: Make an estimate of the main cybersecurity threats and the actors likely to target this facility, considering the operational technology used, country, and industry specifics. EXTRA INSTRUCTION append a probability (as a percentage) of each threat occurring in the next 12 months..
-        2. Predictive Insights: Offer insights on potential future cybersecurity events based on current data and trends.
-        3. Proactive Defense Strategies: Suggest strategies to improve the facility's cybersecurity posture and achieve the target security level.
+        1. Cybersecurity Threats: Make an estimate of up to 10 main cybersecurity threats and the actors likely to target this facility, considering the operational technology used, country, and industry specifics. EXTRA INSTRUCTION append a probability (as a percentage) of each threat occurring in the next 12 months..
+        2. Predictive Insights: Offer up to 10 insights on potential future cybersecurity events based on current data and trends.
+        3. Proactive Defense Strategies: Suggest up to 10 strategies to improve the facility's cybersecurity posture and achieve the target security level.
         
         INSTRUCTION: Utilize relevant and credible sources of information and industry reports such as from Dragos, Gartner, Deloitte.
         
@@ -801,10 +829,11 @@ def facility_threat_profile(security_level, facility, facility_type, country, in
             {"role": "user", "content": prompt}
         ],
         temperature=0.4,
-        max_tokens=2500,
+        max_tokens=4000,
     )
 
     full_response = response['choices'][0]['message']['content']
+
     # Function to extract sections from the full_response
     def extract_section1(full_response1, section_title):
         start_index = full_response1.find(section_title)
@@ -839,6 +868,9 @@ def facility_risk_profile(request):
         has_ir_plan = request.GET.get('has_ir_plan', 'false') == 'true'
         ir_plan_never_tested = request.GET.get('ir_plan_never_tested', 'false') == 'true'
         ir_plan_date_str = request.GET.get('ir_plan_date')
+        connector_status = request.GET.get('connector_status')
+        connector_risk = request.GET.get('connector_risk')
+        connector_score = request.GET.get('connector_score')
 
         aqi = request.GET.get('aqi')
         sl = request.GET.get('sl')
@@ -927,7 +959,8 @@ def facility_risk_profile(request):
                                                                                  compliance_summary,
                                                                                  investment_statement, has_ir_plan_str,
                                                                                  ir_plan_never_tested_str,
-                                                                                 ir_plan_date_str)
+                                                                                 ir_plan_date_str, connector_risk,
+                                                                                 connector_status, connector_score)
 
         # Return the individual parts as variables in JsonResponse
         return JsonResponse({
@@ -1191,7 +1224,9 @@ def getSingleScenario(request):
         'user_role': user_role,
         'risk_rationale': scenario.risk_rationale,
         'risk_recommendation': scenario.risk_recommendation,
-        'cost_justification': scenario.cost_justification
+        'cost_justification': scenario.cost_justification,
+        'asset_name': scenario.asset_name,
+        'asset_purpose': scenario.asset_purpose
     }
     # Retrieve the related PHAControlList records
     control_list = []
@@ -1292,7 +1327,7 @@ def get_response(user_message):
         model=openai_model,
         messages=message,
         temperature=0.1,
-        max_tokens=2600
+        max_tokens=4000
     )
 
     return response['choices'][0]['message']['content']
@@ -1329,12 +1364,12 @@ def generate_recommendation_prompt(likelihood, adjustedRR, costs, probability, f
 
     prompt = f"""
         Given the cybersecurity risk assessment results for a given OT cybersecurity scenario:
-        - Likelihood of occurrence: {likelihood}%
-        - Adjusted residual risk: {adjustedRR}
-        - Estimated costs (low|medium|high): {costs}
-        - Probability of a targeted attack being successful: {probability}%
-        - Annual loss event frequency (as defined by FAIR): {frequency}
-        - Business impact score: {biaScore}{risk_tolerance_str}
+        Likelihood of occurrence: {likelihood}%
+        Adjusted residual risk: {adjustedRR}
+        Estimated costs (low|medium|high): {costs}
+        Probability of a targeted attack being successful: {probability}%
+        Annual loss event frequency (as defined by FAIR): {frequency}
+        Business impact score: {biaScore}{risk_tolerance_str} (IMPORTANT: IF RISK TOLERANCES ARE 0 it means the user has not entered values. It does not indicate actual risk tolerance levels)
 
         Provide a response structured exactly as follows:
 
@@ -1382,6 +1417,44 @@ def get_openai_recommendation(prompt):
     return structured_response
 
 
+def exalens_get_device_incident(ipaddress, exalens_api_key, exalens_ip_address, exalens_client_id):
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+    incident_url = f"https://{exalens_ip_address}/api/thirdparty/incident/target_ip/{ipaddress}?incident=1"
+    headers = {
+        'x-client-id': exalens_client_id,
+        'x-api-key': exalens_api_key
+    }
+    try:
+        response = requests.get(incident_url, headers=headers, verify=False)
+
+        if response.status_code == 200:
+            # Directly parse the response as JSON, which is expected to be a list of dictionaries
+            incident_data = response.json()
+            if not incident_data:  # Check if the list is empty
+                return 'No incidents found for the given IP address.'
+
+            # Filter the incident data to keep only the required fields
+            filtered_incidents = [
+                {
+                    "detection_summary": incident.get("detection_summary"),
+                    "risk_score": incident.get("risk_score"),
+                    "kill_chain": incident.get("detection_artifacts", {}).get("kill_chain"),
+                    "mitre_attack": incident.get("detection_artifacts", {}).get("mitre_attack")
+                }
+                for incident in incident_data
+            ]
+
+            # Convert the filtered incident data to a single string
+            incidents_str = json.dumps(filtered_incidents, indent=2)
+            return incidents_str
+        else:
+            # Handle non-200 responses
+            return f'Failed to fetch incidents, status code: {response.status_code}'
+    except RequestException as e:
+        # Handle exceptions from the requests library
+        return f'Error occurred: {str(e)}'
+
 @login_required
 def scenario_analysis(request):
     # Log the user activity
@@ -1427,6 +1500,8 @@ def scenario_analysis(request):
         supplychainJustification = request.GET.get('supplychainJustification')
         environmentJustification = request.GET.get('environmentJustification')
         dangerJustification = request.GET.get('dangerJustification')
+        targetAsset = request.GET.get('targetAsset')
+        targetAssetPurpose = request.GET.get('targetAssetPurpose')
 
         # Concatenate all GET parameters to form a string
         values_str = '|'.join([request.GET.get(param, '') for param in request.GET])
@@ -1458,6 +1533,11 @@ def scenario_analysis(request):
         has_incident_response_plan = cyber_pha_header.has_incident_response_plan
         plan_last_tested_date = cyber_pha_header.plan_last_tested_date
         plan_never_tested = cyber_pha_header.plan_never_tested
+        exalens_api_key = cyber_pha_header.exalens_api
+        exalens_ip_address = cyber_pha_header.exalens_ip
+        exalens_client_id = cyber_pha_header.exalens_client
+
+        exalens_incidents = exalens_get_device_incident(targetAsset, exalens_api_key, exalens_ip_address, exalens_client_id)
 
         # Convert plan_last_tested_date to string format if it's not None
         plan_last_tested_date_str = plan_last_tested_date.strftime('%Y-%m-%d') if plan_last_tested_date else None
@@ -1508,6 +1588,9 @@ def scenario_analysis(request):
         Scenario Overview: {scenario}.
         Critical System Exposures:
         Internet Exposure: Systems with public IP addresses: {exposed_system}.
+        Affected asset: {targetAsset},
+        Purpose of Affected Asset: {targetAssetPurpose}
+        Incidents on affected asset : {exalens_incidents},
         Credential Security: Systems with weak/default credentials: {weak_credentials}.
         OT Cybersecurity Incident Response:
         Presence of an Incident Response Plan: {has_incident_response_plan}.
@@ -1592,19 +1675,19 @@ def scenario_analysis(request):
                 "role": "user",
                 "content": f"""{common_content}
                             
-                            Based only on the provided scenario and facility details, generate a concise numbered bullet point list of OT/ICS cybersecurity risk mitigation recommendations. Each recommendation should be directly aligned with the latest versions of NIST 800-82 and the NIST CSF. Include the relevant NIST reference in brackets at the end of each recommendation. Include in brackets an estimation of the amount of risk reduction associated with the recommendation as a whole number integer percentage. The output should strictly adhere to the following format:
+                            Based on the provided details, write a concise numbered bullet point list of OT/ICS cybersecurity risk mitigation action items. Ensure the actions should directly relate to the given scenario, any given assets, and the nature of any detected incidents. IMPORTANT: Consider for each action the practicality of implementation in a critical OT environment (for example: vulnerability scanning is known to be very dangerous for OT networks so you wouldn't recommend scanning but you could recommend an alternative approach).  Each action should be aligned with the latest versions of NIST 800-82 and the NIST CSF, but should not be a direct quote from those standards. For example: if 'Ensure <device> is segmented in a secure vlan.' is the action then this would relate to the network segmentation section in the NIST document . Include the relevant NIST reference in brackets at the end of each action. Include in brackets an estimation of the amount of risk reduction associated with the action as a whole number integer percentage. The output should strictly adhere to the following format:
                             
                             Example Format:
                             1. Example recommendation related to OT cybersecurity. (<estimation of risk reduction %>) [NIST Reference] 
                             2. Another example recommendation focused on OT cybersecurity risk mitigation. (<estimation of risk reduction %>) [NIST Reference] 
                             
-                            Following this example format, provide the recommendations in order of priority, specific to the given scenario without any additional narrative, description, advice, or guidance. The recommendations should be clear and easily parsable within an HTML page.
+                            Following this example format, provide the actions in order of priority, specific to the given scenario without any additional narrative, description, advice, or guidance. The actions should be clear and easily parsable within an HTML page.
                             """
 
             },
             {
                 "role": "user",
-                "content": f"{common_content}. ISA-62443-3-2 describes five Security Levels SL-1, SL-2, SL-3, SL-4, SL-5. As an OT Cybersecurity risk analyst, assess which security level has been achieved and format your response as follows: 'Security Level: [SL Value], Justification: [Concise Justification, no more than 20 words].'"
+                "content": f"{common_content}. ISA-62443-3-2 describes five Security Levels SL-1, SL-2, SL-3, SL-4, SL-5. As an OT Cybersecurity risk analyst, assess which security level has been achieved and format the response exactly as follows without any additional text, narrative, characters or explanation: 'Security Level: [SL Value], Justification: [Concise Justification, no more than 20 words].'"
             }
         ]
 
@@ -1623,7 +1706,6 @@ def scenario_analysis(request):
             futures = [executor.submit(get_response, msg) for msg in user_messages]
             # Collect the results in the order the futures were submitted
             responses = [future.result() for future in futures]
-
 
         # Now handle the compliance mapping separately
         compliance_data = compliance_map_data(common_content)
@@ -1952,18 +2034,18 @@ def analyze_scenario(request):
 
             # Construct a prompt for GPT-4
             system_message = f"""
-            TASK: Analyze and consider the following scenario as part of an OT/ICS focused Cyber HAZOPS/Layer of Protection Analysis (LOPA) assessment: {scenario} which occurs at a {facility_type} in the {industry} industry, located at {address} in {country}, specifically in the {zone} zone and the {unit} unit. 
+            You are are expert in cybersecurity scenarios for industrial facilities.  TASK: Analyze and consider the following scenario as part of an OT/ICS focused Cyber HAZOPS/Layer of Protection Analysis (LOPA) assessment: {scenario} which occurs at a {facility_type} in the {industry} industry, located at {address} in {country}, specifically in the {zone} zone and the {unit} unit. 
             The attacker is assumed to be: {attacker}. The attack vector is assumed to be {attack_vector}. The risk category is assumed to be {riskCategory}. Vulnerable systems with Internet exposed IP address {exposed_system}. Vulnerable systems with default or weak credentials {weak_credentials}.
             Considering the likely presence of these OT devices: {devices}, concisely describe in 50 words in a list format (separated by semicolons) of a maximum of 5 of the most likely direct consequences of the given scenario. 
             The direct consequences should be specific to the facility and the mentioned details. 
-            Assume the role of an expert OT Cybersecurity risk advisor. 
-            Additional instruction: output ONLY the list items with no text either before or after the list items.
+            
+            Additional instruction: output ONLY the list items with no text either before or after the list items. DO NOT INCLUDE ANY NOT-TEXT CHARACTERS
             """
             user_message = scenario
 
             # Query OpenAI API
             response = openai.ChatCompletion.create(
-                model="gpt-4-0125-preview",
+                model="gpt-4o",
                 messages=[
                     {"role": "system", "content": system_message},
                     {"role": "user", "content": user_message}
@@ -2024,7 +2106,7 @@ def analyze_scenario(request):
 
                 # Query OpenAI API for the attack tree
                 attack_tree_response = openai.ChatCompletion.create(
-                    model="gpt-4-0125-preview",
+                    model="gpt-4o",
                     messages=[
                         {"role": "system", "content": attack_tree_system_message},
                         {"role": "user", "content": user_message}
@@ -2061,7 +2143,7 @@ def generate_attack_tree(user_message):
 
     # Query OpenAI API for the attack tree
     attack_tree_response = openai.ChatCompletion.create(
-        model="gpt-4",
+        model="gpt-4o",
         messages=[
             {"role": "system", "content": attack_tree_system_message},
             {"role": "user", "content": user_message}
@@ -2727,8 +2809,10 @@ def load_default_facility(request):
             'assessment_id': default_facility.assessment,
             'zone': default_facility.AssessmentZone,
             'sl_t': default_facility.sl_t,
-            'startdate': default_facility.AssessmentStartDate.strftime('%Y-%m-%d') if default_facility.AssessmentStartDate else '',
-            'enddate': default_facility.AssessmentEndDate.strftime('%Y-%m-%d') if default_facility.AssessmentEndDate else '',
+            'startdate': default_facility.AssessmentStartDate.strftime(
+                '%Y-%m-%d') if default_facility.AssessmentStartDate else '',
+            'enddate': default_facility.AssessmentEndDate.strftime(
+                '%Y-%m-%d') if default_facility.AssessmentEndDate else '',
             'safetysummary': default_facility.safetySummary,
             'chemicalsummary': default_facility.chemicalSummary,
             'physicalsummary': default_facility.physicalSummary,
@@ -2752,8 +2836,93 @@ def load_default_facility(request):
         }
 
         return JsonResponse({'headerrecord': facility_data,
-                             'investments': investments_data,})
+                             'investments': investments_data, })
 
     except Exception as e:
 
         return JsonResponse({'error': str(e)}, status=500)
+
+
+def exalens_get_cyberpha_assets(cyberphaid):
+    urllib3.disable_warnings(InsecureRequestWarning)
+
+
+    try:
+        cyberpha_header = tblCyberPHAHeader.objects.get(ID=cyberphaid)
+        exalens_api_key = cyberpha_header.exalens_api
+        exalens_client_id = cyberpha_header.exalens_client
+        exalens_ip_address = cyberpha_header.exalens_ip
+        assets_url = f"https://{exalens_ip_address}/api/thirdparty/asset"
+        headers = {
+            'x-client-id': exalens_client_id,
+            'x-api-key': exalens_api_key
+        }
+        assets_response = requests.get(assets_url, headers=headers, verify=False)
+        if assets_response.status_code == 200:
+            assets_data = assets_response.json().get('data', [])
+            if not assets_data:
+                return []  # Return an empty list if no data is available
+            return assets_data  # Return the list of assets directly
+        else:
+            return []  # Return an empty list in case of non-200 status codes
+    except RequestException as e:
+        return []  # Return an empty list if an exception occurs
+
+
+
+@login_required()
+def generate_cyberpha_scenario_description(request):
+    if request.method == 'POST':
+        # Extracting existing form data
+        cyberPHAID = request.POST.get('cyberPHA_ID')
+        cyberPHAID = int(cyberPHAID)
+        attack_vector = request.POST.get('attackVector', '').strip()
+        attacker = request.POST.get('attacker', '').strip()
+        target_asset = request.POST.get('targetAsset', '').strip()
+        target_asset_purpose = request.POST.get('targetAssetPurpose', '').strip()
+
+        cyberpha_header = get_object_or_404(tblCyberPHAHeader, ID=cyberPHAID)
+        industry = cyberpha_header.Industry
+        facility_type = cyberpha_header.FacilityType
+        employees_on_site = cyberpha_header.EmployeesOnSite
+        country = cyberpha_header.country
+
+        # Constructing the prompt
+        prompt = f"""
+        You are an engineer responsible for safeguarding operations for a {facility_type}. Write a technical scenario for a CYBER HAZOPS assessment using LOPA methodology, detailing a credible cyber-physical attack against operational technology and industrial control systems. The narrative must be factual, specific to the details given, concise, and limit to 200 words, without detailing the consequences or long-term impacts. No preamble or additonal narrative. No repeating of input variables:
+
+        - Attacker: {attacker}
+        - Attack Vector: {attack_vector}
+        - Country: {country}
+        - Industry: {industry}
+        - Facility Type: {facility_type}
+        - Employee count: {employees_on_site}
+        - Affected asset: {target_asset}
+        - Purpose of affected asset: {target_asset_purpose}
+
+        Using the given information above, generate a scenario focusing solely on the purpose and type of asset and the potential for that asset to be compromised and it might be manipulated resulting in a bad outcome in the context of the other given information. Do not speculate on mitigation or describe the facility in detail. Do not repeat information that the user is familiar with: industry, number of employees, country, facility type are for context  in generating the scenario and MUST NOT BE REPEATED IN THE RESPONSE. Use precise and concise language.
+        """
+
+        # Setting OpenAI API key
+        openai.api_key = get_api_key('openai')
+        open_ai_model = get_api_key('OpenAI_Model')
+
+        # Querying the OpenAI API
+        response = openai.ChatCompletion.create(
+            model='gpt-4o',
+            messages=[
+                {"role": "system", "content": prompt}
+            ],
+            max_tokens=1000,
+            temperature=0.1
+        )
+        # Extracting the generated scenario
+        # The response structure is different for chat completions, so adjust accordingly
+        if response.choices and response.choices[0].message:
+            scenario_description = response.choices[0].message['content'].strip()
+        else:
+            scenario_description = "No scenario generated."
+
+        return JsonResponse({'scenario_description': scenario_description})
+    else:
+        return JsonResponse({'error': 'Invalid request'}, status=400)

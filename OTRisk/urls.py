@@ -185,10 +185,11 @@ urlpatterns = [
     path('load_default_facility/', views.load_default_facility, name='load_default_facility'),
     path('get_all_groups_scores/', views.get_all_groups_scores, name='get_all_groups_scores'),
     path('get_asset_data/', views.get_asset_data, name='get_asset_data'),
-
+    path('get-incidents/<str:ipaddress>/', views.exalens_get_incidents, name='get-incidents'),
+    path('cyberpha_exalens_connection/', views.cyberpha_exalens_connection, name='cyberpha_exalens_connection'),
+    path('exalens_defaults/', views.exalens_defaults, name='exalens_defaults'),
+    path('generate_cyberpha_scenario_description/', views.generate_cyberpha_scenario_description, name='generate_cyberpha_scenario_description'),
 ]
-
-
 
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
