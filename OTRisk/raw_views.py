@@ -21,7 +21,7 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from datetime import date
 from django.views import View
-from django.db.models import Sum, Max
+from django.db.models import Sum, Max, Q
 from django.http import JsonResponse, HttpResponse, FileResponse
 from django.shortcuts import get_object_or_404
 from django.core import serializers
@@ -31,6 +31,8 @@ import tempfile
 
 from accounts.views import get_client_ip
 from OTRisk.pha_views import get_api_key, is_inappropriate
+from OTRisk.models.model_assessment import SelfAssessment, AssessmentFramework, AssessmentAnswer, AssessmentQuestion
+
 from .forms import RAActionsForm
 from xhtml2pdf import pisa
 import json
@@ -610,6 +612,53 @@ def qraw(request):
         hdnRawID_value = request.POST.get('hdnRawID', ['0'])[0]  # Take the first value if list, default to '0'
         hdnRawID = int(hdnRawID_value)
 
+        lat = request.POST.get('address_lat')
+        lon = request.POST.get('address_lon')
+
+        if lat == 'None' or not lat:
+            lat = None
+        if lon == 'None' or not lon:
+            lon = None
+
+        try:
+            assessment_id = int(request.POST.get('assessment_id')) if request.POST.get(
+                'assessment_id') else None
+        except ValueError:
+            assessment_id = None
+
+        try:
+            last_assessment_score = int(request.POST.get('last_assessment_score', 0))
+        except (TypeError, ValueError):
+            last_assessment_score = 0
+
+        last_assessment_summary = request.POST.get('last_assessment_summary') or ''
+
+        # Check if lat and lon are not populated
+        if lat is None or lon is None:
+            address_parts = [
+                request.POST.get('txtAddress1'),
+                request.POST.get('txtAddress2'),
+                request.POST.get('txtAddress3'),
+                request.POST.get('txtCity'),
+                request.POST.get('txtState'),
+                request.POST.get('txtPostcode'),
+                request.POST.get('txtCountry'),
+            ]
+            address = ', '.join(filter(None, address_parts))
+
+            geocode_url = f"https://maps.googleapis.com/maps/api/geocode/json?address={address}&key=AIzaSyBJu4p9r_vFL9g5nzctO4yLbNxjK08q4G0"
+
+            response = requests.get(geocode_url)
+            geocode_result = response.json()
+            if geocode_result['status'] == 'OK':
+                location = geocode_result['results'][0]['geometry']['location']
+                lat = location['lat']
+                lon = location['lng']
+            else:
+                lat = None
+                lon = None
+
+
         if edit_mode == 0 or hdnRawID == 0:
 
             if not is_duplicate:
@@ -628,6 +677,7 @@ def qraw(request):
                 created_by_id = request.user.id
                 last_updated_by_id = request.user.id
 
+
                 ra_worksheet = RAWorksheet(
                     RATitle=request.POST.get('txtTitle'),
                     BusinessUnit=request.POST.get('txtBU'),
@@ -635,6 +685,20 @@ def qraw(request):
                     industry=request.POST.get('selectIndustry'),
                     BusinessUnitType=request.POST.get('selectFacility'),
                     RATrigger=request.POST.get('selectTrigger'),
+                    business_unit_address_line1=request.POST.get('txtAddress1'),
+                    business_unit_address_line2=request.POST.get('txtAddress2'),
+                    business_unit_address_line3=request.POST.get('txtAddress3'),
+                    business_unit_city=request.POST.get('txtCity'),
+                    business_unit_postcode=request.POST.get('txtPostcode'),
+                    business_unit_country=request.POST.get('txtCountry'),
+                    business_unit_state=request.POST.get('txtState'),
+                    asset=request.POST.get('txtAsset'),
+                    asset_purpose=request.POST.get('txtAssetPurpose'),
+                    business_unit_lat=lat,
+                    business_unit_lon=lon,
+                    assessment=assessment_id,
+                    last_assessment_summary=last_assessment_summary,
+                    last_assessment_score=last_assessment_score,
                     revenue=revenue_int,
                     insurance=insurance_int,
                     deductable=deductable_int,
@@ -667,6 +731,21 @@ def qraw(request):
             ra_worksheet.insurance = parse_currency(request.POST.get('txtInsurance'))
             ra_worksheet.revenue = parse_currency(request.POST.get('txtRevenue'))
             ra_worksheet.deductable = parse_currency(request.POST.get('txtDeductable'))
+
+            ra_worksheet.business_unit_address_line1 = request.POST.get('txtAddress1')
+            ra_worksheet.business_unit_address_line2 = request.POST.get('txtAddress2')
+            ra_worksheet.business_unit_address_line3 = request.POST.get('txtAddress3')
+            ra_worksheet.business_unit_city = request.POST.get('txtCity')
+            ra_worksheet.business_unit_postcode = request.POST.get('txtPostcode')
+            ra_worksheet.business_unit_country = request.POST.get('txtCountry')
+            ra_worksheet.business_unit_state = request.POST.get('txtState')
+            ra_worksheet.business_unit_lat = lat
+            ra_worksheet.business_unit_lon = lon
+            ra_worksheet.asset = request.POST.get('txtAsset')
+            ra_worksheet.asset_purpose = request.POST.get('txtAssetPurpose')
+            ra_worksheet.assessment = assessment_id
+            ra_worksheet.last_assessment_summary = last_assessment_summary
+            ra_worksheet.last_assessment_score = last_assessment_score
             selected_approver_id = request.POST.get('selectedApprover')
             if selected_approver_id:
                 selected_approver = User.objects.get(id=selected_approver_id)
@@ -709,7 +788,10 @@ def qraw(request):
 
     # scenarios = tblScenarios.objects.filter(industry_id=industry_id).order_by('Scenario')
     scenario_form = RAWorksheetScenarioForm()
-
+    user_organization_id = request.session.get('user_organization', 0)
+    assessments = SelfAssessment.objects.filter(
+        Q(organization_id=user_organization_id)
+    )
     return render(request, 'qraw.html',
                   {'raws': raws,
                    'facilities': facilities,
@@ -723,6 +805,7 @@ def qraw(request):
                    'org_defaults': org_defaults,
                    'potential_approvers': potential_approvers,
                    'is_external_referrer': is_external_referrer,
+                   'assessments': assessments,
                    })
 
 
@@ -1862,7 +1945,6 @@ def analyze_sim_consequences(request):
                 f"Base estimates on historical data from similar OT and IT cybersecurity incidents. Include costs if they apply to the given scenario. Direct costs are estimated as {most_likely_case_cost}. Direct costs are those related to incident response, remediation, legal fees, regulatory fines, and other direct expenses. Please consider the specifics of our industry, size, and the nature of the assets involved in this scenario to provide a comprehensive cost estimate. Please reference industry-specific data from the latest Verizon DBIR, applicable regulations from CISA, and standards from the NIST Cybersecurity Framework in your analysis. "
                 f"Estimate the budget cost for each month so that the Chief Finance Officer for the organization can plan appropriately. Use a pragmatic and realistic monthly estimate that only covers the direct expenses that would be covered by a cybersecurity insurance policy. Only consider costs directly related to the cybersecurity incident. (IMPORTANT Give only the cost for each month, NOT an aggregate of previous months plus the current month). You as the estimator should be able to justify why month on month costs increase OR decrease. The expectation is that costs will taper off over the 12 month period but YOU must give the most realistic response.Provide the estimates as a series of 12 integers in the format: Month1|Month2|...|Month12. Each value should represent the cost for that month in US dollars. Remember, only provide the numerical values without any narrative or explanation."
 
-
             )
         }
         # Query OpenAI API for cost estimation
@@ -1933,4 +2015,59 @@ def update_workflow(request):
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
+@login_required()
+def generate_raw_scenario_description(request):
+    if request.method == 'POST':
+        # Extracting existing form data
 
+        attack_vector = request.POST.get('attackVector', '').strip()
+        attacker = request.POST.get('attacker', '').strip()
+        target_asset = request.POST.get('targetAsset', '').strip()
+        target_asset_purpose = request.POST.get('targetAssetPurpose', '').strip()
+        industry = request.POST.get('industry', '').strip()
+        facility_type = request.POST.get('facilityType', '').strip()
+        # employees_on_site = cyberpha_header.EmployeesOnSite
+        country = request.POST.get('country', '').strip()
+        impact = request.POST.get('impact', '').strip()
+        motivation = request.POST.get('motivation', '').strip()
+
+        # Constructing the prompt
+        prompt = f"""
+        You are an engineer responsible for safeguarding operations for a {facility_type}. Write a technical scenario for a CYBER HAZOPS assessment using LOPA methodology, detailing a credible cyber-physical attack against operational technology and industrial control systems. The narrative must be factual, specific to the details given, concise, and limit to 200 words, without detailing the consequences or long-term impacts. No preamble or additonal narrative. No repeating of input variables:
+
+        - Attacker: {attacker}
+        - Attack Vector: {attack_vector}
+        - Country: {country}
+        - Industry: {industry}
+        - Facility Type: {facility_type}
+        - Affected asset: {target_asset}
+        - Attacker motivation: {motivation}
+        - Attacker intended impact: {impact}
+        - Purpose of affected asset: {target_asset_purpose}
+
+        Using the given information above, generate a scenario focusing solely on the purpose and type of asset and the potential for that asset to be compromised and it might be manipulated resulting in a bad outcome in the context of the other given information. Do not speculate on mitigation or describe the facility in detail. Do not repeat information that the user is familiar with: industry, number of employees, country, facility type are for context  in generating the scenario and MUST NOT BE REPEATED IN THE RESPONSE. Use precise and concise language.
+        """
+
+        # Setting OpenAI API key
+        openai.api_key = get_api_key('openai')
+        open_ai_model = get_api_key('OpenAI_Model')
+
+        # Querying the OpenAI API
+        response = openai.ChatCompletion.create(
+            model='gpt-4o',
+            messages=[
+                {"role": "system", "content": prompt}
+            ],
+            max_tokens=1000,
+            temperature=0.1
+        )
+        # Extracting the generated scenario
+        # The response structure is different for chat completions, so adjust accordingly
+        if response.choices and response.choices[0].message:
+            scenario_description = response.choices[0].message['content'].strip()
+        else:
+            scenario_description = "No scenario generated."
+
+        return JsonResponse({'scenario_description': scenario_description})
+    else:
+        return JsonResponse({'error': 'Invalid request'}, status=400)

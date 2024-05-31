@@ -68,6 +68,20 @@ class RAWorksheet(models.Model):
     approval_status = models.CharField(max_length=10, choices=[('Pending', 'Pending'), ('Approved', 'Approved'),
                                                                ('Rejected', 'Rejected')], default='Pending')
     rejection_comments = models.TextField(blank=True, null=True)
+    business_unit_address_line1 = models.CharField(null=True, max_length=100)
+    business_unit_address_line2 = models.CharField(null=True, max_length=100)
+    business_unit_address_line3 = models.CharField(null=True, max_length=100)
+    business_unit_country = models.CharField(null=True, max_length=20)
+    business_unit_postcode = models.CharField(null=True, max_length=12)
+    business_unit_city = models.CharField(null=True, max_length=20)
+    business_unit_state = models.CharField(null=True, max_length=20)
+    business_unit_lat = models.CharField(null=True, max_length=20)
+    business_unit_lon = models.CharField(null=True, max_length=20)
+    asset = models.CharField(null=True, max_length=100)
+    asset_purpose = models.CharField(null=True, max_length=100)
+    assessment = models.IntegerField(null=True, blank=True)
+    last_assessment_score = models.IntegerField(null=True, blank=True)
+    last_assessment_summary = models.TextField(default="No Summary Saved", null=True)
     class Meta:
         db_table = 'tblRAWorksheet'
 

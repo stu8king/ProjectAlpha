@@ -53,7 +53,7 @@ from xml.etree import ElementTree as ET
 from .raw_views import qraw, openai_assess_risk, GetTechniquesView, raw_action, check_vulnerabilities, rawreport, \
     raw_from_walkdown, save_ra_action, get_rawactions, ra_actions_view, UpdateRAAction, reports, reports_pha, \
     create_or_update_raw_scenario, analyze_raw_scenario, analyze_sim_scenario, generate_sim_attack_tree, \
-    analyze_sim_consequences, update_workflow, get_analysis_result, cleanup_scenariobuilder
+    analyze_sim_consequences, update_workflow, get_analysis_result, cleanup_scenariobuilder, generate_raw_scenario_description
 from .dashboard_views import dashboardhome, get_group_report, get_heatmap_records, get_all_groups_scores
 from .pha_views import iotaphamanager, facility_risk_profile, get_headerrecord, scenario_analysis, phascenarioreport, \
     getSingleScenario, pha_report, scenario_vulnerability, add_vulnerability, get_asset_types, calculate_effectiveness, \
@@ -145,15 +145,16 @@ def get_organization_defaults(request, organization_id):
             'cyber_insurance': org_defaults.cyber_insurance,
             'insurance_deductible': org_defaults.insurance_deductible,
             'employees': org_defaults.employees,
-            'impact_weight_safety': org_defaults.impact_weight_safety,
-            'impact_weight_danger': org_defaults.impact_weight_danger,
-            'impact_weight_environment': org_defaults.impact_weight_environment,
-            'impact_weight_production': org_defaults.impact_weight_production,
-            'impact_weight_finance': org_defaults.impact_weight_finance,
-            'impact_weight_reputation': org_defaults.impact_weight_reputation,
-            'impact_weight_regulation': org_defaults.impact_weight_regulation,
-            'impact_weight_data': org_defaults.impact_weight_data,
-            'impact_weight_supply': org_defaults.impact_weight_supply
+            'business_unit_name': org_defaults.business_unit_name,
+            'business_unit_address_line1': org_defaults.business_unit_address_line1,
+            'business_unit_address_line2': org_defaults.business_unit_address_line2,
+            'business_unit_address_line3': org_defaults.business_unit_address_line3,
+            'business_unit_address_country': org_defaults.business_unit_country,
+            'business_unit_postcode': org_defaults.business_unit_postcode,
+            'business_unit_city': org_defaults.business_unit_city,
+            'business_unit_state': org_defaults.business_unit_state,
+            'business_unit_lat': org_defaults.business_unit_lat,
+            'business_unit_lon': org_defaults.business_unit_lon,
         }
 
         # Return the data as JSON
@@ -626,19 +627,46 @@ def select_framework(request, framework_id):
 def setup_org(request):
     user_organization = request.user.userprofile.organization
     defaults_instance, created = OrganizationDefaults.objects.get_or_create(organization=user_organization)
+    exalens_fields = ['exalens_api_key', 'exalens_client_id', 'exalens_ip_address']
 
     if request.method == 'POST':
+
         form = OrganizationDefaultsForm(request.POST, instance=defaults_instance)
         if form.is_valid():
+
             # Set the organization to the current user's organization and save
             org_defaults = form.save(commit=False)
             org_defaults.organization = user_organization
+
+            address_parts = [
+                org_defaults.business_unit_address_line1,
+                org_defaults.business_unit_address_line2,
+                org_defaults.business_unit_address_line3,
+                org_defaults.business_unit_city,
+                org_defaults.business_unit_state,
+                org_defaults.business_unit_postcode,
+                org_defaults.business_unit_country,
+            ]
+            address = ', '.join(filter(None, address_parts))
+
+            geocode_url = f"https://maps.googleapis.com/maps/api/geocode/json?address={address}&key=AIzaSyBJu4p9r_vFL9g5nzctO4yLbNxjK08q4G0"
+
+            response = requests.get(geocode_url)
+
+            geocode_result = response.json()
+
+            if geocode_result['status'] == 'OK':
+                location = geocode_result['results'][0]['geometry']['location']
+                org_defaults.business_unit_lat = location['lat']
+                org_defaults.business_unit_lon = location['lng']
+
             org_defaults.save()
             request.session['language'] = request.POST.get('language')
             return redirect('OTRisk:setup_org')
+
     else:
         form = OrganizationDefaultsForm(instance=defaults_instance)
-        exalens_fields = ['exalens_api_key', 'exalens_client_id', 'exalens_ip_address']
+
     return render(request, 'org_setup.html', {'form': form, 'exalens_fields': exalens_fields})
 
 

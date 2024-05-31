@@ -2568,7 +2568,7 @@ def assessment_summary(assessment_id, facilityType, industry):
     # System message to set the context for the AI
     messages.append({
         "role": "system",
-        "content": f"This is a cybersecurity assessment summary and scoring task in the context of a {facilityType} in the {industry} industry. Analyze the provided responses to the cybersecurity assessment questions and generate a summary and overall control effectiveness score out of 100."
+        "content": f"You are a cybersecurity analyst and this is a cybersecurity assessment summary and scoring task in the context of a {facilityType} in the {industry} industry. Analyze the provided responses to the cybersecurity assessment questions and write a summary and assign a control effectiveness score out of 100."
     })
 
     # Adding questions and answers to the conversation
@@ -2589,7 +2589,7 @@ def assessment_summary(assessment_id, facilityType, industry):
     # Final user message prompting for the summary and score
     messages.append({
         "role": "user",
-        "content": "Given the above answers, provide a concise summary in under 100 words of the cybersecurity program's state and an overall score of control effectiveness out of 100. Write the output as two variables in a manner that is easily parsed for display <integer score>|<text summary> "
+        "content": f"Given the responses to the assessment questions, give a concise summary in under 100 words of the cybersecurity program's state in the context of OT Cybersecurity for a {facilityType}, and offer an overall score of control effectiveness out of 100 IMPORTANT: it is vital to consider both the summary and score in the context of the facility and industry. Do not include the facility type in the summary description. i.e. Instead of stating The program at the facilitytype is...  you would instead say The OT Cybersecurity program is ... etc etc . Write the output as two variables in a manner that is easily parsed for display <integer score>|<text summary> "
     })
 
     # Sending the chat completion request to OpenAI

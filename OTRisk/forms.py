@@ -68,6 +68,7 @@ class NewAssessmentAnswerForm(forms.ModelForm):
             'remarks': forms.Textarea(attrs={'rows': 4, 'style': 'resize:none;', 'maxlength': '250'}),
         }
 
+
 class EditAssessmentAnswerForm(forms.Form):
     response = forms.ChoiceField(
         choices=[(True, 'Yes'), (False, 'No')],
@@ -152,7 +153,11 @@ class CybersecurityDefaultsForm(forms.ModelForm):
 class OrganizationDefaultsForm(forms.ModelForm):
     class Meta:
         model = OrganizationDefaults
-        exclude = ('organization', 'cyber_insurance', 'insurance_deductible') # Exclude the organization field from the form
+        exclude = (
+        'organization', 'cyber_insurance', 'insurance_deductible', 'impact_weight_safety', 'impact_weight_danger',
+        'impact_weight_data', 'impact_weight_supply', 'impact_weight_finance', 'impact_weight_production',
+        'impact_weight_regulation', 'impact_weight_reputation',
+        'impact_weight_environment', 'business_unit_lat', 'business_unit_lon')  # Exclude the organization field from the form
 
     industry = forms.ModelChoiceField(
         queryset=tblIndustry.objects.all(),
@@ -161,87 +166,7 @@ class OrganizationDefaultsForm(forms.ModelForm):
         empty_label="Select Industry",
         widget=forms.Select(attrs={'class': 'form-control'})
     )
-    impact_weight_safety = forms.IntegerField(
-        widget=forms.NumberInput(attrs={
-            'class': 'form-control',
-            'min': 1,
-            'max': 5,
-            'type': 'number'
-        }),
-        required=True
-    )
-    impact_weight_danger = forms.IntegerField(
-        widget=forms.NumberInput(attrs={
-            'class': 'form-control',
-            'min': 1,
-            'max': 5,
-            'type': 'number'
-        }),
-        required=True
-    )
-    impact_weight_data = forms.IntegerField(
-        widget=forms.NumberInput(attrs={
-            'class': 'form-control',
-            'min': 1,
-            'max': 5,
-            'type': 'number'
-        }),
-        required=True
-    )
-    impact_weight_environment = forms.IntegerField(
-        widget=forms.NumberInput(attrs={
-            'class': 'form-control',
-            'min': 1,
-            'max': 5,
-            'type': 'number'
-        }),
-        required=True
-    )
-    impact_weight_finance = forms.IntegerField(
-        widget=forms.NumberInput(attrs={
-            'class': 'form-control',
-            'min': 1,
-            'max': 5,
-            'type': 'number'
-        }),
-        required=True
-    )
-    impact_weight_production = forms.IntegerField(
-        widget=forms.NumberInput(attrs={
-            'class': 'form-control',
-            'min': 1,
-            'max': 5,
-            'type': 'number'
-        }),
-        required=True
-    )
-    impact_weight_regulation = forms.IntegerField(
-        widget=forms.NumberInput(attrs={
-            'class': 'form-control',
-            'min': 1,
-            'max': 5,
-            'type': 'number'
-        }),
-        required=True
-    )
-    impact_weight_reputation = forms.IntegerField(
-        widget=forms.NumberInput(attrs={
-            'class': 'form-control',
-            'min': 1,
-            'max': 5,
-            'type': 'number'
-        }),
-        required=True
-    )
-    impact_weight_supply = forms.IntegerField(
-        widget=forms.NumberInput(attrs={
-            'class': 'form-control',
-            'min': 1,
-            'max': 5,
-            'type': 'number'
-        }),
-        required=True
-    )
+
     exalens_api_key = forms.CharField(
         required=False,
         widget=forms.TextInput(attrs={'class': 'form-control'}),
@@ -257,6 +182,48 @@ class OrganizationDefaultsForm(forms.ModelForm):
         widget=forms.TextInput(attrs={'class': 'form-control'}),
         label="IP Address"
     )
+    business_unit_name = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control'}),
+        label="Business Unit Name"
+    )
+    business_unit_address_line1 = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control'}),
+        label="Address Line 1"
+    )
+    business_unit_address_line2 = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control'}),
+        label="Address Line 2"
+    )
+    business_unit_address_line3 = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control'}),
+        label="Address Line 3"
+    )
+    business_unit_city = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control'}),
+        label="City"
+    )
+    business_unit_state = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control'}),
+        label="State"
+    )
+    business_unit_country = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control'}),
+        label="Country"
+    )
+    business_unit_postcode = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control'}),
+        label="Postcode"
+    )
+
+
     def __init__(self, *args, **kwargs):
         super(OrganizationDefaultsForm, self).__init__(*args, **kwargs)
         self.fields['industry'].label_from_instance = lambda obj: "{}".format(obj.Industry)
@@ -285,6 +252,8 @@ class OrganizationDefaultsForm(forms.ModelForm):
         if commit:
             instance.save()
         return instance
+
+
 class RAWorksheetScenarioForm(forms.ModelForm):
     class Meta:
         model = RAWorksheetScenario
@@ -330,9 +299,11 @@ class UserProfileForm(forms.ModelForm):
         initial=10,  # Default value or use a sensible default for your use case
         help_text='Maximum number of scenario analyses allowed for the user.'
     )
+
     class Meta:
         model = UserProfile
-        fields = ['organization', 'must_change_password', 'jobtitle', 'role_moderator', 'role_readonly', 'max_scenario_count']
+        fields = ['organization', 'must_change_password', 'jobtitle', 'role_moderator', 'role_readonly',
+                  'max_scenario_count']
 
 
 class UserForm(forms.ModelForm):

@@ -21,7 +21,12 @@
 <script type="text/javascript" src="https://cdn.datatables.net/1.10.2/js/jquery.dataTables.min.js"></script>
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-beta.1/dist/css/select2.min.css" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-beta.1/dist/js/select2.min.js"></script>
+ <script>
+    function initMap() {
 
+    }
+</script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBJu4p9r_vFL9g5nzctO4yLbNxjK08q4G0&loading=async&callback=initMap"></script>
 <script>
 $('select').selectpicker();
 window.addEventListener('beforeunload', function() {
@@ -33,7 +38,97 @@ window.addEventListener('beforeunload', function() {
 {% bootstrap_css %}
 {% bootstrap_javascript %}
 <link rel="stylesheet" type="text/css" href="{% static 'css/otriskstyle.css' %}">
+<style>
+    #headertable {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: "Segoe UI", Arial, sans-serif;
+    color: #333;
+}
 
+#headertable th {
+    background-color: #333;
+    color: #fff;
+    padding: 12px;
+    text-align: left;
+    font-weight: 600;
+    border: 1px solid #ccc;
+}
+
+#headertable td {
+    padding: 12px;
+    border: 1px solid #ccc;
+    background-color: #fff;
+    color: #333;
+}
+
+#headertable tbody tr {
+    border-bottom: 1px solid #ccc;
+}
+
+#headertable tbody tr:hover {
+    background-color: #f2f2f2;
+}
+
+#headertable .actions {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+#headertable button {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    padding: 8px 12px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.3s;
+}
+
+#headertable button:hover {
+    background-color: #0056b3;
+}
+
+#headertable .second-row td {
+    border-top: none;
+    background-color: #f9f9f9;
+}
+
+/* Additional enhancements */
+#headertable th:first-child,
+#headertable td:first-child {
+    border-left: none;
+}
+
+#headertable th:last-child,
+#headertable td:last-child {
+    border-right: none;
+}
+
+#headertable tr:first-child th {
+    border-top: none;
+}
+
+#headertable tr:last-child td {
+    border-bottom: none;
+}
+
+/* For better accessibility */
+#headertable th, #headertable td {
+    text-align: center;
+}
+
+#headertable th, #headertable td.actions {
+    text-align: left;
+}
+
+/* Ensuring buttons are styled consistently */
+#headertable button {
+    font-size: 14px;
+    line-height: 1.5;
+}
+</style>
 </head>
     <!-- Initialize sliders when the page loads -->
 <script>
@@ -235,7 +330,7 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
             <h3 style="color: #FFF">Assessments</h3>
             <div id="dataTableContainer" data-saved-id="{{ saved_worksheet_id }}">
             <div class="form-group">
-            <table id="rawtable" class="table table-striped table-bordered">
+            <table id="headertable" class="table small-font compact">
                 <thead style="background-color: #2c2c2c; color: white">
                 <tr>
                     <th></th>
@@ -260,7 +355,22 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                         data-insurance="{{ raw.insurance }}"
                         data-approver-id="{{ raw.approver_id }}"
                         data-owner="{{ raw.UserID}}"
-                        data-deductable="{{ raw.deductable }}">
+                        data-deductable="{{ raw.deductable }}"
+                        data-lat="{{ raw.business_unit_lat }}"
+                        data-lon="{{ raw.business_unit_lon }}"
+                        data-address1="{{ raw.business_unit_address_line1 }}"
+                        data-address2="{{ raw.business_unit_address_line2 }}"
+                        data-address3="{{ raw.business_unit_address_line3 }}"
+                        data-city="{{ raw.business_unit_city }}"
+                        data-state="{{ raw.business_unit_state }}"
+                        data-postcode="{{ raw.business_unit_postcode }}"
+                        data-country="{{ raw.business_unit_country }}"
+                        data-asset="{{ raw.asset }}"
+                        data-asset_purpose="{{ raw.asset_purpose }}"
+                        data-assessment_id="{{ raw.assessment }}"
+                        data-last_assessment_score="{{ raw.last_assessment_score }}"
+                        data-last_assessment_summary="{{ raw.last_assessment_summary }}"
+                        >
                         <td>{{ raw.ID }}</td>
                         <td style="font-size: 14px"><b>{{ raw.RATitle }}</b></td>
                         <td>{{ raw.StatusFlag }}</td>
@@ -298,8 +408,9 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
         </div>
             <script>
                 $(document).ready(function() {
-                    $('#rawtable').on('click', 'tbody tr.selectable-row', function() {
+                    $('#headertable').on('click', 'tbody tr.selectable-row', function() {
                     // Remove 'highlighted' class from all other rows
+                        sessionStorage.setItem('editMode', '0');
                      $('tr.selectable-row').removeClass('highlighted');
 
                     // Add 'highlighted' class to the clicked row
@@ -337,7 +448,8 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                 var inputFields = [
                 "txtTitle", "txtRevenue", "txtInsurance", "txtDeductable",
                 "txtLeader", "txtBU", "selectIndustry", "selectFacility",
-                "selectTrigger", "selectStatus"
+                "selectTrigger", "selectStatus", "txtAddress1", "txtAddress2", "txtAddress3",
+                "txtCity", "txtPostcode", "txtCountry", "txtState", "assessment_id",  "txtAsset", "txtAssetPurpose"
                 ];
                 inputFields.forEach(resetAndEnableField);
 
@@ -369,6 +481,23 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                             document.getElementById('txtInsurance').value = formattedInsurance;
                             document.getElementById('txtDeductable').value = formattedDeductable;
                             document.getElementById('selectIndustry').value = data.industry;
+                            document.getElementById('txtBU').value = data.business_unit_name;
+                            document.getElementById('txtAddress1').value = data.business_unit_address_line1;
+                            document.getElementById('txtAddress2').value = data.business_unit_address_line2;
+                            document.getElementById('txtAddress3').value = data.business_unit_address_line3;
+                            document.getElementById('txtCity').value = data.business_unit_city;
+                            document.getElementById('txtState').value = data.business_unit_state;
+                            document.getElementById('txtPostcode').value = data.business_unit_postcode;
+                            document.getElementById('txtCountry').value = data.business_unit_country;
+                            document.getElementById('address_lat').value = data.business_unit_lat;
+                            document.getElementById('address_lon').value = data.business_unit_lon;
+
+
+                            if (data.business_unit_lat && data.business_unit_lon) {
+                                drawGoogleMap(data.business_unit_lat, data.business_unit_lon);
+                            }
+
+
                             let industrySelect = document.getElementById('selectIndustry');
                             industrySelect.value = data.industry; // Set the value
 
@@ -454,6 +583,8 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
             // end of reset controls
 
             document.addEventListener('DOMContentLoaded', function() {
+
+              sessionStorage.setItem('editMode', '0');
               var enableButton = document.getElementById('editBtn');
 
               enableButton.addEventListener('click', function() {
@@ -478,31 +609,165 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
             <h2 style="color:white">QRAW Setup</h2>
             <div class="form-group">
             <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                    <label for="txtBU" >Business Unit Name</label>
+                    <input type="text" class="form-control" name="txtBU" id="txtBU" >
+                    <label for="txtAddress1" >Address Line 1</label>
+                    <input type="text" class="form-control" name="txtAddress1" id="txtAddress1" >
+                    <label for="txtAddress2" >Address Line 2</label>
+                    <input type="text" class="form-control" name="txtAddress2" id="txtAddress2" >
+                    <label for="txtAddress3" >Address Line 3</label>
+                    <input type="text" class="form-control" name="txtAddress3" id="txtAddress3" >
+                    <label for="txtCity" >City</label>
+                    <input type="text" class="form-control" name="txtCity" id="txtCity" >
+                    <label for="txtState" >State</label>
+                    <input type="text" class="form-control" name="txtState" id="txtState" >
+                     <label for="txtPostcode" >Postal Code/Zip</label>
+                    <input type="text" class="form-control" name="txtPostcode" id="txtPostcode" >
 
-            <div class="col-md-4">
-                <div class="card mb-3 shadow-sm" style="border: 1px solid black;">
-                <div class="card-body">
-                <label for="txtTitle" style="color: black">Risk Assessment Title</label>
-                <input type="text" class="form-control" name="txtTitle" id="txtTitle" placeholder="Enter a title for this risk assessment" maxlength="50" required/>
+                    <label for="txtCountry" >Country</label>
+                    <input type="text" class="form-control" name="txtCountry" id="txtCountry" >
+                        </div>
+                    <input type="hidden" class="form-control" name="address_lat" id="address_lat" >
+                    <input type="hidden" class="form-control" name="address_lon" id="address_lon" >
+
                 </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card mb-3 shadow-sm" style="border: 1px solid black;">
-                <div class="card-body">
-                <label for="txtBU" style="color: #000">Business Unit</label>
-                <input type="text" class="form-control" name="txtBU" id="txtBU" placeholder="Enter a name for the business unit or facility for this risk assessment" maxlength="50" required>
-                </div>
+                <div class="col-md-6">
+
+                    <div id="facility_map" style="height: 100%;"></div>
+
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="card mb-3 shadow-sm" style="border: 1px solid black;">
-                <div class="card-body">
-                <label for="txtLeader" style="color: #000">Assessment Leader</label>
-                <input type="text" class="form-control" name="txtLeader" id="txtLeader" placeholder="Enter the name of the person leading this risk assessment" maxlength="50" required>
-                </div>
-                </div>
             </div>
+
+
+
+            <div class="form-group">
+            <div class="row">
+
+                <div class="col-md-6">
+                    <div class="card mb-3 shadow-sm" style="border: 1px solid black;">
+                    <div class="card-body">
+                    <label for="txtTitle">Risk Assessment Title</label>
+                    <input type="text" class="form-control" name="txtTitle" id="txtTitle" placeholder="Enter a title for this risk assessment" maxlength="50" required/>
+                    </div>
+
+                         <div class="card-body">
+                                    <label for="selectTrigger" >Trigger Event</label><br>
+                                    <select id="selectTrigger" name="selectTrigger" class="form-control" style="width:100%">
+                                        <option value="">-- Select Assessment Trigger --</option>
+                                        <option value="Audit - External">Audit - External</option>
+                                        <option value="Audit - Internal">Audit - Internal</option>
+                                        <option value="Change Request">Change Request</option>
+                                        <option value="Incident">Incident</option>
+                                        <option value="Policy Exception">Policy Exception</option>
+                                        <option value="Scheduled Assessment">Scheduled Assessment</option>
+                                        <option value="Site Walkdown">Site Walkdown</option>
+                                    </select>
+                                </div>
+
+                    <div class="card-body">
+                    <label for="txtLeader" >Assessment Leader</label>
+                    <input type="text" class="form-control" name="txtLeader" id="txtLeader" placeholder="Enter the name of the person leading this risk assessment" maxlength="50" required>
+                    </div>
+                    </div>
+                </div>
+
+
+                <div class="col-md-6">
+                     <div class="form-group">
+                    <label for="assessment_id" style="color: white" title="Select the control assessment questionnaire that applies to the facility. If no control assessment has been completed, click on Assessments in the menu to go to the assessments page">Control Assessment:</label>
+                    <select class="form-control" id="assessment_id" name="assessment_id" onchange="checkEditModeAndGetAssessment()">
+                        <option value="">Select an Assessment</option>
+                        {% for assessment in assessments %}
+                            <option value="{{ assessment.id }}">{{ assessment.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <input type="hidden" id="last_assessment_score" name="last_assessment_score">
+                    <input type="hidden" id="last_assessment_summary" name="last_assessment_summary">
+
+                    <div id="assessmentspinnerContainer" style="display: none;">
+                        <div class="spinner-border" role="status">
+
+                            <span class="sr-only">Loading...</span>
+                             </div>
+                    </div>
+
+                     <!-- Container to display the summary and score -->
+                    <span id="assessment_summary" ></span>
+                    <br>
+                    <span id="assessment_score" ></span>
+                     <script>
+
+                         function setBorderColorByScore(score) {
+                            var borderColor = '#4CAF50'; // Default color
+                            score = parseInt(score); // Convert score to integer
+
+                            if (score < 30) {
+                                borderColor = 'red';
+                            } else if (score >= 30 && score <= 70) {
+                                borderColor = 'yellow';
+                            } // If score > 70, default green color is used
+
+                            $('#assessment_summary').css('border-left', '5px solid ' + borderColor);
+                        }
+
+                        function checkEditModeAndGetAssessment() {
+                        if (sessionStorage.getItem('editMode') === '1') {
+                            getAssessment();
+                        }
+                    }
+
+                    function getAssessment() {
+                        // Get selected assessment ID
+                        var assessmentId = document.getElementById('assessment_id').value;
+                        // Get selected industry
+                        var industry = document.getElementById('selectIndustry').value;
+                        // Get selected facility type
+                        var facilityType = document.getElementById('selectFacility').value;
+
+                        if (assessmentId) {
+                            Swal.fire({
+                                title: 'Loading',
+                                text: 'Fetching assessment summary...',
+                                didOpen: () => {
+                                    Swal.showLoading()
+                                },
+                                allowOutsideClick: false,
+                                allowEscapeKey: false,
+                                backdrop: true
+                            });
+                            $.ajax({
+                                url: '/OTRisk/get_assessment_summary/',  // Update with the actual URL
+                                type: 'POST',
+                                data: {
+                                    'assessment_id': assessmentId,
+                                    'industry': industry,
+                                    'facilityType': facilityType,
+                                    'csrfmiddlewaretoken': '{{ csrf_token }}'
+                                },
+                                success: function(response) {
+                                    Swal.close();
+                                    $('#assessment_summary').text(response.summary);
+                                    $('#assessment_score').text('Score: ' + response.score + '/100');
+                                    setBorderColorByScore(response.score);
+                                    document.getElementById('last_assessment_score').value = response.score;
+                                    document.getElementById('last_assessment_summary').value = response.summary;
+                                },
+                                error: function(xhr, status, error) {
+                                    Swal.close();
+                                    console.error('Error fetching assessment summary:', error);
+                                }
+                            });
+                        }
+                    }
+                </script>
+
+                 </div>
+                </div>
+
+
 
             </div>
             </div>
@@ -510,22 +775,19 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
             <div class="form-group">
             <div class="row">
                 <div class="col-md-4">
-                <div class="card mb-3 shadow-sm" style="border: 1px solid black;">
-                    <div class="card-body">
-                        <label for="selectIndustry" style="color: #black">Industry</label><br>
-                        <select id="selectIndustry" name="selectIndustry" class="form-control" style="width:100%">
-                            <option value="">-- Select Industry --</option>
-                            {% for industry in industries %}
-                                <option value="{{ industry.Industry }}">{{ industry.Industry }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="card mb-3 shadow-sm" style="border: 1px solid black;">
-                    <div class="card-body">
-                            <label for="selectFacility" style="color: black">Facility Type</label><br>
+                    <div class="card mb-3 shadow-sm">
+                        <div class="card-body">
+                            <label for="selectIndustry" style="color: #black">Industry</label><br>
+                            <select id="selectIndustry" name="selectIndustry" class="form-control" style="width:100%">
+                                <option value="">-- Select Industry --</option>
+                                {% for industry in industries %}
+                                    <option value="{{ industry.Industry }}">{{ industry.Industry }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="card-body">
+                            <label for="selectFacility" >Facility Type</label><br>
                             <select id="selectFacility" name="selectFacility" class="form-control" style="width:100%">
                                 <option value="">-- Select Facility --</option>
                                 {% for facility in facilities %}
@@ -534,23 +796,66 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                             </select>
                         </div>
                     </div>
+
                 </div>
                 <div class="col-md-4">
-                    <div class="card mb-3 shadow-sm" style="border: 1px solid black;">
-                     <div class="card-body">
-                                <label for="selectTrigger" style="color: black">Trigger Event</label><br>
-                                <select id="selectTrigger" name="selectTrigger" class="form-control" style="width:100%">
-                                    <option value="">-- Select Assessment Trigger --</option>
-                                    <option value="Audit - External">Audit - External</option>
-                                    <option value="Audit - Internal">Audit - Internal</option>
-                                    <option value="Change Request">Change Request</option>
-                                    <option value="Incident">Incident</option>
-                                    <option value="Policy Exception">Policy Exception</option>
-                                    <option value="Scheduled Assessment">Scheduled Assessment</option>
-                                    <option value="Site Walkdown">Site Walkdown</option>
-                                </select>
+                    <div class="card mb-3 shadow-sm">
+                        <div class="card-body">
+                                <label for="txtAsset">Asset (Vendor and Model)</label>
+                                <input type="text" class="form-control" id="txtAsset" name="txtAsset" style="width: 100%">
                             </div>
+
+                        <div class="card-body">
+                                <label for="txtAssessPurpose">Asset Purpose:</label>
+                                <input type="text" class="form-control" id="txtAssetPurpose" name="txtAssetPurpose" style="width: 100%">
+                        </div>
                     </div>
+
+
+
+                </div>
+                <div class="col-md-4">
+                    <div class="card mb-3 shadow-sm" > <!-- Bootstrap card with shadow -->
+                    <div class="card-body">
+                        <label for="txtInsurance" ><i class="bi bi-cash-coin"></i> Cyber Insurance Cover</label>
+                        <input type="text" class="form-control" name="txtInsurance" id="txtInsurance" >
+                        <script>
+                         $(document).ready(function() {
+                            $("#txtInsurance").on("input", function() {
+                                // Remove any non-digit characters
+                                var val = $(this).val().replace(/[^0-9]/g, '');
+
+                                // Convert to whole number currency format
+                                var currencyVal = parseInt(val, 10).toLocaleString('en-US');
+
+                                // Set the formatted value
+                                $(this).val(currencyVal);
+                            });
+                        });
+                         </script>
+
+                    </div>
+
+                    <div class="card-body">
+                        <label for="txtDeductable" ><i class="bi bi-calculator"></i> Insurance Deductable Amount</label>
+                        <script>
+                         $(document).ready(function() {
+                            $("#txtDeductable").on("input", function() {
+                                // Remove any non-digit characters
+                                var val = $(this).val().replace(/[^0-9]/g, '');
+
+                                // Convert to whole number currency format
+                                var currencyVal = parseInt(val, 10).toLocaleString('en-US');
+
+                                // Set the formatted value
+                                $(this).val(currencyVal);
+                            });
+                        });
+                         </script>
+                        <input type="text" class="form-control" name="txtDeductable" id="txtDeductable" >
+
+                    </div>
+                </div>
                 </div>
 
             </div>
@@ -560,9 +865,9 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
             <div class="row">
 
             <div class="col-md-4">
-                <div class="card mb-3 shadow-sm" style="border: 1px solid black;">
+                <div class="card mb-3 shadow-sm" >
                     <div class="card-body">
-                        <label for="txtRevenue" style="color: #000"><i class="bi bi-currency-exchange"></i> Annual Revenue</label>
+                        <label for="txtRevenue" ><i class="bi bi-currency-exchange"></i> Annual Revenue</label>
                         <input type="text" class="form-control" name="txtRevenue" id="txtRevenue" >
                     </div>
                  <script>
@@ -583,49 +888,24 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
              </div>
             </div>
             <div class="col-md-4">
-                <div class="card mb-3 shadow-sm" style="border: 1px solid black;"> <!-- Bootstrap card with shadow -->
-                    <div class="card-body">
-                        <label for="txtInsurance" style="color: #000"><i class="bi bi-cash-coin"></i> Cyber Insurance Cover</label>
-                        <input type="text" class="form-control" name="txtInsurance" id="txtInsurance" >
-                        <script>
-                         $(document).ready(function() {
-                            $("#txtInsurance").on("input", function() {
-                                // Remove any non-digit characters
-                                var val = $(this).val().replace(/[^0-9]/g, '');
-
-                                // Convert to whole number currency format
-                                var currencyVal = parseInt(val, 10).toLocaleString('en-US');
-
-                                // Set the formatted value
-                                $(this).val(currencyVal);
-                            });
-                        });
-                         </script>
-
-                    </div>
-             </div>
+                <div class="card mb-3 shadow-sm" style="border: 1px solid black;">
+                  <div class="card-body">
+                    <label for="selectStatus" >Status</label><br>
+                    <select id="selectStatus" name="selectStatus" class="form-control">
+                        <option value="">-- Select Status --</option>
+                        <option value="Open">Open</option>
+                        <option value="Closed">Closed</option>
+                        <option value="Approved">Approved</option>
+                        <option value="Rejected">Rejected</option>
+                    </select>
+                </div>
+                </div>
             </div>
             <div class="col-md-4">
-                <div class="card mb-3 shadow-sm" style="border: 1px solid black;">
+                 <div class="card mb-3 shadow-sm" style="border: 1px solid black;">
                     <div class="card-body">
-                        <label for="txtDeductable" style="color: #000"><i class="bi bi-calculator"></i> Insurance Deductable Amount</label>
-                        <script>
-                         $(document).ready(function() {
-                            $("#txtDeductable").on("input", function() {
-                                // Remove any non-digit characters
-                                var val = $(this).val().replace(/[^0-9]/g, '');
-
-                                // Convert to whole number currency format
-                                var currencyVal = parseInt(val, 10).toLocaleString('en-US');
-
-                                // Set the formatted value
-                                $(this).val(currencyVal);
-                            });
-                        });
-                         </script>
-                        <input type="text" class="form-control" name="txtDeductable" id="txtDeductable" >
-
-                    </div>
+                <button class="form-control" type="submit" id="saveBtn" data-bs-toggle="tooltip" data-bs-placement="top" title="Click this button to save the risk assessment header information." onclick="return checkRiskAssessmentRefreshVariables();" ><i class="bi bi-download"></i> Save Header</button>
+                </div>
                 </div>
             </div>
 
@@ -636,18 +916,7 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
             <div class="row">
 
             <div class="col-md-4">
-                <div class="card mb-3 shadow-sm" style="border: 1px solid black;">
-                  <div class="card-body">
-                    <label for="selectStatus" style="color: black">Status</label><br>
-                    <select id="selectStatus" name="selectStatus" class="form-control">
-                        <option value="">-- Select Status --</option>
-                        <option value="Open">Open</option>
-                        <option value="Closed">Closed</option>
-                        <option value="Approved">Approved</option>
-                        <option value="Rejected">Rejected</option>
-                    </select>
-                </div>
-                </div>
+
             </div>
             <div class="col-md-4 workflow-management-section">
                 <div class="card mb-3 shadow-sm" style="border: 1px solid black;" id="workflow-mgmt">
@@ -770,11 +1039,7 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
 </script>
             </div>
             <div class="col-md-4 ">
-                <div class="card mb-3 shadow-sm" style="border: 1px solid black;">
-                    <div class="card-body">
-                <button class="form-control" type="submit" id="saveBtn" data-bs-toggle="tooltip" data-bs-placement="top" title="Click this button to save the risk assessment header information." onclick="return checkRiskAssessmentRefreshVariables();" ><i class="bi bi-download"></i> Save Header</button>
-                </div>
-                </div>
+
             </div>
 
             </div>
@@ -791,10 +1056,101 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                 <div class="group-container">
                     <div class="group-header">
                         <div class="row">
-                            <div class="col-md-5"><span style="color: white;">Scenario Description</span></div>
-                            <div class="col-md-1"></div>
-                            <div class="col-md-5"><button type="button" class="btn btn-primary btn-file-dialog" data-bs-toggle="modal" data-bs-target="#scenarioSelectModal" id="btnSelectScenario_1">Load Scenario</button></div>
-                            <div class="col-md-1"></div>
+                         <div class="col-md-6">
+                              <div class="group-container">
+                <div class="group-header">
+                     Threat Source
+
+                </div>
+                <div class="group-body">
+
+                  <select id="selectThreat_1" name="selectThreat_1" class="form-control small-font">
+                    <option value="">-- Select Threat Source --</option>
+                    {% for threatsources in threatsources %}
+                        <option value="{{ threatsources.ThreatSource}}">{{ threatsources.ThreatSource }}</option>
+                    {% endfor %}
+                  </select>
+
+                </div>
+              </div>
+                         </div>
+                         <div class="col-md-6">
+                              <div class="group-container">
+                            <div class="group-header">
+                                 MITRE Threat Tactic
+
+                            </div>
+                            <div class="group-body">
+                                <select id="selectTactics_1" name="selectTactics_1" class="form-control small-font">
+                                <option value="">-- Select Threat Tactics --</option>
+                                {% for mitreTactics in mitreTactics %}
+                                    <option value="{{ mitreTactics.tactic}}">{{ mitreTactics.tactic }}</option>
+                                {% endfor %}
+                              </select>
+
+                            </div>
+                          </div>
+                         </div>
+                        </div>
+                        <div class="row">
+                         <div class="col-md-6">
+                              <div class="group-container">
+                                <div class="group-header">
+                                     Likely Scenario Impact
+
+                                </div>
+                                <div class="group-body">
+                                     <select id="id_impact_1" name="id_impact_1" class="form-control small-font">
+                                        <option value="">-- Select Impact --</option>
+                                        {% for value, display in scenario_form.fields.impact.choices %}
+                                            <option value="{{ value }}">{{ display }}</option>
+                                        {% endfor %}
+                                    </select>
+
+                                </div>
+              </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="group-container">
+                                <div class="group-header">
+                                     Threat Motivation
+
+                                </div>
+                                <div class="group-body">
+                                     <select id="selectMotivation_1" name="selectMotivation_1" class="form-control small-font">
+                                            <option value="">-- Select Attack Motivation --</option>
+                                            <option value="None">None</option>
+                                            <option value="Espionage">Espionage</option>
+                                            <option value="Financial Gain">Financial Gain</option>
+                                            <option value="Sabotage">Sabotage</option>
+                                            <option value="Revenge">Revenge</option>
+                                            <option value="Political Reasons">Political Reasons</option>
+                                            <option value="Ideological Beliefs">Ideological Beliefs</option>
+                                            <option value="Competitive Advantage">Competitive Advantage</option>
+                                            <option value="Disruption">Disruption</option>
+                                            <option value="Activism/Hacktivism">Activism/Hacktivism</option>
+                                            <option value="Terrorism">Terrorism</option>
+                                            <option value="Data Theft">Data Theft</option>
+                                            <option value="Reputation Damage">Reputation Damage</option>
+                                            <option value="Intellectual Property Theft">Intellectual Property Theft</option>
+                                            <option value="Cyber Warfare">Cyber Warfare</option>
+                                            <option value="Extortion/Ransomware">Extortion/Ransomware</option>
+                                            <option value="Insider Threat">Insider Threat</option>
+                                            <option value="Corporate Espionage">Corporate Espionage</option>
+                                            <option value="Curiosity/Challenge">Curiosity/Challenge</option>
+                                            <option value="Social Engineering">Social Engineering</option>
+                                            <option value="Fun/Entertainment">Fun/Entertainment</option>
+                                        </select>
+
+
+                                </div>
+              </div>
+                        </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4"><span style="color: white;"><h5>Scenario Description</h5></span></div>
+                            <div class="col-md-4"><a href="#" id="generate_scenario_text_1" class="generate-scenario-link" style="color:white">Generate Scenario</a></div>
+                            <div class="col-md-4"><button type="button" class="btn btn-link" data-bs-toggle="modal" data-bs-target="#scenarioSelectModal" id="btnSelectScenario_1">Load Scenario</button></div>
                         </div>
                         </div>
                     <div class="group-body">
@@ -892,53 +1248,6 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                 <div class="col-md-1"></div>
             </div>
 
-            <div class="group-container">
-                <div class="group-header">
-                     Threat Source
-
-                </div>
-                <div class="group-body">
-
-                  <select id="selectThreat_1" name="selectThreat_1" class="form-control small-font">
-                    <option value="">-- Select Threat Source --</option>
-                    {% for threatsources in threatsources %}
-                        <option value="{{ threatsources.ThreatSource}}">{{ threatsources.ThreatSource }}</option>
-                    {% endfor %}
-                  </select>
-
-                </div>
-              </div>
-
-            <div class="group-container">
-                <div class="group-header">
-                     Threat Tactic
-
-                </div>
-                <div class="group-body">
-                    <select id="selectTactics_1" name="selectTactics_1" class="form-control small-font">
-                    <option value="">-- Select Threat Tactics --</option>
-                    {% for mitreTactics in mitreTactics %}
-                        <option value="{{ mitreTactics.tactic}}">{{ mitreTactics.tactic }}</option>
-                    {% endfor %}
-                  </select>
-
-                </div>
-              </div>
-            <div class="group-container">
-                <div class="group-header">
-                     Scenario Impact
-
-                </div>
-                <div class="group-body">
-                     <select id="id_impact_1" name="impact" class="form-control small-font">
-                        <option value="">-- Select Impact --</option>
-                        {% for value, display in scenario_form.fields.impact.choices %}
-                            <option value="{{ value }}">{{ display }}</option>
-                        {% endfor %}
-                    </select>
-
-                </div>
-              </div>
                 <div class="group-container">
                 <div class="group-header">
                      Asset Detail
@@ -1171,10 +1480,102 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                 <div class="group-container">
                     <div class="group-header">
                         <div class="row">
-                            <div class="col-md-5"><span style="color: white;">Scenario Description</span></div>
-                            <div class="col-md-1"></div>
-                            <div class="col-md-5"><button type="button" class="btn btn-primary btn-file-dialog" data-bs-toggle="modal" data-bs-target="#scenarioSelectModal" id="btnSelectScenario_2">Load Scenario</button></div>
-                            <div class="col-md-1"></div>
+                         <div class="col-md-6">
+                              <div class="group-container">
+                                    <div class="group-header">
+                                         Threat Source
+
+                                    </div>
+                                    <div class="group-body">
+
+                                      <select id="selectThreat_2" name="selectThreat_2" class="form-control small-font">
+                                        <option value="">-- Select Threat Source --</option>
+                                        {% for threatsources in threatsources %}
+                                            <option value="{{ threatsources.ThreatSource}}">{{ threatsources.ThreatSource }}</option>
+                                        {% endfor %}
+                                      </select>
+
+                                    </div>
+                                </div>
+                         </div>
+                         <div class="col-md-6">
+                              <div class="group-container">
+                            <div class="group-header">
+                                 MITRE Threat Tactic
+
+                            </div>
+                            <div class="group-body">
+                                <select id="selectTactics_2" name="selectTactics_2" class="form-control small-font">
+                                <option value="">-- Select Threat Tactics --</option>
+                                {% for mitreTactics in mitreTactics %}
+                                    <option value="{{ mitreTactics.tactic}}">{{ mitreTactics.tactic }}</option>
+                                {% endfor %}
+                              </select>
+
+                            </div>
+                          </div>
+                         </div>
+                        </div>
+                        <div class="row">
+                         <div class="col-md-6">
+                              <div class="group-container">
+                                <div class="group-header">
+                                     Likely Scenario Impact
+
+                                </div>
+                                <div class="group-body">
+                                     <select id="id_impact_2" name="id_impact_2" class="form-control small-font">
+                                        <option value="">-- Select Impact --</option>
+                                        {% for value, display in scenario_form.fields.impact.choices %}
+                                            <option value="{{ value }}">{{ display }}</option>
+                                        {% endfor %}
+                                    </select>
+
+                                </div>
+              </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="group-container">
+                                <div class="group-header">
+                                     Threat Motivation
+
+                                </div>
+                                <div class="group-body">
+                                     <select id="selectMotivation_2" name="selectMotivation_2" class="form-control small-font">
+                                            <option value="">-- Select Attack Motivation --</option>
+                                            <option value="None">None</option>
+                                            <option value="Espionage">Espionage</option>
+                                            <option value="Financial Gain">Financial Gain</option>
+                                            <option value="Sabotage">Sabotage</option>
+                                            <option value="Revenge">Revenge</option>
+                                            <option value="Political Reasons">Political Reasons</option>
+                                            <option value="Ideological Beliefs">Ideological Beliefs</option>
+                                            <option value="Competitive Advantage">Competitive Advantage</option>
+                                            <option value="Disruption">Disruption</option>
+                                            <option value="Activism/Hacktivism">Activism/Hacktivism</option>
+                                            <option value="Terrorism">Terrorism</option>
+                                            <option value="Data Theft">Data Theft</option>
+                                            <option value="Reputation Damage">Reputation Damage</option>
+                                            <option value="Intellectual Property Theft">Intellectual Property Theft</option>
+                                            <option value="Cyber Warfare">Cyber Warfare</option>
+                                            <option value="Extortion/Ransomware">Extortion/Ransomware</option>
+                                            <option value="Insider Threat">Insider Threat</option>
+                                            <option value="Corporate Espionage">Corporate Espionage</option>
+                                            <option value="Curiosity/Challenge">Curiosity/Challenge</option>
+                                            <option value="Social Engineering">Social Engineering</option>
+                                            <option value="Fun/Entertainment">Fun/Entertainment</option>
+                                        </select>
+
+
+                                </div>
+              </div>
+                        </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4"><span style="color: white;"><h5>Scenario Description</h5></span></div>
+                            <div class="col-md-4"><a href="#" id="generate_scenario_text_2" class="btn btn-link" style="color:white">Generate Scenario</a></div>
+                            <div class="col-md-4"><button type="button" class="btn btn-link" data-bs-toggle="modal" data-bs-target="#scenarioSelectModal" id="btnSelectScenario_2">Load Scenario</button></div>
+
                         </div>
                         </div>
                     <div class="group-body">
@@ -1272,53 +1673,6 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                 <div class="col-md-1"></div>
             </div>
 
-            <div class="group-container">
-                <div class="group-header">
-                     Threat Source
-
-                </div>
-                <div class="group-body">
-
-                  <select id="selectThreat_2" name="selectThreat_2" class="form-control small-font">
-                    <option value="">-- Select Threat Source --</option>
-                    {% for threatsources in threatsources %}
-                        <option value="{{ threatsources.ThreatSource}}">{{ threatsources.ThreatSource }}</option>
-                    {% endfor %}
-                  </select>
-
-                </div>
-              </div>
-
-            <div class="group-container">
-                <div class="group-header">
-                     Threat Tactic
-
-                </div>
-                <div class="group-body">
-                    <select id="selectTactics_2" name="selectTactics_2" class="form-control small-font">
-                    <option value="">-- Select Threat Tactics --</option>
-                    {% for mitreTactics in mitreTactics %}
-                        <option value="{{ mitreTactics.tactic}}">{{ mitreTactics.tactic }}</option>
-                    {% endfor %}
-                  </select>
-
-                </div>
-              </div>
-            <div class="group-container">
-                <div class="group-header">
-                     Scenario Impact
-
-                </div>
-                <div class="group-body">
-                     <select id="id_impact_2" name="impact" class="form-control small-font">
-                        <option value="">-- Select Impact --</option>
-                        {% for value, display in scenario_form.fields.impact.choices %}
-                            <option value="{{ value }}">{{ display }}</option>
-                        {% endfor %}
-                    </select>
-
-                </div>
-              </div>
                 <div class="group-container">
                 <div class="group-header">
                      Asset Detail
@@ -1551,10 +1905,102 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                 <div class="group-container">
                     <div class="group-header">
                         <div class="row">
-                            <div class="col-md-5"><span style="color: white;">Scenario Description</span></div>
-                            <div class="col-md-1"></div>
-                            <div class="col-md-5"><button type="button" class="btn btn-primary btn-file-dialog" data-bs-toggle="modal" data-bs-target="#scenarioSelectModal" id="btnSelectScenario_3">Load Scenario</button></div>
-                            <div class="col-md-1"></div>
+                         <div class="col-md-6">
+                              <div class="group-container">
+                            <div class="group-header">
+                                 Threat Source
+
+                            </div>
+                            <div class="group-body">
+
+                              <select id="selectThreat_3" name="selectThreat_3" class="form-control small-font">
+                                <option value="">-- Select Threat Source --</option>
+                                {% for threatsources in threatsources %}
+                                    <option value="{{ threatsources.ThreatSource}}">{{ threatsources.ThreatSource }}</option>
+                                {% endfor %}
+                              </select>
+
+                            </div>
+                          </div>
+                         </div>
+                         <div class="col-md-6">
+                              <div class="group-container">
+                            <div class="group-header">
+                                 MITRE Threat Tactic
+
+                            </div>
+                            <div class="group-body">
+                                <select id="selectTactics_3" name="selectTactics_3" class="form-control small-font">
+                                <option value="">-- Select Threat Tactics --</option>
+                                {% for mitreTactics in mitreTactics %}
+                                    <option value="{{ mitreTactics.tactic}}">{{ mitreTactics.tactic }}</option>
+                                {% endfor %}
+                              </select>
+
+                            </div>
+                          </div>
+                         </div>
+                        </div>
+                        <div class="row">
+                         <div class="col-md-6">
+                              <div class="group-container">
+                                <div class="group-header">
+                                     Likely Scenario Impact
+
+                                </div>
+                                <div class="group-body">
+                                     <select id="id_impact_3" name="id_impact_3" class="form-control small-font">
+                                        <option value="">-- Select Impact --</option>
+                                        {% for value, display in scenario_form.fields.impact.choices %}
+                                            <option value="{{ value }}">{{ display }}</option>
+                                        {% endfor %}
+                                    </select>
+
+                                </div>
+              </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="group-container">
+                                <div class="group-header">
+                                     Threat Motivation
+
+                                </div>
+                                <div class="group-body">
+                                     <select id="selectMotivation_3" name="selectMotivation_3" class="form-control small-font">
+                                            <option value="">-- Select Attack Motivation --</option>
+                                            <option value="None">None</option>
+                                            <option value="Espionage">Espionage</option>
+                                            <option value="Financial Gain">Financial Gain</option>
+                                            <option value="Sabotage">Sabotage</option>
+                                            <option value="Revenge">Revenge</option>
+                                            <option value="Political Reasons">Political Reasons</option>
+                                            <option value="Ideological Beliefs">Ideological Beliefs</option>
+                                            <option value="Competitive Advantage">Competitive Advantage</option>
+                                            <option value="Disruption">Disruption</option>
+                                            <option value="Activism/Hacktivism">Activism/Hacktivism</option>
+                                            <option value="Terrorism">Terrorism</option>
+                                            <option value="Data Theft">Data Theft</option>
+                                            <option value="Reputation Damage">Reputation Damage</option>
+                                            <option value="Intellectual Property Theft">Intellectual Property Theft</option>
+                                            <option value="Cyber Warfare">Cyber Warfare</option>
+                                            <option value="Extortion/Ransomware">Extortion/Ransomware</option>
+                                            <option value="Insider Threat">Insider Threat</option>
+                                            <option value="Corporate Espionage">Corporate Espionage</option>
+                                            <option value="Curiosity/Challenge">Curiosity/Challenge</option>
+                                            <option value="Social Engineering">Social Engineering</option>
+                                            <option value="Fun/Entertainment">Fun/Entertainment</option>
+                                        </select>
+
+
+                                </div>
+              </div>
+                        </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4"><span style="color: white;"><h5>Scenario Description</h5></span></div>
+                            <div class="col-md-4"><a href="#" id="generate_scenario_text_3" class="btn btn-link" style="color:white">Generate Scenario</a></div>
+                            <div class="col-md-4"><button type="button" class="btn btn-link" data-bs-toggle="modal" data-bs-target="#scenarioSelectModal" id="btnSelectScenario_3">Load Scenario</button></div>
+
                         </div>
                         </div>
                     <div class="group-body">
@@ -1652,53 +2098,6 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                 <div class="col-md-1"></div>
             </div>
 
-            <div class="group-container">
-                <div class="group-header">
-                     Threat Source
-
-                </div>
-                <div class="group-body">
-
-                  <select id="selectThreat_3" name="selectThreat_3" class="form-control small-font">
-                    <option value="">-- Select Threat Source --</option>
-                    {% for threatsources in threatsources %}
-                        <option value="{{ threatsources.ThreatSource}}">{{ threatsources.ThreatSource }}</option>
-                    {% endfor %}
-                  </select>
-
-                </div>
-              </div>
-
-            <div class="group-container">
-                <div class="group-header">
-                     Threat Tactic
-
-                </div>
-                <div class="group-body">
-                    <select id="selectTactics_3" name="selectTactics_3" class="form-control small-font">
-                    <option value="">-- Select Threat Tactics --</option>
-                    {% for mitreTactics in mitreTactics %}
-                        <option value="{{ mitreTactics.tactic}}">{{ mitreTactics.tactic }}</option>
-                    {% endfor %}
-                  </select>
-
-                </div>
-              </div>
-            <div class="group-container">
-                <div class="group-header">
-                     Scenario Impact
-
-                </div>
-                <div class="group-body">
-                     <select id="id_impact_3" name="impact" class="form-control small-font">
-                        <option value="">-- Select Impact --</option>
-                        {% for value, display in scenario_form.fields.impact.choices %}
-                            <option value="{{ value }}">{{ display }}</option>
-                        {% endfor %}
-                    </select>
-
-                </div>
-              </div>
                 <div class="group-container">
                 <div class="group-header">
                      Asset Detail
@@ -1931,9 +2330,101 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                 <div class="group-container">
                     <div class="group-header">
                         <div class="row">
-                            <div class="col-md-5"><span style="color: white;">Scenario Description</span></div>
-                            <div class="col-md-1"></div>
-                            <div class="col-md-5"><button type="button" class="btn btn-primary btn-file-dialog" data-bs-toggle="modal" data-bs-target="#scenarioSelectModal" id="btnSelectScenario_4">Load Scenario</button></div>
+                         <div class="col-md-6">
+                              <div class="group-container">
+                <div class="group-header">
+                     Threat Source
+
+                </div>
+                <div class="group-body">
+
+                  <select id="selectThreat_4" name="selectThreat_4" class="form-control small-font">
+                    <option value="">-- Select Threat Source --</option>
+                    {% for threatsources in threatsources %}
+                        <option value="{{ threatsources.ThreatSource}}">{{ threatsources.ThreatSource }}</option>
+                    {% endfor %}
+                  </select>
+
+                </div>
+              </div>
+                         </div>
+                         <div class="col-md-6">
+                              <div class="group-container">
+                            <div class="group-header">
+                                 MITRE Threat Tactic
+
+                            </div>
+                            <div class="group-body">
+                                <select id="selectTactics_4" name="selectTactics_4" class="form-control small-font">
+                                <option value="">-- Select Threat Tactics --</option>
+                                {% for mitreTactics in mitreTactics %}
+                                    <option value="{{ mitreTactics.tactic}}">{{ mitreTactics.tactic }}</option>
+                                {% endfor %}
+                              </select>
+
+                            </div>
+                          </div>
+                         </div>
+                        </div>
+                        <div class="row">
+                         <div class="col-md-6">
+                              <div class="group-container">
+                                <div class="group-header">
+                                     Likely Scenario Impact
+
+                                </div>
+                                <div class="group-body">
+                                     <select id="id_impact_4" name="id_impact_4" class="form-control small-font">
+                                        <option value="">-- Select Impact --</option>
+                                        {% for value, display in scenario_form.fields.impact.choices %}
+                                            <option value="{{ value }}">{{ display }}</option>
+                                        {% endfor %}
+                                    </select>
+
+                                </div>
+              </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="group-container">
+                                <div class="group-header">
+                                     Threat Motivation
+
+                                </div>
+                                <div class="group-body">
+                                     <select id="selectMotivation_4" name="selectMotivation_4" class="form-control small-font">
+                                            <option value="">-- Select Attack Motivation --</option>
+                                            <option value="None">None</option>
+                                            <option value="Espionage">Espionage</option>
+                                            <option value="Financial Gain">Financial Gain</option>
+                                            <option value="Sabotage">Sabotage</option>
+                                            <option value="Revenge">Revenge</option>
+                                            <option value="Political Reasons">Political Reasons</option>
+                                            <option value="Ideological Beliefs">Ideological Beliefs</option>
+                                            <option value="Competitive Advantage">Competitive Advantage</option>
+                                            <option value="Disruption">Disruption</option>
+                                            <option value="Activism/Hacktivism">Activism/Hacktivism</option>
+                                            <option value="Terrorism">Terrorism</option>
+                                            <option value="Data Theft">Data Theft</option>
+                                            <option value="Reputation Damage">Reputation Damage</option>
+                                            <option value="Intellectual Property Theft">Intellectual Property Theft</option>
+                                            <option value="Cyber Warfare">Cyber Warfare</option>
+                                            <option value="Extortion/Ransomware">Extortion/Ransomware</option>
+                                            <option value="Insider Threat">Insider Threat</option>
+                                            <option value="Corporate Espionage">Corporate Espionage</option>
+                                            <option value="Curiosity/Challenge">Curiosity/Challenge</option>
+                                            <option value="Social Engineering">Social Engineering</option>
+                                            <option value="Fun/Entertainment">Fun/Entertainment</option>
+                                        </select>
+
+
+                                </div>
+              </div>
+                        </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4"><span style="color: white;"><h5>Scenario Description</h5></span></div>
+                            <div class="col-md-4"><a href="#" id="generate_scenario_text_4" class="btn btn-link" style="color:white">Generate Scenario</a></div>
+                            <div class="col-md-4"><button type="button" class="btn btn-link" data-bs-toggle="modal" data-bs-target="#scenarioSelectModal" id="btnSelectScenario_4">Load Scenario</button></div>
                             <div class="col-md-1"></div>
                         </div>
                         </div>
@@ -2032,53 +2523,6 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                 <div class="col-md-1"></div>
             </div>
 
-            <div class="group-container">
-                <div class="group-header">
-                     Threat Source
-
-                </div>
-                <div class="group-body">
-
-                  <select id="selectThreat_4" name="selectThreat_4" class="form-control small-font">
-                    <option value="">-- Select Threat Source --</option>
-                    {% for threatsources in threatsources %}
-                        <option value="{{ threatsources.ThreatSource}}">{{ threatsources.ThreatSource }}</option>
-                    {% endfor %}
-                  </select>
-
-                </div>
-              </div>
-
-            <div class="group-container">
-                <div class="group-header">
-                     Threat Tactic
-
-                </div>
-                <div class="group-body">
-                    <select id="selectTactics_4" name="selectTactics_4" class="form-control small-font">
-                    <option value="">-- Select Threat Tactics --</option>
-                    {% for mitreTactics in mitreTactics %}
-                        <option value="{{ mitreTactics.tactic}}">{{ mitreTactics.tactic }}</option>
-                    {% endfor %}
-                  </select>
-
-                </div>
-              </div>
-            <div class="group-container">
-                <div class="group-header">
-                     Scenario Impact
-
-                </div>
-                <div class="group-body">
-                     <select id="id_impact_4" name="impact" class="form-control small-font">
-                        <option value="">-- Select Impact --</option>
-                        {% for value, display in scenario_form.fields.impact.choices %}
-                            <option value="{{ value }}">{{ display }}</option>
-                        {% endfor %}
-                    </select>
-
-                </div>
-              </div>
                 <div class="group-container">
                 <div class="group-header">
                      Asset Detail
@@ -2311,9 +2755,101 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                 <div class="group-container">
                     <div class="group-header">
                         <div class="row">
-                            <div class="col-md-5"><span style="color: white;">Scenario Description</span></div>
-                            <div class="col-md-1"></div>
-                            <div class="col-md-5"><button type="button" class="btn btn-primary btn-file-dialog" data-bs-toggle="modal" data-bs-target="#scenarioSelectModal" id="btnSelectScenario_5">Load Scenario</button></div>
+                         <div class="col-md-6">
+                              <div class="group-container">
+                <div class="group-header">
+                     Threat Source
+
+                </div>
+                <div class="group-body">
+
+                  <select id="selectThreat_5" name="selectThreat_5" class="form-control small-font">
+                    <option value="">-- Select Threat Source --</option>
+                    {% for threatsources in threatsources %}
+                        <option value="{{ threatsources.ThreatSource}}">{{ threatsources.ThreatSource }}</option>
+                    {% endfor %}
+                  </select>
+
+                </div>
+              </div>
+                         </div>
+                         <div class="col-md-6">
+                              <div class="group-container">
+                            <div class="group-header">
+                                 MITRE Threat Tactic
+
+                            </div>
+                            <div class="group-body">
+                                <select id="selectTactics_5" name="selectTactics_5" class="form-control small-font">
+                                <option value="">-- Select Threat Tactics --</option>
+                                {% for mitreTactics in mitreTactics %}
+                                    <option value="{{ mitreTactics.tactic}}">{{ mitreTactics.tactic }}</option>
+                                {% endfor %}
+                              </select>
+
+                            </div>
+                          </div>
+                         </div>
+                        </div>
+                        <div class="row">
+                         <div class="col-md-6">
+                              <div class="group-container">
+                                <div class="group-header">
+                                     Likely Scenario Impact
+
+                                </div>
+                                <div class="group-body">
+                                     <select id="id_impact_5" name="id_impact_5" class="form-control small-font">
+                                        <option value="">-- Select Impact --</option>
+                                        {% for value, display in scenario_form.fields.impact.choices %}
+                                            <option value="{{ value }}">{{ display }}</option>
+                                        {% endfor %}
+                                    </select>
+
+                                </div>
+              </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="group-container">
+                                <div class="group-header">
+                                     Threat Motivation
+
+                                </div>
+                                <div class="group-body">
+                                     <select id="selectMotivation_5" name="selectMotivation_5" class="form-control small-font">
+                                            <option value="">-- Select Attack Motivation --</option>
+                                            <option value="None">None</option>
+                                            <option value="Espionage">Espionage</option>
+                                            <option value="Financial Gain">Financial Gain</option>
+                                            <option value="Sabotage">Sabotage</option>
+                                            <option value="Revenge">Revenge</option>
+                                            <option value="Political Reasons">Political Reasons</option>
+                                            <option value="Ideological Beliefs">Ideological Beliefs</option>
+                                            <option value="Competitive Advantage">Competitive Advantage</option>
+                                            <option value="Disruption">Disruption</option>
+                                            <option value="Activism/Hacktivism">Activism/Hacktivism</option>
+                                            <option value="Terrorism">Terrorism</option>
+                                            <option value="Data Theft">Data Theft</option>
+                                            <option value="Reputation Damage">Reputation Damage</option>
+                                            <option value="Intellectual Property Theft">Intellectual Property Theft</option>
+                                            <option value="Cyber Warfare">Cyber Warfare</option>
+                                            <option value="Extortion/Ransomware">Extortion/Ransomware</option>
+                                            <option value="Insider Threat">Insider Threat</option>
+                                            <option value="Corporate Espionage">Corporate Espionage</option>
+                                            <option value="Curiosity/Challenge">Curiosity/Challenge</option>
+                                            <option value="Social Engineering">Social Engineering</option>
+                                            <option value="Fun/Entertainment">Fun/Entertainment</option>
+                                        </select>
+
+
+                                </div>
+              </div>
+                        </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4"><span style="color: white;"><h5>Scenario Description</h5></span></div>
+                            <div class="col-md-4"><a href="#" id="generate_scenario_text_5" class="btn btn-link" style="color:white">Generate Scenario</a></div>
+                            <div class="col-md-4"><button type="button" class="btn btn-link" data-bs-toggle="modal" data-bs-target="#scenarioSelectModal" id="btnSelectScenario_5">Load Scenario</button></div>
                             <div class="col-md-1"></div>
                         </div>
                         </div>
@@ -2412,53 +2948,6 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                 <div class="col-md-1"></div>
             </div>
 
-            <div class="group-container">
-                <div class="group-header">
-                     Threat Source
-
-                </div>
-                <div class="group-body">
-
-                  <select id="selectThreat_5" name="selectThreat_5" class="form-control small-font">
-                    <option value="">-- Select Threat Source --</option>
-                    {% for threatsources in threatsources %}
-                        <option value="{{ threatsources.ThreatSource}}">{{ threatsources.ThreatSource }}</option>
-                    {% endfor %}
-                  </select>
-
-                </div>
-              </div>
-
-            <div class="group-container">
-                <div class="group-header">
-                     Threat Tactic
-
-                </div>
-                <div class="group-body">
-                    <select id="selectTactics_5" name="selectTactics_5" class="form-control small-font">
-                    <option value="">-- Select Threat Tactics --</option>
-                    {% for mitreTactics in mitreTactics %}
-                        <option value="{{ mitreTactics.tactic}}">{{ mitreTactics.tactic }}</option>
-                    {% endfor %}
-                  </select>
-
-                </div>
-              </div>
-            <div class="group-container">
-                <div class="group-header">
-                     Scenario Impact
-
-                </div>
-                <div class="group-body">
-                     <select id="id_impact_5" name="impact" class="form-control small-font">
-                        <option value="">-- Select Impact --</option>
-                        {% for value, display in scenario_form.fields.impact.choices %}
-                            <option value="{{ value }}">{{ display }}</option>
-                        {% endfor %}
-                    </select>
-
-                </div>
-              </div>
                 <div class="group-container">
                 <div class="group-header">
                      Asset Detail
@@ -5724,7 +6213,7 @@ function abbreviateValue(value) {
   });
 
   $(document).ready(function(){
-    $('#rawtable').dataTable( {
+    $('#headertable').dataTable( {
 
 
     } );
@@ -5749,7 +6238,7 @@ $(document).ready(function() {
 
 //following code to load raw data and scenarios from the clicked raw record in the table
 $(document).ready(function() {
-    $('#rawtable').on('click', 'tbody tr', function() {
+    $('#headertable').on('click', 'tbody tr', function() {
 
         //handleAddNewClick(0)
          clearValues();
@@ -5807,6 +6296,23 @@ $(document).ready(function() {
 
         var showApproverDropdown = isCreatorOrSuperUser && statusFlag !== 'Approved' && statusFlag !== 'Closed';
         var showApprovalControls = isCurrentApprover && statusFlag !== 'Approved' && statusFlag !== 'Closed';
+        var address1 = $(this).data('address1');
+        var address2 = $(this).data('address2');
+        var address3 = $(this).data('address3');
+        var city = $(this).data('city');
+        var state = $(this).data('state');
+        var postcode = $(this).data('postcode');
+        var country = $(this).data('country');
+        var lat = $(this).data('lat');
+        var lon = $(this).data('lon');
+         var asset = $(this).data('asset');
+        var asset_purpose = $(this).data('asset_purpose');
+        var assessment_id = $(this).data('assessment_id');
+
+        $('#assessment_id').val(assessment_id).change();
+        var assessment_summary = $(this).data('last_assessment_summary');
+
+        var assessment_score = $(this).data('last_assessment_score');
 
 
         // Show or hide the approver selection dropdown based on user role and status
@@ -5870,6 +6376,31 @@ $(document).ready(function() {
             maximumFractionDigits: 0 // To ensure no decimal point
         }));
 
+        $('#txtAddress1').val(address1);
+        $('#txtAddress2').val(address2);
+        $('#txtAddress3').val(address3);
+        $('#txtCity').val(city);
+        $('#txtPostcode').val(postcode);
+        $('#txtState').val(state);
+        $('#txtCountry').val(country);
+        $('#address_lat').val(lat);
+        $('#address_lon').val(lon);
+        $('#txtAsset').val(asset);
+        $('#txtAssetPurpose').val(asset_purpose);
+
+        $('#assessment_summary').text(assessment_summary);
+
+        $('#assessment_score').text('Score: ' + assessment_score + '/100');
+        $('#last_assessment_summary').val(assessment_summary);
+        $('#last_assessment_score').val(assessment_score);
+
+        lat = parseFloat(lat);
+        lon = parseFloat(lon);
+
+        // Check if lat and lon are valid numbers and not NaN before calling drawGoogleMap
+        if (!isNaN(lat) && !isNaN(lon) && lat !== '' && lon !== '') {
+            drawGoogleMap(lat, lon);
+        }
         // Send an AJAX request to get the matching scenarios
         $.ajax({
             url: '/OTRisk/get_scenarios/',
@@ -6813,7 +7344,7 @@ function setSliderColor(slider) {
 
 $(document).ready(function() {
 
-    $('#rawtable').on('click', 'tbody tr.selectable-row', function() {
+    $('#headertable').on('click', 'tbody tr.selectable-row', function() {
         // Remove 'highlighted' class from all other rows
         // $('tr.selectable-row').removeClass('highlighted');
 
@@ -6821,7 +7352,7 @@ $(document).ready(function() {
         // $(this).addClass('highlighted');
     });
     // Trigger click on the first row of the table
-    $('#rawtable tbody tr.selectable-row:first').click();
+    $('#headertable tbody tr.selectable-row:first').click();
 
 });
 
@@ -7022,6 +7553,99 @@ function convertSVGtoPNG(svgElement) {
         img.src = 'data:image/svg+xml; charset=utf8, ' + encodeURIComponent(svgData);
     });
 }
+
+function drawGoogleMap(latitude, longitude) {
+    var hdnLat = document.getElementById('address_lat');
+    var hdnLong = document.getElementById('address_lon');
+    var mapElement = document.getElementById('facility_map');
+
+    var createMap = function(lat, lng, title) {
+        setTimeout(function() { // Introduce a delay
+            var latLng = new google.maps.LatLng(lat, lng);
+            var map = new google.maps.Map(mapElement, {
+                center: latLng,
+                zoom: 18,
+                mapTypeId: google.maps.MapTypeId.SATELLITE
+            });
+
+            var marker = new google.maps.Marker({
+                position: latLng,
+                map: map,
+                title: title || 'Selected Facility'
+            });
+
+            hdnLat.value = lat;
+            hdnLong.value = lng;
+
+            mapPopulated = true;
+        }, 100); // Delay in milliseconds, adjust as needed
+    };
+
+    createMap(parseFloat(latitude), parseFloat(longitude), 'Facility Location');
+
+}
+
+$(document).ready(function() {
+    function get_scenario_description(linkId) {
+        alert(linkId);
+
+        var attacker = document.getElementById('selectThreat_' + linkId).value;
+        var attack_vector = document.getElementById('selectTactics_' + linkId).value;
+        var motivation = document.getElementById('selectMotivation_' + linkId).value;
+        var impact = document.getElementById('id_impact_' + linkId).value;
+        var targetAsset, targetAssetPurpose;
+        var scenarioDescriptionId = 'txtScenarioDescription_' + linkId.split('_').pop();
+
+        targetAsset = document.getElementById('txtAsset').value;
+
+        targetAssetPurpose = document.getElementById('txtAssetPurpose').value;
+
+
+        Swal.fire({
+            title: 'Generating Scenario...',
+            text: 'Please wait while the scenario is being generated.',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading()
+            }
+        });
+
+        $.ajax({
+            url: '/OTRisk/generate_raw_scenario_description/',
+            type: 'POST',
+            data: {
+                attackVector: attack_vector,
+                attacker: attacker,
+                targetAsset: targetAsset,
+                targetAssetPurpose: targetAssetPurpose,
+                motivation: motivation,
+                impact: impact,
+                csrfmiddlewaretoken: '{{ csrf_token }}'  // Ensure CSRF token is included for POST request
+            },
+            success: function(response) {
+                $('#txtScenarioDescription_' + linkId).val(response.scenario_description);
+                $('#analyzeScenarioBtn').prop('disabled', false);
+                analyze_Scenario(linkId);
+                Swal.close();
+            },
+            error: function(error) {
+                Swal.close(); // Close the SweetAlert2 progress dialog
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'An error occurred while generating the scenario.',
+                });
+            }
+        });
+    }
+
+    $('.generate-scenario-link').click(function(event) {
+        event.preventDefault(); // Prevent the default link behavior
+        var linkNumber = $(this).attr('id').split('_').pop();
+        get_scenario_description(linkNumber);
+    });
+});
+
 
 </script>
 

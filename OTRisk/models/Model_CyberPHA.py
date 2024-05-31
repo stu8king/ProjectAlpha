@@ -168,6 +168,16 @@ class OrganizationDefaults(models.Model):
     exalens_api_key = models.TextField(null=True)
     exalens_client_id = models.TextField(null=True)
     exalens_ip_address = models.TextField(null=True)
+    business_unit_name = models.CharField(null=True, max_length=100)
+    business_unit_address_line1 = models.CharField(null=True, max_length=100)
+    business_unit_address_line2 = models.CharField(null=True, max_length=100)
+    business_unit_address_line3 = models.CharField(null=True, max_length=100)
+    business_unit_country = models.CharField(null=True, max_length=20)
+    business_unit_postcode = models.CharField(null=True, max_length=12)
+    business_unit_city = models.CharField(null=True, max_length=20)
+    business_unit_state = models.CharField(null=True, max_length=20)
+    business_unit_lat = models.CharField(null=True, max_length=20)
+    business_unit_lon = models.CharField(null=True, max_length=20)
 
     def __str__(self):
         return f"{self.organization.name} Defaults"
