@@ -225,6 +225,9 @@ class RAWorksheetScenario(models.Model):
     attack_tree = models.TextField(null=True)
     scenario_12month_costs = models.TextField(null=True)
     executive_summary = models.TextField(null=True)
+    overall_bia = models.IntegerField(null=True)
+    scenario_probability = models.IntegerField(null=True)
+    bowtie = models.TextField(null=True)
 
     class Meta:
         db_table = 'tblRAWorksheetScenario'

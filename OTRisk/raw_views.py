@@ -1,3 +1,6 @@
+import base64
+from io import BytesIO
+import graphviz
 from urllib.parse import urlparse
 
 import openai
@@ -5,6 +8,7 @@ import os
 
 from django.forms import model_to_dict
 from django.views.decorators.http import require_POST
+from matplotlib import pyplot as plt
 
 from OTRisk.models.raw import RAWorksheet, RAWorksheetScenario, RAActions, MitreICSMitigations, MitreICSTechniques, \
     RawControlList, WorksheetActivity, QRAW_Safeguard
@@ -136,7 +140,6 @@ def get_rawactions(request):
 
 
 def save_ra_action(request):
-    print(request.POST)
     if request.method == "POST":
         # Extract data from POST request
         action_title = request.POST.get('actionTitle')
@@ -386,8 +389,7 @@ def parse_currency(currency_string):
 
 
 def ensure_non_empty(value):
-    """Return the value if non-empty, otherwise return 0."""
-    return value if value != '' else 0
+    return value if value else "0"
 
 
 def ensure_non_null(value):
@@ -658,25 +660,36 @@ def qraw(request):
                 lat = None
                 lon = None
 
-
         if edit_mode == 0 or hdnRawID == 0:
 
             if not is_duplicate:
                 # adding new records
                 revenue_str = ensure_non_empty(request.POST.get('txtRevenue'))
+
                 revenue_cleaned = revenue_str.replace(',', '').replace('$', '')
-                revenue_int = int(revenue_cleaned)
+
+                # Check if the cleaned string is a valid number
+                if re.match(r'^\d+(\.\d+)?$', revenue_cleaned):
+                    revenue_int = int(
+                        float(revenue_cleaned))  # Convert to float first to handle decimal cases, then to int
+                else:
+                    revenue_int = 0
 
                 insurance_str = ensure_non_empty(request.POST.get('txtInsurance'))
                 insurance_cleaned = insurance_str.replace(',', '').replace('$', '')
-                insurance_int = int(insurance_cleaned)
+
+                # Check if the cleaned string is a valid number
+                if re.match(r'^\d+(\.\d+)?$', insurance_cleaned):
+                    insurance_int = int(
+                        float(insurance_cleaned))  # Convert to float first to handle decimal cases, then to int
+                else:
+                    insurance_int = 0
 
                 deductable_str = ensure_non_empty(request.POST.get('txtDeductable'))
                 deductable_cleaned = deductable_str.replace(',', '').replace('$', '')
                 deductable_int = int(deductable_cleaned)
                 created_by_id = request.user.id
                 last_updated_by_id = request.user.id
-
 
                 ra_worksheet = RAWorksheet(
                     RATitle=request.POST.get('txtTitle'),
@@ -853,6 +866,8 @@ def openai_assess_risk(request):
         weak_credentials = request.GET.get('weak_credentials')
         consequences = request.GET.get('consequences')
         safeguards = request.GET.get('safeguards', '')
+        assessment_summary = request.GET.get('assessment_summary', '')
+        country = request.GET.get('country', '')
 
         if outageLength and outageLength.isdigit():
             outageLength = int(outageLength)
@@ -945,13 +960,76 @@ def openai_assess_risk(request):
                 f"in a {facility_type} within the {industry} industry, provide a risk score between 1 and 10 where 1 indicates a very low overall risk with a very low likelihood of occurrence and 10 means catastrophic consequences and almost certain to occur. The response must be only the single number with no additional text or explanation. The user must only see the final risk score number without any other detail")
         }
 
+        business_impact_message = {
+            "role": "user",
+            "content": (
+                f"You are an OT cybersecurity incident responder. Considering the detailed factors about a cybersecurity incident scenario: Threat source - {threat_source}, Threat tactic - {threat_tactic}, vulnerability exposure rated as {vulnerability}/10 "
+                f"Safety impact - {safety_impact}/10, Life impact - {life_impact}/10, Production impact - {production_impact}/10, "
+                f"Financial impact - {financial_impact}/10, Reputation impact - {reputation_impact}/10, Environmental impact - {environment_impact}/10, "
+                f"Regulatory impact - {regulatory_impact}/10, Data impact - {data_impact}/10, , Supply Chain - {supply_impact}/10 and the scenario of {scenario} "
+                f"in a {facility_type} within the {industry} industry, provide an overall business impact score between 1 and 10 where 1 indicates a very low overall business impact 10 means catastrophic business impact . The response must be only the single number with no additional text or explanation. The user must only see the final risk score number without any other detail")
+        }
+
+        prob_message = {
+            "role": "user",
+            "content": (
+                f"You are an Insurance actuary and an OT cybersecurity expert  . Considering the detailed factors about a cybersecurity incident scenario: "
+                f"Scenario description: {scenario}"
+                f"Current state of OT cybersecurity controls: {assessment_summary}"
+                f"Facility type: {facility_type}"
+                f"Industry: {industry}"
+                f"Threat Source: {threat_source}"
+                f"Weak credentials: {weak_credentials}, Internet exposed IP address: {exposed_system}."
+                f"Estimate the probability of an attack resulting in the given scenario being successful. Use any relevant publicly available information relating to cybersecurity incidents to form an opinion. Your output must be a score between 1 and 10 where 1 indicates a very low probability of attack success and 10 means an attack definately success. The response must be only the single number with no additional text or explanation. The user must only see the final risk score number without any other detail")
+        }
+
+        bowtie_message = """
+        You are an expert in risk management. Create a bowtie chart structure in JSON format to represent the following cybersecurity scenario:
+        Scenario description: {scenario}
+        Consequences of the scenario: {consequences}
+        Facility type: {facility_type}
+        Industry: {industry}
+        Threat Source: {threat_source}
+        Weak credentials: {weak_credentials}, Internet exposed IP address: {exposed_system}.
+
+        The JSON should include:
+        - The central event (unauthorized access to the OT network)
+        - The threats leading to the event
+        - The consequences of the event
+        - The edges connecting threats to the central event and the central event to the consequences
+
+        Output must be in JSON format and follow the exact structure shown below. CRITICAL: DO NOT INCLUDE any additional characters (such as ```json or anything else on either side of the json structure), external narrative or commentary outside of the given structure because it needs to be parsed. Do not copy the example data; replace it with the appropriate data for the given scenario.
+
+        {
+            "central_event": "<central event>",
+            "threats": [
+                "<threat 1>",
+                "<threat 2>",
+                "<threat 3>"
+            ],
+            "consequences": [
+                "<consequence 1>",
+                "<consequence 2>",
+                "<consequence 3>"
+            ],
+            "edges": {
+                "<threat 1>": "<central event>",
+                "<threat 2>": "<central event>",
+                "<threat 3>": "<central event>",
+                "<central event>": "<consequence 1>",
+                "<central event>": "<consequence 2>",
+                "<central event>": "<consequence 3>"
+            }
+        }
+        """
+
         # 3. Query for low estimate
         # Base content for both low and high estimates
 
         event_cost_estimate_message = {
             "role": "user",
             "content": (
-                f" Your task is to assess the specific given scenario. Based on this scenario, you need to project the direct financial impact over the next 12 months. Estimate the direct costs of the scenario to the {facility_type}. Generate a 12-month cost projection for the direct financial impact over the next 12 months. Your projections should be grounded in the specifics of the scenario and the impacts you've identified."
+                f" Your task is to assess the specific given scenario. Estimate the direct financial impact of the given scenario over the next 12 months to a {facility_type} in {country}. Generate a 12-month cost projection for the direct financial impact over the next 12 months. Your projections should be grounded in the specifics of the scenario and the impacts identified as follows:"
                 f"Consequences of the scenario are assumed to be {consequences}. "
                 f"- Operations impact: {production_impact} out of 10, "
                 f"- Production outage: {outage}, "
@@ -965,7 +1043,7 @@ def openai_assess_risk(request):
                 f"- Danger to life Impact: {life_impact} out of 10. "
                 f"Your cost projections should include but not be limited to: "
                 f"repair and replacement costs, increased operational costs due to inefficiencies, legal and compliance costs, public relations efforts to manage reputation, and any investments in cybersecurity improvements to prevent future incidents. "
-                f"Provide a pragmatic and realistic monthly estimate, justifying the costs based on the specific impact scores. "
+                f"Provide a pragmatic and realistic monthly estimate, justifying the costs based on the specific impact scores. Use pubic sources of information with information about similar cybersecurity incidents for reference and public reports from organizations such as Ponemon, Gartner, and Verizon that contain information about cybersecurity incident costs. "
                 f"Estimate the budget cost for each month so that the Chief Finance Officer can plan appropriately. "
                 f"OUTPUT INSTRUCTION: Present your estimates as a series of 12 integers in the format: Month1|Month2|Month3|Month4|...|Month12, representing the cost for each month in US dollars. "
                 f"IMPORTANT: only provide the numerical values WITHOUT any narrative or explanation"
@@ -1015,6 +1093,10 @@ def openai_assess_risk(request):
         ###############################
 
         risk_score = query_openai(risk_score_message['content'])
+
+        business_impact_score = query_openai(business_impact_message['content'])
+
+        probability_score = query_openai(prob_message['content'])
 
         ###############################
         # event costs
@@ -1071,14 +1153,14 @@ def openai_assess_risk(request):
         executive_summary_message = {
             "role": "user",
             "content": (f"""
-                   Consider a scenario described as: {scenario}, occurring at a {facility_type} in the {industry} industry.
-                   Based only on the provided scenario and facility details, generate a concise numbered bullet point list of OT/ICS cybersecurity risk mitigation recommendations. Each recommendation should be directly aligned with the latest versions of NIST 800-82 and the NIST CSF. Include the relevant NIST reference in brackets at the end of each recommendation. The output should strictly adhere to the following format:
+                   You are an OT Cybersecurity expert. Consider a scenario described as: {scenario}, occurring at a {facility_type} in the {industry} industry.
+                   Based only on the provided scenario and facility details, generate a concise priority ordered and numbered bullet point list of OT/ICS cybersecurity action items that are readily implementable as a check list. Each action item must be specific to the given scenario and represent a task that can be quickly and readily completed without major effort that would represent some risk mitigation. Each action item MUST be pragmatic and reasonable to accomplish within an OT network environment without extensive effort and could be implemented by an engineer rather than an IT security expert. For example Implement network segmentation is a major effort. Action items are intended to be akin to an immediate action drill. Identify which section of NIST 800-82 OR NIST CSF the action items most closely aligns with and include the relevant NIST reference in brackets at the end of each recommendation however action items MUST NOT SIMPLY BE QUOTES FROM THE STANDARDS. The output should strictly adhere to the following format:
 
                    Example Format:
-                   1. Example recommendation related to OT cybersecurity. [NIST Reference]
-                   2. Another example recommendation focused on OT cybersecurity risk mitigation. [NIST Reference]
+                   1. Example action item. [NIST Reference the action most closely relates to]
+                   2. Another example action item . [NIST Reference the action most closely relates to]
 
-                   Following this example format, provide the recommendations specific to the given scenario without any additional narrative, description, advice, or guidance. The recommendations should be clear and easily parsable within an HTML page.
+                   Following this example format, provide the action items specific to the given scenario without any additional narrative, description, advice, or guidance. The action items should be clear and easily parsable within an HTML page.
                    """
                         )
         }
@@ -1086,8 +1168,14 @@ def openai_assess_risk(request):
         # Generate the executive summary
         executive_summary = query_openai(executive_summary_message['content'])
 
+        bow_tie_json = query_openai(bowtie_message)
+        bowtie_image = generate_bowtie_chart(bow_tie_json)
         # Add the executive summary to the result array to be returned
         result_array.append(executive_summary)
+        result_array.append(probability_score)
+        result_array.append(business_impact_score)
+        result_array.append(bowtie_image)
+        result_array.append(bow_tie_json)
 
         return JsonResponse(result_array, safe=False)
 
@@ -1550,6 +1638,9 @@ def create_or_update_raw_scenario(request):
             'scenario_damage': request.POST.get('scenario_damage'),
             'scenario_12month_costs': request.POST.get('scenario_12month_costs'),
             'executive_summary': request.POST.get('executive_summary'),
+            'overall_bia': request.POST.get('overall_bia'),
+            'scenario_probability': request.POST.get('scenario_probability'),
+            'bowtie': request.POST.get('bowtie'),
         }
 
         # Check if scenario_id is provided to determine if it's an update or create
@@ -1627,8 +1718,9 @@ def analyze_raw_scenario(request):
         Evaluate if the following text represents a coherent and plausible cybersecurity scenario, or OT incident scenario, or industrial incident scenario: '{scenario}'. Respond yes if valid, no if invalid.
         """
 
+        api_model = get_api_key('OpenAI_Model')
         validation_response = openai.ChatCompletion.create(
-            model="gpt-4",
+            model=api_model,
             messages=[
                 {"role": "system", "content": validation_prompt}
             ],
@@ -1647,16 +1739,18 @@ def analyze_raw_scenario(request):
 
             facility_type = RAWorksheet.BusinessUnitType
             industry = RAWorksheet.industry
-
+            country = RAWorksheet.business_unit_country
+            control_effectiveness = RAWorksheet.last_assessment_score
+            control_summary = RAWorksheet.last_assessment_summary
             # Construct a prompt for GPT-4
             system_message = f"""
-            Given a cybersecurity scenario at a {facility_type} in the {industry} industry described as: {scenario}. Concisely describe in 50 words in a bulleted ist format of a maximum of 5 of the most likely direct consequences of the given scenario. The direct consequences should be specific to the facility and the mentioned details. Assume the role of an expert OT Cybersecurity risk advisor. Additional instruction: output ONLY the list items with no text either before or after the list items.
+            You are are expert in developing OT cybersecurity incident scenarios for industrial facilities. TASK: Analyze and consider the following scenario as part of an OT/ICS focused Cyber HAZOPS/Layer of Protection Analysis (LOPA) assessment: {scenario}. This scenario occurs at a {facility_type} in the {industry} . Concisely describe in 50 words in a bulleted ist format of a maximum of 5 of the most likely direct consequences of the given scenario. The direct consequences should be specific to the facility and the mentioned details. Assume the role of an expert OT Cybersecurity risk advisor. Additional instruction: output ONLY the list items with no text either before or after the list items.
             """
             user_message = scenario
 
             # Query OpenAI API
             response = openai.ChatCompletion.create(
-                model="gpt-4",
+                model=api_model,
                 messages=[
                     {"role": "system", "content": system_message},
                     {"role": "user", "content": user_message}
@@ -1667,35 +1761,44 @@ def analyze_raw_scenario(request):
 
             # Extract and process the text from the response
             consequence_text = response['choices'][0]['message']['content']
-            # consequence_list = consequence_text.split(';')  # Splitting based on the chosen delimiter
 
-            ## incident_flow_system_message = f"""
-            ##            Generate a diagram in JSON format representing the flow of the incident scenario from external to internal for the given scenario: '{scenario}'. The diagram should be structured hierarchically with 'name' for node labels and 'children' for nested nodes, representing each step or phase of the incident flow. EXTRA INSTRUCTION: Output MUST be in JSON format with no additional characters outside of the JSON structure.
-            ##        """
+            impact_system_message = f"""
+                        You are an expert in assessing business impacts of OT cybersecurity incidents. TASK: Analyze the given scenario: '{scenario}'. The scenario occurs at a {facility_type} in the {industry} industry in {country}. For each of the following 9 categories, estimate the overall business impact from 0 (no impact) to 10 (catastrophic impact) for each of the following impact categories: Safety, Danger-to-life, Operations of the facility, Data, Environmental consequences, Company financials, Supply chain, Regulatory impact, and Reputation. Consider similar incidents that are known to have occurred in reality and the impacts of those incidents on their respective organizations. Output the scores as a JSON object with the category names as keys and the scores as values. Ensure the format is exactly like this example where <score> represents your integer value: {{
+                            "Safety": <score>,
+                            "Danger": <score>,
+                            "Operations": <score>,
+                            "Data": <score>,
+                            "Environment": <score>,
+                            "Finance": <score>,
+                            "SupplyChain": <score>,
+                            "Regulations": <score>,
+                            "Reputation": <score>
+                        }}. Output ONLY the JSON object with no additional text.
+                        """
+            # Query OpenAI API for business impact scores
+            impact_response = openai.ChatCompletion.create(
+                model=api_model,
+                messages=[
+                    {"role": "system", "content": impact_system_message},
+                    {"role": "user", "content": scenario}
+                ],
+                max_tokens=800,
+                temperature=0.1
+            )
 
-            # Query OpenAI API for the incident flow diagram
-            ##incident_flow_response = openai.ChatCompletion.create(
-            ##    model="gpt-4",
-            ##    messages=[
-            ##        {"role": "system", "content": incident_flow_system_message},
-            ##        {"role": "user", "content": scenario}
-            ##    ],
-            ##    max_tokens=800,
-            ##    temperature=0.3
-            ##)
+            impact_scores_text = impact_response['choices'][0]['message']['content']
 
-            # Process the response for incident flow diagram
-            ## incident_flow_raw = incident_flow_response['choices'][0]['message']['content']
+            try:
+                # Parse the impact scores JSON response
+                impact_scores = json.loads(impact_scores_text)
 
-            ## try:
-            # Parse the raw JSON string into a Python dictionary
-            ##    incident_flow_data = json.loads(incident_flow_raw)
-            ## except json.JSONDecodeError:
-            ##    return JsonResponse({"error": "Invalid JSON format from AI response"}, status=400)
+            except json.JSONDecodeError:
+                return JsonResponse({"error": "Invalid JSON format from AI response"}, status=400)
 
             # Return the results
             return JsonResponse({
-                'consequence': consequence_text
+                'consequence': consequence_text,
+                'impact_scores': impact_scores
             })
 
 
@@ -2015,6 +2118,20 @@ def update_workflow(request):
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
+
+def get_label_for_trigger(trigger):
+    switcher = {
+        'Audit - External': 'Audit finding',
+        'Audit - Internal': 'Audit finding',
+        'Change Request': 'Change Summary',
+        'Incident': 'Incident Summary',
+        'Policy Exception': 'Exception Summary',
+        'Scheduled Assessment': 'Finding Summary',
+        'Site Walkdown': 'Observation'
+    }
+    return switcher.get(trigger, 'Affected asset')
+
+
 @login_required()
 def generate_raw_scenario_description(request):
     if request.method == 'POST':
@@ -2030,7 +2147,8 @@ def generate_raw_scenario_description(request):
         country = request.POST.get('country', '').strip()
         impact = request.POST.get('impact', '').strip()
         motivation = request.POST.get('motivation', '').strip()
-
+        trigger = request.POST.get('trigger', '').strip()
+        affected_label = get_label_for_trigger(trigger)
         # Constructing the prompt
         prompt = f"""
         You are an engineer responsible for safeguarding operations for a {facility_type}. Write a technical scenario for a CYBER HAZOPS assessment using LOPA methodology, detailing a credible cyber-physical attack against operational technology and industrial control systems. The narrative must be factual, specific to the details given, concise, and limit to 200 words, without detailing the consequences or long-term impacts. No preamble or additonal narrative. No repeating of input variables:
@@ -2040,10 +2158,10 @@ def generate_raw_scenario_description(request):
         - Country: {country}
         - Industry: {industry}
         - Facility Type: {facility_type}
-        - Affected asset: {target_asset}
+         - {affected_label}: {target_asset}
         - Attacker motivation: {motivation}
         - Attacker intended impact: {impact}
-        - Purpose of affected asset: {target_asset_purpose}
+        - Purpose of affected asset or system: {target_asset_purpose}
 
         Using the given information above, generate a scenario focusing solely on the purpose and type of asset and the potential for that asset to be compromised and it might be manipulated resulting in a bad outcome in the context of the other given information. Do not speculate on mitigation or describe the facility in detail. Do not repeat information that the user is familiar with: industry, number of employees, country, facility type are for context  in generating the scenario and MUST NOT BE REPEATED IN THE RESPONSE. Use precise and concise language.
         """
@@ -2071,3 +2189,41 @@ def generate_raw_scenario_description(request):
         return JsonResponse({'scenario_description': scenario_description})
     else:
         return JsonResponse({'error': 'Invalid request'}, status=400)
+
+
+def generate_bowtie_chart(bow_tie_json):
+    # Parse the JSON data
+    try:
+        data = json.loads(bow_tie_json)
+    except json.JSONDecodeError as e:
+        raise ValueError(f"Invalid JSON: {e}")
+
+    # Create a new directed graph
+    dot = graphviz.Digraph(format='png')
+
+    # Add the central event node
+    central_event = data['central_event']
+    dot.node('central', central_event, shape='ellipse', color='red')
+
+    # Add threat nodes and connect them to the central event
+    for i, threat in enumerate(data['threats']):
+        node_id = f'threat_{i}'
+        dot.node(node_id, threat, shape='box', color='blue')
+        dot.edge(node_id, 'central')
+
+    # Add consequence nodes and connect them from the central event
+    for i, consequence in enumerate(data['consequences']):
+        node_id = f'consequence_{i}'
+        dot.node(node_id, consequence, shape='box', color='green')
+        dot.edge('central', node_id)
+
+    # Render the graph to a PNG image
+    buf = BytesIO()
+    buf.write(dot.pipe())
+    buf.seek(0)
+
+    # Encode the image in Base64
+    image_base64 = base64.b64encode(buf.read()).decode('utf-8')
+
+    return image_base64
+

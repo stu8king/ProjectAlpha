@@ -128,6 +128,23 @@ window.addEventListener('beforeunload', function() {
     font-size: 14px;
     line-height: 1.5;
 }
+
+ .edit-mode {
+            background-color: #ffffff; /* Light yellow for edit mode */
+        }
+.view-mode {
+    background-color: #c7c78a; /* Light grey for view mode */
+}
+#bowtie-chart-container {
+    width: 100%;
+    overflow: hidden; /* Hide overflow */
+    text-align: center; /* Center align image */
+}
+
+#bowtie-chart-container img {
+    max-width: 100%; /* Ensure image scales to container width */
+    height: auto; /* Maintain aspect ratio */
+}
 </style>
 </head>
     <!-- Initialize sliders when the page loads -->
@@ -164,6 +181,7 @@ initSlider(`range_${category}_${i}`, `${category}range_${i}`);
         setRiskAssessmentRefreshNotRequired(3)
         setRiskAssessmentRefreshNotRequired(4)
         setRiskAssessmentRefreshNotRequired(5)
+        applyEditMode();
 });
 anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
 </script>
@@ -320,6 +338,7 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                 // If the clicked tab is a scenario, toggle its submenu
                 if ($(this).data('tab').startsWith('scenario1') || $(this).data('tab').startsWith('scenario2') || $(this).data('tab').startsWith('scenario3') || $(this).data('tab').startsWith('scenario4') || $(this).data('tab').startsWith('scenario5')) {
                 $(this).next('.sub-menu2').toggleClass('active');
+
             }
             });
         });
@@ -407,21 +426,10 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
     </div>
         </div>
             <script>
-                $(document).ready(function() {
-                    $('#headertable').on('click', 'tbody tr.selectable-row', function() {
-                    // Remove 'highlighted' class from all other rows
-                        sessionStorage.setItem('editMode', '0');
-                     $('tr.selectable-row').removeClass('highlighted');
 
-                    // Add 'highlighted' class to the clicked row
-                    $(this).addClass('highlighted');
-                    var ratitle = $(this).find('td:nth-child(2)').text();
-                    $('#scenario_title').text(ratitle);
-                    //handleAddNewClick(1);
-                    });
-                });
 
             function showRAActionsModal() {
+
                 var rawid = sessionStorage.getItem('rawid');  // Get the value from session storage
 
                 if (rawid === null || rawid === "") {
@@ -433,6 +441,7 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
 
             function handleAddNewClick(default_code) {
 
+                clearValues();
                 if (default_code == 1) {
                     var ratitle = $(this).find('td:nth-child(2)').text();
                     $('#scenario_title').text(ratitle);
@@ -443,79 +452,51 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                 // Enable buttons and set session storage
                 $('#saveBtn, #actionBtn, #btnlogout').prop('disabled', false);
                 ['editMode', 'addNew', 'rawid'].forEach(key => sessionStorage.setItem(key, key === 'editMode' ? '0' : '1'));
+
+                applyEditMode();
                 enableAllControls();
+
                 // Reset input fields and enable them
                 var inputFields = [
                 "txtTitle", "txtRevenue", "txtInsurance", "txtDeductable",
                 "txtLeader", "txtBU", "selectIndustry", "selectFacility",
                 "selectTrigger", "selectStatus", "txtAddress1", "txtAddress2", "txtAddress3",
-                "txtCity", "txtPostcode", "txtCountry", "txtState", "assessment_id",  "txtAsset", "txtAssetPurpose"
+                "txtCity", "txtPostcode", "txtCountry", "txtState", "assessment_id",  "txtAsset", "txtAssetPurpose",
+                "last_assessment_score", "last_assessment_summary", "address_lat", "address_lon"
                 ];
+                document.getElementById("assessment_summary").innerHTML = '';
+                document.getElementById("assessment_score").innerHTML = '';
+                document.getElementById("facility_map").innerHTML = '';
+
                 inputFields.forEach(resetAndEnableField);
 
                 // Reset scenario tabs
                 for (let i = 1; i <= 5; i++) {
                 resetScenarioTab(i);
                 }
+
                 document.getElementById("hdnRawID").value = 0;
                 // Click the first scenario tab to reset it to default
                 document.getElementById("scenario1-tab").click();
 
                 var organizationId = document.getElementById('orgid').value;
 
-                if (default_code==1) {
-                    fetch(`/OTRisk/get-organization-defaults/${organizationId}/`)
-                        .then(response => response.json())
-                        .then(data => {
-                            var revenue = data.annual_revenue || 0;
-                            var formattedRevenue = formatCurrency(revenue);
 
-                            var insurance = data.cyber_insurance || 0;
-                            var formattedInsurance = formatCurrency(insurance);
-
-                            var deductable = data.insurance_deductible || 0;
-                            var formattedDeductable = formatCurrency(deductable);
-
-                            // Update txtRevenue field with formatted annual_revenue
-                            document.getElementById('txtRevenue').value = formattedRevenue;
-                            document.getElementById('txtInsurance').value = formattedInsurance;
-                            document.getElementById('txtDeductable').value = formattedDeductable;
-                            document.getElementById('selectIndustry').value = data.industry;
-                            document.getElementById('txtBU').value = data.business_unit_name;
-                            document.getElementById('txtAddress1').value = data.business_unit_address_line1;
-                            document.getElementById('txtAddress2').value = data.business_unit_address_line2;
-                            document.getElementById('txtAddress3').value = data.business_unit_address_line3;
-                            document.getElementById('txtCity').value = data.business_unit_city;
-                            document.getElementById('txtState').value = data.business_unit_state;
-                            document.getElementById('txtPostcode').value = data.business_unit_postcode;
-                            document.getElementById('txtCountry').value = data.business_unit_country;
-                            document.getElementById('address_lat').value = data.business_unit_lat;
-                            document.getElementById('address_lon').value = data.business_unit_lon;
-
-
-                            if (data.business_unit_lat && data.business_unit_lon) {
-                                drawGoogleMap(data.business_unit_lat, data.business_unit_lon);
-                            }
-
-
-                            let industrySelect = document.getElementById('selectIndustry');
-                            industrySelect.value = data.industry; // Set the value
-
-                            // Trigger a change event
-                            if ('createEvent' in document) {
-                                var evt = document.createEvent('HTMLEvents');
-                                evt.initEvent('change', false, true);
-                                industrySelect.dispatchEvent(evt);
-                            } else {
-                                industrySelect.fireEvent('onchange');
-                            }
-                        })
-                        .catch(error => console.error('Error fetching organization defaults:', error));
-                }
                 document.getElementById("txtTitle").focus();
 
-                    $('.tab-content').removeClass('active').hide();
-                    $('#tab2').addClass('active').show();
+                $('.tab').removeClass('active show').hide();
+                $('.tab-link').removeClass('active');
+
+                // Explicitly hide all scenario tabs
+                $('#scenario1').removeClass('active show').hide();
+                $('#scenario2').removeClass('active show').hide();
+                $('#scenario3').removeClass('active show').hide();
+                $('#scenario4').removeClass('active show').hide();
+                $('#scenario5').removeClass('active show').hide();
+
+                // Ensure only tab2 is active and visible
+                $('#tab2').addClass('active show').show();
+                $('a[data-tab="tab2"]').addClass('active');
 
 
             }
@@ -535,6 +516,7 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
               if(field.type === 'select-one') field.selectedIndex = 0;
               else field.value = "";
               field.disabled = false;
+              console.log("a2");
             }
 
             function resetScenarioTab(tabNumber) {
@@ -542,9 +524,9 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
               var prefix = `scenario${tabNumber}`;
               document.getElementById(`${prefix}-tab`).click();
 
-              var fieldsToReset = ["txtScenarioDescription", "selectThreat", "selectTactics", "exposed_system","weak_credentials",
-                                   "id_impact", "txtAssets",  "lblriskRating","txtexec_summary","txtDamage","production_outage",
-                                   "scenario_12month_costs", "outage", "txtScenarioAnalysis"];
+              var fieldsToReset = ["txtScenarioDescription", "txtScenarioDuplicate","selectThreat", "selectTactics", "exposed_system","weak_credentials",
+                                   "id_impact", "txtAssets",  "lblriskRating","txtexec_summary","txtDamage","production_outage","txtBIAScore","lblBIAScore","txtResidualRisk","lblinherentRisk",
+                                   "scenario_12month_costs", "outage", "txtScenarioAnalysis", "monthly_cost_chart", "bowtie_chart", "action_item_table", "bowtieChart"];
 
               fieldsToReset.forEach(function(field) {
                     var element = document.getElementById(`${field}_${tabNumber}`);
@@ -571,7 +553,7 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                 "threat", "frequency"
             ];
             const numSliders = 5;
-
+            console.log("a3");
             for (let i = 1; i <= numSliders; i++) {
                 categories.forEach(function(category) {
                     document.getElementById(`range_${category}_${i}`).value = 0;
@@ -583,8 +565,9 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
             // end of reset controls
 
             document.addEventListener('DOMContentLoaded', function() {
-
+              console.log("a14");
               sessionStorage.setItem('editMode', '0');
+              applyEditMode();
               var enableButton = document.getElementById('editBtn');
 
               enableButton.addEventListener('click', function() {
@@ -594,6 +577,7 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                 sessionStorage.setItem('editMode', '1');
                 sessionStorage.setItem('addNew', '0');
                 document.getElementById("edit_mode").value="1";
+                applyEditMode();
                 enableAllControls();
                 //document.getElementById("scenario1-tab").click();
 
@@ -607,30 +591,114 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
         </div>
         <div class="tab-content" id="tab2">
             <h2 style="color:white">QRAW Setup</h2>
+            <a href="#" id="loadDefaultFacilityLink" style="margin-left: 10px; color: white;">Load Default Facility</a>
+        <script>
+            document.getElementById('loadDefaultFacilityLink').addEventListener('click', function(e) {
+                console.log("a7");
+            e.preventDefault(); // Prevent default link action
+
+            // Show confirmation dialog
+             Swal.fire({
+                    title: 'Do you want to use the default facility?',
+                    text: "Loading the default facility will overwrite the current form data.",
+                    icon: 'warning',
+                    showCancelButton: true, // This enables the cancel button
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Yes, load it!',
+                    cancelButtonText: 'No, cancel!',
+                    reverseButtons: true // Reverses the order of the buttons
+                })
+    .then((willLoad) => {
+        if (willLoad) {
+            $.ajax({
+                url: '/OTRisk/load_default_facility/', // Adjust the URL to your actual AJAX endpoint
+                type: 'GET',
+                dataType: 'json',
+                success: function(data) {
+                    if(data && data.headerrecord) {
+                        // Assuming data.headerrecord contains all the facility details
+                        $('#selectIndustry').val(data.headerrecord.Industry);
+                        $('#selectIndustry').val(data.headerrecord.Industry).trigger('change');
+                        $('#txtBU').val(data.headerrecord.facility);
+
+                        $('#selectFacility').val(data.headerrecord.facilitytype);
+
+                        $('#selectFacility').val(data.headerrecord.facilitytype).trigger('change');
+
+                        $('#assessment_id').val(data.headerrecord.assessment_id);
+                        $('#assessment_id').val(data.headerrecord.assessment_id).trigger('change');
+
+
+
+                         $('#txtCountry').val(data.headerrecord.country)
+
+                         $('#txtRevenue').val(formatAsCurrency(data.headerrecord.annual_revenue));
+                         $('#txtInsurance').val(data.headerrecord.cyber_insurance);
+
+
+                         $('#txtAddress1').val(data.headerrecord.address);
+                         $('#address_lat').val(data.headerrecord.facilityLat);
+                         $('#address_lon').val(data.headerrecord.facilityLong);
+
+                         $('#txtCity').val(data.headerrecord.facilityCity);
+                         $('#txtState').val(data.headerrecord.facilityState);
+                         $('#txtPostcode').val(data.headerrecord.facilityCode);
+
+                        $('#assessment_summary').text(data.headerrecord.last_assessment_summary);
+                        $('#assessment_score').text('Score: ' + data.headerrecord.last_assessment_score + '/100');
+                        $('#last_assessment_summary').text(data.headerrecord.last_assessment_summary);
+                        $('#last_assessment_score').text(data.headerrecord.last_assessment_score);
+
+
+
+                         var lat = data.headerrecord.facilityLat;
+                         var long = data.headerrecord.facilityLong;
+                         var address = data.headerrecord.address + ', ' + data.headerrecord.facilityCity + ', ' + data.headerrecord.facilityCode;
+                         var country = data.headerrecord.country
+                         drawGoogleMap(lat,long,address,country);
+
+                        setBorderColorByScore(data.headerrecord.last_assessment_score);
+                        console.log("a8");
+
+                        // Add other form updates as in your provided code...
+                    } else {
+                        swal.fire("Error", "Failed to load default facility.", "error");
+                    }
+                },
+                error: function(xhr, status, error) {
+                    swal.fire("Error", "An error occurred while loading the default facility: " + error, "error");
+                }
+            });
+        }
+    });
+});
+
+</script>
             <div class="form-group">
             <div class="row">
                 <div class="col-md-6">
                     <div class="form-group">
                     <label for="txtBU" >Business Unit Name</label>
-                    <input type="text" class="form-control" name="txtBU" id="txtBU" >
+                    <input type="text" class="form-control mode-dependent" name="txtBU" id="txtBU" >
                     <label for="txtAddress1" >Address Line 1</label>
-                    <input type="text" class="form-control" name="txtAddress1" id="txtAddress1" >
+                    <input type="text" class="form-control mode-dependent" name="txtAddress1" id="txtAddress1" >
                     <label for="txtAddress2" >Address Line 2</label>
-                    <input type="text" class="form-control" name="txtAddress2" id="txtAddress2" >
+                    <input type="text" class="form-control mode-dependent" name="txtAddress2" id="txtAddress2" >
                     <label for="txtAddress3" >Address Line 3</label>
-                    <input type="text" class="form-control" name="txtAddress3" id="txtAddress3" >
+                    <input type="text" class="form-control mode-dependent" name="txtAddress3" id="txtAddress3" >
                     <label for="txtCity" >City</label>
-                    <input type="text" class="form-control" name="txtCity" id="txtCity" >
+                    <input type="text" class="form-control mode-dependent" name="txtCity" id="txtCity" >
                     <label for="txtState" >State</label>
-                    <input type="text" class="form-control" name="txtState" id="txtState" >
+                    <input type="text" class="form-control mode-dependent" name="txtState" id="txtState" >
                      <label for="txtPostcode" >Postal Code/Zip</label>
-                    <input type="text" class="form-control" name="txtPostcode" id="txtPostcode" >
+                    <input type="text" class="form-control mode-dependent" name="txtPostcode" id="txtPostcode" >
 
                     <label for="txtCountry" >Country</label>
-                    <input type="text" class="form-control" name="txtCountry" id="txtCountry" >
+                    <input type="text" class="form-control mode-dependent" name="txtCountry" id="txtCountry" >
                         </div>
-                    <input type="hidden" class="form-control" name="address_lat" id="address_lat" >
-                    <input type="hidden" class="form-control" name="address_lon" id="address_lon" >
+                    <input type="hidden" class="form-control mode-dependent" name="address_lat" id="address_lat" >
+                    <input type="hidden" class="form-control mode-dependent" name="address_lon" id="address_lon" >
 
                 </div>
                 <div class="col-md-6">
@@ -655,7 +723,7 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
 
                          <div class="card-body">
                                     <label for="selectTrigger" >Trigger Event</label><br>
-                                    <select id="selectTrigger" name="selectTrigger" class="form-control" style="width:100%">
+                                    <select id="selectTrigger" name="selectTrigger" class="form-control" style="width:100%" onchange="updateLabel()">
                                         <option value="">-- Select Assessment Trigger --</option>
                                         <option value="Audit - External">Audit - External</option>
                                         <option value="Audit - Internal">Audit - Internal</option>
@@ -665,11 +733,12 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                                         <option value="Scheduled Assessment">Scheduled Assessment</option>
                                         <option value="Site Walkdown">Site Walkdown</option>
                                     </select>
+
                                 </div>
 
                     <div class="card-body">
                     <label for="txtLeader" >Assessment Leader</label>
-                    <input type="text" class="form-control" name="txtLeader" id="txtLeader" placeholder="Enter the name of the person leading this risk assessment" maxlength="50" required>
+                    <input type="text" class="form-control mode-dependent" name="txtLeader" id="txtLeader" placeholder="Enter the name of the person leading this risk assessment" maxlength="50" required>
                     </div>
                     </div>
                 </div>
@@ -693,10 +762,10 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                             <span class="sr-only">Loading...</span>
                              </div>
                     </div>
-
+                    <br>
                      <!-- Container to display the summary and score -->
                     <span id="assessment_summary" ></span>
-                    <br>
+                    <br><br>
                     <span id="assessment_score" ></span>
                      <script>
 
@@ -774,7 +843,7 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
             <br>
             <div class="form-group">
             <div class="row">
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <div class="card mb-3 shadow-sm">
                         <div class="card-body">
                             <label for="selectIndustry" style="color: #black">Industry</label><br>
@@ -798,27 +867,35 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                     </div>
 
                 </div>
-                <div class="col-md-4">
-                    <div class="card mb-3 shadow-sm">
-                        <div class="card-body">
-                                <label for="txtAsset">Asset (Vendor and Model)</label>
-                                <input type="text" class="form-control" id="txtAsset" name="txtAsset" style="width: 100%">
-                            </div>
+                <div class="col-md-7">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card mb-3 shadow-sm">
+                                <div class="card-body">
+                                    <label for="txtAsset" id="lblEvent" name="lblEvent">QRAW</label>
+                                    <textarea class="form-control mode-dependent" rows="5" id="txtAsset" name="txtAsset" style="resize: none; width: 100%" ></textarea>
+                                </div>
 
-                        <div class="card-body">
-                                <label for="txtAssessPurpose">Asset Purpose:</label>
-                                <input type="text" class="form-control" id="txtAssetPurpose" name="txtAssetPurpose" style="width: 100%">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card mb-3 shadow-sm">
+                                <div class="card-body">
+                                <label for="txtAssessPurpose">Asset or System Purpose:</label>
+
+                                <textarea class="form-control mode-dependent" rows="5" id="txtAssetPurpose" name="txtAssetPurpose" style="resize: none; width: 100%" ></textarea>
+                            </div>
+                    </div>
                         </div>
                     </div>
 
 
-
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-2">
                     <div class="card mb-3 shadow-sm" > <!-- Bootstrap card with shadow -->
                     <div class="card-body">
                         <label for="txtInsurance" ><i class="bi bi-cash-coin"></i> Cyber Insurance Cover</label>
-                        <input type="text" class="form-control" name="txtInsurance" id="txtInsurance" >
+                        <input type="text" class="form-control mode-dependent" name="txtInsurance" id="txtInsurance" >
                         <script>
                          $(document).ready(function() {
                             $("#txtInsurance").on("input", function() {
@@ -852,7 +929,7 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                             });
                         });
                          </script>
-                        <input type="text" class="form-control" name="txtDeductable" id="txtDeductable" >
+                        <input type="text" class="form-control mode-dependent" name="txtDeductable" id="txtDeductable" >
 
                     </div>
                 </div>
@@ -868,7 +945,7 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                 <div class="card mb-3 shadow-sm" >
                     <div class="card-body">
                         <label for="txtRevenue" ><i class="bi bi-currency-exchange"></i> Annual Revenue</label>
-                        <input type="text" class="form-control" name="txtRevenue" id="txtRevenue" >
+                        <input type="text" class="form-control mode-dependent" name="txtRevenue" id="txtRevenue" >
                     </div>
                  <script>
                  $(document).ready(function() {
@@ -1573,7 +1650,7 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                         </div>
                         <div class="row">
                             <div class="col-md-4"><span style="color: white;"><h5>Scenario Description</h5></span></div>
-                            <div class="col-md-4"><a href="#" id="generate_scenario_text_2" class="btn btn-link" style="color:white">Generate Scenario</a></div>
+                            <div class="col-md-4"><a href="#" id="generate_scenario_text_2" class="generate-scenario-link" style="color:white">Generate Scenario</a></div>
                             <div class="col-md-4"><button type="button" class="btn btn-link" data-bs-toggle="modal" data-bs-target="#scenarioSelectModal" id="btnSelectScenario_2">Load Scenario</button></div>
 
                         </div>
@@ -1998,7 +2075,7 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                         </div>
                         <div class="row">
                             <div class="col-md-4"><span style="color: white;"><h5>Scenario Description</h5></span></div>
-                            <div class="col-md-4"><a href="#" id="generate_scenario_text_3" class="btn btn-link" style="color:white">Generate Scenario</a></div>
+                            <div class="col-md-4"><a href="#" id="generate_scenario_text_3" class="generate-scenario-link" style="color:white">Generate Scenario</a></div>
                             <div class="col-md-4"><button type="button" class="btn btn-link" data-bs-toggle="modal" data-bs-target="#scenarioSelectModal" id="btnSelectScenario_3">Load Scenario</button></div>
 
                         </div>
@@ -2423,7 +2500,7 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                         </div>
                         <div class="row">
                             <div class="col-md-4"><span style="color: white;"><h5>Scenario Description</h5></span></div>
-                            <div class="col-md-4"><a href="#" id="generate_scenario_text_4" class="btn btn-link" style="color:white">Generate Scenario</a></div>
+                            <div class="col-md-4"><a href="#" id="generate_scenario_text_4" class="generate-scenario-link" style="color:white">Generate Scenario</a></div>
                             <div class="col-md-4"><button type="button" class="btn btn-link" data-bs-toggle="modal" data-bs-target="#scenarioSelectModal" id="btnSelectScenario_4">Load Scenario</button></div>
                             <div class="col-md-1"></div>
                         </div>
@@ -2848,7 +2925,7 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                         </div>
                         <div class="row">
                             <div class="col-md-4"><span style="color: white;"><h5>Scenario Description</h5></span></div>
-                            <div class="col-md-4"><a href="#" id="generate_scenario_text_5" class="btn btn-link" style="color:white">Generate Scenario</a></div>
+                            <div class="col-md-4"><a href="#" id="generate_scenario_text_5" class="generate-scenario-link" style="color:white">Generate Scenario</a></div>
                             <div class="col-md-4"><button type="button" class="btn btn-link" data-bs-toggle="modal" data-bs-target="#scenarioSelectModal" id="btnSelectScenario_5">Load Scenario</button></div>
                             <div class="col-md-1"></div>
                         </div>
@@ -3192,20 +3269,27 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
      <div class="tab-content" id="tab9">
          <h4 style="color: #fff">Scenario 1 Outcomes</h4>
          <div class="col small-font">
-                <br>
-                <button id="risk-assessment-btn_1" type="button" class="btn btn-primary" style="background-color: #e24e42"   onclick="checkEditModeAndExecute(this.id, 'loadingSpinner1')">
-                    <i class="bi bi-play-fill mr-2"></i>Execute Risk Assessment
-                </button>
-                <br>
-                <!-- Add this HTML element where you want to display the loading spinner -->
-                <div id="loadingSpinner1" class="spinner-border" role="status" style="display: none;">
-                  <span class="visually-hidden">Loading...</span>
-                </div>
-                <br>
-                <div class="row">
+            <br>
+            <button id="risk-assessment-btn_1" type="button" class="btn btn-primary" style="background-color: #e24e42"   onclick="checkEditModeAndExecute(this.id, 'loadingSpinner1')">
+                <i class="bi bi-play-fill mr-2"></i>Execute Risk Assessment
+            </button>
+            <br>
+            <!-- Add this HTML element where you want to display the loading spinner -->
+            <div id="loadingSpinner1" class="spinner-border" role="status" style="display: none;">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+            <br>
+            <div class="row">
                     <div class="col-md-1"></div>
-                    <div class="col-md-5">
-                        <div class="group-container">
+
+                    <div class="col-md-4">
+                        <div class="form-group">
+                        <textarea class="form-control small-font" name="txtScenarioDuplicate_1" id="txtScenarioDuplicate_1" rows="5" style="resize: none; word-wrap: normal" readonly></textarea></div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="group-container">
                             <div class="group-header">
                                  Risk Rating
                             </div>
@@ -3213,17 +3297,44 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                                     <img src="{% static 'images/redcube.png' %}" class="cube-icon" alt="Red Cube"><label id="lblriskRating_1" name="lblriskRating_1" style="color:white"></label>
                             </div>
                         </div>
-                    </div>
-                    <div class="col-md-5">
-                        <div class="group-container">
-                            <div class="group-header">
-                                 Residual Risk
                             </div>
+                            <div class="col-md-6">
+                                <div class="group-container">
+                                <div class="group-header">
+                                     Residual Risk
+                                </div>
                                 <div class="group-body">
                                     <img src="{% static 'images/redcube.png' %}" class="cube-icon" alt="Red Cube"><label id="lblinherentRisk_1" name="lblinherentRisk_1" style="color:white"></label>
                                     <input type="hidden" id="txtResidualRisk_1">
                                 </div>
-
+                            </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="group-container">
+                            <div class="group-header">
+                                  Business Impact
+                            </div>
+                                <div class="group-body">
+                                    <img src="{% static 'images/redcube.png' %}" class="cube-icon" alt="Red Cube"><label id="lblBIAScore_1" name="lbBIAScore_1" style="color:white"></label>
+                                    <input type="hidden" id="txtBIAScore_1">
+                                </div>
+                        </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="group-container">
+                                <div class="group-header">
+                                     Success Probability
+                                </div>
+                                <div class="group-body">
+                                    <img src="{% static 'images/redcube.png' %}" class="cube-icon" alt="Red Cube"><label id="lblAttackSuccess_1" name="lblAttackSuccess_1" style="color:white"></label>
+                                    <input type="hidden" id="txtAttackSuccess_1">
+                                </div>
+                            </div>
+                            </div>
                         </div>
                     </div>
                     <div class="col-md-1"></div>
@@ -3232,15 +3343,22 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                 <div class="row">
                     <div class="col-md-1"></div>
                     <div class="col-md-5">
+                        <div class="form-group">
+                            <div id="bowtie-chart-container">
+                                <img id="bowtieChart_1" alt="">
+                            </div>
+                        </div>
+                        <br>
                         <div class="group-container">
                             <div class="group-header">
                                  Recommendations
                             </div>
-                                <div class="group-body">
-                            <textarea rows="10"  id="txtexec_summary_1" name="txtexec_summary_1" class="form-control custom-textarea" style="font-size: 14px; color: #0a53be; resize: none" readonly></textarea>
-                            <a href="#" id="copyExecSummaryLink" class="copy-code-link">
-                                <i class="bi bi-clipboard"></i> Copy Recommendations
-                            </a>
+                            <div class="group-body">
+                                <div id="action_item_table_1"></div>
+                                <textarea rows="1"  id="txtexec_summary_1" name="txtexec_summary_1" class="form-control custom-textarea" style="font-size: 14px; color: #0a53be; resize: none; visibility: hidden" readonly></textarea>
+                                <a href="#" id="copyExecSummaryLink" class="copy-code-link">
+                                    <i class="bi bi-clipboard"></i> Copy Recommendations
+                                </a>
                             </div>
                             <script>
                                 document.getElementById('copyExecSummaryLink').addEventListener('click', function(event) {
@@ -3255,7 +3373,9 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                                     });
                                 });
                                 </script>
+                            <br>
 
+                            <input type="hidden" id="bowtie_chart_1" name="bowtie_chart_1">
                         </div>
                     </div>
                     <div class="col-md-5">
@@ -3265,11 +3385,11 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                             </div>
                                 <div class="group-body">
 
-                                    <textarea rows="10"  id="txtDamage_1" name="txtDamage_1" class="form-control custom-textarea" style="font-size: 14px; color: #0a53be; resize: none" readonly></textarea>
+                                    <textarea rows="6"  id="txtDamage_1" name="txtDamage_1" class="form-control custom-textarea" style="font-size: 14px; color: #0a53be; resize: none" readonly></textarea>
                                     <a href="#" id="copyDamageLink" class="copy-code-link">
                                 <i class="bi bi-clipboard"></i> Copy Damage Estimate
                             </a>
-                                    <script>
+                            <script>
                                 document.getElementById('copyDamageLink').addEventListener('click', function(event) {
                                     event.preventDefault(); // Prevent the default anchor action
                                     var damageText = document.getElementById('txtDamage_1').value;
@@ -3281,17 +3401,10 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                                         console.error('Could not copy text: ', err);
                                     });
                                 });
-                                </script>
+                            </script>
                             </div>
-                        </div>
-                    </div>
-                    <div class="col-md-1"></div>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-1"></div>
-                    <div class="col">
-                        <div class="group-container">
+                            <br><br>
+                            <div class="group-container">
                             <div class="group-header">
                                  Event Costs
                             </div>
@@ -3300,9 +3413,12 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                                     <input type="hidden" id="scenario_12month_costs_1" name="scenario_12month_costs_1">
                             </div>
                         </div>
+                        </div>
                     </div>
                     <div class="col-md-1"></div>
                 </div>
+
+
 
                     <button id="save_scenario_1" type="button" class="btn btn-primary" style="background-color: #e24e42" onclick="save_scenario(1);">
                     <i class="bi bi-play-fill mr-2"></i>Save Scenario 1
@@ -3327,8 +3443,14 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                 <br>
                 <div class="row">
                     <div class="col-md-1"></div>
-                    <div class="col-md-5">
-                        <div class="group-container">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                        <textarea class="form-control small-font" name="txtScenarioDuplicate_2" id="txtScenarioDuplicate_2" rows="5" style="resize: none; word-wrap: normal" readonly></textarea></div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="group-container">
                             <div class="group-header">
                                  Risk Rating
                             </div>
@@ -3336,17 +3458,44 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                                     <img src="{% static 'images/redcube.png' %}" class="cube-icon" alt="Red Cube"><label id="lblriskRating_2" name="lblriskRating_2" style="color:white"></label>
                             </div>
                         </div>
-                    </div>
-                    <div class="col-md-5">
-                        <div class="group-container">
-                            <div class="group-header">
-                                 Residual Risk
                             </div>
+                            <div class="col-md-6">
+                                <div class="group-container">
+                                <div class="group-header">
+                                     Residual Risk
+                                </div>
                                 <div class="group-body">
                                     <img src="{% static 'images/redcube.png' %}" class="cube-icon" alt="Red Cube"><label id="lblinherentRisk_2" name="lblinherentRisk_2" style="color:white"></label>
                                     <input type="hidden" id="txtResidualRisk_2">
                                 </div>
-
+                            </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="group-container">
+                            <div class="group-header">
+                                  Business Impact
+                            </div>
+                                <div class="group-body">
+                                    <img src="{% static 'images/redcube.png' %}" class="cube-icon" alt="Red Cube"><label id="lblBIAScore_2" name="lbBIAScore_2" style="color:white"></label>
+                                    <input type="hidden" id="txtBIAScore_2">
+                                </div>
+                        </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="group-container">
+                                <div class="group-header">
+                                     Success Probability
+                                </div>
+                                <div class="group-body">
+                                    <img src="{% static 'images/redcube.png' %}" class="cube-icon" alt="Red Cube"><label id="lblAttackSuccess_2" name="lblAttackSuccess_2" style="color:white"></label>
+                                    <input type="hidden" id="txtAttackSuccess_2">
+                                </div>
+                            </div>
+                            </div>
                         </div>
                     </div>
                     <div class="col-md-1"></div>
@@ -3355,12 +3504,18 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                 <div class="row">
                     <div class="col-md-1"></div>
                     <div class="col-md-5">
+                        <div class="form-group">
+                            <div id="bowtie-chart-container">
+                                <img id="bowtieChart_2" alt="">
+                            </div>
+                        </div>
                         <div class="group-container">
                             <div class="group-header">
                                  Recommendations
                             </div>
                                 <div class="group-body">
-                            <textarea rows="10"  id="txtexec_summary_2" name="txtexec_summary_2" class="form-control custom-textarea" style="font-size: 14px; color: #0a53be; resize: none" readonly></textarea>
+                                <div id="action_item_table_2"></div>
+                            <textarea rows="10"  id="txtexec_summary_2" name="txtexec_summary_2" class="form-control custom-textarea" style="visibility: hidden; font-size: 14px; color: #0a53be; resize: none" readonly></textarea>
                             <a href="#" id="copyExecSummaryLink_2" class="copy-code-link">
                                 <i class="bi bi-clipboard"></i> Copy Recommendations
                             </a>
@@ -3377,7 +3532,9 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                                     });
                                 });
                                 </script>
+                            <br>
 
+                            <input type="hidden" id="bowtie_chart_2" name="bowtie_chart_2">
                         </div>
                     </div>
                     <div class="col-md-5">
@@ -3387,11 +3544,11 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                             </div>
                                 <div class="group-body">
 
-                                    <textarea rows="10"  id="txtDamage_2" name="txtDamage_2" class="form-control custom-textarea" style="font-size: 14px; color: #0a53be; resize: none" readonly></textarea>
+                                    <textarea rows="6"  id="txtDamage_2" name="txtDamage_2" class="form-control custom-textarea" style="font-size: 14px; color: #0a53be; resize: none" readonly></textarea>
                                     <a href="#" id="copyDamageLink_2" class="copy-code-link">
                                 <i class="bi bi-clipboard"></i> Copy Damage Estimate
                             </a>
-                                    <script>
+                            <script>
                                 document.getElementById('copyDamageLink_2').addEventListener('click', function(event) {
                                     event.preventDefault(); // Prevent the default anchor action
                                     var damageText = document.getElementById('txtDamage_2').value;
@@ -3405,26 +3562,22 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                                 });
                                 </script>
                             </div>
+                            <br><br>
+                        <div class="group-container">
+                        <div class="group-header">
+                             Event Costs
+                        </div>
+                        <div class="group-body">
+                            <div id="monthly_cost_chart_2" style="height:300px"></div>
+                            <input type="hidden" id="scenario_12month_costs_2" name="scenario_12month_costs_2">
                         </div>
                     </div>
+                    </div>
+                </div>
                     <div class="col-md-1"></div>
                 </div>
 
-                <div class="row">
-                    <div class="col-md-1"></div>
-                    <div class="col">
-                        <div class="group-container">
-                            <div class="group-header">
-                                 Event Costs
-                            </div>
-                                <div class="group-body">
-                                    <div id="monthly_cost_chart_2" style="height:300px"></div>
-                                    <input type="hidden" id="scenario_12month_costs_2" name="scenario_12month_costs_2">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-1"></div>
-                </div>
+
 
                     <button id="save_scenario_2" type="button" class="btn btn-primary" style="background-color: #e24e42" onclick="save_scenario(2);">
                     <i class="bi bi-play-fill mr-2"></i>Save Scenario 2
@@ -3449,8 +3602,15 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                 <br>
                 <div class="row">
                     <div class="col-md-1"></div>
-                    <div class="col-md-5">
-                        <div class="group-container">
+
+                    <div class="col-md-4">
+                        <div class="form-group">
+                        <textarea class="form-control small-font" name="txtScenarioDuplicate_3" id="txtScenarioDuplicate_3" rows="5" style="resize: none; word-wrap: normal" readonly></textarea></div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="group-container">
                             <div class="group-header">
                                  Risk Rating
                             </div>
@@ -3458,17 +3618,44 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                                     <img src="{% static 'images/redcube.png' %}" class="cube-icon" alt="Red Cube"><label id="lblriskRating_3" name="lblriskRating_3" style="color:white"></label>
                             </div>
                         </div>
-                    </div>
-                    <div class="col-md-5">
-                        <div class="group-container">
-                            <div class="group-header">
-                                 Residual Risk
                             </div>
+                            <div class="col-md-6">
+                                <div class="group-container">
+                                <div class="group-header">
+                                     Residual Risk
+                                </div>
                                 <div class="group-body">
                                     <img src="{% static 'images/redcube.png' %}" class="cube-icon" alt="Red Cube"><label id="lblinherentRisk_3" name="lblinherentRisk_3" style="color:white"></label>
                                     <input type="hidden" id="txtResidualRisk_3">
                                 </div>
-
+                            </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="group-container">
+                            <div class="group-header">
+                                  Business Impact
+                            </div>
+                                <div class="group-body">
+                                    <img src="{% static 'images/redcube.png' %}" class="cube-icon" alt="Red Cube"><label id="lblBIAScore_3" name="lbBIAScore_3" style="color:white"></label>
+                                    <input type="hidden" id="txtBIAScore_3">
+                                </div>
+                        </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="group-container">
+                                <div class="group-header">
+                                     Success Probability
+                                </div>
+                                <div class="group-body">
+                                    <img src="{% static 'images/redcube.png' %}" class="cube-icon" alt="Red Cube"><label id="lblAttackSuccess_3" name="lblAttackSuccess_3" style="color:white"></label>
+                                    <input type="hidden" id="txtAttackSuccess_3">
+                                </div>
+                            </div>
+                            </div>
                         </div>
                     </div>
                     <div class="col-md-1"></div>
@@ -3477,12 +3664,19 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                 <div class="row">
                     <div class="col-md-1"></div>
                     <div class="col-md-5">
+                         <div class="form-group">
+                            <div id="bowtie-chart-container">
+                                <img id="bowtieChart_3" alt="">
+                            </div>
+                        </div>
+                        <br>
                         <div class="group-container">
                             <div class="group-header">
                                  Recommendations
                             </div>
                                 <div class="group-body">
-                            <textarea rows="10"  id="txtexec_summary_3" name="txtexec_summary_3" class="form-control custom-textarea" style="font-size: 14px; color: #0a53be; resize: none" readonly></textarea>
+                                <div id="action_item_table_3"></div>
+                            <textarea rows="10"  id="txtexec_summary_3" name="txtexec_summary_3" class="form-control custom-textarea" style="font-size: 14px; color: #0a53be; resize: none; visibility: hidden" readonly></textarea>
                             <a href="#" id="copyExecSummaryLink_3" class="copy-code-link">
                                 <i class="bi bi-clipboard"></i> Copy Recommendations
                             </a>
@@ -3499,7 +3693,9 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                                     });
                                 });
                                 </script>
+                            <br>
 
+                            <input type="hidden" id="bowtie_chart_3" name="bowtie_chart_3">
                         </div>
                     </div>
                     <div class="col-md-5">
@@ -3509,11 +3705,11 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                             </div>
                                 <div class="group-body">
 
-                                    <textarea rows="10"  id="txtDamage_3" name="txtDamage_3" class="form-control custom-textarea" style="font-size: 14px; color: #0a53be; resize: none" readonly></textarea>
+                                    <textarea rows="6"  id="txtDamage_3" name="txtDamage_3" class="form-control custom-textarea" style="font-size: 14px; color: #0a53be; resize: none" readonly></textarea>
                                     <a href="#" id="copyDamageLink_3" class="copy-code-link">
                                 <i class="bi bi-clipboard"></i> Copy Damage Estimate
                             </a>
-                                    <script>
+                            <script>
                                 document.getElementById('copyDamageLink_3').addEventListener('click', function(event) {
                                     event.preventDefault(); // Prevent the default anchor action
                                     var damageText = document.getElementById('txtDamage_3').value;
@@ -3527,15 +3723,8 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                                 });
                                 </script>
                             </div>
-                        </div>
-                    </div>
-                    <div class="col-md-1"></div>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-1"></div>
-                    <div class="col">
-                        <div class="group-container">
+                            <br><br>
+                            <div class="group-container">
                             <div class="group-header">
                                  Event Costs
                             </div>
@@ -3544,11 +3733,11 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                                     <input type="hidden" id="scenario_12month_costs_3" name="scenario_12month_costs_3">
                             </div>
                         </div>
+                        </div>
                     </div>
                     <div class="col-md-1"></div>
                 </div>
-
-                    <button id="save_scenario_3" type="button" class="btn btn-primary" style="background-color: #e24e42" onclick="save_scenario(3);">
+               <button id="save_scenario_3" type="button" class="btn btn-primary" style="background-color: #e24e42" onclick="save_scenario(3);">
                     <i class="bi bi-play-fill mr-2"></i>Save Scenario 3
                     </button>
                 <br>
@@ -3571,8 +3760,15 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                 <br>
                 <div class="row">
                     <div class="col-md-1"></div>
-                    <div class="col-md-5">
-                        <div class="group-container">
+
+                    <div class="col-md-4">
+                        <div class="form-group">
+                        <textarea class="form-control small-font" name="txtScenarioDuplicate_4" id="txtScenarioDuplicate_4" rows="5" style="resize: none; word-wrap: normal" readonly></textarea></div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="group-container">
                             <div class="group-header">
                                  Risk Rating
                             </div>
@@ -3580,17 +3776,44 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                                     <img src="{% static 'images/redcube.png' %}" class="cube-icon" alt="Red Cube"><label id="lblriskRating_4" name="lblriskRating_4" style="color:white"></label>
                             </div>
                         </div>
-                    </div>
-                    <div class="col-md-5">
-                        <div class="group-container">
-                            <div class="group-header">
-                                 Residual Risk
                             </div>
+                            <div class="col-md-6">
+                                <div class="group-container">
+                                <div class="group-header">
+                                     Residual Risk
+                                </div>
                                 <div class="group-body">
                                     <img src="{% static 'images/redcube.png' %}" class="cube-icon" alt="Red Cube"><label id="lblinherentRisk_4" name="lblinherentRisk_4" style="color:white"></label>
                                     <input type="hidden" id="txtResidualRisk_4">
                                 </div>
-
+                            </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="group-container">
+                            <div class="group-header">
+                                  Business Impact
+                            </div>
+                                <div class="group-body">
+                                    <img src="{% static 'images/redcube.png' %}" class="cube-icon" alt="Red Cube"><label id="lblBIAScore_4" name="lbBIAScore_4" style="color:white"></label>
+                                    <input type="hidden" id="txtBIAScore_4">
+                                </div>
+                        </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="group-container">
+                                <div class="group-header">
+                                     Success Probability
+                                </div>
+                                <div class="group-body">
+                                    <img src="{% static 'images/redcube.png' %}" class="cube-icon" alt="Red Cube"><label id="lblAttackSuccess_4" name="lblAttackSuccess_4" style="color:white"></label>
+                                    <input type="hidden" id="txtAttackSuccess_4">
+                                </div>
+                            </div>
+                            </div>
                         </div>
                     </div>
                     <div class="col-md-1"></div>
@@ -3599,12 +3822,19 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                 <div class="row">
                     <div class="col-md-1"></div>
                     <div class="col-md-5">
+                        <div class="form-group">
+                            <div id="bowtie-chart-container">
+                                <img id="bowtieChart_4" alt="">
+                            </div>
+                        </div>
+                        <br>
                         <div class="group-container">
                             <div class="group-header">
-                                 Recommendations Summary
+                                 Recommendations
                             </div>
                                 <div class="group-body">
-                            <textarea rows="10"  id="txtexec_summary_4" name="txtexec_summary_4" class="form-control custom-textarea" style="font-size: 14px; color: #0a53be; resize: none" readonly></textarea>
+                                    <div id="action_item_table_4"></div>
+                            <textarea rows="1"  id="txtexec_summary_4" name="txtexec_summary_4" class="form-control custom-textarea" style="font-size: 14px; color: #0a53be; resize: none; visibility: hidden" readonly></textarea>
                             <a href="#" id="copyExecSummaryLink_4" class="copy-code-link">
                                 <i class="bi bi-clipboard"></i> Copy Recommendations
                             </a>
@@ -3621,7 +3851,9 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                                     });
                                 });
                                 </script>
+                            <br>
 
+                            <input type="hidden" id="bowtie_chart_4" name="bowtie_chart_4">
                         </div>
                     </div>
                     <div class="col-md-5">
@@ -3649,15 +3881,8 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                                 });
                                 </script>
                             </div>
-                        </div>
-                    </div>
-                    <div class="col-md-1"></div>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-1"></div>
-                    <div class="col">
-                        <div class="group-container">
+                            <br><br>
+                            <div class="group-container">
                             <div class="group-header">
                                  Event Costs
                             </div>
@@ -3666,11 +3891,12 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                                     <input type="hidden" id="scenario_12month_costs_4" name="scenario_12month_costs_4">
                             </div>
                         </div>
+                        </div>
                     </div>
                     <div class="col-md-1"></div>
                 </div>
 
-                    <button id="save_scenario_1" type="button" class="btn btn-primary" style="background-color: #e24e42" onclick="save_scenario(4);">
+                    <button id="save_scenario_4" type="button" class="btn btn-primary" style="background-color: #e24e42" onclick="save_scenario(4);">
                     <i class="bi bi-play-fill mr-2"></i>Save Scenario 4
                     </button>
                 <br>
@@ -3691,10 +3917,17 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                   <span class="visually-hidden">Loading...</span>
                 </div>
                 <br>
-                <div class="row">
+                 <div class="row">
                     <div class="col-md-1"></div>
-                    <div class="col-md-5">
-                        <div class="group-container">
+
+                    <div class="col-md-4">
+                        <div class="form-group">
+                        <textarea class="form-control small-font" name="txtScenarioDuplicate_5" id="txtScenarioDuplicate_5" rows="5" style="resize: none; word-wrap: normal" readonly></textarea></div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="group-container">
                             <div class="group-header">
                                  Risk Rating
                             </div>
@@ -3702,17 +3935,44 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                                     <img src="{% static 'images/redcube.png' %}" class="cube-icon" alt="Red Cube"><label id="lblriskRating_5" name="lblriskRating_5" style="color:white"></label>
                             </div>
                         </div>
-                    </div>
-                    <div class="col-md-5">
-                        <div class="group-container">
-                            <div class="group-header">
-                                 Residual Risk
                             </div>
+                            <div class="col-md-6">
+                                <div class="group-container">
+                                <div class="group-header">
+                                     Residual Risk
+                                </div>
                                 <div class="group-body">
                                     <img src="{% static 'images/redcube.png' %}" class="cube-icon" alt="Red Cube"><label id="lblinherentRisk_5" name="lblinherentRisk_5" style="color:white"></label>
                                     <input type="hidden" id="txtResidualRisk_5">
                                 </div>
-
+                            </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="group-container">
+                            <div class="group-header">
+                                  Business Impact
+                            </div>
+                                <div class="group-body">
+                                    <img src="{% static 'images/redcube.png' %}" class="cube-icon" alt="Red Cube"><label id="lblBIAScore_5" name="lbBIAScore_5" style="color:white"></label>
+                                    <input type="hidden" id="txtBIAScore_5">
+                                </div>
+                        </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="group-container">
+                                <div class="group-header">
+                                     Success Probability
+                                </div>
+                                <div class="group-body">
+                                    <img src="{% static 'images/redcube.png' %}" class="cube-icon" alt="Red Cube"><label id="lblAttackSuccess_5" name="lblAttackSuccess_5" style="color:white"></label>
+                                    <input type="hidden" id="txtAttackSuccess_5">
+                                </div>
+                            </div>
+                            </div>
                         </div>
                     </div>
                     <div class="col-md-1"></div>
@@ -3721,12 +3981,19 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                 <div class="row">
                     <div class="col-md-1"></div>
                     <div class="col-md-5">
+                        <div class="form-group">
+                            <div id="bowtie-chart-container">
+                                <img id="bowtieChart_5" alt="">
+                            </div>
+                        </div>
+                        <br>
                         <div class="group-container">
                             <div class="group-header">
                                  Recommendations
                             </div>
                                 <div class="group-body">
-                            <textarea rows="10"  id="txtexec_summary_5" name="txtexec_summary_5" class="form-control custom-textarea" style="font-size: 14px; color: #0a53be; resize: none" readonly></textarea>
+                                    <div id="action_item_table_5"></div>
+                            <textarea rows="1"  id="txtexec_summary_5" name="txtexec_summary_5" class="form-control custom-textarea" style="font-size: 14px; color: #0a53be; resize: none; visibility: hidden" readonly></textarea>
                             <a href="#" id="copyExecSummaryLink_5" class="copy-code-link">
                                 <i class="bi bi-clipboard"></i> Copy Recommendations
                             </a>
@@ -3743,7 +4010,9 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                                     });
                                 });
                                 </script>
+                            <br>
 
+                            <input type="hidden" id="bowtie_chart_5" name="bowtie_chart_5">
                         </div>
                     </div>
                     <div class="col-md-5">
@@ -3753,7 +4022,7 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                             </div>
                                 <div class="group-body">
 
-                                    <textarea rows="10"  id="txtDamage_5" name="txtDamage_5" class="form-control custom-textarea" style="font-size: 14px; color: #0a53be; resize: none" readonly></textarea>
+                                    <textarea rows="6"  id="txtDamage_5" name="txtDamage_5" class="form-control custom-textarea" style="font-size: 14px; color: #0a53be; resize: none" readonly></textarea>
                                     <a href="#" id="copyDamageLink_5" class="copy-code-link">
                                 <i class="bi bi-clipboard"></i> Copy Damage Estimate
                             </a>
@@ -3771,15 +4040,8 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                                 });
                                 </script>
                             </div>
-                        </div>
-                    </div>
-                    <div class="col-md-1"></div>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-1"></div>
-                    <div class="col">
-                        <div class="group-container">
+                            <br><br>
+                            <div class="group-container">
                             <div class="group-header">
                                  Event Costs
                             </div>
@@ -3787,6 +4049,7 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                                     <div id="monthly_cost_chart_5" style="height:300px"></div>
                                     <input type="hidden" id="scenario_12month_costs_5" name="scenario_12month_costs_5">
                             </div>
+                        </div>
                         </div>
                     </div>
                     <div class="col-md-1"></div>
@@ -5363,7 +5626,7 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                     <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                         <div class="card-body">
                             <label for="actionTitle" class="form-label" style="color: white">Headline</label>
-                            <input type="text" class="form-control" id="actionTitle" name="actionTitle" required>
+                            <input type="text" class="form-control mode-dependent" id="actionTitle" name="actionTitle" required>
                         </div>
                     </div>
                 </div>
@@ -5375,7 +5638,7 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                             <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                                 <div class="card-body">
                                     <label for="actionOwner" class="form-label" style="color: white">Risk Owner</label>
-                                    <input type="text" class="form-control" id="actionOwner" name="actionOwner" required>
+                                    <input type="text" class="form-control mode-dependent" id="actionOwner" name="actionOwner" required>
                                 </div>
                             </div>
                         </div>
@@ -5471,7 +5734,7 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                             <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
                                 <div class="card-body">
                                     <label for="actionStatus" class="form-label" style="color: white">Status</label>
-                                    <input type="text" class="form-control" id="actionStatus" name="actionStatus" readonly value="Open">
+                                    <input type="text" class="form-control mode-dependent" id="actionStatus" name="actionStatus" readonly value="Open">
                                 </div>
                             </div>
                         </div>
@@ -5517,96 +5780,6 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                     </div>
                 </div>
                 <!-- Action Assets -->
-                <div class="mb-3">
-                    <div class="card mb-3 shadow-sm"> <!-- Bootstrap card with shadow -->
-                        <div class="card-body">
-                            <div class="row justify-content-center">
-                                <div class="col-md-12">
-                                <p class="justify-content-center" style="color: white">Expected Risk Mitigation from Action</p>
-                                </div>
-                            </div>
-                            <div class="row justify-content-center">
-                                <div class="col-md-4">
-                                    <label for="safetyMitigation" style="color: white">Safety: <span id="safetyMitigationValue"></span></label>
-                                    <input type="range" class="form-control custom-range" id="safetyMitigation" name="safetyMitigation" min="0" max="100" value="0">
-                                </div>
-                                <div class="col-md-4">
-                                    <label for="lifeMitigation" style="color: white">Life: <span id="lifeMitigationValue"></span></label>
-                                    <input type="range" class="form-control custom-range" id="lifeMitigation" name="lifeMitigation" min="0" max="100" value="0">
-                                </div>
-                                <div class="col-md-4">
-                                    <label for="productionMitigation" style="color: white">Production: <span id="productionMitigationValue"></span></label>
-                                    <input type="range" class="form-control custom-range" id="productionMitigation" name="productionMitigation" min="0" max="100" value="0">
-                                </div>
-                            </div>
-                            <div class="row justify-content-center mt-4">
-                                <div class="col-md-4">
-                                    <label for="financeMitigation" style="color: white">Finance: <span id="financeMitigationValue"></span></label>
-                                    <input type="range" class="form-control custom-range" id="financeMitigation" name="financeMitigation" min="0" max="100" value="0">
-                                </div>
-
-                                <div class="col-md-4">
-                                    <label for="reputationMitigation" style="color: white">Reputation: <span id="reputationMitigationValue"></span></label>
-                                    <input type="range" class="form-control custom-range" id="reputationMitigation" name="reputationMitigation" min="0" max="100" value="0">
-                                </div>
-                                <div class="col-md-4">
-                                    <label for="environmentMitigation" style="color: white">Environment: <span id="environmentMitigationValue"></span></label>
-                                    <input type="range" class="form-control custom-range" id="environmentMitigation" name="environmentMitigation" min="0" max="100" value="0">
-                                </div>
-                            </div>
-                            <div class="row justify-content-center mt-4">
-                                <div class="col-md-4">
-                                    <label for="regulationMitigation" style="color: white">Regulation: <span id="regulationMitigationValue"></span></label>
-                                    <input type="range" class="form-control custom-range" id="regulationMitigation" name="regulationMitigation" min="0" max="100" value="0">
-                                </div>
-                                <div class="col-md-4">
-                                    <label for="dataMitigation" style="color: white">Data: <span id="dataMitigationValue"></span></label>
-                                    <input type="range" class="form-control custom-range" id="dataMitigation" name="dataMitigation" min="0" max="100" value="0">
-                                </div>
-
-                                <div class="col-md-4">
-                                    <label for="supplyMitigation" style="color: white">Supply: <span id="supplyMitigationValue"></span></label>
-                                    <input type="range" class="form-control custom-range" id="supplyMitigation" name="supplyMitigation" min="0" max="100" value="0">
-                                </div>
-                            </div>
-                            <div class="row justify-content-center mt-4">
-                                <div class="col-md-4">
-                                    <label for="threatMitigation" style="color: white">Threat: <span id="threatMitigationValue"></span></label>
-                                    <input type="range" class="form-control custom-range" id="threatMitigation" name="threatMitigation" min="0" max="100" value="0">
-                                </div>
-                                <div class="col-md-4">
-                                    <label for="vulnerabilityMitigation" style="color: white">Vulnerability: <span id="vulnerabilityMitigationValue"></span></label>
-                                    <input type="range" class="form-control custom-range" id="vulnerabilityMitigation" name="vulnerabilityMitigation" min="0" max="100" value="0">
-                                </div>
-                            </div>
-                            <script>
-                            document.addEventListener('DOMContentLoaded', (event) => {
-                              // This function updates the span displaying the value of the slider
-                              function updateSliderValue(slider) {
-                                const valueDisplayId = slider.id + 'Value';
-                                const valueDisplay = document.getElementById(valueDisplayId);
-                                if (valueDisplay) {
-                                  valueDisplay.textContent = slider.value + '%'; // Add the '%' symbol
-                                } else {
-                                  // console.error('No element found with id:', valueDisplayId);
-                                }
-                              }
-
-                              // Get all range inputs on the form
-                              const sliders = document.querySelectorAll('input[type="range"]');
-
-                              // Initialize the display values and add event listeners to each slider
-                              sliders.forEach(slider => {
-                                updateSliderValue(slider); // Initialize the display value
-                                slider.addEventListener('input', () => updateSliderValue(slider));
-                              });
-                            });
-
-                            </script>
-                        </div>
-
-                    </div>
-                </div>
 
                 <div class="row">
                     <div class="col-md-4">
@@ -5712,6 +5885,8 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
     </div>
   </div>
 </div>
+
+
 <div class="modal fade" id="scenarioSelectModal" tabindex="-1" aria-labelledby="scenarioSelectModalLabel" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content">
@@ -5736,6 +5911,7 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
     var selectedButtonId = "";
     // Function to populate the scenario list in the modal
 function populateScenarioList() {
+    console.log("a10");
   $.ajax({
     url: '/OTRisk/get_saved_scenario_builders',
     type: 'GET',
@@ -5767,6 +5943,7 @@ function populateScenarioList() {
 
 // Function to retrieve and display a selected scenario
 function retrieveScenario(scenarioId) {
+    console.log("a11");
   resetScenarioTab(selectedButtonId);
   $.ajax({
     url: '/OTRisk/retrieve_scenario_builder/' + scenarioId,
@@ -5774,6 +5951,7 @@ function retrieveScenario(scenarioId) {
     success: function(response) {
         resetScenarioTab(selectedButtonId);
       $('#txtScenarioDescription_' + selectedButtonId).val(response.scenario_description);
+      $('#txtScenarioDuplicate_' + selectedButtonId).val(response.scenario_description);
       $('#txtScenarioAnalysis_' + selectedButtonId).val(response.consequences);
       // $('#attack_tree_text').val(response.attack_tree_data);
 
@@ -5833,6 +6011,7 @@ function retrieveScenario(scenarioId) {
 
 // Call populateScenarioList when the modal is about to be shown
 $('#scenarioSelectModal').on('show.bs.modal', function (e) {
+    console.log("a12");
   populateScenarioList();
   selectedButtonId = $(e.relatedTarget).attr('id'); // Store the ID of the clicked button
 });
@@ -5890,21 +6069,21 @@ function checkEditModeAndExecute(buttonId, spinnerId) {
         headers: { "X-CSRFToken": getCookie("csrftoken") }
     });
 
-    function submitRAActionForm() {
-        $.ajax({
-            type: "POST",
-            url: "{% url 'OTRisk:save_ra_action' %}",
-            data: $("#raActionsForm").serialize(),
-            success: function(response) {
-                if (response.status == "success") {
-                    $("#RAActionsModal").modal('hide');
-                    // Optionally, show a success message or perform other actions.
-                } else {
-                    alert("Error saving data!");
-                }
+function submitRAActionForm() {
+    $.ajax({
+        type: "POST",
+        url: "{% url 'OTRisk:save_ra_action' %}",
+        data: $("#raActionsForm").serialize(),
+        success: function(response) {
+            if (response.status == "success") {
+                $("#RAActionsModal").modal('hide');
+                // Optionally, show a success message or perform other actions.
+            } else {
+                alert("Error saving data!");
             }
-        });
-    }
+        }
+    });
+}
 
 function abbreviateValue(value) {
     var newValue = value;
@@ -5957,6 +6136,9 @@ function createCostChart(containerId, costArray) {
         // Customize the Y-axis
         var yAxis = chart.yAxis();
         yAxis.title("Cost in USD");
+        yAxis.labels().format(function() {
+            return formatCurrency(this.value);
+        });
 
         var series = chart.getSeries(0);
         series.labels(true);
@@ -5965,7 +6147,7 @@ function createCostChart(containerId, costArray) {
             .anchor("centerBottom")
             .fontSize(10)
             .format(function() {
-                return abbreviateValue(this.value);
+                return formatCurrency(this.value);
             });
 
         // Optionally disable credits if needed
@@ -6065,6 +6247,8 @@ function abbreviateValue(value) {
             var weak_credentials = document.getElementById('weak_credentials_' + buttonNumber).checked;
             var outageLength = document.getElementById('outage_' + buttonNumber).value;
             var consequences = document.getElementById('txtScenarioAnalysis_' + buttonNumber).value;
+            var assessment_summary = document.getElementById('last_assessment_summary').value;
+            var country = document.getElementById('txtCountry').value;
             var safeguardDescriptions = [];
             $('#table_safeguards tbody tr').each(function() {
                 var description = $(this).find('textarea').eq(0).val(); // Assuming the first textarea is the Safeguard Description
@@ -6116,6 +6300,8 @@ function abbreviateValue(value) {
                     exposed_system: exposed_system,
                     consequences: consequences,
                     safeguards: safeguardsData,
+                    assessment_summary: assessment_summary,
+                    country: country
                  },
                 success: function (response) {
                     clearInterval(progressBarInterval);
@@ -6134,7 +6320,16 @@ function abbreviateValue(value) {
                     // var high_estimate = response[3];
                     var riskSummary = response[2];
                     var executive_summary = response[4];
+                    var scenario_probability = response[5];
+                    var overall_business_impact = response[6];
                     var costArray = riskSummary.split('|').map(Number);
+                    var bowtieImage = response[7];
+                    var bow_tie_json = response[8];
+                    document.getElementById('bowtieChart_' + buttonNumber).src = 'data:image/png;base64,' + bowtieImage;
+                    $('#bowtie_chart_' + buttonNumber).val(bow_tie_json);
+
+
+                    action_item_table(executive_summary, buttonNumber);
 
                     document.getElementById('scenario_12month_costs_' + buttonNumber).value = riskSummary;
                     createCostChart('monthly_cost_chart_' + buttonNumber, costArray);
@@ -6145,13 +6340,19 @@ function abbreviateValue(value) {
                     var damage = response[3];
                     // var riskSummaryArray = risk_summary_array;
 
-
-
                     $('#lblriskRating_' + buttonNumber).text(riskRating);
-                    $('#lblinherentRisk_' + buttonNumber).text(riskScore);
+                    // $('#lblinherentRisk_' + buttonNumber).text(riskScore);
+                    displayRiskScore(buttonNumber, 'lblinherentRisk', riskScore);
+                    $('#txtResidualRisk_' + buttonNumber).text(riskScore);
                     $('#txtDamage_' + buttonNumber).val(damage);
                     $('#txtexec_summary_' + buttonNumber).val(executive_summary);
 
+                    //$('#lblBIAScore_' + buttonNumber).text(overall_business_impact);
+                    displayRiskScore(buttonNumber, 'lblBIAScore' ,overall_business_impact);
+
+                    $('#txtBIAScore_' + buttonNumber).val(overall_business_impact);
+                    displayRiskScore(buttonNumber, 'lblAttackSuccess', scenario_probability);
+                    $('#txtAttackSuccess_' + buttonNumber).val(scenario_probability);
 
                     $('#lblriskSummary_' + buttonNumber).val(riskSummary);
 
@@ -6214,7 +6415,7 @@ function abbreviateValue(value) {
 
   $(document).ready(function(){
     $('#headertable').dataTable( {
-
+        pageLength: 100
 
     } );
 });
@@ -6238,8 +6439,44 @@ $(document).ready(function() {
 
 //following code to load raw data and scenarios from the clicked raw record in the table
 $(document).ready(function() {
-    $('#headertable').on('click', 'tbody tr', function() {
 
+     var isSimulatedClick = false;
+
+            // Simulate the click if saved_worksheet_id is greater than 0
+            var savedWorksheetId = $('#dataTableContainer').data('saved-id');
+            if (savedWorksheetId > 0) {
+                // Find the row with the matching ID and simulate a click
+                var rowToClick = $('#headertable tr.selectable-row[data-id="' + savedWorksheetId + '"]');
+                if (rowToClick.length) {
+                    isSimulatedClick = true;
+                    rowToClick.addClass('highlighted');
+                    rowToClick.trigger('click');
+
+
+                }
+            }
+
+    $('#headertable').on('click', 'tbody tr.selectable-row', function() {
+
+        var clickedRowId = $(this).data('id');
+        console.log(clickedRowId);
+        if (isSimulatedClick) {
+            clickedRowId = savedWorksheetId;
+
+            isSimulatedClick = false; // Reset the flag after processing the simulated click
+
+        }
+        console.log(clickedRowId);
+        sessionStorage.setItem('editMode', '0');
+        applyEditMode();
+        $('tr.selectable-row').removeClass('highlighted');
+        var targetRow = $('tr.selectable-row[data-id="' + clickedRowId + '"]');
+        // Add 'highlighted' class to the clicked row
+        targetRow.addClass('highlighted');
+        var ratitle = targetRow.find('td:nth-child(2)').text();
+        console.log(ratitle);
+
+        $('#scenario_title').text(ratitle);
         //handleAddNewClick(0)
          clearValues();
 
@@ -6256,6 +6493,7 @@ $(document).ready(function() {
 
 
         document.getElementById("txtScenarioDescription_1").value = "";
+        document.getElementById("txtScenarioDuplicate_1").value = "";
 
         document.getElementById("txtScenarioDescription_2").value = "";
         document.getElementById("scenario3-tab").click();
@@ -6270,50 +6508,49 @@ $(document).ready(function() {
         document.getElementById("editBtn").disabled= false;
         document.getElementById("scenario1-tab").click();
 
-
         // Get the data from the clicked row
-        var title = $(this).find('td:eq(1)').text();
-        var businessUnit = $(this).find('td:eq(8)').text();
-        var leader = $(this).find('td:eq(9)').text();
-        var facility = $(this).find('td:eq(6)').text();
-        var industry = $(this).find('td:eq(7)').text();
-        var trigger = $(this).find('td:eq(5)').text();
-        var status = $(this).find('td:eq(2)').text();
-        var insurance = $(this).data('insurance');
-        var revenue = $(this).data('revenue');
-        var deductable = $(this).data('deductable');
-        var raw_id = $(this).find('td:eq(0)').text();
-         var approverId = $(this).data('approver-id');
+        var title = targetRow.find('td:eq(1)').text();
+        var businessUnit = targetRow.find('td:eq(8)').text();
+        var leader = targetRow.find('td:eq(9)').text();
+        var facility = targetRow.find('td:eq(6)').text();
+        var industry = targetRow.find('td:eq(7)').text();
+        var trigger = targetRow.find('td:eq(5)').text();
+        var status = targetRow.find('td:eq(2)').text();
+        var insurance = targetRow.data('insurance');
+        var revenue = targetRow.data('revenue');
+        var deductable = targetRow.data('deductable');
+        var raw_id = targetRow.find('td:eq(0)').text();
+         var approverId = targetRow.data('approver-id');
 
         var currentUserId = $('#userId').val();
-        var recordCreatorId = $(this).data('data_owner');
+        var recordCreatorId = targetRow.data('data_owner');
         var isSuperUser = $('#isSuperUser').val();
-        var statusFlag = $(this).find('td:eq(2)').text().trim(); // Assuming the StatusFlag is in the third column
-        var approverId = $(this).data('approver-id');
+        var statusFlag = targetRow.find('td:eq(2)').text().trim(); // Assuming the StatusFlag is in the third column
+        var approverId = targetRow.data('approver-id');
 
         var isCreatorOrSuperUser = (currentUserId == recordCreatorId || isSuperUser);
         var isCurrentApprover = (currentUserId == approverId);
 
         var showApproverDropdown = isCreatorOrSuperUser && statusFlag !== 'Approved' && statusFlag !== 'Closed';
         var showApprovalControls = isCurrentApprover && statusFlag !== 'Approved' && statusFlag !== 'Closed';
-        var address1 = $(this).data('address1');
-        var address2 = $(this).data('address2');
-        var address3 = $(this).data('address3');
-        var city = $(this).data('city');
-        var state = $(this).data('state');
-        var postcode = $(this).data('postcode');
-        var country = $(this).data('country');
-        var lat = $(this).data('lat');
-        var lon = $(this).data('lon');
-         var asset = $(this).data('asset');
-        var asset_purpose = $(this).data('asset_purpose');
-        var assessment_id = $(this).data('assessment_id');
+        var address1 = targetRow.data('address1');
+        var address2 = targetRow.data('address2');
+        var address3 = targetRow.data('address3');
+        var city = targetRow.data('city');
+        var state = targetRow.data('state');
+        var postcode = targetRow.data('postcode');
+        var country = targetRow.data('country');
+        var lat = targetRow.data('lat');
+        var lon = targetRow.data('lon');
+         var asset = targetRow.data('asset');
+        var asset_purpose = targetRow.data('asset_purpose');
+        var assessment_id = targetRow.data('assessment_id');
 
         $('#assessment_id').val(assessment_id).change();
-        var assessment_summary = $(this).data('last_assessment_summary');
+        var assessment_summary = targetRow.data('last_assessment_summary');
 
-        var assessment_score = $(this).data('last_assessment_score');
-
+        var assessment_score = targetRow.data('last_assessment_score');
+        console.log("a22");
 
         // Show or hide the approver selection dropdown based on user role and status
         if (isCreatorOrSuperUser && statusFlag === 'Open') {
@@ -6341,6 +6578,7 @@ $(document).ready(function() {
         document.getElementById('hdntxtModalRAW').value = raw_id;
         sessionStorage.setItem('rawid',raw_id);
         sessionStorage.setItem('editMode','0');
+        applyEditMode();
         sessionStorage.setItem('addNew','0');
         sessionStorage.setItem('RATitle',title);
         sessionStorage.setItem('RABU',businessUnit);
@@ -6401,6 +6639,7 @@ $(document).ready(function() {
         if (!isNaN(lat) && !isNaN(lon) && lat !== '' && lon !== '') {
             drawGoogleMap(lat, lon);
         }
+
         // Send an AJAX request to get the matching scenarios
         $.ajax({
             url: '/OTRisk/get_scenarios/',
@@ -6432,12 +6671,19 @@ $(document).ready(function() {
                     document.getElementById("hdnScenarioID_2").value = scenarios[1].pk;
                     sessionStorage.setItem('scenario2id', scenarios[1].pk);
                     document.getElementById("txtScenarioDescription_2").value = scenarios[1].fields.ScenarioDescription;
+                    document.getElementById("txtScenarioDuplicate_2").value = scenarios[1].fields.ScenarioDescription;
+
                     document.getElementById("txtScenarioAnalysis_2").value = scenarios[1].fields.raw_consequences;
                     document.getElementById("selectThreat_2").value = scenarios[1].fields.threatSource;
                     document.getElementById("selectTactics_2").value = scenarios[1].fields.threatTactic;
                     document.getElementById("id_impact_2").value = scenarios[1].fields.impact;
+                    var outageValue = scenarios[1].fields.outage === "true";
+
+                    document.getElementById("production_outage_2").checked = outageValue;
+                    document.getElementById("outage_2").value = scenarios[1].fields.outageLength;
                     document.getElementById('exposed_system_2').checked = scenarios[1].fields.exposed_system;
                     document.getElementById('weak_credentials_2').checked = scenarios[1].fields.weak_credentials;
+
                     document.getElementById("lblriskSummary_2").value = scenarios[1].fields.riskSummary;
                     document.getElementById("range_safety_2").value = scenarios[1].fields.SafetyScore;
                     initSlider('range_safety_2', 'safetyrange_2')
@@ -6473,68 +6719,58 @@ $(document).ready(function() {
                     document.getElementById("txtsupplyJustify_2").value = scenarios[1].fields.justifySupply;
                     document.getElementById("txtDamage_2").value = scenarios[1].fields.scenario_damage;
                     document.getElementById("txtexec_summary_2").value = scenarios[1].fields.executive_summary;
+                    action_item_table(scenarios[1].fields.executive_summary, 2);
                     document.getElementById("scenario_12month_costs_2").value = scenarios[1].fields.scenario_12month_costs;
                     document.getElementById("lblriskRating_2").textContent = scenarios[1].fields.RiskStatus;
 
                     document.getElementById("lblinherentRisk_2").textContent = scenarios[1].fields.residual_risk;
                     document.getElementById("txtResidualRisk_2").value = scenarios[1].fields.residual_risk;
-                    var residualRisk = scenarios[1].fields.residual_risk;
-                    var riskText = "";
+                    document.getElementById("bowtieChart_2").src = 'data:image/png;base64,' + scenarios[1].fields.bowtie;
 
-                        // Determine the risk text based on the value of residual risk
-                        if (residualRisk >= 0 && residualRisk <= 2) {
-                            riskText = "Low";
-                        } else if (residualRisk === 3 || residualRisk === 4) {
-                            riskText = "Low/Medium";
-                        } else if (residualRisk === 5 || residualRisk === 6) {
-                            riskText = "Medium";
-                        } else if (residualRisk === 7) {
-                            riskText = "Medium/High";
-                        } else if (residualRisk === 8 || residualRisk === 9) {
-                            riskText = "High";
-                        } else if (residualRisk === 10) {
-                            riskText = "Very High";
-                        }
+                    displayRiskScore(2, 'lblinherentRisk', scenarios[1].fields.residual_risk);
+                    $('#txtResidualRisk_2').text(scenarios[1].fields.residual_risk);
+                    displayRiskScore(2, 'lblBIAScore' ,scenarios[1].fields.overall_bia);
+                    $('#txtBIAScore_2').val(scenarios[1].fields.overall_bia);
+                    displayRiskScore(2, 'lblAttackSuccess', scenarios[1].fields.scenario_probability);
+                    $('#txtAttackSuccess_2').val(scenarios[1].fields.scenario_probability);
 
-                       document.getElementById("lblinherentRisk_2").textContent = riskText;
-                       try {
-                           var costArray = scenarios[1].fields.scenario_12month_costs.split('|').map(Number);
-                           createCostChart('monthly_cost_chart_2', costArray);
-                       }
-                       catch (e){}
+                    try {
+                       var costArray = scenarios[1].fields.scenario_12month_costs.split('|').map(Number);
+                       createCostChart('monthly_cost_chart_2', costArray);
+                    }
+                    catch (e){}
 
                           // Assuming 'safeguards' is the variable holding the safeguards data received from the server
-                        var scenarioId = scenarios[1].pk; // The ID of the currently selected scenario
-                        var scenarioSafeguards = safeguards[scenarioId]; // The safeguards for the selected scenario
+                    var scenarioId = scenarios[1].pk; // The ID of the currently selected scenario
+                    var scenarioSafeguards = safeguards[scenarioId]; // The safeguards for the selected scenario
 
-                        // Find the table where you want to add the safeguards
-                        var safeguardsTableBody = document.getElementById('table_safeguards_2').getElementsByTagName('tbody')[0];
+                    var safeguardsTableBody = document.getElementById('table_safeguards_2').getElementsByTagName('tbody')[0];
 
                         // Clear existing rows in the table
-                        safeguardsTableBody.innerHTML = '';
+                    safeguardsTableBody.innerHTML = '';
 
-                        // Check if there are safeguards for the selected scenario
-                        if (scenarioSafeguards && scenarioSafeguards.length > 0) {
-                            // Iterate over each safeguard and add it to the table as editable rows
-                            scenarioSafeguards.forEach(function(safeguard) {
-                                var newRow = `<tr>
-                                    <td><textarea class="form-control" maxlength="255">${safeguard.fields.safeguard_description}</textarea></td>
-                                    <td><textarea class="form-control" maxlength="100">${safeguard.fields.safeguard_type}</textarea></td>
-                                    <td><button type="button" class="btn btn-danger btn-sm deleteRowBtn">Delete</button></td>
-                                </tr>`;
-                                $(safeguardsTableBody).append(newRow);
-                            });
-                        } else {
-
-                        }
-
-                        // Reattach the event handler for delete buttons in case it was cleared with innerHTML = ''
-                        $("#table_safeguards_2").on("click", ".deleteRowBtn", function() {
-                            $(this).closest("tr").remove();
+                    // Check if there are safeguards for the selected scenario
+                    if (scenarioSafeguards && scenarioSafeguards.length > 0) {
+                        // Iterate over each safeguard and add it to the table as editable rows
+                        scenarioSafeguards.forEach(function(safeguard) {
+                            var newRow = `<tr>
+                                <td><textarea class="form-control" maxlength="255">${safeguard.fields.safeguard_description}</textarea></td>
+                                <td><textarea class="form-control" maxlength="100">${safeguard.fields.safeguard_type}</textarea></td>
+                                <td><button type="button" class="btn btn-danger btn-sm deleteRowBtn">Delete</button></td>
+                            </tr>`;
+                            $(safeguardsTableBody).append(newRow);
                         });
+                    } else {
+
+                    }
+
+                    // Reattach the event handler for delete buttons in case it was cleared with innerHTML = ''
+                    $("#table_safeguards_2").on("click", ".deleteRowBtn", function() {
+                        $(this).closest("tr").remove();
+                    });
 
 
-                        disableAllControls();
+                    disableAllControls();
                     loadActions(raw_id)
 
 
@@ -6546,6 +6782,8 @@ $(document).ready(function() {
                       document.getElementById("hdnScenarioID_3").value = scenarios[2].pk;
                       sessionStorage.setItem('scenario3id',scenarios[2].pk);
                       document.getElementById("txtScenarioDescription_3").value = scenarios[2].fields.ScenarioDescription;
+                      document.getElementById("txtScenarioDuplicate_3").value = scenarios[2].fields.ScenarioDescription;
+
                       document.getElementById("txtScenarioAnalysis_3").value = scenarios[2].fields.raw_consequences;
                       document.getElementById("selectThreat_3").value = scenarios[2].fields.threatSource;
                       document.getElementById("selectTactics_3").value = scenarios[2].fields.threatTactic;
@@ -6555,13 +6793,9 @@ $(document).ready(function() {
                       document.getElementById("production_outage_3").checked = outageValue;
                       document.getElementById("outage_3").value = scenarios[2].fields.outageLength;
                       document.getElementById('exposed_system_3').checked = scenarios[2].fields.exposed_system;
-                        document.getElementById('weak_credentials_3').checked = scenarios[2].fields.weak_credentials;
+                      document.getElementById('weak_credentials_3').checked = scenarios[2].fields.weak_credentials;
 
-                     document.getElementById("lblriskRating_3").value = scenarios[2].fields.RiskStatus;
-                     document.getElementById("lblriskSummary_3").value = scenarios[2].fields.riskSummary;
-
-
-
+                      document.getElementById("lblriskSummary_3").value = scenarios[2].fields.riskSummary;
                       document.getElementById("range_safety_3").value = scenarios[2].fields.SafetyScore;
                       initSlider('range_safety_3', 'safetyrange_3')
                       document.getElementById("range_life_3").value = scenarios[2].fields.lifeScore;
@@ -6594,8 +6828,62 @@ $(document).ready(function() {
                       document.getElementById("txtregulationJustify_3").value = scenarios[2].fields.justifyRegulation;
                       document.getElementById("txtdataJustify_3").value = scenarios[2].fields.justifyData;
                       document.getElementById("txtsupplyJustify_3").value = scenarios[2].fields.justifySupply;
-                      var costArray = scenarios[2].fields.scenario_12month_costs.split('|').map(Number);
-                      createCostChart('monthly_cost_chart_2', costArray);
+                      document.getElementById("txtDamage_3").value = scenarios[2].fields.scenario_damage;
+                    document.getElementById("txtexec_summary_3").value = scenarios[2].fields.executive_summary;
+                    action_item_table(scenarios[2].fields.executive_summary, 3);
+                    document.getElementById("scenario_12month_costs_3").value = scenarios[2].fields.scenario_12month_costs;
+                    document.getElementById("lblriskRating_3").textContent = scenarios[2].fields.RiskStatus;
+
+                    document.getElementById("lblinherentRisk_3").textContent = scenarios[2].fields.residual_risk;
+                    document.getElementById("txtResidualRisk_3").value = scenarios[2].fields.residual_risk;
+                    document.getElementById("bowtieChart_3").src = 'data:image/png;base64,' + scenarios[2].fields.bowtie;
+
+                    displayRiskScore(3, 'lblinherentRisk', scenarios[2].fields.residual_risk);
+                    $('#txtResidualRisk_3').text(scenarios[2].fields.residual_risk);
+                    displayRiskScore(3, 'lblBIAScore' ,scenarios[2].fields.overall_bia);
+                    $('#txtBIAScore_3').val(scenarios[2].fields.overall_bia);
+                    displayRiskScore(3, 'lblAttackSuccess', scenarios[2].fields.scenario_probability);
+                    $('#txtAttackSuccess_3').val(scenarios[2].fields.scenario_probability);
+
+                    try {
+                       var costArray = scenarios[2].fields.scenario_12month_costs.split('|').map(Number);
+                       createCostChart('monthly_cost_chart_3', costArray);
+                    }
+                    catch (e){}
+
+                          // Assuming 'safeguards' is the variable holding the safeguards data received from the server
+                    var scenarioId = scenarios[2].pk; // The ID of the currently selected scenario
+                    var scenarioSafeguards = safeguards[scenarioId]; // The safeguards for the selected scenario
+
+                    var safeguardsTableBody = document.getElementById('table_safeguards_3').getElementsByTagName('tbody')[0];
+
+                        // Clear existing rows in the table
+                    safeguardsTableBody.innerHTML = '';
+
+                    // Check if there are safeguards for the selected scenario
+                    if (scenarioSafeguards && scenarioSafeguards.length > 0) {
+                        // Iterate over each safeguard and add it to the table as editable rows
+                        scenarioSafeguards.forEach(function(safeguard) {
+                            var newRow = `<tr>
+                                <td><textarea class="form-control" maxlength="255">${safeguard.fields.safeguard_description}</textarea></td>
+                                <td><textarea class="form-control" maxlength="100">${safeguard.fields.safeguard_type}</textarea></td>
+                                <td><button type="button" class="btn btn-danger btn-sm deleteRowBtn">Delete</button></td>
+                            </tr>`;
+                            $(safeguardsTableBody).append(newRow);
+                        });
+                    } else {
+
+                    }
+
+                    // Reattach the event handler for delete buttons in case it was cleared with innerHTML = ''
+                    $("#table_safeguards_3").on("click", ".deleteRowBtn", function() {
+                        $(this).closest("tr").remove();
+                    });
+
+
+                    disableAllControls();
+                    loadActions(raw_id)
+
 
                       }
                   if (scenarios.length >= 4) {
@@ -6604,6 +6892,8 @@ $(document).ready(function() {
                       document.getElementById("hdnScenarioID_4").value = scenarios[3].pk;
                       sessionStorage.setItem('scenario4id',scenarios[3].pk);
                       document.getElementById("txtScenarioDescription_4").value = scenarios[3].fields.ScenarioDescription;
+                       document.getElementById("txtScenarioDuplicate_4").value = scenarios[3].fields.ScenarioDescription;
+
                       document.getElementById("txtScenarioAnalysis_4").value = scenarios[3].fields.raw_consequences;
                       document.getElementById("selectThreat_4").value = scenarios[3].fields.threatSource;
                       document.getElementById("selectTactics_4").value = scenarios[3].fields.threatTactic;
@@ -6615,11 +6905,7 @@ $(document).ready(function() {
                       document.getElementById('exposed_system_4').checked = scenarios[3].fields.exposed_system;
                       document.getElementById('weak_credentials_4').checked = scenarios[3].fields.weak_credentials;
 
-                     document.getElementById("lblriskRating_4").value = scenarios[3].fields.RiskStatus;
-                     document.getElementById("lblriskSummary_4").value = scenarios[3].fields.riskSummary;
-
-
-
+                      document.getElementById("lblriskSummary_4").value = scenarios[3].fields.riskSummary;
                       document.getElementById("range_safety_4").value = scenarios[3].fields.SafetyScore;
                       initSlider('range_safety_4', 'safetyrange_4')
                       document.getElementById("range_life_4").value = scenarios[3].fields.lifeScore;
@@ -6652,16 +6938,70 @@ $(document).ready(function() {
                       document.getElementById("txtregulationJustify_4").value = scenarios[3].fields.justifyRegulation;
                       document.getElementById("txtdataJustify_4").value = scenarios[3].fields.justifyData;
                       document.getElementById("txtsupplyJustify_4").value = scenarios[3].fields.justifySupply;
-                        var costArray = scenarios[3].fields.scenario_12month_costs.split('|').map(Number);
-                          createCostChart('monthly_cost_chart_4', costArray);
+                      document.getElementById("txtDamage_4").value = scenarios[3].fields.scenario_damage;
+                      document.getElementById("txtexec_summary_4").value = scenarios[3].fields.executive_summary;
+                    action_item_table(scenarios[3].fields.executive_summary, 4);
+                    document.getElementById("scenario_12month_costs_4").value = scenarios[3].fields.scenario_12month_costs;
+                    document.getElementById("lblriskRating_4").textContent = scenarios[3].fields.RiskStatus;
 
-                      }
+                    document.getElementById("lblinherentRisk_4").textContent = scenarios[3].fields.residual_risk;
+                    document.getElementById("txtResidualRisk_4").value = scenarios[3].fields.residual_risk;
+                    document.getElementById("bowtieChart_4").src = 'data:image/png;base64,' + scenarios[3].fields.bowtie;
+
+                    displayRiskScore(4, 'lblinherentRisk', scenarios[3].fields.residual_risk);
+                    $('#txtResidualRisk_4').text(scenarios[3].fields.residual_risk);
+                    displayRiskScore(4, 'lblBIAScore' ,scenarios[3].fields.overall_bia);
+                    $('#txtBIAScore_4').val(scenarios[3].fields.overall_bia);
+                    displayRiskScore(4, 'lblAttackSuccess', scenarios[3].fields.scenario_probability);
+                    $('#txtAttackSuccess_4').val(scenarios[3].fields.scenario_probability);
+
+                    try {
+                       var costArray = scenarios[3].fields.scenario_12month_costs.split('|').map(Number);
+                       createCostChart('monthly_cost_chart_4', costArray);
+                    }
+                    catch (e){}
+
+                          // Assuming 'safeguards' is the variable holding the safeguards data received from the server
+                    var scenarioId = scenarios[3].pk; // The ID of the currently selected scenario
+                    var scenarioSafeguards = safeguards[scenarioId]; // The safeguards for the selected scenario
+
+                    var safeguardsTableBody = document.getElementById('table_safeguards_4').getElementsByTagName('tbody')[0];
+
+                        // Clear existing rows in the table
+                    safeguardsTableBody.innerHTML = '';
+
+                    // Check if there are safeguards for the selected scenario
+                    if (scenarioSafeguards && scenarioSafeguards.length > 0) {
+                        // Iterate over each safeguard and add it to the table as editable rows
+                        scenarioSafeguards.forEach(function(safeguard) {
+                            var newRow = `<tr>
+                                <td><textarea class="form-control" maxlength="255">${safeguard.fields.safeguard_description}</textarea></td>
+                                <td><textarea class="form-control" maxlength="100">${safeguard.fields.safeguard_type}</textarea></td>
+                                <td><button type="button" class="btn btn-danger btn-sm deleteRowBtn">Delete</button></td>
+                            </tr>`;
+                            $(safeguardsTableBody).append(newRow);
+                        });
+                    } else {
+
+                    }
+
+                    // Reattach the event handler for delete buttons in case it was cleared with innerHTML = ''
+                    $("#table_safeguards_4").on("click", ".deleteRowBtn", function() {
+                        $(this).closest("tr").remove();
+                    });
+
+
+                    disableAllControls();
+                    loadActions(raw_id)
+                  }
                   if (scenarios.length >= 5) {
                       document.getElementById("scenarioCount").value = "5";
                       document.getElementById("scenario5-tab").click();
                       document.getElementById("hdnScenarioID_5").value = scenarios[4].pk;
                       sessionStorage.setItem('scenario5id',scenarios[4].pk);
                       document.getElementById("txtScenarioDescription_5").value = scenarios[4].fields.ScenarioDescription;
+                      document.getElementById("txtScenarioDuplicate_5").value = scenarios[4].fields.ScenarioDescription;
+
                       document.getElementById("txtScenarioAnalysis_5").value = scenarios[4].fields.raw_consequences;
                       document.getElementById("selectThreat_5").value = scenarios[4].fields.threatSource;
                       document.getElementById("selectTactics_5").value = scenarios[4].fields.threatTactic;
@@ -6672,8 +7012,6 @@ $(document).ready(function() {
                       document.getElementById("outage_5").value = scenarios[4].fields.outageLength;
                       document.getElementById('exposed_system_5').checked = scenarios[4].fields.exposed_system;
                       document.getElementById('weak_credentials_5').checked = scenarios[4].fields.weak_credentials;
-
-                      document.getElementById("lblriskRating_5").value = scenarios[4].fields.RiskStatus;
                       document.getElementById("lblriskSummary_5").value = scenarios[4].fields.riskSummary;
 
 
@@ -6710,17 +7048,71 @@ $(document).ready(function() {
                       document.getElementById("txtregulationJustify_5").value = scenarios[4].fields.justifyRegulation;
                       document.getElementById("txtdataJustify_5").value = scenarios[4].fields.justifyData;
                       document.getElementById("txtsupplyJustify_5").value = scenarios[4].fields.justifySupply;
-                        var costArray = scenarios[4].fields.scenario_12month_costs.split('|').map(Number);
-                          createCostChart('monthly_cost_chart_5', costArray);
+                       document.getElementById("txtDamage_5").value = scenarios[4].fields.scenario_damage;
+                      document.getElementById("txtexec_summary_5").value = scenarios[4].fields.executive_summary;
+                    action_item_table(scenarios[4].fields.executive_summary, 5);
+                    document.getElementById("scenario_12month_costs_5").value = scenarios[4].fields.scenario_12month_costs;
+                    document.getElementById("lblriskRating_5").textContent = scenarios[4].fields.RiskStatus;
 
+                    document.getElementById("lblinherentRisk_5").textContent = scenarios[4].fields.residual_risk;
+                    document.getElementById("txtResidualRisk_5").value = scenarios[4].fields.residual_risk;
+                    document.getElementById("bowtieChart_5").src = 'data:image/png;base64,' + scenarios[4].fields.bowtie;
+
+                    displayRiskScore(5, 'lblinherentRisk', scenarios[4].fields.residual_risk);
+                    $('#txtResidualRisk_5').text(scenarios[4].fields.residual_risk);
+                    displayRiskScore(5, 'lblBIAScore' ,scenarios[4].fields.overall_bia);
+                    $('#txtBIAScore_5').val(scenarios[4].fields.overall_bia);
+                    displayRiskScore(5, 'lblAttackSuccess', scenarios[4].fields.scenario_probability);
+                    $('#txtAttackSuccess_5').val(scenarios[4].fields.scenario_probability);
+
+                    try {
+                       var costArray = scenarios[4].fields.scenario_12month_costs.split('|').map(Number);
+                       createCostChart('monthly_cost_chart_5', costArray);
+                    }
+                    catch (e){}
+
+                          // Assuming 'safeguards' is the variable holding the safeguards data received from the server
+                    var scenarioId = scenarios[4].pk; // The ID of the currently selected scenario
+                    var scenarioSafeguards = safeguards[scenarioId]; // The safeguards for the selected scenario
+
+                    var safeguardsTableBody = document.getElementById('table_safeguards_5').getElementsByTagName('tbody')[0];
+
+                        // Clear existing rows in the table
+                    safeguardsTableBody.innerHTML = '';
+
+                    // Check if there are safeguards for the selected scenario
+                    if (scenarioSafeguards && scenarioSafeguards.length > 0) {
+                        // Iterate over each safeguard and add it to the table as editable rows
+                        scenarioSafeguards.forEach(function(safeguard) {
+                            var newRow = `<tr>
+                                <td><textarea class="form-control" maxlength="255">${safeguard.fields.safeguard_description}</textarea></td>
+                                <td><textarea class="form-control" maxlength="100">${safeguard.fields.safeguard_type}</textarea></td>
+                                <td><button type="button" class="btn btn-danger btn-sm deleteRowBtn">Delete</button></td>
+                            </tr>`;
+                            $(safeguardsTableBody).append(newRow);
+                        });
+                    } else {
+
+                    }
+
+                    // Reattach the event handler for delete buttons in case it was cleared with innerHTML = ''
+                    $("#table_safeguards_5").on("click", ".deleteRowBtn", function() {
+                        $(this).closest("tr").remove();
+                    });
+
+
+                    disableAllControls();
+                    loadActions(raw_id)
                       }
                 try {
                     document.getElementById("scenario1-tab").click();
                      if (scenarios && scenarios.length > 0 && scenarios[0]) {
-                         document.getElementById("hdnScenarioID_1").value = scenarios[0].pk;
 
-                         sessionStorage.setItem('scenario1id', scenarios[0].pk);
+                        document.getElementById("hdnScenarioID_1").value = scenarios[0].pk;
+                        sessionStorage.setItem('scenario1id', scenarios[0].pk);
                          document.getElementById("txtScenarioDescription_1").value = scenarios[0].fields.ScenarioDescription;
+                         document.getElementById("txtScenarioDuplicate_1").value = scenarios[0].fields.ScenarioDescription;
+
                          document.getElementById("txtScenarioAnalysis_1").value = scenarios[0].fields.raw_consequences;
                          document.getElementById("selectThreat_1").value = scenarios[0].fields.threatSource;
                          document.getElementById("selectTactics_1").value = scenarios[0].fields.threatTactic;
@@ -6768,44 +7160,36 @@ $(document).ready(function() {
                           document.getElementById("txtsupplyJustify_1").value = scenarios[0].fields.justifySupply;
                           document.getElementById("txtDamage_1").value = scenarios[0].fields.scenario_damage;
                           document.getElementById("txtexec_summary_1").value = scenarios[0].fields.executive_summary;
+
+                          action_item_table(scenarios[0].fields.executive_summary, 1);
+
                           document.getElementById("scenario_12month_costs_1").value = scenarios[0].fields.scenario_12month_costs;
                           document.getElementById("lblriskRating_1").textContent = scenarios[0].fields.RiskStatus;
 
                           document.getElementById("lblinherentRisk_1").textContent = scenarios[0].fields.residual_risk;
                           document.getElementById("txtResidualRisk_1").value = scenarios[0].fields.residual_risk;
-                          var residualRisk = scenarios[0].fields.residual_risk; // Assuming this is an integer
-                            var riskText = ""; // Initialize the risk text variable
+                          document.getElementById("bowtieChart_1").src = 'data:image/png;base64,' + scenarios[0].fields.bowtie;
 
-                            // Determine the risk text based on the value of residual risk
-                            if (residualRisk >= 0 && residualRisk <= 2) {
-                                riskText = "Low";
-                            } else if (residualRisk === 3 || residualRisk === 4) {
-                                riskText = "Low/Medium";
-                            } else if (residualRisk === 5 || residualRisk === 6) {
-                                riskText = "Medium";
-                            } else if (residualRisk === 7) {
-                                riskText = "Medium/High";
-                            } else if (residualRisk === 8 || residualRisk === 9) {
-                                riskText = "High";
-                            } else if (residualRisk === 10) {
-                                riskText = "Very High";
-                            }
-
-                            // Set the text content of lblinherentRisk_1 to the determined risk text
-                            document.getElementById("lblinherentRisk_1").textContent = riskText;
+                          displayRiskScore(1, 'lblinherentRisk', scenarios[0].fields.residual_risk);
+                          $('#txtResidualRisk_1').text(scenarios[0].fields.residual_risk);
+                          displayRiskScore(1, 'lblBIAScore' ,scenarios[0].fields.overall_bia);
+                          $('#txtBIAScore_1').val(scenarios[0].fields.overall_bia);
+                          displayRiskScore(1, 'lblAttackSuccess', scenarios[0].fields.scenario_probability);
+                          $('#txtAttackSuccess_1').val(scenarios[0].fields.scenario_probability);
 
                           var costArray = scenarios[0].fields.scenario_12month_costs.split('|').map(Number);
+
                           createCostChart('monthly_cost_chart_1', costArray);
 
                           // Assuming 'safeguards' is the variable holding the safeguards data received from the server
-                                var scenarioId = scenarios[0].pk; // The ID of the currently selected scenario
-                                var scenarioSafeguards = safeguards[scenarioId]; // The safeguards for the selected scenario
+                        var scenarioId = scenarios[0].pk; // The ID of the currently selected scenario
+                        var scenarioSafeguards = safeguards[scenarioId]; // The safeguards for the selected scenario
 
-                                // Find the table where you want to add the safeguards
-                                var safeguardsTableBody = document.getElementById('table_safeguards_1').getElementsByTagName('tbody')[0];
+                        // Find the table where you want to add the safeguards
+                        var safeguardsTableBody = document.getElementById('table_safeguards_1').getElementsByTagName('tbody')[0];
 
-                                // Clear existing rows in the table
-                                safeguardsTableBody.innerHTML = '';
+                        // Clear existing rows in the table
+                        safeguardsTableBody.innerHTML = '';
 
                                 // Check if there are safeguards for the selected scenario
                                 if (scenarioSafeguards && scenarioSafeguards.length > 0) {
@@ -6830,42 +7214,52 @@ $(document).ready(function() {
 
                         disableAllControls();
                         var isExternalReferrer = {{ is_external_referrer|lower }};
+                        console.log("1");
 
                         $('.tab-content').removeClass('active').hide();
 
                         if (!sessionStorage.getItem('handledExternalReferrer')) {
-                        if (isExternalReferrer) {
-                            sessionStorage.setItem('handledExternalReferrer', 'true');
-                            $('.tab').removeClass('active').hide(); // Assuming .tab is a common class for tab content
-                            $('.tab-link').removeClass('active'); // Assuming .tab-link is a common class for tab links
-                            $('#tab1').addClass('active').show();
-                            $('a[data-tab="tab1"]').addClass('active'); // Highlight tab1 link as active
-                        } else {
-                            // Otherwise, show tab
-                            $('.tab').removeClass('active').hide(); // Remove active class and hide all tabs
-                            $('.tab-link').removeClass('active'); // Remove active class from all tab links
-                            $('#tab2').addClass('active').show();
-                            $('a[data-tab="tab2"]').addClass('active'); // Highlight tab2 link as active
+                            console.log("2");
+                            if (isExternalReferrer) {
+                                console.log("3");
+                                sessionStorage.setItem('handledExternalReferrer', 'true');
+                                $('.tab').removeClass('active').hide(); // Assuming .tab is a common class for tab content
+                                $('.tab-link').removeClass('active'); // Assuming .tab-link is a common class for tab links
+                                $('#tab1').addClass('active').show();
+                                $('a[data-tab="tab1"]').addClass('active'); // Highlight tab1 link as active
+                                return;
+
+                            } else {
+                                console.log("4");
+                                $('.tab').removeClass('active').hide(); // Remove active class and hide all tabs
+                                $('.tab-link').removeClass('active'); // Remove active class from all tab links
+                                 document.getElementById("tab2").click();
+                                $('#tab2').addClass('active').show();
+                                $('a[data-tab="tab2"]').addClass('active'); // Highlight tab2 link as active
+
                         }
                         // Mark that we've handled the external referrer
 
                     } else {
-                        // If already handled, default to showing tab2 or other logi
+                        console.log("5");
                         $('.tab').removeClass('active').hide(); // Remove active class and hide all tabs
                         $('.tab-link').removeClass('active'); // Remove active class from all tab links
+                        document.getElementById("tab2").click();
                         $('#tab2').addClass('active').show();
                         $('a[data-tab="tab2"]').addClass('active');
+
                     }
 
-                         //now load the action items table
                      } else {
-                        // console.warn("");
+                        console.log("6");
+
                      }
 
                     loadActions(raw_id);
-                    // $('.tab-content').removeClass('active').hide();
-                    // $('#tab1').addClass('active').show();
+
+
                 } catch (error){
+
 
                 }
                  }
@@ -6980,6 +7374,7 @@ function initFrequencySlider(sliderId, outputId) {
 
 
     function clearValues(){
+
 
       document.getElementById("scenario2-tab").click();
       document.getElementById("hdnScenarioID_2").value = '';
@@ -7143,6 +7538,7 @@ function initFrequencySlider(sliderId, outputId) {
       document.getElementById("scenario1-tab").click();
       document.getElementById("hdnScenarioID_1").value = '';
       document.getElementById("txtScenarioDescription_1").value = '';
+      document.getElementById("txtScenarioDuplicate_1").value = '';
       document.getElementById("txtScenarioAnalysis_1").value = '';
       document.getElementById("selectThreat_1").value = '';
       document.getElementById("production_outage_1").checked = false;
@@ -7176,6 +7572,21 @@ function initFrequencySlider(sliderId, outputId) {
       document.getElementById("txtAssets_1").value = '';
       document.getElementById("lblriskRating_1").value = '';
       document.getElementById("lblriskSummary_1").value = '';
+
+      document.getElementById("txtResidualRisk_1").value = '';
+      document.getElementById("txtBIAScore_1").value = '';
+      document.getElementById("txtAttackSuccess_1").value = '';
+      document.getElementById("txtDamage_1").value = '';
+      document.getElementById("action_item_table_1").innerHTML = '';
+
+      document.getElementById("scenario_12month_costs_1").value = '';
+      document.getElementById("monthly_cost_chart_1").innerHTML = '';
+      document.getElementById('lblriskRating_1').textContent = '';
+      document.getElementById('lblinherentRisk_1').textContent = '';
+      document.getElementById('lblBIAScore_1').textContent = '';
+      document.getElementById('lblAttackSuccess_1').textContent = '';
+      document.getElementById('bowtieChart_1').src = '';
+
 
     }
 
@@ -7220,7 +7631,7 @@ function save_scenario(buttonId) {
         }
     }).then((result) => {
         if (result.isConfirmed) {
-            // Gather data from your form controls
+            var bowtieImage = document.getElementById('bowtieChart_' + buttonId).src.split(',')[1];// Gather data from your form controls
             var scenarioData = {
                 'scenarioID': $('#hdnScenarioID_' + buttonId).val(),
                 'rawID': sessionStorage.getItem('rawid'),
@@ -7280,8 +7691,12 @@ function save_scenario(buttonId) {
                 'scenario_12month_costs': $('#scenario_12month_costs_' + buttonId).val(),
                 'executive_summary': $('#txtexec_summary_' + buttonId).val(),
                 'safeguards': [],
-                'residual_risk': $('#lblinherentRisk_' + buttonId).textContent,
+                'residual_risk': $('#txtResidualRisk_' + buttonId).val(),
+                'overall_bia': $('#txtBIAScore_' + buttonId).val(),
+                'scenario_probability': $('#txtAttackSuccess_' + buttonId).val(),
+                'bowtie': bowtieImage ,
             };
+
             // Iterate over each row in the table_safeguards table
             $('#table_safeguards_' + buttonId + ' tbody tr').each(function () {
                 var safeguard = $(this).find('textarea').eq(0).val(); // Assuming the first textarea is Safeguard
@@ -7405,7 +7820,26 @@ function analyze_Scenario(scenario) {
                 // Handle scenarios where 'consequence' is empty or not in response
                 analyzeTextarea.value = 'No analysis available.';
             }
+            var safetySlider = document.getElementById('range_safety_' + scenario);
+            safetySlider.value = response.impact_scores.Safety;
+            var lifeSlider = document.getElementById('range_life_' + scenario);
+            lifeSlider.value = response.impact_scores.Danger;
+            var operationsSlider = document.getElementById('range_production_' + scenario);
+            operationsSlider.value = response.impact_scores.Operations;
+            var financeSlider = document.getElementById('range_finance_' + scenario);
+            financeSlider.value = response.impact_scores.Finance;
+            var reputationSlider = document.getElementById('range_reputation_' + scenario);
+            reputationSlider.value = response.impact_scores.Reputation;
+            var environmentSlider = document.getElementById('range_environment_' + scenario);
+            environmentSlider.value = response.impact_scores.Environment;
+            var regulationSlider = document.getElementById('range_regulatory_' + scenario);
+            regulationSlider.value = response.impact_scores.Regulations;
+            var dataSlider = document.getElementById('range_data_' + scenario);
+            dataSlider.value = response.impact_scores.Data;
+            var supplySlider = document.getElementById('range_supply_' + scenario);
+            supplySlider.value = response.impact_scores.SupplyChain;
 
+            //populate the BIA sliders
             // var attackTreeJson = JSON.stringify(response.incident_flow_diagram);
             // document.getElementById('hdnattacktree').value = attackTreeJson;
             // drawAttackTree(response.incident_flow_diagram);
@@ -7593,6 +8027,7 @@ $(document).ready(function() {
         var impact = document.getElementById('id_impact_' + linkId).value;
         var targetAsset, targetAssetPurpose;
         var scenarioDescriptionId = 'txtScenarioDescription_' + linkId.split('_').pop();
+        var trigger = document.getElementById('selectTrigger').value;
 
         targetAsset = document.getElementById('txtAsset').value;
 
@@ -7618,10 +8053,12 @@ $(document).ready(function() {
                 targetAssetPurpose: targetAssetPurpose,
                 motivation: motivation,
                 impact: impact,
+                trigger: trigger,
                 csrfmiddlewaretoken: '{{ csrf_token }}'  // Ensure CSRF token is included for POST request
             },
             success: function(response) {
                 $('#txtScenarioDescription_' + linkId).val(response.scenario_description);
+                $('#txtScenarioDuplicate_' + linkId).val(response.scenario_description);
                 $('#analyzeScenarioBtn').prop('disabled', false);
                 analyze_Scenario(linkId);
                 Swal.close();
@@ -7644,7 +8081,156 @@ $(document).ready(function() {
     });
 });
 
+function applyEditMode() {
+    var editMode = sessionStorage.getItem('editMode');
+    var fields = document.querySelectorAll('.mode-dependent');
+    fields.forEach(function(field) {
+        if (editMode === '1') {
+            field.classList.remove('view-mode');
+            field.classList.add('edit-mode');
+            field.disabled = false; // Enable editing
+        } else {
+            field.classList.remove('edit-mode');
+            field.classList.add('view-mode');
+            field.disabled = true; // Disable editing
+        }
+    });
+}
 
+function formatAsCurrency(value) {
+                 // Strip any non-digit characters
+                 let cleanedValue = String(value).replace(/\D/g, '');
+
+                 // Convert the number to a currency format
+                 return parseInt(cleanedValue).toLocaleString('en-US', {
+                     style: 'currency',
+                     currency: 'USD',
+                     minimumFractionDigits: 0
+                 });
+             }
+
+function action_item_table(action_items, button){
+    // Create and populate the table
+    var tableHTML = `
+        <table style="width: 100%; font-size: small; table-layout: fixed; border-collapse: collapse; border: 1px solid black;">
+            <thead>
+                <tr>
+                    <th style="width: 10%; border: 1px solid black;">Action</th>
+                    <th style="width: 50%; border: 1px solid black;">Description</th>
+                    <th style="width: 20%; border: 1px solid black;">Reference</th>
+                    <th style="width: 10%; border: 1px solid black;"></th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    var rows = action_items.split('\n');
+    rows.forEach(function(row, index) {
+        var actionNumber = index + 1;
+        var description = row.substring(row.indexOf('.') + 1, row.lastIndexOf('[')).trim();
+        var nistReference = row.substring(row.lastIndexOf('[')).trim();
+
+        tableHTML += `
+            <tr>
+                <td style="border: 1px solid black;">${actionNumber}</td>
+                <td style="border: 1px solid black;">${description}</td>
+                <td style="border: 1px solid black;">${nistReference}</td>
+                 <td style="border: 1px solid black;">
+                    <button type="button" class="btn btn-primary add-action-btn" data-description="${description}" style="transform: scale(0.75);">Action</button>
+                </td>
+            </tr>
+        `;
+    });
+
+    tableHTML += `
+            </tbody>
+        </table>
+    `;
+
+    $('#action_item_table_' + button).html(tableHTML);
+    // Add event listeners to the "Add action" buttons
+    $('.add-action-btn').on('click', function() {
+        var description = $(this).data('description');
+        var currentDate = new Date();
+        var formattedDate = (currentDate.getMonth() + 1).toString().padStart(2, '0') + '/' +
+                            currentDate.getDate().toString().padStart(2, '0') + '/' +
+                            currentDate.getFullYear();
+
+        $('#actionTitle').val(description);
+        $('#actionDescription').val(description);
+        $('#actionDate').val(formattedDate);
+        $('#hdntxtModalRAW').val(sessionStorage.getItem('rawid'));
+        // Show the modal
+        $('#RAActionsModal').modal('show');
+    });
+
+    }
+
+function updateLabel() {
+        var selectTrigger = document.getElementById('selectTrigger');
+        var selectedValue = selectTrigger.value;
+        var lblEvent = document.getElementById('lblEvent');
+
+        switch (selectedValue) {
+            case 'Audit - External':
+            case 'Audit - Internal':
+                lblEvent.textContent = 'Audit Finding';
+                break;
+            case 'Change Request':
+                lblEvent.textContent = 'Change Summary';
+                break;
+            case 'Incident':
+                lblEvent.textContent = 'Incident Summary';
+                break;
+            case 'Policy Exception':
+                lblEvent.textContent = 'Exception Summary';
+                break;
+            case 'Scheduled Assessment':
+                lblEvent.textContent = 'Finding Summary';
+                break;
+            case 'Site Walkdown':
+                lblEvent.textContent = 'Observation';
+                break;
+            default:
+                lblEvent.textContent = 'QRAW';
+        }
+    }
+
+function displayRiskScore(buttonNumber, control, value) {
+    var label = $('#' + control +'_' + buttonNumber);
+    var image = label.prev('img'); // Assuming the image is the previous sibling of the label
+
+    var text, imgSrc;
+    if (value <= 2) {
+        text = 'Low';
+        imgSrc = "{% static 'images/green_cube.png' %}";
+    } else if (value <= 4) {
+        text = 'Low/Medium';
+        imgSrc = "{% static 'images/green_cube.png' %}";
+    } else if (value <= 6) {
+        text = 'Medium';
+        imgSrc = "{% static 'images/yellow_cube.png' %}";
+    } else if (value === 7) {
+        text = 'Medium/High';
+        imgSrc = "{% static 'images/yellow_cube.png' %}";
+    } else if (value <= 9) {
+        text = 'High';
+        imgSrc = "{% static 'images/redcube.png' %}";
+    } else if (value === 10) {
+        text = 'Very High';
+        imgSrc = "{% static 'images/redcube.png' %}";
+    } else {
+        text = 'Unknown'; // Fallback text in case the value is outside the expected range
+        imgSrc = "{% static 'images/redcube.png' %}"; // Fallback image
+    }
+
+    // Update the label text
+    label.text(text);
+
+    // Update the image source
+    image.attr('src', imgSrc);
+
+}
 </script>
 
  <textarea id="lblriskSummary_1" name="lblriskSummary_1" class="form-control" readonly style="resize: none; visibility: hidden" rows="15" > </textarea>
