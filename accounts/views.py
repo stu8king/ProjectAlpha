@@ -260,6 +260,8 @@ def password_reset_request(request):
 
     return render(request, 'accounts/password_reset_request.html', {'form': form})
 
+def home_view(request):
+    return render(request, 'accounts/home.html')
 
 @csrf_exempt
 def password_reset(request, uid):
@@ -276,7 +278,7 @@ def password_reset(request, uid):
                 time_difference = timezone.now() - reset_code.timestamp
                 if time_difference.total_seconds() > 1800:  # 1800 seconds = 30 minutes
                     messages.error(request, 'The reset code has expired. Please request a new one.')
-                    return redirect('accounts;password_reset_request')
+                    return redirect('accounts:password_reset_request')
 
                 # If the code is valid and not expired, reset the password
                 user = reset_code.user
@@ -287,7 +289,7 @@ def password_reset(request, uid):
                 reset_code.delete()
 
                 messages.success(request, 'Password reset successful. You can now login with your new password.')
-                return redirect('accounts/home.html')
+                return redirect('accounts:home')
             except PasswordResetCode.DoesNotExist:
                 messages.error(request, 'Invalid reset code. Please check and try again.')
     else:
