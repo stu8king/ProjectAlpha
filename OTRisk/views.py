@@ -60,7 +60,7 @@ from .pha_views import iotaphamanager, facility_risk_profile, get_headerrecord, 
     generate_ppt, analyze_scenario, assign_cyberpha_to_group, fetch_groups, fetch_all_groups, retrieve_scenario_builder, \
     facilities, air_quality_index, delete_pha_record, get_assessment_summary, copy_cyber_pha, assessment_gap_analysis, \
     load_default_facility, exalens_get_cyberpha_assets, generate_cyberpha_scenario_description
-from .report_views import pha_reports, get_scenario_report_details, qraw_reports, get_qraw_scenario_report_details
+from .report_views import pha_reports, get_scenario_report_details, qraw_reports, get_qraw_scenario_report_details, raw_reports
 from .scenario_builder import scenario_sim_v2, analyze_sim_scenario_v2, generate_sim_attack_tree_v2, \
     analyze_sim_consequences_v2, generate_scenario_description_v2, related_incidents, retrieve_scenario_builder_v2, \
     exalens_get_incidents

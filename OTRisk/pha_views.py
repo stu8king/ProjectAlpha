@@ -28,7 +28,7 @@ from OTRisk.models.Model_CyberPHA import tblIndustry, tblCyberPHAHeader, tblZone
     tblCyberPHAScenario, vulnerability_analysis, tblAssetType, tblMitigationMeasures, MitreControlAssessment, \
     cyberpha_safety, SECURITY_LEVELS, ScenarioConsequences, user_scenario_audit, auditlog, CyberPHAModerators, \
     WorkflowStatus, APIKey, CyberPHA_Group, ScenarioBuilder, PHA_Safeguard, CyberSecurityInvestment, UserScenarioHash, \
-    CyberPHARiskTolerance, CyberPHACybersecurityDefaults, PHA_Observations
+    CyberPHARiskTolerance, CyberPHACybersecurityDefaults, PHA_Observations, Country
 from OTRisk.models.raw import SecurityControls
 from OTRisk.models.raw import MitreICSMitigations, RAActions
 from OTRisk.models.questionnairemodel import FacilityType
@@ -470,6 +470,7 @@ def iotaphamanager(request, record_id=None):
     )
 
     industries = tblIndustry.objects.all().order_by('Industry')
+    countries = Country.objects.all().order_by('country')
     facilities = FacilityType.objects.all().order_by('FacilityType')
     zones = tblZones.objects.all().order_by('PlantZone')
     standardslist = tblStandards.objects.all().order_by('standard')
@@ -509,7 +510,8 @@ def iotaphamanager(request, record_id=None):
         'workflow_status_choices': WorkflowStatus.STATUS_CHOICES,
         'anychart_key': anychart_key,
         'group_types': CyberPHA_Group.GROUP_TYPES,
-        'saved_record_id': new_record_id
+        'saved_record_id': new_record_id,
+        'countries': countries
     })
 
 

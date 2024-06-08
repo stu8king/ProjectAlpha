@@ -1177,3 +1177,14 @@ class auditlog(models.Model):
 
     class Meta:
         db_table = 'tblAuditLog'
+
+class Country(models.Model):
+    id = models.AutoField(primary_key=True)
+    country = models.CharField(max_length=100)
+
+    class Meta:
+        db_table = 'tblCountries'
+        ordering = ['country']
+
+    def __str__(self):
+        return self.country

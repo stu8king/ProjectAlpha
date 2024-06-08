@@ -1,42 +1,40 @@
+import base64
 import os
+import re
 from datetime import date
 from io import BytesIO
+from math import ceil
 
+import inflect
 import openai
 from django.contrib.auth.decorators import login_required
-from django.db.models import Count, Avg, F, ExpressionWrapper, FloatField, Value, CharField, Func, Sum
-from django.db.models.functions import Cast, Substr, Length, math
-from math import ceil
-from django.forms import IntegerField
-from django.http import JsonResponse, HttpResponseRedirect, HttpResponseForbidden, HttpResponse
-from django.urls import reverse
-
-from django.shortcuts import get_object_or_404
 from django.core import serializers
+from django.db.models import Count, Avg, Func, Sum
+from django.http import JsonResponse, HttpResponseRedirect, HttpResponseForbidden, HttpResponse
+from django.shortcuts import get_object_or_404
+from django.shortcuts import render
+from django.urls import reverse
+from reportlab.graphics.charts.barcharts import VerticalBarChart
+from reportlab.graphics.shapes import Drawing, Rect, Image
+from reportlab.lib import colors
+from reportlab.lib.enums import TA_CENTER
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.sequencer import getSequencer
+from reportlab.lib.styles import ParagraphStyle
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.units import inch
+from reportlab.graphics.charts.textlabels import Label
+from reportlab.lib.utils import ImageReader
+from reportlab.pdfgen.canvas import Canvas
+from reportlab.platypus import SimpleDocTemplate, PageBreak, Image
+from reportlab.platypus import Table, TableStyle, Paragraph, Spacer
+
 from OTRisk.models.Model_CyberPHA import tblCyberPHAHeader, tblCyberPHAScenario, vulnerability_analysis, \
     MitreControlAssessment, ScenarioConsequences, CyberSecurityInvestment, PHA_Observations
-from OTRisk.models.raw import RAWorksheet, RAWorksheetScenario
 from OTRisk.models.raw import RAActions
+from OTRisk.models.raw import RAWorksheet, RAWorksheetScenario
 from accounts.models import UserProfile
-from .pha_views import calculate_effectiveness, get_overall_control_effectiveness_score, get_api_key
-
-from django.shortcuts import render
-from reportlab.pdfgen import canvas
-from reportlab.lib.pagesizes import letter
-from reportlab.lib.styles import getSampleStyleSheet
-from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, PageBreak
-from reportlab.lib.styles import ParagraphStyle
-from reportlab.lib.enums import TA_JUSTIFY, TA_CENTER
-from reportlab.platypus import Table, TableStyle, Paragraph, Spacer
-from reportlab.lib import colors
-from reportlab.lib.sequencer import getSequencer
-from reportlab.graphics.charts.legends import Legend
-from reportlab.graphics.shapes import Drawing, Rect
-from reportlab.graphics.charts.barcharts import VerticalBarChart
-from reportlab.pdfgen.canvas import Canvas
-from reportlab.lib.units import inch
-
-import re
+from .pha_views import get_overall_control_effectiveness_score, get_api_key
 
 
 class FooterCanvas(Canvas):
@@ -72,6 +70,64 @@ class FooterCanvas(Canvas):
         self.drawCentredString(width / 2, 0.75 * inch, "Confidential")
 
         self.restoreState()
+
+
+def create_bar_chart(scenario):
+    # Data for the bar chart
+    scores = [
+        ('Safety', scenario.SafetyScore),
+        ('Reputation', scenario.ReputationScore),
+        ('Finance', scenario.FinancialScore),
+        ('Data', scenario.DataScore),
+        ('Supply Chain', scenario.SupplyChainScore),
+        ('Danger', scenario.lifeScore),
+        ('Operations', scenario.productionScore),
+        ('Environment', scenario.environmentScore),
+        ('Compliance', scenario.regulatoryScore)
+    ]
+
+    # Sort scores from highest to lowest
+    sorted_scores = sorted(scores, key=lambda x: x[1], reverse=True)
+    category_names, data = zip(*sorted_scores)
+
+    # Create the drawing
+    drawing = Drawing(400, 200)
+
+    # Create the bar chart
+    bc = VerticalBarChart()
+    bc.x = 50
+    bc.y = 50
+    bc.height = 125
+    bc.width = 300
+    bc.data = [data]  # Needs to be a list of lists
+    bc.strokeColor = colors.black
+
+    # Set the category axis
+    bc.categoryAxis.categoryNames = category_names
+    bc.categoryAxis.labels.boxAnchor = 'ne'
+    bc.categoryAxis.labels.angle = 45
+    bc.categoryAxis.labels.dy = -15
+
+    # Set the value axis
+    bc.valueAxis.valueMin = 0
+    bc.valueAxis.valueMax = 10
+    bc.valueAxis.valueStep = 1
+
+    # Bar properties
+    bc.bars[0].fillColor = colors.blue
+
+    # Add title
+    title = Label()
+    title.setOrigin(200, 190)  # Position title above the chart
+    title.setText("Scenario Business Impact Analysis")
+    title.fontSize = 14
+    title.textAnchor = 'middle'
+    drawing.add(title)
+
+    # Add the bar chart to the drawing
+    drawing.add(bc)
+
+    return drawing
 
 
 @login_required()
@@ -336,7 +392,7 @@ def pha_reports(request, cyber_pha_header_id):
         chart.width = 300
         chart.data = [impact_values]
         chart.valueAxis.valueMin = 0
-        chart.valueAxis.valueMax = 11 # Set max value slightly higher than the max data value
+        chart.valueAxis.valueMax = 11  # Set max value slightly higher than the max data value
         chart.bars.fillColor = colors.skyblue
         # Add category names
         chart.categoryAxis.categoryNames = [
@@ -1024,3 +1080,334 @@ def get_qraw_scenario_report_details(request):
 
     }
     return JsonResponse(data)
+
+
+def get_risk_rating(value):
+    if value in [0, 1, 2]:
+        return "Low"
+    elif value in [3, 4]:
+        return "Low/Medium"
+    elif value in [5, 6]:
+        return "Medium"
+    elif value == 7:
+        return "Medium/High"
+    elif value in [8, 9]:
+        return "High"
+    elif value == 10:
+        return "Very High"
+    return ""
+
+
+def parse_executive_summary(executive_summary, style):
+    lines = executive_summary.split('\n')
+    table_data = []
+    for line in lines:
+        parts = line.split('. ', 1)
+        if len(parts) == 2:
+            number = Paragraph(parts[0], style)
+            text_and_reference = parts[1].rsplit(' [', 1)
+            if len(text_and_reference) == 2:
+                text = Paragraph(text_and_reference[0], style)
+                reference = Paragraph('[' + text_and_reference[1], style)  # Add the leading bracket back
+                table_data.append([number, text, reference])
+    return table_data
+
+
+def parse_consequences(raw_consequences, style):
+    lines = raw_consequences.split('\n')
+    bullet_points = []
+    for line in lines:
+        if line.startswith('- '):
+            bullet_points.append(Paragraph(line[2:], style))
+    return bullet_points
+
+
+@login_required()
+def raw_reports(request, raw_id):
+    p = inflect.engine()
+    raw_header = get_object_or_404(RAWorksheet, ID=raw_id)
+    user_profile = request.user.userprofile
+    organization = user_profile.organization
+    # Get the ID of the user who created the CyberPHA
+    creator_user_id = raw_header.UserID
+    current_user_organization_id = raw_header.organization_id
+
+    context = get_raw_records(raw_id)
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'inline; filename="report.pdf"'
+
+    buffer = BytesIO()
+    # Create a canvas and a PDF document.
+    doc = SimpleDocTemplate(buffer, pagesize=letter)
+    story = []
+
+    styles = getSampleStyleSheet()
+
+    def onFirstPage(canvas, doc):
+        canvas.saveState()
+        canvas.setTitle("CyberPHA Report")
+        width, height = letter
+
+        # Assuming the logo is stored correctly in your static directory
+        logo_path = os.path.join('static/images', 'anzenot_highres_small.jpg')
+        canvas.drawImage(logo_path, width / 2.1 - 50, height / 1.8, 150, 150, mask='auto')  # Center the logo
+
+        # Draw 'Report for' and 'Prepared for' text
+        canvas.setFont('Helvetica-Bold', 12)
+        canvas.drawString(inch, height / 2 - 40, f"Report for: {raw_header.BusinessUnit}")
+        canvas.drawString(inch, height / 2 - 70, f"Prepared for: {organization.name}")
+        current_date = date.today().strftime("%B %d, %Y")
+        canvas.setFont('Helvetica', 12)
+        canvas.drawString(inch, height / 2 - 120, current_date)
+        canvas.restoreState()
+
+    doc.build(story, onFirstPage=onFirstPage)
+    story.append(PageBreak())
+    custom_bold_style = ParagraphStyle('CustomBold', parent=styles['BodyText'], fontName='Helvetica-Bold')
+    body_text_style = ParagraphStyle('BodyTextWithMarkup', parent=styles['BodyText'], fontName='Helvetica',
+                                     allowMarkup=True)
+
+    # Add a title
+    report_title = f"Risk Assessment Report for {raw_header.BusinessUnit}"
+    title = Paragraph(report_title, styles['Title'])
+    story.append(title)
+    story.append(Spacer(1, 20))  # Add some space below the title
+
+    # Add Executive Summary section
+    executive_summary_title = "Executive Summary"
+    executive_summary = Paragraph(executive_summary_title, styles['Heading2'])
+    story.append(executive_summary)
+    story.append(Spacer(1, 12))
+
+    executive_summary_text = f"This is a report for a risk assessment conducted at {raw_header.BusinessUnit}, a {raw_header.BusinessUnitType} at {raw_header.business_unit_address_line1}, {raw_header.business_unit_city}, {raw_header.business_unit_postcode}, {raw_header.business_unit_country}. The assessment was conducted on {raw_header.RADate} by {raw_header.AssessorName}"
+    summary_paragraph = Paragraph(executive_summary_text, styles['BodyText'])
+    story.append(summary_paragraph)
+    story.append(Spacer(1, 12))
+
+    # Data for the table
+    table_data = [
+        ["Risk Assessment Title:", raw_header.RATitle],
+        ["Reason for risk assessment (Trigger Event):", raw_header.RATrigger],
+        ["Asset or observation under assessment:", raw_header.asset]
+    ]
+
+    # Create the table
+    table = Table(table_data, hAlign='LEFT')
+
+    # Define the table style
+    table.setStyle(TableStyle([
+        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
+        ('TOPPADDING', (0, 0), (-1, -1), 12),
+        ('LEFTPADDING', (0, 0), (-1, -1), 5),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 0),
+        # Add more styling as needed
+    ]))
+    story.append(table)
+    story.append(Spacer(1, 12))
+
+    styles = getSampleStyleSheet()
+    center_style = ParagraphStyle(name='Center', parent=styles['BodyText'], alignment=1, spaceBefore=6, spaceAfter=6,
+                                  fontSize=10)
+
+    # Prepare data and labels for the bar chart
+    impact_data = context['impact_summary']
+    data = [list(impact_data.values())]  # Data for the chart
+    categories = list(impact_data.keys())  # Category labels
+
+    # Creating a drawing for the chart
+    width, height = 450, 250
+    drawing = Drawing(width, height)
+    chart = VerticalBarChart()
+    chart.x = 50
+    chart.y = 75
+    chart.height = 125
+    chart.width = 300
+    chart.data = data
+    chart.categoryAxis.categoryNames = categories
+    chart.valueAxis.valueMin = 0
+    chart.valueAxis.valueMax = max(data[0]) + 1  # Set max value slightly higher than the max data value
+    chart.bars.fillColor = colors.skyblue
+
+    # Chart styles
+    chart.categoryAxis.labels.boxAnchor = 'n'  # North alignment for category labels
+    chart.categoryAxis.labels.angle = 45  # Optional: tilt the labels for better fit
+    chart.categoryAxis.labels.fontSize = 8
+    chart.categoryAxis.labels.dy = -10
+    chart.categoryAxis.labels.dx = -10
+
+    # Add the chart to the drawing
+    drawing.add(chart)
+    border = Rect(0, 0, width, height, strokeColor=colors.black, strokeWidth=1, fillColor=None)
+    drawing.add(border)
+    # Add a caption above the chart
+    caption_text = "<b>Overall Scenario Business Impact Analysis</b>"
+    caption_paragraph = Paragraph(caption_text, center_style)
+    story.append(caption_paragraph)  # Adding caption above the chart
+    story.append(drawing)  # Add the drawing with the chart to the story
+    story.append(Spacer(1, 20))
+
+    raw_scenarios = context['raw_scenarios']
+    scenario_count = len(raw_scenarios)  # Count the scenarios
+    if scenario_count == 1:
+        scenario_count_text = "One scenario was considered for this assessment. The scenario is described in the section below."
+    else:
+        scenario_count_text = f"{p.number_to_words(scenario_count).capitalize()} scenarios were considered for this assessment. The scenarios are described in the sections below."
+    scenario_count_paragraph = Paragraph(scenario_count_text, styles['BodyText'])
+    story.append(scenario_count_paragraph)
+    story.append(Spacer(1, 12))
+
+    story.append(PageBreak())
+
+    # end of executive summary page
+    scenarios_title = "Scenarios"
+    scenarios_header = Paragraph(scenarios_title, styles['Heading2'])
+    story.append(scenarios_header)
+    story.append(Spacer(1, 12))
+    center_style = ParagraphStyle(name='Center', parent=styles['BodyText'], alignment=TA_CENTER)
+    raw_scenarios = context['raw_scenarios']
+    first_scenario = True
+
+    for index, scenario in enumerate(raw_scenarios, start=1):
+        if index > 1:
+            # Add a PageBreak before every new scenario after the first
+            story.append(PageBreak())
+            # Create a header for each scenario using its 'Scenario' attribute
+        scenario_title = f"Scenario {index}: {scenario.ScenarioDescription}"
+        scenario_header = Paragraph(scenario_title, styles['Heading3'])
+        story.append(scenario_header)
+        story.append(Spacer(1, 10))
+
+        styles = getSampleStyleSheet()
+        center_style = ParagraphStyle(name='Center', parent=styles['BodyText'], alignment=TA_CENTER, spaceBefore=6,
+                                      spaceAfter=6, fontSize=12)
+        # Decode the base64 image
+        image_data = base64.b64decode(scenario.bowtie)
+        image = Image(BytesIO(image_data))  # Image object instantiated correctly without 'y'
+        available_width = 5 * inch  # Assuming the page width is 8 inches, half of it is 4 inches
+        aspect_ratio = image.drawHeight / image.drawWidth
+        image.drawWidth = available_width
+        image.drawHeight = available_width * aspect_ratio
+        story.append(image)
+        story.append(Spacer(1, 10))
+
+        # Add the bar chart
+        bar_chart = create_bar_chart(scenario)
+        story.append(bar_chart)
+        story.append(Spacer(1, 14))
+
+        styles = getSampleStyleSheet()
+        center_style = ParagraphStyle(name='Center', parent=styles['BodyText'], alignment=TA_CENTER, spaceBefore=6,
+                                      spaceAfter=6, fontSize=12)
+
+        # Determine risk ratings
+        bia = get_risk_rating(scenario.overall_bia)
+        scenario_probability_rating = get_risk_rating(scenario.scenario_probability)
+
+        # Create paragraphs with risk ratings
+        bia_paragraph = Paragraph(f"Overall BIA: {bia} ({scenario.overall_bia}/10)",
+                                  center_style)
+        scenario_probability_paragraph = Paragraph(
+            f"Scenario Probability: {scenario_probability_rating} ({scenario.scenario_probability}/10)", center_style)
+
+        story.append(bia_paragraph)
+        story.append(Spacer(1, 10))
+        story.append(scenario_probability_paragraph)
+        story.append(Spacer(1, 12))
+
+
+        bullet_point_style = ParagraphStyle(name='Bullet', parent=styles['BodyText'], spaceBefore=3, spaceAfter=3,
+                                            leftIndent=20)
+
+        # Add the Scenario Consequences section
+        consequences_title = Paragraph("Scenario Consequences", styles['Heading4'])
+        story.append(consequences_title)
+        story.append(Spacer(1, 10))
+
+        consequences_paragraphs = parse_consequences(scenario.raw_consequences, bullet_point_style)
+        for paragraph in consequences_paragraphs:
+            story.append(paragraph)
+            story.append(Spacer(1, 5))
+
+        # Add the Estimated Damage section
+        damage_title = Paragraph("Estimated Damage", styles['Heading4'])
+        story.append(damage_title)
+        story.append(Spacer(1, 10))
+
+        damage_paragraph = Paragraph(scenario.scenario_damage, styles['BodyText'])
+        story.append(damage_paragraph)
+        story.append(Spacer(1, 12))
+
+        styles = getSampleStyleSheet()
+        center_style = ParagraphStyle(name='Center', parent=styles['BodyText'], alignment=TA_CENTER, spaceBefore=6,
+                                      spaceAfter=6, fontSize=12)
+        table_cell_style = ParagraphStyle(name='TableCell', parent=styles['BodyText'], fontSize=10, spaceBefore=3,
+                                          spaceAfter=3)
+        action_items_title = Paragraph("Action Items", styles['Heading4'])
+        story.append(action_items_title)
+        story.append(Spacer(1, 10))
+        # Parse executive summary into table data
+        table_data = parse_executive_summary(scenario.executive_summary, table_cell_style)
+
+        # Define the table
+        col_widths = [0.5 * inch, 4 * inch, 2.5 * inch]  # Adjust column widths as needed
+        exec_summary_table = Table(table_data, colWidths=col_widths)
+
+        # Define table style
+        exec_summary_table.setStyle(TableStyle([
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ('LEFTPADDING', (0, 0), (-1, -1), 10),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 10),
+            ('TOPPADDING', (0, 0), (-1, -1), 5),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 5)
+        ]))
+
+        # Add the table to the story
+        story.append(exec_summary_table)
+        story.append(Spacer(1, 12))
+    doc.build(story, canvasmaker=FooterCanvas)
+
+    pdf = buffer.getvalue()
+    buffer.close()
+    response.write(pdf)
+    response = HttpResponse(pdf, content_type='application/pdf')
+    response['Content-Disposition'] = 'inline; filename="CyberPHA.pdf"'
+    return response
+
+
+def get_raw_records(raw_id):
+    raw_header = get_object_or_404(RAWorksheet, ID=raw_id)
+
+    raw_scenarios = RAWorksheetScenario.objects.filter(RAWorksheetID=raw_id)
+
+    field_label_mapping = {
+        'SafetyScore': 'Safety',
+        'ReputationScore': 'Reputation',
+        'FinancialScore': 'Finance',
+        'DataScore': 'Data',
+        'SupplyChainScore': 'Supply Chain',
+        'lifeScore': 'Danger',
+        'productionScore': 'Operations',
+        'environmentScore': 'Environment',
+        'regulatoryScore': 'Compliance'
+    }
+
+    impact_fields = list(field_label_mapping.keys())
+    impact_summary = {}
+
+    # Aggregate the data and populate the impact_summary with user-friendly labels
+    for field in impact_fields:
+        avg_value = raw_scenarios.aggregate(avg_value=Avg(field))['avg_value']
+        custom_label = field_label_mapping[field]
+        impact_summary[custom_label] = avg_value if avg_value is not None else 0
+
+    return {
+        'raw_header': raw_header,
+        'impact_summary': impact_summary,
+        'raw_scenarios': raw_scenarios
+    }

@@ -418,7 +418,8 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                         <td>{{ raw.industry }}</td>
                         <td>{{ raw.BusinessUnit }}</td>
                         <td>{{ raw.AssessorName }}</td>
-                        <td><a class="dropdown-item" href="{% url 'OTRisk:qraw_reports'  qraw_id=raw.ID  %}">Report</a></td>
+                        <!--<td><a class="dropdown-item" href="{% url 'OTRisk:qraw_reports'  qraw_id=raw.ID  %}">Report</a></td>-->
+                        <td><button type="button" class="report-button" onclick="window.open('{% url 'OTRisk:raw_reports' raw_id=raw.ID %}', '_blank')">Report</button></td>
                     </tr>
                 {% endfor %}
             </tbody>
@@ -7776,7 +7777,7 @@ $(document).ready(function() {
     function disableAllControls() {
         // Disable all input, textarea, select, and button elements
 
-        var elements = document.querySelectorAll('input:not([type="hidden"]), textarea, select, button:not(.modal-button)');
+        var elements = document.querySelectorAll('input:not([type="hidden"]), textarea, select, button:not(.modal-button):not(.report-button)');
         elements.forEach(function(element) {
             element.disabled = true;
         });

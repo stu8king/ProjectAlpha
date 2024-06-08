@@ -112,6 +112,7 @@ urlpatterns = [
     path('get_cve_details/', views.get_cve_details, name='get_cve_details'),
     path('pha_reports/<int:cyber_pha_header_id>/', views.pha_reports, name='pha_reports'),
     path('qraw_reports/<int:qraw_id>/', views.qraw_reports, name='qraw_reports'),
+    path('raw_reports/<int:raw_id>/', views.raw_reports, name='raw_reports'),
     path('get_scenario_report_details/', views.get_scenario_report_details, name='get_scenario_report_details'),
     path('get_qraw_scenario_report_details/', views.get_qraw_scenario_report_details, name='get_qraw_scenario_report_details'),
     path('list_frameworks/', views.list_frameworks, name='list_frameworks'),

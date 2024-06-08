@@ -377,15 +377,18 @@ def get_risk_status(risk_score):
 
 def parse_currency(currency_string):
     """Parse a currency string and return its integer value."""
-    # Remove any non-digit characters
-    sanitized_string = re.sub(r'[^\d]', '', currency_string)
+    try:
+        # Remove any non-digit characters
+        sanitized_string = re.sub(r'[^\d]', '', currency_string)
 
-    # Check if the sanitized string is empty
-    if not sanitized_string:
+        # Check if the sanitized string is empty
+        if not sanitized_string:
+            return 0
+
+        # Convert the sanitized string to an integer
+        return int(sanitized_string)
+    except Exception:
         return 0
-
-    # Convert the sanitized string to an integer
-    return int(sanitized_string)
 
 
 def ensure_non_empty(value):
