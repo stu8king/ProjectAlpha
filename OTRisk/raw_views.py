@@ -18,7 +18,7 @@ from OTRisk.models.Model_CyberPHA import tblIndustry, tblThreatSources, auditlog
     OrganizationDefaults, user_scenario_audit, ScenarioBuilder_AnalysisResult
 from OTRisk.models.Model_Mitre import MitreICSTactics
 from accounts.models import Organization, UserProfile
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from django.utils.decorators import method_decorator
@@ -576,6 +576,22 @@ def get_or_create_org_defaults(org_id):
 
 
 from django.urls import reverse
+
+
+@login_required
+def raw_delete(request, worksheet_id):
+    # Get the organization ID of the current user
+    org_id = get_user_organization_id(request)
+
+    # Retrieve the worksheet, ensuring it exists and belongs to the same organization as the user
+    worksheet = get_object_or_404(RAWorksheet, ID=worksheet_id, organization_id=org_id)
+
+    # Update the 'deleted' field
+    worksheet.deleted = 1
+    worksheet.save()
+
+    # Redirect to the desired URL
+    return redirect('OTRisk:qraw')
 
 
 @login_required
@@ -2229,4 +2245,3 @@ def generate_bowtie_chart(bow_tie_json):
     image_base64 = base64.b64encode(buf.read()).decode('utf-8')
 
     return image_base64
-
