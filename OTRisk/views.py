@@ -53,7 +53,7 @@ from xml.etree import ElementTree as ET
 from .raw_views import qraw, openai_assess_risk, GetTechniquesView, raw_action, check_vulnerabilities, rawreport, \
     raw_from_walkdown, save_ra_action, get_rawactions, ra_actions_view, UpdateRAAction, reports, reports_pha, \
     create_or_update_raw_scenario, analyze_raw_scenario, analyze_sim_scenario, generate_sim_attack_tree, \
-    analyze_sim_consequences, update_workflow, get_analysis_result, cleanup_scenariobuilder, generate_raw_scenario_description
+    analyze_sim_consequences, raw_delete, update_workflow, get_analysis_result, cleanup_scenariobuilder, generate_raw_scenario_description
 from .dashboard_views import dashboardhome, get_group_report, get_heatmap_records, get_all_groups_scores
 from .pha_views import iotaphamanager, facility_risk_profile, get_headerrecord, scenario_analysis, phascenarioreport, \
     getSingleScenario, pha_report, scenario_vulnerability, add_vulnerability, get_asset_types, calculate_effectiveness, \

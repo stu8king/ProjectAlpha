@@ -113,7 +113,18 @@
         });
     </script>
             <br>
-
+    <!-- Message section to display login errors -->
+    {% if messages %}
+        <div class="row">
+            <div class="col-md-4"></div>
+            <div class="col-md-4">
+                {% for message in messages %}
+                    <div style="color: white" class="alert alert-{{ message.tags }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+            <div class="col-md-4"></div>
+        </div>
+    {% endif %}
             <form method="POST" action="{% url 'accounts:login' %}">
                 {% csrf_token %}
 

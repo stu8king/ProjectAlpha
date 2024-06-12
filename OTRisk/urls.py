@@ -122,7 +122,7 @@ urlpatterns = [
     # To start a new assessment
     path('assessment_questions/<int:framework_id>/', views.assessment_questions, name='assessment_questions'),
     path('fetch-updated-assessments/', views.fetch_updated_assessments, name='fetch_updated_assessments'),
-
+    path('raw_delete/<int:worksheet_id>/', views.raw_delete, name='raw_delete'),
     path('save_assessment/<int:framework_id>/', views.save_assessment, name='save_assessment'),
     path('edit_assessment/<int:assessment_id>/', views.edit_assessment, name='edit_assessment'),
     path('create/', views.setup_org, name='setup_org'),
