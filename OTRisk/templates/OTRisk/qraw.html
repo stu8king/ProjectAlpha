@@ -8173,8 +8173,14 @@ function formatAsCurrency(value) {
              }
 
 function action_item_table(action_items, button){
-    // Create and populate the table
-    var tableHTML = `
+
+    try {
+        if (!action_items || typeof action_items !== 'string') {
+            return;
+        }
+
+        // Create and populate the table
+        var tableHTML = `
         <table style="width: 100%; font-size: small; table-layout: fixed; border-collapse: collapse; border: 1px solid black;">
             <thead>
                 <tr>
@@ -8187,13 +8193,13 @@ function action_item_table(action_items, button){
             <tbody>
     `;
 
-    var rows = action_items.split('\n');
-    rows.forEach(function(row, index) {
-        var actionNumber = index + 1;
-        var description = row.substring(row.indexOf('.') + 1, row.lastIndexOf('[')).trim();
-        var nistReference = row.substring(row.lastIndexOf('[')).trim();
+        var rows = action_items.split('\n');
+        rows.forEach(function (row, index) {
+            var actionNumber = index + 1;
+            var description = row.substring(row.indexOf('.') + 1, row.lastIndexOf('[')).trim();
+            var nistReference = row.substring(row.lastIndexOf('[')).trim();
 
-        tableHTML += `
+            tableHTML += `
             <tr>
                 <td style="border: 1px solid black;">${actionNumber}</td>
                 <td style="border: 1px solid black;">${description}</td>
@@ -8203,29 +8209,32 @@ function action_item_table(action_items, button){
                 </td>
             </tr>
         `;
-    });
+        });
 
-    tableHTML += `
+        tableHTML += `
             </tbody>
         </table>
     `;
 
-    $('#action_item_table_' + button).html(tableHTML);
-    // Add event listeners to the "Add action" buttons
-    $('.add-action-btn').on('click', function() {
-        var description = $(this).data('description');
-        var currentDate = new Date();
-        var formattedDate = (currentDate.getMonth() + 1).toString().padStart(2, '0') + '/' +
-                            currentDate.getDate().toString().padStart(2, '0') + '/' +
-                            currentDate.getFullYear();
+        $('#action_item_table_' + button).html(tableHTML);
+        // Add event listeners to the "Add action" buttons
+        $('.add-action-btn').on('click', function () {
+            var description = $(this).data('description');
+            var currentDate = new Date();
+            var formattedDate = (currentDate.getMonth() + 1).toString().padStart(2, '0') + '/' +
+                currentDate.getDate().toString().padStart(2, '0') + '/' +
+                currentDate.getFullYear();
 
-        $('#actionTitle').val(description);
-        $('#actionDescription').val(description);
-        $('#actionDate').val(formattedDate);
-        $('#hdntxtModalRAW').val(sessionStorage.getItem('rawid'));
-        // Show the modal
-        $('#RAActionsModal').modal('show');
-    });
+            $('#actionTitle').val(description);
+            $('#actionDescription').val(description);
+            $('#actionDate').val(formattedDate);
+            $('#hdntxtModalRAW').val(sessionStorage.getItem('rawid'));
+            // Show the modal
+            $('#RAActionsModal').modal('show');
+        });
+    } catch (error) {
+        return;
+    }
 
     }
 
