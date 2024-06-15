@@ -878,7 +878,7 @@ def facility_risk_profile(request):
         # Generate the text statement for investments
         investment_statement = "Investments have been made in:\n"
         for idx, investment in enumerate(investments, start=1):
-            investment_statement += f"{idx}: Investment Type:{investment['type']}, Vendor:{investment['vendor_name']}, Product:{investment['product_name']}, Investment date:{investment['date']}.\n"
+            investment_statement += f"{idx}: Vendor:{investment['vendor_name']}, Product:{investment['product_name']}.\n"
 
         language = request.session.get('organization_defaults', {}).get('language', 'en')  # 'en' is the default value
 
