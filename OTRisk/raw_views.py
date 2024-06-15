@@ -1002,7 +1002,7 @@ def openai_assess_risk(request):
                 f"Estimate the probability of an attack resulting in the given scenario being successful. Use any relevant publicly available information relating to cybersecurity incidents to form an opinion. Your output must be a score between 1 and 10 where 1 indicates a very low probability of attack success and 10 means an attack definately success. The response must be only the single number with no additional text or explanation. The user must only see the final risk score number without any other detail")
         }
 
-        bowtie_message = """
+        bowtie_message = f""""
         You are an expert in risk management. Create a bowtie chart structure in JSON format to represent the following cybersecurity scenario:
         Scenario description: {scenario}
         Consequences of the scenario: {consequences}

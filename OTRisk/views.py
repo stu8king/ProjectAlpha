@@ -841,7 +841,7 @@ def send_password_email(username, user_email, password):
             'user_name': username,
             'password': password,
             'user_email': user_email,  # Assuming you want to display this in the email
-            'logo_url': 'https://www.anzenot.ai/staticfiles/images/anzen_owl.png',
+            'logo_url': 'https://anzenot.ai/static/images/AnzenOTIconBlack.png',
             'login_url': 'https://www.anzenot.ai'
         }
         html_content = render_to_string('OTRisk/welcome_email.html', context)
@@ -3031,7 +3031,6 @@ def save_scenario_builder(request):
                 'regs': data.get('regs'),
                 'attacker': data.get('attacker'),
                 'vector': data.get('vector'),
-                'target': data.get('target'),
                 'effect': data.get('effect'),
                 'network': data.get('network'),
                 'impact': data.get('impact'),

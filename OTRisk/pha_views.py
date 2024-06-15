@@ -28,7 +28,7 @@ from OTRisk.models.Model_CyberPHA import tblIndustry, tblCyberPHAHeader, tblZone
     tblCyberPHAScenario, vulnerability_analysis, tblAssetType, tblMitigationMeasures, MitreControlAssessment, \
     cyberpha_safety, SECURITY_LEVELS, ScenarioConsequences, user_scenario_audit, auditlog, CyberPHAModerators, \
     WorkflowStatus, APIKey, CyberPHA_Group, ScenarioBuilder, PHA_Safeguard, CyberSecurityInvestment, UserScenarioHash, \
-    CyberPHARiskTolerance, CyberPHACybersecurityDefaults, PHA_Observations, Country
+    CyberPHARiskTolerance, CyberPHACybersecurityDefaults, PHA_Observations, Country, OTVendor
 from OTRisk.models.raw import SecurityControls
 from OTRisk.models.raw import MitreICSMitigations, RAActions
 from OTRisk.models.questionnairemodel import FacilityType
@@ -48,7 +48,6 @@ import concurrent.futures
 import os
 import math
 from decimal import Decimal, InvalidOperation
-
 from ProjectAlpha import settings
 from ProjectAlpha.settings import BASE_DIR
 from accounts.models import UserProfile, Organization
@@ -300,36 +299,18 @@ def iotaphamanager(request, record_id=None):
             CyberSecurityInvestment.objects.filter(cyber_pha_header=pha_header).delete()
 
         # Extract and process investment information from POST data
-        investment_types = request.POST.getlist('investment_type[]')
+
         vendor_names = request.POST.getlist('vendor_name[]')
         product_names = request.POST.getlist('product_name[]')
-        costs = request.POST.getlist('cost[]')
-        dates = request.POST.getlist('date[]')
 
-        for i_type, vendor, product, cost, date_str in zip(investment_types, vendor_names, product_names, costs, dates):
-            # Ensure empty strings are saved for text fields if no data is entered
-            i_type = i_type if i_type else ""
+        for vendor, product in zip(vendor_names, product_names):
             vendor = vendor if vendor else ""
             product = product if product else ""
 
-            # Handle cost, ensuring a default of 0 if no cost is entered
-            cost = cost if cost else "0"
-
-            # Convert date string to a date object, making it timezone-aware if necessary
-            if not date_str:
-                investment_date = timezone.now().date()  # Get the current date
-            else:
-                investment_date = parse_datetime(date_str + " 00:00")
-                if investment_date and timezone.is_naive(investment_date):
-                    investment_date = timezone.make_aware(investment_date, timezone.get_default_timezone()).date()
-
             CyberSecurityInvestment.objects.create(
                 cyber_pha_header=pha_header,
-                investment_type=i_type,
                 vendor_name=vendor,
-                product_name=product,
-                cost=cost,
-                date=investment_date
+                product_name=product
             )
 
         #### End save investments
@@ -474,6 +455,14 @@ def iotaphamanager(request, record_id=None):
     facilities = FacilityType.objects.all().order_by('FacilityType')
     zones = tblZones.objects.all().order_by('PlantZone')
     standardslist = tblStandards.objects.all().order_by('standard')
+    vendors_products = list(OTVendor.objects.all().values('vendor', 'product'))
+
+    # Create a set for unique vendors
+    unique_vendors = {vp['vendor'] for vp in vendors_products}
+
+    # Convert the vendors and products to JSON
+    vendors_json = json.dumps(vendors_products)
+    unique_vendors_json = json.dumps(list(unique_vendors))
     mitigations = MitreICSMitigations.objects.all()
     anychart_key = get_api_key('anychart')
     moderators_in_organization = UserProfile.objects.filter(
@@ -511,7 +500,9 @@ def iotaphamanager(request, record_id=None):
         'anychart_key': anychart_key,
         'group_types': CyberPHA_Group.GROUP_TYPES,
         'saved_record_id': new_record_id,
-        'countries': countries
+        'countries': countries,
+        'vendors_json': vendors_json,
+        'unique_vendors_json': unique_vendors_json
     })
 
 
@@ -806,9 +797,9 @@ def facility_threat_profile(security_level, facility, facility_type, country, in
         INSTRUCTION: Utilize relevant and credible sources of information and industry reports such as from Dragos, Gartner, Deloitte.
         
         Example Format:
-        Section 1: Threats.
-        1. Example threat.
-        2. Another example threat.
+        Section 1: Threats
+        1. Threat description. (Probability: X%)
+        2. Threat description. (Probability: X%)
         
         Section 2: Insights
         1. Example insight.
@@ -964,7 +955,6 @@ def facility_risk_profile(request):
                                                                                  ir_plan_date_str, connector_risk,
                                                                                  connector_status, connector_score)
 
-        # Return the individual parts as variables in JsonResponse
         return JsonResponse({
             'safety_summary': safety_summary,
             'chemical_summary': chemical_summary,
@@ -1457,6 +1447,7 @@ def exalens_get_device_incident(ipaddress, exalens_api_key, exalens_ip_address, 
         # Handle exceptions from the requests library
         return f'Error occurred: {str(e)}'
 
+
 @login_required
 def scenario_analysis(request):
     # Log the user activity
@@ -1539,7 +1530,8 @@ def scenario_analysis(request):
         exalens_ip_address = cyber_pha_header.exalens_ip
         exalens_client_id = cyber_pha_header.exalens_client
 
-        exalens_incidents = exalens_get_device_incident(targetAsset, exalens_api_key, exalens_ip_address, exalens_client_id)
+        exalens_incidents = exalens_get_device_incident(targetAsset, exalens_api_key, exalens_ip_address,
+                                                        exalens_client_id)
 
         # Convert plan_last_tested_date to string format if it's not None
         plan_last_tested_date_str = plan_last_tested_date.strftime('%Y-%m-%d') if plan_last_tested_date else None
@@ -2009,7 +2001,7 @@ def analyze_scenario(request):
         """
 
         validation_response = openai.ChatCompletion.create(
-            model="gpt-4",
+            model="gpt-4o",
             messages=[
                 {"role": "system", "content": validation_prompt}
             ],
@@ -2036,7 +2028,7 @@ def analyze_scenario(request):
 
             # Construct a prompt for GPT-4
             system_message = f"""
-            You are are expert in cybersecurity scenarios for industrial facilities.  TASK: Analyze and consider the following scenario as part of an OT/ICS focused Cyber HAZOPS/Layer of Protection Analysis (LOPA) assessment: {scenario} which occurs at a {facility_type} in the {industry} industry, located at {address} in {country}, specifically in the {zone} zone and the {unit} unit. 
+            You are are expert in cyber-physical scenarios for industrial facilities.  TASK: Analyze and consider the following scenario as part of an OT/ICS focused Cyber HAZOPS/Layer of Protection Analysis (LOPA) assessment: {scenario} which occurs at a {facility_type} in the {industry} industry, located at {address} in {country}, specifically in the {zone} zone and the {unit} unit. 
             The attacker is assumed to be: {attacker}. The attack vector is assumed to be {attack_vector}. The risk category is assumed to be {riskCategory}. Vulnerable systems with Internet exposed IP address {exposed_system}. Vulnerable systems with default or weak credentials {weak_credentials}.
             Considering the likely presence of these OT devices: {devices}, concisely describe in 50 words in a list format (separated by semicolons) of a maximum of 5 of the most likely direct consequences of the given scenario. 
             The direct consequences should be specific to the facility and the mentioned details. 
@@ -2129,6 +2121,7 @@ def analyze_scenario(request):
 
                     # Parse the raw JSON string into a Python dictionary
                 attack_tree_json = json.loads(cleaned_json_str)
+
             return JsonResponse({'consequence': consequence_list, 'attack_tree': attack_tree_json})
 
 
@@ -2848,7 +2841,6 @@ def load_default_facility(request):
 def exalens_get_cyberpha_assets(cyberphaid):
     urllib3.disable_warnings(InsecureRequestWarning)
 
-
     try:
         cyberpha_header = tblCyberPHAHeader.objects.get(ID=cyberphaid)
         exalens_api_key = cyberpha_header.exalens_api
@@ -2871,7 +2863,6 @@ def exalens_get_cyberpha_assets(cyberphaid):
         return []  # Return an empty list if an exception occurs
 
 
-
 @login_required()
 def generate_cyberpha_scenario_description(request):
     if request.method == 'POST':
@@ -2891,7 +2882,7 @@ def generate_cyberpha_scenario_description(request):
 
         # Constructing the prompt
         prompt = f"""
-        You are an engineer responsible for safeguarding operations for a {facility_type}. Write a technical scenario for a CYBER HAZOPS assessment using LOPA methodology, detailing a credible cyber-physical attack against operational technology and industrial control systems. The narrative must be factual, specific to the details given, concise, and limit to 200 words, without detailing the consequences or long-term impacts. No preamble or additonal narrative. No repeating of input variables:
+        You are an engineer responsible for safeguarding operations for a {facility_type}. Write a technical scenario for a CYBER HAZOPS assessment using LOPA methodology, detailing a credible cyber-physical attack against operational technology and industrial control systems. The narrative must be factual, specific to the details given, concise, and limit to 200 words, without detailing the consequences or long-term impacts. No preamble or additional narrative. No repeating of input variables:
 
         - Attacker: {attacker}
         - Attack Vector: {attack_vector}
@@ -2902,7 +2893,7 @@ def generate_cyberpha_scenario_description(request):
         - Affected asset: {target_asset}
         - Purpose of affected asset: {target_asset_purpose}
 
-        Using the given information above, generate a scenario focusing solely on the purpose and type of asset and the potential for that asset to be compromised and it might be manipulated resulting in a bad outcome in the context of the other given information. Do not speculate on mitigation or describe the facility in detail. Do not repeat information that the user is familiar with: industry, number of employees, country, facility type are for context  in generating the scenario and MUST NOT BE REPEATED IN THE RESPONSE. Use precise and concise language.
+        Using the given information above, generate a scenario focusing solely on the purpose and type of asset and the potential for that asset to be compromised and it might be manipulated resulting in a bad outcome in the context of the other given information. INSTRUCTIONS a) If no asset detail is given then focus on the type of facility. b) Do not speculate on mitigation or describe the facility in detail. c) Do not repeat information about the targeted asset or other given detail in the output. d) Do not repeat information that the user is familiar with: industry, number of employees, country, facility type are for context  in generating the scenario and MUST NOT BE REPEATED IN THE RESPONSE. e) Use precise and concise language with as much technical detail as possible given the input details.
         """
 
         # Setting OpenAI API key
@@ -2928,3 +2919,4 @@ def generate_cyberpha_scenario_description(request):
         return JsonResponse({'scenario_description': scenario_description})
     else:
         return JsonResponse({'error': 'Invalid request'}, status=400)
+

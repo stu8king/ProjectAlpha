@@ -215,7 +215,24 @@ def pha_reports(request, cyber_pha_header_id):
     story.append(scenario_count_paragraph)
     story.append(Spacer(1, 12))
 
-    likelihood_summary_text = f"Overall likelihood of the facility being affected by the given scenarios is: {context['overall_likelihood']}: "
+    # Determine the likelihood description based on the overall_likelihood value
+    overall_likelihood = context['overall_likelihood']
+    if 0 <= overall_likelihood <= 25:
+        likelihood_description = "Very Low"
+    elif 26 <= overall_likelihood <= 35:
+        likelihood_description = "Low"
+    elif 36 <= overall_likelihood <= 55:
+        likelihood_description = "Medium"
+    elif 56 <= overall_likelihood <= 70:
+        likelihood_description = "Medium to High"
+    elif 71 <= overall_likelihood <= 90:
+        likelihood_description = "High"
+    elif 91 <= overall_likelihood <= 100:
+        likelihood_description = "Very High"
+    else:
+        likelihood_description = "Unknown"  # Just in case the value is out of expected range
+
+    likelihood_summary_text = f"Overall likelihood of the facility being affected by the given scenarios is: {overall_likelihood}% ({likelihood_description})"
     likelihood_summary_paragraph = Paragraph(likelihood_summary_text, body_text_style)
     story.append(likelihood_summary_paragraph)
     story.append(Spacer(1, 12))
@@ -241,7 +258,7 @@ def pha_reports(request, cyber_pha_header_id):
     chart.categoryAxis.categoryNames = categories
     chart.valueAxis.valueMin = 0
     chart.valueAxis.valueMax = max(data[0]) + 1  # Set max value slightly higher than the max data value
-    chart.bars.fillColor = colors.skyblue
+    chart.bars[0].fillColor = colors.skyblue
 
     # Chart styles
     chart.categoryAxis.labels.boxAnchor = 'n'  # North alignment for category labels
@@ -252,13 +269,28 @@ def pha_reports(request, cyber_pha_header_id):
 
     # Add the chart to the drawing
     drawing.add(chart)
-    border = Rect(0, 0, width, height, strokeColor=colors.black, strokeWidth=1, fillColor=None)
-    drawing.add(border)
-    # Add a caption above the chart
+
+    # Create a table with the chart and caption
     caption_text = "<b>Overall Scenario Business Impact Analysis</b>"
     caption_paragraph = Paragraph(caption_text, center_style)
-    story.append(caption_paragraph)  # Adding caption above the chart
-    story.append(drawing)  # Add the drawing with the chart to the story
+
+    # Adjusting the column width to bring the caption closer to the chart
+    chart_and_caption_table = Table(
+        [[drawing, caption_paragraph]],
+        colWidths=[width, 100],  # Adjust the width of the caption column
+        rowHeights=[height]
+    )
+
+    # Style the table to align the caption to the left and position it
+    chart_and_caption_table.setStyle(TableStyle([
+        ('VALIGN', (0, 0), (0, 0), 'TOP'),  # Align the chart to the top
+        ('VALIGN', (1, 0), (1, 0), 'TOP'),  # Align the caption to the top
+        ('LEFTPADDING', (1, 0), (1, 0), 0),  # Remove left padding for the caption
+        ('TOPPADDING', (1, 0), (1, 0), height * 0.25),  # Move the caption down 25% of the chart height
+        ('ALIGN', (1, 0), (1, 0), 'LEFT')  # Left align the caption text
+    ]))
+    # Add the table to the story
+    story.append(chart_and_caption_table)
     story.append(Spacer(1, 20))
 
     assessment_summary_text = f"OT Cybersecurity Controls are assessed as: {cyber_pha_header.last_assessment_score}/100: <b>{cyber_pha_header.last_assessment_summary} </b>"
@@ -393,7 +425,7 @@ def pha_reports(request, cyber_pha_header_id):
         chart.data = [impact_values]
         chart.valueAxis.valueMin = 0
         chart.valueAxis.valueMax = 11  # Set max value slightly higher than the max data value
-        chart.bars.fillColor = colors.skyblue
+        chart.bars[0].fillColor = colors.skyblue
         # Add category names
         chart.categoryAxis.categoryNames = [
             'Safety', 'Data', 'Danger', 'Supply', 'Production', 'Finance', 'Environment', 'Supply'
@@ -568,7 +600,7 @@ def pha_reports(request, cyber_pha_header_id):
             story.append(Spacer(1, 10))
 
     story.append(PageBreak())
-    safety_summary_title = "Safety Summary"
+    safety_summary_title = "Appendix - Facility Safety Summary"
     safety_summary = Paragraph(safety_summary_title, styles['Heading2'])
     story.append(safety_summary)
     story.append(Spacer(1, 12))
@@ -599,9 +631,9 @@ def pha_reports(request, cyber_pha_header_id):
     safety_summary_paragraph = Paragraph(safety_summary_text, list_style)
     story.append(safety_summary_paragraph)
     story.append(Spacer(1, 20))
-
+    story.append(PageBreak())
     # Chemical summary
-    chemical_summary_title = "Chemical Summary"
+    chemical_summary_title = "Appendix - Facility Chemical Summary"
     chemical_summary = Paragraph(chemical_summary_title, styles['Heading2'])
     story.append(chemical_summary)
     story.append(Spacer(1, 12))
@@ -631,6 +663,85 @@ def pha_reports(request, cyber_pha_header_id):
     # Creating the paragraph with the list
     chemical_summary_paragraph = Paragraph(chemical_summary_text, list_style)
     story.append(chemical_summary_paragraph)
+    story.append(Spacer(1, 20))
+
+    # Add the Threat Summary section as an appendix
+    threat_summary_title = "Appendix - Facility Threat Summary"
+    threat_summary_header = Paragraph(threat_summary_title, styles['Heading2'])
+    story.append(PageBreak())
+    story.append(threat_summary_header)
+    story.append(Spacer(1, 12))
+
+    # Split the threat summary text by numbered items and clean up each item
+    threat_summary_items = cyber_pha_header.threatSummary.split('\n')
+    threat_summary_items = [item.strip() for item in threat_summary_items if item.strip() != '']
+
+    # Constructing the formatted threat summary
+    threat_summary_text = "<br/><br/>".join(f"{item}" for item in threat_summary_items)
+
+    # Define the paragraph style for the threat summary with line spacing
+    threat_summary_style = ParagraphStyle(
+        name='ThreatSummaryStyle',
+        parent=styles['BodyText'],
+        spaceBefore=10,
+        spaceAfter=10
+    )
+
+    # Creating the paragraph with the threat summary
+    threat_summary_paragraph = Paragraph(threat_summary_text, threat_summary_style)
+    story.append(threat_summary_paragraph)
+    story.append(Spacer(1, 20))
+
+    insight_summary_title = "Appendix - Cybersecurity Insights"
+    insight_summary_header = Paragraph(insight_summary_title, styles['Heading2'])
+    story.append(PageBreak())
+    story.append(insight_summary_header)
+    story.append(Spacer(1, 12))
+
+    # Split the threat summary text by numbered items and clean up each item
+    insight_summary_items = cyber_pha_header.insightSummary.split('\n')
+    insight_summary_items = [item.strip() for item in insight_summary_items if item.strip() != '']
+
+    # Constructing the formatted threat summary
+    insight_summary_text = "<br/><br/>".join(f"{item}" for item in insight_summary_items)
+
+    # Define the paragraph style for the threat summary with line spacing
+    insight_summary_style = ParagraphStyle(
+        name='InsightSummaryStyle',
+        parent=styles['BodyText'],
+        spaceBefore=10,
+        spaceAfter=10
+    )
+
+    # Creating the paragraph with the threat summary
+    insight_summary_paragraph = Paragraph(insight_summary_text, insight_summary_style)
+    story.append(insight_summary_paragraph)
+    story.append(Spacer(1, 20))
+
+    strategy_summary_title = "Appendix - Cybersecurity Strategy Insight"
+    strategy_summary_header = Paragraph(strategy_summary_title, styles['Heading2'])
+    story.append(PageBreak())
+    story.append(strategy_summary_header)
+    story.append(Spacer(1, 12))
+
+    # Split the threat summary text by numbered items and clean up each item
+    strategy_summary_items = cyber_pha_header.strategySummary.split('\n')
+    strategy_summary_items = [item.strip() for item in strategy_summary_items if item.strip() != '']
+
+    # Constructing the formatted threat summary
+    strategy_summary_text = "<br/><br/>".join(f"{item}" for item in strategy_summary_items)
+
+    # Define the paragraph style for the threat summary with line spacing
+    strategy_summary_style = ParagraphStyle(
+        name='StrategySummaryStyle',
+        parent=styles['BodyText'],
+        spaceBefore=10,
+        spaceAfter=10
+    )
+
+    # Creating the paragraph with the threat summary
+    strategy_summary_paragraph = Paragraph(strategy_summary_text, strategy_summary_style)
+    story.append(strategy_summary_paragraph)
     story.append(Spacer(1, 20))
 
     story.append(PageBreak())
@@ -1230,7 +1341,7 @@ def raw_reports(request, raw_id):
     chart.categoryAxis.categoryNames = categories
     chart.valueAxis.valueMin = 0
     chart.valueAxis.valueMax = max(data[0]) + 1  # Set max value slightly higher than the max data value
-    chart.bars.fillColor = colors.skyblue
+    chart.bars[0].fillColor = colors.skyblue
 
     # Chart styles
     chart.categoryAxis.labels.boxAnchor = 'n'  # North alignment for category labels

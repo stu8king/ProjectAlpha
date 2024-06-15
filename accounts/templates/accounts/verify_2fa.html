@@ -16,7 +16,7 @@
 
 
 <link rel="icon" href="{% static 'images/AnzenOTIconBlack.png' %}" type="image/x-icon">
-
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
     <link href="https://fonts.googleapis.com/css?family=Poppins:100,200,400,300,500,600,700" rel="stylesheet">
@@ -114,10 +114,11 @@
             <div class="col-md-12">
                 <br>
                 <p style="color:white">Enter the code in the SMS sent to your device</p>
-               <form id="two_factor_verify_form" method="post">
+               <form id="two_factor_verify_form" method="post" style="color:white">
                 {% csrf_token %}
                 {{ form.as_p }}
                 <button type="submit" class="form-control btn-primary">Submit Code</button><br>
+               <button type="button" class="form-control btn-secondary" id="backButton">Edit Phone Number</button><br>
                    <label id="lblmfamsg" style="color:white">Contact your AnzenOT administrator or email <a href="mailto:support@anzenot.com">support@anzenot.com</a> if the number you receive your codes at has changed</label>
             </form>
             </div>
@@ -145,7 +146,22 @@
         </div>
         <div class="col-md-5"></div>
     </div>
+
 <script>
+document.getElementById('backButton').addEventListener('click', function() {
+    Swal.fire({
+        title: 'Are you sure?',
+        text: "Do you want to go back and edit your phone number?",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, go back',
+        cancelButtonText: 'Cancel'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            window.location.href = '{% url "accounts:setup_2fa" %}';
+        }
+    });
+});
 document.addEventListener("DOMContentLoaded", function() {
     var form = document.getElementById('two_factor_verify_form');
     form.addEventListener('submit', function(e) {

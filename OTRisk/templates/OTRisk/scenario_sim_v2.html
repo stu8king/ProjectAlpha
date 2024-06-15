@@ -663,7 +663,7 @@ document.getElementById('newScenarioBtn').addEventListener('click', function() {
                                         $('#selRegulatoryEnvironment').val('').trigger('change');
                                         $('#selThreats').val('').trigger('change');
                                         $('#selVectors').val('').trigger('change');
-                                        document.getElementById('targetComponent').value = '';
+                                        //document.getElementById('targetComponent').value = '';
                                         document.getElementById('attackEffect').value = '';
                                         document.getElementById('targetSystem').value = '';
                                         document.getElementById('impact').value = '';
@@ -951,7 +951,7 @@ function loadScenarioDetails(scenarioId) {
     $('#selRegulatoryEnvironment').val(response.regs).trigger('change');
     $('#selThreats').val(response.attacker);
     $('#selVectors').val(response.vector);
-    $('#targetComponent').val(response.target);
+    //$('#targetComponent').val(response.target);
     $('#attackEffect').val(response.effect);
     $('#targetSystem').val(response.network);
     $('#impact').val(response.impact);
@@ -1343,31 +1343,32 @@ console.error('Error fetching scenarios:', error);
                                     </select>
                                 </div>
                             </div>
-                            <div class="form-group">
-                            <div class="row">
+                            {% if show_exalens_connector %}
+                            <div class="form-group" id="exalensConnector">
+                                <div class="row">
 
-                                <div class="col-md-6">
-                                    <label for="asset_select">Select Asset    </label><img src="{% static 'images/exalenslogo.png' %}" alt="" class="align-middle" style="max-height: 1rem; margin-left: 1em">
-                                    <select id="asset_select" name="asset_select" class="form-control select2-asset" style="width: 100%">
-                                        {% for asset in exalens_assets %}
-                                        <option value="{{ asset.ip }}">{{ asset.mac_vendor }} - {{ asset.model }} - {{ asset.ip }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="asset_purpose">Asset Purpose:</label>
+                                    <div class="col-md-6">
+                                        <label for="asset_select">Select Asset    </label><img src="{% static 'images/exalenslogo.png' %}" alt="" class="align-middle" style="max-height: 1rem; margin-left: 1em">
+                                        <select id="asset_select" name="asset_select" class="form-control select2-asset" style="width: 100%">
+                                            {% for asset in exalens_assets %}
+                                            <option value="{{ asset.ip }}">{{ asset.mac_vendor }} - {{ asset.model }} - {{ asset.ip }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="asset_purpose">Asset Purpose:</label>
                                         <input type="text" class="form-control" id="asset_purpose" name="asset_purpose" style="width: 100%">
-
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div id="incident_data" style="width:100%; ">Select an IP to see incidents.</div>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="row">
-                                <div class="col-md-12">
-                                    <div id="incident_data" style="width:100%; ">Select an IP to see incidents.</div>
-                                </div>
-                            </div>
-                            </div>
+                            {% endif %}
 
-                    <script>
+                            <script>
                     $(document).ready(function() {
                         $('#asset_select').change(function() {
                             var ipaddress = $(this).val();
@@ -1389,7 +1390,7 @@ console.error('Error fetching scenarios:', error);
                                     $('#incident_data').html(tableHtml);
                                 },
                                 error: function() {
-                                    $('#incident_data').html('<p>An error has occurred</p>');
+                                    $('#incident_data').html('<p>No incident data for the selected asset</p>');
                                 }
                             });
                         });
@@ -1496,66 +1497,89 @@ $(document).ready(function() {
     </div>
 
     <!-- Tab 2 Content -->
-    <div class="tab-content" id="tab3">
-        <h2>Tools & Software</h2>
-        <div class="form-group">
-            <label style="color:white">List purchases that have been, or are planned to be, made for OT Cybersecurity risk mitigation</label>
+<div class="tab-content" id="tab3">
+    <h3 style="color: white">OT Tools & Software</h3>
+    <div class="card mb-3 shadow-sm" style="background-color: #5E6266;">
+        <div class="card-body">
+            <label style="color:white">List tools and software purchased to mitigate OT cybersecurity risks</label>
             <div class="table-responsive">
-            <script>
-                $(document).ready(function() {
-  $("#addRow").click(function() {
-    var newRow = `<tr>
-
-      <td><input type="text" name="vendor_name[]" class="form-control" /></td>
-      <td><input type="text" name="product_name[]" class="form-control" /></td>
-      <td><input type="number" name="cost[]" class="form-control" step="0.01" /></td>
-      <td><input type="date" name="date[]" class="form-control" /></td>
-      <td><button type="button" class="btn btn-danger removeRow">Remove</button></td>
-    </tr>`;
-    $("#investmentTable tbody").append(newRow);
-  });
-
-  $(document).on('click', '.removeRow', function() {
-    $(this).closest('tr').remove();
-  });
-});
-            </script>
-          <table class="table" id="investmentTable">
-            <colgroup>
-
-                  <col span="1" style="width: 25%;"> <!-- Vendor Name -->
-                  <col span="1" style="width: 25%;"> <!-- Product Name -->
-                  <col span="1" style="width: 15%;"> <!-- Cost -->
-                  <col span="1" style="width: 15%;"> <!-- Date -->
-                  <col span="1" style="width: 10%;"> <!-- Action -->
-                </colgroup>
-            <thead>
-              <tr>
-
-                <th>Vendor Name</th>
-                <th>Product Name</th>
-                <th>Cost</th>
-                <th>Date</th> <!-- New Date Column -->
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-
-                <td><input type="text" name="vendor_name[]" class="form-control" /></td>
-                <td><input type="text" name="product_name[]" class="form-control" /></td>
-                <td><input type="number" name="cost[]" class="form-control" step="0.01" /></td>
-                <td><input type="date" name="date[]" class="form-control" /></td> <!-- New Date Input -->
-                <td><button class="btn btn-danger removeRow">Remove</button></td>
-              </tr>
-            </tbody>
-
-          </table>
-          <button type="button" class="btn btn-primary" id="addRow">Add Row</button>
-
-          </div>
+                <table class="table" id="investmentTable">
+                    <colgroup>
+                        <col span="1" style="width: 50%;"> <!-- Vendor Name -->
+                        <col span="1" style="width: 40%;"> <!-- Product Name -->
+                        <col span="1" style="width: 10%;"> <!-- Action -->
+                    </colgroup>
+                    <thead>
+                        <tr>
+                            <th>Vendor Name</th>
+                            <th>Product Name</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <select name="vendor_name[]" class="form-control vendor-select">
+                                    <option value="">Select Vendor</option>
+                                    {% for vendor in unique_vendors_json %}
+                                        <option value="{{ vendor }}">{{ vendor }}</option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+                            <td>
+                                <select name="product_name[]" class="form-control product-select">
+                                    <option value="">Select Product</option>
+                                </select>
+                            </td>
+                            <td><button class="btn btn-danger removeRow">Remove</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <button type="button" class="btn btn-primary" id="addRow">Add Row</button>
+            </div>
         </div>
     </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    var vendors = JSON.parse('{{ vendors_json|escapejs }}');
+    var uniqueVendors = {{ unique_vendors_json|safe }};  // Use safe filter for list
+
+    $("#addRow").click(function() {
+        var newRow = `<tr>
+            <td>
+                <select name="vendor_name[]" class="form-control vendor-select">
+                    <option value="">Select Vendor</option>
+                    ${uniqueVendors.map(v => `<option value="${v}">${v}</option>`).join('')}
+                </select>
+            </td>
+            <td>
+                <select name="product_name[]" class="form-control product-select">
+                    <option value="">Select Product</option>
+                </select>
+            </td>
+            <td><button type="button" class="btn btn-danger removeRow">Remove</button></td>
+        </tr>`;
+        $("#investmentTable tbody").append(newRow);
+    });
+
+    $(document).on('change', '.vendor-select', function() {
+        var vendor = $(this).val();
+        var productSelect = $(this).closest('tr').find('.product-select');
+        var products = vendors.filter(v => v.vendor === vendor).map(v => v.product);
+
+        productSelect.empty().append('<option value="">Select Product</option>');
+        products.forEach(function(product) {
+            productSelect.append(`<option value="${product}">${product}</option>`);
+        });
+    });
+
+    $(document).on('click', '.removeRow', function() {
+        $(this).closest('tr').remove();
+    });
+});
+</script>
 
     <!-- Tab 3 Content -->
     <div class="tab-content" id="tab4">
@@ -1626,7 +1650,6 @@ $('.sub-menu a').click(function(e) {
                 var formData = {
                     'attacker': $('#selThreats').val(),
                     'attackVector': $('#selVectors').val(),
-                    'targetComponent': $('#targetComponent').val(),
                     'attackEffect': $('#attackEffect').val(),
                     'targetSystem': $('#targetSystem').val(),
                     'impact': $('#impact').val(),
@@ -1919,14 +1942,13 @@ function collectInvestments() {
     var investments = [];
     $('#investmentTable tbody tr').each(function() {
         investments.push({
-            vendor_name: $(this).find('input[name="vendor_name[]"]').val(),
-            product_name: $(this).find('input[name="product_name[]"]').val(),
-            cost: $(this).find('input[name="cost[]"]').val(),
-            date: $(this).find('input[name="date[]"]').val()
+            vendor_name: $(this).find('select[name="vendor_name[]"]').val(),
+            product_name: $(this).find('select[name="product_name[]"]').val()
         });
     });
     return investments;
 }
+
 
 document.getElementById('analyzeScenarioBtn').addEventListener('click', function() {
     var scenarioDetails = {
@@ -2448,7 +2470,6 @@ function saveScenario(scenarioName) {
     regs: document.getElementById('selRegulatoryEnvironment').value,
     attacker: document.getElementById('selThreats').value,
     vector: document.getElementById('selVectors').value,
-    target: document.getElementById('targetComponent').value,
     effect: document.getElementById('attackEffect').value,
     network: document.getElementById('targetSystem').value,
     impact: document.getElementById('impact').value,

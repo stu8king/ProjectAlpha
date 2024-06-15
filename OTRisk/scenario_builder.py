@@ -41,7 +41,7 @@ from OTRisk.models.Model_CyberPHA import tblCyberPHAHeader, tblRiskCategories, \
     tblNodes, tblUnits, tblZones, tblCyberPHAScenario, tblIndustry, auditlog, tblStandards, MitreControlAssessment, \
     CyberPHAScenario_snapshot, Audit, PHAControlList, SECURITY_LEVELS, OrganizationDefaults, scenario_compliance, \
     ScenarioConsequences, APIKey, ScenarioBuilder, PHA_Safeguard, OpenAIAPILog, CybersecurityDefaults, \
-    user_scenario_audit
+    user_scenario_audit, OTVendor
 from django.shortcuts import render, redirect
 
 from .dashboard_views import get_user_organization_id, get_scenarios_for_regulation
@@ -101,26 +101,48 @@ def parse_consequences(text):
 
 @login_required()
 def scenario_sim_v2(request):  # Changed the function name
+
+    user_profile = UserProfile.objects.get(user=request.user)
+    organization_defaults = user_profile.organization.defaults
+    exalens_api_key = getattr(organization_defaults, 'exalens_api_key', None)
+    exalens_client_id = getattr(organization_defaults, 'exalens_client_id', None)
+    exalens_ip_address = getattr(organization_defaults, 'exalens_ip_address', None)
+
     scenario_form = CyberSecurityScenarioForm(request.POST)
     industries = tblIndustry.objects.all().order_by('Industry')
     facilities = FacilityType.objects.all().order_by('FacilityType')
     threatsources = tblThreatSources.objects.all().order_by('ThreatSource')
     attack_vectors = tblThreatActions.objects.all().order_by('ThreatAction')
 
-    asset_data_response = exalens_get_assets()
-    if isinstance(asset_data_response, HttpResponse):  # Check if the function returned an error
-        return asset_data_response  # Return error response directly to the client
+    vendors_products = list(OTVendor.objects.all().values('vendor', 'product'))
 
-    # Filter asset data for dropdown
-    assets_for_dropdown = [
-        {'mac_vendor': asset.get('mac_vendor', 'Unknown'), 'model': asset.get('model', 'Unknown'),
-         'ip': asset.get('ip', 'No IP')}
-        for asset in asset_data_response
-    ]
+    # Create a set for unique vendors
+    unique_vendors = {vp['vendor'] for vp in vendors_products}
+
+    # Convert the vendors and products to JSON
+    vendors_json = json.dumps(vendors_products)
+    unique_vendors_json = list(unique_vendors)
+
+    if exalens_api_key and exalens_client_id and exalens_ip_address:
+        asset_data_response = exalens_get_assets(exalens_api_key, exalens_client_id, exalens_ip_address)
+        if isinstance(asset_data_response, HttpResponse):  # Check if the function returned an error
+            return asset_data_response
+
+        assets_for_dropdown = [
+            {'mac_vendor': asset.get('mac_vendor', 'Unknown'), 'model': asset.get('model', 'Unknown'),
+             'ip': asset.get('ip', 'No IP')}
+            for asset in asset_data_response
+        ]
+        show_exalens_connector = True
+    else:
+        assets_for_dropdown = ""  # Set to empty string if any key is missing
+        show_exalens_connector = False
 
     return render(request, 'OTRisk/scenario_sim_v2.html',
                   {'scenario_form': scenario_form, 'industries': industries, 'facilities': facilities,
-                   'threats': threatsources, 'attack_vectors': attack_vectors, 'exalens_assets': assets_for_dropdown})
+                   'threats': threatsources, 'attack_vectors': attack_vectors, 'exalens_assets': assets_for_dropdown,
+                   'show_exalens_connector': show_exalens_connector, 'vendors_json': vendors_json,
+                   'unique_vendors_json': unique_vendors_json, })
 
 
 @login_required
@@ -137,7 +159,7 @@ def analyze_sim_scenario_v2(request):
         exalens_api_key = organization_defaults.exalens_api_key
         exalens_client_id = organization_defaults.exalens_client_id
         exalens_ip_address = organization_defaults.exalens_ip_address
-        incident_prompt = "No incidents"
+        incident_prompt = "No incidents to analyze"
         if incident_ids:
             # Concatenate incident IDs with semicolons for the API call
             incident_numbers = ";".join(incident_ids)
@@ -161,13 +183,18 @@ def analyze_sim_scenario_v2(request):
         except UserProfile.DoesNotExist:
             organization_id = None  # Or handle the lack of a profile as you see fit
 
-        investments_data = request.POST.get('investments')
+        investments_data = request.POST.get('investment_data')
         investments = json.loads(investments_data) if investments_data else []
 
         if investments:
             investment_statement = "Investments have been made in:\n"
             for idx, investment in enumerate(investments, start=1):
-                investment_statement += f"{idx}: Investment Type:{investment['type']}, Vendor:{investment['vendor_name']}, Product:{investment['product_name']}, Investment date:{investment['date']}.\n"
+                investment_type = investment.get('type', 'N/A')  # Default to 'N/A' if 'type' key is missing
+                investment_statement += (
+                    f"{idx}: Investment Type: {investment_type}, "
+                    f"Vendor: {investment['vendor_name']}, "
+                    f"Product: {investment['product_name']}.\n"
+                )
         else:
             investment_statement = "No investments have been specified."
 
@@ -265,16 +292,19 @@ def analyze_sim_scenario_v2(request):
             else:
                 investment_impact_text = "No tools or software were submitted for this scenario."
 
-            incident_response = openai.ChatCompletion.create(
-                model='gpt-4o',
-                messages=[
-                    {"role": "system", "content": incident_prompt}
-                ],
-                max_tokens=2000,
-                temperature=0.3
-            )
+            if incident_prompt != "No incidents to analyze":
+                incident_response = openai.ChatCompletion.create(
+                    model='gpt-4o',
+                    messages=[
+                        {"role": "system", "content": incident_prompt}
+                    ],
+                    max_tokens=2000,
+                    temperature=0.3
+                )
 
-            incident_response_text = incident_response['choices'][0]['message']['content']
+                incident_response_text = incident_response['choices'][0]['message']['content']
+            else:
+                incident_response_text = incident_prompt
 
             response = {
                 'consequence': parsed_consequences,
@@ -399,7 +429,7 @@ def generate_sim_attack_tree_v2(request):
 
     # Query OpenAI API for the attack tree
     attack_tree_response = openai.ChatCompletion.create(
-        model="gpt-4-0125-preview",
+        model=get_api_key('OpenAI_Model'),
         messages=[
             {"role": "system", "content": attack_tree_system_message},
             {"role": "user", "content": enriched_scenario}
@@ -557,7 +587,7 @@ def generate_scenario_description_v2(request):
         # Extracting existing form data
         attacker = request.POST.get('attacker', '').strip()
         attack_vector = request.POST.get('attackVector', '').strip()
-        target_component = request.POST.get('targetComponent', '').strip()
+        # target_component = request.POST.get('targetComponent', '').strip()
         intended_attack_effect = request.POST.get('attackEffect', '').strip()
         target_system = request.POST.get('targetSystem', '').strip()
         impact = request.POST.get('impact', '').strip()
@@ -582,7 +612,6 @@ deviation perspectives in alignment with IEC 61882 which directs that the role o
 
         - Attacker: {attacker}
         - Attack Vector: {attack_vector}
-        - Target Component: {target_component}
         - Intended effect of Attack: {intended_attack_effect}
         - Target System/Network: {target_system}
         - Country: {country}
@@ -591,7 +620,7 @@ deviation perspectives in alignment with IEC 61882 which directs that the role o
         - Guide words: {motivation}
         - Active operations: {'Yes' if active_ops else 'No'}
 
-        Use this information to generate a scenario focusing solely on the attack's progression. Do not speculate on mitigation or describe the facility in detail. Use precise and concise language.
+        Use this information to generate a scenario focusing solely on the attack's progression. Do not speculate on mitigation or describe the facility in detail. Use precise and concise language. DO NOT OUTPUT ANY HEADINGS, TITLES, NARRATIVE, NON-TEXT CHARACTER. output MUST only be the scenario
         """
 
         # Setting OpenAI API key
@@ -633,9 +662,9 @@ def related_incidents(request):
 
     # Constructing the prompt for GPT-4
     prompt = f"""
-    You are a university research assistant. Given the cybersecurity scenario: '{scenario}',  identify
-    up to three cybersecurity incidents that have been reported anywhere in the world in any language that have details in common with the given scenario.
-    Useful sources include but not limited to ICS STRIVE, ICS_CERT,CISA   
+    You are a cybersecurity researcher. Given the cybersecurity scenario: '{scenario}',  identify
+    up to five cybersecurity incidents that have been reported anywhere in the world in any language that have details in common with the given scenario.
+    Useful sources include but not limited to ICS STRIVE, ICS_CERT,CISA. Consider sources of information in any language but always translate into english.   
     For each related incident, provide a brief (english) summary, where it occurred, and include a URL link where information about the incident can be found. 
     Format each incident as follows:
     <Incident title>|<incident description>|<Incident Date>|<incident URL>
@@ -747,12 +776,12 @@ def retrieve_scenario_builder_v2(request, scenario_id):
         return JsonResponse({'error': str(e)}, status=500)
 
 
-def exalens_get_assets():
+def exalens_get_assets(exalens_api_key, exalens_client_id, exalens_ip_address):
     urllib3.disable_warnings(InsecureRequestWarning)
-    assets_url = "https://34.136.119.73/api/thirdparty/asset"
+    assets_url = f"https://{exalens_ip_address}/api/thirdparty/asset"
     headers = {
-        'x-client-id': 'test_api_key',
-        'x-api-key': 'WPaRPsksKbHwL6wXrXtuUyq4sAoIgfeR'
+        'x-client-id': exalens_client_id,
+        'x-api-key': exalens_api_key
     }
 
     try:
@@ -783,8 +812,6 @@ def exalens_get_incidents(request, ipaddress):
         'x-client-id': exalens_client_id,
         'x-api-key': exalens_api_key
     }
-
-
 
     try:
         response = requests.get(incident_url, headers=headers, verify=False)

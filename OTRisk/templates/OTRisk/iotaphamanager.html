@@ -1193,7 +1193,7 @@ $(document).ready(function() {
                 </div>
             <div class="form-group">
                     <label for="txtAddress" style="color: white" title="Enter the address of the facility">Facility Address:</label>
-                    <input type="text"  class="form-control"  name="txtAddress" id="txtAddress"  maxlength="500" value="{{ current_pha_header.facilityAddress }}" required>
+                    <input type="text"  class="form-control"  name="txtAddress" id="txtAddress"  maxlength="50" value="{{ current_pha_header.facilityAddress }}" required>
                     <br>
                     <label for="txtCity" style="color: white" title="Enter the city of the facility">City:</label>
                     <input type="text"  class="form-control"  name="txtCity" id="txtCity"  maxlength="50" value="" required>
@@ -2064,83 +2064,90 @@ updateGroupList();
 
 
      </div>
-     <div class="tab-content" id="tab4">
-        <h3 style="color: white">OT Tools & Software</h3>
-         <div class="card mb-3 shadow-sm" style="background-color: #5E6266;">
-            <div class="card-body">
-                <label style="color:white">List tools and software purchased to mitigate OT cybersecurity risks</label>
-                <div class="table-responsive">
-
-                  <table class="table" id="investmentTable">
+  <div class="tab-content" id="tab4">
+    <h3 style="color: white">OT Tools & Software</h3>
+    <div class="card mb-3 shadow-sm" style="background-color: #5E6266;">
+        <div class="card-body">
+            <label style="color:white">List tools and software purchased to mitigate OT cybersecurity risks</label>
+            <div class="table-responsive">
+                <table class="table" id="investmentTable">
                     <colgroup>
-                          <col span="1" style="width: 20%;"> <!-- Type -->
-                          <col span="1" style="width: 20%;"> <!-- Vendor Name -->
-                          <col span="1" style="width: 20%;"> <!-- Product Name -->
-                          <col span="1" style="width: 15%;"> <!-- Cost -->
-                          <col span="1" style="width: 15%;"> <!-- Date -->
-                          <col span="1" style="width: 10%;"> <!-- Action -->
-                        </colgroup>
+                        <col span="1" style="width: 50%;"> <!-- Vendor Name -->
+                        <col span="1" style="width: 40%;"> <!-- Product Name -->
+                        <col span="1" style="width: 10%;"> <!-- Action -->
+                    </colgroup>
                     <thead>
-                      <tr>
-                        <th>Type</th>
-                        <th>Vendor Name</th>
-                        <th>Product Name</th>
-                        <th>Cost</th>
-                        <th>Date</th> <!-- New Date Column -->
-                        <th>Action</th>
-                      </tr>
+                        <tr>
+                            <th>Vendor Name</th>
+                            <th>Product Name</th>
+                            <th>Action</th>
+                        </tr>
                     </thead>
                     <tbody>
-                      <tr>
-                          <td>
-                              <input type="hidden" name="investment_id[]" value="{{ investment.id | default:'' }}" class="form-control">
-                              <select name="investment_type[]" class="form-control">
-                                <option value="Software">Software</option>
-                                <option value="Hardware">Hardware</option>
-                              </select>
-                          </td>
-                          <td><input type="text" name="vendor_name[]" class="form-control" /></td>
-                          <td><input type="text" name="product_name[]" class="form-control" /></td>
-                          <td><input type="number" name="cost[]" class="form-control" step="0.01" /></td>
-                          <td><input type="date" name="date[]" class="form-control" /></td>
-                          <td><button class="btn btn-danger removeRow">Remove</button></td>
-                      </tr>
+                        <tr>
+                            <td>
+                                <select name="vendor_name[]" class="form-control vendor-select">
+                                    <option value="">Select Vendor</option>
+                                    {% for vendor in unique_vendors_json %}
+                                        <option value="{{ vendor }}">{{ vendor }}</option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+                            <td>
+                                <select name="product_name[]" class="form-control product-select">
+                                    <option value="">Select Product</option>
+                                </select>
+                            </td>
+                            <td><button class="btn btn-danger removeRow">Remove</button></td>
+                        </tr>
                     </tbody>
-
-                  </table>
-                  <button type="button" class="btn btn-primary" id="addRow">Add Row</button>
-
-                </div>
+                </table>
+                <button type="button" class="btn btn-primary" id="addRow">Add Row</button>
             </div>
-            <script>
-            $(document).ready(function() {
-              $("#addRow").click(function() {
-            var newRow = `<tr>
-                <td>
-                    <input type="hidden" name="investment_id[]" value="" class="form-control">
-                    <select name="investment_type[]" class="form-control">
-                        <option value="Software">Software</option>
-                        <option value="Hardware">Hardware</option>
-                        <option value="People">People</option> <!-- Assuming you want to add this option -->
-                    </select>
-                </td>
-                <td><input type="text" name="vendor_name[]" class="form-control" /></td>
-                <td><input type="text" name="product_name[]" class="form-control" /></td>
-                <td><input type="number" name="cost[]" class="form-control" step="0.01" /></td>
-                <td><input type="date" name="date[]" class="form-control" /></td>
-                <td><button type="button" class="btn btn-danger removeRow">Remove</button></td>
-            </tr>`;
-            $("#investmentTable tbody").append(newRow);
-        });
+        </div>
+    </div>
+</div>
 
+        <script>
+        $(document).ready(function() {
+            var vendors = JSON.parse('{{ vendors_json|escapejs }}');
+            var uniqueVendors = JSON.parse('{{ unique_vendors_json|escapejs }}');
 
-              $(document).on('click', '.removeRow', function() {
-                $(this).closest('tr').remove();
-              });
+            $("#addRow").click(function() {
+                var newRow = `<tr>
+                    <td>
+                        <select name="vendor_name[]" class="form-control vendor-select">
+                            <option value="">Select Vendor</option>
+                            ${uniqueVendors.map(v => `<option value="${v}">${v}</option>`).join('')}
+                        </select>
+                    </td>
+                    <td>
+                        <select name="product_name[]" class="form-control product-select">
+                            <option value="">Select Product</option>
+                        </select>
+                    </td>
+                    <td><button type="button" class="btn btn-danger removeRow">Remove</button></td>
+                </tr>`;
+                $("#investmentTable tbody").append(newRow);
             });
-            </script>
-         </div>
-     </div>
+
+            $(document).on('change', '.vendor-select', function() {
+                var vendor = $(this).val();
+                var productSelect = $(this).closest('tr').find('.product-select');
+                var products = vendors.filter(v => v.vendor === vendor).map(v => v.product);
+
+                productSelect.empty().append('<option value="">Select Product</option>');
+                products.forEach(function(product) {
+                    productSelect.append(`<option value="${product}">${product}</option>`);
+                });
+            });
+
+            $(document).on('click', '.removeRow', function() {
+                $(this).closest('tr').remove();
+            });
+        });
+        </script>
+
      <div class="tab-content" id="tab5">
         <h3 style="color:white">Safety Profile <img src="{% static 'images/osha_safety.png' %}" style="width: 50px" class="img-fluid" alt="Logo"></h3>
          <p style="color:white">Safety considerations for the facility</p>
@@ -2804,44 +2811,46 @@ $(document).ready(function() {
             txtArea.val(newText);
         });
     }
-    function attachRemoveIcon(box, item) {
-    const removeIcon = $('<img class="remove-item" src="/static/images/red_delete_circle.png" style="cursor: pointer; margin-left: 5px; width: 1em; height: 1em;">');
-    box.append(removeIcon);
 
-    removeIcon.click(() => {
-        swal.fire({
-            title: "Are you sure?",
-            text: "Once removed, you will not be able to recover this item!",
-            imageUrl: '/static/images/anzen_owl.png',
-            imageWidth: 150,
-            imageHeight: 150,
-            background: '#000',
-            color: '#fff',
-            showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
-            confirmButtonText: 'Yes',
-            cancelButtonText: 'Cancel',
-            customClass: {
-                popup: 'swal2-custom-border'
-            }
-        }).then((willDelete) => {
-            if (willDelete.isConfirmed) {
-                box.remove();
-                swal.fire("Item has been removed!");
-            } else {
-                swal.fire("Your item is safe!");
-            }
+    function attachRemoveIcon(box, item) {
+        const removeIcon = $('<img class="remove-item" src="/static/images/red_delete_circle.png" style="cursor: pointer; margin-left: 5px; width: 1em; height: 1em;">');
+        box.append(removeIcon);
+
+        removeIcon.click(() => {
+            swal.fire({
+                title: "Are you sure?",
+                text: "Once removed, you will not be able to recover this item!",
+                imageUrl: '/static/images/anzen_owl.png',
+                imageWidth: 150,
+                imageHeight: 150,
+                background: '#000',
+                color: '#fff',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes',
+                cancelButtonText: 'Cancel',
+                customClass: {
+                    popup: 'swal2-custom-border'
+                }
+            }).then((willDelete) => {
+                if (willDelete.isConfirmed) {
+                    box.remove();
+                    swal.fire("Item has been removed!");
+                } else {
+                    swal.fire("Your item is safe!");
+                }
+            });
         });
-    });
-}
+    }
+
     $('#' + containerId).empty();
     const normalizedData = summaryData.replace(/\r\n|\r|\n/g, '\n');
     const items = normalizedData.split('\n').filter(item => item.trim() !== '');
 
     items.forEach((item, index) => {
         // Use a regular expression to split the description from the probability
-        const regex = /(.+?)\. Probability: (\d+%)/;
+        const regex = /(.+?)\s*\.\s*\(Probability: (\d+%)\)/;
         const match = item.match(regex);
         const txtArea = $('#threatSummary');
 
@@ -2862,6 +2871,7 @@ $(document).ready(function() {
         attachRemoveIcon(box, item); // Ensure attachRemoveIcon is defined or this line should be adjusted accordingly.
     });
 }
+
       // AJAX function to call the Django view
     function assessRisk() {
             $('#progressBarContainerProfile').show();
@@ -3134,17 +3144,10 @@ $(document).ready(function() {
 
     investments.forEach(function(investment) {
         const row = `<tr>
-            <td><input type="hidden" name="investment_id[]" value="${investment.id}" class="form-control">
-                <select name="investment_type[]" class="form-control">
-                    <option value="Software" ${investment.investment_type === 'Software' ? 'selected' : ''}>Software</option>
-                    <option value="Hardware" ${investment.investment_type === 'Hardware' ? 'selected' : ''}>Hardware</option>
-                    <option value="People" ${investment.investment_type === 'People' ? 'selected' : ''}>People</option>
-                </select>
-            </td>
+
             <td><input type="text" name="vendor_name[]" value="${investment.vendor_name}" class="form-control"></td>
             <td><input type="text" name="product_name[]" value="${investment.product_name}" class="form-control"></td>
-            <td><input type="number" name="cost[]" value="${investment.cost}" class="form-control" step="0.01"></td>
-            <td><input type="date" name="date[]" value="${investment.date}" class="form-control"></td>
+
             <td><button type="button" class="btn btn-danger removeRow">Remove</button></td>
         </tr>`;
         tableBody.append(row);
