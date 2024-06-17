@@ -1560,6 +1560,11 @@ def clean_numeric_string(value):
     # Remove non-numeric characters ('$' and ',') and convert to an integer
     return int(''.join(filter(str.isdigit, value)))
 
+def get_int_or_default(value, default=0):
+    try:
+        return int(value)
+    except (ValueError, TypeError):
+        return default
 
 def get_int_or_zero(value):
     try:
@@ -1657,8 +1662,8 @@ def create_or_update_raw_scenario(request):
             'scenario_damage': request.POST.get('scenario_damage'),
             'scenario_12month_costs': request.POST.get('scenario_12month_costs'),
             'executive_summary': request.POST.get('executive_summary'),
-            'overall_bia': request.POST.get('overall_bia'),
-            'scenario_probability': request.POST.get('scenario_probability'),
+            'overall_bia': get_int_or_default(request.POST.get('overall_bia')),
+            'scenario_probability': get_int_or_default(request.POST.get('scenario_probability')),
             'bowtie': request.POST.get('bowtie'),
         }
 
