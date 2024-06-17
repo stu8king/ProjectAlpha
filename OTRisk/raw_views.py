@@ -855,6 +855,7 @@ class GetTechniquesView(View):
 
 # Function to assess the risk using the OpenAI GPT-3 API
 def openai_assess_risk(request):
+
     language = request.session.get('organization_defaults', {}).get('language', 'en')  # 'en' is the default value
     if request.method == 'GET':
         openai.api_key = get_api_key('openai')
@@ -1019,7 +1020,7 @@ def openai_assess_risk(request):
 
         Output must be in JSON format and follow the exact structure shown below. CRITICAL: DO NOT INCLUDE any additional characters (such as ```json or anything else on either side of the json structure), external narrative or commentary outside of the given structure because it needs to be parsed. Do not copy the example data; replace it with the appropriate data for the given scenario.
 
-        {
+        {{
             "central_event": "<central event>",
             "threats": [
                 "<threat 1>",
@@ -1031,15 +1032,15 @@ def openai_assess_risk(request):
                 "<consequence 2>",
                 "<consequence 3>"
             ],
-            "edges": {
+            "edges": {{
                 "<threat 1>": "<central event>",
                 "<threat 2>": "<central event>",
                 "<threat 3>": "<central event>",
                 "<central event>": "<consequence 1>",
                 "<central event>": "<consequence 2>",
                 "<central event>": "<consequence 3>"
-            }
-        }
+            }}
+        }}
         """
 
         # 3. Query for low estimate
