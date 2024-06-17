@@ -2519,7 +2519,7 @@ def facility_risk_profile_newrecord(userid, industry, facility_type, address, co
                                                                              other_summary,
                                                                              compliance_summary, '',
                                                                              has_ir_plan, ir_plan_never_tested,
-                                                                             ir_plan_tested_date)
+                                                                             ir_plan_tested_date, '', '', 0)
 
     return {
         'safety_summary': safety_summary,
