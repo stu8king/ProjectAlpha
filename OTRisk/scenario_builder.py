@@ -81,6 +81,7 @@ import csv
 from django.contrib import messages
 import chardet
 import datetime
+from pinecone import Pinecone, ServerlessSpec
 
 
 def parse_consequences(text):
@@ -143,6 +144,57 @@ def scenario_sim_v2(request):  # Changed the function name
                    'threats': threatsources, 'attack_vectors': attack_vectors, 'exalens_assets': assets_for_dropdown,
                    'show_exalens_connector': show_exalens_connector, 'vendors_json': vendors_json,
                    'unique_vendors_json': unique_vendors_json, })
+
+
+def summarize_text(text, max_tokens=200):
+    response = openai.ChatCompletion.create(
+        model='gpt-4o',
+        messages=[
+            {"role": "system", "content": "Summarize the following text:"},
+            {"role": "user", "content": text}
+        ],
+        max_tokens=max_tokens,
+        temperature=0.1
+    )
+    return response.choices[0].message['content']
+
+
+def get_summarized_chunks(chunks, max_tokens_per_chunk=200):
+    summarized_chunks = []
+    for chunk in chunks:
+        summarized_text = summarize_text(chunk['metadata']['text'], max_tokens=max_tokens_per_chunk)
+        summarized_chunks.append(summarized_text)
+    return summarized_chunks
+
+
+def query_index(query, top_k=5):
+    pinecone_api = get_api_key('pinecone')
+    pc = Pinecone(api_key=pinecone_api)
+    index_name = get_api_key('pinecone_index')
+    dimension = 1536  # This should match the dimension of the OpenAI embeddings
+    # Create the index if it doesn't exist
+    if index_name not in pc.list_indexes().names():
+        pc.create_index(
+            name=index_name,
+            dimension=dimension,
+            metric='cosine',
+            spec=ServerlessSpec(cloud='aws', region='us-east-1')
+        )
+
+    # Connect to the index
+    index = pc.Index(index_name)
+    # Create an embedding for the query
+    response = openai.Embedding.create(input=query, model="text-embedding-ada-002")
+    query_embedding = response['data'][0]['embedding']
+
+    # Ensure the query_embedding is a list of floats
+    if not isinstance(query_embedding, list) or not all(isinstance(x, float) for x in query_embedding):
+        raise ValueError("Query embedding is not in the correct format.")
+
+    # Query Pinecone index
+    results = index.query(vector=query_embedding, top_k=top_k, include_metadata=True)
+
+    return results['matches']
 
 
 @login_required
@@ -229,8 +281,15 @@ def analyze_sim_scenario_v2(request):
             facility_type = request.POST.get('facility_type')
             industry = request.POST.get('industry')
 
+            pinecone_query = "CyberPHA HAZOPS OT Cybersecurity Scenario"
+            retrieved_chunks = query_index(pinecone_query)
+            summarized_chunks = get_summarized_chunks(retrieved_chunks)
+            # documents_context = "\n\n".join([chunk['metadata']['text'] for chunk in retrieved_chunks])
+            documents_context = "\n\n".join(summarized_chunks)
+
             system_message = f"""
-                In the context of a Cyber HAZOPS assessment, analyze the following cybersecurity scenario at a {facility_type} in the {industry} industry: '{scenario}'. The scenario includes an asset that has the following incidents: {incident_prompt}. For each factor listed below, provide a score out of 10 for impact severity and a concise narrative in under 50 words per factor. IMPORTANT: NARRATIVE MUST BE IN {request.session.get('organization_defaults', {}).get('language', 'en')}. Format your response with clear delimiters as follows: 'Factor: [Factor Name] | Score: X/10 | Narrative: [Explanation]'.
+            {documents_context}
+                In the context of a Cyber HAZOPS assessment including, analyze the following cybersecurity scenario at a {facility_type} in the {industry} industry: '{scenario}'. The scenario includes an asset that has the following incidents: {incident_prompt}. For each factor listed below, provide a score out of 10 for impact severity and a concise narrative in under 50 words per factor. IMPORTANT: NARRATIVE MUST BE IN {request.session.get('organization_defaults', {}).get('language', 'en')}. Format your response with clear delimiters as follows: 'Factor: [Factor Name] | Score: X/10 | Narrative: [Explanation]'.
 
                 Factors:
                 - Safety
@@ -245,7 +304,6 @@ def analyze_sim_scenario_v2(request):
 
                 Ensure that the scores and narratives are specific to the facility and scenario described. Use '|' as a delimiter between different sections of your response for each factor.
             """
-
             # Query OpenAI API
             response = openai.ChatCompletion.create(
                 model='gpt-4o',
@@ -546,9 +604,14 @@ def create_system_messages(details):
     Do NOT add any additional characters or symbols
     
     """
+    pinecone_query = "Cost of a cybersecurity incident, costs, Incident Costs, OT Cybersecurity incident"
+    retrieved_chunks = query_index(pinecone_query)
+    summarized_chunks = get_summarized_chunks(retrieved_chunks)
+    documents_context = "\n\n".join(summarized_chunks)
 
     # Enhancing the cost estimation message for accuracy and detail
     cost_estimation_message = f"""
+    {documents_context}
     {common_content} Acting as an insurance actuary specializing in cybersecurity, you are tasked with estimating the direct financial impact of the described cybersecurity incident. Utilize data from similar incidents, industry reports, and known costs related to cybersecurity breaches, such as data loss, system downtime, and recovery efforts. 
 
     Provide three distinct cost estimates reflecting the best case, worst case, and most likely case scenarios. These estimates should solely focus on direct costs including, but not limited to, incident response, remediation, legal fees, notification costs, regulatory fines, compensations, and increased insurance premiums. 
@@ -564,7 +627,12 @@ def create_system_messages(details):
 
 
 def create_projection_message(details):
+    pinecone_query = "Cost of a cybersecurity incident, costs, Incident Costs, OT Cybersecurity incident"
+    retrieved_chunks = query_index(pinecone_query)
+    summarized_chunks = get_summarized_chunks(retrieved_chunks)
+    documents_context = "\n\n".join(summarized_chunks)
     projection_message = f"""
+    {documents_context}
     Your task is to generate a 12-month direct cost projection for a hypothetical cybersecurity incident, focusing specifically on a {details['organization_size']} {details['facility_type']} within the {details['industry']} industry in {details['country']}. The projection should strictly follow a numerical format without any additional text, narrative, or characters. 
 
     Scenario description: '{details['scenario']}'.
@@ -660,11 +728,17 @@ def related_incidents(request):
     if not scenario:
         return JsonResponse({"error": "Scenario description is required."}, status=400)
 
+    pinecone_query = "OT Cybersecurity Incidents, cyberattack, impact, hacked"
+    retrieved_chunks = query_index(pinecone_query)
+    summarized_chunks = get_summarized_chunks(retrieved_chunks)
+    documents_context = "\n\n".join(summarized_chunks)
+
     # Constructing the prompt for GPT-4
     prompt = f"""
+    
     You are a cybersecurity researcher. Given the cybersecurity scenario: '{scenario}',  identify
     up to five cybersecurity incidents that have been reported anywhere in the world in any language that have details in common with the given scenario.
-    Useful sources include but not limited to ICS STRIVE, ICS_CERT,CISA. Consider sources of information in any language but always translate into english.   
+    Use content retrieved from the Pinecone index: {documents_context}. In addition to useful sources including but not limited to ICS STRIVE, ICS_CERT,CISA. Consider sources of information in any language but always translate into english.   
     For each related incident, provide a brief (english) summary, where it occurred, and include a URL link where information about the incident can be found. 
     Format each incident as follows:
     <Incident title>|<incident description>|<Incident Date>|<incident URL>

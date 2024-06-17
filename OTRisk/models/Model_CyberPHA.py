@@ -11,6 +11,7 @@ from django.db.models import URLField
 import OTRisk.models.model_assessment
 from accounts.models import Organization, UserProfile
 from OTRisk.models.raw import MitreICSMitigations, RAWorksheet
+from simple_history.models import HistoricalRecords
 
 
 class user_scenario_audit(models.Model):
@@ -362,6 +363,7 @@ class tblCyberPHAHeader(models.Model):
     exalens_status = models.TextField(null=True)
     exalens_risk = models.TextField(null=True)
     exalens_score = models.IntegerField(null=True)
+    history = HistoricalRecords()
 
     def set_workflow_status(self, status):
         WorkflowStatus.objects.create(cyber_pha_header=self, status=status)
@@ -721,6 +723,7 @@ class tblCyberPHAScenario(models.Model):
     risk_treatment_plan = models.TextField(null=True, blank=True)
     asset_name = models.TextField(null=True)
     asset_purpose = models.TextField(null=True)
+    history = HistoricalRecords()
 
     class Meta:
         db_table = 'tblCyberPHAScenario'
