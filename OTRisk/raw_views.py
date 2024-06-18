@@ -47,7 +47,9 @@ from django.http import HttpResponseForbidden
 from django.contrib.auth.models import User
 from .forms import RAWorksheetScenarioForm
 from .tasks import analyze_scenario_task
+from pinecone import Pinecone, ServerlessSpec
 
+openai.api_key = get_api_key('openai')
 
 class UpdateRAAction(View):
     def put(self, request, *args, **kwargs):
@@ -1138,11 +1140,16 @@ def openai_assess_risk(request):
         # Return the results
         result_array = [risk_rating, risk_score, event_cost_estimate]
 
+        pinecone_query = f"CyberPHA, Hazops, PHA, CyberHAZOPs, Scenario, safety, incident"
+        retrieved_chunks = query_index(pinecone_query)
+        summarized_chunks = get_summarized_chunks(retrieved_chunks)
+        documents_context = "\n\n".join(summarized_chunks)
         damage_repair_estimate_message = {
             "role": "user",
             "content": (
-                f"You are an expert in engineering and the deployment and maintenance of industrial control systems. You are participating in an OT Cybersecurity risk assessment and must provide an accurate and pragmatic damage analysis of the following: Scenario: {scenario} in a {facility_type} within the {industry} industry. Estimate the potential damage and repair effort specific to the scenario. Do not consider finances, outages or other outcomes unrelated to damage - only refer to the physical and product damage that the given scenario might result in."
-                f"Provide a concise estimate in less than 50 words, focusing specifically on the scenario's impact and necessary repair efforts."
+
+                f"Pinecone index data for reference: {documents_context}.You are an expert in engineering and the deployment and maintenance of industrial control systems. You are participating in an OT Cybersecurity risk assessment and must provide an accurate and pragmatic damage analysis of the following: Scenario: {scenario} in a {facility_type} within the {industry} industry. Estimate the potential damage and repair effort specific to the scenario. Do not consider finances, outages or other outcomes unrelated to damage - only refer to the physical and product damage that the given scenario might result in."
+                f"Provide a concise estimate in less than 100 words, focusing specifically on the scenario's impact and necessary repair efforts."
             )
         }
 
@@ -1170,9 +1177,15 @@ def openai_assess_risk(request):
                 f"Provide this summary in a tight, concise, executive-friendly format that can be used on a slide. You will have less than 3 minutes to present the information so you must be sharp and concise. DO NOT PUT THE WORD 'SLIDE' ON THE SLIDE. INCLUDE THE TOTAL OF THE COSTS NOT THE MONTH BY MONTH BREAKDOWN"
             )
         }
+
+        pinecone_query = f"NIST, NIST 800-53, NIST 800-82, NIST CSF, 62443, CyberPHA, HAZOPs"
+        retrieved_chunks = query_index(pinecone_query)
+        summarized_chunks = get_summarized_chunks(retrieved_chunks)
+        documents_context = "\n\n".join(summarized_chunks)
         executive_summary_message = {
             "role": "user",
             "content": (f"""
+                Pinecone index data for reference: {documents_context}.
                    You are an OT Cybersecurity expert. Consider a scenario described as: {scenario}, occurring at a {facility_type} in the {industry} industry.
                    Based only on the provided scenario and facility details, generate a concise priority ordered and numbered bullet point list of OT/ICS cybersecurity action items that are readily implementable as a check list. Each action item must be specific to the given scenario and represent a task that can be quickly and readily completed without major effort that would represent some risk mitigation. Each action item MUST be pragmatic and reasonable to accomplish within an OT network environment without extensive effort and could be implemented by an engineer rather than an IT security expert. For example Implement network segmentation is a major effort. Action items are intended to be akin to an immediate action drill. Identify which section of NIST 800-82 OR NIST CSF the action items most closely aligns with and include the relevant NIST reference in brackets at the end of each recommendation however action items MUST NOT SIMPLY BE QUOTES FROM THE STANDARDS. The output should strictly adhere to the following format:
 
@@ -1767,9 +1780,15 @@ def analyze_raw_scenario(request):
             country = RAWorksheet.business_unit_country
             control_effectiveness = RAWorksheet.last_assessment_score
             control_summary = RAWorksheet.last_assessment_summary
+            pinecone_query = f"CyberPHA, Hazops, PHA, CyberHAZOPs, Scenario, safety, {industry}"
+            retrieved_chunks = query_index(pinecone_query)
+            summarized_chunks = get_summarized_chunks(retrieved_chunks)
+            documents_context = "\n\n".join(summarized_chunks)
+
             # Construct a prompt for GPT-4
             system_message = f"""
-            You are are expert in developing OT cybersecurity incident scenarios for industrial facilities. TASK: Analyze and consider the following scenario as part of an OT/ICS focused Cyber HAZOPS/Layer of Protection Analysis (LOPA) assessment: {scenario}. This scenario occurs at a {facility_type} in the {industry} . Concisely describe in 50 words in a bulleted ist format of a maximum of 5 of the most likely direct consequences of the given scenario. The direct consequences should be specific to the facility and the mentioned details. Assume the role of an expert OT Cybersecurity risk advisor. Additional instruction: output ONLY the list items with no text either before or after the list items.
+            pinecone index data: {documents_context}.
+            You are are expert in developing OT cybersecurity incident scenarios for industrial facilities. TASK: Analyze and consider the following scenario as part of an OT/ICS focused Cyber HAZOPS/Layer of Protection Analysis (LOPA) assessment: {scenario}. This scenario occurs at a {facility_type}. Concisely describe in 50 words in a bulleted ist format of a maximum of 5 of the most likely direct consequences of the given scenario. The direct consequences should be specific to the facility and the mentioned details. Assume the role of an expert OT Cybersecurity risk advisor. Additional instruction: output ONLY the list items with no text either before or after the list items.
             """
             user_message = scenario
 
@@ -1780,7 +1799,7 @@ def analyze_raw_scenario(request):
                     {"role": "system", "content": system_message},
                     {"role": "user", "content": user_message}
                 ],
-                max_tokens=100,
+                max_tokens=1000,
                 temperature=0.1
             )
 
@@ -2174,8 +2193,14 @@ def generate_raw_scenario_description(request):
         motivation = request.POST.get('motivation', '').strip()
         trigger = request.POST.get('trigger', '').strip()
         affected_label = get_label_for_trigger(trigger)
+
+        pinecone_query = f"CyberPHA, Hazops, PHA, CyberHAZOPs, Scenario, safety, {industry}"
+        retrieved_chunks = query_index(pinecone_query)
+        summarized_chunks = get_summarized_chunks(retrieved_chunks)
+        documents_context = "\n\n".join(summarized_chunks)
         # Constructing the prompt
         prompt = f"""
+        pinecone index data: {documents_context}.
         You are an engineer responsible for safeguarding operations for a {facility_type}. Write a technical scenario for a CYBER HAZOPS assessment using LOPA methodology, detailing a credible cyber-physical attack against operational technology and industrial control systems. The narrative must be factual, specific to the details given, concise, and limit to 200 words, without detailing the consequences or long-term impacts. No preamble or additonal narrative. No repeating of input variables:
 
         - Attacker: {attacker}
@@ -2188,7 +2213,7 @@ def generate_raw_scenario_description(request):
         - Attacker intended impact: {impact}
         - Purpose of affected asset or system: {target_asset_purpose}
 
-        Using the given information above, generate a scenario focusing solely on the purpose and type of asset and the potential for that asset to be compromised and it might be manipulated resulting in a bad outcome in the context of the other given information. Do not speculate on mitigation or describe the facility in detail. Do not repeat information that the user is familiar with: industry, number of employees, country, facility type are for context  in generating the scenario and MUST NOT BE REPEATED IN THE RESPONSE. Use precise and concise language.
+        Using the given information above and the information from the pinecone index, generate a scenario focusing solely on the purpose and type of asset and the potential for that asset to be compromised and it might be manipulated resulting in a bad outcome in the context of the other given information. Do not speculate on mitigation or describe the facility in detail. Do not repeat information that the user is familiar with: industry, number of employees, country, facility type are for context  in generating the scenario and MUST NOT BE REPEATED IN THE RESPONSE. Use precise and concise language.
         """
 
         # Setting OpenAI API key
@@ -2251,3 +2276,54 @@ def generate_bowtie_chart(bow_tie_json):
     image_base64 = base64.b64encode(buf.read()).decode('utf-8')
 
     return image_base64
+
+
+def summarize_text(text, max_tokens=200):
+    response = openai.ChatCompletion.create(
+        model='gpt-4o',
+        messages=[
+            {"role": "system", "content": "Summarize the following text:"},
+            {"role": "user", "content": text}
+        ],
+        max_tokens=max_tokens,
+        temperature=0.1
+    )
+    return response.choices[0].message['content']
+
+
+def get_summarized_chunks(chunks, max_tokens_per_chunk=200):
+    summarized_chunks = []
+    for chunk in chunks:
+        summarized_text = summarize_text(chunk['metadata']['text'], max_tokens=max_tokens_per_chunk)
+        summarized_chunks.append(summarized_text)
+    return summarized_chunks
+
+
+def query_index(query, top_k=5):
+    pinecone_api = get_api_key('pinecone')
+    pc = Pinecone(api_key=pinecone_api)
+    index_name = get_api_key('pinecone_index')
+    dimension = 1536  # This should match the dimension of the OpenAI embeddings
+    # Create the index if it doesn't exist
+    if index_name not in pc.list_indexes().names():
+        pc.create_index(
+            name=index_name,
+            dimension=dimension,
+            metric='cosine',
+            spec=ServerlessSpec(cloud='aws', region='us-east-1')
+        )
+
+    # Connect to the index
+    index = pc.Index(index_name)
+    # Create an embedding for the query
+    response = openai.Embedding.create(input=query, model="text-embedding-ada-002")
+    query_embedding = response['data'][0]['embedding']
+
+    # Ensure the query_embedding is a list of floats
+    if not isinstance(query_embedding, list) or not all(isinstance(x, float) for x in query_embedding):
+        raise ValueError("Query embedding is not in the correct format.")
+
+    # Query Pinecone index
+    results = index.query(vector=query_embedding, top_k=top_k, include_metadata=True)
+
+    return results['matches']

@@ -65,6 +65,7 @@ from django.core import serializers
 from django.http import FileResponse
 from pptx import Presentation
 from pptx.util import Inches, Pt
+from pinecone import Pinecone, ServerlessSpec
 
 
 def get_api_key(service_name):
@@ -74,6 +75,9 @@ def get_api_key(service_name):
     except ObjectDoesNotExist:
         # Handle the case where the key is not found
         return None
+
+
+openai.api_key = get_api_key('openai')
 
 
 def validate_and_format_date(date_str, default_date='2001-01-01', date_format='%Y-%m-%d'):
@@ -1572,8 +1576,13 @@ def scenario_analysis(request):
 
         openai.api_key = get_api_key('openai')
         # Define the common part of the user message
+        pinecone_query = "FAIR, risk assessment, 62443, cybersecurity, hazops, cyberpha, incident, event costs, costs, cost of a security incident "
+        retrieved_chunks = query_index(pinecone_query)
+        summarized_chunks = get_summarized_chunks(retrieved_chunks)
+        documents_context = "\n\n".join(summarized_chunks)
+
         common_content = f"""
-        
+        Pinecone index data for reference: {documents_context}.
         Act as both an Insurance Actuary and an OT Cybersecurity HAZOPS Risk Expert. You're tasked with analyzing a specific scenario for a facility in the industry sector, located in a particular country. Your analysis should cover various risk outcomes based on the detailed context provided.
 
         Scenario Details:
@@ -1652,7 +1661,7 @@ def scenario_analysis(request):
 
             {
                 "role": "user",
-                "content": f"I am a CISO at a {industry} company with approximately {employees_on_site} employees, operating primarily in {country}. We are assessing our cybersecurity posture and need to estimate the potential costs associated with a {scenario} that has consequences of {validated_consequences_list}."
+                "content": f"Pinecone index data for reference: {documents_context}.I am a CISO at a {industry} company with approximately {employees_on_site} employees, operating primarily in {country}. We are assessing our cybersecurity posture and need to estimate the potential costs associated with a {scenario} that has consequences of {validated_consequences_list}."
                            "Your Task: Given the scenario, please provide an estimate of the direct and indirect costs we might incur, including but not limited to:"
                            "1. Immediate Response Costs: Costs associated with the initial response to the incident, such as emergency IT support, forensic analysis, and legal consultations."
                            "2. Remediation Costs: Expenses related to remediating the cybersecurity breach, including software updates, hardware replacements, and strengthening of security measures."
@@ -2559,11 +2568,14 @@ def assessment_summary(assessment_id, facilityType, industry):
 
     # Preparing the chat messages for the conversation with GPT-4
     messages = []
-
+    pinecone_query = f"Risk assessment, NIST, 62443, C2M2, NIST CSF, gap analysis"
+    retrieved_chunks = query_index(pinecone_query)
+    summarized_chunks = get_summarized_chunks(retrieved_chunks)
+    documents_context = "\n\n".join(summarized_chunks)
     # System message to set the context for the AI
     messages.append({
         "role": "system",
-        "content": f"You are a cybersecurity analyst and this is a cybersecurity assessment summary and scoring task in the context of a {facilityType} in the {industry} industry. Analyze the provided responses to the cybersecurity assessment questions and write a summary and assign a control effectiveness score out of 100."
+        "content": f"pinecone index data for reference: {documents_context}. You are a cybersecurity analyst and this is a cybersecurity assessment summary and scoring task in the context of a {facilityType} in the {industry} industry. Analyze the provided responses to the cybersecurity assessment questions and write a summary and assign a control effectiveness score out of 100."
     })
 
     # Adding questions and answers to the conversation
@@ -2880,8 +2892,13 @@ def generate_cyberpha_scenario_description(request):
         employees_on_site = cyberpha_header.EmployeesOnSite
         country = cyberpha_header.country
 
+        pinecone_query = f"CyberPHA, Hazops, PHA, CyberHAZOPs, Scenario, safety, OSHA, {industry}"
+        retrieved_chunks = query_index(pinecone_query)
+        summarized_chunks = get_summarized_chunks(retrieved_chunks)
+        documents_context = "\n\n".join(summarized_chunks)
         # Constructing the prompt
         prompt = f"""
+        pinecone index data: {documents_context}.
         You are an engineer responsible for safeguarding operations for a {facility_type}. Write a technical scenario for a CYBER HAZOPS assessment using LOPA methodology, detailing a credible cyber-physical attack against operational technology and industrial control systems. The narrative must be factual, specific to the details given, concise, and limit to 200 words, without detailing the consequences or long-term impacts. No preamble or additional narrative. No repeating of input variables:
 
         - Attacker: {attacker}
@@ -2893,7 +2910,7 @@ def generate_cyberpha_scenario_description(request):
         - Affected asset: {target_asset}
         - Purpose of affected asset: {target_asset_purpose}
 
-        Using the given information above, generate a scenario focusing solely on the purpose and type of asset and the potential for that asset to be compromised and it might be manipulated resulting in a bad outcome in the context of the other given information. INSTRUCTIONS a) If no asset detail is given then focus on the type of facility. b) Do not speculate on mitigation or describe the facility in detail. c) Do not repeat information about the targeted asset or other given detail in the output. d) Do not repeat information that the user is familiar with: industry, number of employees, country, facility type are for context  in generating the scenario and MUST NOT BE REPEATED IN THE RESPONSE. e) Use precise and concise language with as much technical detail as possible given the input details.
+        Using the given information above and the information from the pinecone index, generate a scenario focusing solely on the purpose and type of asset and the potential for that asset to be compromised and it might be manipulated resulting in a bad outcome in the context of the other given information. INSTRUCTIONS a) If no asset detail is given then focus on the type of facility. b) Do not speculate on mitigation or describe the facility in detail. c) Do not repeat information about the targeted asset or other given detail in the output. d) Do not repeat information that the user is familiar with: industry, number of employees, country, facility type are for context  in generating the scenario and MUST NOT BE REPEATED IN THE RESPONSE. e) Use precise and concise language with as much technical detail as possible given the input details.
         """
 
         # Setting OpenAI API key
@@ -2902,11 +2919,11 @@ def generate_cyberpha_scenario_description(request):
 
         # Querying the OpenAI API
         response = openai.ChatCompletion.create(
-            model='gpt-4o',
+            model=open_ai_model,
             messages=[
                 {"role": "system", "content": prompt}
             ],
-            max_tokens=1000,
+            max_tokens=2000,
             temperature=0.1
         )
         # Extracting the generated scenario
@@ -2920,3 +2937,53 @@ def generate_cyberpha_scenario_description(request):
     else:
         return JsonResponse({'error': 'Invalid request'}, status=400)
 
+
+def summarize_text(text, max_tokens=200):
+    response = openai.ChatCompletion.create(
+        model='gpt-4o',
+        messages=[
+            {"role": "system", "content": "Summarize the following text:"},
+            {"role": "user", "content": text}
+        ],
+        max_tokens=max_tokens,
+        temperature=0.1
+    )
+    return response.choices[0].message['content']
+
+
+def get_summarized_chunks(chunks, max_tokens_per_chunk=200):
+    summarized_chunks = []
+    for chunk in chunks:
+        summarized_text = summarize_text(chunk['metadata']['text'], max_tokens=max_tokens_per_chunk)
+        summarized_chunks.append(summarized_text)
+    return summarized_chunks
+
+
+def query_index(query, top_k=5):
+    pinecone_api = get_api_key('pinecone')
+    pc = Pinecone(api_key=pinecone_api)
+    index_name = get_api_key('pinecone_index')
+    dimension = 1536  # This should match the dimension of the OpenAI embeddings
+    # Create the index if it doesn't exist
+    if index_name not in pc.list_indexes().names():
+        pc.create_index(
+            name=index_name,
+            dimension=dimension,
+            metric='cosine',
+            spec=ServerlessSpec(cloud='aws', region='us-east-1')
+        )
+
+    # Connect to the index
+    index = pc.Index(index_name)
+    # Create an embedding for the query
+    response = openai.Embedding.create(input=query, model="text-embedding-ada-002")
+    query_embedding = response['data'][0]['embedding']
+
+    # Ensure the query_embedding is a list of floats
+    if not isinstance(query_embedding, list) or not all(isinstance(x, float) for x in query_embedding):
+        raise ValueError("Query embedding is not in the correct format.")
+
+    # Query Pinecone index
+    results = index.query(vector=query_embedding, top_k=top_k, include_metadata=True)
+
+    return results['matches']
