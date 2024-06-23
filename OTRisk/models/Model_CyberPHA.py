@@ -169,6 +169,9 @@ class OrganizationDefaults(models.Model):
     exalens_api_key = models.TextField(null=True)
     exalens_client_id = models.TextField(null=True)
     exalens_ip_address = models.TextField(null=True)
+    darktrace_private_key = models.TextField(null=True)
+    darktrace_public_key = models.TextField(null=True)
+    darktrace_host = models.TextField(null=True)
     business_unit_name = models.CharField(null=True, max_length=100)
     business_unit_address_line1 = models.CharField(null=True, max_length=100)
     business_unit_address_line2 = models.CharField(null=True, max_length=100)
@@ -363,6 +366,12 @@ class tblCyberPHAHeader(models.Model):
     exalens_status = models.TextField(null=True)
     exalens_risk = models.TextField(null=True)
     exalens_score = models.IntegerField(null=True)
+    darktrace_private_api = models.TextField(null=True)
+    darktrace_public_api = models.TextField(null=True)
+    darktrace_client = models.TextField(null=True)
+    darktrace_status = models.TextField(null=True)
+    darktrace_risk = models.TextField(null=True)
+    darktrace_score = models.IntegerField(null=True)
     history = HistoricalRecords()
 
     def set_workflow_status(self, status):

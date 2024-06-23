@@ -455,6 +455,33 @@ svg {
         margin-top: 10px; /* Adds space between the Security Level and Justification */
         display: block; /* Ensures it starts on a new line */
     }
+            .btn-custom {
+            width: 95%;
+            padding: 12px 20px;
+            font-size: 16px;
+            font-weight: 500;
+            text-align: center;
+            color: #fff;
+            background-color: #007bff;
+            border: none;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s ease, transform 0.3s ease;
+        }
+
+        .btn-custom:hover {
+            background-color: #0056b3;
+            transform: translateY(-2px);
+        }
+
+        .btn-custom:active {
+            background-color: #004085;
+            transform: translateY(1px);
+        }
+
+        .btn-custom i {
+            margin-right: 8px;
+        }
 </style>
 <script>
 
@@ -560,8 +587,8 @@ document.addEventListener("DOMContentLoaded", function() {
                 <div class="top-strip">
                 <div class="row">
                     <div class="col-md-1"></div>
-                    <div class="col-md-4">
-                        <a class="page-title" style="color: #d3d1cd" href="#" id="cyberPHALink">CyberPHA Scenario Analysis - <span id="facilityName"></span></a>
+                    <div class="col-md-3">
+                        <a class="page-title" style="color: #d3d1cd" href="#" id="cyberPHALink"><span id="facilityName"></span></a>
                         <h6 style="visibility: hidden">Industry set to: <span id="facilityName2" class="text-decoration-underline text-body-emphasis" data-bs-toggle="tooltip" data-bs-placement="top" title="If the incorrect industry is displayed, return to the 'CyberPHA Manager' screen and select the 'Edit' button for this assessment from the table. Select the correct industry in the Assessment Setup form and save the record before re-selecting it to return to this screen"></span> </h6>
                             <h6 style="visibility: hidden"> <span id="user_role" class="text-decoration-underline text-body-emphasis"></span></h6>
                           <script>
@@ -583,15 +610,14 @@ document.addEventListener("DOMContentLoaded", function() {
                         </script>
 
                     </div>
-                    <div class="col-md-1">
-                    </div>
-                    <div class="col-md-1" > <button type="button" id="addScenarioBtn" class="btn nav-link" onclick="resetformcontrols()" ><i class="bi bi-folder-plus"></i> New</button></div>
-                    <div class="col-md-1" ><button type="button" class="btn nav-link" data-bs-toggle="modal"  onclick="processFormData()"><i class="bi bi-box-arrow-down"></i> Save</button></div>
 
-                    <div class="col-md-1" ><button type="button" class="btn nav-link" data-bs-toggle="modal"  data-bs-target="#scenarioSelectModal"><i class="bi bi-box-arrow-down"></i> Load</button></div>
-                    <div class="col-md-1">
-                <button id="risk-assessment-btn" type="button" class="btn nav-link" ><i class="bi bi-bullseye"></i>
-                    Execute Assessment  </button><br>
+                    <div class="col-md-1" > <button type="button" id="addScenarioBtn" class="btn btn-custom nav-link" onclick="resetformcontrols()" ><i class="bi bi-folder-plus"></i> New</button></div>
+                    <div class="col-md-1" ><button type="button" class="btn btn-custom nav-link" data-bs-toggle="modal"  onclick="processFormData()"><i class="bi bi-box-arrow-down"></i> Save</button></div>
+
+                    <div class="col-md-1" ><button type="button" class="btn btn-custom nav-link" data-bs-toggle="modal"  data-bs-target="#scenarioSelectModal"><i class="bi bi-box-arrow-down"></i> Load</button></div>
+                    <div class="col-md-2">
+                        <button id="risk-assessment-btn" type="button" class="btn btn-custom nav-link" ><i class="bi bi-bullseye"></i>
+                            Execute Assessment  </button><br>
 
                             <script>
                             $(document).ready(function () {
@@ -630,7 +656,7 @@ document.addEventListener("DOMContentLoaded", function() {
                             });
                         });
                             </script>
-                </div>
+                    </div>
                     <div class="col-md-1">
                         <div class="form-group">
                         <label for="risk_register">Risk Register</label>
@@ -649,8 +675,6 @@ document.addEventListener("DOMContentLoaded", function() {
                             });
                         });
                         </script>
-
-
                     <div class="col-md-1">
                         <div class="form-group">
                         <label for="risk_snapshot">Create Snapshot</label>
@@ -941,12 +965,21 @@ $(document).ready(function() {
         </div>
 
         <div class="tab-content" id="tab2">
-        <h2>Scenario Detail</h2>
+        <div class="row">
+            <div class="col-md-3">
+                <h2>Scenario Detail</h2>
+            </div>
+            <div class="col-md-1">
+            </div>
+            <div class="col-md-8">
+                <div id="txtRiskRegister"></div>
+            </div>
+        </div>
             <div class="form-group">
                 <div class = "row">
                     <div class="col-md-3">
                         <br>
-                    <div class="form-group" id="noconnect_asset_group" style="display: {% if assets_data %}none{% endif %};">
+                    <div class="form-group" id="noconnect_asset_group" style="display: {% if assets_data or darktrace_assets_data %}none{% endif %};">
                         <div class="row">
                             <div class="col">
                                 <label for="noconnect_asset">Targeted Asset (Vendor and Model)</label>
@@ -974,13 +1007,36 @@ $(document).ready(function() {
                             </div>
                         </div>
                     </div>
+                    <div class="form-group" id="darktrace_asset_group" style="display: {% if not darktrace_assets_data %}none{% endif %};">
+                        <div class="row">
+                            <div class="col">
+                                <label for="darktrace_asset_select">Select Asset</label><img src="{% static 'images/darktrace_logo.png' %}" alt="" class="align-middle" style="max-height: 1rem; margin-left: 1em">
+                                <select id="darktrace_asset_select" name="darktrace_asset_select" class="form-control select2-asset" style="width: 100%">
+                                    {% for darktrace_asset in darktrace_assets_data %}
+                                    <option value="{{ darktrace_asset.ip_address }}">{{ darktrace_asset.asset_type }} - {{ darktrace_asset.hostname }} - {{ darktrace_asset.ip_address }}</option>
+                                    {% endfor %}
+                                </select>
+
+                                <label for="darktrace_asset_purpose">Asset Purpose:</label>
+                                <input type="text" class="form-control" id="darktrace_asset_purpose" name="darktrace_asset_purpose" style="width: 100%">
+                            </div>
+                        </div>
+                    </div>
                     <script>
                     $(document).ready(function() {
                         var assetSelect = $('#asset_select');
+                        var darktrace_assetSelect = $('#darktrace_asset_select');
+
                         if (assetSelect.children('option').length === 0) {
                             $('#exalens_asset_group').hide();
                         } else {
                             $('#exalens_asset_group').show();
+                        }
+
+                        if (darktrace_assetSelect.children('option').length === 0) {
+                            $('#darktrace_asset_group').hide();
+                        } else {
+                            $('#darktrace_asset_group').show();
                         }
                     });
                     </script>
@@ -1044,11 +1100,18 @@ $(document).ready(function() {
                                     var attack_vector = document.getElementById('selVectors').value;
                                     var attacker = document.getElementById('threat-intelligence').value;
                                     var targetAsset, targetAssetPurpose;
+                                    var connectionFlag = 0;
 
                                     if ($('#noconnect_asset_group').is(':visible')) {
                                         targetAsset = document.getElementById('noconnect_asset').value;
                                         targetAssetPurpose = document.getElementById('noconnectasset_purpose').value;
+                                        connectionFlag = 0; // no external connections
+                                    } else if ($('#darktrace_asset_group').is(':visible')) {
+                                        connectionFlag = 1; //darktrace connection
+                                        targetAsset = document.getElementById('darktrace_asset_select').value;
+                                        targetAssetPurpose = document.getElementById('darktrace_asset_purpose').value;
                                     } else {
+                                        connectionFlag = 2; // exalens connection
                                         targetAsset = document.getElementById('asset_select').value;
                                         targetAssetPurpose = document.getElementById('asset_purpose').value;
                                     }
@@ -1070,14 +1133,17 @@ $(document).ready(function() {
                                             attacker: attacker,
                                             targetAsset: targetAsset,
                                             targetAssetPurpose: targetAssetPurpose,
+                                            connectionFlag: connectionFlag,
                                             csrfmiddlewaretoken: '{{ csrf_token }}'  // Ensure CSRF token is included for POST request
                                         },
                                         success: function(response) {
                                             $('#id_txtScenario').val(response.scenario_description);
                                             $('#analyzeScenarioBtn').prop('disabled', false);
-                                            Swal.close();
 
+                                            analyzeScenario(response.scenario_description, phaID, attacker, attack_vector);
+                                            Swal.close();
                                             },
+
                                         error: function(error) {
                                             Swal.close(); // Close the SweetAlert2 progress dialog
                                             Swal.fire({
@@ -1354,116 +1420,107 @@ $(document).ready(function() {
         }
 
 
-                document.getElementById('analyzeScenarioBtn').addEventListener('click', function() {
-                var scenarioText = document.getElementById('id_txtScenario').value;
-                var phaID = document.getElementById('hdnphaID').value;
-                var attackTreeDrawn = sessionStorage.getItem('attackTreeDrawn');
-                var exposed_system = document.getElementById('exposed_system').checked;
-                var weak_credentials = document.getElementById('weak_credentials').checked;
-                var attacker = document.getElementById('threat-intelligence').value;
-                var riskCategory = document.getElementById('risk-category').value;
-                var attack_vector = document.getElementById('selVectors').value;
-                var button = this;
-                $('#loadingProgressBar').show();
-                $('#progressBarInner').css('width', '0%').attr('aria-valuenow', 0);
-                $('#progressBarMessage').text('').show(); // Initialize and show message
-                $('.tab-link').addClass('disabled');
-                $('.nav-link').addClass('disabled');
-                button.disabled = true;
+          function analyzeScenario(scenarioText, phaID, attacker, attack_vector) {
+        var attackTreeDrawn = sessionStorage.getItem('attackTreeDrawn');
+        var exposed_system = document.getElementById('exposed_system').checked;
+        var weak_credentials = document.getElementById('weak_credentials').checked;
+        var riskCategory = document.getElementById('risk-category').value;
 
-                let progress = 0;
-                    let progressBarInterval = setInterval(function() {
-                        progress += 2; // Increment progress by 10% every second
-                        if (progress <= 100) {
-                            $('#progressBarInner').css('width', progress + '%').attr('aria-valuenow', progress);
+        $('#loadingProgressBar').show();
+        $('#progressBarInner').css('width', '0%').attr('aria-valuenow', 0);
+        $('#progressBarMessage').text('').show(); // Initialize and show message
+        $('.tab-link').addClass('disabled');
+        $('.nav-link').addClass('disabled');
 
-                            // Update progress bar message based on current progress
-                            if (progress === 6) {
-                                $('#progressBarMessage').text('Analysing consequences...');
-                            } else if (progress === 42) {
-                                $('#progressBarMessage').text('Drawing attack tree...');
-                            }
-                        } else {
-                            clearInterval(progressBarInterval); // Clear interval if progress exceeds 100%
-                        }
-                    }, 1000); // Update progress every second
-                $.ajax({
-                    url: "{% url 'OTRisk:analyze_scenario' %}",
-                    type: 'POST',
-                    data: {
-                        'scenario': scenarioText,
-                        'phaID': phaID,
-                        'attackTreeDrawn': attackTreeDrawn,
-                        'attacker': attacker,
-                        'riskCategory': riskCategory,
-                        'attack_vector': attack_vector,
-                        'exposed_system': exposed_system,
-                       'weak_credentials': weak_credentials,
-                        'csrfmiddlewaretoken': '{{ csrf_token }}',
-                    },
-                    success: function(response) {
-                        clearInterval(progressBarInterval);
-                        $('#loadingProgressBar').hide();
-                        $('#progressBarMessage').hide();
-                        $('.tab-link').removeClass('disabled');
-                        $('.nav-link').removeClass('disabled');
-                         $('.tab-link').removeClass('disabled');
-                        button.disabled = false;
+        let progress = 0;
+        let progressBarInterval = setInterval(function() {
+            progress += 2; // Increment progress by 10% every second
+            if (progress <= 100) {
+                $('#progressBarInner').css('width', progress + '%').attr('aria-valuenow', progress);
 
-                        var tableBody = document.getElementById('consequenceTable').getElementsByTagName('tbody')[0];
-                        tableBody.innerHTML = ''; // Clear existing rows
+                // Update progress bar message based on current progress
+                if (progress === 6) {
+                    $('#progressBarMessage').text('Analysing consequences...');
+                } else if (progress === 42) {
+                    $('#progressBarMessage').text('Drawing attack tree...');
+                }
+            } else {
+                clearInterval(progressBarInterval); // Clear interval if progress exceeds 100%
+            }
+        }, 1000); // Update progress every second
 
-                        response.consequence.forEach(function(item, index) {
-                            var row = tableBody.insertRow();
-                            var cell1 = row.insertCell(0);
-                            var cell2 = row.insertCell(1);
+        $.ajax({
+            url: "{% url 'OTRisk:analyze_scenario' %}",
+            type: 'POST',
+            data: {
+                'scenario': scenarioText,
+                'phaID': phaID,
+                'attackTreeDrawn': attackTreeDrawn,
+                'attacker': attacker,
+                'riskCategory': riskCategory,
+                'attack_vector': attack_vector,
+                'exposed_system': exposed_system,
+                'weak_credentials': weak_credentials,
+                'csrfmiddlewaretoken': '{{ csrf_token }}',
+            },
+            success: function(response) {
+                clearInterval(progressBarInterval);
+                $('#loadingProgressBar').hide();
+                $('#progressBarMessage').hide();
+                $('.tab-link').removeClass('disabled');
+                $('.nav-link').removeClass('disabled');
 
-                            cell1.innerHTML = item;
-                            cell2.innerHTML = '<input type="checkbox" id="validate' + index + '">';
-                        });
+                var tableBody = document.getElementById('consequenceTable').getElementsByTagName('tbody')[0];
+                tableBody.innerHTML = ''; // Clear existing rows
 
-                        if (sessionStorage.getItem('attackTreeDrawn') === 'false') {
-                            var attackTreeData = response.attack_tree;
+                response.consequence.forEach(function(item, index) {
+                    var row = tableBody.insertRow();
+                    var cell1 = row.insertCell(0);
+                    var cell2 = row.insertCell(1);
 
-                            // Check if the attackTreeData does not contain the error key
-                            if (!attackTreeData.error) {
-                                document.getElementById('attack_tree_text').value = JSON.stringify(attackTreeData);
-
-                                drawAttackTree(attackTreeData);
-                            } else {
-                                // Handle the error case, e.g., display a message to the user
-                                console.error(attackTreeData.error);
-                                // Optionally, display the error message to the user in a user-friendly manner
-                            }
-                        }
-
-
-
-                    },
-                    error: function(xhr, status, error) {
-                        clearInterval(progressBarInterval);
-                        $('#loadingProgressBar').hide();
-                        $('#progressBarMessage').hide();
-                         $('.tab-link').removeClass('disabled');
-                        $('.nav-link').removeClass('disabled');
-                        button.disabled = false;
-
-                        // Parse the responseText to JSON if it is in JSON format
-                        var response = xhr.responseText;
-                        try {
-                            var jsonResponse = JSON.parse(response);
-                            if (jsonResponse.error) {
-                                alert('Error: ' + jsonResponse.error);
-                            } else {
-                                alert('An error occurred: ' + response);
-                            }
-                        } catch(e) {
-                            // If responseText is not JSON, display it directly
-                            alert('An error occurred: ' + response);
-                        }
-                    }
+                    cell1.innerHTML = item;
+                    cell2.innerHTML = '<input type="checkbox" id="validate' + index + '">';
                 });
-            });
+
+                if (sessionStorage.getItem('attackTreeDrawn') === 'false') {
+                    var attackTreeData = response.attack_tree;
+
+                    // Check if the attackTreeData does not contain the error key
+                    if (!attackTreeData.error) {
+                        document.getElementById('attack_tree_text').value = JSON.stringify(attackTreeData);
+
+                        drawAttackTree(attackTreeData);
+                    } else {
+                        // Handle the error case, e.g., display a message to the user
+                        console.error(attackTreeData.error);
+                        // Optionally, display the error message to the user in a user-friendly manner
+                    }
+                }
+                Swal.close();
+            },
+            error: function(xhr, status, error) {
+                clearInterval(progressBarInterval);
+                $('#loadingProgressBar').hide();
+                $('#progressBarMessage').hide();
+                $('.tab-link').removeClass('disabled');
+                $('.nav-link').removeClass('disabled');
+                Swal.close();
+                // Parse the responseText to JSON if it is in JSON format
+                var response = xhr.responseText;
+                try {
+                    var jsonResponse = JSON.parse(response);
+                    if (jsonResponse.error) {
+                        alert('Error: ' + jsonResponse.error);
+                    } else {
+                        alert('An error occurred: ' + response);
+                    }
+                } catch(e) {
+                    // If responseText is not JSON, display it directly
+                    alert('An error occurred: ' + response);
+                }
+            }
+        });
+    }
         </script>
              <p></p>
 
@@ -2425,10 +2482,16 @@ $(document).ready(function() {
                     const selectedAsset = assetSelect.options[assetSelect.selectedIndex].text;
                     asset_name = selectedAsset;
                     asset_purpose = document.getElementById('asset_purpose').value;
+                } else if (document.getElementById('darktrace_asset_group').style.display !== 'none') {
+                    const assetSelect = document.getElementById('darktrace_asset_select');
+                    const selectedAsset = assetSelect.options[assetSelect.selectedIndex].text;
+                    asset_name = selectedAsset;
+                    asset_purpose = document.getElementById('darktrace_asset_purpose').value;
                 } else {
                     asset_name = document.getElementById('noconnect_asset').value;
                     asset_purpose = document.getElementById('noconnectasset_purpose').value;
                 }
+
                   if (rows.length === 0 || !validatedConsequenceExists) {
                       alert("No consequences have been added or validated. Please add and validate consequences before proceeding.");
                       return; // Exit the function
@@ -3790,14 +3853,22 @@ $('#scenarioSelectModal').on('show.bs.modal', function (e) {
             let environmentJustification = document.getElementById('txtenvironmentJustify').value;
             let dangerJustification = document.getElementById('txtlifeJustify').value;
             var targetAsset, targetAssetPurpose;
+            var partner_connection;
 
             if ($('#noconnect_asset_group').is(':visible')) {
                 targetAsset = document.getElementById('noconnect_asset').value;
                 targetAssetPurpose = document.getElementById('noconnectasset_purpose').value;
+                partner_connection = 0;
+            } else if ($('#darktrace_asset_group').is(':visible')) {
+                targetAsset = document.getElementById('darktrace_asset_select').value;
+                targetAssetPurpose = document.getElementById('darktrace_asset_purpose').value;
+                partner_connection = 1;
             } else {
                 targetAsset = document.getElementById('asset_select').value;
                 targetAssetPurpose = document.getElementById('asset_purpose').value;
+                partner_connection = 2;
             }
+
              // Gather Physical Safeguards from the table
             let physicalSafeguards = [];
             $("#table_safeguards tbody tr").each(function() {
@@ -3879,7 +3950,8 @@ $('#scenarioSelectModal').on('show.bs.modal', function (e) {
                     environmentJustification: environmentJustification,
                     dangerJustification: dangerJustification,
                     targetAsset: targetAsset,
-                    targetAssetPurpose: targetAssetPurpose
+                    targetAssetPurpose: targetAssetPurpose,
+                    partner_connection: partner_connection
                 },
                 success: function (response) {
                     // On success, set progress to 100% and hide the progress bar
@@ -4794,9 +4866,11 @@ function clearScenario(){
          if (data.risk_register === true) {
             sessionStorage.setItem("ls", "1");
             $('#risk_register').prop('checked', true);
+             $('#txtRiskRegister').text('WARNING: This scenario was added to the risk register. Changes may  be saved as a snapshot but will not affect the saved scenario. ').css('color', 'red');
         } else {
             sessionStorage.setItem("ls", "0");
             $('#risk_register').prop('checked', false);
+            $('#txtRiskRegister').text('');
         }
         // Fill the form fields with the returned data
         $('#id_txtScenario').val(data.Scenario);
@@ -4833,19 +4907,29 @@ function clearScenario(){
          $('#env_population').val(data.env_population);
          $('#env_wildlife').val(data.env_wildlife);
 
-          if (document.getElementById('exalens_asset_group').style.display !== 'none') {
-                    const assetSelect = document.getElementById('asset_select');
-                    const assetOptions = Array.from(assetSelect.options);
-                    const selectedAsset = assetOptions.find(option => option.text === data.asset_name);
+         if (document.getElementById('exalens_asset_group').style.display !== 'none') {
+            const assetSelect = document.getElementById('asset_select');
+            const assetOptions = Array.from(assetSelect.options);
+            const selectedAsset = assetOptions.find(option => option.text === data.asset_name);
 
-                    if (selectedAsset) {
-                        assetSelect.value = selectedAsset.value;
-                    }
-                    $('#asset_purpose').val(data.asset_purpose);
-                } else {
-                    $('#noconnect_asset').val(data.asset_name);
-                    $('#noconnectasset_purpose').val(data.asset_purpose);
-                }
+            if (selectedAsset) {
+                assetSelect.value = selectedAsset.value;
+            }
+            $('#asset_purpose').val(data.asset_purpose);
+        } else if (document.getElementById('darktrace_asset_group').style.display !== 'none') {
+            const assetSelect = document.getElementById('darktrace_asset_select');
+            const assetOptions = Array.from(assetSelect.options);
+            const selectedAsset = assetOptions.find(option => option.text === data.asset_name);
+
+            if (selectedAsset) {
+                assetSelect.value = selectedAsset.value;
+            }
+            $('#darktrace_asset_purpose').val(data.asset_purpose);
+        } else {
+            $('#noconnect_asset').val(data.asset_name);
+            $('#noconnectasset_purpose').val(data.asset_purpose);
+        }
+
 
         $('.tab-link[data-tab="tab2"]').click();
 

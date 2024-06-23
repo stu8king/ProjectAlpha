@@ -188,9 +188,12 @@ urlpatterns = [
     path('get_asset_data/', views.get_asset_data, name='get_asset_data'),
     path('get-incidents/<str:ipaddress>/', views.exalens_get_incidents, name='get-incidents'),
     path('cyberpha_exalens_connection/', views.cyberpha_exalens_connection, name='cyberpha_exalens_connection'),
+    path('cyberpha_darktrace_connection/', views.cyberpha_darktrace_connection, name='cyberpha_darktrace_connection'),
     path('exalens_defaults/', views.exalens_defaults, name='exalens_defaults'),
+    path('darktrace_defaults/', views.darktrace_defaults, name='darktrace_defaults'),
     path('generate_cyberpha_scenario_description/', views.generate_cyberpha_scenario_description, name='generate_cyberpha_scenario_description'),
     path('generate_raw_scenario_description/', views.generate_raw_scenario_description, name='generate_raw_scenario_description'),
+    path('network_risk_profile/', views.network_risk_profile, name='darktrace'),
 ]
 
 if settings.DEBUG:

@@ -1,71 +1,57 @@
+import concurrent.futures
 import hashlib
 import json
-from urllib.parse import urljoin
-import urllib3
-from urllib3.exceptions import InsecureRequestWarning
-import requests
-from requests.exceptions import RequestException
-from django.contrib import messages
-import requests
 import logging
+import math
+import os
+import re
+import tempfile
+import time
+import uuid
+import datetime
+from decimal import Decimal
+from urllib.parse import urljoin
 
-from django.db import transaction
-from google.oauth2 import service_account
-from ibm_watson import NaturalLanguageUnderstandingV1
-from ibm_watson.natural_language_understanding_v1 import Features, KeywordsOptions, SummarizationOptions, \
-    CategoriesOptions, ConceptsOptions, EntitiesOptions, SentimentOptions, RelationsOptions
-from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
-from django.db.models import CharField
-from google.cloud import language_v1
-from django.db.models.functions import Coalesce
-from django.forms import model_to_dict, CharField
-from django.utils import timezone
-from django.utils.dateparse import parse_datetime, parse_date
-from django.core.serializers import serialize
-from django.views.decorators.http import require_POST, require_http_methods
-
-from OTRisk.models.Model_CyberPHA import tblIndustry, tblCyberPHAHeader, tblZones, tblStandards, \
-    tblCyberPHAScenario, vulnerability_analysis, tblAssetType, tblMitigationMeasures, MitreControlAssessment, \
-    cyberpha_safety, SECURITY_LEVELS, ScenarioConsequences, user_scenario_audit, auditlog, CyberPHAModerators, \
-    WorkflowStatus, APIKey, CyberPHA_Group, ScenarioBuilder, PHA_Safeguard, CyberSecurityInvestment, UserScenarioHash, \
-    CyberPHARiskTolerance, CyberPHACybersecurityDefaults, PHA_Observations, Country, OTVendor
-from OTRisk.models.raw import SecurityControls
-from OTRisk.models.raw import MitreICSMitigations, RAActions
-from OTRisk.models.questionnairemodel import FacilityType
-from OTRisk.models.model_assessment import SelfAssessment, AssessmentFramework, AssessmentAnswer, AssessmentQuestion
+import openai
+import requests
+import urllib3
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
+from django.core.exceptions import ObjectDoesNotExist
+from django.core.serializers import serialize
+from django.db import transaction
+from django.db.models import Avg, Sum, F, Count, Subquery, OuterRef, Value, IntegerField, Q
+from django.db.models.functions import Coalesce
+from django.forms import model_to_dict
+from django.http import FileResponse
+from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.utils import timezone
+
 from django.views.decorators.csrf import csrf_exempt
-from datetime import date, time, datetime
-from django.views import View
-from django.http import JsonResponse
-from django.core.exceptions import ObjectDoesNotExist
-import openai
-import re
-from django.db.models import Avg, Sum, F, Count, Subquery, OuterRef, Case, When, Value, IntegerField, Q
-import concurrent.futures
-import os
-import math
-from decimal import Decimal, InvalidOperation
+from django.views.decorators.http import require_POST, require_http_methods
+from pinecone import Pinecone, ServerlessSpec
+from pptx import Presentation
+from pptx.util import Pt
+from requests.exceptions import RequestException
+from urllib3.exceptions import InsecureRequestWarning
+
+from OTRisk.models.Model_CyberPHA import tblIndustry, tblCyberPHAHeader, tblZones, tblStandards, \
+    tblCyberPHAScenario, vulnerability_analysis, tblAssetType, MitreControlAssessment, \
+    SECURITY_LEVELS, ScenarioConsequences, user_scenario_audit, auditlog, CyberPHAModerators, \
+    WorkflowStatus, APIKey, CyberPHA_Group, ScenarioBuilder, PHA_Safeguard, CyberSecurityInvestment, UserScenarioHash, \
+    CyberPHARiskTolerance, CyberPHACybersecurityDefaults, PHA_Observations, Country, OTVendor
+from OTRisk.models.model_assessment import SelfAssessment, AssessmentQuestion
+from OTRisk.models.questionnairemodel import FacilityType
+from OTRisk.models.raw import MitreICSMitigations, RAActions
+from OTRisk.models.raw import SecurityControls
 from ProjectAlpha import settings
 from ProjectAlpha.settings import BASE_DIR
 from accounts.models import UserProfile, Organization
 from accounts.views import get_client_ip
 from .dashboard_views import get_user_organization_id, get_organization_users
-from django.contrib.auth.models import User
-from concurrent.futures import ThreadPoolExecutor, as_completed
 from .forms import VulnerabilityAnalysisForm
-import aiohttp
-import asyncio
-import tempfile
-import time
-import uuid
-from django.core import serializers
-from django.http import FileResponse
-from pptx import Presentation
-from pptx.util import Inches, Pt
-from pinecone import Pinecone, ServerlessSpec
+from OTRisk.models.darktraceapi import DarktraceAPI
 
 
 def get_api_key(service_name):
@@ -83,6 +69,7 @@ openai.api_key = get_api_key('openai')
 def validate_and_format_date(date_str, default_date='2001-01-01', date_format='%Y-%m-%d'):
     """
     Validates and formats a date string into a timezone-aware datetime object.
+    If the date string is empty, the function returns the current date.
 
     :param date_str: The date string to validate and format.
     :param default_date: The default date to return if date_str is invalid or empty.
@@ -92,18 +79,17 @@ def validate_and_format_date(date_str, default_date='2001-01-01', date_format='%
     if date_str:
         try:
             # Attempt to parse the date string using the specified format
-            valid_date = datetime.strptime(date_str, date_format)
-            # Make the datetime object timezone-aware
-            timezone_aware_date = timezone.make_aware(valid_date, timezone.get_default_timezone())
-            return timezone_aware_date
+            valid_date = datetime.datetime.strptime(date_str, date_format)
         except ValueError:
-            # If parsing fails, return the default date as a timezone-aware datetime object
-            default_datetime = datetime.strptime(default_date, date_format)
-            return timezone.make_aware(default_datetime, timezone.get_default_timezone())
+            # If parsing fails, use the default date
+            valid_date = datetime.datetime.strptime(default_date, date_format)
     else:
-        # If the date string is empty, return the default date as a timezone-aware datetime object
-        default_datetime = datetime.strptime(default_date, date_format)
-        return timezone.make_aware(default_datetime, timezone.get_default_timezone())
+        # If the date string is empty, use the current date
+        valid_date = datetime.datetime.now()
+
+    # Make the datetime object timezone-aware
+    timezone_aware_date = timezone.make_aware(valid_date, timezone.get_default_timezone())
+    return timezone_aware_date
 
 
 @login_required
@@ -254,14 +240,23 @@ def iotaphamanager(request, record_id=None):
         pha_header.exalens_status = request.POST.get('hdn_exalens_status')
         pha_header.exalens_risk = request.POST.get('hdn_exalens_risk')
         exalens_risk_score_string = request.POST.get('hdn_exalens_score')
-        # exalens_risk_score_int = int(exalens_risk_score_string)
-
         try:
             exalens_risk_score_int = int(exalens_risk_score_string)
         except ValueError:  # Handle cases where the input might still not be a valid integer
             exalens_risk_score_int = 0
-
         pha_header.exalens_score = exalens_risk_score_int
+
+        pha_header.darktrace_client = request.POST.get('darktrace_host')
+        pha_header.darktrace_public_api = request.POST.get('darktrace_public_key')
+        pha_header.darktrace_private_api = request.POST.get('darktrace_private_key')
+        pha_header.darktrace_status = request.POST.get('hdn_darktrace_status')
+        pha_header.darktrace_risk = request.POST.get('hdn_darktrace_risk')
+        darktrace_risk_score_string = request.POST.get('hdn_darktrace_score')
+        try:
+            darktrace_risk_score_int = int(darktrace_risk_score_string)
+        except ValueError:  # Handle cases where the input might still not be a valid integer
+            darktrace_risk_score_int = 0
+        pha_header.darktrace_score = darktrace_risk_score_int
 
         # Convert ir_plan_date from string to date object, handle empty string
         if ir_plan_date_str:
@@ -578,7 +573,13 @@ def get_headerrecord(request):
         'exalens_ip': headerrecord.exalens_ip,
         'exalens_risk': headerrecord.exalens_risk,
         'exalens_score': headerrecord.exalens_score,
-        'exalens_status': headerrecord.exalens_status
+        'exalens_status': headerrecord.exalens_status,
+        'darktrace_public_api': headerrecord.darktrace_public_api,
+        'darktrace_private_api': headerrecord.darktrace_private_api,
+        'darktrace_client': headerrecord.darktrace_client,
+        'darktrace_risk': headerrecord.darktrace_risk,
+        'darktrace_score': headerrecord.darktrace_score,
+        'darktrace_status': headerrecord.darktrace_status
     }
 
     # Query for moderators associated with this header record
@@ -862,6 +863,8 @@ def facility_risk_profile(request):
         shift_model = request.GET.get('shift_model')
         assessment_id = request.GET.get('assessment_id')
         investments_data = request.GET.get('investments')
+
+        print(request.GET.get('investments'))
         has_ir_plan = request.GET.get('has_ir_plan', 'false') == 'true'
         ir_plan_never_tested = request.GET.get('ir_plan_never_tested', 'false') == 'true'
         ir_plan_date_str = request.GET.get('ir_plan_date')
@@ -881,8 +884,11 @@ def facility_risk_profile(request):
 
         # Generate the text statement for investments
         investment_statement = "Investments have been made in:\n"
+
         for idx, investment in enumerate(investments, start=1):
-            investment_statement += f"{idx}: Vendor:{investment['vendor_name']}, Product:{investment['product_name']}.\n"
+            vendor_name = investment.get('vendor_name', 'Unknown Vendor')
+            product_name = investment.get('product_name', 'Unknown Product')
+            investment_statement += f"{idx}: Vendor:{vendor_name}, Product:{product_name}.\n"
 
         language = request.session.get('organization_defaults', {}).get('language', 'en')  # 'en' is the default value
 
@@ -906,14 +912,35 @@ def facility_risk_profile(request):
         openai_model = get_api_key('OpenAI_Model')
         # openai_api_key = os.environ.get('OPENAI_API_KEY')
         openai.api_key = openai_api_key
+
+        chemical_query = f"chemicals used in manufacturing, industrial chemicals, chemical safety, chemical hazards, chemical storage, chemical handling, manufacturing industry, types of chemicals, production chemicals, chemical regulations"
+        retrieved_chunks = query_index(chemical_query)
+        summarized_chunks = get_summarized_chunks(retrieved_chunks)
+        chemical_context = "\n\n".join(summarized_chunks)
+
+        safety_query = f"Industrial safety, OSHA, chemical safety, manufacturing hazards, safety hazards, danger, safety in dangerous environments"
+        retrieved_chunks = query_index(safety_query)
+        summarized_chunks = get_summarized_chunks(retrieved_chunks)
+        safety_context = "\n\n".join(summarized_chunks)
+
+        OT_query = f"CyberPHA, OT Cybersecurity, Industrial Cyber, OT Device, Industrial control systems, Manufacturing, Industry, ICS Cybersecurity"
+        retrieved_chunks = query_index(OT_query)
+        summarized_chunks = get_summarized_chunks(retrieved_chunks)
+        OT_context = "\n\n".join(summarized_chunks)
+
+        physical_query = f"physical security, industrial security, protecting facilities, industrial protection, security "
+        retrieved_chunks = query_index(physical_query)
+        summarized_chunks = get_summarized_chunks(retrieved_chunks)
+        physical_context = "\n\n".join(summarized_chunks)
+
         context = f"You are an industrial safety and hazard expert. For the {facility} {facility_type} at {address}, {country} in the {Industry} industry, with {employees} employees working a {shift_model} shift model. The local Air Quality Index is {aqi}.  "
 
         prompts = [
-            f"{context} List safety hazards, max 100 words. - Specific to facility - mechanical or chemical or electrical or heat or cold or crush or height - Space between bullets. \n\nExample Format:\n 1. Specific safety hazard.\n 2. Another specific safety hazard.",
-            f"{context} List expected chemicals, max 100 words. - Specific to facility - Chemical names only - raw materials and by-products and stored chemicals - Space between bullets. \n\nExample Format:\n 1. Chemical name (raw material or by-product).\n- 2. Another chemical name (raw material or by-product).",
-            f"{context}, List physical security requirements for the given facility and location - access control - surveillance - consideration of local crime statistics - blind spots - proximity to other infrastructure . Max of 100 words .\n\nExample Format:\n 1. Physical security challenge.\n 2. Another physical security challenge.",
-            f"{context}, list of specialized OT and IoT devices and equipment expected to be at the facility. Max of 150 words .\n\nExample Format:\n 1. OT or IoT device (purpose of device).\n 2. Another OT or IoT device (purpose of device).",
-            f"{context}, list of national and international regulatory compliance containing cybersecurity requirements relevant to the {Industry} industry that applies to {facility_type} facilities in {country} . Includes laws and standards. Max of 150 words .\n\nExample Format:\n 1. Compliance name (name of issuing authority).\n 2. Another compliance name (name of issuing authority).",
+            f"INSTRUCTION: DO NOT PRINT ** characters. If any words are emphasized with **, replace them with normal text without ** characters.   Indexed pinecone content for context: {safety_context}. {context} List safety hazards - Specific to facility - of any type such as (but not limited to) mechanical or chemical or electrical or heat or cold or crush or height - Space between bullets. Use the pinecone index for more context. \n\nExample Format:\n 1. Specific safety hazard.\n 2. Another specific safety hazard.",
+            f"INSTRUCTION: DO NOT PRINT ** characters. If any words are emphasized with **, replace them with normal text without ** characters. Indexed pinecone content for context: {chemical_context}. {context} List expected chemicals (of all types e.g. solvent, compound, liquid, gas, powder, etc) - Specific to facility - Chemical names only - raw materials and by-products and stored chemicals - Space between bullets. Use the pinecone index for more context. \n\nExample Format:\n 1. Chemical name (raw material or by-product).\n- 2. Another chemical name (raw material or by-product).",
+            f"INSTRUCTION: DO NOT PRINT ** characters. If any words are emphasized with **, replace them with normal text without ** characters. Indexed pinecone content for context: {physical_context}.{context}, List physical security considerations SPECIFIC for the given facility and location including (but not limited to) CONSIDERINGS OF: access control,surveillance,local crime statistics,blind spots,proximity to other infrastructure . Use the pinecone index for more context .\n\nExample Format:\n 1. Physical security challenge.\n 2. Another physical security challenge. ",
+            f"INSTRUCTION: DO NOT PRINT ** characters. If any words are emphasized with **, replace them with normal text without ** characters.   indexed pinecone content for context: {OT_context}.{context}, list of OT devices expected to be operating on the industrial networks at the given facility. Use the pinecone index for more context. .\n\nExample Format:\n 1. OT device (brief and concise purpose of device).\n 2. Another OT device (brief and concise purpose of device).",
+            f"{context}, list of national and international regulatory compliance containing cybersecurity requirements relevant to the {Industry} industry that applies to {facility_type} facilities in {country} . Includes laws and standards .\n\nExample Format:\n 1. Compliance name (name of issuing authority).\n 2. Another compliance name (name of issuing authority).",
             f"{context}: You are a safety inspector. For a {facility_type} in {country}, estimate a detailed and nuanced safety and hazard risk score. Use a scale from 0 to 100, where 0 indicates an absence of safety hazards and 100 signifies the presence of extreme and imminent fatal hazards. Provide a score reflecting the unique risk factors associated with the facility type and its operational context in {country}. Scores should reflect increments of 10, with each decile corresponding to escalating levels of hazard severity and likelihood of occurrence given the expected attention to safety at the facility. Base your score on a typical {facility_type} in {country}, adhering to expected standard safety protocols, equipment conditions, and operational practices. Provide the score as a single, precise number without additional commentary."
         ]
 
@@ -930,7 +957,7 @@ def facility_risk_profile(request):
                     {"role": "user", "content": prompt}
                 ],
                 temperature=0.1,
-                max_tokens=600
+                max_tokens=4000
 
             )
 
@@ -939,13 +966,16 @@ def facility_risk_profile(request):
         with concurrent.futures.ThreadPoolExecutor() as executor:
             responses = list(executor.map(fetch_response, prompts))
 
+        def remove_emphasis(output):
+            return output.replace("**", "")
             # Extract the individual responses
-        safety_summary = responses[0]['choices'][0]['message']['content'].strip()
-        chemical_summary = responses[1]['choices'][0]['message']['content'].strip()
-        physical_security_summary = responses[2]['choices'][0]['message']['content'].strip()
-        other_summary = responses[3]['choices'][0]['message']['content'].strip()
-        compliance_summary = responses[4]['choices'][0]['message']['content'].strip()
-        pha_score = responses[5]['choices'][0]['message']['content'].strip()
+
+        safety_summary = remove_emphasis(responses[0]['choices'][0]['message']['content'].strip())
+        chemical_summary = remove_emphasis(responses[1]['choices'][0]['message']['content'].strip())
+        physical_security_summary = remove_emphasis(responses[2]['choices'][0]['message']['content'].strip())
+        other_summary = remove_emphasis(responses[3]['choices'][0]['message']['content'].strip())
+        compliance_summary = remove_emphasis(responses[4]['choices'][0]['message']['content'].strip())
+        pha_score = remove_emphasis(responses[5]['choices'][0]['message']['content'].strip())
 
         # Call to facility_threat_profile
         threatSummary, insightSummary, strategySummary = facility_threat_profile(sl, facility, facility_type, country,
@@ -1499,6 +1529,7 @@ def scenario_analysis(request):
         dangerJustification = request.GET.get('dangerJustification')
         targetAsset = request.GET.get('targetAsset')
         targetAssetPurpose = request.GET.get('targetAssetPurpose')
+        connectionFlag = request.GET.get('partner_connection')
 
         # Concatenate all GET parameters to form a string
         values_str = '|'.join([request.GET.get(param, '') for param in request.GET])
@@ -1534,8 +1565,8 @@ def scenario_analysis(request):
         exalens_ip_address = cyber_pha_header.exalens_ip
         exalens_client_id = cyber_pha_header.exalens_client
 
-        exalens_incidents = exalens_get_device_incident(targetAsset, exalens_api_key, exalens_ip_address,
-                                                        exalens_client_id)
+        # exalens_incidents = exalens_get_device_incident(targetAsset, exalens_api_key, exalens_ip_address,
+        #                                                exalens_client_id)
 
         # Convert plan_last_tested_date to string format if it's not None
         plan_last_tested_date_str = plan_last_tested_date.strftime('%Y-%m-%d') if plan_last_tested_date else None
@@ -1574,6 +1605,28 @@ def scenario_analysis(request):
         cost_op_hour = cyber_pha_header.coho
         annual_revenue = cyber_pha_header.annual_revenue
 
+        asset_data = {}
+        if connectionFlag == 1:
+            darktrace_host = cyber_pha_header.darktrace_client
+            darktrace_public_token = cyber_pha_header.darktrace_public_api
+            darktrace_private_token = cyber_pha_header.darktrace_private_api
+
+            # Fetch asset details from Darktrace
+            asset_data = darktrace_asset_detail(targetAsset, darktrace_host, darktrace_public_token,
+                                                darktrace_private_token)
+
+        if connectionFlag == 2:
+            exalens_client = cyber_pha_header.exalens_client
+            exalens_api = cyber_pha_header.exalens_api
+            exalens_url = cyber_pha_header.exalens_ip
+
+            # Fetch asset details from Darktrace
+            asset_data = exalens_asset_detail(targetAsset, exalens_url, exalens_api,
+                                              exalens_client)
+
+        if connectionFlag == 0:
+            asset_data = 'No detailed asset data available'
+
         openai.api_key = get_api_key('openai')
         # Define the common part of the user message
         pinecone_query = "FAIR, risk assessment, 62443, cybersecurity, hazops, cyberpha, incident, event costs, costs, cost of a security incident "
@@ -1587,13 +1640,13 @@ def scenario_analysis(request):
 
         Scenario Details:
 
-        Facility Type & Industry: A facility in the {industry} industry, located in {country}.
+        Facility Type & Industry: A {facility_type} in the {industry} industry, located in {country}.
         Scenario Overview: {scenario}.
         Critical System Exposures:
         Internet Exposure: Systems with public IP addresses: {exposed_system}.
         Affected asset: {targetAsset},
         Purpose of Affected Asset: {targetAssetPurpose}
-        Incidents on affected asset : {exalens_incidents},
+        Asset_Data : {asset_data},
         Credential Security: Systems with weak/default credentials: {weak_credentials}.
         OT Cybersecurity Incident Response:
         Presence of an Incident Response Plan: {has_incident_response_plan}.
@@ -1677,13 +1730,13 @@ def scenario_analysis(request):
             {
                 "role": "user",
                 "content": f"""{common_content}
-                            
-                            Based on the provided details, write a concise numbered bullet point list of OT/ICS cybersecurity risk mitigation action items. Ensure the actions should directly relate to the given scenario, any given assets, and the nature of any detected incidents. IMPORTANT: Consider for each action the practicality of implementation in a critical OT environment (for example: vulnerability scanning is known to be very dangerous for OT networks so you wouldn't recommend scanning but you could recommend an alternative approach).  Each action should be aligned with the latest versions of NIST 800-82 and the NIST CSF, but should not be a direct quote from those standards. For example: if 'Ensure <device> is segmented in a secure vlan.' is the action then this would relate to the network segmentation section in the NIST document . Include the relevant NIST reference in brackets at the end of each action. Include in brackets an estimation of the amount of risk reduction associated with the action as a whole number integer percentage. The output should strictly adhere to the following format:
-                            
+                            You are an OT Cybersecurity expert. Consider the given scenario and all of the associated information.
+                            Using the given details, generate a concise priority ordered and numbered bullet point list of OT/ICS cybersecurity action items that are readily implementable, as a check list. Each action item must be specific to the given scenario and represent a task that can be quickly and readily completed without major effort AND that would represent some risk mitigation. Each action item MUST be pragmatic and reasonable to accomplish within an OT network environment without extensive effort and could be implemented by an engineer rather than an IT security expert. For example Implement network segmentation is a major effort. Action items are intended to be akin to an immediate action drill. Identify which section of NIST 800-82 OR NIST CSF the action items most closely aligns with and include the relevant NIST reference in brackets at the end of each recommendation however action items MUST NOT SIMPLY BE QUOTES FROM THE STANDARDS. The output should strictly adhere to the following format:
+
                             Example Format:
-                            1. Example recommendation related to OT cybersecurity. (<estimation of risk reduction %>) [NIST Reference] 
-                            2. Another example recommendation focused on OT cybersecurity risk mitigation. (<estimation of risk reduction %>) [NIST Reference] 
-                            
+                           1. Concise and pragmatic action item. [NIST Reference the action most closely relates to]
+                           2. Another concise and pragmatic action item . [NIST Reference the action most closely relates to]
+
                             Following this example format, provide the actions in order of priority, specific to the given scenario without any additional narrative, description, advice, or guidance. The actions should be clear and easily parsable within an HTML page.
                             """
 
@@ -2632,9 +2685,6 @@ def get_assessment_summary(request):
     return JsonResponse({'score': score, 'summary': summary})
 
 
-from django.utils.timezone import make_aware
-
-
 def copy_cyber_pha(request, pha_id):
     if request.method == 'POST':
         original_pha = get_object_or_404(tblCyberPHAHeader, ID=pha_id)
@@ -2875,6 +2925,93 @@ def exalens_get_cyberpha_assets(cyberphaid):
         return []  # Return an empty list if an exception occurs
 
 
+import urllib3
+import datetime
+from typing import Any, Dict, Optional
+from OTRisk.darktrace_integration.darktrace import Darktrace
+from OTRisk.darktrace_integration.device import Device
+from OTRisk.darktrace_integration.model_breach import ModelBreach
+from OTRisk.darktrace_integration.ai_analyst_incident import AIAnalystIncident
+from OTRisk.darktrace_integration.endpoint import Endpoint
+
+
+def darktrace_asset_detail(target_asset_ip: str, darktrace_host: str, darktrace_public_token: str,
+                           darktrace_private_token: str) -> Optional[str]:
+    # Disable SSL warnings
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+    # Initialize the Darktrace session
+    dt_session = Darktrace.initialize_from_string(
+        host=darktrace_host,
+        public_token=darktrace_public_token,
+        private_token=darktrace_private_token,
+        timeout=30  # Increase the timeout value
+    )
+
+    # Fetch the list of devices
+    try:
+        devices = Device.get_assets(dt_session)
+        asset_detail = next((device for device in devices if device.ip == target_asset_ip), None)
+
+        if asset_detail:
+            device_id = asset_detail.did
+
+            # Fetch incidents related to the asset
+            incidents = AIAnalystIncident.get_incidents(
+                session=dt_session,
+                init_date=datetime.datetime.strptime("2023-01-01 00:00:00", "%Y-%m-%d %H:%M:%S"),
+                end_date=datetime.datetime.now()
+            )
+            related_incidents = [incident for incident in incidents if
+                                 target_asset_ip in incident.breach_identifiers]
+
+            model_breaches = ModelBreach.get_model_breaches(session=dt_session, device=asset_detail)
+            endpoint_details = Endpoint.get_details(session=dt_session, ip=target_asset_ip)
+            largest_data_transfers = Endpoint.get_largest_data_transfers(session=dt_session, ip=target_asset_ip)
+
+            tags = asset_detail.get_tags()
+
+            # Process and format the asset detail for readability
+            asset_info = {
+                "ip_address": asset_detail.ip,
+                "asset_type": asset_detail.typename,
+                "hostname": asset_detail.hostname,
+                "first_seen": datetime.datetime.fromtimestamp(
+                    asset_detail.first_seen / 1000).isoformat() if asset_detail.first_seen else None,
+                "last_seen": datetime.datetime.fromtimestamp(
+                    asset_detail.last_seen / 1000).isoformat() if asset_detail.last_seen else None,
+                "os": asset_detail.os,
+                "tags": tags,
+                "related_incidents_count": len(related_incidents),
+                "related_incidents_types": list(set(incident.summary for incident in related_incidents)),
+                "model_breaches_count": len(model_breaches),
+                "model_breaches_types": list(set(breach.raw["model"]["then"]["name"] for breach in model_breaches)),
+                "endpoint_details_summary": endpoint_details.get("ip", "N/A"),
+                "largest_data_transfers_summary": len(largest_data_transfers)
+            }
+
+            # Create a condensed summary
+            condensed_info = f"""
+                        IP: {asset_info['ip_address']}
+                        Type: {asset_info['asset_type']}
+                        Host: {asset_info['hostname']}
+                        First Seen: {asset_info['first_seen']}
+                        Last Seen: {asset_info['last_seen']}
+                        OS: {asset_info['os']}
+                        Tags: {', '.join(asset_info['tags'])}
+                        Incidents: {asset_info['related_incidents_count']} ({', '.join(asset_info['related_incidents_types'])})
+                        Breaches: {asset_info['model_breaches_count']} ({', '.join(asset_info['model_breaches_types'])})
+                        Endpoint Details: IP: {asset_info['endpoint_details_summary']}
+                        Data Transfers: {asset_info['largest_data_transfers_summary']}
+                        """.strip()
+
+            return condensed_info
+    except Exception as e:
+        logging.error(f"Error fetching asset details: {e}")
+
+    return None
+
+
 @login_required()
 def generate_cyberpha_scenario_description(request):
     if request.method == 'POST':
@@ -2891,15 +3028,36 @@ def generate_cyberpha_scenario_description(request):
         facility_type = cyberpha_header.FacilityType
         employees_on_site = cyberpha_header.EmployeesOnSite
         country = cyberpha_header.country
+        connectionFlag = int(request.POST.get('connectionFlag'))
 
-        pinecone_query = f"CyberPHA, Hazops, PHA, CyberHAZOPs, Scenario, safety, OSHA, {industry}"
+        asset_data = {}
+        if connectionFlag == 1:
+            darktrace_host = cyberpha_header.darktrace_client
+            darktrace_public_token = cyberpha_header.darktrace_public_api
+            darktrace_private_token = cyberpha_header.darktrace_private_api
+
+            # Fetch asset details from Darktrace
+            asset_data = darktrace_asset_detail(target_asset, darktrace_host, darktrace_public_token,
+                                                darktrace_private_token)
+
+        if connectionFlag == 2:
+            exalens_client = cyberpha_header.exalens_client
+            exalens_api = cyberpha_header.exalens_api
+            exalens_url = cyberpha_header.exalens_ip
+
+            # Fetch asset details from Darktrace
+            asset_data = exalens_asset_detail(target_asset, exalens_url, exalens_api,
+                                              exalens_client)
+
+        pinecone_query = f"CyberPHA, Hazops, PHA, CyberHAZOPs, OT Cybersecurity Incidents, OSHA, {industry}"
         retrieved_chunks = query_index(pinecone_query)
         summarized_chunks = get_summarized_chunks(retrieved_chunks)
         documents_context = "\n\n".join(summarized_chunks)
+
         # Constructing the prompt
         prompt = f"""
-        pinecone index data: {documents_context}.
-        You are an engineer responsible for safeguarding operations for a {facility_type}. Write a technical scenario for a CYBER HAZOPS assessment using LOPA methodology, detailing a credible cyber-physical attack against operational technology and industrial control systems. The narrative must be factual, specific to the details given, concise, and limit to 200 words, without detailing the consequences or long-term impacts. No preamble or additional narrative. No repeating of input variables:
+        
+        You are an OT Cybersecurity expert responsible for safeguarding operations for a {facility_type}. Write a technical OT cybersecurity scenario for a CYBERPHA/ Cyber HAZOPS assessment using LOPA methodology, detailing a credible event specific to manipulation, control, or subversion of given asset. The narrative must be technical, factual, specific to the details given, and concise. Write up to a maximum of 250 words. IMPORTANT: DO NOT describe the consequences, long-term impacts, or make any assumptions about operational disruption and what the scenario means is lacking. No preamble or additional narrative. No repeating of input variables:
 
         - Attacker: {attacker}
         - Attack Vector: {attack_vector}
@@ -2909,8 +3067,15 @@ def generate_cyberpha_scenario_description(request):
         - Employee count: {employees_on_site}
         - Affected asset: {target_asset}
         - Purpose of affected asset: {target_asset_purpose}
+        - Asset data reported by threat management: {asset_data}
+        - Pinecone index data: {documents_context}.
 
-        Using the given information above and the information from the pinecone index, generate a scenario focusing solely on the purpose and type of asset and the potential for that asset to be compromised and it might be manipulated resulting in a bad outcome in the context of the other given information. INSTRUCTIONS a) If no asset detail is given then focus on the type of facility. b) Do not speculate on mitigation or describe the facility in detail. c) Do not repeat information about the targeted asset or other given detail in the output. d) Do not repeat information that the user is familiar with: industry, number of employees, country, facility type are for context  in generating the scenario and MUST NOT BE REPEATED IN THE RESPONSE. e) Use precise and concise language with as much technical detail as possible given the input details.
+        Use the given information above including the data reported by threat management and the information from the pinecone index. Generate a realistic feasible scenario focusing solely on the purpose and type of asset and the potential for that asset to be compromised and how it might be manipulated resulting in a bad outcome in the context of the other given information. INSTRUCTIONS a) If no asset detail is given then focus on the type of facility. b) Do not speculate on mitigation or describe the facility in detail. c) Do not repeat information about the targeted asset or other given detail in the output. d) Do not repeat information that the user is familiar with: industry, number of employees, country, facility type are for context  in generating the scenario and MUST NOT BE REPEATED IN THE RESPONSE. e) Use precise and concise language with as much technical detail as possible given the input details.
+        
+        The structure of the scenario must be exactly as follows with nothing further:
+        <Paragraph describing what is going to happen to the selected asset>.
+        <Paragraph describing how the selected asset is affected by the action>.
+        
         """
 
         # Setting OpenAI API key
@@ -2923,7 +3088,7 @@ def generate_cyberpha_scenario_description(request):
             messages=[
                 {"role": "system", "content": prompt}
             ],
-            max_tokens=2000,
+            max_tokens=2500,
             temperature=0.1
         )
         # Extracting the generated scenario
@@ -2959,7 +3124,7 @@ def get_summarized_chunks(chunks, max_tokens_per_chunk=200):
     return summarized_chunks
 
 
-def query_index(query, top_k=5):
+def query_index(query, top_k=7):
     pinecone_api = get_api_key('pinecone')
     pc = Pinecone(api_key=pinecone_api)
     index_name = get_api_key('pinecone_index')
@@ -2987,3 +3152,121 @@ def query_index(query, top_k=5):
     results = index.query(vector=query_embedding, top_k=top_k, include_metadata=True)
 
     return results['matches']
+
+
+def darktrace_assets(cyberphaid):
+    # Disable SSL warnings
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+    cyberpha_header = tblCyberPHAHeader.objects.get(ID=cyberphaid)
+    # Fetch Darktrace credentials from the request or configuration
+    darktrace_host = cyberpha_header.darktrace_client
+    darktrace_public_token = cyberpha_header.darktrace_public_api
+    darktrace_private_token = cyberpha_header.darktrace_private_api
+
+    # Initialize the Darktrace session
+    dt_session = DarktraceAPI.initialize_from_string(
+        host=darktrace_host,
+        public_token=darktrace_public_token,
+        private_token=darktrace_private_token
+    )
+
+    # Fetch the list of assets
+    assets = dt_session.get_assets()
+
+    # Prepare the dataset for the dropdown
+    asset_list = []
+    for asset in assets:
+        asset_data = {
+            "ip_address": asset.get("ip"),
+            "asset_type": asset.get("typename"),
+            "hostname": asset.get("hostname")
+        }
+        asset_list.append(asset_data)
+
+    # Return the dataset as JSON
+    return asset_list
+
+
+def exalens_asset_detail(target_asset_ip: str, exalens_host: str, exalens_api_key: str, exalens_client_id: str) -> \
+        Optional[str]:
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+    incident_url = f"https://{exalens_host}/api/thirdparty/incident/target_ip/{target_asset_ip}?incident=1"
+    asset_url = f"https://{exalens_host}/api/thirdparty/asset/ip/{target_asset_ip}"
+
+    headers = {
+        'x-client-id': exalens_client_id,
+        'x-api-key': exalens_api_key
+    }
+
+    try:
+        # Fetch incident details
+        incident_response = requests.get(incident_url, headers=headers, verify=False)
+        if incident_response.status_code != 200:
+            raise Exception(f'Failed to fetch incidents, status code: {incident_response.status_code}')
+
+        incident_data = incident_response.json()
+
+        if not incident_data:  # Check if the list is empty
+            incident_summary = 'No incidents found for the given IP address.'
+        else:
+            # Limit to the first three incidents
+            limited_incidents = incident_data[:3]
+            incident_summaries = []
+            for i, incident in enumerate(limited_incidents, start=1):
+                summary = (
+                    f"Incident {i}\n"
+                    f"Incident ID: {incident.get('incident_id', 'N/A')}\n"
+                    f"Detection Name: {incident.get('detection_name', 'N/A')}\n"
+                    f"Status: {incident.get('status', 'N/A')}\n"
+                    f"Severity: {incident.get('severity', 'N/A')}\n"
+                    f"Risk Score: {incident.get('risk_score', 'N/A')}\n"
+                    f"Summary: {incident.get('summary', 'N/A')}\n"
+                    f"Response Recommendations: {incident.get('response_recommendations', 'N/A')}\n"
+                )
+                incident_summaries.append(summary)
+
+            incident_summary = "\n".join(incident_summaries)
+
+        # Fetch asset details
+        asset_response = requests.get(asset_url, headers=headers, verify=False)
+        if asset_response.status_code != 200:
+            raise Exception(f'Failed to fetch asset details, status code: {asset_response.status_code}')
+
+        asset_data = asset_response.json()
+
+        if not asset_data:  # Check if the list is empty
+            asset_summary = 'No asset details found for the given IP address.'
+        else:
+            asset_info = asset_data[0]  # Assuming the first entry corresponds to the asset
+            asset_summary = f"""
+                IP: {asset_info.get('ip', 'N/A')}
+                VLAN: {asset_info.get('vlan', 'N/A')}
+                Status: {asset_info.get('status', 'N/A')}
+                OS: {asset_info.get('os', 'N/A')}
+                MAC: {asset_info.get('mac', 'N/A')}
+                Criticality: {asset_info.get('criticality', 'N/A')}
+                Model: {asset_info.get('model', 'N/A')}
+                Vendor: {asset_info.get('vendor', 'N/A')}
+                Description: {asset_info.get('system_description', 'N/A')}
+                Location: {asset_info.get('location', 'N/A')}
+                Device Type: {asset_info.get('device_type', 'N/A')}
+                First Seen: {datetime.datetime.fromtimestamp(asset_info['first_seen'] / 1000).isoformat() if 'first_seen' in asset_info else 'N/A'}
+                Last Seen: {datetime.datetime.fromtimestamp(asset_info['last_seen'] / 1000).isoformat() if 'last_seen' in asset_info else 'N/A'}
+            """.strip()
+
+        # Combine the data into a condensed summary
+        condensed_info = f"""
+            Asset Summary:
+            {asset_summary}
+
+            Incident Summary:
+            {incident_summary}
+        """.strip()
+
+        return condensed_info
+
+    except Exception as e:
+        print(f"Error fetching asset details: {e}")
+        return None
