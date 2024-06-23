@@ -1,5 +1,6 @@
 import decimal
 import os
+from collections import defaultdict
 
 from django.views.decorators.http import require_POST, require_http_methods
 from pptx import Presentation
@@ -17,7 +18,7 @@ from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 from django.db.models import Subquery, OuterRef, Count, IntegerField, Case, When, Value, Prefetch
 from requests import RequestException
-
+from .darktrace import network_risk_profile
 import OTRisk.forms
 from OTRisk.models.RiskScenario import RiskScenario
 from OTRisk.models.Model_Scenario import tblConsequence
@@ -53,14 +54,16 @@ from xml.etree import ElementTree as ET
 from .raw_views import qraw, openai_assess_risk, GetTechniquesView, raw_action, check_vulnerabilities, rawreport, \
     raw_from_walkdown, save_ra_action, get_rawactions, ra_actions_view, UpdateRAAction, reports, reports_pha, \
     create_or_update_raw_scenario, analyze_raw_scenario, analyze_sim_scenario, generate_sim_attack_tree, \
-    analyze_sim_consequences, raw_delete, update_workflow, get_analysis_result, cleanup_scenariobuilder, generate_raw_scenario_description
+    analyze_sim_consequences, raw_delete, update_workflow, get_analysis_result, cleanup_scenariobuilder, \
+    generate_raw_scenario_description
 from .dashboard_views import dashboardhome, get_group_report, get_heatmap_records, get_all_groups_scores
 from .pha_views import iotaphamanager, facility_risk_profile, get_headerrecord, scenario_analysis, phascenarioreport, \
     getSingleScenario, pha_report, scenario_vulnerability, add_vulnerability, get_asset_types, calculate_effectiveness, \
     generate_ppt, analyze_scenario, assign_cyberpha_to_group, fetch_groups, fetch_all_groups, retrieve_scenario_builder, \
     facilities, air_quality_index, delete_pha_record, get_assessment_summary, copy_cyber_pha, assessment_gap_analysis, \
-    load_default_facility, exalens_get_cyberpha_assets, generate_cyberpha_scenario_description
-from .report_views import pha_reports, get_scenario_report_details, qraw_reports, get_qraw_scenario_report_details, raw_reports
+    load_default_facility, exalens_get_cyberpha_assets, generate_cyberpha_scenario_description, darktrace_assets
+from .report_views import pha_reports, get_scenario_report_details, qraw_reports, get_qraw_scenario_report_details, \
+    raw_reports
 from .scenario_builder import scenario_sim_v2, analyze_sim_scenario_v2, generate_sim_attack_tree_v2, \
     analyze_sim_consequences_v2, generate_scenario_description_v2, related_incidents, retrieve_scenario_builder_v2, \
     exalens_get_incidents
@@ -87,6 +90,9 @@ from django.db.models import Max
 import urllib3
 from urllib3.exceptions import InsecureRequestWarning
 import random
+import logging
+from OTRisk.models.darktraceapi import Darktrace
+from pinecone import Pinecone, ServerlessSpec
 import networkx as nx
 
 app_name = 'OTRisk'
@@ -1669,6 +1675,7 @@ def assess_cyberpha(request, cyberPHAID=None):
 
     if active_cyberpha_id is not None:
         exalens_api = tblCyberPHAHeader.objects.get(ID=active_cyberpha_id).exalens_api
+        darktrace_api = tblCyberPHAHeader.objects.get(ID=active_cyberpha_id).darktrace_public_api
 
         if exalens_api:
             # Call the exalens_get_cyberpha_assets function with active_cyberpha_id
@@ -1676,8 +1683,16 @@ def assess_cyberpha(request, cyberPHAID=None):
             # Use assets_data as needed
         else:
             assets_data = []  # Handle the case where exalens_api is null
+
+        if darktrace_api:
+            # Call the darktrace_assets function with active_cyberpha_id
+            darktrace_assets_data = darktrace_assets(active_cyberpha_id)
+
+        else:
+            darktrace_assets_data = []  # Handle the case where darktrace_api is null
     else:
         assets_data = []  # Handle the case where active_cyberpha_id is None
+        darktrace_assets_data = []
 
     return render(request, 'OTRisk/phascenariomgr.html', {
         # 'scenarios': combined_scenarios,
@@ -1696,7 +1711,8 @@ def assess_cyberpha(request, cyberPHAID=None):
         'SECURITY_LEVELS': SECURITY_LEVELS,
         'scenario_form': scenario_form,
         'scenario_status': scenario_status,
-        'assets_data': assets_data
+        'assets_data': assets_data,
+        'darktrace_assets_data': darktrace_assets_data
     })
 
 
@@ -3512,18 +3528,26 @@ def cyberpha_exalens_connection(request):
         }
         filtered_incidents.append(filtered_incident)
 
+    pinecone_query = f"CyberPHA, Hazops, PHA, CyberHAZOPs, Scenario, safety, OSHA "
+    retrieved_chunks = query_index(pinecone_query)
+    summarized_chunks = get_summarized_chunks(retrieved_chunks)
+    documents_context = "\n\n".join(summarized_chunks)
+
     prompt = (
-        "You are an OT system risk analyst. Based on the following Incidents Data from OT devices analyze and make the following assertions:\n"
-        "1. In 50 words write a concise bullet pointed analysis of network OT cyber-physical controls that can be objectively determined from the incident data. No preamble or additional narrative. \n"
-        "2. In  50 words state what the incidents suggest about OT network cybersecurity risks for the network and the potential impacts for safety and cyber-physical risk.\n"
-        "3. An OT cyber-physical risk score on a scale of 1 to 100 where 1 is best and 100 is worst.\n"
-        "The assertions should be concise and suitable for presentation to an executive leader.\n"
-        "IMPORTANT: Format the output strictly as follows, with each part on a new line:\n"
-        "Control Status: <description of the status of the controls>\n"
-        "Risk Statement: <assertion about risk>\n"
-        "Risk Score: <numeric value displaying the risk score>\n"
-        "Do not include any additional text or formatting.\n"
-        "Incidents Data: {filtered_incidents}"
+        f"""You are an OT system risk analyst. Based on the following Incidents Data from OT devices analyze and make the following assertions:
+        1. In 100 words write a concise bullet pointed analysis of network OT cyber-physical controls that can be objectively determined from the incident data. The context of the analysis is a CyberPHA/HAZOPS assessment. No preamble or additional narrative. 
+        2. In  100 words state what the incidents suggest about OT network cybersecurity risks for the network and the potential impacts for safety and cyber-physical risk.
+        3. An OT cyber-physical risk score on a scale of 1 to 100 where 1 is best and 100 is worst.
+        The assertions should be concise and suitable for presentation to an executive leader.
+        IMPORTANT: Format the output exactly as follows (replacing the text between the <> with the output text), with each part on a new line:
+        
+        Control Status: <description of the status of the controls>
+        Risk Statement: <assertion about risk>
+        Risk Score: <numeric value displaying the risk score>
+        
+        Do not include any additional text or formatting.
+        Incidents Data: {filtered_incidents}
+        pinecone index data for additional context: {documents_context}. """
     )
     openai.api_key = get_api_key('openai')
     response = openai.ChatCompletion.create(
@@ -3538,13 +3562,162 @@ def cyberpha_exalens_connection(request):
     ai_output = response.choices[0]['message']['content'].strip()
 
     lines = [line.strip() for line in ai_output.split('\n') if line.strip()]
-    if len(lines) != 3:
-        raise ValueError("The output format is incorrect. Expected exactly three sections each on a new line.")
+    control_status = []
+    risk_statement = []
+    risk_score = ""
+
+    current_section = None
+
+    for line in lines:
+        if line.startswith("Control Status:"):
+            current_section = "Control Status"
+            control_status.append(line.replace("Control Status:", "").strip())
+        elif line.startswith("Risk Statement:"):
+            current_section = "Risk Statement"
+            risk_statement.append(line.replace("Risk Statement:", "").strip())
+        elif line.startswith("Risk Score:"):
+            current_section = "Risk Score"
+            risk_score = line.replace("Risk Score:", "").strip()
+            current_section = None
+        else:
+            if current_section == "Control Status":
+                control_status.append(line)
+            elif current_section == "Risk Statement":
+                risk_statement.append(line)
+
+    result = {
+        "Control Status": " ".join(control_status).strip(),
+        "Risk Statement": " ".join(risk_statement).strip(),
+        "Risk Score": risk_score.strip()
+    }
+
+    return JsonResponse(result, status=200)
+
+
+import datetime
+
+
+def darktrace_metrics(incidents):
+    total_incidents = len(incidents)
+    if total_incidents == 0:
+        return {}
+
+    severity_scores = [incident['aiaScore'] for incident in incidents]
+    average_severity = sum(severity_scores) / total_incidents
+    max_severity = max(severity_scores)
+    min_severity = min(severity_scores)
+
+    category_distribution = defaultdict(int)
+    device_incidents = defaultdict(int)
+    mitre_tactics_count = defaultdict(int)
+    attack_phases_count = defaultdict(int)
+
+    most_recent_incident = max(incident['createdAt'] for incident in incidents)
+    oldest_incident = min(incident['createdAt'] for incident in incidents)
+
+    for incident in incidents:
+        category_distribution[incident['title']] += 1
+        for device in incident['breachDevices']:
+            device_incidents[device['identifier']] += 1
+        for tactic in incident.get('mitreTactics', []):
+            mitre_tactics_count[tactic] += 1
+        for phase in incident.get('attackPhases', []):
+            attack_phases_count[phase] += 1
+
+    most_affected_devices = sorted(device_incidents.items(), key=lambda x: x[1], reverse=True)
+
+    return {
+        "total_incidents": total_incidents,
+        "average_severity": average_severity,
+        "max_severity": max_severity,
+        "min_severity": min_severity,
+        "category_distribution": dict(category_distribution),
+        "most_affected_devices": most_affected_devices,
+        "mitre_tactics_count": dict(mitre_tactics_count),
+        "attack_phases_count": dict(attack_phases_count),
+        "most_recent_incident": most_recent_incident,
+        "oldest_incident": oldest_incident
+    }
+
+
+def cyberpha_darktrace_connection(request):
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+    user_profile = UserProfile.objects.get(user=request.user)
+    organization_defaults = user_profile.organization.defaults
+    darktrace_host = request.POST.get('darktrace_host')
+    darktrace_public_token = request.POST.get('darktrace_public_key')
+    darktrace_private_token = request.POST.get('darktrace_private_key')
+
+    dt_session = Darktrace.initialize_from_string(
+        host=darktrace_host,
+        public_token=darktrace_public_token,
+        private_token=darktrace_private_token
+    )
+    dt_session.test_connection()
+
+    init_date = datetime.datetime.strptime("2023-01-01 00:00:00", "%Y-%m-%d %H:%M:%S")
+    incidents = dt_session.get_aianalyst_incidents(init_date=init_date)
+
+    metrics = darktrace_metrics(incidents)
+
+    # Limit the number of incidents to process
+    max_incidents = 20
+    if len(incidents) > max_incidents:
+        incidents = random.sample(incidents, max_incidents)
+
+    filtered_incidents = []
+    for incident in incidents:
+        filtered_incident = {
+            "id": incident.get("id"),
+            "title": incident.get("title"),
+            "summary": incident.get("summary"),
+            "createdAt": datetime.datetime.fromtimestamp(incident.get("createdAt") / 1000).isoformat(),
+            "severity": incident.get("aiaScore"),
+            "breachDevices": [
+                {
+                    "identifier": device.get("identifier"),
+                    "hostname": device.get("hostname"),
+                    "ip": device.get("ip")
+                } for device in incident.get("breachDevices", [])
+            ]
+        }
+        filtered_incidents.append(filtered_incident)
+
+    prompt = (
+        f"""You are an OT system risk analyst. Based on the following Incidents Data from OT devices analyze and make the following assertions:\n
+        1. In 100 words write a concise bullet pointed analysis of network OT cyber-physical controls that can be objectively determined from the incident data. No preamble or additional narrative. \n
+        2. In  100 words state what the incidents suggest about OT network cybersecurity risks for the network and the potential impacts for safety and cyber-physical risk.\n
+        3. An OT cyber-physical risk score on a scale of 1 to 100 where 1 is best and 100 is worst.\n
+        The assertions should be concise and suitable for presentation to an executive leader.\n
+        IMPORTANT: Format the output strictly as follows, with each part on a new line:
+        
+        Control Status: <description of the status of the controls>
+        Risk Statement: <assertion about risk>
+        Risk Score: <numeric value displaying the risk score>
+        
+        Do not include any additional text or formatting.
+        Incidents Data: {filtered_incidents}"""
+    )
+    openai.api_key = get_api_key('openai')
+    response = openai.ChatCompletion.create(
+        model="gpt-4o",
+        messages=[
+            {"role": "system", "content": prompt}
+        ],
+        temperature=0.5
+    )
+
+    # Extract and format the response
+    ai_output = response.choices[0]['message']['content'].strip()
+
+    lines = [line.strip() for line in ai_output.split('\n') if line.strip()]
 
     result = {
         "Control Status": lines[0].replace("Control Status: ", "").strip(),
         "Risk Statement": lines[1].replace("Risk Statement: ", "").strip(),
-        "Risk Score": lines[2].replace("Risk Score: ", "").strip()
+        "Risk Score": lines[2].replace("Risk Score: ", "").strip(),
+        "Metrics": metrics
     }
 
     return JsonResponse(result, status=200)
@@ -3562,3 +3735,158 @@ def exalens_defaults(request):
     }
 
     return JsonResponse(response_data)
+
+
+@login_required
+def darktrace_defaults(request):
+    user_profile = UserProfile.objects.get(user=request.user)
+    organization_defaults = user_profile.organization.defaults
+
+    response_data = {
+        'darktrace_host': organization_defaults.darktrace_host,
+        'darktrace_public_key': organization_defaults.darktrace_public_key,
+        'darktrace_private_key': organization_defaults.darktrace_private_key
+    }
+
+    return JsonResponse(response_data)
+
+
+def summarize_text(text, max_tokens=200):
+    response = openai.ChatCompletion.create(
+        model='gpt-4o',
+        messages=[
+            {"role": "system", "content": "Summarize the following text:"},
+            {"role": "user", "content": text}
+        ],
+        max_tokens=max_tokens,
+        temperature=0.1
+    )
+    return response.choices[0].message['content']
+
+
+def get_summarized_chunks(chunks, max_tokens_per_chunk=200):
+    summarized_chunks = []
+    for chunk in chunks:
+        summarized_text = summarize_text(chunk['metadata']['text'], max_tokens=max_tokens_per_chunk)
+        summarized_chunks.append(summarized_text)
+    return summarized_chunks
+
+
+def query_index(query, top_k=5):
+    pinecone_api = get_api_key('pinecone')
+    pc = Pinecone(api_key=pinecone_api)
+    index_name = get_api_key('pinecone_index')
+    dimension = 1536  # This should match the dimension of the OpenAI embeddings
+    # Create the index if it doesn't exist
+    if index_name not in pc.list_indexes().names():
+        pc.create_index(
+            name=index_name,
+            dimension=dimension,
+            metric='cosine',
+            spec=ServerlessSpec(cloud='aws', region='us-east-1')
+        )
+
+    # Connect to the index
+    index = pc.Index(index_name)
+    # Create an embedding for the query
+    response = openai.Embedding.create(input=query, model="text-embedding-ada-002")
+    query_embedding = response['data'][0]['embedding']
+
+    # Ensure the query_embedding is a list of floats
+    if not isinstance(query_embedding, list) or not all(isinstance(x, float) for x in query_embedding):
+        raise ValueError("Query embedding is not in the correct format.")
+
+    # Query Pinecone index
+    results = index.query(vector=query_embedding, top_k=top_k, include_metadata=True)
+
+    return results['matches']
+
+
+@login_required
+def exalens_generate_scenarios(request):
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+    user_profile = UserProfile.objects.get(user=request.user)
+    organization_defaults = user_profile.organization.defaults
+    exalens_api_key = request.POST.get('api_key')
+    exalens_client_id = request.POST.get('client_id')
+    exalens_ip_address = request.POST.get('exalens_ip')
+
+    incident_url = f"https://{exalens_ip_address}/api/thirdparty/incident"
+    headers = {
+        'x-client-id': exalens_client_id,
+        'x-api-key': exalens_api_key
+    }
+
+    incident_response = requests.get(incident_url, headers=headers, verify=False)
+    incident_response.raise_for_status()  # Raise an error for bad status codes
+    incident_details = incident_response.json().get('data', [])
+
+    # Limit the number of incidents to process
+    max_incidents = 20
+    if len(incident_details) > max_incidents:
+        incident_details = random.sample(incident_details, max_incidents)
+
+    filtered_incidents = []
+    for incident in incident_details:
+        filtered_incident = {
+            "incident_no": incident.get("incident_no"),
+            "detection_name": incident.get("detection_name"),
+            "status": incident.get("status"),
+            "first_seen": incident.get("first_seen"),
+            "last_seen": incident.get("last_seen"),
+            "src": incident.get("src"),
+            "dst": incident.get("dst"),
+            "severity": incident.get("severity"),
+            "severity_text": incident.get("severity_text"),
+            "classification": incident.get("classification"),
+            "risk_score": incident.get("risk_score"),
+            "risk_score_label": incident.get("risk_score_label"),
+            "category": incident.get("category"),
+            "description": incident.get("description"),
+            "detection_artifacts": {
+                "kill_chain": incident.get("detection_artifacts", {}).get("kill_chain"),
+                "mitre_attack": incident.get("detection_artifacts", {}).get("mitre_attack"),
+                "src_ip": incident.get("detection_artifacts", {}).get("src_ip"),
+                "dst_ip": incident.get("detection_artifacts", {}).get("dst_ip"),
+                "service_indicator": incident.get("detection_artifacts", {}).get("service_indicator"),
+                "src_mac": incident.get("detection_artifacts", {}).get("src_mac"),
+                "dst_mac": incident.get("detection_artifacts", {}).get("dst_mac"),
+            },
+            "detection_summary": incident.get("detection_summary"),
+            "notes": incident.get("notes"),
+        }
+        filtered_incidents.append(filtered_incident)
+
+    # Break the incidents into chunks for manageable AI prompt size
+    chunks = [filtered_incidents[i:i + 4] for i in range(0, len(filtered_incidents), 4)]
+    scenarios = []
+
+    openai.api_key = get_api_key('openai')
+
+    for chunk in chunks:
+        prompt = (
+            f"You are an OT system risk analyst. Based on the following Incidents Data from OT devices, create five different hypothetical but realistic OT cybersecurity scenarios. Each scenario should be concise, no more than 100 words, and realistically reflect the incidents data. Separate each scenario with a new line.\n"
+            f"Incidents Data: {chunk}"
+        )
+
+        response = openai.ChatCompletion.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": prompt}
+            ],
+            temperature=0.5
+        )
+
+        # Extract the scenarios from the response
+        ai_output = response.choices[0]['message']['content'].strip()
+        scenarios.extend(ai_output.split('\n'))
+
+    # Ensure we only have five scenarios
+    scenarios = scenarios[:5]
+
+    result = {
+        "scenarios": scenarios
+    }
+
+    return JsonResponse(result, status=200)
