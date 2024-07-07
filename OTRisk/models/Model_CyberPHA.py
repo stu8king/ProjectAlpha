@@ -12,6 +12,9 @@ import OTRisk.models.model_assessment
 from accounts.models import Organization, UserProfile
 from OTRisk.models.raw import MitreICSMitigations, RAWorksheet
 from simple_history.models import HistoricalRecords
+# Import at the top of the file where Facility model is defined
+from .questionnairemodel import FacilityType
+
 
 
 class user_scenario_audit(models.Model):
