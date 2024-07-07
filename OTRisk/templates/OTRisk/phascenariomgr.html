@@ -3735,7 +3735,9 @@ $('#scenarioSelectModal').on('show.bs.modal', function (e) {
             addScenarioRow();
         });
 
-
+        function formatRationaleText(rationaleText) {
+            return rationaleText.split('\n').map(line => line.replace(/^\s*-\s*/, '')).join('\n');
+        }
 
         // Function to fetch and populate the mitigation measures dynamically
         function populateMitigationMeasures(controlObjectiveSelect) {
@@ -4010,7 +4012,9 @@ $('#scenarioSelectModal').on('show.bs.modal', function (e) {
                         $("#recommendationText").text(response.rationale.Recommendation);
 
                         $("#rationaleTitle").text("Rationale");
-                        $("#rationalePoints").html("<li>" + response.rationale.Rationale.replace(/\n/g, "</li><li>") + "</li>");
+                        // $("#rationalePoints").html("<li>" + response.rationale.Rationale.replace(/\n/g, "</li><li>") + "</li>");
+                        let formattedRationale = formatRationaleText(response.rationale.Rationale);
+                         $("#rationalePoints").html("<li>" + formattedRationale.replace(/\n/g, "</li><li>") + "</li>");
 
                         document.getElementById('frequency').value = response.frequency;
                         document.getElementById('txtProbability').value = response.probability;
@@ -5085,7 +5089,9 @@ function clearScenario(){
         $("#recommendationText").text(data.risk_recommendation);
         $("#rationaleTitle").text("Rationale");
          try {
-             $("#rationalePoints").html("<li>" + data.risk_rationale.replace(/\n/g, "</li><li>") + "</li>");
+             //$("#rationalePoints").html("<li>" + data.risk_rationale.replace(/\n/g, "</li><li>") + "</li>");
+              let formattedRationale = formatRationaleText(data.risk_rationale);
+              $("#rationalePoints").html("<li>" + formattedRationale.replace(/\n/g, "</li><li>") + "</li>");
          }
          catch (e)
          {}

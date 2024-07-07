@@ -54,6 +54,7 @@ urlpatterns = [
     path('raw_action', views.raw_action, name='raw_action'),
     path('get_techniques/', views.GetTechniquesView.as_view(), name='get_techniques'),
     path('dashboardhome', views.dashboardhome, name='dashboardhome'),
+    path('anzenot_dashboard', views.anzenot_dashboard, name='anzenot_dashboard'),
 
     path('iotaphamanager/', views.iotaphamanager, name='iotaphamanager'),
     path('iotaphamanager/<int:record_id>/', views.iotaphamanager, name='iotaphamanager_with_id'),
@@ -75,6 +76,11 @@ urlpatterns = [
     path('ra_actions_view/qraw/<int:qraw_id>/pha/<int:pha_id>/', views.ra_actions_view, name='ra_actions_view_both'),
 
     path('update_ra_action/', views.UpdateRAAction.as_view(), name='update_ra_action'),
+    path('facility/', views.facility_view, name='facility_view'),
+    path('save_facility/', views.save_facility, name='save_facility'),
+    path('get_facilities/', views.get_facilities, name='get_facilities'),
+    path('get_facility/<int:facility_id>/', views.get_facility, name='get_facility'),
+    path('delete_facility/<int:facility_id>/', views.delete_facility, name='delete_facility'),
 
 
     # For adding and editing consequences

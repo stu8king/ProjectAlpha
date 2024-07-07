@@ -8,7 +8,7 @@ from django.utils.html import mark_safe
 from OTRisk.models.raw import RAWorksheet, RAWorksheetScenario, RAActions
 from django.contrib.auth.decorators import login_required
 from OTRisk.models.Model_CyberPHA import tblCyberPHAHeader, tblCyberPHAScenario, OrganizationDefaults, auditlog, \
-    CyberPHAModerators, CyberPHA_Group
+    CyberPHAModerators, CyberPHA_Group, Facility
 from django.db.models import Count, Sum, Q, Case, When, Value, CharField
 from django.db.models import Avg
 from accounts.models import Organization, UserProfile
@@ -552,6 +552,147 @@ def dashboardhome(request):
     }
 
     return render(request, 'dashboard.html', context)
+
+def get_bia_summary_data(facilities):
+    bia_categories = ['impactSafety', 'impactDanger', 'impactProduction', 'impactFinance', 'impactReputation', 'impactEnvironment', 'impactRegulation', 'impactData', 'impactSupply']
+    bia_scores = {
+        "Low": 0,
+        "Low/Medium": 0,
+        "Medium": 0,
+        "Medium/High": 0,
+        "High": 0,
+        "Very High": 0
+    }
+
+    # Calculate average BIA score for each tblCyberPHAHeader
+    pha_headers = tblCyberPHAHeader.objects.filter(facility__in=facilities)
+    total_phas = pha_headers.count()
+    closed_phas = pha_headers.filter(AssessmentStatus="Closed").count()
+    open_phas = total_phas - closed_phas
+
+    for pha_header in pha_headers:
+        scenarios = tblCyberPHAScenario.objects.filter(CyberPHA=pha_header)
+        total_score = 0
+        total_scenarios = scenarios.count()
+
+        if total_scenarios > 0:
+            for category in bia_categories:
+                category_avg = scenarios.aggregate(avg_score=Avg(category))['avg_score']
+                total_score += category_avg if category_avg else 0
+
+            avg_bia_score = total_score / (total_scenarios * len(bia_categories))
+
+            # Determine BIA category
+            if 0 <= avg_bia_score <= 2:
+                bia_scores["Low"] += 1
+            elif 3 <= avg_bia_score <= 4:
+                bia_scores["Low/Medium"] += 1
+            elif 5 <= avg_bia_score <= 6:
+                bia_scores["Medium"] += 1
+            elif 7 <= avg_bia_score <= 8:
+                bia_scores["Medium/High"] += 1
+            elif 9 <= avg_bia_score <= 9:
+                bia_scores["High"] += 1
+            elif avg_bia_score == 10:
+                bia_scores["Very High"] += 1
+
+    # Prepare data for the pie chart
+    pie_chart_data = [{"category": key, "count": value} for key, value in bia_scores.items()]
+
+    return {
+        "total_phas": total_phas,
+        "closed_phas": closed_phas,
+        "open_phas": open_phas,
+        "pie_chart_data": pie_chart_data
+    }
+
+def anzenot_dashboard(request):
+    organization_id = get_user_organization_id(request)
+
+    # Query to get the required statistics
+    facilities = Facility.objects.filter(organization_id=organization_id)
+    facilities_data = serialize('json', facilities, fields=('name', 'lat', 'lon'))
+
+    num_facilities = facilities.count()
+    total_revenue = facilities.aggregate(Sum('revenue'))['revenue__sum'] or 0
+    unique_industries = facilities.values('industry').distinct().count()
+    unique_facility_types = facilities.values('type').distinct().count()
+
+    avg_pha_score = tblCyberPHAHeader.objects.filter(facility__in=facilities).aggregate(Avg('pha_score'))['pha_score__avg'] or 0
+    avg_last_assessment_score = tblCyberPHAHeader.objects.filter(facility__in=facilities).aggregate(Avg('last_assessment_score'))['last_assessment_score__avg'] or 0
+    # Get the pha_score data for the chart
+    # Get the pha_score data for the chart
+    pha_scores = list(tblCyberPHAHeader.objects.filter(facility__in=facilities).values_list('pha_score', flat=True))
+    last_assessment_scores = list(
+        tblCyberPHAHeader.objects.filter(facility__in=facilities).values_list('last_assessment_score', flat=True))
+
+    # Categorize and count pha_scores
+    pha_score_categories = {
+        'Low': 0,
+        'Low/Medium': 0,
+        'Medium': 0,
+        'Medium/High': 0,
+        'High': 0,
+        'Very High': 0
+    }
+
+    last_assessment_score_categories = {
+        'Low': 0,
+        'Low/Medium': 0,
+        'Medium': 0,
+        'Medium/High': 0,
+        'High': 0,
+        'Very High': 0
+    }
+
+    for score in pha_scores:
+        if 0 <= score <= 25:
+            pha_score_categories['Low'] += 1
+        elif 26 <= score <= 45:
+            pha_score_categories['Low/Medium'] += 1
+        elif 46 <= score <= 60:
+            pha_score_categories['Medium'] += 1
+        elif 61 <= score <= 75:
+            pha_score_categories['Medium/High'] += 1
+        elif 76 <= score <= 90:
+            pha_score_categories['High'] += 1
+        elif 91 <= score <= 100:
+            pha_score_categories['Very High'] += 1
+
+    for score in last_assessment_scores:
+        if 0 <= score <= 25:
+            last_assessment_score_categories['Low'] += 1
+        elif 26 <= score <= 45:
+            last_assessment_score_categories['Low/Medium'] += 1
+        elif 46 <= score <= 60:
+            last_assessment_score_categories['Medium'] += 1
+        elif 61 <= score <= 75:
+            last_assessment_score_categories['Medium/High'] += 1
+        elif 76 <= score <= 90:
+            last_assessment_score_categories['High'] += 1
+        elif 91 <= score <= 100:
+            last_assessment_score_categories['Very High'] += 1
+
+    bia_summary_data = get_bia_summary_data(facilities)
+    total_cyberphas = bia_summary_data['total_phas']
+    open_assessments = bia_summary_data['open_phas']
+
+    context = {
+        'num_facilities': num_facilities,
+        'total_revenue': total_revenue,
+        'unique_industries': unique_industries,
+        'unique_facility_types': unique_facility_types,
+        'avg_pha_score': avg_pha_score,
+        'avg_last_assessment_score': avg_last_assessment_score,
+        'pha_score_categories': pha_score_categories,
+        'last_assessment_score_categories': last_assessment_score_categories,
+        'facilities_data': facilities_data,
+        'bia_summary_data': json.dumps(bia_summary_data),
+        'total_cyberphas': total_cyberphas,
+        'open_assessments': open_assessments
+    }
+
+    return render(request, 'anzenot_dashboard.html', context)
 
 
 def process_data(data):

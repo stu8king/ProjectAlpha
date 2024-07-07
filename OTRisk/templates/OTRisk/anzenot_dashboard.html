@@ -1,0 +1,487 @@
+{% load static %}
+{% load humanize %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>AnzenOT - GRC for OT</title>
+    <link rel="icon" href="{% static 'images/AnzenOTIconBlack.png' %}" type="image/x-icon">
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css">
+    <!-- Bootstrap Select CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.1/css/bootstrap-select.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.1/font/bootstrap-icons.css" rel="stylesheet">
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- jQuery UI -->
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <!-- AnyChart -->
+    <script src="{% static 'anychart/dist/js/anychart-bundle.min.js' %}"></script>
+    <script src="{% static 'anychart/dist/js/anychart-pie.min.js' %}"></script>
+    <script src="https://cdn.anychart.com/releases/v8/js/anychart-base.min.js"></script>
+    <script src="https://cdn.anychart.com/releases/v8/js/anychart-ui.min.js"></script>
+    <script src="https://cdn.anychart.com/releases/v8/js/anychart-exports.min.js"></script>
+    <script src="https://cdn.anychart.com/releases/v8/js/anychart-data-adapter.min.js"></script>
+
+    <!-- Proj4 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/2.3.15/proj4.js"></script>
+    <link href="https://cdn.anychart.com/releases/v8/css/anychart-ui.min.css" type="text/css" rel="stylesheet">
+    <link href="https://cdn.anychart.com/releases/v8/fonts/css/anychart-font.min.css" type="text/css" rel="stylesheet">
+
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.25/css/jquery.dataTables.css">
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.js"></script>
+
+    {% load django_bootstrap5 %}
+    {% bootstrap_css %}
+    {% bootstrap_javascript %}
+    <link rel="stylesheet" type="text/css" href="{% static 'css/otriskstyle.css' %}">
+<style>
+/* Updated styles for blocks */
+.info-block {
+    background-color: #313136; /* Color-blind friendly color */
+    color: #fff;
+    padding: 0;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    text-align: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
+}
+
+.info-block .block-header, .info-block .block-footer {
+    background-color: #7cbbd9; /* Color-blind friendly orange */
+    color: #000;
+    padding: 10px;
+    font-weight: bold;
+    display: flex;
+    align-items: center; /* Center align the icon and text vertically */
+}
+
+.info-block .block-header img {
+    margin-right: 10px; /* Space between icon and text */
+    width: 24px; /* Adjust icon size as needed */
+    height: 24px;
+}
+
+.info-block .block-header {
+            background-color: #7cbbd9;
+            color: #000;
+            padding: 10px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: move; /* Change cursor to indicate draggable */
+        }
+.info-block .block-header img {
+    margin-left: 10px;
+    width: 24px;
+    height: 24px;
+}
+.info-block .block-body {
+    font-size: 0.9rem;
+    padding: 20px;
+    text-align: left;
+    flex-grow: 1;
+    display: none; /* Initially hidden */
+}
+.block-header button {
+    background: none;
+    border: none;
+    font-size: 1.2em;
+    cursor: pointer;
+    color: #000;
+}
+.flex-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+.flex-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.chart-container {
+    width: 49%; /* Ensure both charts have the same width */
+    height: 250px; /* Increase height to fill more of the container */
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.chart-title {
+    font-size: 5pt; /* Same size as the legend font */
+    color: #ffffff; /* White color for the titles */
+    text-align: center; /* Center align the titles */
+    margin-bottom: 10px; /* Space between the title and the chart */
+}
+
+
+.flex-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.flex-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+/* Styles for the info table */
+.info-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+    margin: 0 auto; /* Center align the table within its container */
+}
+
+.info-table td {
+    padding: 5px 10px; /* Add padding to create a gap between columns */
+    border: none; /* Remove borders */
+}
+
+.left-column {
+    text-align: right; /* Right align text in the left column */
+    padding-right: 10px;
+}
+
+.right-column {
+    text-align: left; /* Left align text in the right column */
+    padding-left: 10px;
+}
+
+.row {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.col-md-4 {
+    display: flex;
+    flex: 1;
+    margin-bottom: 20px;
+}
+
+.info-block {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+.btn {
+            font-size: 0.8em; /* Set font size for buttons */
+        }
+        .highlight {
+            background-color: #d3f9d8 !important;
+        }
+</style>
+</head>
+<body style="background-color: #464748">
+<script>
+    anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
+    sessionStorage.clear();
+    localStorage.clear();
+</script>
+<div class="container-fluid">
+    <div class="row">
+        {% include 'menu_bar.html' %}
+        <!-- Main content area, including sub-menu and tabs -->
+        <div class="col-md-9 col-lg-10">
+            <!-- Top Strip -->
+            <div class="top-strip">
+                <div class="row">
+                    <div class="col-md-2"></div>
+                    <div class="col-md-7">
+                        <h1 class="page-title">Dashboard New@AnzenOT</h1>
+                    </div>
+                    <div class="col-md-3"></div>
+                </div>
+            </div>
+            <br><br>
+            <div class="custom-main-content">
+                <div class="flex-row">
+                    <div class="col-md-4 flex-col">
+                        <div class="info-block">
+                            <div class="block-header">
+                                <img src="{% static 'images/icon_facility_dashboard.png' %}" alt="Statistics Icon"> Facilities
+                                 <button class="toggle-body">+</button>
+                            </div>
+                            <div class="block-body">
+                                <table class="info-table">
+                                    <tr>
+                                        <td class="left-column">Number of Facilities:</td>
+                                        <td class="right-column">{{ num_facilities }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="left-column">Total Revenue:</td>
+                                        <td class="right-column">${{ total_revenue|intcomma|default:"0" }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="left-column">Unique Industries:</td>
+                                        <td class="right-column">{{ unique_industries }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="left-column">Unique Facility Types:</td>
+                                        <td class="right-column">{{ unique_facility_types }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="left-column">Average PHA Score:</td>
+                                        <td class="right-column">{{ avg_pha_score|floatformat:2 }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="left-column">Av. Control Effectiveness:</td>
+                                        <td class="right-column">{{ avg_last_assessment_score|floatformat:2 }}</td>
+                                    </tr>
+                                </table>
+
+                            </div>
+
+                        </div>
+                    </div>
+                    <div class="col-md-4 flex-col">
+                        <div class="info-block">
+                            <div class="block-header">
+                                <img src="{% static 'images/globe1.png' %}" alt="Statistics Icon"> Locations
+                                <button class="toggle-body">+</button>
+                            </div>
+                            <div class="block-body"><div id="facility-map" style="height: 30vh;"></div></div>
+
+                        </div>
+                    </div>
+                   <div class="col-md-4 flex-col">
+                        <div class="info-block">
+                            <div class="block-header">
+                                CyberPHA Summary
+                                <button class="toggle-body">+</button>
+                            </div>
+                            <div class="block-body">
+                                <table class="info-table">
+                                    <tr>
+                                        <td class="left-column">Total Assessments:</td>
+                                        <td class="right-column">{{ total_cyberphas }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="left-column">Open Assessments:</td>
+                                        <td class="right-column">{{ open_assessments }}</td>
+                                    </tr>
+
+                                </table>
+                                <br>
+
+                                <div id="bia_pie_chart" style="height: 30vh;"></div>
+                            </div>
+                        </div>
+</div>
+
+    <script>
+        anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
+
+        document.addEventListener('DOMContentLoaded', function() {
+            var biaSummaryData = JSON.parse('{{ bia_summary_data|escapejs }}');
+            renderBiaPieChart(biaSummaryData.pie_chart_data);
+        });
+
+        function renderBiaPieChart(categoryData) {
+            var colorMapping = {
+                "Low": "#008000",        // Green
+                "Low/Medium": "#00FF00", // Light Green
+                "Medium": "#FFD500",     // Yellow
+                "Medium/High": "#FF9100",// Orange
+                "High": "#b42121",       // Red
+                "Very High": "#8B0000"   // Dark Red
+            };
+
+            var chartData = [];
+            categoryData.forEach(function(category) {
+                chartData.push({ x: category.category, value: category.count, fill: colorMapping[category.category] });
+            });
+
+            anychart.onDocumentReady(function() {
+                var chart = anychart.pie(chartData);
+
+                chart.innerRadius("80%");
+                chart.container("bia_pie_chart");
+                chart.bounds("0%", "0%", "115%", "115%");
+                chart.labels()
+                    .position("outside")
+                    .fontSize("8pt")
+                    .fontColor("#ffffff")
+                    .format("{%x}");
+                chart.legend(false);
+                chart.title('Business Impact Assessment');
+                chart.credits().enabled(false);
+
+                var containerBackgroundColor = window.getComputedStyle(document.getElementById('bia_pie_chart')).backgroundColor;
+                chart.background().fill(containerBackgroundColor || "transparent");
+
+                chart.labels()
+                    .useHtml(true)
+                    .position("outside")
+                    .anchor('center')
+                    .format(function() {
+                        return `<span style="color: ${this.fill};">${this.x}</span>`;
+                    })
+                    .connectorStroke({
+                        color: "black",
+                        thickness: 1,
+                        dash: "2 2"
+                    })
+                    .hAlign('center')
+                    .vAlign('middle');
+
+                chart.draw();
+            });
+        }
+    </script>
+
+
+                </div>
+                <div class="flex-row">
+                    <div class="col-md-4 flex-col">
+                        <div class="info-block">
+                            <div class="block-header">
+                                Block 4
+                                <button class="toggle-body">+</button>
+                            </div>
+                            <div class="block-body">Main Content</div>
+
+                        </div>
+                    </div>
+                    <div class="col-md-4 flex-col">
+                        <div class="info-block">
+                            <div class="block-header">
+                                Block 5
+                                <button class="toggle-body">+</button>
+                            </div>
+                            <div class="block-body">Main Content</div>
+
+                        </div>
+                    </div>
+                    <div class="col-md-4 flex-col">
+                        <div class="info-block">
+                            <div class="block-header">
+                                Block 6
+                                <button class="toggle-body">+</button>
+                            </div>
+                            <div class="block-body">Main Content</div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    var zIndexCounter = 1000;
+    var facilityMap; // Declare the map variable
+
+    $(document).ready(function() {
+        // Make info-blocks draggable
+        $(".info-block").draggable({
+            handle: ".block-header",
+            start: function(event, ui) {
+                // Bring the dragged element to the front
+                $(this).css('z-index', ++zIndexCounter);
+            }
+        });
+
+        // Toggle block-body visibility
+        $(".toggle-body").on('click', function() {
+            var blockBody = $(this).closest(".info-block").find(".block-body");
+            blockBody.toggle();
+            $(this).text(blockBody.is(":visible") ? "-" : "+");
+
+            if (blockBody.is(":visible")) {
+                $(this).closest(".info-block").css('z-index', ++zIndexCounter);
+
+                if ($(this).closest(".info-block").find('#facility-map').length) {
+                    setTimeout(function () {
+                        if (facilityMap) {
+                            facilityMap.invalidateSize();
+                        }
+                    }, 200);
+                }
+            }
+        });
+
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+
+        window.initMap = function() {
+            facilityMap = L.map('facility-map', {
+                attributionControl: false,
+                minZoom: 2,
+                maxZoom: 18
+            }).setView([0, 0], 2);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 18
+            }).addTo(facilityMap);
+
+            // Assuming facilities_data is passed correctly to the template and parsed
+            const facilities = JSON.parse('{{ facilities_data|escapejs }}');
+
+            // Check and plot each facility
+            facilities.forEach(facility => {
+                const lat = facility.fields.lat;
+                const lon = facility.fields.lon;
+                const name = facility.fields.name;
+
+                if (lat && lon) {
+                    var icon = new L.Icon({
+                        iconUrl: '{% static "images/map_marker_blue.svg" %}',
+                        iconSize: [20, 30], // Reduced from [30, 50] to half
+                        iconAnchor: [6, 20.5], // Adjusted to fit the new icon size
+                        popupAnchor: [1, -34], // You might need to adjust this too if the popup positioning looks off
+                        shadowSize: [20.5, 20.5]
+                    });
+
+                    var marker = L.marker([lat, lon], {
+                        icon: icon,
+                        title: name // Tooltip text that appears on hover
+                    }).addTo(facilityMap);
+
+                    // Bind the popup with facility name and coordinates
+                    marker.bindPopup(`<b>${name} </b><br>Coordinates: ${lat}, ${lon}`);
+
+                    // Click event to redirect to a detailed page
+                    marker.on('click', function() {
+                        var url = `/OTRisk/pha_reports/${facility.pk}/`;
+                        window.location.href = url;
+                    });
+                }
+            });
+
+            // Adjust map bounds to show all markers
+            var group = L.featureGroup(facilities.map(facility => L.marker([facility.fields.lat, facility.fields.lon])));
+            facilityMap.fitBounds(group.getBounds());
+        };
+
+        window.onload = function() {
+            initMap();
+        };
+    });
+</script>
+
+
+</body>
+</html>

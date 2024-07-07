@@ -82,6 +82,7 @@ class RAWorksheet(models.Model):
     assessment = models.IntegerField(null=True, blank=True)
     last_assessment_score = models.IntegerField(null=True, blank=True)
     last_assessment_summary = models.TextField(default="No Summary Saved", null=True)
+
     class Meta:
         db_table = 'tblRAWorksheet'
 

@@ -1,7 +1,7 @@
 import decimal
 import os
 from collections import defaultdict
-
+import concurrent.futures
 from django.views.decorators.http import require_POST, require_http_methods
 from pptx import Presentation
 from pptx.util import Inches
@@ -18,6 +18,8 @@ from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 from django.db.models import Subquery, OuterRef, Count, IntegerField, Case, When, Value, Prefetch
 from requests import RequestException
+
+from OTRisk.darktrace_integration.intel_feed import IntelFeed
 from .darktrace import network_risk_profile
 import OTRisk.forms
 from OTRisk.models.RiskScenario import RiskScenario
@@ -40,7 +42,8 @@ from OTRisk.models.Model_CyberPHA import tblCyberPHAHeader, tblRiskCategories, \
     tblThreatIntelligence, tblMitigationMeasures, tblScenarios, tblSafeguards, tblThreatSources, tblThreatActions, \
     tblNodes, tblUnits, tblZones, tblCyberPHAScenario, tblIndustry, auditlog, tblStandards, MitreControlAssessment, \
     CyberPHAScenario_snapshot, Audit, PHAControlList, SECURITY_LEVELS, OrganizationDefaults, scenario_compliance, \
-    ScenarioConsequences, APIKey, ScenarioBuilder, PHA_Safeguard, OpenAIAPILog, CybersecurityDefaults, PHA_Observations
+    ScenarioConsequences, APIKey, ScenarioBuilder, PHA_Safeguard, OpenAIAPILog, CybersecurityDefaults, PHA_Observations, \
+    Facility, OTVendor, CyberSecurityInvestment
 from django.shortcuts import render, redirect
 from .dashboard_views import get_user_organization_id, get_scenarios_for_regulation
 from django.contrib.auth.decorators import login_required
@@ -56,12 +59,14 @@ from .raw_views import qraw, openai_assess_risk, GetTechniquesView, raw_action, 
     create_or_update_raw_scenario, analyze_raw_scenario, analyze_sim_scenario, generate_sim_attack_tree, \
     analyze_sim_consequences, raw_delete, update_workflow, get_analysis_result, cleanup_scenariobuilder, \
     generate_raw_scenario_description
-from .dashboard_views import dashboardhome, get_group_report, get_heatmap_records, get_all_groups_scores
+from .dashboard_views import dashboardhome, get_group_report, get_heatmap_records, get_all_groups_scores, \
+    anzenot_dashboard
 from .pha_views import iotaphamanager, facility_risk_profile, get_headerrecord, scenario_analysis, phascenarioreport, \
     getSingleScenario, pha_report, scenario_vulnerability, add_vulnerability, get_asset_types, calculate_effectiveness, \
     generate_ppt, analyze_scenario, assign_cyberpha_to_group, fetch_groups, fetch_all_groups, retrieve_scenario_builder, \
     facilities, air_quality_index, delete_pha_record, get_assessment_summary, copy_cyber_pha, assessment_gap_analysis, \
-    load_default_facility, exalens_get_cyberpha_assets, generate_cyberpha_scenario_description, darktrace_assets
+    load_default_facility, exalens_get_cyberpha_assets, generate_cyberpha_scenario_description, darktrace_assets, \
+    facility_risk_profile_newrecord
 from .report_views import pha_reports, get_scenario_report_details, qraw_reports, get_qraw_scenario_report_details, \
     raw_reports
 from .scenario_builder import scenario_sim_v2, analyze_sim_scenario_v2, generate_sim_attack_tree_v2, \
@@ -3491,6 +3496,57 @@ def cyberpha_exalens_connection(request):
     incident_response = requests.get(incident_url, headers=headers, verify=False)
     incident_response.raise_for_status()  # Raise an error for bad status codes
     incident_details = incident_response.json().get('data', [])
+    # Prepare data for visualizations
+    severity_distribution = {}
+    top_incident_types = {}
+    incident_category_breakdown = {}
+    indicators_triggered = {}
+    risk_scores = []
+    mitre_attack_techniques = {}
+
+    for incident in incident_details:
+        # Incident severity distribution
+        severity_text = incident.get('severity_text', 'Unknown')
+        if severity_text in severity_distribution:
+            severity_distribution[severity_text] += 1
+        else:
+            severity_distribution[severity_text] = 1
+
+        # Top incident types
+        detection_name = incident.get('detection_name', 'Unknown')
+        if detection_name in top_incident_types:
+            top_incident_types[detection_name] += 1
+        else:
+            top_incident_types[detection_name] = 1
+
+        # Incident category breakdown
+        category = incident.get('category', 'Unknown')
+        if category in incident_category_breakdown:
+            incident_category_breakdown[category] += 1
+        else:
+            incident_category_breakdown[category] = 1
+
+        # Indicators triggered
+        indicators = incident.get('indicators_triggered_flag', {})
+        for indicator, triggered in indicators.items():
+            if indicator in indicators_triggered:
+                indicators_triggered[indicator] += 1 if triggered else 0
+            else:
+                indicators_triggered[indicator] = 1 if triggered else 0
+
+        # Risk scores
+        risk_score = incident.get('risk_score', None)
+        if risk_score is not None:
+            risk_scores.append(risk_score)
+
+        # MITRE ATT&CK techniques
+        mitre_attack_list = incident.get('mitre_attack', [])
+        if isinstance(mitre_attack_list, list):
+            for technique in mitre_attack_list:
+                if technique:
+                    if technique not in mitre_attack_techniques:
+                        mitre_attack_techniques[technique] = 0
+                    mitre_attack_techniques[technique] += 1
 
     # Limit the number of incidents to process
     max_incidents = 20
@@ -3588,7 +3644,13 @@ def cyberpha_exalens_connection(request):
     result = {
         "Control Status": " ".join(control_status).strip(),
         "Risk Statement": " ".join(risk_statement).strip(),
-        "Risk Score": risk_score.strip()
+        "Risk Score": risk_score.strip(),
+        "Severity Distribution": severity_distribution,
+        "Top Incident Types": top_incident_types,
+        "Incident Category Breakdown": incident_category_breakdown,
+        "Indicators Triggered": indicators_triggered,
+        "Risk Scores": risk_scores,
+        "MITRE ATT&CK Techniques": mitre_attack_techniques
     }
 
     return JsonResponse(result, status=200)
@@ -3660,8 +3722,36 @@ def cyberpha_darktrace_connection(request):
     incidents = dt_session.get_aianalyst_incidents(init_date=init_date)
 
     metrics = darktrace_metrics(incidents)
+    top_categories = {}
+    severity_of_incidents = {
+        'critical': 0,
+        'high': 0,
+        'medium': 0,
+        'low': 0
+    }
+    aia_scores = []
+    mitre_tactics_count = {}
+    for incident in incidents:
+        # Top Categories of Incidents
+        category = incident.get('category', 'Uncategorized')
+        if category not in top_categories:
+            top_categories[category] = 0
+        top_categories[category] += 1
 
-    # Limit the number of incidents to process
+        # Severity of Incidents
+        severity = incident.get('groupCategory', 'low')
+        if severity in severity_of_incidents:
+            severity_of_incidents[severity] += 1
+        else:
+            severity_of_incidents['low'] += 1
+
+        # Incident Count by MITRE Tactic
+        mitre_tactics = incident.get('mitreTactics', [])
+        for tactic in mitre_tactics:
+            if tactic not in mitre_tactics_count:
+                mitre_tactics_count[tactic] = 0
+            mitre_tactics_count[tactic] += 1
+
     max_incidents = 20
     if len(incidents) > max_incidents:
         incidents = random.sample(incidents, max_incidents)
@@ -3684,20 +3774,31 @@ def cyberpha_darktrace_connection(request):
         }
         filtered_incidents.append(filtered_incident)
 
+    pinecone_query = f"Risk assessment, Incidents, darktrace, incident response, compliance "
+    retrieved_chunks = query_index(pinecone_query)
+    summarized_chunks = get_summarized_chunks(retrieved_chunks)
+    documents_context = "\n\n".join(summarized_chunks)
+
     prompt = (
         f"""You are an OT system risk analyst. Based on the following Incidents Data from OT devices analyze and make the following assertions:\n
-        1. In 100 words write a concise bullet pointed analysis of network OT cyber-physical controls that can be objectively determined from the incident data. No preamble or additional narrative. \n
-        2. In  100 words state what the incidents suggest about OT network cybersecurity risks for the network and the potential impacts for safety and cyber-physical risk.\n
+        1. In 150 words write a concise bullet pointed analysis of network OT cyber-physical controls that can be objectively determined from the incident data. No preamble or additional narrative. \n
+        2. In  150 words write a concise bullet point analysis of what the incidents suggest about OT network cybersecurity risks for the network and the potential impacts for safety and cyber-physical risk.\n
         3. An OT cyber-physical risk score on a scale of 1 to 100 where 1 is best and 100 is worst.\n
         The assertions should be concise and suitable for presentation to an executive leader.\n
-        IMPORTANT: Format the output strictly as follows, with each part on a new line:
+        
+        Incident Data: {filtered_incidents};
+        Overall top incident categories: {top_categories};
+        Overall mitre tactics incident breakdown: {mitre_tactics_count};
+        Indexed data for context: {documents_context}
+        
+        IMPORTANT FORMATTING INSTRUCTION: Format the output strictly and exactly as follows, with each part on a new line:
         
         Control Status: <description of the status of the controls>
         Risk Statement: <assertion about risk>
         Risk Score: <numeric value displaying the risk score>
         
         Do not include any additional text or formatting.
-        Incidents Data: {filtered_incidents}"""
+        """
     )
     openai.api_key = get_api_key('openai')
     response = openai.ChatCompletion.create(
@@ -3713,11 +3814,42 @@ def cyberpha_darktrace_connection(request):
 
     lines = [line.strip() for line in ai_output.split('\n') if line.strip()]
 
+    # Initialize placeholders for the sections
+    control_status_lines = []
+    risk_statement_lines = []
+    risk_score = ""
+
+    # Flags to determine the current section
+    in_control_status = False
+    in_risk_statement = False
+
+    for line in lines:
+        if line.startswith("Control Status:"):
+            in_control_status = True
+            in_risk_statement = False
+            control_status_lines.append(line.replace("Control Status:", "").strip())
+        elif line.startswith("Risk Statement:"):
+            in_control_status = False
+            in_risk_statement = True
+            risk_statement_lines.append(line.replace("Risk Statement:", "").strip())
+        elif line.startswith("Risk Score:"):
+            in_control_status = False
+            in_risk_statement = False
+            risk_score = line.replace("Risk Score:", "").strip()
+        else:
+            if in_control_status:
+                control_status_lines.append(line)
+            elif in_risk_statement:
+                risk_statement_lines.append(line)
+
     result = {
-        "Control Status": lines[0].replace("Control Status: ", "").strip(),
-        "Risk Statement": lines[1].replace("Risk Statement: ", "").strip(),
-        "Risk Score": lines[2].replace("Risk Score: ", "").strip(),
-        "Metrics": metrics
+        "Control Status": " ".join(control_status_lines).strip(),
+        "Risk Statement": " ".join(risk_statement_lines).strip(),
+        "Risk Score": risk_score.strip(),
+        "Metrics": metrics,
+        'top_categories': top_categories,
+        'severity_of_incidents': severity_of_incidents,
+        'mitre_tactics_count': mitre_tactics_count
     }
 
     return JsonResponse(result, status=200)
@@ -3890,3 +4022,360 @@ def exalens_generate_scenarios(request):
     }
 
     return JsonResponse(result, status=200)
+
+
+def facility_view(request):
+    industries = tblIndustry.objects.all().order_by('Industry')
+    facilityTypes = FacilityType.objects.all().order_by('FacilityType')
+    shift_models = Facility.SHIFT_MODELS
+    vendors_products = list(OTVendor.objects.all().values('vendor', 'product'))
+    unique_vendors = {vp['vendor'] for vp in vendors_products}
+
+    # Convert the vendors and products to JSON
+    vendors_json = json.dumps(vendors_products)
+    unique_vendors_list = list(unique_vendors)
+    return render(request, 'facilities.html', {
+        'industries': industries,
+        'facilityTypes': facilityTypes,
+        'shift_models': shift_models,
+        'vendors_json': vendors_json,
+        'unique_vendors_list': unique_vendors_list,
+    })
+
+
+def get_facility_profile(userid, industry, facility_type, address, facility, employees, shift_model):
+    language = 'en'
+
+    if not industry or not facility_type:
+        error_msg = "Missing industry or facility type. Complete all fields to get an accurate assessment"
+        return JsonResponse({
+            'safety_summary': error_msg,
+            'chemical_summary': error_msg,
+            'physical_security_summary': error_msg,
+            'other_summary': error_msg
+        })
+
+    address_parts = address.split(',')
+    country = address_parts[-1].strip() if address_parts else ''
+
+    openai_api_key = get_api_key('openai')
+    openai_model = get_api_key('OpenAI_Model')
+    # openai_api_key = os.environ.get('OPENAI_API_KEY')
+    openai.api_key = openai_api_key
+
+    chemical_query = f"chemicals used in manufacturing, industrial chemicals, chemicals by industry, chemical safety, chemical hazards, chemical storage, chemical handling, manufacturing industry, types of chemicals, production chemicals, chemical regulations"
+    retrieved_chunks = query_index(chemical_query)
+    summarized_chunks = get_summarized_chunks(retrieved_chunks)
+    chemical_context = "\n\n".join(summarized_chunks)
+
+    safety_query = f"Industrial safety, OSHA, chemical safety, manufacturing hazards, safety hazards, danger, safety in dangerous environments"
+    retrieved_chunks = query_index(safety_query)
+    summarized_chunks = get_summarized_chunks(retrieved_chunks)
+    safety_context = "\n\n".join(summarized_chunks)
+
+    OT_query = f"CyberPHA, OT Cybersecurity, Industrial Cyber, OT Device, Industrial control systems, Manufacturing, Industry, ICS Cybersecurity"
+    retrieved_chunks = query_index(OT_query)
+    summarized_chunks = get_summarized_chunks(retrieved_chunks)
+    OT_context = "\n\n".join(summarized_chunks)
+
+    physical_query = f"physical security, industrial security, protecting facilities, industrial protection, physical security resources, physical security considerations "
+    retrieved_chunks = query_index(physical_query)
+    summarized_chunks = get_summarized_chunks(retrieved_chunks)
+    physical_context = "\n\n".join(summarized_chunks)
+
+    compliance_query = f"regulatory compliance, regulations, cybersecurity laws, global cybersecurity index"
+    retrieved_chunks = query_index(compliance_query)
+    summarized_chunks = get_summarized_chunks(retrieved_chunks)
+    compliance_context = "\n\n".join(summarized_chunks)
+
+    context = f"You are an industrial safety and hazard expert. For the {facility} {facility_type} in {country} in the {industry} industry, with {employees} employees working a {shift_model} shift model.  "
+
+    prompts = [
+        f"INSTRUCTION: DO NOT PRINT ** characters. If any words are emphasized with **, replace them with normal text without ** characters.  {context} List safety hazards - Specific to facility - of any type such as (but not limited to) mechanical or chemical or electrical or heat or cold or crush or height - Space between bullets. Use the pinecone index for more context. \n\nExample Format:\n 1. Specific safety hazard.\n 2. Another specific safety hazard.  Indexed pinecone content for context: {safety_context}. ",
+        f"INSTRUCTION: DO NOT PRINT ** characters. If any words are emphasized with **, replace them with normal text without ** characters.  {context} List expected chemicals (of all types e.g. solvent, compound, liquid, gas, powder, etc) - Specific to facility - Chemical names only - raw materials and by-products and stored chemicals - Space between bullets. Use the pinecone index for more context. \n\nExample Format:\n 1. Chemical name (raw material or by-product).\n- 2. Another chemical name (raw material or by-product). Indexed pinecone content for context: {chemical_context}.",
+        f"INSTRUCTION: DO NOT PRINT ** characters. If any words are emphasized with **, replace them with normal text without ** characters. {context}, List physical security requirements SPECIFIC to facility and location including (but not limited to): access control,surveillance,local crime statistics,blind spots,proximity to other infrastructure . Use the pinecone index for more context .\n\nExample Format:\n 1. Physical security requirement.\n 2. Another physical security requirement. Each requirement should be stated in mo more than 5 words and MUST be specific to the given facility. Indexed pinecone content for context: {physical_context}.",
+        # f"INSTRUCTION: DO NOT PRINT ** characters. If any words are emphasized with **, replace them with normal text without ** characters.   indexed pinecone content for context: {OT_context}.{context}, list of OT devices expected to be operating on the industrial networks at the given facility. Use the pinecone index for more context. .\n\nExample Format:\n 1. OT device (brief and concise purpose of device).\n 2. Another OT device (brief and concise purpose of device).",
+        f"{context}, list of national and international regulatory compliance containing cybersecurity requirements relevant to the {industry} industry that applies to {facility_type} facilities in {country} . Includes laws and regulatory frameworks . IMPORTANT: Specific to the country and industry. Maximum of the 10 most relevant. \n\nExample Format:\n 1. Compliance name (name of issuing authority).\n 2. Another compliance name (name of issuing authority). DON NOT INCLUDE ANY DESCRIPTION OR FURTHER NARRATIVE ABOUT THE REGULATION - ONLY THE COMPLAINCE NAME AND ISSUING AUTHORITY. Indexed pinecone content for context: {compliance_context}.",
+        f"{context}: You are a safety inspector. For a {facility_type} at {address}, estimate a detailed and nuanced safety and hazard risk score. Use a scale from 0 to 100, where 0 indicates an absence of safety hazards and 100 signifies the presence of extreme and imminent fatal hazards. Provide a score reflecting the unique risk factors associated with the facility type and its operational context at {address} in {country}. Scores should reflect increments of 10, with each decile corresponding to escalating levels of hazard severity and likelihood of occurrence given the expected attention to safety at the facility. Base your score on a typical {facility_type} at {address}, adhering to expected standard safety protocols, equipment conditions, and operational practices. Provide the score as a single, precise number without additional commentary."
+    ]
+
+    responses = []
+
+    # Loop through the prompts and make an API call for each one
+    def fetch_response(prompt):
+        return openai.ChatCompletion.create(
+            # model="gpt-4",
+            model=openai_model,
+            messages=[
+                {"role": "system",
+                 "content": "You are a model trained to provide concise responses. Please provide a concise numbered bullet-point list based on the given statement."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.1,
+            max_tokens=3000
+
+        )
+
+        # Use ThreadPoolExecutor to parallelize the API calls
+
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        responses = list(executor.map(fetch_response, prompts))
+
+        # Extract the individual responses
+    safety_summary = responses[0]['choices'][0]['message']['content'].strip()
+    chemical_summary = responses[1]['choices'][0]['message']['content'].strip()
+    physical_security_summary = responses[2]['choices'][0]['message']['content'].strip()
+    # other_summary = responses[3]['choices'][0]['message']['content'].strip()
+    compliance_summary = responses[3]['choices'][0]['message']['content'].strip()
+    pha_score = responses[4]['choices'][0]['message']['content'].strip()
+
+    ra_query = f"physical security, risk assessment, industrial risks, physical security risk"
+    retrieved_chunks = query_index(ra_query)
+    summarized_chunks = get_summarized_chunks(retrieved_chunks)
+    ra_context = "\n\n".join(summarized_chunks)
+    ra_prompt = [
+        f"""{context}. Consider the following information about the given facility: 
+            Safety Profile: {safety_summary}
+            Chemical Profile: {chemical_summary}
+            Physical Security profile: {physical_security_summary}
+            Utilise the following indexed data: {ra_context}
+            INSTRUCTION. Write a concise summary statement about the recommended physical security processes, procedures, and controls necessary to mitigate the key physical security risks for the given facility.  The physical security summary is an executive-level concisely worded narrative of no more than 150 words written as bullet points.
+            IMPORTANT: do not offer solutions, consequences, or any narrative outside of the scope of a summary. CRITICAL : DO NOT MAKE ANY ASSUMPTIONS or STATEMENTS or COMMENT ABOUT THE CURRENT STATE OF SECURITY CONTROLS. 
+            The output must strictly confirm to the following format with no additional lines of text that are not bullet points specific to the summary statement
+            
+            - bullet point 1
+            - bullet point 2
+            further bullets points up to a maximum of 10
+            
+            """
+    ]
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        responses = list(executor.map(fetch_response, ra_prompt))
+
+    ps_summary = responses[0]['choices'][0]['message']['content'].strip()
+
+    return {
+        'safety_summary': safety_summary,
+        'chemical_summary': chemical_summary,
+        'physical_security_summary': physical_security_summary,
+        # 'other_summary': other_summary,
+        'compliance_summary': compliance_summary,
+        'pha_score': pha_score,
+        'ps_summary': ps_summary
+    }
+
+
+def facility_air_quality_index(lat, lon):
+    aqicn_api_key = get_api_key("aqicn")
+
+    url = f"https://api.waqi.info/feed/geo:{lat};{lon}/?token={aqicn_api_key}"
+
+    try:
+        response = requests.get(url)
+        data = response.json()
+        aqi = data.get('data', {}).get('aqi')
+        return aqi
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+@csrf_exempt
+def save_facility(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+
+        # Ensure employees is numeric and set to 0 if not
+        employees = data.get('employees')
+        try:
+            employees = int(employees)
+        except (ValueError, TypeError):
+            employees = 0
+
+        revenue = data.get('revenue')
+        try:
+            revenue = float(revenue)
+        except (ValueError, TypeError):
+            revenue = 0
+
+        # Ensure operating_cost is numeric and set to 0 if not
+        operating_cost = data.get('operating_cost')
+        try:
+            operating_cost = float(operating_cost)
+        except (ValueError, TypeError):
+            operating_cost = 0
+
+        # Ensure profit_margin is numeric and set to 0 if not
+        profit_margin = data.get('profit_margin')
+        try:
+            profit_margin = float(profit_margin)
+        except (ValueError, TypeError):
+            profit_margin = 0
+
+        # Get the user's organization
+        user_profile = UserProfile.objects.get(user=request.user)
+        organization = user_profile.organization
+
+        # Get the industry and facility type objects
+        industry = tblIndustry.objects.get(id=data['industry'])
+        facility_type = FacilityType.objects.get(ID=data['type'])
+        business_name = data['business_name']
+        facility_id = data.get('id')
+
+        safetySummary = data['safetySummary']
+        physicalSummary = data['physicalSummary']
+        chemicalSummary = data['chemicalSummary']
+        complianceSummary = data['complianceSummary']
+        ps_summary = data['ps_summary']
+        pha_score = data['pha_score']
+        aqi_score = data.get('aqi_score', 0)
+
+        #AQI is dynamic so check it every time
+        aqi_score = facility_air_quality_index(data['lat'], data['lon'])
+
+        if safetySummary == '':
+            risk_profile_data = get_facility_profile(request.user.id,
+                                                     industry,
+                                                     type,
+                                                     data['address'],
+                                                     data['name'],
+                                                     employees,
+                                                     data['shift_model']
+                                                     )
+            safetySummary = risk_profile_data['safety_summary']
+            chemicalSummary = risk_profile_data['chemical_summary']
+            physicalSummary = risk_profile_data['physical_security_summary']
+            # otherSummary = risk_profile_data['other_summary']
+            complianceSummary = risk_profile_data['compliance_summary']
+            pha_score = risk_profile_data['pha_score']
+            ps_summary = risk_profile_data['ps_summary']
+
+        if facility_id:
+            facility = get_object_or_404(Facility, id=facility_id, organization=organization)
+            facility.name = data['name']
+            facility.industry = industry
+            facility.type = facility_type
+            facility.employees = employees
+            facility.public_ips = data['public_ips']
+            facility.shift_model = data['shift_model']
+            facility.address = data['address']
+            facility.lat = data['lat']
+            facility.lon = data['lon']
+            facility.revenue = revenue
+            facility.operating_cost = operating_cost
+            facility.profit_margin = profit_margin
+            facility.pha_score = pha_score
+            facility.safetySummary = safetySummary
+            facility.physicalSummary = physicalSummary
+            facility.chemicalSummary = chemicalSummary
+            facility.complianceSummary = complianceSummary
+            facility.ps_summary = ps_summary
+            facility.aqi_score = aqi_score
+            facility.business_name = business_name
+
+        else:
+            facility = Facility(
+                name=data['name'],
+                industry=industry,
+                type=facility_type,
+                employees=employees,
+                public_ips=data['public_ips'],
+                shift_model=data['shift_model'],
+                address=data['address'],
+                lat=data['lat'],
+                lon=data['lon'],
+                organization=organization,
+                revenue=revenue,
+                operating_cost=operating_cost,
+                profit_margin=profit_margin,
+                safetySummary=safetySummary,
+                chemicalSummary=chemicalSummary,
+                physicalSummary=physicalSummary,
+                complianceSummary=complianceSummary,
+                pha_score=pha_score,
+                aqi_score=aqi_score,
+                business_name=business_name,
+                ps_summary=ps_summary
+            )
+
+        facility.save()
+        # Save investments
+        if facility.id:
+            CyberSecurityInvestment.objects.filter(facility=facility).delete()
+
+        investments = data.get('investments', [])
+        for investment in investments:
+            vendor_name = investment.get('vendor_name', "")
+            product_name = investment.get('product_name', "")
+            CyberSecurityInvestment.objects.create(
+                facility=facility,
+                vendor_name=vendor_name,
+                product_name=product_name
+            )
+
+
+        saved_investments = list(
+            CyberSecurityInvestment.objects.filter(facility=facility).order_by('vendor_name').values('vendor_name',
+                                                                                                     'product_name'))
+
+        return JsonResponse({'status': 'success',
+                             'facility_id': facility.id,
+                             'safetySummary': safetySummary,
+                             'chemicalSummary': chemicalSummary,
+                             'physicalSummary': physicalSummary,
+                             'complianceSummary': complianceSummary,
+                             'ps_summary': ps_summary,
+                             'aqi_score': aqi_score,
+                             'pha_score':pha_score,
+                             'saved_investments': saved_investments})
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=400)
+
+
+def get_facilities(request):
+    user_profile = UserProfile.objects.get(user=request.user)
+
+    facilities = Facility.objects.filter(organization=user_profile.organization).values(
+        'id', 'name', 'industry__Industry', 'type__FacilityType', 'employees', 'public_ips', 'shift_model', 'address',
+        'lat', 'lon', 'revenue', 'operating_cost', 'profit_margin', 'pha_score', 'chemicalSummary', 'physicalSummary',
+        'safetySummary', 'complianceSummary', 'aqi_score'
+    )
+    return JsonResponse({'facilities': list(facilities)})
+
+
+def get_facility(request, facility_id):
+    user_profile = UserProfile.objects.get(user=request.user)
+    facility = get_object_or_404(Facility, id=facility_id, organization=user_profile.organization)
+    saved_investments = list(
+        CyberSecurityInvestment.objects.filter(facility=facility).order_by('vendor_name').values('vendor_name',
+                                                                                                 'product_name'))
+
+    return JsonResponse({'facility': {
+        'id': facility.id,
+        'name': facility.name,
+        'industry': facility.industry.id,
+        'industry__Industry': facility.industry.Industry,
+        'type': facility.type.ID,
+        'type__type': facility.type.FacilityType,
+        'employees': facility.employees,
+        'public_ips': facility.public_ips,
+        'shift_model': facility.shift_model,
+        'address': facility.address,
+        'lat': facility.lat,
+        'lon': facility.lon,
+        'revenue': facility.revenue,
+        'operating_cost': facility.operating_cost,
+        'profit_margin': facility.profit_margin,
+        'pha_score': facility.pha_score,
+        'safetySummary': facility.safetySummary,
+        'chemicalSummary': facility.chemicalSummary,
+        'physicalSummary': facility.physicalSummary,
+        'complianceSummary': facility.complianceSummary,
+        'ps_summary': facility.ps_summary,
+        'aqi_score': facility.aqi_score
+    },
+        'saved_investments': saved_investments
+    })
+
+
+def delete_facility(request, facility_id):
+    facility = get_object_or_404(Facility, id=facility_id)
+    facility.delete()
+    return JsonResponse({'status': 'success'})

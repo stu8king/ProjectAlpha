@@ -11,6 +11,7 @@ import uuid
 import datetime
 from decimal import Decimal
 from urllib.parse import urljoin
+from datetime import datetime
 
 import openai
 import requests
@@ -40,7 +41,7 @@ from OTRisk.models.Model_CyberPHA import tblIndustry, tblCyberPHAHeader, tblZone
     tblCyberPHAScenario, vulnerability_analysis, tblAssetType, MitreControlAssessment, \
     SECURITY_LEVELS, ScenarioConsequences, user_scenario_audit, auditlog, CyberPHAModerators, \
     WorkflowStatus, APIKey, CyberPHA_Group, ScenarioBuilder, PHA_Safeguard, CyberSecurityInvestment, UserScenarioHash, \
-    CyberPHARiskTolerance, CyberPHACybersecurityDefaults, PHA_Observations, Country, OTVendor
+    CyberPHACybersecurityDefaults, PHA_Observations, Country, OTVendor, Facility
 from OTRisk.models.model_assessment import SelfAssessment, AssessmentQuestion
 from OTRisk.models.questionnairemodel import FacilityType
 from OTRisk.models.raw import MitreICSMitigations, RAActions
@@ -94,15 +95,17 @@ def validate_and_format_date(date_str, default_date='2001-01-01', date_format='%
 
 @login_required
 def iotaphamanager(request, record_id=None):
+    auto_start = request.GET.get('autoStart', False)
+
     pha_header = None
     new_record_id = None  # Initialize new_record_id to None
-    annual_revenue_str = "$0"
-    coho_str = "$0"
+    ### annual_revenue_str = "$0"
+    ### annual_revenue_str = "$0" coho_str = "$0"
 
     if request.method == 'POST':
         is_new_record = False  # Initialize flag
         title = request.POST.get('txtTitle')
-        facility_name = request.POST.get('txtFacility')
+        ### facility_name = request.POST.get('txtFacility')
         # Check for duplicate record
 
         pha_id = request.POST.get('txtHdnCyberPHAID')
@@ -110,22 +113,23 @@ def iotaphamanager(request, record_id=None):
             # Update existing record
             pha_header, created = tblCyberPHAHeader.objects.get_or_create(ID=pha_id)
         else:
-            duplicate_record = tblCyberPHAHeader.objects.filter(title=title, FacilityName=facility_name).exists()
-            if duplicate_record:
-                return redirect('OTRisk:iotaphamanager')
+            ### duplicate_record = tblCyberPHAHeader.objects.filter(title=title, FacilityName=facility_name).exists()
+            ### if duplicate_record:
+            ###    return redirect('OTRisk:iotaphamanager')
             # Create a new record
             is_new_record = True
             pha_header = tblCyberPHAHeader()
 
+        pha_header.facility_id = int(request.POST.get('facilityid'))
         PHATitle = request.POST.get('txtTitle')
         pha_header.title = PHATitle if PHATitle else "Not Given"
         PHALeaderName = request.POST.get('txtLeader')
         pha_header.PHALeader = PHALeaderName if PHALeaderName else "Not Given"
         PHALeaderEmail = request.POST.get('txtLeaderEmail')
         pha_header.PHALeaderEmail = PHALeaderEmail if PHALeaderEmail else "Not Given"
-        pha_header.FacilityName = request.POST.get('txtFacility')
-        pha_header.Industry = request.POST.get('selIndustry')
-        pha_header.FacilityType = request.POST.get('selFacilityType')
+        pha_header.FacilityName = '' ### request.POST.get('txtFacility')
+        pha_header.Industry = '' ### request.POST.get('selIndustry')
+        pha_header.FacilityType = '' ### request.POST.get('selFacilityType')
 
         pha_header.AssessmentUnit = request.POST.get('txtUnit')
 
@@ -139,60 +143,51 @@ def iotaphamanager(request, record_id=None):
         end_date_str = request.POST.get('txtEndDate')
         pha_header.AssessmentEndDate = validate_and_format_date(end_date_str)
 
-        pha_header.facilityAddress = request.POST.get('txtAddress')
+        pha_header.facilityAddress = '' ### request.POST.get('txtAddress')
 
         if is_new_record:
             risk_profile_data = facility_risk_profile_newrecord(request.user.id,
-                                                                request.POST.get('selIndustry'),
-                                                                request.POST.get('selFacilityType'),
-                                                                request.POST.get('txtAddress'),
-                                                                request.POST.get('countrySelector'),
-                                                                request.POST.get('txtFacility'),
-                                                                int(request.POST.get('txtEmployees') or 0),
-                                                                request.POST.get('shift_model'),
+                                                                int(request.POST.get('facilityid')),
+
                                                                 int(request.POST.get('assessment_id') or 0),
                                                                 int(request.POST.get('sl') or 0),
                                                                 request.POST.get('ir_plan'),
                                                                 request.POST.get('ir_plan_ut'),
                                                                 request.POST.get('ir_plan_date')
                                                                 )
-            pha_header.safetySummary = risk_profile_data['safety_summary']
-            pha_header.chemicalSummary = risk_profile_data['chemical_summary']
-            pha_header.physicalSummary = risk_profile_data['physical_security_summary']
+            ### pha_header.safetySummary = risk_profile_data['safety_summary']
+            ### pha_header.chemicalSummary = risk_profile_data['chemical_summary']
+            ### pha_header.physicalSummary = risk_profile_data['physical_security_summary']
             pha_header.otherSummary = risk_profile_data['other_summary']
             pha_header.threatSummary = risk_profile_data['threatSummary']
             pha_header.insightSummary = risk_profile_data['insightSummary']
             pha_header.strategySummary = risk_profile_data['strategySummary']
-            pha_header.complianceSummary = risk_profile_data['compliance_summary']
-            pha_header.pha_score = risk_profile_data['pha_score']
+            ### pha_header.complianceSummary = risk_profile_data['compliance_summary']
+            ### pha_header.pha_score = risk_profile_data['pha_score']
 
         else:
-            pha_header.safetySummary = request.POST.get('txtSafetySummary')
-            pha_header.chemicalSummary = request.POST.get('txtChemical')
-            pha_header.physicalSummary = request.POST.get('txtPhysical')
+            pha_header.safetySummary = '' ###  request.POST.get('txtSafetySummary')
+            pha_header.chemicalSummary = '' ### request.POST.get('txtChemical')
+            pha_header.physicalSummary = '' ### request.POST.get('txtPhysical')
             pha_header.otherSummary = request.POST.get('txtOther')
             pha_header.threatSummary = request.POST.get('threatSummary')
             pha_header.insightSummary = request.POST.get('insightSummary')
             pha_header.strategySummary = request.POST.get('strategySummary')
-            pha_header.complianceSummary = request.POST.get('txtCompliance')
-            try:
-                # Attempt to convert the POST value to an integer.
-                pha_header.pha_score = int(request.POST.get('hdn_pha_score', 0))
-            except ValueError:
-                # If conversion fails, set pha_score to 0.
-                pha_header.pha_score = 0
+            pha_header.complianceSummary = '' ### request.POST.get('txtCompliance
+            pha_header.pha_score = 0
 
-        pha_header.country = request.POST.get('countrySelector')
-        pha_header.Date = validate_and_format_date(start_date_str)
-        pha_header.EmployeesOnSite = int(request.POST.get('txtEmployees') or 0)
-        pha_header.facilityAQI = request.POST.get('txthdnAQI')
-        pha_header.facilityCity = request.POST.get('txtCity')
-        pha_header.facilityCode = request.POST.get('zipCode')
-        pha_header.facilityLat = request.POST.get('txthdnLat')
+            pha_header.country = ""
+            validated_date = validate_and_format_date(start_date_str)
+            pha_header.Date = validated_date if validated_date else datetime.now()
+            pha_header.EmployeesOnSite = 0 ### int(request.POST.get('txtEmployees') or 0)
+            pha_header.facilityAQI = 0 ### request.POST.get('txthdnAQI')
+            pha_header.facilityCity = ""
+            pha_header.facilityCode = ""
+            pha_header.facilityLat = ""
 
-        pha_header.facilityLong = request.POST.get('txthdnLong')
-        pha_header.facilityState = request.POST.get('txtState')
-        pha_header.shift_model = request.POST.get('shift_model')
+            pha_header.facilityLong = ""
+            pha_header.facilityState = ""
+            pha_header.shift_model = "" #### request.POST.get('shift_model')
         try:
             assessment_id = int(request.POST.get('assessment_id')) if request.POST.get('assessment_id') else None
         except ValueError:
@@ -201,7 +196,7 @@ def iotaphamanager(request, record_id=None):
         pha_header.last_assessment_score = int(request.POST.get('last_assessment_score') or 0)
 
         pha_header.last_assessment_summary = request.POST.get('last_assessment_summary') or ''
-        pha_header.npm = int(request.POST.get('npm') or 0)
+        pha_header.npm = 0
 
         # Continue with the rest of the processing
 
@@ -209,23 +204,17 @@ def iotaphamanager(request, record_id=None):
         pha_header.FacilityID = 0
         pha_header.Deleted = 0
 
-        annual_revenue_str = request.POST.get('annual_revenue', '')
-        coho_str = request.POST.get('coho', '')
+        annual_revenue_str = 0 ### request.POST.get('annual_revenue', '')
+        coho_str = '' ### request.POST.get('coho', '')
         # Strip out $ and , characters
-        cleaned_annual_revenue_str = ''.join(filter(str.isdigit, annual_revenue_str))
-        cleaned_coho_str = ''.join(filter(str.isdigit, coho_str))
+        cleaned_annual_revenue_str = '' ### .join(filter(str.isdigit, annual_revenue_str))
+        cleaned_coho_str = '' ### .join(filter(str.isdigit, coho_str))
 
         # Convert the cleaned string to an integer
-        try:
-            annual_revenue_int = int(cleaned_annual_revenue_str)
-        except ValueError:  # Handle cases where the input might still not be a valid integer
-            annual_revenue_int = 0  # Or handle this situation differently if needed
-        try:
-            coho_int = int(cleaned_coho_str)
-        except ValueError:  # Handle cases where the input might still not be a valid integer
-            coho_int = 0  # Or handle this situation differently if needed
+        annual_revenue_int = 0  # Or handle this situation differently if needed
+        coho_int = 0  # Or handle this situation differently if needed
         # Save to your model
-        pha_header.annual_revenue = annual_revenue_int
+        pha_header.annual_revenue = 0 ### annual_revenue_int
         pha_header.coho = coho_int
 
         cyber_insurance_value = request.POST.get('cyber_insurance')
@@ -314,29 +303,6 @@ def iotaphamanager(request, record_id=None):
 
         #### End save investments
 
-        ##### save risk tolerance data
-        risk_tolerance_data = {
-            'negligible_low': request.POST.get('negligible_low'),
-            'negligible_high': request.POST.get('negligible_high'),
-            'minor_low': request.POST.get('minor_low'),
-            'minor_high': request.POST.get('minor_high'),
-            'moderate_low': request.POST.get('moderate_low'),
-            'moderate_high': request.POST.get('moderate_high'),
-            'significant_low': request.POST.get('significant_low'),
-            'significant_high': request.POST.get('significant_high'),
-            'severe_low': request.POST.get('severe_low'),
-            'severe_high': request.POST.get('severe_high'),
-        }
-
-        # Convert string values to Decimal, handling empty strings
-        for key, value in risk_tolerance_data.items():
-            risk_tolerance_data[key] = Decimal(value) if value else Decimal('0.00')
-
-        # Check if a CyberPHARiskTolerance record already exists for this header
-        risk_tolerance, created = CyberPHARiskTolerance.objects.update_or_create(
-            cyber_pha_header=pha_header,
-            defaults=risk_tolerance_data
-        )
 
         #### End save risk tolerance data
         # After saving pha_header, handle CyberPHACybersecurityDefaults
@@ -487,8 +453,8 @@ def iotaphamanager(request, record_id=None):
         'new_record_id': new_record_id,
         'mitigations': mitigations,
         'SHIFT_MODELS': tblCyberPHAHeader.SHIFT_MODELS,
-        'annual_revenue_str': annual_revenue_str,
-        'coho_str': coho_str,
+        'annual_revenue_str': '0', # annual_revenue_str,
+        'coho_str': '0' , # coho_str,
         'selected_record_id': first_record_id,
         'SECURITY_LEVELS': SECURITY_LEVELS,
         'assessments': assessments,
@@ -501,7 +467,8 @@ def iotaphamanager(request, record_id=None):
         'saved_record_id': new_record_id,
         'countries': countries,
         'vendors_json': vendors_json,
-        'unique_vendors_json': unique_vendors_json
+        'unique_vendors_json': unique_vendors_json,
+        'auto_start': auto_start
     })
 
 
@@ -519,49 +486,51 @@ def get_headerrecord(request):
     all_groups = CyberPHA_Group.objects.all()
     all_groups_data = serialize('json', all_groups)
     # Retrieve the CyberPHARiskTolerance record associated with this header record
-
+    facility = get_object_or_404(Facility, id=headerrecord.facility_id)
+    industry = facility.industry.Industry
+    facility_type = facility.type.FacilityType
     # create a dictionary with the record data
     headerrecord_data = {
         'title': headerrecord.title,
         'facility': headerrecord.FacilityName,
         'leader': headerrecord.PHALeader,
         'leaderemail': headerrecord.PHALeaderEmail,
-        'Industry': headerrecord.Industry,
-        'facilitytype': headerrecord.FacilityType,
+        'Industry': industry,
+        'facilitytype': facility_type,
         'unit': headerrecord.AssessmentUnit,
         'zone': headerrecord.AssessmentZone,
         'startdate': headerrecord.AssessmentStartDate.strftime('%Y-%m-%d'),
         'enddate': headerrecord.AssessmentEndDate.strftime('%Y-%m-%d'),
-        'address': headerrecord.facilityAddress,
-        'safetysummary': headerrecord.safetySummary,
-        'chemicalsummary': headerrecord.chemicalSummary,
-        'physicalsummary': headerrecord.physicalSummary,
+        'address': facility.address,
+        'safetysummary': facility.safetySummary,
+        'chemicalsummary': facility.chemicalSummary,
+        'physicalsummary': facility.physicalSummary,
         'othersummary': headerrecord.otherSummary,
-        'compliancesummary': headerrecord.complianceSummary,
+        'compliancesummary': facility.complianceSummary,
         'threatSummary': headerrecord.threatSummary,
         'insightSummary': headerrecord.insightSummary,
         'strategySummary': headerrecord.strategySummary,
-        'country': headerrecord.country,
-        'shift_model': headerrecord.shift_model,
-        'EmployeesOnSite': headerrecord.EmployeesOnSite,
+        # 'country': headerrecord.country,
+        'shift_model': facility.shift_model,
+        'EmployeesOnSite': facility.employees,
         'cyber_insurance': headerrecord.cyber_insurance,
-        'annual_revenue': headerrecord.annual_revenue,
-        'pha_score': headerrecord.pha_score,
+        'annual_revenue': facility.revenue,
+        'pha_score': facility.pha_score,
         'sl_t': headerrecord.sl_t,
         'assessment_id': headerrecord.assessment,
         'last_assessment_score': headerrecord.last_assessment_score,
         'last_assessment_summary': headerrecord.last_assessment_summary,
-        'coho': headerrecord.coho,
-        'npm': headerrecord.npm,
+        'coho': facility.operating_cost,
+        'npm': facility.profit_margin,
         'current_workflow_status': current_workflow_status,
         'current_groups': current_groups_data,
         'all_groups': all_groups_data,
         'group_types': CyberPHA_Group.GROUP_TYPES,
-        'facilityAQI': headerrecord.facilityAQI,
-        'facilityCity': headerrecord.facilityCity,
-        'facilityCode': headerrecord.facilityCode,
-        'facilityLat': headerrecord.facilityLat,
-        'facilityLong': headerrecord.facilityLong,
+        'facilityAQI': facility.aqi_score,
+        # 'facilityCity': headerrecord.facilityCity,
+        # 'facilityCode': headerrecord.facilityCode,
+        'facilityLat': facility.lat,
+        'facilityLong': facility.lon,
         'facilityState': headerrecord.facilityState,
         'has_incident_response_plan': headerrecord.has_incident_response_plan,
         'plan_last_tested_date': headerrecord.plan_last_tested_date.strftime(
@@ -579,7 +548,8 @@ def get_headerrecord(request):
         'darktrace_client': headerrecord.darktrace_client,
         'darktrace_risk': headerrecord.darktrace_risk,
         'darktrace_score': headerrecord.darktrace_score,
-        'darktrace_status': headerrecord.darktrace_status
+        'darktrace_status': headerrecord.darktrace_status,
+        'facility_id': headerrecord.facility_id
     }
 
     # Query for moderators associated with this header record
@@ -627,54 +597,11 @@ def get_headerrecord(request):
         }
         control_assessments_data.append(assessment_data)
 
-    investments = CyberSecurityInvestment.objects.filter(cyber_pha_header=headerrecord).values(
+    investments = CyberSecurityInvestment.objects.filter(facility=facility).values(
         'id', 'investment_type', 'vendor_name', 'product_name', 'cost', 'date'
     )
     investments_data = list(investments)
-    try:
-        risk_tolerance = CyberPHARiskTolerance.objects.get(cyber_pha_header=headerrecord)
-        risk_tolerance_data = {
-            'negligible_low': risk_tolerance.negligible_low,
-            'negligible_high': risk_tolerance.negligible_high,
-            'minor_low': risk_tolerance.minor_low,
-            'minor_high': risk_tolerance.minor_high,
-            'moderate_low': risk_tolerance.moderate_low,
-            'moderate_high': risk_tolerance.moderate_high,
-            'significant_low': risk_tolerance.significant_low,
-            'significant_high': risk_tolerance.significant_high,
-            'severe_low': risk_tolerance.severe_low,
-            'severe_high': risk_tolerance.severe_high,
-        }
-    except CyberPHARiskTolerance.DoesNotExist:
-        risk_tolerance_data = {}
 
-    try:
-        # Retrieve the related CyberPHACybersecurityDefaults instance
-        cyber_defaults = CyberPHACybersecurityDefaults.objects.get(cyber_pha=headerrecord)
-        # Serialize the CyberPHACybersecurityDefaults data
-        cyber_defaults_data = {
-            'overall_aggregate_limit': str(cyber_defaults.overall_aggregate_limit),
-            'per_claim_limit': str(cyber_defaults.per_claim_limit),
-            'deductible_amount': str(cyber_defaults.deductible_amount),
-            'first_party_coverage': cyber_defaults.first_party_coverage,
-            'third_party_coverage': cyber_defaults.third_party_coverage,
-            'security_event_liability': cyber_defaults.security_event_liability,
-            'privacy_regulatory_actions': cyber_defaults.privacy_regulatory_actions,
-            'cyber_extortion_coverage': cyber_defaults.cyber_extortion_coverage,
-            'data_breach_response_coverage': cyber_defaults.data_breach_response_coverage,
-            'business_interruption_coverage': cyber_defaults.business_interruption_coverage,
-            'dependent_business_coverage': cyber_defaults.dependent_business_coverage,
-            'data_recovery': cyber_defaults.data_recovery,
-            'hardware_replacement': cyber_defaults.hardware_replacement,
-            'reputation_harm': cyber_defaults.reputation_harm,
-            'media_liability': cyber_defaults.media_liability,
-            'pci_dss': cyber_defaults.pci_dss,
-            'premium_base': str(cyber_defaults.premium_base),
-            'notification_period_days': cyber_defaults.notification_period_days,
-            'cancellation_terms_days': cyber_defaults.cancellation_terms_days,
-        }
-    except CyberPHACybersecurityDefaults.DoesNotExist:
-        cyber_defaults_data = {}
 
     response_data = {
         'headerrecord': headerrecord_data,
@@ -683,9 +610,7 @@ def get_headerrecord(request):
         'organization_moderators': organization_moderators_data,  # All moderators in the organization
         'current_moderators': moderators_data,  # Moderators for the specific header record
         'moderator_ids': moderator_ids,  # IDs of Moderators for the specific header record
-        'investments': investments_data,
-        'risk_tolerance': risk_tolerance_data,
-        'cyber_defaults': cyber_defaults_data
+        'investments': investments_data
     }
 
     return JsonResponse(response_data)
@@ -765,9 +690,9 @@ def make_request_with_backoff(openai_function, *args, **kwargs):
     raise Exception("Failed to make request after several attempts.")
 
 
-def facility_threat_profile(security_level, facility, facility_type, country, industry, safety_summary,
-                            chemical_summary,
-                            physical_security_summary, other_summary, compliance_summary, investment_statement,
+def facility_threat_profile(security_level, facility, facility_type, country, industry,
+
+                            other_summary,  investment_statement,
                             has_ir_plan_str, ir_plan_never_tested_str, ir_plan_date_str, connector_risk,
                             connector_status, connector_score):
     openai_api_key = get_api_key('openai')
@@ -777,11 +702,7 @@ def facility_threat_profile(security_level, facility, facility_type, country, in
     # Constructing the detailed context
     context = f"""
         Analyze the cybersecurity posture of {facility}, a {facility_type} in {country}, focusing on OT cybersecurity risk mitigation. This facility is notable in the {industry} industry and has specific challenges and assets:
-        Safety Hazards: {safety_summary}
-        Chemical Hazards: {chemical_summary}
-        Physical Security Challenges: {physical_security_summary}
         OT Devices: {other_summary}
-        Compliance Requirements: {compliance_summary}
         Incident Response Plan: {has_ir_plan_str} (Last tested: {ir_plan_date_str})
         Cybersecurity Investments: {investment_statement}
         Target Security Level (SL-T) as per IEC62443-3-2: {security_level}.
@@ -854,17 +775,22 @@ def facility_threat_profile(security_level, facility, facility_type, country, in
 def facility_risk_profile(request):
     if request.method == 'GET':
         # Gather the necessary data for the risk assessment (impact scores and scenario information)
-        Industry = request.GET.get('industry')
-        facility_type = request.GET.get('facility_type')
-        address = request.GET.get('address')
-        country = request.GET.get('country')
-        facility = request.GET.get('facility')
-        employees = request.GET.get('employees')
-        shift_model = request.GET.get('shift_model')
+        facility_id = int(request.GET.get('facilityid'))
+        facility = get_object_or_404(Facility, id=facility_id)
+
+        Industry = facility.industry
+        facility_type = facility.type
+        address = facility.address
+        address_parts = address.split(',')
+        country = address_parts[-1].strip() if address_parts else ''
+
+        facility_name = facility.business_name
+        employees = facility.employees
+
+        shift_model = facility.shift_model
         assessment_id = request.GET.get('assessment_id')
         investments_data = request.GET.get('investments')
 
-        print(request.GET.get('investments'))
         has_ir_plan = request.GET.get('has_ir_plan', 'false') == 'true'
         ir_plan_never_tested = request.GET.get('ir_plan_never_tested', 'false') == 'true'
         ir_plan_date_str = request.GET.get('ir_plan_date')
@@ -913,36 +839,18 @@ def facility_risk_profile(request):
         # openai_api_key = os.environ.get('OPENAI_API_KEY')
         openai.api_key = openai_api_key
 
-        chemical_query = f"chemicals used in manufacturing, industrial chemicals, chemical safety, chemical hazards, chemical storage, chemical handling, manufacturing industry, types of chemicals, production chemicals, chemical regulations"
-        retrieved_chunks = query_index(chemical_query)
-        summarized_chunks = get_summarized_chunks(retrieved_chunks)
-        chemical_context = "\n\n".join(summarized_chunks)
-
-        safety_query = f"Industrial safety, OSHA, chemical safety, manufacturing hazards, safety hazards, danger, safety in dangerous environments"
-        retrieved_chunks = query_index(safety_query)
-        summarized_chunks = get_summarized_chunks(retrieved_chunks)
-        safety_context = "\n\n".join(summarized_chunks)
 
         OT_query = f"CyberPHA, OT Cybersecurity, Industrial Cyber, OT Device, Industrial control systems, Manufacturing, Industry, ICS Cybersecurity"
         retrieved_chunks = query_index(OT_query)
         summarized_chunks = get_summarized_chunks(retrieved_chunks)
         OT_context = "\n\n".join(summarized_chunks)
 
-        physical_query = f"physical security, industrial security, protecting facilities, industrial protection, security "
-        retrieved_chunks = query_index(physical_query)
-        summarized_chunks = get_summarized_chunks(retrieved_chunks)
-        physical_context = "\n\n".join(summarized_chunks)
 
         context = f"You are an industrial safety and hazard expert. For the {facility} {facility_type} at {address}, {country} in the {Industry} industry, with {employees} employees working a {shift_model} shift model. The local Air Quality Index is {aqi}.  "
 
         prompts = [
-            f"INSTRUCTION: DO NOT PRINT ** characters. If any words are emphasized with **, replace them with normal text without ** characters.   Indexed pinecone content for context: {safety_context}. {context} List safety hazards - Specific to facility - of any type such as (but not limited to) mechanical or chemical or electrical or heat or cold or crush or height - Space between bullets. Use the pinecone index for more context. \n\nExample Format:\n 1. Specific safety hazard.\n 2. Another specific safety hazard.",
-            f"INSTRUCTION: DO NOT PRINT ** characters. If any words are emphasized with **, replace them with normal text without ** characters. Indexed pinecone content for context: {chemical_context}. {context} List expected chemicals (of all types e.g. solvent, compound, liquid, gas, powder, etc) - Specific to facility - Chemical names only - raw materials and by-products and stored chemicals - Space between bullets. Use the pinecone index for more context. \n\nExample Format:\n 1. Chemical name (raw material or by-product).\n- 2. Another chemical name (raw material or by-product).",
-            f"INSTRUCTION: DO NOT PRINT ** characters. If any words are emphasized with **, replace them with normal text without ** characters. Indexed pinecone content for context: {physical_context}.{context}, List physical security considerations SPECIFIC for the given facility and location including (but not limited to) CONSIDERINGS OF: access control,surveillance,local crime statistics,blind spots,proximity to other infrastructure . Use the pinecone index for more context .\n\nExample Format:\n 1. Physical security challenge.\n 2. Another physical security challenge. ",
             f"INSTRUCTION: DO NOT PRINT ** characters. If any words are emphasized with **, replace them with normal text without ** characters.   indexed pinecone content for context: {OT_context}.{context}, list of OT devices expected to be operating on the industrial networks at the given facility. Use the pinecone index for more context. .\n\nExample Format:\n 1. OT device (brief and concise purpose of device).\n 2. Another OT device (brief and concise purpose of device).",
-            f"{context}, list of national and international regulatory compliance containing cybersecurity requirements relevant to the {Industry} industry that applies to {facility_type} facilities in {country} . Includes laws and standards .\n\nExample Format:\n 1. Compliance name (name of issuing authority).\n 2. Another compliance name (name of issuing authority).",
-            f"{context}: You are a safety inspector. For a {facility_type} in {country}, estimate a detailed and nuanced safety and hazard risk score. Use a scale from 0 to 100, where 0 indicates an absence of safety hazards and 100 signifies the presence of extreme and imminent fatal hazards. Provide a score reflecting the unique risk factors associated with the facility type and its operational context in {country}. Scores should reflect increments of 10, with each decile corresponding to escalating levels of hazard severity and likelihood of occurrence given the expected attention to safety at the facility. Base your score on a typical {facility_type} in {country}, adhering to expected standard safety protocols, equipment conditions, and operational practices. Provide the score as a single, precise number without additional commentary."
-        ]
+           ]
 
         responses = []
 
@@ -969,33 +877,21 @@ def facility_risk_profile(request):
         def remove_emphasis(output):
             return output.replace("**", "")
             # Extract the individual responses
-
-        safety_summary = remove_emphasis(responses[0]['choices'][0]['message']['content'].strip())
-        chemical_summary = remove_emphasis(responses[1]['choices'][0]['message']['content'].strip())
-        physical_security_summary = remove_emphasis(responses[2]['choices'][0]['message']['content'].strip())
-        other_summary = remove_emphasis(responses[3]['choices'][0]['message']['content'].strip())
-        compliance_summary = remove_emphasis(responses[4]['choices'][0]['message']['content'].strip())
-        pha_score = remove_emphasis(responses[5]['choices'][0]['message']['content'].strip())
+        other_summary = remove_emphasis(responses[0]['choices'][0]['message']['content'].strip())
 
         # Call to facility_threat_profile
         threatSummary, insightSummary, strategySummary = facility_threat_profile(sl, facility, facility_type, country,
-                                                                                 Industry, safety_summary,
-                                                                                 chemical_summary,
-                                                                                 physical_security_summary,
+                                                                                 Industry,
                                                                                  other_summary,
-                                                                                 compliance_summary,
                                                                                  investment_statement, has_ir_plan_str,
                                                                                  ir_plan_never_tested_str,
                                                                                  ir_plan_date_str, connector_risk,
                                                                                  connector_status, connector_score)
 
         return JsonResponse({
-            'safety_summary': safety_summary,
-            'chemical_summary': chemical_summary,
-            'physical_security_summary': physical_security_summary,
+
             'other_summary': other_summary,
-            'compliance_summary': compliance_summary,
-            'pha_score': pha_score,
+
             'threatSummary': threatSummary,
             'insightSummary': insightSummary,
             'strategySummary': strategySummary
@@ -1360,9 +1256,37 @@ def get_response(user_message):
 
 
 def compliance_map_data(common_content):
+    pinecone_query = "Compliance, regulations, cybersecurity, law, regulatory compliance"
+    retrieved_chunks = query_index(pinecone_query)
+    summarized_chunks = get_summarized_chunks(retrieved_chunks)
+    documents_context = "\n\n".join(summarized_chunks)
+
     user_message = {
         "role": "user",
-        "content": f"{common_content}. Based on the provided information, please map the current OT security posture to a maximum of 10 of the MOST RELEVANT AND IMPORTANT industry regulatory compliance regulations for this organization in the given country. When naming these regulations, use their official titles as recognized by the issuing bodies or as commonly used in official publications. Separate each item with '||' and use '>' to separate parts within an item. Ensure each item's format is concise and can be easily parsed for display in an HTML table. Example format: <Concise Compliance Concern, maximum 30 words> > <Official Compliance Reference> > <Internet URL>. Output only the line items with NO additional text, header, intro, or narrative. Strive for consistency in the naming of compliance regulations to facilitate accurate parsing and display."
+        "content": f""""
+            {common_content}. 
+            
+            Based on the provided information, please map the current OT security posture to a maximum of 10 of the MOST RELEVANT AND IMPORTANT industry regulatory compliance regulations for this organization in the given country. 
+            When naming these regulations, use their official titles as recognized by the issuing bodies or as commonly used in official publications. 
+            
+            Extra guidance:
+            - Be relevant to the given industry and type of facility
+            - Be relevant to OT cybersecurity
+            - Be relevant to country
+            
+            Formatting instruction for output: 
+            
+            Separate each item with '||' and use '>' to separate parts within an item. 
+            Ensure each item's format is concise and can be easily parsed for display in an HTML table. 
+            
+           The precise format for each item must be as follows : 
+            
+            Concise Description of reason for the Compliance Concern, maximum 30 words > Official Compliance Reference > Internet URL ||
+            
+            Output only the line items with NO additional text, header, intro, or narrative. 
+            Strive for consistency in the naming of compliance regulations to facilitate accurate parsing and display.
+            Pinecone index data for extra context {documents_context}. 
+            """
     }
 
     try:
@@ -1373,29 +1297,24 @@ def compliance_map_data(common_content):
         return f"Error: {str(e)}"
 
 
-def generate_recommendation_prompt(likelihood, adjustedRR, costs, probability, frequency, biaScore, cyberphaID):
+def generate_recommendation_prompt(likelihood, adjustedRR, costs, probability, frequency, biaScore, scenario, cyberphaID):
     # Attempt to fetch the related CyberPHARiskTolerance record
-    try:
-        risk_tolerance = CyberPHARiskTolerance.objects.get(cyber_pha_header_id=cyberphaID)
-        risk_tolerance_str = f"""
-        - Risk Tolerance Levels:
-            - Negligible: {risk_tolerance.negligible_low} to {risk_tolerance.negligible_high}
-            - Minor: {risk_tolerance.minor_low} to {risk_tolerance.minor_high}
-            - Moderate: {risk_tolerance.moderate_low} to {risk_tolerance.moderate_high}
-            - Significant: {risk_tolerance.significant_low} to {risk_tolerance.significant_high}
-            - Severe: {risk_tolerance.severe_low} to {risk_tolerance.severe_high}
-        """
-    except ObjectDoesNotExist:
-        risk_tolerance_str = "\n        - Risk Tolerance Levels: Not specified"
+
+
+    pinecone_query = "Cybersecurity Risk assessment, residual risk, threats, cybersecurity, hazops, cyberpha, risk mitigation, risk scoring"
+    retrieved_chunks = query_index(pinecone_query)
+    summarized_chunks = get_summarized_chunks(retrieved_chunks)
+    documents_context = "\n\n".join(summarized_chunks)
 
     prompt = f"""
-        Given the cybersecurity risk assessment results for a given OT cybersecurity scenario:
+        Pinecone indexed data for reference: {documents_context}
+        Given the cybersecurity risk assessment results for a given OT cybersecurity scenario described as: {scenario}.
         Likelihood of occurrence: {likelihood}%
         Adjusted residual risk: {adjustedRR}
         Estimated costs (low|medium|high): {costs}
         Probability of a targeted attack being successful: {probability}%
         Annual loss event frequency (as defined by FAIR): {frequency}
-        Business impact score: {biaScore}{risk_tolerance_str} (IMPORTANT: IF RISK TOLERANCES ARE 0 it means the user has not entered values. It does not indicate actual risk tolerance levels)
+        Business impact score: {biaScore}
 
         Provide a response structured exactly as follows:
 
@@ -1774,6 +1693,7 @@ def scenario_analysis(request):
             probability=responses[3],
             frequency=responses[4],
             biaScore=responses[5],
+            scenario=scenario,
             cyberphaID=cyberPHAID
         )
 
@@ -2505,9 +2425,15 @@ def air_quality_index(request):
         return JsonResponse({'error': str(e)}, status=500)
 
 
-def facility_risk_profile_newrecord(userid, industry, facility_type, address, country, facility, employees,
-                                    shift_model, assessment_id, sl, has_ir_plan, ir_plan_never, ir_plan_tested_date):
+def facility_risk_profile_newrecord(userid, facility_id, assessment_id, sl, has_ir_plan, ir_plan_never, ir_plan_tested_date):
     language = 'en'
+
+    facility = get_object_or_404(Facility, id=facility_id)
+    industry = facility.industry.Industry
+    facility_type = facility.type.FacilityType
+    address = facility.address
+    shift_model = facility.shift_model
+    employees = facility.employees
 
     if has_ir_plan == 'on':
         ir_plan = 'true'
@@ -2532,15 +2458,15 @@ def facility_risk_profile_newrecord(userid, industry, facility_type, address, co
     openai_model = get_api_key('OpenAI_Model')
     # openai_api_key = os.environ.get('OPENAI_API_KEY')
     openai.api_key = openai_api_key
-    context = f"You are an industrial safety and hazard expert. For the {facility} {facility_type} at {address}, {country} in the {industry} industry, with {employees} employees working a {shift_model} shift model, (NOTE ALSO - has an OT Cybersecurity Incident Response Plan: {has_ir_plan}. Incident response plan never tested: {ir_plan_never_tested}). "
+    context = f"You are an industrial safety and hazard expert. For the {facility} {facility_type} at {address} in the {industry} industry, with {employees} employees working a {shift_model} shift model, (NOTE ALSO - has an OT Cybersecurity Incident Response Plan: {has_ir_plan}. Incident response plan never tested: {ir_plan_never_tested}). "
 
     prompts = [
-        f"{context} List safety hazards, max 100 words. - Specific to facility - mechanical or chemical or electrical or heat or cold or crush or height - Space between bullets. \n\nExample Format:\n 1. Specific safety hazard.\n 2. Another specific safety hazard.",
-        f"{context} List expected chemicals, max 100 words. - Specific to facility - Chemical names only - raw materials and by-products and stored chemicals - Space between bullets. \n\nExample Format:\n 1. Chemical name (raw material or by-product).\n- 2. Another chemical name (raw material or by-product).",
-        f"{context}, List physical security requirements for the given facility and location - access control - surveillance - consideration of local crime statistics - blind spots - proximity to other infrastructure . Max of 100 words .\n\nExample Format:\n 1. Physical security challenge.\n 2. Another physical security challenge.",
+        ### f"{context} List safety hazards, max 100 words. - Specific to facility - mechanical or chemical or electrical or heat or cold or crush or height - Space between bullets. \n\nExample Format:\n 1. Specific safety hazard.\n 2. Another specific safety hazard.",
+        ### f"{context} List expected chemicals, max 100 words. - Specific to facility - Chemical names only - raw materials and by-products and stored chemicals - Space between bullets. \n\nExample Format:\n 1. Chemical name (raw material or by-product).\n- 2. Another chemical name (raw material or by-product).",
+        ### f"{context}, List physical security requirements for the given facility and location - access control - surveillance - consideration of local crime statistics - blind spots - proximity to other infrastructure . Max of 100 words .\n\nExample Format:\n 1. Physical security challenge.\n 2. Another physical security challenge.",
         f"{context}, list of specialized OT and IoT devices and equipment expected to be at the facility. Max of 150 words .\n\nExample Format:\n 1. OT or IoT device (purpose of device).\n 2. Another OT or IoT device (purpose of device).",
-        f"{context}, list of national and international regulatory compliance containing cybersecurity requirements relevant to the {industry} industry that applies to {facility_type} facilities in {country} . Includes laws and standards. Max of 150 words .\n\nExample Format:\n 1. Compliance name (name of issuing authority).\n 2. Another compliance name (name of issuing authority).",
-        f"{context}: You are a safety inspector. For a {facility_type} in {country}, estimate a detailed and nuanced safety and hazard risk score. Use a scale from 0 to 100, where 0 indicates an absence of safety hazards and 100 signifies the presence of extreme and imminent fatal hazards. Provide a score reflecting the unique risk factors associated with the facility type and its operational context in {country}. Scores should reflect increments of 10, with each decile corresponding to escalating levels of hazard severity and likelihood of occurrence given the expected attention to safety at the facility. Base your score on a typical {facility_type} in {country}, adhering to expected standard safety protocols, equipment conditions, and operational practices. Provide the score as a single, precise number without additional commentary."
+        ### f"{context}, list of national and international regulatory compliance containing cybersecurity requirements relevant to the {industry} industry that applies to {facility_type} facilities in {country} . Includes laws and standards. Max of 150 words .\n\nExample Format:\n 1. Compliance name (name of issuing authority).\n 2. Another compliance name (name of issuing authority).",
+        ### f"{context}: You are a safety inspector. For a {facility_type} in {country}, estimate a detailed and nuanced safety and hazard risk score. Use a scale from 0 to 100, where 0 indicates an absence of safety hazards and 100 signifies the presence of extreme and imminent fatal hazards. Provide a score reflecting the unique risk factors associated with the facility type and its operational context in {country}. Scores should reflect increments of 10, with each decile corresponding to escalating levels of hazard severity and likelihood of occurrence given the expected attention to safety at the facility. Base your score on a typical {facility_type} in {country}, adhering to expected standard safety protocols, equipment conditions, and operational practices. Provide the score as a single, precise number without additional commentary."
     ]
 
     responses = []
@@ -2566,30 +2492,23 @@ def facility_risk_profile_newrecord(userid, industry, facility_type, address, co
         responses = list(executor.map(fetch_response, prompts))
 
         # Extract the individual responses
-    safety_summary = responses[0]['choices'][0]['message']['content'].strip()
-    chemical_summary = responses[1]['choices'][0]['message']['content'].strip()
-    physical_security_summary = responses[2]['choices'][0]['message']['content'].strip()
-    other_summary = responses[3]['choices'][0]['message']['content'].strip()
-    compliance_summary = responses[4]['choices'][0]['message']['content'].strip()
-    pha_score = responses[5]['choices'][0]['message']['content'].strip()
+    ### safety_summary = responses[0]['choices'][0]['message']['content'].strip()
+    ### chemical_summary = responses[1]['choices'][0]['message']['content'].strip()
+    ### physical_security_summary = responses[2]['choices'][0]['message']['content'].strip()
+    other_summary = responses[0]['choices'][0]['message']['content'].strip()
+    ### compliance_summary = responses[4]['choices'][0]['message']['content'].strip()
+    ### pha_score = responses[5]['choices'][0]['message']['content'].strip()
 
     # Call to facility_threat_profile
-    threatSummary, insightSummary, strategySummary = facility_threat_profile(sl, facility, facility_type, country,
-                                                                             industry, safety_summary,
-                                                                             chemical_summary,
-                                                                             physical_security_summary,
+    threatSummary, insightSummary, strategySummary = facility_threat_profile(sl, facility, facility_type, address,
+                                                                             industry,
                                                                              other_summary,
-                                                                             compliance_summary, '',
+                                                                              '',
                                                                              has_ir_plan, ir_plan_never_tested,
                                                                              ir_plan_tested_date, '', '', 0)
 
     return {
-        'safety_summary': safety_summary,
-        'chemical_summary': chemical_summary,
-        'physical_security_summary': physical_security_summary,
         'other_summary': other_summary,
-        'compliance_summary': compliance_summary,
-        'pha_score': pha_score,
         'threatSummary': threatSummary,
         'insightSummary': insightSummary,
         'strategySummary': strategySummary

@@ -289,6 +289,45 @@ class CyberPHA_Group(models.Model):
         return f"{self.name} ({self.group_type}) - {self.organization.name}"
 
 
+class Facility(models.Model):
+    SHIFT_MODELS = [
+        ('Single Shift Model', 'Single Shift Model'),
+        ('Double Shift Model', 'Double Shift Model'),
+        ('Three-Shift (24/7) Model', 'Three-Shift (24/7) Model'),
+        ('Rotating Shift Model', 'Rotating Shift Model'),
+        ('Fixed Shift Model', 'Fixed Shift Model'),
+        ('Split Shift Model', 'Split Shift Model'),
+        ('On-Call or Flex Shift Model', 'On-Call or Flex Shift Model'),
+        ('Compressed Workweek Model', 'Compressed Workweek Model'),
+        ('Part-Time or Seasonal Model', 'Part-Time or Seasonal Model'),
+        ('Hybrid Shift Models', 'Hybrid Shift Models'),
+    ]
+    name = models.CharField(max_length=255, null=True)
+    industry = models.ForeignKey('tblIndustry', on_delete=models.CASCADE)
+    type = models.ForeignKey('FacilityType', on_delete=models.CASCADE)
+    employees = models.IntegerField(null=True)
+    public_ips = models.CharField(max_length=255, null=True)
+    shift_model = models.CharField(max_length=50, choices=SHIFT_MODELS, null=True)
+    address = models.CharField(max_length=255)
+    lat = models.FloatField()
+    lon = models.FloatField()
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, null=False)
+    revenue = models.DecimalField(max_digits=10, decimal_places=0, null=True)  # No cents, dollars only
+    operating_cost = models.DecimalField(max_digits=10, decimal_places=0, null=True)  # No cents, dollars only
+    profit_margin = models.DecimalField(max_digits=5, decimal_places=2, null=True)  # Percentage value
+    safetySummary = models.TextField(null=True)
+    chemicalSummary = models.TextField(null=True)
+    physicalSummary = models.TextField(null=True)
+    complianceSummary = models.TextField(null=True)
+    ps_summary = models.TextField(null=True)
+    pha_score = models.IntegerField(null=True)
+    business_name = models.TextField(null=True)
+    aqi_score = models.IntegerField(null=True)
+
+    def __str__(self):
+        return self.name
+
+
 class tblCyberPHAHeader(models.Model):
     ID = models.AutoField(primary_key=True)
     PHALeader = models.CharField(max_length=30)
@@ -299,20 +338,21 @@ class tblCyberPHAHeader(models.Model):
     FacilityScope = models.CharField(max_length=255)
     Description = models.CharField(max_length=255)
     Notes = models.TextField(max_length=255)
-    Date = models.DateTimeField()
+    Date = models.DateTimeField(null=True)
     AssessmentUnit = models.CharField(max_length=100)
     AssessmentNode = models.CharField(max_length=100)
     AssessmentZone = models.CharField(max_length=100)
-    FacilityType = models.CharField(max_length=100)
-    Industry = models.TextField(max_length=30)
-    EmployeesOnSite = models.IntegerField()
+    FacilityType = models.CharField(max_length=100, null=True)
+    Industry = models.TextField(max_length=30, null=True)
+    EmployeesOnSite = models.IntegerField(null=True)
     AssessmentStartDate = models.DateField()
     AssessmentEndDate = models.DateField()
     AssessmentStatus = models.CharField(max_length=10)
     UserID = models.CharField(max_length=10)
     Timestamp = models.DateField
     Deleted = models.IntegerField()
-    facilityAddress = models.CharField(max_length=255)
+    facility = models.ForeignKey(Facility, on_delete=models.CASCADE, null=True, blank=True)  # New field
+    facilityAddress = models.CharField(max_length=255, null=True)
     facilityCity = models.CharField(max_length=100, null=True)
     facilityState = models.CharField(max_length=100, null=True)
     facilityCode = models.CharField(max_length=20, null=True)
@@ -320,12 +360,12 @@ class tblCyberPHAHeader(models.Model):
     facilityLong = models.CharField(max_length=10, null=True)
     facilityAQI = models.IntegerField(null=True)
     title = models.TextField()
-    safetySummary = models.TextField()
-    chemicalSummary = models.TextField()
-    physicalSummary = models.TextField()
+    safetySummary = models.TextField(null=True)
+    chemicalSummary = models.TextField(null=True)
+    physicalSummary = models.TextField(null=True)
     otherSummary = models.TextField()
-    complianceSummary = models.TextField()
-    country = models.TextField()
+    complianceSummary = models.TextField(null=True)
+    country = models.TextField(null=True)
     SHIFT_MODELS = [
         ('Single Shift Model', 'Single Shift Model'),
         ('Double Shift Model', 'Double Shift Model'),
@@ -339,18 +379,18 @@ class tblCyberPHAHeader(models.Model):
         ('Hybrid Shift Models', 'Hybrid Shift Models'),
     ]
 
-    shift_model = models.CharField(max_length=50, choices=SHIFT_MODELS)
-    annual_revenue = models.DecimalField(max_digits=10, decimal_places=0)
+    shift_model = models.CharField(max_length=50, choices=SHIFT_MODELS, null=True)
+    annual_revenue = models.DecimalField(max_digits=10, decimal_places=0, null=True)
     cyber_insurance = models.BooleanField(default=False)
-    pha_score = models.IntegerField()
+    pha_score = models.IntegerField(null=True)
     sl_t = models.PositiveSmallIntegerField(choices=SECURITY_LEVELS, default=0)
     assessment = models.IntegerField(null=True, blank=True)
     last_assessment_score = models.IntegerField(null=True, blank=True)
     last_assessment_summary = models.TextField(default="No Summary Saved", null=True)
     bia_scenarios = models.IntegerField(null=True, blank=True)  # overall bia score based on all scenarios
     risk_scenarios = models.IntegerField(null=True, blank=True)  # overall cyberPHA risk score based on all scenarios
-    coho = models.IntegerField(default=0)  # facility cost per operating hour
-    npm = models.IntegerField(default=0)  # net profit margin
+    coho = models.IntegerField(default=0,null=True)  # facility cost per operating hour
+    npm = models.IntegerField(default=0, null=True)  # net profit margin
     threatSummary = models.TextField(default="No Summary Saved", null=True)
     insightSummary = models.TextField(default="No Summary Saved", null=True)
     strategySummary = models.TextField(default="No Summary Saved", null=True)
@@ -415,39 +455,19 @@ class CyberPHACybersecurityDefaults(models.Model):
     def __str__(self):
         return f"{self.cyber_pha.FacilityName} Cybersecurity Defaults"
 
-
-class CyberPHARiskTolerance(models.Model):
-    cyber_pha_header = models.OneToOneField(tblCyberPHAHeader, on_delete=models.CASCADE, primary_key=True)
-    negligible_low = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
-    negligible_high = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
-    minor_low = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
-    minor_high = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
-    moderate_low = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
-    moderate_high = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
-    significant_low = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
-    significant_high = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
-    severe_low = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
-    severe_high = models.DecimalField(max_digits=14, decimal_places=2, default=Decimal('0.00'))
-
-    class Meta:
-        db_table = 'cyberpha_risk_tolerance'
-
-    def __str__(self):
-        return f"{self.cyber_pha_header.FacilityName} Risk Tolerance"
-
-
 class CyberSecurityInvestment(models.Model):
     TYPE_CHOICES = [
         ('Software', 'Software'),
         ('Hardware', 'Hardware'),
         ('People', 'People'),
     ]
-    cyber_pha_header = models.ForeignKey('tblCyberPHAHeader', on_delete=models.CASCADE, related_name='investments')
+    cyber_pha_header = models.ForeignKey('tblCyberPHAHeader', on_delete=models.CASCADE, related_name='investments', null=True)
     investment_type = models.CharField(max_length=50, choices=TYPE_CHOICES, null=True)
     vendor_name = models.CharField(max_length=255)
     product_name = models.CharField(max_length=255)
     cost = models.DecimalField(max_digits=10, decimal_places=2, null=True)
     date = models.DateField(null=True)
+    facility = models.ForeignKey('Facility', null=True, on_delete=models.CASCADE, related_name='investments')
 
     class Meta:
         db_table = 'tblCyberSecurityInvestment'
