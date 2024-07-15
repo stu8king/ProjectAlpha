@@ -6,6 +6,8 @@ from .views import login_view
 from two_factor.urls import urlpatterns as tf_urls
 from django.contrib.auth.views import LogoutView
 
+app_name = 'accounts'
+
 urlpatterns = [
     # path('admin/', admin.site.urls),
     path('', views.home_view, name='home'),
@@ -36,6 +38,10 @@ urlpatterns = [
     path('contact_form/', views.contact_form, name='contact_form'),
     path('eula/', views.eula, name='eula'),
     path('privacy/', views.privacy, name='privacy'),
+    path('setup-auth-app/', views.setup_auth_app, name='setup_auth_app'),
+    path('two-factor-verify/', views.two_factor_verify, name='two_factor_verify'),  # Assuming this view exists for SMS verification
+    path('two-factor-auth-app-verify/', views.two_factor_auth_app_verify, name='two_factor_auth_app_verify'),
+    path('autocompletetest/', views.autocompletetest, name='autocompletetest'),
 ]
 
 

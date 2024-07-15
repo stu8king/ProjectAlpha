@@ -35,7 +35,8 @@
     <!-- AnyChart JS -->
     <script src="{% static 'anychart/dist/js/anychart-bundle.min.js' %}"></script>
 
-     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBJu4p9r_vFL9g5nzctO4yLbNxjK08q4G0&libraries=places"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBJu4p9r_vFL9g5nzctO4yLbNxjK08q4G0&libraries=places"></script>
+
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
@@ -43,64 +44,16 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gridstack.js/3.3.0/gridstack-h5.min.js"></script>
 
 
+
      {% load django_bootstrap5 %}
      {% bootstrap_css %}
      {% bootstrap_javascript %}
 <link rel="stylesheet" type="text/css" href="{% static 'css/otriskstyle.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/info_block.css' %}">
 <style>
         #map {
             height: 400px;
             width: 100%;
-        }
-        .info-block {
-            background-color: #313136;
-            color: #fff;
-            padding: 0;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            text-align: center;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 1);
-            position: relative;
-            border: 2px solid #36a9b2;
-        }
-        .info-block .block-header {
-            background-color: #a0dde2;
-            color: #000;
-            padding: 10px;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            cursor: move; /* Change cursor to indicate draggable */
-        }
-        .info-block .block-header img {
-            margin-left: 10px;
-            width: 24px;
-            height: 24px;
-        }
-        .info-block .block-body {
-            font-size: 0.9rem;
-            padding: 20px;
-            text-align: left;
-            flex-grow: 1;
-            display: none; /* Initially hidden */
-        }
-        .block-header button {
-            background: none;
-            border: none;
-            font-size: 1.2em;
-            cursor: pointer;
-            color: #000;
-        }
-        .flex-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-        }
-        .flex-col {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
         }
 
         #investmentTable {
@@ -139,7 +92,63 @@
             background-color: #e9ecef;
             opacity: 1;
         }
+body {
+        background-color: #464748;
+        color: #d3d1cd;
+    }
+.sidebar {
+    display: flex;
+    height: 100vh;
+    background-color: #2D2E30; /* Darker shade for sidebar */
+    padding: 1vw;
+    width: 10vw; /* Sidebar width */
+}
 
+.sidebar-logo {
+    padding: 1vw;
+    text-align: center;
+}
+.nav-sidebar {
+    display: flex;
+    flex-direction: column;
+    padding-left: 0;
+    list-style: none;
+}
+.nav-sidebar .nav-item {
+    padding: 0.1vw;
+    /* border-bottom: 1px solid  #fac330; /* Light orange line */
+    margin: 0 10%;
+    gap: 1rem;
+}
+.nav-sidebar .nav-link {
+    color: #d3d1cd;
+    border-radius: 0;
+    transition: color 0.3s ease-in-out;
+    font-size: 0.7rem;
+}
+.nav-sidebar .nav-link:hover, .nav-sidebar .nav-link.active {
+    background-color: #3A5F5F;
+    color: #E0E0E0;
+}
+.custom-main-content {
+    width: calc(100% - 200px); /* Adjust width calculation */
+    max-width: calc(90vw - 200px);
+    margin-left: 10vw; /* Change from margin-left: 200px; to margin-left: 10vw; */
+}
+
+
+@media (min-width: 992px) { /* Adjusting for Bootstrap's large devices breakpoint */
+    .custom-main-content {
+        width: 100%;
+
+        margin-left: 4vw;
+    }
+}
+.custom-main-content {
+    width: calc(100% - 200px); /* Adjust width calculation */
+    max-width: calc(90vw - 200px);
+    margin-left: 1vw; /* Change from margin-left: 200px; to margin-left: 10vw; */
+}
         .scale-down {
             transform: scale(0.95);
             transform-origin: top left;
@@ -235,6 +244,36 @@
          #tools, #physical, #safety, #chemical, #compliance, #ps_requirements {
         display: none;
     }
+.top-strip {
+    background-color: #464748; /* Same as body background for seamless integration */
+    color: #d3d1cd; /* Text color */
+    padding: 10px 20px; /* Adjust as needed */
+    padding-left: 100px; /* Align with the end of the sidebar */
+    width: calc(100% - 200px); /* Adjust based on the actual sidebar width */
+    box-sizing: border-box;
+}
+.page-title {
+    margin: 0; /* Remove default margins */
+    font-size: 1.5rem; /* Adjust size as needed */
+}
+@media (max-width: 992px) {
+    .top-strip {
+        padding-left: 0;
+        width: 100%;
+    }
+     .sub-menu {
+        left: 0;
+        width: 100px; /* Adjust for smaller screens */
+    }
+
+    .custom-main-content {
+        margin-left: 4vw;
+    }
+}
+.top-strip .btn {
+    margin-right: 10px; /* Spacing between buttons */
+}
+
 .switch {
   position: relative;
   display: inline-block;
@@ -290,9 +329,159 @@ input:checked + .slider:before {
   font-size: 10px;
   color: #fff;
 }
+.addressfields {z-index:9999 !important}
+.addressfieldsblock {z-index:9999 !important}
+
+.sub-menu {
+    position: fixed; /* Fixed position to stay in view */
+    top: 0; /* Align with the top of the viewport */
+    left: 10vw; /* Position the sub-menu right next to the sidebar */
+    width: 5vw; /* Width of the sub-menu */
+    height: 100vh; /* Full viewport height */
+    /* background-color: #333; /* Sub-menu background color */
+    color: #fff; /* Text color */
+    padding: 0.5vw ; /* Padding */
+    box-sizing: border-box; /* Include padding in width calculation */
+    font-size: 0.8rem;
+}
+.sub-menu ul {
+    list-style: none; /* Remove default list styling */
+    padding: 0; /* Remove default padding */
+    margin: 0; /* Remove default margin */
+}
+
+.sub-menu li a {
+    color: #d3d1cd; /* Link color */
+    text-decoration: none; /* Remove underline */
+    display: block; /* Make the links fill the container */
+    padding: 10px 0; /* Padding for touch targets */
+    transition: background-color 0.3s; /* Smooth transition for hover effect */
+}
+.sub-menu li a:hover, .sub-menu li a.active {
+    background-color: #57595b; /* Hover/active background color */
+}
+/* Add this CSS to your stylesheet */
+.autocomplete-container {
+    position: relative; /* Ensure z-index works */
+    z-index: 1000; /* Higher than other elements */
+}
+.pac-container {
+    z-index: 1050 !important; /* Ensure the autocomplete dropdown is above other elements */
+}
+
     </style>
+    <script>
+        var autocomplete, map, marker;
+
+        function initPage() {
+
+            initAutocomplete();
+            initMap();
+            geolocate();
+
+        }
+
+        function initAutocomplete() {
+            // Create the autocomplete object, restricting the search predictions to geographical location types.
+            autocomplete = new google.maps.places.Autocomplete(
+                document.getElementById('facilityAddress'),
+                { types: ['geocode'] }
+            );
+
+            autocomplete.addListener('place_changed', function() {
+            var place = autocomplete.getPlace();
+            // Ensure the place has geometry data
+            if (place.geometry) {
+                var lat = place.geometry.location.lat();
+                var lng = place.geometry.location.lng();
+
+                // Update the latitude and longitude fields
+                document.getElementById('facilityLat').value = lat;
+                document.getElementById('facilityLon').value = lng;
+
+                // Update the map and marker position
+                map.setCenter(place.geometry.location);
+                marker.setPosition(place.geometry.location);
+            }
+        });
+
+            // Bias the autocomplete object to the user's geographical location, as supplied by the browser's 'navigator.geolocation' object.
+            geolocate();
+        }
+
+        function geolocate() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    var geolocation = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude
+                    };
+                    var circle = new google.maps.Circle({
+                        center: geolocation,
+                        radius: position.coords.accuracy
+                    });
+                    autocomplete.setBounds(circle.getBounds());
+                });
+            }
+        }
+
+
+
+        function initMap() {
+            const mapOptions = {
+                center: { lat: -34.397, lng: 150.644 },
+                zoom: 15,
+                mapTypeId: 'satellite'
+            };
+
+            map = new google.maps.Map(document.getElementById("map"), mapOptions);
+
+            marker = new google.maps.Marker({
+                map: map,
+                draggable: true,
+                position: mapOptions.center
+            });
+
+            marker.addListener('dragend', () => {
+                const latLng = marker.getPosition();
+                document.getElementById('facilityLat').value = latLng.lat();
+                document.getElementById('facilityLon').value = latLng.lng();
+                geocodePosition(latLng);
+            });
+
+            map.addListener('dblclick', (event) => {
+                const latLng = event.latLng;
+                marker.setPosition(latLng);
+                document.getElementById('facilityLat').value = latLng.lat();
+                document.getElementById('facilityLon').value = latLng.lng();
+                geocodePosition(latLng);
+            });
+        }
+
+        function geocodePosition(pos) {
+            const geocoder = new google.maps.Geocoder();
+            geocoder.geocode({ latLng: pos }, function(responses) {
+                if (responses && responses.length > 0) {
+                    document.getElementById('facilityAddress').value = responses[0].formatted_address;
+                } else {
+                    document.getElementById('facilityAddress').value = 'Cannot determine address at this location.';
+                }
+            });
+        }
+
+        function handleLocationError(browserHasGeolocation, pos) {
+            console.log(browserHasGeolocation
+                ? 'Error: The Geolocation service failed.'
+                : 'Error: Your browser doesn\'t support geolocation.');
+            map.setCenter(pos);
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initPage();
+        });
+    </script>
 </head>
-<body style="background-color: #464748">
+<body style="background-color: #464748" onload="initAutocomplete()">
     <div class="container-fluid">
         <div class="row">
             {% include 'menu_bar.html' %}
@@ -301,8 +490,7 @@ input:checked + .slider:before {
             <div class="row">
                 <div class="col-md-2">
                     <div class="top-strip">
-
-                    </div>
+                     </div>
 
                 </div>
                 <div class="col-md-1"></div>
@@ -315,10 +503,11 @@ input:checked + .slider:before {
                 </div>
                 <div class="col-md-5">
                 </div>
-                <div class="sub-menu">
+                <div class="sub-menu sub-menu-container small-font">
                   <br><br><br><br><br><br><br><br><br><br>
                     <div id="block_selector">
-
+                     <a href="#" id="organizeBlocks"  style="display: block; color: white; margin-top: 10px; align-self: center">Organize</a>
+             <br>
                     <div class="switch-container">
                         <span class="switch-label">Tools</span>
                         <label class="switch">
@@ -375,279 +564,340 @@ input:checked + .slider:before {
             <div class="col-md-6"></div>
         </div>
             <br>
-            <div class="flex-row">
-                <div class="col-md-6 flex-col" id="block1">
-                    <div class="info-block" id="facilities">
-                        <div class="block-header">
-                        All Facilities
-                        <button class="toggle-body">+</button>
-                        </div>
-                        <div class="block-body">
-                            <div class="table-responsive">
-                            <table class="table table-striped" id="facilitiesTable">
-                                        <thead>
-                                            <tr>
-                                                <th class="sortable" onclick="sortTable(this)">Name</th>
-                                                <th>Address</th>
-                                                <th>Type</th>
-                                                <th></th>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="savedFacilities">
-                                            <!-- Rows will be populated here -->
-                                        </tbody>
-                                    </table>
-                            <div id="pagination-container" class="pagination-container"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6 flex-col" id="block2">
-                    <div class="info-block" id="details">
-                            <div class="block-header">
-                                Facility Details
-                                <button class="toggle-body">+</button>
-                            </div>
-                            <div class="block-body scale-down">
-                                <form id="facilityForm" class="mb-4">
-                                    <input type="hidden" id="facilityId" name="facilityId">
-                                    <div class="form-group">
-                                        <label for="facilityAddress">Facility Address:</label>
-                                        <input type="text" class="form-control" id="facilityAddress" name="facilityAddress" required>
-                                        <label for="businessName">Business Name:</label>
-                                        <input type="text" class="form-control" id="businessName" name="businessName" required>
-                                        <label for="facilityName">Facility Name:</label>
-                                        <input type="text" class="form-control" id="facilityName" name="facilityName" required>
-
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <label for="facilityIndustry">Industry:</label>
-                                                <select class="form-control" id="facilityIndustry" name="facilityIndustry" required>
-                                                    {% for industry in industries %}
-                                                        <option value="{{ industry.id }}">{{ industry.Industry }}</option>
-                                                    {% endfor %}
-                                                </select>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <label for="facilityType">Facility Type:</label>
-                                                <select class="form-control" id="facilityType" name="facilityType" required>
-                                                    {% for facilityType in facilityTypes %}
-                                                        <option value="{{ facilityType.ID }}">{{ facilityType.FacilityType }}</option>
-                                                    {% endfor %}
-                                                </select>
-                                            </div>
+            <div class="custom-main-content" >
+                <div id="block_container" >
+                    <div class="row" id="block_rows">
+                        <div class="col-md-6" id="block_row_left">
+                            <div class="flex-row">
+                                <div class="col-md-12 flex-col" id="block1">
+                                    <div class="info-block" id="facilities">
+                                        <div class="block-header">
+                                        All Facilities
+                                        <button class="toggle-body">+</button>
                                         </div>
-
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <label for="numEmployees">Number of Employees:</label>
-                                                <input type="number" class="form-control" id="numEmployees" name="numEmployees" required>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <label for="shiftModel">Shift Model:</label>
-                                                <select class="form-control" id="shiftModel" name="shiftModel" required>
-                                                    {% for value, display in shift_models %}
-                                                        <option value="{{ value }}">{{ display }}</option>
-                                                    {% endfor %}
-                                                </select>
-                                            </div>
-                                        </div>
-
-                                        <label for="publicIPs">Public IP Addresses:</label>
-                                        <input type="text" class="form-control" id="publicIPs" name="publicIPs" required>
-
-                                        <div class="row">
-                                            <div class="col-md-4">
-                                                <label for="revenue">Revenue ($):</label>
-                                                <input type="number" class="form-control" id="revenue" name="revenue" required>
-                                            </div>
-                                            <div class="col-md-4">
-                                                <label for="operatingCost">Operating Cost ($):</label>
-                                                <input type="number" class="form-control" id="operatingCost" name="operatingCost" required>
-                                            </div>
-                                            <div class="col-md-4">
-                                                <label for="profitMargin">Profit Margin (%):</label>
-                                                <input type="number" step="0.01" class="form-control" id="profitMargin" name="profitMargin" required>
+                                        <div class="block-body">
+                                            <div class="block-body-content" style="align-items: center; align-content: center">
+                                                <div class="table-responsive">
+                                                <table class="table table-striped" id="facilitiesTable">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th class="sortable" onclick="sortTable(this)">Name</th>
+                                                                    <th>Address</th>
+                                                                    <th>Type</th>
+                                                                    <th></th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody id="savedFacilities">
+                                                                <!-- Rows will be populated here -->
+                                                            </tbody>
+                                                        </table>
+                                                <div id="pagination-container" class="pagination-container"></div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                    <input type="hidden" id="facilityLat" name="facilityLat" required readonly>
-                                    <input type="hidden" id="facilityLon" name="facilityLon" required readonly>
+                                </div>
+                            </div>
+                            <div class="flex-row">
+                                <div class="col-md-12 flex-col" id="block3">
+                                    <div class="info-block" id="location">
+                                            <div class="block-header">
+                                                Location Map
+                                                <button class="toggle-body">+</button>
+                                            </div>
+                                            <div class="block-body">
+                                                <div class="block-body-content" style="align-items: center; align-content: center">
+                                                <div id="map"></div>
+                                                <br>
+                                                <div id="aqiGlobe" class="aqi-globe">--</div>
+                                                <input type="hidden" id="hdn_pha_score" name="hdn_pha_score">
+                                                <input type="hidden" id="txthdnAQI" name="txthdnAQI">
+                                                </div>
+                                            </div>
+                                        </div>
+                                </div>
+                            </div>
+                            <div class="flex-row">
+                                <div class="col-md-12 flex-col" id="block5">
+                                    <div class="info-block" id="chemical">
+                                <div class="block-header">Chemical Profile <button class="toggle-body">+</button></div>
+                                            <div class="block-body">
+                                                <div class="block-body-content" style="align-items: center; align-content: center">
+                                                    <div class="row" style="width:95%">
+                                                        <div class="col">
+                                                            <div class="form-group" >
+                                                             <div id="chemicalContainer" class="summary-container"></div>
+                                                                <label for="txtChemical"></label><textarea rows="25" name="txtChemical" id="txtChemical" class="form-control" style="resize: none; background-color: white; border-width: 0" readonly hidden>{{ current_pha_header.chemicalSummary }}</textarea>
+                                                             </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                </div>
+                            </div>
+                            <div class="flex-row">
+                                <div class="col-md-12 flex-col" id="block7">
+                                    <div class="info-block" id="physical">
+                                <div class="block-header">Physical Security Profile <button class="toggle-body">+</button></div>
+                                <div class="block-body">
+                                    <div class="block-body-content" style="align-items: center; align-content: center">
+                                        <div class="row" style="width:95%">
+                                            <div class="col">
+                                                <div class="form-group">
+                                                    <div id="physicalContainer" class="summary-container"></div>
+                                                    <label for="txtPhysical"></label><textarea rows="25" name="txtPhysical" id="txtPhysical" class="form-control" style="resize: none; background-color: white; border-width: 0" readonly hidden>{{ current_pha_header.physicalSummary }}</textarea>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                                </div>
+                            </div>
+                            <div class="flex-row">
+                                <div class="col-md-12 flex-col" id="block9">
+                                    <div class="info-block" id="ps_requirements">
+                                        <div class="block-header">Physical Security Requirements <button class="toggle-body">+</button></div>
+                                        <div class="block-body">
+                                            <div class="block-body-content" style="align-items: center; align-content: center">
+                                            <input type="hidden" id="ps_summary" name="ps_summary">
+                                            <div id="display_ps_summary"></div>
+                                            <div id="pha_gauge"></div></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
 
-                                </form>
-                            </div>
                         </div>
-                </div>
-            </div>
-            <div class="flex-row">
-                <div class="col-md-6 flex-col" id="block3">
-                    <div class="info-block" id="location">
-                            <div class="block-header">
-                                Location Map
-                                <button class="toggle-body">+</button>
-                            </div>
-                            <div class="block-body">
-                                <div id="map"></div>
-                                <br>
-                                <div id="aqiGlobe" class="aqi-globe">--</div>
-                                <input type="hidden" id="hdn_pha_score" name="hdn_pha_score">
-                                <input type="hidden" id="txthdnAQI" name="txthdnAQI">
-                            </div>
-                        </div>
-                </div>
-                <div class="col-md-6 flex-col" id="block4">
-                    <div class="info-block" id="safety">
-                <div class="block-header">
-                      Safety Profile
-                        <button class="toggle-body">+</button>
-                    </div>
-                    <div class="block-body">
-                        <div class="form-group">
-                            <div id="safetySummaryContainer" class="summary-container"></div>
-                            <label for="txtSafetySummary"></label><textarea rows="25" name="txtSafetySummary" id="txtSafetySummary" class="form-control" style="resize: none; background-color: white; border-width: 0" readonly hidden>{{ current_pha_header.safetySummary }}</textarea>
-                        </div>
-                    </div>
-                </div>
-                </div>
-            </div>
-            <div class="flex-row">
-                <div class="col-md-6 flex-col" id="block5">
-                    <div class="info-block" id="chemical">
-                <div class="block-header">Chemical Profile <button class="toggle-body">+</button></div>
-                            <div class="block-body">
-                                <div class="form-group">
-                                 <div id="chemicalContainer" class="summary-container"></div>
-                                    <label for="txtChemical"></label><textarea rows="25" name="txtChemical" id="txtChemical" class="form-control" style="resize: none; background-color: white; border-width: 0" readonly hidden>{{ current_pha_header.chemicalSummary }}</textarea>
-                                 </div>
+                        <div class="col-md-6" id="block_row_right">
+                            <div class="col-md-12 flex-col autocomplete-container" id="block2">
+                                    <div class="info-block" id="details" style="z-index:99999;">
+                                            <div class="block-header">
+                                                Facility Details
+                                                <button class="toggle-body">+</button>
+                                            </div>
+                                            <div class="block-body scale-down addressfieldsblock">
+                                                <form id="facilityForm" class="mb-4">
+                                                    <input type="hidden" id="facilityId" name="facilityId">
+                                                    <div class="form-group addressfields" >
+                                                        <label for="facilityAddress">Facility Address:</label>
+                                                        <input type="text" class="form-control" id="facilityAddress" name="facilityAddress" style="z-index:99999;" required>
+                                                        <label for="businessName">Business Name:</label>
+                                                        <input type="text" class="form-control" id="businessName" name="businessName" required>
+                                                        <label for="facilityName">Facility Name:</label>
+                                                        <input type="text" class="form-control" id="facilityName" name="facilityName" required>
 
-                            </div>
-                        </div>
-                </div>
-                <div class="col-md-6 flex-col" id="block6">
-                    <div class="info-block" id="compliance">
-                <div class="block-header">Compliance Profile <button class="toggle-body">+</button></div>
-            <div class="block-body">
-                <div class="form-group">
-                    <div id="complianceContainer" class="safety-summary-container"></div>
-                    <label for="txtCompliance"></label><textarea rows="25" name="txtCompliance" id="txtCompliance" hidden class="form-control" style="resize: none; background-color: white; border-width: 0" readonly hidden>{{ current_pha_header.complianceSummary }}</textarea>
-                     </div>
-            </div>
-            </div>
-                </div>
-            </div>
-            <div class="flex-row">
-                <div class="col-md-6 flex-col" id="block7">
-                    <div class="info-block" id="physical">
-                <div class="block-header">Physical Security Profile <button class="toggle-body">+</button></div>
-                <div class="block-body">
-                    <div class="form-group">
-                        <div id="physicalContainer" class="summary-container"></div>
-                        <label for="txtPhysical"></label><textarea rows="25" name="txtPhysical" id="txtPhysical" class="form-control" style="resize: none; background-color: white; border-width: 0" readonly hidden>{{ current_pha_header.physicalSummary }}</textarea>
-                    </div>
-                </div>
-            </div>
-                </div>
-                <div class="col-md-6 flex-col" id="block8">
-                    <div class="info-block" id="tools">
-                        <div class="block-header">Tools and Software <button class="toggle-body">+</button></div>
+                                                        <div class="row">
+                                                            <div class="col-md-6">
+                                                                <label for="facilityIndustry">Industry:</label>
+                                                                <select class="form-control" id="facilityIndustry" name="facilityIndustry" required>
+                                                                    <option value="">-- Select Industry --</option>
+                                                                    {% for industry in industries %}
+                                                                        <option value="{{ industry.id }}">{{ industry.Industry }}</option>
+                                                                    {% endfor %}
+                                                                </select>
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <label for="facilityType">Facility Type:</label>
+                                                                <select class="form-control" id="facilityType" name="facilityType" required>
+                                                                    <option value="">-- Select Facility Type --</option>
+                                                                    {% for facilityType in facilityTypes %}
+                                                                        <option value="{{ facilityType.ID }}">{{ facilityType.FacilityType }}</option>
+                                                                    {% endfor %}
+                                                                </select>
+                                                            </div>
+                                                        </div>
+                                                        <script type="text/javascript">
+                                                        $(document).ready(function() {
+                                                        $('#facilityIndustry').change(function() {
+                                                            var industryId = $(this).val();
+                                                            $.ajax({
+                                                                url: '/OTRisk/get_facility_types/',  // Ensure this URL matches your URL configuration
+                                                                data: {
+                                                                    'industry_id': industryId
+                                                                },
+                                                                success: function(data) {
+                                                                    var options = '<option value="">Select Facility Type</option>';
+                                                                    $.each(data, function(index, value) {
+                                                                        options += '<option value="' + value.ID + '">' + value.FacilityType + '</option>';
+                                                                    });
+                                                                    $('#facilityType').html(options);
+                                                                }
+                                                            });
+                                                        });
+                                                    });
+                                                </script>
+                                                        <div class="row">
+                                                            <div class="col-md-6">
+                                                                <label for="numEmployees">Number of Employees:</label>
+                                                                <input type="number" class="form-control" id="numEmployees" name="numEmployees" required>
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <label for="shiftModel">Shift Model:</label>
+                                                                <select class="form-control" id="shiftModel" name="shiftModel" required>
+                                                                    {% for value, display in shift_models %}
+                                                                        <option value="{{ value }}">{{ display }}</option>
+                                                                    {% endfor %}
+                                                                </select>
+                                                            </div>
+                                                        </div>
+
+                                                        <label for="publicIPs">Public IP Addresses:</label>
+                                                        <input type="text" class="form-control" id="publicIPs" name="publicIPs" required>
+
+                                                        <div class="row">
+                                                            <div class="col-md-4">
+                                                                <label for="revenue">Revenue ($):</label>
+                                                                <input type="number" class="form-control" id="revenue" name="revenue" required>
+                                                            </div>
+                                                            <div class="col-md-4">
+                                                                <label for="operatingCost">Operating Cost ($):</label>
+                                                                <input type="number" class="form-control" id="operatingCost" name="operatingCost" required>
+                                                            </div>
+                                                            <div class="col-md-4">
+                                                                <label for="profitMargin">Profit Margin (%):</label>
+                                                                <input type="number" step="0.01" class="form-control" id="profitMargin" name="profitMargin" required>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <input type="hidden" id="facilityLat" name="facilityLat" required readonly>
+                                                    <input type="hidden" id="facilityLon" name="facilityLon" required readonly>
+
+                                                </form>
+                                            </div>
+                                        </div>
+                                </div>
+                            <div class="col-md-12 flex-col" id="block4">
+                                    <div class="info-block" id="safety">
+                                <div class="block-header">
+                                      Safety Profile
+                                        <button class="toggle-body">+</button>
+                                    </div>
+                                    <div class="block-body">
+                                        <div class="block-body-content" style="align-items: center; align-content: center">
+                                            <div class="row" style="width:95%">
+                                                <div class="col">
+                                                    <div class="form-group">
+                                                        <div id="safetySummaryContainer" class="summary-container"></div>
+                                                        <label for="txtSafetySummary"></label><textarea rows="25" name="txtSafetySummary" id="txtSafetySummary" class="form-control" style="resize: none; background-color: white; border-width: 0" readonly hidden>{{ current_pha_header.safetySummary }}</textarea>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                </div>
+                            <div class="col-md-12 flex-col" id="block6">
+                                    <div class="info-block" id="compliance">
+                                <div class="block-header">Compliance Profile <button class="toggle-body">+</button></div>
                             <div class="block-body">
-                                <div class="card mb-3 shadow-sm" style="background-color: #5E6266;">
-                                    <div class="card-body">
-                                        <label style="color:white">List tools and software purchased to mitigate OT cybersecurity risks</label>
-                                        <div class="table-responsive">
-                                                <table class="table table-striped" id="investmentTable" >
-                                                    <colgroup>
-                                                        <col span="1" style="width: 50%;"> <!-- Vendor Name -->
-                                                        <col span="1" style="width: 40%;"> <!-- Product Name -->
-                                                        <col span="1" style="width: 10%;"> <!-- Action -->
-                                                    </colgroup>
-                                                    <thead>
-                                                        <tr>
-                                                            <th>Vendor Name</th>
-                                                            <th>Product Name</th>
-                                                            <th>Action</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                    <tr>
-                                                        <td>
-                                                            <select name="vendor_name[]" class="form-control vendor-select">
-                                                                <option value="">Select Vendor</option>
-                                                                {% for vendor in unique_vendors_list %}
-                                                                    <option value="{{ vendor }}">{{ vendor }}</option>
-                                                                {% endfor %}
-                                                            </select>
-                                                        </td>
-                                                        <td>
-                                                            <select name="product_name[]" class="form-control product-select">
-                                                                <option value="">Select Product</option>
-                                                            </select>
-                                                        </td>
-                                                        <td><button class="btn btn-danger removeRow">Remove</button></td>
-                                                    </tr>
-                                                    </tbody>
-                                                </table>
-                                                <button type="button" class="btn btn-primary" id="addRow">Add Row</button>
+                                <div class="block-body-content" style="align-items: center; align-content: center">
+                                    <div class="row" style="width:95%">
+                                        <div class="col">
+                                            <div class="form-group">
+                                                <div id="complianceContainer" class="safety-summary-container"></div>
+                                                <label for="txtCompliance"></label><textarea rows="25" name="txtCompliance" id="txtCompliance" hidden class="form-control" style="resize: none; background-color: white; border-width: 0" readonly hidden>{{ current_pha_header.complianceSummary }}</textarea>
+                                                 </div>
                                             </div>
                                     </div>
                                 </div>
                             </div>
+                            </div>
+                                </div>
+                            <div class="col-md-12 flex-col" id="block8">
+                                    <div class="info-block" id="tools">
+                                        <div class="block-header">Tools and Software <button class="toggle-body">+</button></div>
+                                            <div class="block-body">
+                                            <div class="block-body-content" style="align-items: center; align-content: center">
+                                                <div class="card mb-3 shadow-sm" style="background-color: #5E6266;">
+                                                    <div class="card-body">
+                                                        <label style="color:white">List tools and software purchased to mitigate OT cybersecurity risks</label>
+                                                        <div class="table-responsive">
+                                                                <table class="table table-striped" id="investmentTable" >
+                                                                    <colgroup>
+                                                                        <col span="1" style="width: 50%;"> <!-- Vendor Name -->
+                                                                        <col span="1" style="width: 40%;"> <!-- Product Name -->
+                                                                        <col span="1" style="width: 10%;"> <!-- Action -->
+                                                                    </colgroup>
+                                                                    <thead>
+                                                                        <tr>
+                                                                            <th>Vendor Name</th>
+                                                                            <th>Product Name</th>
+                                                                            <th>Action</th>
+                                                                        </tr>
+                                                                    </thead>
+                                                                    <tbody>
+                                                                    <tr>
+                                                                        <td>
+                                                                            <select name="vendor_name[]" class="form-control vendor-select">
+                                                                                <option value="">Select Vendor</option>
+                                                                                {% for vendor in unique_vendors_list %}
+                                                                                    <option value="{{ vendor }}">{{ vendor }}</option>
+                                                                                {% endfor %}
+                                                                            </select>
+                                                                        </td>
+                                                                        <td>
+                                                                            <select name="product_name[]" class="form-control product-select">
+                                                                                <option value="">Select Product</option>
+                                                                            </select>
+                                                                        </td>
+                                                                        <td><button class="btn btn-danger removeRow">Remove</button></td>
+                                                                    </tr>
+                                                                    </tbody>
+                                                                </table>
+                                                                <button type="button" class="btn btn-primary" id="addRow">Add Row</button>
+                                                            </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            </div>
+                                    </div>
+                                    <script>
+                        $(document).ready(function() {
+                            var vendors = JSON.parse('{{ vendors_json|escapejs }}');
+                            var uniqueVendors = {{ unique_vendors_list|safe }};
+
+                            $("#addRow").click(function() {
+                                var newRow = `<tr>
+                                    <td>
+                                        <select name="vendor_name[]" class="form-control vendor-select">
+                                            <option value="">Select Vendor</option>
+                                            ${uniqueVendors.map(v => `<option value="${v}">${v}</option>`).join('')}
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <select name="product_name[]" class="form-control product-select">
+                                            <option value="">Select Product</option>
+                                        </select>
+                                    </td>
+                                    <td><button type="button" class="btn btn-danger removeRow">Remove</button></td>
+                                </tr>`;
+                                $("#investmentTable tbody").append(newRow);
+                            });
+
+                            $(document).on('change', '.vendor-select', function() {
+                                var vendor = $(this).val();
+                                var productSelect = $(this).closest('tr').find('.product-select');
+                                var products = vendors.filter(v => v.vendor === vendor).map(v => v.product);
+
+                                productSelect.empty().append('<option value="">Select Product</option>');
+                                products.forEach(function(product) {
+                                    productSelect.append(`<option value="${product}">${product}</option>`);
+                                });
+                            });
+
+                            $(document).on('click', '.removeRow', function() {
+                                $(this).closest('tr').remove();
+                            });
+                        });
+                        </script>
+                                </div>
+                            <div class="col-md-12 flex-col" id="">
+                        </div>
                     </div>
-                    <script>
-        $(document).ready(function() {
-            var vendors = JSON.parse('{{ vendors_json|escapejs }}');
-            var uniqueVendors = {{ unique_vendors_list|safe }};
-
-            $("#addRow").click(function() {
-                var newRow = `<tr>
-                    <td>
-                        <select name="vendor_name[]" class="form-control vendor-select">
-                            <option value="">Select Vendor</option>
-                            ${uniqueVendors.map(v => `<option value="${v}">${v}</option>`).join('')}
-                        </select>
-                    </td>
-                    <td>
-                        <select name="product_name[]" class="form-control product-select">
-                            <option value="">Select Product</option>
-                        </select>
-                    </td>
-                    <td><button type="button" class="btn btn-danger removeRow">Remove</button></td>
-                </tr>`;
-                $("#investmentTable tbody").append(newRow);
-            });
-
-            $(document).on('change', '.vendor-select', function() {
-                var vendor = $(this).val();
-                var productSelect = $(this).closest('tr').find('.product-select');
-                var products = vendors.filter(v => v.vendor === vendor).map(v => v.product);
-
-                productSelect.empty().append('<option value="">Select Product</option>');
-                products.forEach(function(product) {
-                    productSelect.append(`<option value="${product}">${product}</option>`);
-                });
-            });
-
-            $(document).on('click', '.removeRow', function() {
-                $(this).closest('tr').remove();
-            });
-        });
-        </script>
                 </div>
             </div>
-            <div class="flex-row">
-                <div class="col-md-6 flex-col" id="block9">
-                    <div class="info-block" id="ps_requirements">
-                        <div class="block-header">Physical Security Requirements <button class="toggle-body">+</button></div>
-                        <div class="block-body">
-                            <input type="hidden" id="ps_summary" name="ps_summary">
-                            <div id="display_ps_summary"></div>
-                            <div id="pha_gauge"></div></div>
-                    </div>
-                </div>
-                <div class="col-md-6 flex-col" id="">
-                </div>
-            </div>
-
 
 
 
@@ -655,77 +905,8 @@ input:checked + .slider:before {
             </main>
         </div>
     </div>
-    <script>
-
-        var zIndexCounter = 1000;
-        $(document).ready(function() {
-             $(".info-block").each(function() {
-            var block = $(this);
-            block.data("originalWidth", block.width());
-            block.data("originalHeight", block.height());
-            block.data("originalPosition", block.position());
-        });
 
 
-            // Make info-blocks draggable
-            $(".info-block").draggable({
-                handle: ".block-header",
-                start: function(event, ui) {
-                    // Bring the dragged element to the front
-                    $(this).css('z-index', ++zIndexCounter);
-                }
-            });
-
-            // Make info-blocks resizable
-            $(".info-block").resizable({
-                handles: 'n, e, s, w, ne, nw, se, sw'
-            });
-            
-            // Toggle block-body visibility
-        $(".toggle-body").on('click', function() {
-        var block = $(this).closest(".info-block");
-        var blockBody = block.find(".block-body");
-        blockBody.toggle();
-        $(this).text(blockBody.is(":visible") ? "-" : "+");
-
-        if (blockBody.is(":visible")) {
-            block.css({
-                'z-index': ++zIndexCounter,
-                'height': 'auto'
-            });
-        } else {
-            // Reset the block size to its original dimensions
-            block.css({
-                'width': block.data("originalWidth"),
-                'height': block.data("originalHeight")
-            });
-        }
-    });
-
-        // Handle block selection
-    $("#block_selector input[type=checkbox]").on('change', function() {
-        var blockId = $(this).data('block-id');
-        var block = $("#" + blockId);
-        var isChecked = $(this).is(":checked");
-
-        if (isChecked) {
-            // Find the first available container
-            var availableContainer = $(".flex-col:has(.info-block)").not(":has(.info-block:visible)").first();
-            if (availableContainer.length) {
-                block.appendTo(availableContainer).show();
-                block.find(".block-body").hide();
-                block.find(".toggle-body").text("+");
-            }
-        } else {
-            // Move the block back to its original container and hide it
-            block.hide();
-        }
-    });
-
-
-
-        });
-    </script>
 <script>
 var currentHighlightedRow = null;
 function loadSavedFacilities(savedFacilityId) {
@@ -852,18 +1033,20 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     loadSavedFacilities();
+
+    const urlParams = new URLSearchParams(window.location.search);
+        const facilityId = urlParams.get('facility_id');
+        if (facilityId) {
+                editFacility(facilityId);
+            }
 });
 
-
-    let map;
-    let marker;
-    let autocomplete;
 
 $(document).ready(function() {
 
     $('#facilitiesTable_filter').remove();
 
-    initMap();
+
 
     function getCookie(name) {
         let cookieValue = null;
@@ -956,9 +1139,11 @@ $(document).ready(function() {
                     if (response.facility_id) {
                         loadSavedFacilities(response.facility_id);
                         populateSummary("safetySummaryContainer", response.safetySummary);
-                        populateSummary("chemicalContainer", response.chemicalSummary);
+                        // populateSummary("chemicalContainer", response.chemicalSummary);
                         populateSummary("physicalContainer", response.physicalSummary);
                         populateSummary("complianceContainer", response.complianceSummary);
+
+                        populateChemicalJSON(response.chemicalSummary);
                         $('#txtChemical').val(response.chemicalSummary)
                         $('#txtSafetySummary').val(response.safetySummary)
                         $('#txtPhysical').val(response.physicalSummary)
@@ -988,13 +1173,6 @@ $(document).ready(function() {
         }
     });
 });
-    function expandFacilityDetails() {
-        var facilityDetailsBlock = $(".info-block:contains('Facility Details')");
-        var blockBody = facilityDetailsBlock.find(".block-body");
-        blockBody.show();
-        facilityDetailsBlock.find(".toggle-body").text("-");
-        facilityDetailsBlock.css('z-index', ++zIndexCounter);
-    }
 
     $('#newFacility').on('click', function() {
         $('#facilityForm')[0].reset();
@@ -1034,95 +1212,6 @@ $(document).ready(function() {
 });
 
 
-
-function initMap() {
-    // Default location (if geolocation fails)
-    const defaultLocation = { lat: -34.397, lng: 150.644 };
-
-    map = new google.maps.Map(document.getElementById('map'), {
-        center: defaultLocation,
-        zoom: 15,
-        mapTypeId: 'satellite' // Set the initial map type to satellite
-    });
-
-    marker = new google.maps.Marker({
-        map: map,
-        draggable: true,
-        position: defaultLocation
-    });
-
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(function(position) {
-            const userLocation = {
-                lat: position.coords.latitude,
-                lng: position.coords.longitude
-            };
-            map.setCenter(userLocation);
-            marker.setPosition(userLocation);
-            $('#facilityLat').val(userLocation.lat);
-            $('#facilityLon').val(userLocation.lng);
-        }, function() {
-            handleLocationError(true, map.getCenter());
-        });
-    } else {
-        // Browser doesn't support Geolocation
-        handleLocationError(false, map.getCenter());
-    }
-    autocomplete = new google.maps.places.Autocomplete(document.getElementById('facilityAddress'));
-    autocomplete.bindTo('bounds', map);
-
-    autocomplete.addListener('place_changed', function() {
-        let place = autocomplete.getPlace();
-        if (!place.geometry) {
-            return;
-        }
-
-        if (place.geometry.viewport) {
-            map.fitBounds(place.geometry.viewport);
-        } else {
-            map.setCenter(place.geometry.location);
-            map.setZoom(17);
-        }
-
-        marker.setPosition(place.geometry.location);
-        $('#facilityLat').val(place.geometry.location.lat());
-        $('#facilityLon').val(place.geometry.location.lng());
-    });
-
-    google.maps.event.addListener(marker, 'dragend', function() {
-        let latLng = marker.getPosition();
-        $('#facilityLat').val(latLng.lat());
-        $('#facilityLon').val(latLng.lng());
-        geocodePosition(latLng);
-    });
-
-    google.maps.event.addListener(map, 'dblclick', function(event) {
-        let latLng = event.latLng;
-        marker.setPosition(latLng);
-        $('#facilityLat').val(latLng.lat());
-        $('#facilityLon').val(latLng.lng());
-        geocodePosition(latLng);
-    });
-}
-
-function geocodePosition(pos) {
-    let geocoder = new google.maps.Geocoder();
-    geocoder.geocode({ latLng: pos }, function(responses) {
-        if (responses && responses.length > 0) {
-            $('#facilityAddress').val(responses[0].formatted_address);
-        } else {
-            $('#facilityAddress').val('Cannot determine address at this location.');
-        }
-    });
-}
-
-function handleLocationError(browserHasGeolocation, pos) {
-    console.log(browserHasGeolocation
-        ? 'Error: The Geolocation service failed.'
-        : 'Error: Your browser doesn\'t support geolocation.');
-    map.setCenter(pos);
-}
-
 function attachRemoveIcon(box, item) {
         const removeIcon = $('<img class="remove-item" src="/static/images/red_delete_circle.png" style="cursor: pointer; margin-left: 5px; width: 1em; height: 1em;">');
         box.append(removeIcon);
@@ -1155,9 +1244,47 @@ function attachRemoveIcon(box, item) {
         });
     }
 
+function populateChemicalJSON(chemicalData) {
+    // Check if the data is a string, and if so, parse it into an object
+    if (typeof chemicalData === 'string') {
+        try {
+            chemicalData = JSON.parse(chemicalData);
+        } catch (e) {
+            console.error("Error parsing chemical data JSON:", e);
+            return;
+        }
+    }
+
+    // Clear existing content
+    $('#chemicalContainer').empty();
+
+    if (!chemicalData || !chemicalData.chemicals || !Array.isArray(chemicalData.chemicals)) {
+        console.error("Chemical data is invalid or missing. Expected an object with a 'chemicals' array.");
+        return;
+    }
+
+    // Iterate over the chemicals and create boxes
+    chemicalData.chemicals.forEach((chemical, index) => {
+        const toxicText = chemical.toxic ? 'Yes' : 'No';
+        const flammableText = chemical.flammable ? 'Yes' : 'No';
+        const boxText = `Name: ${chemical.chemicalName}\nToxic: ${toxicText}\nFlammable: ${flammableText}\nCAS: ${chemical.CAS}`;
+        const box = $('<div class="summary-box" style="color: #000; width: 100%; white-space: pre-line;"></div>').text(boxText);
+        $('#chemicalContainer').append(box);
+    });
+}
+
+
+
+
+
+
 function populateSummary(containerId, summaryData) {
     // Clear existing content
     $('#' + containerId).empty();
+
+    if (summaryData == null){
+        return;
+    }
 
     // Normalize newline characters and split the summary by new lines, filter out empty lines
     const normalizedData = summaryData.replace(/\r\n|\r|\n/g, '\n');
@@ -1278,19 +1405,29 @@ function editFacility(facilityId) {
             $('#operatingCost').val(facility.operating_cost);
             $('#profitMargin').val(facility.profit_margin);
             populateSummary("safetySummaryContainer", facility.safetySummary);
-            populateSummary("chemicalContainer", facility.chemicalSummary);
+            // populateSummary("chemicalContainer", facility.chemicalSummary);
             populateSummary("physicalContainer", facility.physicalSummary);
             populateSummary("complianceContainer", facility.complianceSummary);
+            populateChemicalJSON(JSON.parse(facility.type__chemprofile));
+
             $('#txtChemical').val(facility.chemicalSummary)
             $('#txtSafetySummary').val(facility.safetySummary)
             $('#txtPhysical').val(facility.physicalSummary)
             $('#txtCompliance').val(facility.complianceSummary)
             $('#ps_summary').val(facility.ps_summary)
+            if (facility.ps_summary != null){
             const psSummary = facility.ps_summary.split('\n').map(item => `<li>${item}</li>`).join('');
             $('#display_ps_summary').html(`<ul style="list-style-type: disc; padding-left: 20px;">${psSummary}</ul>`);
+            }
+// Update map and marker position
+            if (map && marker) {
+                const facilityLocation = new google.maps.LatLng(facility.lat, facility.lon);
+                map.setCenter(facilityLocation);
+                marker.setPosition(facilityLocation);
+            } else {
+                console.error('Google Maps or marker is not initialized.');
+            }
 
-            marker.setPosition(new google.maps.LatLng(facility.lat, facility.lon));
-            map.setCenter(new google.maps.LatLng(facility.lat, facility.lon));
             drawGauge(facility.pha_score);
             $('#hdn_pha_score').val(facility.pha_score);
             $('#txthdnAQI').val(facility.aqi_score);
@@ -1318,6 +1455,7 @@ function editFacility(facilityId) {
                 // Apply the background color
                 aqiGlobe.css('background-color', bgColor);
                 populateInvestmentTable(response.saved_investments);
+                expandFacilityDetails();
         },
         error: function(error) {
             alert('Error fetching facility details.');
@@ -1405,8 +1543,25 @@ function populateInvestmentTable(investments) {
         $(this).closest('tr').remove();
     });
 }
+
+function closeScenarioList() {
+        var scenarioDetailsBlock = $(".info-block:contains('All Facilities')");
+        var blockBody = scenarioDetailsBlock.find(".block-body");
+        blockBody.hide();
+        scenarioDetailsBlock.find(".toggle-body").text("+");
+        scenarioDetailsBlock.css('z-index', --zIndexCounter);
+    }
+
+function expandFacilityDetails() {
+        var scenarioDetailsBlock = $(".info-block:contains('Facility Details')");
+        var blockBody = scenarioDetailsBlock.find(".block-body");
+        blockBody.show();
+        scenarioDetailsBlock.find(".toggle-body").text("-");
+        scenarioDetailsBlock.css('z-index', ++zIndexCounter);
+        closeScenarioList();
+    }
 </script>
 
-
+<script src="{% static "js/block_manager.js" %}"></script>
 </body>
 </html>

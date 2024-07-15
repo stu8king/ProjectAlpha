@@ -13,7 +13,6 @@ from accounts.models import Organization, UserProfile
 from OTRisk.models.raw import MitreICSMitigations, RAWorksheet
 from simple_history.models import HistoricalRecords
 # Import at the top of the file where Facility model is defined
-from .questionnairemodel import FacilityType
 
 
 
@@ -252,6 +251,9 @@ class tblIndustry(models.Model):
 
     class Meta:
         db_table = 'tblIndustry'
+
+    def __str__(self):
+        return self.Industry
 
 
 class tblAssetType(models.Model):
@@ -657,24 +659,24 @@ class tblCyberPHAScenario(models.Model):
     impactRegulation = models.IntegerField()
     impactData = models.IntegerField()
     impactSupply = models.IntegerField()
-    UEL = models.IntegerField()
-    uel_threat = models.IntegerField()
-    uel_vuln = models.IntegerField()
-    uel_exposure = models.IntegerField()
-    RRU = models.IntegerField()
-    SM = models.IntegerField()
-    MEL = models.IntegerField()
-    RRM = models.IntegerField()
-    SA = models.IntegerField()
-    MELA = models.IntegerField()
-    RRa = models.TextField()
-    sl = models.IntegerField()
+    UEL = models.IntegerField(null=True)
+    uel_threat = models.IntegerField(null=True)
+    uel_vuln = models.IntegerField(null=True)
+    uel_exposure = models.IntegerField(null=True)
+    RRU = models.IntegerField(null=True)
+    SM = models.IntegerField(null=True)
+    MEL = models.IntegerField(null=True)
+    RRM = models.IntegerField(null=True)
+    SA = models.IntegerField(null=True)
+    MELA = models.IntegerField(null=True)
+    RRa = models.TextField(null=True)
+    sl = models.IntegerField(null=True)
     recommendations = models.TextField(null=True)
     Deleted = models.IntegerField()
     timestamp = models.DateTimeField()
-    aro = models.IntegerField()
-    sle = models.IntegerField()
-    ale = models.IntegerField()
+    aro = models.IntegerField(null=True)
+    sle = models.IntegerField(null=True)
+    ale = models.IntegerField(null=True)
     countermeasureCosts = models.IntegerField()
     control_recommendations = models.TextField()
     justifySafety = models.TextField()
@@ -1238,3 +1240,16 @@ class OTVendor(models.Model):
         verbose_name = "OT Vendor"
         verbose_name_plural = "OT Vendors"
         ordering = ['vendor', 'product']
+
+
+class FacilityType(models.Model):
+    ID = models.AutoField(primary_key=True)
+    FacilityType = models.CharField(max_length=50)
+    Industry = models.ForeignKey(tblIndustry, on_delete=models.CASCADE, related_name='facility_types')
+    chemical_profile = models.TextField(null=True)
+
+    class Meta:
+        db_table = 'tblFacilityTypes'
+
+    def __str__(self):
+        return self.FacilityType

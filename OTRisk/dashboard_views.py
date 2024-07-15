@@ -4,6 +4,7 @@ from django.http import JsonResponse
 from django.shortcuts import render
 from django.core.serializers import serialize
 from django.template.loader import render_to_string
+from django.utils.dateformat import DateFormat
 from django.utils.html import mark_safe
 from OTRisk.models.raw import RAWorksheet, RAWorksheetScenario, RAActions
 from django.contrib.auth.decorators import login_required
@@ -605,7 +606,17 @@ def get_bia_summary_data(facilities):
         "open_phas": open_phas,
         "pie_chart_data": pie_chart_data
     }
+def format_currency(value):
+    if value is None:
+        value = 0
+    if value >= 1_000_000:
+        return f'${value / 1_000_000:.1f}m'
+    elif value >= 1_000:
+        return f'${value / 1_000:.1f}k'
+    else:
+        return f'${value}'
 
+@login_required()
 def anzenot_dashboard(request):
     organization_id = get_user_organization_id(request)
 
@@ -677,6 +688,69 @@ def anzenot_dashboard(request):
     total_cyberphas = bia_summary_data['total_phas']
     open_assessments = bia_summary_data['open_phas']
 
+    # Calculate the business impact score for each scenario
+    top_scenarios = tblCyberPHAScenario.objects.filter(CyberPHA__facility__in=facilities).annotate(
+        business_impact_score=(
+                F('impactSafety') +
+                F('impactDanger') +
+                F('impactProduction') +
+                F('impactFinance') +
+                F('impactReputation') +
+                F('impactEnvironment') +
+                F('impactRegulation') +
+                F('impactData') +
+                F('impactSupply')
+        )
+    ).order_by('-business_impact_score')[:10]
+
+    # Format the top scenarios for easy parsing on the client side
+    top_scenarios_data = list(top_scenarios.values('Scenario', 'business_impact_score'))
+
+    # Query to get CyberPHA records and sum of ale_median for each
+    user_profile = UserProfile.objects.get(user=request.user)
+    cyberpha_records = (
+        tblCyberPHAHeader.objects.filter(
+            UserID__in=UserProfile.objects.filter(organization_id=organization_id).values_list('user_id', flat=True)
+        )
+        .filter(~Q(title='') & Q(title__isnull=False))
+        .annotate(total_ale_median=Sum('tblcyberphascenario__ale_median'))
+        .values('ID', 'title', 'total_ale_median')
+    )
+
+    cyberpha_records_list = [
+        {'ID': record['ID'], 'title': record['title'], 'total_ale_median': format_currency(record['total_ale_median'])}
+        for record in cyberpha_records if record['title'].strip()
+    ]
+
+    # Query to get Facility records
+    facility_records = Facility.objects.filter(
+        organization=organization_id
+    ).values('id', 'name', 'address', 'pha_score')
+
+    # Fetch active users in the same organization
+    active_users = User.objects.filter(
+        userprofile__organization_id=organization_id,
+        is_active=True
+    ).values('first_name', 'last_name', 'username', 'email', 'last_login')
+
+    # Format last_login
+    for user in active_users:
+        if user['last_login']:
+            user['last_login'] = DateFormat(user['last_login']).format('m/d/Y H:i')
+
+    organization_users = get_organization_users(organization_id)
+    groups_with_cyberphas = []
+    for group in CyberPHA_Group.objects.all():
+        cyberphas = group.tblcyberphaheader_set.filter(UserID__in=organization_users)
+
+        # Only append the group if it has associated tblCyberPHAHeader records within the organization
+        if cyberphas.exists():
+            groups_with_cyberphas.append({
+                'id': group.id,
+                'group_name': group.name,
+                'cyberphas': [{'facility_name': cyberpha.FacilityName} for cyberpha in cyberphas]
+            })
+
     context = {
         'num_facilities': num_facilities,
         'total_revenue': total_revenue,
@@ -689,7 +763,12 @@ def anzenot_dashboard(request):
         'facilities_data': facilities_data,
         'bia_summary_data': json.dumps(bia_summary_data),
         'total_cyberphas': total_cyberphas,
-        'open_assessments': open_assessments
+        'open_assessments': open_assessments,
+        'top_scenarios_data': json.dumps(top_scenarios_data),
+        'cyberpha_records': list(cyberpha_records_list),
+        'facility_records': list(facility_records),
+        'active_users': list(active_users),
+        'groups_with_cyberphas': groups_with_cyberphas
     }
 
     return render(request, 'anzenot_dashboard.html', context)

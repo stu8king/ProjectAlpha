@@ -147,6 +147,7 @@ class UserProfile(models.Model):
     failed_login_attempts = models.IntegerField(null=True, default=0)
     max_scenario_count = models.IntegerField(default=10)  # Default or set via admin/site setup
     current_scenario_count = models.IntegerField(default=0)  # Keep track of the current count
+    otp_secret = models.CharField(max_length=16, blank=True, null=True)
 
     class Meta:
         db_table = 'userprofile'

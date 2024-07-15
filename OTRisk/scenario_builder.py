@@ -22,7 +22,6 @@ from requests import RequestException
 import OTRisk.forms
 from OTRisk.models.RiskScenario import RiskScenario
 from OTRisk.models.Model_Scenario import tblConsequence
-from OTRisk.models.questionnairemodel import Questionnaire, FacilityType
 from OTRisk.models.ThreatAssessment import ThreatAssessment
 from OTRisk.models.raw import RAWorksheet, RAWorksheetScenario, RAActions, MitreICSMitigations, RawControlList, \
     QRAW_Safeguard
@@ -41,7 +40,7 @@ from OTRisk.models.Model_CyberPHA import tblCyberPHAHeader, tblRiskCategories, \
     tblNodes, tblUnits, tblZones, tblCyberPHAScenario, tblIndustry, auditlog, tblStandards, MitreControlAssessment, \
     CyberPHAScenario_snapshot, Audit, PHAControlList, SECURITY_LEVELS, OrganizationDefaults, scenario_compliance, \
     ScenarioConsequences, APIKey, ScenarioBuilder, PHA_Safeguard, OpenAIAPILog, CybersecurityDefaults, \
-    user_scenario_audit, OTVendor
+    user_scenario_audit, OTVendor, FacilityType
 from django.shortcuts import render, redirect
 
 from .dashboard_views import get_user_organization_id, get_scenarios_for_regulation

@@ -13,9 +13,8 @@ from matplotlib import pyplot as plt
 from OTRisk.models.raw import RAWorksheet, RAWorksheetScenario, RAActions, MitreICSMitigations, MitreICSTechniques, \
     RawControlList, WorksheetActivity, QRAW_Safeguard
 from django.contrib.auth.decorators import login_required
-from OTRisk.models.questionnairemodel import FacilityType
 from OTRisk.models.Model_CyberPHA import tblIndustry, tblThreatSources, auditlog, tblScenarios, tblCyberPHAHeader, \
-    OrganizationDefaults, user_scenario_audit, ScenarioBuilder_AnalysisResult
+    OrganizationDefaults, user_scenario_audit, ScenarioBuilder_AnalysisResult, FacilityType
 from OTRisk.models.Model_Mitre import MitreICSTactics
 from accounts.models import Organization, UserProfile
 from django.shortcuts import render, redirect

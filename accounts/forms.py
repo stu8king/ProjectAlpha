@@ -10,6 +10,25 @@ from django import forms
 from .models import SubscriptionType
 
 
+class AuthAppVerifyForm(forms.Form):
+    otp_code = forms.CharField(
+        max_length=6,
+        required=True,
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Enter authentication code'
+        })
+    )
+
+
+class TwoFactorSetupForm(forms.Form):
+    phone_number = forms.CharField(max_length=15, required=True)
+
+
+class AuthAppSetupForm(forms.Form):
+    otp_code = forms.CharField(max_length=6, required=True)
+
+
 class Verify2FAForm(forms.Form):
     code = forms.CharField(label="Enter 2FA Code", max_length=6,
                            widget=forms.TextInput(attrs={'placeholder': '6-digit code'}))
@@ -23,7 +42,6 @@ class TwoFactorSetupForm(forms.Form):
 
 class TwoFactorVerifyForm(forms.Form):
     token = forms.CharField(required=True, label="Verification Code", max_length=6)
-
 
 
 class PasswordResetRequestForm(forms.Form):

@@ -103,3 +103,8 @@ def start_index(value, arg):
 @register.filter
 def end_index(value, arg):
     return (value + 1) * arg
+
+
+@register.filter(name='add_class')
+def add_class(field, css):
+    return field.as_widget(attrs={"class": css})

@@ -46,152 +46,383 @@
     {% load django_bootstrap5 %}
     {% bootstrap_css %}
     {% bootstrap_javascript %}
-    <link rel="stylesheet" type="text/css" href="{% static 'css/otriskstyle.css' %}">
+
+       <link rel="stylesheet" type="text/css" href="{% static 'css/info_block.css' %}">
 <style>
-/* Updated styles for blocks */
-.info-block {
-    background-color: #313136; /* Color-blind friendly color */
-    color: #fff;
-    padding: 0;
-    border-radius: 8px;
-    margin-bottom: 20px;
+        #map {
+            height: 400px;
+            width: 100%;
+        }
+
+        #investmentTable {
+            font-size: 0.8em;
+            transform: scale(0.95);
+            transform-origin: top left;
+            margin: auto;
+            margin-bottom: 0; /* Remove any bottom margin from the table */
+        }
+
+        #facilitiesTable {
+            font-size: 0.6em;
+            transform: scale(0.95);
+            transform-origin: top left;
+            margin: auto;
+            margin-bottom: 0; /* Remove any bottom margin from the table */
+        }
+        #facilitiesTable tbody tr {
+            background-color: white;
+            color: black;
+            cursor: pointer;
+        }
+        #facilitiesTable tbody tr:hover {
+            background-color: #f0f0f0;
+        }
+        #facilitiesTable tbody tr td button {
+            cursor: default;
+        }
+        .hidden {
+            display: none;
+        }
+        .btn-danger {
+            transform: scale(0.75);
+        }
+        .form-control[readonly] {
+            background-color: #e9ecef;
+            opacity: 1;
+        }
+body {
+        background-color: #464748;
+        color: #d3d1cd;
+    }
+.icon-text img {
+    vertical-align: middle;
+    height: 1em; /* This will make the image the same height as the text */
+}
+@media (max-width: 480px) {
+    .nav-sidebar .nav-link img {
+        width: 2em; /* Even larger icons */
+        height: 2em; /* Even larger icons */
+    }
+
+    .nav-sidebar .nav-link {
+        font-size: 1.2rem; /* Even larger text */
+    }
+}
+/* Larger icons for tablets */
+@media (min-width: 768px) {
+    .nav-sidebar .nav-link img {
+    width: 1.5em;
+    height: 1.5em;
+    }
+    .nav-sidebar .nav-link {
+        font-size: 0.8rem; /* Larger text */
+    }
+    .modal-lg {
+    max-width: 90%; /* Adjust based on preference */
+  }
+}
+@media (min-width: 992px) {
+    .nav-sidebar .nav-link img {
+        width: 1.5em;
+        height: 1.5em;
+    }
+    .nav-sidebar .nav-link {
+        font-size: 0.8rem; /* Larger text */
+    }
+    .custom-main-content {
+        width: calc(100% - 200px);
+        max-width: calc(90vw - 200px);
+        margin-left: 10vw; /* Adjusted margin to accommodate sidebar */
+    }
+}
+.sidebar {
+    display: flex;
+    height: 100vh;
+    background-color: #2D2E30; /* Darker shade for sidebar */
+    padding: 1vw;
+    width: 10vw; /* Sidebar width */
+}
+
+.sidebar-logo {
+    padding: 1vw;
     text-align: center;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+.nav-sidebar {
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
-    position: relative;
+    padding-left: 0;
+    list-style: none;
+}
+.nav-sidebar .nav-item {
+    padding: 0.1vw;
+    /* border-bottom: 1px solid  #fac330; /* Light orange line */
+    margin: 0 10%;
+    gap: 1rem;
+}
+.nav-sidebar .nav-link {
+    color: #d3d1cd;
+    border-radius: 0;
+    transition: color 0.3s ease-in-out;
+    font-size: 0.7rem;
+}
+.nav-sidebar .nav-link:hover, .nav-sidebar .nav-link.active {
+    background-color: #3A5F5F;
+    color: #E0E0E0;
+}
+.custom-main-content {
+    width: calc(100% - 200px); /* Adjust width calculation */
+    max-width: calc(90vw - 200px);
+    margin-left: 10vw; /* Change from margin-left: 200px; to margin-left: 10vw; */
 }
 
-.info-block .block-header, .info-block .block-footer {
-    background-color: #7cbbd9; /* Color-blind friendly orange */
-    color: #000;
-    padding: 10px;
-    font-weight: bold;
-    display: flex;
-    align-items: center; /* Center align the icon and text vertically */
+
+@media (min-width: 992px) { /* Adjusting for Bootstrap's large devices breakpoint */
+    .custom-main-content {
+        width: 100%;
+
+        margin-left: 4vw;
+    }
+}
+.custom-main-content {
+    width: calc(100% - 200px); /* Adjust width calculation */
+    max-width: calc(90vw - 200px);
+    margin-left: 1vw; /* Change from margin-left: 200px; to margin-left: 10vw; */
 }
 
-.info-block .block-header img {
-    margin-right: 10px; /* Space between icon and text */
-    width: 24px; /* Adjust icon size as needed */
-    height: 24px;
-}
+        .scale-down {
+            transform: scale(0.95);
+            transform-origin: top left;
+        }
 
-.info-block .block-header {
-            background-color: #7cbbd9;
-            color: #000;
-            padding: 10px;
-            font-weight: bold;
+        .flex-row {
             display: flex;
-            align-items: center;
-            justify-content: space-between;
-            cursor: move; /* Change cursor to indicate draggable */
+            flex-wrap: wrap;
+            gap: 20px;
         }
-.info-block .block-header img {
-    margin-left: 10px;
-    width: 24px;
-    height: 24px;
-}
-.info-block .block-body {
-    font-size: 0.9rem;
-    padding: 20px;
-    text-align: left;
-    flex-grow: 1;
-    display: none; /* Initially hidden */
-}
-.block-header button {
-    background: none;
-    border: none;
-    font-size: 1.2em;
-    cursor: pointer;
-    color: #000;
-}
-.flex-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
-}
-.flex-col {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-}
 
-.chart-container {
-    width: 49%; /* Ensure both charts have the same width */
-    height: 250px; /* Increase height to fill more of the container */
-    margin-top: 20px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-}
-
-.chart-title {
-    font-size: 5pt; /* Same size as the legend font */
-    color: #ffffff; /* White color for the titles */
-    text-align: center; /* Center align the titles */
-    margin-bottom: 10px; /* Space between the title and the chart */
-}
-
-
-.flex-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
-}
-
-.flex-col {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-}
-/* Styles for the info table */
-.info-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.9rem;
-    margin: 0 auto; /* Center align the table within its container */
-}
-
-.info-table td {
-    padding: 5px 10px; /* Add padding to create a gap between columns */
-    border: none; /* Remove borders */
-}
-
-.left-column {
-    text-align: right; /* Right align text in the left column */
-    padding-right: 10px;
-}
-
-.right-column {
-    text-align: left; /* Left align text in the right column */
-    padding-left: 10px;
-}
-
-.row {
-    display: flex;
-    flex-wrap: wrap;
-}
-
-.col-md-4 {
-    display: flex;
-    flex: 1;
-    margin-bottom: 20px;
-}
-
-.info-block {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-}
-.btn {
-            font-size: 0.8em; /* Set font size for buttons */
+        .flex-col {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
         }
-        .highlight {
-            background-color: #d3f9d8 !important;
+
+        .pagination-container {
+            text-align: center;
+            margin-top: 10px;
         }
-</style>
+
+        .pagination-container a {
+            margin: 0 5px;
+            text-decoration: none;
+            color: #007bff;
+        }
+
+        .pagination-container a:hover {
+            text-decoration: underline;
+        }
+
+        .form-group label {
+            font-size: 0.8em; /* Set font size for labels */
+        }
+        .form-group .row {
+            margin-bottom: 10px;
+        }
+        .form-group .row .col-md-6,
+        .form-group .row .col-md-4 {
+            padding: 0 5px;
+        }
+        .form-group .row .col-md-4 .form-control,
+        .form-group .row .col-md-6 .form-control {
+            height: calc(1.15em + 0.75rem + 2px); /* Adjust height for input controls */
+        }
+
+.top-strip {
+    background-color: #464748; /* Same as body background for seamless integration */
+    color: #d3d1cd; /* Text color */
+    padding: 10px 20px; /* Adjust as needed */
+    padding-left: 100px; /* Align with the end of the sidebar */
+    width: calc(100% - 200px); /* Adjust based on the actual sidebar width */
+    box-sizing: border-box;
+}
+
+@media (max-width: 992px) {
+    .top-strip {
+        padding-left: 0;
+        width: 100%;
+    }
+     .sub-menu {
+        left: 0;
+        width: 100px; /* Adjust for smaller screens */
+    }
+
+    .custom-main-content {
+        margin-left: 4vw;
+    }
+}
+.top-strip .btn {
+    margin-right: 10px; /* Spacing between buttons */
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 3rem;
+  height: 1.4rem;
+}
+.switch-container {
+  text-align: center;
+  margin-bottom: 15px;
+}
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: .4s;
+  border-radius: 1rem;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 1rem;
+  width: 1rem;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: #2196F3;
+}
+
+input:checked + .slider:before {
+  transform: translateX(26px);
+}
+
+/* Show/Hide label */
+.switch-label {
+  display: block;
+  margin-left:5px;
+  font-size: 10px;
+  color: #fff;
+}
+
+.sub-menu {
+    position: fixed; /* Fixed position to stay in view */
+    top: 0; /* Align with the top of the viewport */
+    left: 10vw; /* Position the sub-menu right next to the sidebar */
+    width: 5vw; /* Width of the sub-menu */
+    height: 100vh; /* Full viewport height */
+    /* background-color: #333; /* Sub-menu background color */
+    color: #fff; /* Text color */
+    padding: 0.5vw ; /* Padding */
+    box-sizing: border-box; /* Include padding in width calculation */
+    font-size: 0.8rem;
+}
+.sub-menu ul {
+    list-style: none; /* Remove default list styling */
+    padding: 0; /* Remove default padding */
+    margin: 0; /* Remove default margin */
+}
+
+.sub-menu li a {
+    color: #d3d1cd; /* Link color */
+    text-decoration: none; /* Remove underline */
+    display: block; /* Make the links fill the container */
+    padding: 10px 0; /* Padding for touch targets */
+    transition: background-color 0.3s; /* Smooth transition for hover effect */
+}
+.sub-menu li a:hover, .sub-menu li a.active {
+    background-color: #57595b; /* Hover/active background color */
+}
+/* Add this CSS to your stylesheet */
+.autocomplete-container {
+    position: relative; /* Ensure z-index works */
+    z-index: 1000; /* Higher than other elements */
+}
+.pac-container {
+    z-index: 1050 !important; /* Ensure the autocomplete dropdown is above other elements */
+}
+
+.search-result {
+        cursor: pointer;
+    }
+ .currency {
+            font-weight: bold;
+            font-size: 1.2em;
+            color: #4CAF50; /* Highlight color for currency values */
+        }
+        table.dataTable thead th {
+            color: #ffffff;
+        }
+        table.dataTable tbody td {
+            color: #000B1D;
+        }
+        table.dataTable {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table.dataTable thead th,
+        table.dataTable tbody td {
+            padding: 8px;
+            text-align: left;
+        }
+
+
+        table.dataTable tbody tr.selected {
+            background-color: #4CAF50 !important;
+            color: #ffffff;
+        }
+           .dataTables_wrapper .dataTables_paginate .paginate_button {
+            color: #d3d1cd !important;
+            background-color: #333333 !important;
+        }
+        .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+            color: #ffffff !important;
+            background-color: #565656 !important;
+        }
+.cyberpha-item {
+    display: flex;
+    align-items: center; /* Centers items vertically */
+    margin-bottom: 5px; /* Adds space between items */
+}
+
+.cube-icon {
+    margin-right: 5px; /* Space between icon and text */
+}
+.group-container {
+    background: #6c757d; /* Light grey background, can be changed */
+    border: 1px solid #ccc; /* Add a subtle border */
+    margin: 8px;
+    flex-grow: 1; /* Allows the container to grow to fill the column if needed */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* Distributes space evenly */
+    height: 100%; /* Full height of the parent column */
+}
+
+.group-header, .group-body {
+    padding: 10px;
+    font-size: 1em;
+}
+
+.group-body {
+    overflow-y: auto; /* Adds scroll to the body if content exceeds the container height */
+    flex-grow: 1; /* Allows the body to grow and take up available space */
+}
+    </style>
 </head>
 <body style="background-color: #464748">
 <script>
@@ -202,37 +433,95 @@
 <div class="container-fluid">
     <div class="row">
         {% include 'menu_bar.html' %}
-        <!-- Main content area, including sub-menu and tabs -->
-        <div class="col-md-9 col-lg-10">
-            <!-- Top Strip -->
-            <div class="top-strip">
-                <div class="row">
-                    <div class="col-md-2"></div>
-                    <div class="col-md-7">
-                        <h1 class="page-title">Dashboard New@AnzenOT</h1>
+        <main role="main" class="col-md-10 ml-sm-auto col-lg-12 custom-main-content">
+        <br>
+        <div class="row">
+                <div class="col-md-2">
+                    <div class="top-strip">
+                     </div>
+
+                </div>
+                <div class="col-md-10"></div>
+                <div class="sub-menu sub-menu-container small-font">
+                  <br><br><br><br><br><br><br><br><br><br>
+                    <div id="block_selector">
+                     <a href="#" id="organizeBlocks"  style="display: block; color: white; margin-top: 10px; align-self: center">Organize</a>
+             <br>
+                    <div class="switch-container">
+                        <span class="switch-label">Facilities</span>
+                        <label class="switch">
+                            <input type="checkbox" data-block-id="facilities" checked>
+                            <span class="slider"></span>
+                        </label>
                     </div>
-                    <div class="col-md-3"></div>
+                    <div class="switch-container">
+                        <span class="switch-label">CyberPHAs</span>
+                        <label class="switch">
+                            <input type="checkbox" data-block-id="phasummary" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                     <div class="switch-container">
+                        <span class="switch-label">Groups</span>
+                        <label class="switch">
+                            <input type="checkbox" data-block-id="facilitygroups" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="switch-container">
+                        <span class="switch-label">Locations</span>
+                        <label class="switch">
+                            <input type="checkbox" data-block-id="locations" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="switch-container">
+                        <span class="switch-label">Scenarios</span>
+                        <label class="switch">
+                            <input type="checkbox" data-block-id="risks" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="switch-container">
+                        <span class="switch-label">Users</span>
+                        <label class="switch">
+                            <input type="checkbox" data-block-id="users" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+    </div>
                 </div>
             </div>
-            <br><br>
-            <div class="custom-main-content">
-                <div class="flex-row">
-                    <div class="col-md-4 flex-col">
-                        <div class="info-block">
-                            <div class="block-header">
-                                <img src="{% static 'images/icon_facility_dashboard.png' %}" alt="Statistics Icon"> Facilities
-                                 <button class="toggle-body">+</button>
-                            </div>
-                            <div class="block-body">
-                                <table class="info-table">
+        <div class="row">
+           <div class="col-md-4">
+                <label id="lblCyberPHATitle" style="font-size: 18px;  color:#fff">Dashboard@AnzenOT</label>
+            </div>
+             <div class="col-md-4">
+                <input type="text" id="searchBox" placeholder="Search..." style="width: 100%; padding: 8px;">
+                <div id="searchResults" style=" color: #f0f0f0; padding: 10px; margin-top: 5px; max-height: 300px; overflow-y: auto;"></div>
+            </div>
+            <div class="col-md-4"></div>
+        </div>
+        <br>
+        <div class="custom-main-content">
+            <div id="block_container" >
+                    <div class="row" id="block_rows">
+                        <div class="col-md-6" id="block_row_left">
+                            <div class="flex-row">
+                                <div class="col-md-12 flex-col" id="block1">
+                                    <div class="info-block" id="facilities">
+                                        <div class="block-header">
+                                            <img src="{% static 'images/dashboard1.png' %}" alt="Statistics Icon"> Facilities
+                                            <button class="toggle-body">+</button>
+                                        </div>
+                                        <div class="block-body">
+                                        <div class="block-body-content" >
+                                            <table class="info-table">
                                     <tr>
                                         <td class="left-column">Number of Facilities:</td>
                                         <td class="right-column">{{ num_facilities }}</td>
                                     </tr>
-                                    <tr>
-                                        <td class="left-column">Total Revenue:</td>
-                                        <td class="right-column">${{ total_revenue|intcomma|default:"0" }}</td>
-                                    </tr>
+
                                     <tr>
                                         <td class="left-column">Unique Industries:</td>
                                         <td class="right-column">{{ unique_industries }}</td>
@@ -241,188 +530,305 @@
                                         <td class="left-column">Unique Facility Types:</td>
                                         <td class="right-column">{{ unique_facility_types }}</td>
                                     </tr>
-                                    <tr>
-                                        <td class="left-column">Average PHA Score:</td>
-                                        <td class="right-column">{{ avg_pha_score|floatformat:2 }}</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="left-column">Av. Control Effectiveness:</td>
-                                        <td class="right-column">{{ avg_last_assessment_score|floatformat:2 }}</td>
-                                    </tr>
-                                </table>
-
-                            </div>
-
-                        </div>
-                    </div>
-                    <div class="col-md-4 flex-col">
-                        <div class="info-block">
-                            <div class="block-header">
-                                <img src="{% static 'images/globe1.png' %}" alt="Statistics Icon"> Locations
-                                <button class="toggle-body">+</button>
-                            </div>
-                            <div class="block-body"><div id="facility-map" style="height: 30vh;"></div></div>
-
-                        </div>
-                    </div>
-                   <div class="col-md-4 flex-col">
-                        <div class="info-block">
-                            <div class="block-header">
-                                CyberPHA Summary
-                                <button class="toggle-body">+</button>
-                            </div>
-                            <div class="block-body">
-                                <table class="info-table">
-                                    <tr>
-                                        <td class="left-column">Total Assessments:</td>
-                                        <td class="right-column">{{ total_cyberphas }}</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="left-column">Open Assessments:</td>
-                                        <td class="right-column">{{ open_assessments }}</td>
-                                    </tr>
 
                                 </table>
                                 <br>
+                                <div class="row" style="width: 95%">
+                                    <div class="col">
+                                        <table id="facilityTable" class="display" style="width:100%">
+                                    <thead>
+                                        <tr>
+                                            <th>Name</th>
+                                            <th>Address</th>
+                                            <th>PHA Score</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for facility in facility_records %}
+                                            <tr class="selectable-row" data-id="{{ facility.id }}">
+                                                <td>{{ facility.name }}</td>
+                                                <td>{{ facility.address }}</td>
+                                                <td class="currency">
+                                                    <div style="font-weight: bold; font-size: 1.2em; color: #f0f0f0;">
+                                                        {{ facility.pha_score }}
+                                                    </div>
+                                                    <div class="progress" style="height: 20px; background-color: #444;">
+                                                        <div class="progress-bar" role="progressbar" style="width: {{ facility.pha_score }}%; background-color:
+                                                            {% if facility.pha_score <= 30 %}
+                                                                #66c2a5  /* Green */
+                                                            {% elif facility.pha_score <= 70 %}
+                                                                #fc8d62  /* Orange */
+                                                            {% else %}
+                                                                #8da0cb  /* Purple */
+                                                            {% endif %}
+                                                            " aria-valuenow="{{ facility.pha_score }}" aria-valuemin="0" aria-valuemax="100">
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                                        <script>
+                                            $(document).ready(function() {
 
-                                <div id="bia_pie_chart" style="height: 30vh;"></div>
+
+                                                $('#facilityTable').DataTable({
+                                                    "paging": true,
+                                                    "pageLength": 10,
+                                                    "lengthChange": false,
+                                                    "info": false,
+                                                    "searching": false
+                                                });
+
+                                                $('#facilityTable tbody').on('click', 'tr', function () {
+                                                    var facilityId = $(this).data('id');
+                                                    window.location.href = `/OTRisk/facility/?facility_id=${facilityId}`;
+                                                });
+                                            });
+                                        </script>
+                                    </div>
+                                </div>
+                                        </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
+                            <div class="flex-row">
+                                <div class="col-md-12 flex-col" id="block2">
+                                    <div class="info-block" id="phasummary">
+                                        <div class="block-header">
+                                            <img src="{% static 'images/dashboard3.png' %}" alt="Statistics Icon"> CyberPHA Summary
+                                            <button class="toggle-body">+</button>
+                                        </div>
+                                        <div class="block-body">
+                                            <div class="block-body-content">
+                                            <table class="info-table">
+                                                <tr>
+                                                    <td class="left-column">Total Assessments:</td>
+                                                    <td class="right-column">{{ total_cyberphas }}</td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="left-column">Open Assessments:</td>
+                                                    <td class="right-column">{{ open_assessments }}</td>
+                                                </tr>
+
+                                                </table>
+                                            <br>
+                                                <div class="row" style="width:95%">
+                                                <div class="col">
+                                                 <table id="cyberphaTable" class="display" style="width:100%">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Title</th>
+                                                        <th>Total ALE Median</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for record in cyberpha_records %}
+                                                        <tr class="selectable-row" data-id="{{ record.ID }}">
+                                                            <td>{{ record.title }}</td>
+                                                            <td class="currency">{{ record.total_ale_median }}</td>
+                                                        </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                                     <script>
+                                                        $(document).ready(function() {
+                                                            $('#cyberphaTable').DataTable({
+                                                                "paging": true,
+                                                                "pageLength": 10,
+                                                                "lengthChange": false,
+                                                                "info": false,
+                                                                "searching": false
+                                                            });
+
+                                                            $('#cyberphaTable tbody').on('click', 'tr', function () {
+                                                                var recordId = $(this).data('id');
+                                                                window.location.href = `/OTRisk/iotaphamanager/${recordId}/`;
+                                                            });
+
+                                                            $('#cyberphaTable tbody').on('mouseenter', 'tr', function () {
+                                                                $(this).addClass('hovered');
+                                                            });
+
+                                                            $('#cyberphaTable tbody').on('mouseleave', 'tr', function () {
+                                                                $(this).removeClass('hovered');
+                                                            });
+                                                        });
+                                                    </script>
+                                                </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="flex-row">
+                                <div class="col-md-12 flex-col" id="block3">
+                                    <div class="info-block" id="facilitygroups">
+                                        <div class="block-header">
+                                            <img src="{% static 'images/dashboard5.png' %}" alt="Statistics Icon"> Groups
+                                            <button class="toggle-body">+</button>
+                                        </div>
+                                        <div class="block-body">
+                                            <div class="block-body-content">
+                                                <div class="row" style="width:95%">
+    <div class="col">
+        {% if groups_with_cyberphas %}
+            {% for group in groups_with_cyberphas %}
+                {% if forloop.first %}
+                    <div class="row mb-2">
+                {% endif %}
+                <div class="col-md-4">
+                    <div class="group-container" data-group-id="{{ group.id }}" onclick="getGroupReport(this.getAttribute('data-group-id'))">
+                        <div class="group-header">
+                            {{ group.group_name }}
                         </div>
-</div>
-
-    <script>
-        anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
-
-        document.addEventListener('DOMContentLoaded', function() {
-            var biaSummaryData = JSON.parse('{{ bia_summary_data|escapejs }}');
-            renderBiaPieChart(biaSummaryData.pie_chart_data);
-        });
-
-        function renderBiaPieChart(categoryData) {
-            var colorMapping = {
-                "Low": "#008000",        // Green
-                "Low/Medium": "#00FF00", // Light Green
-                "Medium": "#FFD500",     // Yellow
-                "Medium/High": "#FF9100",// Orange
-                "High": "#b42121",       // Red
-                "Very High": "#8B0000"   // Dark Red
-            };
-
-            var chartData = [];
-            categoryData.forEach(function(category) {
-                chartData.push({ x: category.category, value: category.count, fill: colorMapping[category.category] });
-            });
-
-            anychart.onDocumentReady(function() {
-                var chart = anychart.pie(chartData);
-
-                chart.innerRadius("80%");
-                chart.container("bia_pie_chart");
-                chart.bounds("0%", "0%", "115%", "115%");
-                chart.labels()
-                    .position("outside")
-                    .fontSize("8pt")
-                    .fontColor("#ffffff")
-                    .format("{%x}");
-                chart.legend(false);
-                chart.title('Business Impact Assessment');
-                chart.credits().enabled(false);
-
-                var containerBackgroundColor = window.getComputedStyle(document.getElementById('bia_pie_chart')).backgroundColor;
-                chart.background().fill(containerBackgroundColor || "transparent");
-
-                chart.labels()
-                    .useHtml(true)
-                    .position("outside")
-                    .anchor('center')
-                    .format(function() {
-                        return `<span style="color: ${this.fill};">${this.x}</span>`;
-                    })
-                    .connectorStroke({
-                        color: "black",
-                        thickness: 1,
-                        dash: "2 2"
-                    })
-                    .hAlign('center')
-                    .vAlign('middle');
-
-                chart.draw();
-            });
-        }
-    </script>
-
-
+                        <div class="group-body">
+                            {% for cyberpha in group.cyberphas %}
+                                <div class="cyberpha-item">
+                                    <span class="facility-name">{{ cyberpha.facility_name }}</span>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
                 </div>
-                <div class="flex-row">
-                    <div class="col-md-4 flex-col">
-                        <div class="info-block">
-                            <div class="block-header">
-                                Block 4
-                                <button class="toggle-body">+</button>
-                            </div>
-                            <div class="block-body">Main Content</div>
-
-                        </div>
+                {% if forloop.counter|divisibleby:3 and not forloop.last %}
+                    </div><div class="row mb-2">
+                {% elif forloop.last %}
                     </div>
-                    <div class="col-md-4 flex-col">
-                        <div class="info-block">
-                            <div class="block-header">
-                                Block 5
-                                <button class="toggle-body">+</button>
-                            </div>
-                            <div class="block-body">Main Content</div>
-
-                        </div>
-                    </div>
-                    <div class="col-md-4 flex-col">
-                        <div class="info-block">
-                            <div class="block-header">
-                                Block 6
-                                <button class="toggle-body">+</button>
-                            </div>
-                            <div class="block-body">Main Content</div>
-
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+                {% endif %}
+            {% endfor %}
+        {% else %}
+            <p>No groups found.</p>
+        {% endif %}
     </div>
 </div>
+
+
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                            <div class="col-md-6" id="block_row_left">
+                            <div class="flex-row">
+                                <div class="col-md-12 flex-col" id="block2">
+                                    <div class="info-block" id="locations">
+                                        <div class="block-header">
+                                            <img src="{% static 'images/dashboard2.png' %}" alt="Statistics Icon"> Locations
+                                            <button class="toggle-body">+</button>
+                                        </div>
+                                        <div class="block-body">
+                                        <div class="block-body-content">
+                                            <div class="row" style="width:95%">
+                                                <div class="col">
+                                                    <div id="facility-map" style="height: 30vh;"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex-row">
+                                <div class="col-md-12 flex-col" id="block4">
+                                    <div class="info-block" id="risks">
+                                        <div class="block-header">
+                                            <img src="{% static 'images/dashboard4.png' %}" alt="Statistics Icon"> Business Impact
+                                            <button class="toggle-body">+</button>
+                                        </div>
+                                        <div class="block-body">
+                                        <div class="block-body-content">
+                                            <div class="row" style="width:95%">
+                                                <div class="col">
+                                                    <table class="table table-striped" style="color: #f0f0f0; ">
+                                                        <thead>
+                                                            <tr style="color: #ffffff;">
+                                                                <th scope="col">#</th>
+                                                                <th scope="col" style="width:70%">Scenario</th>
+                                                                <th scope="col">BIA Score</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody id="top-scenarios-table-body">
+                                                            <!-- Table rows will be inserted here by JavaScript -->
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                        </div>
+                                        <div class="flex-row">
+                                             <div class="col-md-12 flex-col" id="block6">
+                                    <div class="info-block" id="users">
+                                        <div class="block-header">
+                                            <img src="{% static 'images/dashboard6.png' %}" alt="Statistics Icon"> Users
+                                            <button class="toggle-body">+</button>
+                                        </div>
+                                        <div class="block-body">
+                                        <div class="block-body-content">
+                                            <div class="row" style="width:95%">
+                                            <div class="col">
+                                            <div class="usertable">
+
+                                                <div class="usertable">
+                                                    <table id="userTable" class="display" style="width:100%">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>First Name</th>
+                                                                <th>Last Name</th>
+                                                                <th>Username</th>
+                                                                <th>Email</th>
+                                                                <th>Last Login</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            {% for user in active_users %}
+                                                                <tr>
+                                                                    <td>{{ user.first_name }}</td>
+                                                                    <td>{{ user.last_name }}</td>
+                                                                    <td>{{ user.username }}</td>
+                                                                    <td>{{ user.email }}</td>
+                                                                    <td>{{ user.last_login }}</td>
+                                                                </tr>
+                                                            {% endfor %}
+                                                        </tbody>
+                                                    </table>
+                                                    </div>
+
+                                                    <script>
+                                                        $(document).ready(function() {
+                                                            $('#userTable').DataTable({
+                                                                "paging": true,
+                                                                "pageLength": 10,
+                                                                "lengthChange": false,
+                                                                "info": false,
+                                                                "searching": false,
+                                                                "order": [[4, 'desc']] // Order by last login date descending
+                                                            });
+                                                        });
+                                                    </script>
+                                            </div>
+                                            </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+        </div>
+
 <script>
-    var zIndexCounter = 1000;
-    var facilityMap; // Declare the map variable
-
-    $(document).ready(function() {
-        // Make info-blocks draggable
-        $(".info-block").draggable({
-            handle: ".block-header",
-            start: function(event, ui) {
-                // Bring the dragged element to the front
-                $(this).css('z-index', ++zIndexCounter);
-            }
-        });
-
-        // Toggle block-body visibility
-        $(".toggle-body").on('click', function() {
-            var blockBody = $(this).closest(".info-block").find(".block-body");
-            blockBody.toggle();
-            $(this).text(blockBody.is(":visible") ? "-" : "+");
-
-            if (blockBody.is(":visible")) {
-                $(this).closest(".info-block").css('z-index', ++zIndexCounter);
-
-                if ($(this).closest(".info-block").find('#facility-map').length) {
-                    setTimeout(function () {
-                        if (facilityMap) {
-                            facilityMap.invalidateSize();
-                        }
-                    }, 200);
-                }
-            }
-        });
-
-    });
+ var facilityMap; // Declare the map variable
 
     document.addEventListener('DOMContentLoaded', function() {
 
@@ -445,6 +851,7 @@
                 const lat = facility.fields.lat;
                 const lon = facility.fields.lon;
                 const name = facility.fields.name;
+                const id = facility.pk;
 
                 if (lat && lon) {
                     var icon = new L.Icon({
@@ -455,19 +862,19 @@
                         shadowSize: [20.5, 20.5]
                     });
 
-                    var marker = L.marker([lat, lon], {
+                     var marker = L.marker([lat, lon], {
                         icon: icon,
                         title: name // Tooltip text that appears on hover
                     }).addTo(facilityMap);
 
-                    // Bind the popup with facility name and coordinates
-                    marker.bindPopup(`<b>${name} </b><br>Coordinates: ${lat}, ${lon}`);
-
-                    // Click event to redirect to a detailed page
+                    // Add click event to open the facility page
                     marker.on('click', function() {
-                        var url = `/OTRisk/pha_reports/${facility.pk}/`;
-                        window.location.href = url;
+                        window.location.href = `/facility/${id}/`;
                     });
+
+                    // Optional: Bind the popup with facility name and coordinates
+                    marker.bindPopup(`<b>${name}</b><br>Coordinates: ${lat}, ${lon}`);
+
                 }
             });
 
@@ -476,11 +883,132 @@
             facilityMap.fitBounds(group.getBounds());
         };
 
+        function refreshMap() {
+            setTimeout(function() {
+                if (facilityMap) {
+                    facilityMap.invalidateSize();
+                }
+            }, 300);
+        }
+
+        document.querySelector('.toggle-body').addEventListener('click', function() {
+            var blockBody = document.querySelector('.block-body');
+            if (blockBody.style.display === 'none') {
+                blockBody.style.display = 'block';
+                if (!facilityMap) {
+                    initMap();
+                }
+                refreshMap();
+            } else {
+                blockBody.style.display = 'none';
+            }
+        });
+
+        // Refresh map on window resize
+        window.addEventListener('resize', refreshMap);
+
+        // Initialize the map on page load
         window.onload = function() {
             initMap();
         };
     });
+
+
+
+
+    document.addEventListener("DOMContentLoaded", function() {
+        const topScenariosData = {{ top_scenarios_data|safe }};
+        const tableBody = document.getElementById("top-scenarios-table-body");
+
+        topScenariosData.forEach((scenario, index) => {
+            const row = document.createElement("tr");
+
+            const cellIndex = document.createElement("th");
+            cellIndex.scope = "row";
+            cellIndex.textContent = index + 1;
+            cellIndex.style.color = '#f0f0f0';
+            row.appendChild(cellIndex);
+
+            const cellScenario = document.createElement("td");
+            let scenarioText = scenario.Scenario.split(" ").slice(0, 20).join(" ");
+            if (scenario.Scenario.split(" ").length > 20) {
+                scenarioText += '...';
+            }
+            cellScenario.textContent = scenarioText;
+            cellScenario.style.color = '#f0f0f0';
+             cellScenario.style.fontSize = '80%';
+            row.appendChild(cellScenario);
+
+            const cellScore = document.createElement("td");
+            const score = scenario.business_impact_score;
+            let color;
+            if (score <= 30) {
+                color = '#66c2a5'; // Color-blind friendly green
+            } else if (score <= 70) {
+                color = '#fc8d62'; // Color-blind friendly orange
+            } else {
+                color = '#8da0cb'; // Color-blind friendly purple
+            }
+            cellScore.innerHTML = `
+                <div style="font-weight: bold; font-size: 1.2em; color: #f0f0f0;">
+                    ${score}
+                </div>
+                <div class="progress" style="height: 20px; background-color: #444;">
+                    <div class="progress-bar" role="progressbar" style="width: ${score}%; background-color: ${color};" aria-valuenow="${score}" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+            `;
+            row.appendChild(cellScore);
+
+            tableBody.appendChild(row);
+        });
+
+        const searchBox = document.getElementById("searchBox");
+        const searchResults = document.getElementById("searchResults");
+
+        searchBox.addEventListener("input", function() {
+            const query = searchBox.value;
+            if (query.length >= 3) {
+                fetch(`/OTRisk/search/?q=${query}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        searchResults.innerHTML = '';
+                        data.results.forEach(result => {
+                            const resultDiv = document.createElement('div');
+                            resultDiv.innerHTML = `
+                                <strong>${result.model}</strong>: ${result.field.substring(0, 50)}...
+                            `;
+                            resultDiv.classList.add('search-result');
+                            resultDiv.dataset.model = result.model;
+                            resultDiv.dataset.id = result.id; // Add ID to the result for redirection
+                            searchResults.appendChild(resultDiv);
+                        });
+
+                        // Add click event listeners to the search results
+                        document.querySelectorAll('.search-result').forEach(item => {
+                            item.addEventListener('click', function() {
+                                const model = this.dataset.model;
+                                const id = this.dataset.id;
+
+                                if (model === 'CyberPHA') {
+                                    // Redirect to the iotaphamanager.html page and set the correct record ID
+                                    window.location.href = `/OTRisk/iotaphamanager/${id}/`;
+                                } else if (model === 'Facility') {
+                                    // Redirect to the facilities.html page and set the correct facility ID
+                                    window.location.href = `/OTRisk/facility/?facility_id=${id}`;
+                                } else {
+                                    // Handle other models if needed
+                                }
+                            });
+                        });
+                    });
+            } else {
+                searchResults.innerHTML = '';
+            }
+        });
+    });
 </script>
+<script src="{% static "js/block_manager.js" %}"></script>
+
 
 
 </body>

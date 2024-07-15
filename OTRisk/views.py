@@ -16,7 +16,7 @@ from django.template.loader import render_to_string
 from django.utils.crypto import get_random_string
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
-from django.db.models import Subquery, OuterRef, Count, IntegerField, Case, When, Value, Prefetch
+from django.db.models import Subquery, OuterRef, Count, IntegerField, Case, When, Value, Prefetch, Q
 from requests import RequestException
 
 from OTRisk.darktrace_integration.intel_feed import IntelFeed
@@ -24,7 +24,6 @@ from .darktrace import network_risk_profile
 import OTRisk.forms
 from OTRisk.models.RiskScenario import RiskScenario
 from OTRisk.models.Model_Scenario import tblConsequence
-from OTRisk.models.questionnairemodel import Questionnaire, FacilityType
 from OTRisk.models.ThreatAssessment import ThreatAssessment
 from OTRisk.models.raw import RAWorksheet, RAWorksheetScenario, RAActions, MitreICSMitigations, RawControlList, \
     QRAW_Safeguard
@@ -43,7 +42,7 @@ from OTRisk.models.Model_CyberPHA import tblCyberPHAHeader, tblRiskCategories, \
     tblNodes, tblUnits, tblZones, tblCyberPHAScenario, tblIndustry, auditlog, tblStandards, MitreControlAssessment, \
     CyberPHAScenario_snapshot, Audit, PHAControlList, SECURITY_LEVELS, OrganizationDefaults, scenario_compliance, \
     ScenarioConsequences, APIKey, ScenarioBuilder, PHA_Safeguard, OpenAIAPILog, CybersecurityDefaults, PHA_Observations, \
-    Facility, OTVendor, CyberSecurityInvestment
+    Facility, OTVendor, CyberSecurityInvestment, FacilityType
 from django.shortcuts import render, redirect
 from .dashboard_views import get_user_organization_id, get_scenarios_for_regulation
 from django.contrib.auth.decorators import login_required
@@ -1390,18 +1389,6 @@ def save_or_update_cyberpha(request):
                 'impactData': impactdata,
                 'impactSupply': impactsupply,
                 'recommendations': recommendations,
-                'SM': sm,
-                'MEL': mel,
-                'RRM': rrm,
-                'SA': sa,
-                'MELA': mela,
-                'RRa': rra,
-                'UEL': uel,
-                'uel_threat': uel_threat,
-                'uel_exposure': uel_exposure,
-                'uel_vuln': uel_vuln,
-                'RRU': rru,
-                'sl': sl,
                 'Deleted': deleted,
                 'justifySafety': justifySafety,
                 'justifyLife': justifyLife,
@@ -1619,8 +1606,7 @@ def assess_cyberpha(request, cyberPHAID=None):
     safeguards = tblSafeguards.objects.order_by('Safeguard').values('Safeguard').distinct()
     threatsources = tblThreatSources.objects.all().order_by('ThreatSource')
     threatactions = tblThreatActions.objects.all().order_by('ThreatAction')
-    # consequenceList = tblConsequence.objects.all().order_by('Consequence')
-    standardslist = tblStandards.objects.all().order_by('standard')
+
     scenario_status = tblCyberPHAScenario.SCENARIO_STATUSES
 
     control_objectives = [json.loads(obj.ControlObjective) for obj in control_objectives]
@@ -1674,8 +1660,6 @@ def assess_cyberpha(request, cyberPHAID=None):
         else:
             scenario.updater_name = ''
 
-    MitreControlAssessment_results = MitreControlAssessment.objects.filter(cyberPHA_id=active_cyberpha)
-    control_assessments_data = serializers.serialize('json', MitreControlAssessment_results)
     scenario_form = CyberSecurityScenarioForm(request.POST)
 
     if active_cyberpha_id is not None:
@@ -1702,7 +1686,6 @@ def assess_cyberpha(request, cyberPHAID=None):
     return render(request, 'OTRisk/phascenariomgr.html', {
         # 'scenarios': combined_scenarios,
         'control_objectives': control_objectives,
-        'mitigation_measures': mitigation_measures,
         'threat_intelligence': threat_intelligence,
         'risk_categories': risk_categories,
         'description': description,
@@ -1711,8 +1694,6 @@ def assess_cyberpha(request, cyberPHAID=None):
         'threatactions': threatactions,
         'clicked_row_facility_name': clicked_row_facility_name,
         'saved_scenarios': saved_scenarios,
-        'standardslist': standardslist,
-        'MitreControlAssessment_results': control_assessments_data,
         'SECURITY_LEVELS': SECURITY_LEVELS,
         'scenario_form': scenario_form,
         'scenario_status': scenario_status,
@@ -4024,7 +4005,7 @@ def exalens_generate_scenarios(request):
     return JsonResponse(result, status=200)
 
 
-def facility_view(request):
+def facility_view(request, facility_id=None):
     industries = tblIndustry.objects.all().order_by('Industry')
     facilityTypes = FacilityType.objects.all().order_by('FacilityType')
     shift_models = Facility.SHIFT_MODELS
@@ -4034,13 +4015,22 @@ def facility_view(request):
     # Convert the vendors and products to JSON
     vendors_json = json.dumps(vendors_products)
     unique_vendors_list = list(unique_vendors)
+
     return render(request, 'facilities.html', {
         'industries': industries,
         'facilityTypes': facilityTypes,
         'shift_models': shift_models,
         'vendors_json': vendors_json,
         'unique_vendors_list': unique_vendors_list,
+        'facility_id': facility_id,  # Pass the facility_id to the template
     })
+
+
+def get_facility_types(request):
+    industry_id = request.GET.get('industry_id')
+    facility_types = FacilityType.objects.filter(Industry_id=industry_id).order_by('FacilityType')
+    facility_types_list = list(facility_types.values('ID', 'FacilityType'))
+    return JsonResponse(facility_types_list, safe=False)
 
 
 def get_facility_profile(userid, industry, facility_type, address, facility, employees, shift_model):
@@ -4050,7 +4040,6 @@ def get_facility_profile(userid, industry, facility_type, address, facility, emp
         error_msg = "Missing industry or facility type. Complete all fields to get an accurate assessment"
         return JsonResponse({
             'safety_summary': error_msg,
-            'chemical_summary': error_msg,
             'physical_security_summary': error_msg,
             'other_summary': error_msg
         })
@@ -4062,11 +4051,6 @@ def get_facility_profile(userid, industry, facility_type, address, facility, emp
     openai_model = get_api_key('OpenAI_Model')
     # openai_api_key = os.environ.get('OPENAI_API_KEY')
     openai.api_key = openai_api_key
-
-    chemical_query = f"chemicals used in manufacturing, industrial chemicals, chemicals by industry, chemical safety, chemical hazards, chemical storage, chemical handling, manufacturing industry, types of chemicals, production chemicals, chemical regulations"
-    retrieved_chunks = query_index(chemical_query)
-    summarized_chunks = get_summarized_chunks(retrieved_chunks)
-    chemical_context = "\n\n".join(summarized_chunks)
 
     safety_query = f"Industrial safety, OSHA, chemical safety, manufacturing hazards, safety hazards, danger, safety in dangerous environments"
     retrieved_chunks = query_index(safety_query)
@@ -4092,7 +4076,6 @@ def get_facility_profile(userid, industry, facility_type, address, facility, emp
 
     prompts = [
         f"INSTRUCTION: DO NOT PRINT ** characters. If any words are emphasized with **, replace them with normal text without ** characters.  {context} List safety hazards - Specific to facility - of any type such as (but not limited to) mechanical or chemical or electrical or heat or cold or crush or height - Space between bullets. Use the pinecone index for more context. \n\nExample Format:\n 1. Specific safety hazard.\n 2. Another specific safety hazard.  Indexed pinecone content for context: {safety_context}. ",
-        f"INSTRUCTION: DO NOT PRINT ** characters. If any words are emphasized with **, replace them with normal text without ** characters.  {context} List expected chemicals (of all types e.g. solvent, compound, liquid, gas, powder, etc) - Specific to facility - Chemical names only - raw materials and by-products and stored chemicals - Space between bullets. Use the pinecone index for more context. \n\nExample Format:\n 1. Chemical name (raw material or by-product).\n- 2. Another chemical name (raw material or by-product). Indexed pinecone content for context: {chemical_context}.",
         f"INSTRUCTION: DO NOT PRINT ** characters. If any words are emphasized with **, replace them with normal text without ** characters. {context}, List physical security requirements SPECIFIC to facility and location including (but not limited to): access control,surveillance,local crime statistics,blind spots,proximity to other infrastructure . Use the pinecone index for more context .\n\nExample Format:\n 1. Physical security requirement.\n 2. Another physical security requirement. Each requirement should be stated in mo more than 5 words and MUST be specific to the given facility. Indexed pinecone content for context: {physical_context}.",
         # f"INSTRUCTION: DO NOT PRINT ** characters. If any words are emphasized with **, replace them with normal text without ** characters.   indexed pinecone content for context: {OT_context}.{context}, list of OT devices expected to be operating on the industrial networks at the given facility. Use the pinecone index for more context. .\n\nExample Format:\n 1. OT device (brief and concise purpose of device).\n 2. Another OT device (brief and concise purpose of device).",
         f"{context}, list of national and international regulatory compliance containing cybersecurity requirements relevant to the {industry} industry that applies to {facility_type} facilities in {country} . Includes laws and regulatory frameworks . IMPORTANT: Specific to the country and industry. Maximum of the 10 most relevant. \n\nExample Format:\n 1. Compliance name (name of issuing authority).\n 2. Another compliance name (name of issuing authority). DON NOT INCLUDE ANY DESCRIPTION OR FURTHER NARRATIVE ABOUT THE REGULATION - ONLY THE COMPLAINCE NAME AND ISSUING AUTHORITY. Indexed pinecone content for context: {compliance_context}.",
@@ -4123,7 +4106,6 @@ def get_facility_profile(userid, industry, facility_type, address, facility, emp
 
         # Extract the individual responses
     safety_summary = responses[0]['choices'][0]['message']['content'].strip()
-    chemical_summary = responses[1]['choices'][0]['message']['content'].strip()
     physical_security_summary = responses[2]['choices'][0]['message']['content'].strip()
     # other_summary = responses[3]['choices'][0]['message']['content'].strip()
     compliance_summary = responses[3]['choices'][0]['message']['content'].strip()
@@ -4136,7 +4118,6 @@ def get_facility_profile(userid, industry, facility_type, address, facility, emp
     ra_prompt = [
         f"""{context}. Consider the following information about the given facility: 
             Safety Profile: {safety_summary}
-            Chemical Profile: {chemical_summary}
             Physical Security profile: {physical_security_summary}
             Utilise the following indexed data: {ra_context}
             INSTRUCTION. Write a concise summary statement about the recommended physical security processes, procedures, and controls necessary to mitigate the key physical security risks for the given facility.  The physical security summary is an executive-level concisely worded narrative of no more than 150 words written as bullet points.
@@ -4156,7 +4137,6 @@ def get_facility_profile(userid, industry, facility_type, address, facility, emp
 
     return {
         'safety_summary': safety_summary,
-        'chemical_summary': chemical_summary,
         'physical_security_summary': physical_security_summary,
         # 'other_summary': other_summary,
         'compliance_summary': compliance_summary,
@@ -4177,6 +4157,7 @@ def facility_air_quality_index(lat, lon):
         return aqi
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+
 
 @csrf_exempt
 def save_facility(request):
@@ -4217,18 +4198,20 @@ def save_facility(request):
         # Get the industry and facility type objects
         industry = tblIndustry.objects.get(id=data['industry'])
         facility_type = FacilityType.objects.get(ID=data['type'])
+        # get the chemical profile for the facility type
+        chemical_summary = facility_type.chemical_profile
+
         business_name = data['business_name']
         facility_id = data.get('id')
 
         safetySummary = data['safetySummary']
         physicalSummary = data['physicalSummary']
-        chemicalSummary = data['chemicalSummary']
         complianceSummary = data['complianceSummary']
         ps_summary = data['ps_summary']
         pha_score = data['pha_score']
         aqi_score = data.get('aqi_score', 0)
 
-        #AQI is dynamic so check it every time
+        # AQI is dynamic so check it every time
         aqi_score = facility_air_quality_index(data['lat'], data['lon'])
 
         if safetySummary == '':
@@ -4241,7 +4224,6 @@ def save_facility(request):
                                                      data['shift_model']
                                                      )
             safetySummary = risk_profile_data['safety_summary']
-            chemicalSummary = risk_profile_data['chemical_summary']
             physicalSummary = risk_profile_data['physical_security_summary']
             # otherSummary = risk_profile_data['other_summary']
             complianceSummary = risk_profile_data['compliance_summary']
@@ -4265,7 +4247,6 @@ def save_facility(request):
             facility.pha_score = pha_score
             facility.safetySummary = safetySummary
             facility.physicalSummary = physicalSummary
-            facility.chemicalSummary = chemicalSummary
             facility.complianceSummary = complianceSummary
             facility.ps_summary = ps_summary
             facility.aqi_score = aqi_score
@@ -4287,7 +4268,6 @@ def save_facility(request):
                 operating_cost=operating_cost,
                 profit_margin=profit_margin,
                 safetySummary=safetySummary,
-                chemicalSummary=chemicalSummary,
                 physicalSummary=physicalSummary,
                 complianceSummary=complianceSummary,
                 pha_score=pha_score,
@@ -4311,7 +4291,6 @@ def save_facility(request):
                 product_name=product_name
             )
 
-
         saved_investments = list(
             CyberSecurityInvestment.objects.filter(facility=facility).order_by('vendor_name').values('vendor_name',
                                                                                                      'product_name'))
@@ -4319,12 +4298,12 @@ def save_facility(request):
         return JsonResponse({'status': 'success',
                              'facility_id': facility.id,
                              'safetySummary': safetySummary,
-                             'chemicalSummary': chemicalSummary,
+                             'chemicalSummary': chemical_summary,
                              'physicalSummary': physicalSummary,
                              'complianceSummary': complianceSummary,
                              'ps_summary': ps_summary,
                              'aqi_score': aqi_score,
-                             'pha_score':pha_score,
+                             'pha_score': pha_score,
                              'saved_investments': saved_investments})
     return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=400)
 
@@ -4354,6 +4333,7 @@ def get_facility(request, facility_id):
         'industry__Industry': facility.industry.Industry,
         'type': facility.type.ID,
         'type__type': facility.type.FacilityType,
+        'type__chemprofile': facility.type.chemical_profile,
         'employees': facility.employees,
         'public_ips': facility.public_ips,
         'shift_model': facility.shift_model,
@@ -4379,3 +4359,47 @@ def delete_facility(request, facility_id):
     facility = get_object_or_404(Facility, id=facility_id)
     facility.delete()
     return JsonResponse({'status': 'success'})
+
+
+def search(request):
+    query = request.GET.get('q', '')
+    if len(query) >= 3:
+        header_results = tblCyberPHAHeader.objects.filter(
+            Q(title__icontains=query) |
+            Q(safetySummary__icontains=query) |
+            Q(physicalSummary__icontains=query) |
+            Q(otherSummary__icontains=query) |
+            Q(complianceSummary__icontains=query) |
+            Q(insightSummary__icontains=query) |
+            Q(strategySummary__icontains=query) |
+            Q(threatSummary__icontains=query)
+        ).values('ID', 'title', 'safetySummary', 'physicalSummary', 'otherSummary', 'complianceSummary', 'insightSummary', 'strategySummary', 'threatSummary')
+
+        scenario_results = tblCyberPHAScenario.objects.filter(
+            Q(Scenario__icontains=query) |
+            Q(cost_justification__icontains=query) |
+            Q(risk_rationale__icontains=query) |
+            Q(recommendations__icontains=query)
+        ).values('ID', 'Scenario', 'cost_justification', 'risk_rationale', 'recommendations')
+
+        facility_results = Facility.objects.filter(
+            Q(address__icontains=query) |
+            Q(name__icontains=query) |
+            Q(business_name__icontains=query)
+        ).values('id', 'address', 'name', 'business_name')
+
+        results = []
+
+        # Helper function to safely add results
+        def add_results(result_set, model_name, id_field='ID'):
+            for result in result_set:
+                for field, value in result.items():
+                    if value and query.lower() in str(value).lower():
+                        results.append({'model': model_name, 'field': str(value), 'id': result[id_field]})
+
+        add_results(header_results, 'CyberPHA', 'ID')
+        add_results(scenario_results, 'CyberPHA Scenario', 'ID')
+        add_results(facility_results, 'Facility', 'id')
+
+        return JsonResponse({'results': results})
+    return JsonResponse({'results': []})

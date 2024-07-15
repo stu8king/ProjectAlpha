@@ -47,78 +47,60 @@
     {% load django_bootstrap5 %}
      {% bootstrap_css %}
      {% bootstrap_javascript %}
-<link rel="stylesheet" type="text/css" href="{% static 'css/otriskstyle.css' %}">
+
+<link rel="stylesheet" type="text/css" href="{% static 'css/info_block.css' %}">
 <style>
-     .table-responsive {
-            max-width: 100%; /* Ensure table fits within the parent */
-            overflow-x: auto; /* Allow horizontal scrolling if needed */
-        }
-    #map {
-            height: 400px;
-            width: 100%;
-        }
-        .info-block {
-            background-color: #313136;
-            color: #fff;
-            padding: 0;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            text-align: center;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 1);
-            position: relative;
-            border: 2px solid #6593d0;
-        }
-        .info-block .block-header {
-            background-color: #65c8d0;
-            color: #000;
-            padding: 10px;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            cursor: move; /* Change cursor to indicate draggable */
-        }
-        .info-block .block-header img {
-            margin-left: 10px;
-            width: 24px;
-            height: 24px;
-        }
-        .info-block .block-body {
-            font-size: 0.9rem;
-            padding: 20px;
-            text-align: left;
-            flex-grow: 1;
-            display: none; /* Initially hidden */
-        }
-        .block-header button {
-            background: none;
-            border: none;
-            font-size: 1.2em;
-            cursor: pointer;
-            color: #000;
-        }
-        .info-block .table-responsive {
-        width: 100%;
-        height: 100%;
-        overflow: auto;
-    }
-        .info-block .table {
-        width: 100%;
-        height: 100%;
-        transform-origin: 0 0;
-    }
-        .flex-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-        }
-        .flex-col {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-        }
+body {
+    background-color: #464748;
+    color: #d3d1cd;
+}
+.sidebar {
+    display: flex;
+    height: 100vh;
+    background-color: #2D2E30; /* Darker shade for sidebar */
+    padding: 1vw;
+    width: 10vw; /* Sidebar width */
+}
 
+.sidebar-logo {
+    padding: 1vw;
+    text-align: center;
+}
+.nav-sidebar .nav-link img {
+    width: 1.25em; /* Scales with the font size */
+    height: 1.25em; /* Scales with the font size */
+}
+.nav-sidebar {
+    display: flex;
+    flex-direction: column;
+    padding-left: 0;
+    list-style: none;
+}
+.nav-sidebar .nav-item {
+    padding: 0.1vw;
+    /* border-bottom: 1px solid  #fac330; /* Light orange line */
+    margin: 0 10%;
+    gap: 1rem;
+}
+.nav-sidebar .nav-link {
+    color: #d3d1cd;
+    border-radius: 0;
+    transition: color 0.3s ease-in-out;
+    font-size: 0.7rem;
+}
+.nav-sidebar .nav-link:hover, .nav-sidebar .nav-link.active {
+    background-color: #3A5F5F;
+    color: #E0E0E0;
+}
 
+.table-responsive {
+    max-width: 100%; /* Ensure table fits within the parent */
+    overflow-x: auto; /* Allow horizontal scrolling if needed */
+}
+#map {
+    height: 400px;
+    width: 100%;
+}
 
     /* General table styles */
 #headertable {
@@ -315,6 +297,7 @@
     margin-bottom: 20px; /* Space between the progress bar and the tab content */
 }
 
+
 /* Progress Bar */
 .progress-bar {
     height: 100%;
@@ -387,6 +370,83 @@ input:checked + .slider:before {
   color: #fff;
 }
 
+@media (min-width: 768px) {
+    .nav-sidebar .nav-link img {
+    width: 1.5em;
+    height: 1.5em;
+    }
+}
+/* Even larger icons for desktops */
+@media (min-width: 992px) {
+    .nav-sidebar .nav-link img {
+    width: 1.75em;
+    height: 1.75em;
+    }
+}
+@media (max-width: 992px) {
+    .top-strip {
+        padding-left: 0;
+        width: 100%;
+    }
+     .sub-menu {
+        left: 0;
+        width: 100px; /* Adjust for smaller screens */
+    }
+
+
+}
+.custom-main-content {
+
+min-height: 100vh; /* Ensure it fills the viewport height */
+}
+@media (min-width: 992px) { /* Adjusting for Bootstrap's large devices breakpoint */
+    .custom-main-content {
+        width: 100%;
+
+        margin-left: 4vw;
+    }
+}
+
+     .page-title {
+    margin: 0; /* Remove default margins */
+    font-size: 1.5rem; /* Adjust size as needed */
+}
+     .top-strip {
+    background-color: #464748; /* Same as body background for seamless integration */
+    color: #d3d1cd; /* Text color */
+    padding: 10px 20px; /* Adjust as needed */
+    padding-left: 100px; /* Align with the end of the sidebar */
+    width: calc(100% - 200px); /* Adjust based on the actual sidebar width */
+    box-sizing: border-box;
+}
+     .sub-menu {
+    position: fixed; /* Fixed position to stay in view */
+    top: 0; /* Align with the top of the viewport */
+    left: 10vw; /* Position the sub-menu right next to the sidebar */
+    width: 5vw; /* Width of the sub-menu */
+    height: 100vh; /* Full viewport height */
+    /* background-color: #333; /* Sub-menu background color */
+    color: #fff; /* Text color */
+    padding: 0.5vw ; /* Padding */
+    box-sizing: border-box; /* Include padding in width calculation */
+    font-size: 0.8rem;
+}
+.sub-menu ul {
+    list-style: none; /* Remove default list styling */
+    padding: 0; /* Remove default padding */
+    margin: 0; /* Remove default margin */
+}
+
+.sub-menu li a {
+    color: #d3d1cd; /* Link color */
+    text-decoration: none; /* Remove underline */
+    display: block; /* Make the links fill the container */
+    padding: 10px 0; /* Padding for touch targets */
+    transition: background-color 0.3s; /* Smooth transition for hover effect */
+}
+.sub-menu li a:hover, .sub-menu li a.active {
+    background-color: #57595b; /* Hover/active background color */
+}
 </style>
 
 </head>
@@ -406,6 +466,8 @@ sessionStorage.setItem('sessionIndustry','');
 
     //disable all controls and reset local session variable when form loads
     document.addEventListener('DOMContentLoaded', function() {
+
+
         document.getElementById("txtTitle").setAttribute('disabled', true);
         document.getElementById("txtLeader").setAttribute('disabled', true);
 
@@ -429,6 +491,14 @@ sessionStorage.setItem('sessionIndustry','');
          $('#btnformSubmit').prop('disabled', true);
          $('#scenarioButton').prop('disabled', true);
          $('#generatePPT').prop('disabled', true);
+
+         const urlParams = new URLSearchParams(window.location.search);
+        const recordId = urlParams.get('record_id');
+
+        if (recordId) {
+            // Call the function to fetch and display the record
+            fetchHeaderRecord(recordId);
+        }
 });
 
 
@@ -535,110 +605,112 @@ function showNotification(message, isError = false) {
 var map;
 
 </script>
+
 <div class="container-fluid">
-<div class="row">
+    <div class="row">
+        {% include 'menu_bar.html' %}
+        <div id="notificationMessage" class="notification-message" style="display: none;"></div>
+        <!-- Main content area, including sub-menu and tabs -->
+        <div class="col-md-9 col-lg-10">
+        <div class="top-strip">
+            <div class="row">
+                <div class="col-md-1"></div>
+                <div class="col-md-1">
 
-{% include 'menu_bar.html' %}
-<div id="notificationMessage" class="notification-message" style="display: none;"></div>
-    <!-- Main content area, including sub-menu and tabs -->
-    <div class="col-md-9 col-lg-10">
-    <div class="top-strip">
-        <div class="row">
-            <div class="col-md-1"></div>
-            <div class="col-md-1">
-
-            </div>
-            <div class="col-md-2">
-                <button type="submit" id="btnformSubmit" class="btn btn-custom nav-link" title="Click here to save the current facility information"><i class="bi bi-floppy2-fill"></i> Save</button>
-                <div id="spinnerContainer" style="display: none;">
-                    <div class="spinner-border" role="status">
-                        <span class="sr-only">Loading...</span>
-                    </div>
                 </div>
+                <div class="col-md-2">
+                    <button type="submit" id="btnformSubmit" class="btn btn-custom nav-link" title="Click here to save the current facility information"><i class="bi bi-floppy2-fill"></i> Save</button>
+                    <div id="spinnerContainer" style="display: none;">
+                        <div class="spinner-border" role="status">
+                            <span class="sr-only">Loading...</span>
+                        </div>
+                    </div>
 
-            </div>
-            <div class="col-md-2">
-                <button type="button" class="btn btn-custom nav-link " id="resetButton" title="Click here to begin a new CyberPHA"><i class="bi bi-plus-circle"></i> New</button>
-            </div>
-            <div class="col-md-2">
-                <button type="button" class="btn btn-custom nav-link " id="scenarioButton" title="Click here to view scenarios for the currently selected facility "><i class="bi bi-pencil-square"></i> Edit Scenarios</button>
+                </div>
+                <div class="col-md-2">
+                    <button type="button" class="btn btn-custom nav-link " id="resetButton" title="Click here to begin a new CyberPHA"><i class="bi bi-plus-circle"></i> New</button>
+                </div>
+                <div class="col-md-2">
+                    <button type="button" class="btn btn-custom nav-link " id="scenarioButton" title="Click here to view scenarios for the currently selected facility "><i class="bi bi-pencil-square"></i> Edit Scenarios</button>
+                        <script>
+                             $(document).ready(function() {
+                                $('#scenarioButton').on('click', function() {
+                                    window.location.href = "{% url 'OTRisk:assess_cyberpha' %}?active_cyberpha=" + sessionStorage.getItem('activeCyberPHA');
+                                });
+                             });
+                        </script>
+                </div>
+                <div class="col-md-2">
+                    <button type="button" id="risk-assessment-btn" class="btn btn-custom nav-link" title="Click here to re-generate the PHA profile for the facility"><i class="bi bi-calculator"></i> Run Profile</button></div>
                     <script>
-                         $(document).ready(function() {
-                            $('#scenarioButton').on('click', function() {
-                                window.location.href = "{% url 'OTRisk:assess_cyberpha' %}?active_cyberpha=" + sessionStorage.getItem('activeCyberPHA');
+                        $(document).ready(function() {
+                        // Event handler for the Copy button
+                         $('#copyAssessment').click(function() {
+                            Swal.fire({
+                                title: 'Are you sure?',
+                                text: "Do you wish to copy the currently selected CyberPHA Assessment?",
+                                icon: 'warning',
+                                showCancelButton: true,
+                                confirmButtonColor: '#3085d6',
+                                cancelButtonColor: '#d33',
+                                confirmButtonText: 'Yes',
+                                cancelButtonText: 'Cancel'
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    $('#facilityDetailsModal').modal('show');
+                                    populateCountries();
+                                }
                             });
-                         });
-                    </script>
-            </div>
-            <div class="col-md-2">
-                <button type="button" id="risk-assessment-btn" class="btn btn-custom nav-link" title="Click here to re-generate the PHA profile for the facility"><i class="bi bi-calculator"></i> Run Profile</button></div>
-                <script>
-                    $(document).ready(function() {
-                    // Event handler for the Copy button
-                     $('#copyAssessment').click(function() {
-                        Swal.fire({
-                            title: 'Are you sure?',
-                            text: "Do you wish to copy the currently selected CyberPHA Assessment?",
-                            icon: 'warning',
-                            showCancelButton: true,
-                            confirmButtonColor: '#3085d6',
-                            cancelButtonColor: '#d33',
-                            confirmButtonText: 'Yes',
-                            cancelButtonText: 'Cancel'
-                        }).then((result) => {
-                            if (result.isConfirmed) {
-                                $('#facilityDetailsModal').modal('show');
-                                populateCountries();
-                            }
+                        });
+
+
+
+                        // Form submission logic (to be expanded in further instructions)
+                        $('#facilityDetailsForm').submit(function(event) {
+                            event.preventDefault();
+                            // Logic to handle form submission will go here
+                            $('#facilityDetailsModal').modal('hide');
                         });
                     });
 
+                    </script>
 
-
-                    // Form submission logic (to be expanded in further instructions)
-                    $('#facilityDetailsForm').submit(function(event) {
-                        event.preventDefault();
-                        // Logic to handle form submission will go here
-                        $('#facilityDetailsModal').modal('hide');
-                    });
-                });
-
-                </script>
-
-            <div class="col-md-2">
-                 <button type="button" id="copyAssessment" class="btn btn-custom nav-link" title="Creates a clone of the currently selected CyberPHA and related scenarios"><i class="bi bi-copy"></i> Clone</button>
-                <a href="#" id="restoreLink" style="display: block; margin-top: 10px;">Restore</a>
-            </div>
-
-        </div>
-        <div class="row">
-            <div class="col-md-1"></div>
-            <div class="col-md-5">
-                <label id="lblCyberPHATitle" style="font-size: 18px;  color:#fff">CyberPHA Setup</label><p>
-                <font style="font-size: 0.8em">Select an existing CyberPHA from the CyberPHA list or click New to begin a new CyberPHA assessment</font></p>
-                <div id="progressBarContainerProfile" class="progress" style="display: none;">
-                    <div class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" id="progressBarProfile"></div>
+                <div class="col-md-2">
+                     <button type="button" id="copyAssessment" class="btn btn-custom nav-link" title="Creates a clone of the currently selected CyberPHA and related scenarios"><i class="bi bi-copy"></i> Clone</button>
+                    <a href="#" id="restoreLink" style="display: block; margin-top: 10px;">Restore</a>
                 </div>
-                <span id="progressBarMessageProfile" style="display:block; text-align:center; margin-top:5px;"></span>
-            </div>
 
-            <div class="col-md-6"></div>
+            </div>
+            <div class="row">
+                <div class="col-md-1"></div>
+                <div class="col-md-5">
+                    <label id="lblCyberPHATitle" style="font-size: 18px;  color:#fff">CyberPHA Setup</label><p>
+                    <font style="font-size: 0.8em">Select an existing CyberPHA from the CyberPHA list or click New to begin a new CyberPHA assessment</font></p>
+                    <div id="progressBarContainerProfile" class="progress" style="display: none;">
+                        <div class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" id="progressBarProfile"></div>
+                    </div>
+                    <span id="progressBarMessageProfile" style="display:block; text-align:center; margin-top:5px;"></span>
+                </div>
+
+                <div class="col-md-6"></div>
+            </div>
         </div>
-    </div>
-    <div id="notificationMessage" class="notification-message" style="display: none;"></div>
-    <div class="spinner" id="loadingSpinner"></div>
-     <form name="frmHeader" id="frmRAW" method="POST" action="{% url 'OTRisk:iotaphamanager' %}">
+        <div id="notificationMessage" class="notification-message" style="display: none;"></div>
+        <div class="spinner" id="loadingSpinner"></div>
+        <form name="frmHeader" id="frmRAW" method="POST" action="{% url 'OTRisk:iotaphamanager' %}">
         {% csrf_token %}
 
      <input type="hidden" name="txtHdnCyberPHAID" id="txtHdnCyberPHAID" value="0">
      <input type="hidden" id="hdn_pha_score" name="hdn_pha_score" value="{{ pha_header_records.pha_score }}">
 
-    <div class="sub-menu">
+    <div class="sub-menu sub-menu-container small-font">
         <br><br><br><br><br><br><br><br><br><br>
-
 
         <br>
          <div id="block_selector">
+             <a href="#" id="organizeBlocks"  style="display: block; color: white; margin-top: 10px; align-self: center">Organize</a>
+             <br>
+
         <div class="switch-container">
             <span class="switch-label">Connectors</span>
             <label class="switch">
@@ -728,10 +800,7 @@ $(document).ready(function() {
     });
 });
 </script>
-
-
-     <div class="custom-main-content" >
-    <script>
+ <script>
     $(document).ready(function() {
 
         // Load Facility button click handler
@@ -877,1321 +946,1318 @@ $(document).ready(function() {
 
 
                 </script>
-     <div id="block_container" >
-<div class="flex-row">
-    <div class="col-md-6 flex-col" id="block1">
-        <div class="info-block" id="list">
-                <div class="block-header">
-                    CyberPHA List
-                <button type="button" class="toggle-body">+</button>
-                </div>
-                <div class="block-body">
-                    <div class="form-group">
-                        <label class="form-label" style="color:white">Select a record in the table to view and edit the CyberPHA</label>
-                        <div class="table-responsive">
-                            <table id="headertable" class="table small-font compact" style="transform: scale(0.9); transform-origin: 0 0;">
-                                <thead >
-                                    <tr>
-                                    <th class="th hidden-column">ID</th>
-                                    <th>Title</th>
-                                    <th>Site</th>
-                                    <th>Type</th>
-                                    <th>BIA</th>
-                                    <th>Scenarios</th>
-                                    <th>Status</th>
-                                    <th>Actions</th>
-                                    <th></th>
-                                    <th></th>
-                                    </tr>
-                                </thead>
-                                <tbody style="font-size: 10px">
-                                    {% for pha_header_records in pha_header_records %}
-                                    <tr data-id="{{ pha_header_records.ID }}" class="selectable-row">
-                                        <td class="hidden-column">{{ pha_header_records.ID }}</td>
-                                        <td >
-                                        {{ pha_header_records.title }}
-                                        {% if pha_header_records.is_default %}
-                                            (Default Facility)
-                                        {% endif %}
-                                        </td>
-                                        <td>{{ pha_header_records.FacilityName }}</td>
-                                        <td>{{ pha_header_records.FacilityType }}</td>
-                                        <input type="hidden" name="AssessmentUnit_{{ pha_header_records.ID }}" value="{{ pha_header_records.AssessmentUnit }}">
-                                        <input type="hidden" name="AssessmentZone_{{ pha_header_records.ID }}" value="{{ pha_header_records.AssessmentZone }}">
-                                        <input type="hidden" name="Industry_{{ pha_header_records.ID }}" value="{{ pha_header_records.Industry }}">
-                                         <td style="text-align: center">
-                                            {% if pha_header_records.bia_scenarios == None %}
-                                                N/A
-                                            {% elif pha_header_records.bia_scenarios == 0 or pha_header_records.bia_scenarios == 1 or pha_header_records.bia_scenarios == 2 %}
-                                                Low
-                                            {% elif pha_header_records.bia_scenarios == 3 %}
-                                                Low/Medium
-                                            {% elif pha_header_records.bia_scenarios == 4 or pha_header_records.bia_scenarios == 5 %}
-                                                Medium
-                                            {% elif pha_header_records.bia_scenarios == 6 or pha_header_records.bia_scenarios == 7 %}
-                                                Medium/High
-                                            {% elif pha_header_records.bia_scenarios == 8 or pha_header_records.bia_scenarios == 9 %}
-                                                High
-                                            {% elif pha_header_records.bia_scenarios == 10 %}
-                                                Very High
-                                            {% else %}
-                                                N/A
-                                            {% endif %}
-                                        </td>
-                                        <td style="text-align: center">{{ pha_header_records.scenario_count }}</td>
-                                        <td>{{ pha_header_records.latest_workflow_status }}</td>
-                                         <td style="text-align: center">
-                                            {% if pha_header_records.ra_action_count > 0 %}
-                                                <a href="{% url 'OTRisk:ra_actions_view_pha' pha_id=pha_header_records.ID %}">{{ pha_header_records.ra_action_count }}</a>
 
-                                            {% else %}
-                                                {{ pha_header_records.ra_action_count }}
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            {% if pha_header_records.scenario_count != 0 %}
-                                                <button class="report-button" onclick="window.open('{% url 'OTRisk:pha_reports' cyber_pha_header_id=pha_header_records.ID %}', '_blank')">Report</button>
-                                            {% endif %}
-                                        </td>
-
-                                        <td>
-                                        <button type="button" class="delete-btn" data-id="{{ pha_header_records.ID }}">Delete</button>
-
-                                        </td>
-                                    </tr>
-                                {% endfor %}
-                            </tbody>
-                            </table>
-                         </div>
-                    </div>
-
-                    <script>
-         $(document).ready(function() {
-                  function minimizeBlock(block) {
-
-                        var blockBody = block.find(".block-body");
-                        if (blockBody.is(":visible")) {
-                            blockBody.toggle();
-                            block.find(".toggle-body").text("+");
-                        }
-                    }
-             // Event handler for clicking on a table row
-             $('#headertable').on('click', 'tbody tr.selectable-row', function () {
-                 // Remove 'highlighted' class from all other rows
-                 $(this).toggleClass('selected');
-                 $('tr.selectable-row').removeClass('highlighted');
-
-
-                 let recordId = $(this).data('id');  // get the ID of the clicked row
-                 let title = $(this).find('td:nth-child(2)').text();
-                 let facility = $(this).find('td:nth-child(3)').text();
-                 document.getElementById("lblCyberPHATitle").textContent = 'CyberPHA: ' + title + '@' + facility ;
-                 //make all the sub menu tabs active
-                 fetchHeaderRecord(recordId);
-
-             });
-
-             // Check if a saved_record_id is provided in the rendered context
-             let savedRecordId = "{{ saved_record_id }}";  // Get the saved_record_id from the Django context
-             if (savedRecordId && savedRecordId !== "None") {
-                 $('tr[data-id="' + savedRecordId + '"]').addClass('highlighted');
-                 fetchHeaderRecord(savedRecordId);
-
-             }
-
-
-         });
-
-     $(document).on('click', '.delete-btn', function() {
-    var recordId = $(this).data('id');
-    if(confirm('Are you sure you want to delete this record?')) {
-        $.ajax({
-            url: '{% url "OTRisk:delete_pha_record" %}',
-            type: 'POST',
-            data: {
-                'id': recordId,
-                'csrfmiddlewaretoken': '{{ csrf_token }}'
-            },
-            success: function(response) {
-                if(response.deleted) {
-                    window.location.reload();
-                } else {
-                    alert('Error deleting record.');
-                }
-            }
-        });
-    }
-});
-    </script>
-                </div>
-            </div>
-    </div>
-    <div class="col-md-6 flex-col" id="block2">
-        <div class="info-block" id="detail">
-                <div class="block-header">
-                    Assessment Facility
-                    <button type="button" class="toggle-body">+</button>
-                </div>
-                <div class="block-body">
-                    <button type="button" class="btn btn-primary" id="loadFacilityButton" disabled>Load Facility</button>
-                    <p></p>
-                    <div class="row"> <!-- data rows -->
-                        <div class="col-md-6">
-
-                        <div class="form-group">
-                        <input type="hidden" id="facilityid" name="facilityid" >
-                        <div class="row">
-                            <div class="col-md-12">
-                            <label style="color: #b7b9c0">Facility Name: &nbsp;&nbsp;</label><label name="lblFacilityName" id="lblFacilityName">{{ current_pha_header.FacilityName }}</label><br>
-                            <label style="color: #b7b9c0">Address: &nbsp;&nbsp;</label><label name="lblFacilityAddress" id="lblFacilityAddress" >{{ current_pha_header.facilityAddress }}</label><br>
-                            <label style="color: #b7b9c0">Industry: &nbsp;&nbsp;</label><label name="lblFacilityIndustry" id="lblFacilityIndustry" >{{ current_pha_header.Industry }}</label><br>
-                            <label style="color: #b7b9c0">Facility Type: &nbsp;&nbsp;</label><label name="lblFacilityType" id="lblFacilityType" >{{ current_pha_header.FacilityType }}</label><br>
-                            <label style="color: #b7b9c0">Shift Model: &nbsp;&nbsp;</label><label name="lblFacilityShiftModel" id="lblFacilityShiftModel" >{{ current_pha_header.shift_model }}</label><br>
-                            <label style="color: #b7b9c0">Employees: &nbsp;&nbsp;</label><label name="lblFacilityEmployees" id="lblFacilityEmployees" >{{ current_pha_header.EmployeesOnSite }}</label><br>
-                            <label style="color: #b7b9c0">Revenue: &nbsp;&nbsp;</label><label name="lblFacilityRevenue" id="lblFacilityRevenue" >{{ annual_revenue_str|default:'0' }}</label><br>
-                            <label style="color: #b7b9c0">Operating Cost/Hour: &nbsp;&nbsp;</label><label name="lblFacilityOC" id="lblFacilityOC" >{{ coho_str|default:'0' }}</label><br>
-                            <label style="color: #b7b9c0">Net Profit Margin: &nbsp;&nbsp;</label><label name="lblFacilityNPM" id="lblFacilityNPM" >{{ coho_str|default:'0' }}</label><br>
-                            <br>
-                                <div class="form-group">
-                            <label style="color: white">Air Quality Index (AQI):</label>
-                            <div id="aqiGlobe" class="aqi-globe">--</div>
-                                <input type="hidden" id="txthdnAQI">
-                        </div>
-                            </div>
-                        </div>
-
-
-
-                </div>
-
-             </div>
-
-                        <div class="col-md-6" style="background-color: #464748;">
-                        <div id="facility_map" style="height: 95%; border:1"></div>
-                        <input type="hidden" id="txthdnLat" name="txthdnLat">
-                        <input type="hidden" id="txthdnLong" name="txthdnLong">
-                    </div>
-                    </div>
-                </div>
-            </div>
-    </div>
-</div>
-<div class="flex-row">
-    <div class="col-md-6 flex-col" id="block3">
-        <div class="info-block" id="config">
-                <div class="block-header">
-                CyberPHA Configuration
-                <button type="button" class="toggle-body">+</button>
-                </div>
-                <div class="block-body">
-
-                <label id="cyberpha_detail_label" style="color:white">Information about the CyberPHA </label>
-
-                <script>
-        $(document).ready(function() {
-        $('#assign-group-btn').on('click', function() {
-
-        var cyberphaId = sessionStorage.getItem('activeCyberPHA'); // Retrieve from session storage
-        var existingGroupId = $('#existing_group').val();
-        var newGroupName = $('#new_group_name').val();
-        var newGroupType = $('#new_group_type').val();
-
-        $.ajax({
-            type: 'POST',
-            url: '/OTRisk/assign_cyberpha_to_group/', // URL to Django view for assignment
-            data: {
-                'csrfmiddlewaretoken': $('input[name=csrfmiddlewaretoken]').val(),
-                'cyberpha_id': cyberphaId,
-                'existing_group_id': existingGroupId,
-                'new_group_name': newGroupName,
-                'new_group_type': newGroupType
-            },
-            success: function(response) {
-                // Handle success
-                var assignGroupModal = new bootstrap.Modal(document.getElementById('assignGroupModal'));
-                assignGroupModal.hide();
-
-                updateGroupAssignmentsDisplay(cyberphaId); // Function to refresh group assignments on the page
-                updateGroupList();
-
-            },
-            error: function(error) {
-                // Handle error
-                console.error('Error:', error);
-            }
-        });
-    });
-});
-
-function updateGroupAssignmentsDisplay(cyberphaId) {
-    $.ajax({
-        type: 'GET',
-        url: '/OTRisk/fetch_groups/', // URL to a Django view that returns group assignments
-        data: { 'cyberpha_id': cyberphaId },
-        success: function(response) {
-            // Assuming 'response' contains an array of group names or objects
-            var currentGroupsDiv = $('#currentGroupsDiv');
-            currentGroupsDiv.empty();
-
-            if (response.groups && response.groups.length > 0) {
-                response.groups.forEach(function(group) {
-                    // Assuming 'group' contains a property 'name'
-                    currentGroupsDiv.append($('<p>').text(group.name));
-                });
-            } else {
-                currentGroupsDiv.append($('<p>').text('No groups assigned.'));
-            }
-        },
-        error: function(error) {
-            console.error('Error fetching group assignments:', error);
-        }
-    });
-}
-
-function updateGroupList() {
-    $.ajax({
-        type: 'GET',
-        url: '/OTRisk/fetch_all_groups/', // URL to Django view
-        success: function(response) {
-            var existingGroupSelect = $('#existing_group');
-            existingGroupSelect.empty();
-
-            existingGroupSelect.append($('<option>', {
-                value: '',
-                text: 'Select a Group'
-            }));
-
-            response.groups.forEach(function(group) {
-                existingGroupSelect.append($('<option>', {
-                    value: group.id,
-                    text: group.name
-                }));
-            });
-        },
-        error: function(error) {
-            console.error('Error fetching groups:', error);
-        }
-    });
-}
-
-
-document.addEventListener('DOMContentLoaded', function() {
-    var workflowSelector = document.getElementById('workflow_selector');
-    workflowSelector.addEventListener('change', function() {
-        if (this.value === 'Complete') {
-            swal.fire({
-                title: 'CyberPHA Completed?',
-                text: "Once you save the status of this record as 'Complete', you will not be able to make further changes.",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Yes, I understand'
-            });
-        }
-    });
-});
-
-updateGroupList();
-</script>
-
-                <div class="row">
-
-                    <div class="col-md-6">
-                        <div class="form-group">
-              <div class="col-md-12">
-                <div class="form-group d-flex align-items-center" >
-                    <label for="txtTitle" style="color: white; margin-right: 0.6em; font-size: 0.8em" title="Enter a descriptive title for this assessment">CyberPHA Title</label>
-                    <input type="text" class="form-control" name="txtTitle" id="txtTitle" value="{{ current_pha_header.title }}" maxlength="100" style="flex: 1;font-size: 0.8em">
-                </div>
-
-                <div class="form-group d-flex align-items-center">
-                    <label for="txtLeader" style="color: white; margin-right: 10px; font-size: 0.8em" title="Enter the name of the person leading this assessment">CyberPHA Owner:</label>
-                    <input type="text" class="form-control" name="txtLeader" id="txtLeader" value="{{ current_pha_header.PHALeader }}" maxlength="100" style="flex: 1;font-size: 0.8em">
-                </div>
-
-                <div class="form-group d-flex align-items-center">
-                    <label for="txtLeaderEmail" style="color: white; margin-right: 10px; font-size: 0.8em" title="Enter the email address of the person leading this assessment">Email:</label>
-                    <input type="email" class="form-control" name="txtLeaderEmail" id="txtLeaderEmail" value="{{ current_pha_header.PHALeaderEmail }}" onblur="validateEmail(this)" style="flex: 1;font-size: 0.8em">
-                </div>
-
-            <script type="text/javascript">
-                function validateEmail(input) {
-                    var regex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
-                    if (!regex.test(input.value)) {
-                        alert('Please enter a valid email address');
-                        input.focus();
-                    }
-                }
-            </script>
-</div>
-
-                        <div class="row">
-                            <div class="col-md-6">
-                                <label for="txtStartDate" style="color: white; font-size: 0.8em" title="Enter the intended assessment start date">Start Date:</label>
-                                <input type="date" class="form-control" style="font-size: 0.8em"  name="txtStartDate" id="txtStartDate" value="{{ current_pha_header.AssessmentStartDate|date:'Y-m-d' }}" >
-
-                            </div>
-                            <div class="col-md-6">
-                                <label for="txtEndDate" style="color: white; font-size: 0.8em" title="Enter the intended assessment end date">End Date:</label>
-                                <input type="date" class="form-control" style="font-size: 0.8em" name="txtEndDate" id="txtEndDate" value="{{ current_pha_header.AssessmentEndDate|date:'Y-m-d' }}" onchange="validateDates()">
-                            </div>
-                             <script type="text/javascript">
-                                function validateDates() {
-                                    var startDate = document.getElementById('txtStartDate').value;
-                                    var endDate = document.getElementById('txtEndDate').value;
-
-                                    if (endDate < startDate) {
-                                        alert('End date cannot be before start date');
-                                        document.getElementById('txtEndDate').value = '';
-                                    }
-                                }
-                                </script>
-                        </div>
-                        <br>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <label for="txtUnit" style="color: white; font-size: 0.8em" title="Enter the facility unit, if applicable, that's in scope for the current assessment">Unit:</label>
-                                <input type="text" class="form-control" style="font-size: 0.8em"  name="txtUnit" id="txtUnit" value="{{ current_pha_header.AssessmentUnit }}"  maxlength="100">
-                            </div>
-                            <div class="col-md-6">
-                                <label for="selZone" style="color: white; font-size: 0.8em" title="Enter the facility zone, if applicable, that's in scope for the current assessment">Zone:</label>
-                                <select class="form-control" name="selZone" id="selZone" style="font-size: 0.8em">
-                                    <option value = ""> -- Select Plant Zone -- </option>
-                                    {% for zone in zones %}
-                                        <option value="{{ zone.PlantZone }}"
-                                        {% if current_pha_header.AssessmentZone == zone.PlantZone %}selected{% endif %}>
-                                            {{ zone.PlantZone }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                        </div>
-                        <br>
-                        <div class="form-group">
-                            <label style="font-size: 0.8em">OT Incident Response (IR)</label>
-                        <div class="col-md-12">
-                            <div class="form-group d-flex align-items-center" >
-                                <label for="ir_plan" style="color: white; font-size: 0.8em" title="Check the box if there is an OT Cybersecurity Incident Response Plan for the facility">OT IR Plan (Yes/No):&nbsp;&nbsp;&nbsp;</label>
-                                <input type="checkbox" id="ir_plan" name="ir_plan" style="transform: scale(2); margin-right: 5px;">
-                                </div>
-                            <div class="form-group d-flex align-items-center" >
-                                <label for="ir_plan_date" style="color: white; font-size: 0.8em" title="Enter the date that the Incident Response Plan was last tested">Last Tested Date:&nbsp;&nbsp;&nbsp;</label>
-                                <input type="date" class="form-control" name="ir_plan_date" id="ir_plan_date" value="" style="font-size: 0.8em">
-
-                            </div>
-                            <div class="form-group d-flex align-items-center" >
-                                <label for="ir_plan_ut" style="color: white; font-size: 0.8em" title="Check the box if the OT Cybersecurity Incident Response PLan has never been tested">Never Tested (Yes/No):&nbsp;&nbsp;&nbsp;</label>
-                                <input type="checkbox" id="ir_plan_ut" name="ir_plan_ut" style="transform: scale(2); margin-right: 5px;">
-
-                            </div>
-                        </div>
-                        </div>
-
-                        </div>
-                    </div>
-
-
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <div class="form-group">
-                                 <label for="selSL" style="color: white; font-size: 0.8em" title="SL-Ts are the desired level of security for a particular IACS, zone or conduit. Select the targeted security level, if applicable, per ISA-62443-3-2 Annex A">Target Security Level (SL-T):</label>
-                                    <select class="form-control" name="selSL" style="font-size: 0.8em" id="selSL">
-                                    <option value="0"> -- Select SL-T -- </option>
-                                    {% for value, description in SECURITY_LEVELS %}
-                                        <option value="{{ value }}"
-                                        {% if current_pha_header.sl_t|stringformat:"s" == value|stringformat:"s" %}selected{% endif %}>
-                                            {{ description }}</option>
-                                    {% endfor %}
-                                    </select>
-                                </div>
-
-                            <div class="form-group">
-                                <label for="assessment_id" style="color: white; font-size: 0.8em" title="Select the control assessment questionnaire that applies to the facility. If no control assessment has been completed, click on Assessments in the menu to go to the assessments page">Control Assessment:</label>
-                                <select class="form-control"   id="assessment_id" name="assessment_id" style="font-size: 0.8em">
-                                    <option value="">Select an Assessment</option>
-                                    {% for assessment in assessments %}
-                                        <option value="{{ assessment.id }}"
-                                        {% if current_pha_header.assessment == assessment.id %}select{% endif %}>
-                                            {{ assessment.name }}</option>
-                                    {% endfor %}
-                                </select>
-                                <input type="hidden" id="last_assessment_score" name="last_assessment_score">
-                                <input type="hidden" id="last_assessment_summary" name="last_assessment_summary">
-
-                                <div id="assessmentspinnerContainer" style="display: none;">
-                                    <div class="spinner-border" role="status">
-
-                                        <span class="sr-only">Loading...</span>
-                                         </div>
-                                </div>
-
-                         <!-- Container to display the summary and score -->
-                        <span id="assessment_summary" ></span>
-                        <br>
-                        <span id="assessment_score" ></span>
-                             </div>
-
-                            <div class="form-group">
-                                <label for="walkdown_id" style="color: white; font-size: 0.8em" title="Select the control assessment questionnaire that applies to the facility. If no control assessment has been completed, click on Assessments in the menu to go to the assessments page">Site Walk-Down Assessment:</label>
-                                <select class="form-control"   id="walkdown_id" name="walkdown_id" style="font-size: 0.8em">
-                                    <option value="">Select the site walkdown</option>
-                                    {% for walkdown in walkdowns %}
-                                        <option value="{{ walkdown.id }}"
-                                        {% if current_pha_header.walkdown == walkdown.id %}select{% endif %}>
-                                            {{ walkdown.name }}</option>
-                                    {% endfor %}
-                                </select>
-                                <div id="walkdownspinnerContainer" style="display: none;">
-                                    <div class="spinner-border" role="status">
-
-                                        <span class="sr-only">Loading...</span>
-                                        <input type="hidden" id="last_walkdown_score" name="last_walkdown_score">
-                                        <input type="hidden" id="last_walkdown_summary" name="last_walkdown_summary">
+     <div class="custom-main-content" >
+        <div id="block_container" >
+            <div class="row" id="block_rows">
+                <div class="col-md-6" id="block_row_left">
+                    <div class="flex-row">
+                        <div class="col-md-12 flex-col" id="block1">
+                            <div class="info-block" id="list">
+                                    <div class="block-header">
+                                        CyberPHA List
+                                    <button type="button" class="toggle-body">+</button>
                                     </div>
-                                </div>
+                                    <div class="block-body">
+                                        <div class="block-body-content" style="align-items: center; align-content: center">
 
-                         <!-- Container to display the summary and score -->
-                        <span id="walkdown_summary" ></span>
-                        <br>
-                        <span id="walkdown_score" ></span>
-                             </div>
-                            <div class="form-group" style="color: white">
-                                    Current Group Assignments:
-                                    <br>
-                                    <div id="currentGroupsDiv" style="font-size: 16px">
-                                    </div>
-                                <br>
-                                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#assignGroupModal">
-                                    Assign to Group
-                                </button>
+                                            <div class="row" style="width: 95%" >
+                                                <div class="col-md-col">
 
-                        </div>
-                            <div class="form-group">
-                                <label for="workflow_selector" style="color: white; font-size: 0.8em">Workflow Status:</label>
-                                <select class="form-control" id="workflow_selector" name="workflow_selector" style="font-size: 0.8em">
-                                    <option value="">Select a Status</option>
-                                    {% for status, status_display in workflow_status_choices %}
-                                        <option value="{{ status }}"
-                                                {% if current_workflow_status == status %} selected {% endif %}>
-                                            {{ status_display }}
-                                        </option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                        </div>
+                                                <div class="form-group">
+                                                    <label class="form-label" style="color:white">Select a record in the table to view and edit the CyberPHA</label>
+                                                    <div class="table-responsive" >
+                                                        <table id="headertable" class="table small-font compact" style="transform: scale(0.9); transform-origin: 0 0;">
+                                                            <thead >
+                                                                <tr>
+                                                                <th class="th hidden-column">ID</th>
+                                                                <th>Title</th>
+                                                                <th>Site</th>
+                                                                <th>Type</th>
+                                                                <th>BIA</th>
+                                                                <th>Scenarios</th>
+                                                                <th>Status</th>
+                                                                <th>Actions</th>
+                                                                <th></th>
+                                                                <th></th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody style="font-size: 10px">
+                                                                {% for pha_header_records in pha_header_records %}
+                                                                <tr data-id="{{ pha_header_records.ID }}" class="selectable-row">
+                                                                    <td class="hidden-column">{{ pha_header_records.ID }}</td>
+                                                                    <td >
+                                                                    {{ pha_header_records.title }}
+                                                                    {% if pha_header_records.is_default %}
+                                                                        (Default Facility)
+                                                                    {% endif %}
+                                                                    </td>
+                                                                    <td>{{ pha_header_records.FacilityName }}</td>
+                                                                    <td>{{ pha_header_records.FacilityType }}</td>
+                                                                    <input type="hidden" name="AssessmentUnit_{{ pha_header_records.ID }}" value="{{ pha_header_records.AssessmentUnit }}">
+                                                                    <input type="hidden" name="AssessmentZone_{{ pha_header_records.ID }}" value="{{ pha_header_records.AssessmentZone }}">
+                                                                    <input type="hidden" name="Industry_{{ pha_header_records.ID }}" value="{{ pha_header_records.Industry }}">
+                                                                     <td style="text-align: center">
+                                                                        {% if pha_header_records.bia_scenarios == None %}
+                                                                            N/A
+                                                                        {% elif pha_header_records.bia_scenarios == 0 or pha_header_records.bia_scenarios == 1 or pha_header_records.bia_scenarios == 2 %}
+                                                                            Low
+                                                                        {% elif pha_header_records.bia_scenarios == 3 %}
+                                                                            Low/Medium
+                                                                        {% elif pha_header_records.bia_scenarios == 4 or pha_header_records.bia_scenarios == 5 %}
+                                                                            Medium
+                                                                        {% elif pha_header_records.bia_scenarios == 6 or pha_header_records.bia_scenarios == 7 %}
+                                                                            Medium/High
+                                                                        {% elif pha_header_records.bia_scenarios == 8 or pha_header_records.bia_scenarios == 9 %}
+                                                                            High
+                                                                        {% elif pha_header_records.bia_scenarios == 10 %}
+                                                                            Very High
+                                                                        {% else %}
+                                                                            N/A
+                                                                        {% endif %}
+                                                                    </td>
+                                                                    <td style="text-align: center">{{ pha_header_records.scenario_count }}</td>
+                                                                    <td>{{ pha_header_records.latest_workflow_status }}</td>
+                                                                     <td style="text-align: center">
+                                                                        {% if pha_header_records.ra_action_count > 0 %}
+                                                                            <a href="{% url 'OTRisk:ra_actions_view_pha' pha_id=pha_header_records.ID %}">{{ pha_header_records.ra_action_count }}</a>
 
-                        <div class="form-group" style="display: none">
-                            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#moderatorModal" >
-                                Select CyberPHA Moderators
-                            </button>
-                        </div>
-                        <script>
+                                                                        {% else %}
+                                                                            {{ pha_header_records.ra_action_count }}
+                                                                        {% endif %}
+                                                                    </td>
+                                                                    <td>
+                                                                        {% if pha_header_records.scenario_count != 0 %}
+                                                                            <button class="report-button" onclick="window.open('{% url 'OTRisk:pha_reports' cyber_pha_header_id=pha_header_records.ID %}', '_blank')">Report</button>
+                                                                        {% endif %}
+                                                                    </td>
 
-                                $(document).ready(function() {
+                                                                    <td>
+                                                                    <button type="button" class="delete-btn" data-id="{{ pha_header_records.ID }}">Delete</button>
 
-                                    let isUserChange = false;
-                                    $("#assessment-select").selectmenu().selectmenu("menuWidget").addClass("overflow");
+                                                                    </td>
+                                                                </tr>
+                                                            {% endfor %}
+                                                        </tbody>
+                                                        </table>
+                                                     </div>
+                                                </div>
+                                                </div>
 
-                                     $('#assessment_id').change(function() {
-                                          if (!isUserChange) return;
-                                    var assessmentId = $(this).val();
-                                    var industry = document.getElementById('lblFacilityIndustry').textContent;
-                                    var facilityType = document.getElementById('lblFacilityType').textContent;
+                                            </div>
 
-                                    if(assessmentId  && isUserChange) {
-                                        $('#assessmentspinnerContainer').show();
-                                        $.ajax({
-                                            url: '/OTRisk/get_assessment_summary/',  // Update with the actual URL
-                                            type: 'POST',
-                                            data: { 'assessment_id': assessmentId,
-                                                        'industry': industry,
-                                                        'facilityType': facilityType,
-                                                    'csrfmiddlewaretoken': '{{ csrf_token }}'
-                                            },
-                                            success: function(response) {
-                                                $('#assessmentspinnerContainer').hide();
-                                                if(response.error) {
-                                                    console.log(response.error);
-                                                } else {
-                                                    $('#assessment_summary').text(response.summary);
-                                                    $('#assessment_score').text('Score: ' + response.score  + '/100');
-                                                    setBorderColorByScore(response.score);
-                                                    drawControlGauge(response.score);
-                                                    document.getElementById('last_assessment_score').value = response.score;
-                                                    document.getElementById('last_assessment_summary').value = response.summary;
 
-                                                }
-                                            },
-                                            error: function(xhr, errmsg, err) {
-                                                $('#assessmentspinnerContainer').hide();
-                                                alert('AJAX call failed: ' + errmsg);
+                                        <script>
+                             $(document).ready(function() {
+                                      function minimizeBlock(block) {
+
+                                            var blockBody = block.find(".block-body");
+                                            if (blockBody.is(":visible")) {
+                                                blockBody.toggle();
+                                                block.find(".toggle-body").text("+");
                                             }
-                                        });
-                                    }
-
-                                 isUserChange = false;
-                                });
-
-                                $('#assessment_id').change(function() {
-                                    isUserChange = true; // Set true on any change event
-                                });
-
-
-                                 function setBorderColorByScore(score) {
-                                    var borderColor = '#4CAF50'; // Default color
-                                    score = parseInt(score); // Convert score to integer
-
-                                    if (score < 30) {
-                                        borderColor = 'red';
-                                    } else if (score >= 30 && score <= 70) {
-                                        borderColor = 'yellow';
-                                    } // If score > 70, default green color is used
-
-                                    $('#assessment_summary').css('border-left', '5px solid ' + borderColor);
-                                }
-                               });
-                            </script>
-
-
-
-
-
-                    </div>
-                </div>
-
-                <div class="modal" id="assignGroupModal">
-                    <div class="modal-dialog">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h4 class="modal-title">Assign to Group</h4>
-                                <button type="button" class="close" data-dismiss="modal">&times;</button>
-                            </div>
-                            <div class="modal-body">
-                                <form id="group-assignment-form">
-                                    <!-- Existing Groups -->
-                                    <div class="form-group">
-                                        <label for="existing_group">Existing Group:</label>
-                                        <select class="form-control" id="existing_group" name="existing_group">
-                                            <option value="">Select a Group</option>
-                                            {% for group in all_groups %}
-                                                <option value="{{ group.id }}">{{ group.name }}</option>
-                                            {% endfor %}
-                                        </select>
-                                    </div>
-                                    <!-- New Group -->
-                                    <div class="form-group">
-                                        <label for="new_group_name">New Group Name:</label>
-                                        <input type="text" class="form-control" id="new_group_name" name="new_group_name">
-                                    </div>
-                                    <div class="form-group">
-                                    <label for="new_group_type">New Group Type:</label>
-                                    <select class="form-control" id="new_group_type" name="new_group_type">
-                                        {% for type_value, type_name in group_types %}
-                                            <option value="{{ type_value }}">{{ type_name }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                                    <!-- Hidden Field for CyberPHA ID -->
-                                    <input type="hidden" name="cyberpha_id" value="{{ current_pha_header.ID }}">
-                                    <!-- Submit Button -->
-                                    <button type="button" id="assign-group-btn"  class="btn btn-primary">Assign</button>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                </div>
-            </div>
-    </div>
-    <div class="col-md-6 flex-col" id="block4">
-        <div class="info-block" id="connector">
-                <div class="block-header">
-                Third Party Connectors
-                <button type="button" class="toggle-body">+</button>
-                </div>
-                <div class="block-body">
-
-        <div class="form-group">
-            <div class="row">
-                <div class="col-md-3">
-                    <label for="connector_select" style="color: white" title="Select the relevant installed internal solution that AnzenOT can connect to">Select Product:</label>
-                    <select class="form-control"   id="connector_select" name="connector_select">
-                        <option value="">Select Connector</option>
-                        <option value="Darktrace">Darktrace</option>
-                        <option value="Exalens">Exalens</option>
-                     </select>
-                </div>
-            </div>
-            <br><br>
-            <div id="darktraceConfig" style="display: none;">
-                <br>
-                <div class="row">
-                    <div class="col-md-2">
-                        <img src="{% static 'images/darktrace_logo.png' %}" alt="Darktrace Logo" class="mb-3" style="width: 100px;">
-                    </div>
-                    <div class="col-3">
-                        <a href="#" id="useDefaultsLink_darktrace" style="color:white">Use Defaults</a>
-                            <script>
-                            $(document).ready(function() {
-                                $('#useDefaultsLink_darktrace').click(function(event) {
-                                    event.preventDefault(); // Prevent the default link behavior
-
-                                    $.ajax({
-                                        url: '/OTRisk/darktrace_defaults/',
-                                        type: 'GET',
-                                        success: function(response) {
-                                            $('#darktrace_host').val(response.darktrace_host);
-                                            $('#darktrace_public_key').val(response.darktrace_public_key);
-                                            $('#darktrace_private_key').val(response.darktrace_private_key);
-
-                                            },
-                                        error: function(error) {
-                                            console.log('Error fetching Exalens defaults:', error);
                                         }
-                                    });
-                                });
-                            });
-                            </script>
-                        </div>
-                    <div class="col-7">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="row">
-                        <div class="col-md-3">
-                            <label for="darktrace_public_key">Darktrace Public Key</label>
-                            <input type="text" class="form-control" id="darktrace_public_key" name="darktrace_public_key" placeholder="Enter Darktrace Public Key">
-                            <br>
-                            <label for="darktrace_private_key">Darktrace Private Key</label>
-                            <input type="password" class="form-control" id="darktrace_private_key" name="darktrace_private_key" placeholder="Enter Darktrace Private Key">
-                            <br>
-                            <label for="darktrace_host">Darktrace Host</label>
-                            <input type="text" class="form-control" id="darktrace_host" name="darktrace_host" placeholder="Enter Darktrace Host">
-                            <br>
-                            <button id="DarktraceConnectionBtn" type="button" class="btn btn-primary">Connect to Darktrace</button>
-                        </div>
-                        <div class="col-md-9">
-                            <div id="darktrace_risk_status" class="form-group">
-                            <br>
-                            <div class="row" >
-                                <div class="col-md-6">
-                                    <div id="darktrace_control_status" class="scaled-text"></div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div id="darktrace_risk_statement" class="scaled-text"></div>
-                                </div>
-                            </div>
-                            <br>
-                            <div class="row">
-                                <div class="col-md-4">
-                                    <label id="label_darktrace_incident_severity" name="label_darktrace_incident_severity" style="font-size: 1em">Incident Severity</label>
-                                </div>
-                                <div class="col-md-4">
-                                    <label id="label_darktrace_category" name="label_darktrace_category" style="font-size: 1em">Incident Category</label>
-                                 </div>
-                                    <div class="col-md-4">
-                                        <div id="darktrace_risk_score_number"></div>
-                                 </div>
-                            </div>
-
-                            <div class="row" style="display: flex; align-items: center; justify-content: center">
-                                <div class="col-md-4">
-                                    <div id="risk_score_container">
-                                    <div id="darktrace_tactics" style="width: 100%; height: 200px;"></div>
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div id="risk_score_container">
-                                    <div id="darktrace_mitre" style="width: 100%; height: 100%;"></div>
-                                    </div>
-                                </div>
-                                <div class="col-md-4"><div id="darktrace_risk_score_container">
-                                    <div id="darktrace_risk_score_chart"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                    </div>
-                </div>
-            </div>
+                                 // Event handler for clicking on a table row
+                                 $('#headertable').on('click', 'tbody tr.selectable-row', function () {
+                                     // Remove 'highlighted' class from all other rows
+                                     $(this).toggleClass('selected');
+                                     $('tr.selectable-row').removeClass('highlighted');
 
 
-                         <!-- Exalens configuration fields -->
-            <div id="exalensConfig" style="display: none;">
-            <br>
-                <div class="row">
-                    <div class="col-md-2">
-                        <img src="{% static 'images/exalenslogo.png' %}" alt="Exalens Logo" class="mb-3" style="width: 100px;">
-                    </div>
-                    <div class="col-3">
-                        <a href="#" id="useDefaultsLink" style="color:white">Use Defaults</a>
-                            <script>
-                            $(document).ready(function() {
-                                $('#useDefaultsLink').click(function(event) {
-                                    event.preventDefault(); // Prevent the default link behavior
+                                     let recordId = $(this).data('id');  // get the ID of the clicked row
+                                     let title = $(this).find('td:nth-child(2)').text();
+                                     let facility = $(this).find('td:nth-child(3)').text();
+                                     document.getElementById("lblCyberPHATitle").textContent = 'CyberPHA: ' + title + '@' + facility ;
+                                     //make all the sub menu tabs active
+                                     fetchHeaderRecord(recordId);
 
-                                    $.ajax({
-                                        url: '/OTRisk/exalens_defaults/',
-                                        type: 'GET',
-                                        success: function(response) {
-                                            $('#exalensClientId').val(response.exalens_client_id);
-                                            $('#exalensIpAddress').val(response.exalens_ip_address);
-                                            $('#exalensApiKey').val(response.exalens_api);
+                                 });
 
-                                            },
-                                        error: function(error) {
-                                            console.log('Error fetching Exalens defaults:', error);
-                                        }
-                                    });
-                                });
-                            });
-                            </script>
-                        </div>
-                    <div class="col-7">
-                    </div>
-                </div>
+                                 // Check if a saved_record_id is provided in the rendered context
+                                 let savedRecordId = "{{ saved_record_id }}";  // Get the saved_record_id from the Django context
+                                 if (savedRecordId && savedRecordId !== "None") {
+                                     $('tr[data-id="' + savedRecordId + '"]').addClass('highlighted');
+                                     fetchHeaderRecord(savedRecordId);
 
-                <div class="form-group">
-                    <div class="row">
-                        <div class="col-md-3">
-                            <label for="exalensApiKey">Exalens API Key</label>
-                            <input type="password" class="form-control" id="exalensApiKey" name="exalensApiKey" placeholder="Enter Exalens API Key">
-                            <br>
-                            <label for="exalensClientId">Exalens Client ID</label>
-                            <input type="text" class="form-control" id="exalensClientId" name="exalensClientId" placeholder="Enter Exalens Client ID">
-                            <br>
-                            <label for="exalensIpAddress">Exalens IP Address</label>
-                            <input type="text" class="form-control" id="exalensIpAddress" name="exalensIpAddress" placeholder="Enter Exalens IP Address">
-                            <br>
-                            <button id="ExalensConnectionBtn" type="button" class="btn btn-primary">Connect to Exalens</button>
-                        </div>
-                        <div class="col-md-9">
-                            <div id="exalens_risk_status" class="form-group">
-                                <br>
-
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div id="control_status" class="scaled-text"></div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div id="risk_statement" class="scaled-text"></div>
-                                    </div>
-                                </div>
-                                <br>
-                                    <div class="row">
-                                    <div class="col-md-4">
-                                        <label id="label_exalens_incident_severity" name="label_exalens_incident_severity" style="font-size: 1em">Incident Severity</label>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label id="label_exalens_category" name="label_exalens_category" style="font-size: 1em">Incident Category</label>
-                                     </div>
-                                        <div class="col-md-4">
-                                            <div id="risk_score_number"></div>
-                                     </div>
-                                </div>
-                                 <div class="row" style="display: flex; align-items: center; justify-content: center">
-                                     <div class="col-md-4">
-                                         <div id="risk_score_container">
-                                        <div id="exalens_severity_distribution" style="width: 100%; height: 200px;"></div>
-                                         </div>
-                                    </div>
-
-                                     <div class="col-md-4">
-                                         <div id="risk_score_container">
-                                        <div id="exalens_category_distribution" style="width: 100%; height: 200px;"></div>
-                                         </div>
-                                    </div>
-                                     <div class="col-md-4"><div id="risk_score_container">
-                                            <div id="risk_score_chart"></div>
-                                        </div></div>
-
-                                 </div>
-                                <br>
-                                <div class="row" style="display: flex; align-items: center; justify-content: center">
-                                    <div class="col-md-6">
-
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div id="risk_score_number"></div>
-                                        </div>
-                                     </div>
-                                 </div>
-                            </div>
-                        </div>
-                    </div>
-            </div>
-                        <input type="hidden" id="hdn_exalens_status" name="hdn_exalens_status">
-                        <input type="hidden" id="hdn_exalens_risk" name="hdn_exalens_risk">
-                        <input type="hidden" id="hdn_exalens_score" name="hdn_exalens_score">
-                        <input type="hidden" id="hdn_darktrace_status" name="hdn_darktrace_status">
-                        <input type="hidden" id="hdn_darktrace_risk" name="hdn_darktrace_risk">
-                        <input type="hidden" id="hdn_darktrace_score" name="hdn_darktrace_score">
-
-                        <script>
+                                 }
 
 
+                             });
 
-
-
-                        document.getElementById('DarktraceConnectionBtn').addEventListener('click', function() {
-                        var darktrace_host = document.getElementById('darktrace_host').value;
-                        var darktrace_public_key = document.getElementById('darktrace_public_key').value;
-                        var darktrace_private_key = document.getElementById('darktrace_private_key').value;
-
-                        $.ajax({
-                            url: '/OTRisk/cyberpha_darktrace_connection/',
-                            type: 'POST',
-                            data: {
-                                darktrace_host: darktrace_host,
-                                darktrace_public_key: darktrace_public_key,
-                                darktrace_private_key: darktrace_private_key,
-                                csrfmiddlewaretoken: $('input[name="csrfmiddlewaretoken"]').val()
-                            },
-                            beforeSend: function() {
-                                Swal.fire({
-                                    title: 'Processing...',
-                                    text: 'Please wait while we retrieve the data.',
-                                    allowOutsideClick: false,
-                                    didOpen: () => {
-                                        Swal.showLoading()
+                         $(document).on('click', '.delete-btn', function() {
+                        var recordId = $(this).data('id');
+                        if(confirm('Are you sure you want to delete this record?')) {
+                            $.ajax({
+                                url: '{% url "OTRisk:delete_pha_record" %}',
+                                type: 'POST',
+                                data: {
+                                    'id': recordId,
+                                    'csrfmiddlewaretoken': '{{ csrf_token }}'
+                                },
+                                success: function(response) {
+                                    if(response.deleted) {
+                                        window.location.reload();
+                                    } else {
+                                        alert('Error deleting record.');
                                     }
-                                });
-                            },
-                            success: function(response) {
-                                // Update text content
-                                document.getElementById('darktrace_control_status').innerHTML = "<b>Darktrace Status:</b> " + response["Control Status"];
-                                document.getElementById('darktrace_risk_statement').innerHTML = "<b>Inferred Risk:</b> " + response["Risk Statement"];
-
-                                document.getElementById('darktrace_risk_score_number').innerText = "Risk Score: " + response["Risk Score"] + "/100";
-                                document.getElementById('hdn_darktrace_status').value = response["Control Status"];
-                                document.getElementById('hdn_darktrace_risk').value = response["Risk Statement"];
-                                document.getElementById('hdn_darktrace_score').value = response["Risk Score"];
-
-                                darktrace_risk_score_chart(response["Risk Score"]);
-                                darktrace_incident_severity_DistributionChart(response["severity_of_incidents"]);
-                                darktrace_tactics_DistributionChart(response["mitre_tactics_count"]);
-
-
-                            },
-                            complete: function() {
-                                Swal.close();
-                            },
-                            error: function() {
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: 'Error',
-                                    text: 'Failed to retrieve the risk status.'
-                                });
-                            },
-
-                        });
-                    });
-
-
-
-                        document.getElementById('ExalensConnectionBtn').addEventListener('click', function() {
-                        var exalensIP = document.getElementById('exalensIpAddress').value;
-                        var exalensClientID = document.getElementById('exalensClientId').value;
-                        var exalensAPIKey = document.getElementById('exalensApiKey').value;
-
-                        $.ajax({
-                            url: '/OTRisk/cyberpha_exalens_connection/',
-                            type: 'POST',
-                            data: {
-                                exalens_ip: exalensIP,
-                                client_id: exalensClientID,
-                                api_key: exalensAPIKey,
-                                csrfmiddlewaretoken: $('input[name="csrfmiddlewaretoken"]').val()
-                            },
-                            beforeSend: function() {
-                                Swal.fire({
-                                    title: 'Processing...',
-                                    text: 'Please wait while we retrieve the data.',
-                                    allowOutsideClick: false,
-                                    didOpen: () => {
-                                        Swal.showLoading()
-                                    }
-                                });
-                            },
-                            success: function(response) {
-                                // Update text content
-                                document.getElementById('control_status').innerHTML = "<b>Exalens Status:</b> " + response["Control Status"];
-                                document.getElementById('risk_statement').innerHTML = "<b>Inferred Risk:</b> " + response["Risk Statement"];
-
-                                document.getElementById('risk_score_number').innerText = "Risk Score: " + response["Risk Score"] + "/100";
-                                document.getElementById('hdn_exalens_status').value = response["Control Status"];
-                                document.getElementById('hdn_exalens_risk').value = response["Risk Statement"];
-                                document.getElementById('hdn_exalens_score').value = response["Risk Score"];
-                                exalens_createSeverityDistributionChart(response["Severity Distribution"]);
-                                exalens_createCategoryDistributionChart(response[ "Incident Category Breakdown"]);
-
-                                exalens_risk_score_chart(response["Risk Score"]);
-
-                            },
-                            complete: function() {
-                                Swal.close();
-                            },
-                            error: function() {
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: 'Error',
-                                    text: 'Failed to retrieve the risk status.'
-                                });
-                            },
-
-                        });
-                    });
-
-
-                        $(document).ready(function() {
-                            $('#connector_select').change(function() {
-                                var selectedValue = $(this).val();
-                                if (selectedValue === 'Exalens') {
-                                    $('#exalensConfig').show();
-                                    $('#darktraceConfig').hide();
-                                } else if (selectedValue === 'Darktrace') {
-                                    $('#darktraceConfig').show();
-                                    $('#exalensConfig').hide();
-                                } else {
-                                    $('#exalensConfig').hide();
-                                    $('#darktraceConfig').hide();
                                 }
                             });
-                        });
-
-
-
+                        }
+                    });
                         </script>
+                                        </div>
+                                    </div>
+                                </div>
+                        </div>
+                    </div>
+                    <div class="flex-row">
+                        <div class="col-md-12 flex-col" id="block3">
+                            <div class="info-block" id="config">
+                                    <div class="block-header">
+                                    CyberPHA Configuration
+                                    <button type="button" class="toggle-body">+</button>
+                                    </div>
+                                    <div class="block-body">
+                                    <div class="block-body-content" style="align-items: center; align-content: center">
+                                    <label id="cyberpha_detail_label" style="color:white">Information about the CyberPHA </label>
+
+                                    <script>
+                            $(document).ready(function() {
+                            $('#assign-group-btn').on('click', function() {
+
+                            var cyberphaId = sessionStorage.getItem('activeCyberPHA'); // Retrieve from session storage
+                            var existingGroupId = $('#existing_group').val();
+                            var newGroupName = $('#new_group_name').val();
+                            var newGroupType = $('#new_group_type').val();
+
+                            $.ajax({
+                                type: 'POST',
+                                url: '/OTRisk/assign_cyberpha_to_group/', // URL to Django view for assignment
+                                data: {
+                                    'csrfmiddlewaretoken': $('input[name=csrfmiddlewaretoken]').val(),
+                                    'cyberpha_id': cyberphaId,
+                                    'existing_group_id': existingGroupId,
+                                    'new_group_name': newGroupName,
+                                    'new_group_type': newGroupType
+                                },
+                                success: function(response) {
+                                    // Handle success
+                                    var assignGroupModal = new bootstrap.Modal(document.getElementById('assignGroupModal'));
+                                    assignGroupModal.hide();
+
+                                    updateGroupAssignmentsDisplay(cyberphaId); // Function to refresh group assignments on the page
+                                    updateGroupList();
+
+                                },
+                                error: function(error) {
+                                    // Handle error
+                                    console.error('Error:', error);
+                                }
+                            });
+                        });
+                    });
+
+                    function updateGroupAssignmentsDisplay(cyberphaId) {
+                        $.ajax({
+                            type: 'GET',
+                            url: '/OTRisk/fetch_groups/', // URL to a Django view that returns group assignments
+                            data: { 'cyberpha_id': cyberphaId },
+                            success: function(response) {
+                                // Assuming 'response' contains an array of group names or objects
+                                var currentGroupsDiv = $('#currentGroupsDiv');
+                                currentGroupsDiv.empty();
+
+                                if (response.groups && response.groups.length > 0) {
+                                    response.groups.forEach(function(group) {
+                                        // Assuming 'group' contains a property 'name'
+                                        currentGroupsDiv.append($('<p>').text(group.name));
+                                    });
+                                } else {
+                                    currentGroupsDiv.append($('<p>').text('No groups assigned.'));
+                                }
+                            },
+                            error: function(error) {
+                                console.error('Error fetching group assignments:', error);
+                            }
+                        });
+                    }
+
+                    function updateGroupList() {
+                        $.ajax({
+                            type: 'GET',
+                            url: '/OTRisk/fetch_all_groups/', // URL to Django view
+                            success: function(response) {
+                                var existingGroupSelect = $('#existing_group');
+                                existingGroupSelect.empty();
+
+                                existingGroupSelect.append($('<option>', {
+                                    value: '',
+                                    text: 'Select a Group'
+                                }));
+
+                                response.groups.forEach(function(group) {
+                                    existingGroupSelect.append($('<option>', {
+                                        value: group.id,
+                                        text: group.name
+                                    }));
+                                });
+                            },
+                            error: function(error) {
+                                console.error('Error fetching groups:', error);
+                            }
+                        });
+                    }
+
+
+                    document.addEventListener('DOMContentLoaded', function() {
+                        var workflowSelector = document.getElementById('workflow_selector');
+                        workflowSelector.addEventListener('change', function() {
+                            if (this.value === 'Complete') {
+                                swal.fire({
+                                    title: 'CyberPHA Completed?',
+                                    text: "Once you save the status of this record as 'Complete', you will not be able to make further changes.",
+                                    icon: 'warning',
+                                    showCancelButton: true,
+                                    confirmButtonColor: '#3085d6',
+                                    cancelButtonColor: '#d33',
+                                    confirmButtonText: 'Yes, I understand'
+                                });
+                            }
+                        });
+                    });
+
+                    updateGroupList();
+                    </script>
+
+                                    <div class="row" style="width:95%">
+
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                  <div class="col-md-12">
+                                    <div class="form-group d-flex align-items-center" >
+                                        <label for="txtTitle" style="color: white; margin-right: 0.6em; font-size: 0.8em" title="Enter a descriptive title for this assessment">CyberPHA Title</label>
+                                        <input type="text" class="form-control" name="txtTitle" id="txtTitle" value="{{ current_pha_header.title }}" maxlength="100" style="flex: 1;font-size: 0.8em">
+                                    </div>
+
+                                    <div class="form-group d-flex align-items-center">
+                                        <label for="txtLeader" style="color: white; margin-right: 10px; font-size: 0.8em" title="Enter the name of the person leading this assessment">CyberPHA Owner:</label>
+                                        <input type="text" class="form-control" name="txtLeader" id="txtLeader" value="{{ current_pha_header.PHALeader }}" maxlength="100" style="flex: 1;font-size: 0.8em">
+                                    </div>
+
+                                    <div class="form-group d-flex align-items-center">
+                                        <label for="txtLeaderEmail" style="color: white; margin-right: 10px; font-size: 0.8em" title="Enter the email address of the person leading this assessment">Email:</label>
+                                        <input type="email" class="form-control" name="txtLeaderEmail" id="txtLeaderEmail" value="{{ current_pha_header.PHALeaderEmail }}" onblur="validateEmail(this)" style="flex: 1;font-size: 0.8em">
+                                    </div>
+
+                                <script type="text/javascript">
+                                    function validateEmail(input) {
+                                        var regex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+                                        if (!regex.test(input.value)) {
+                                            alert('Please enter a valid email address');
+                                            input.focus();
+                                        }
+                                    }
+                                </script>
+                    </div>
+
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <label for="txtStartDate" style="color: white; font-size: 0.8em" title="Enter the intended assessment start date">Start Date:</label>
+                                                    <input type="date" class="form-control" style="font-size: 0.8em"  name="txtStartDate" id="txtStartDate" value="{{ current_pha_header.AssessmentStartDate|date:'Y-m-d' }}" >
+
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label for="txtEndDate" style="color: white; font-size: 0.8em" title="Enter the intended assessment end date">End Date:</label>
+                                                    <input type="date" class="form-control" style="font-size: 0.8em" name="txtEndDate" id="txtEndDate" value="{{ current_pha_header.AssessmentEndDate|date:'Y-m-d' }}" onchange="validateDates()">
+                                                </div>
+                                                 <script type="text/javascript">
+                                                    function validateDates() {
+                                                        var startDate = document.getElementById('txtStartDate').value;
+                                                        var endDate = document.getElementById('txtEndDate').value;
+
+                                                        if (endDate < startDate) {
+                                                            alert('End date cannot be before start date');
+                                                            document.getElementById('txtEndDate').value = '';
+                                                        }
+                                                    }
+                                                    </script>
+                                            </div>
+                                            <br>
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <label for="txtUnit" style="color: white; font-size: 0.8em" title="Enter the facility unit, if applicable, that's in scope for the current assessment">Unit:</label>
+                                                    <input type="text" class="form-control" style="font-size: 0.8em"  name="txtUnit" id="txtUnit" value="{{ current_pha_header.AssessmentUnit }}"  maxlength="100">
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label for="selZone" style="color: white; font-size: 0.8em" title="Enter the facility zone, if applicable, that's in scope for the current assessment">Zone:</label>
+                                                    <select class="form-control" name="selZone" id="selZone" style="font-size: 0.8em">
+                                                        <option value = ""> -- Select Plant Zone -- </option>
+                                                        {% for zone in zones %}
+                                                            <option value="{{ zone.PlantZone }}"
+                                                            {% if current_pha_header.AssessmentZone == zone.PlantZone %}selected{% endif %}>
+                                                                {{ zone.PlantZone }}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <br>
+                                            <div class="form-group">
+                                                <label style="font-size: 0.8em">OT Incident Response (IR)</label>
+                                            <div class="col-md-12">
+                                                <div class="form-group d-flex align-items-center" >
+                                                    <label for="ir_plan" style="color: white; font-size: 0.8em" title="Check the box if there is an OT Cybersecurity Incident Response Plan for the facility">OT IR Plan (Yes/No):&nbsp;&nbsp;&nbsp;</label>
+                                                    <input type="checkbox" id="ir_plan" name="ir_plan" style="transform: scale(2); margin-right: 5px;">
+                                                    </div>
+                                                <div class="form-group d-flex align-items-center" >
+                                                    <label for="ir_plan_date" style="color: white; font-size: 0.8em" title="Enter the date that the Incident Response Plan was last tested">Last Tested Date:&nbsp;&nbsp;&nbsp;</label>
+                                                    <input type="date" class="form-control" name="ir_plan_date" id="ir_plan_date" value="" style="font-size: 0.8em">
+
+                                                </div>
+                                                <div class="form-group d-flex align-items-center" >
+                                                    <label for="ir_plan_ut" style="color: white; font-size: 0.8em" title="Check the box if the OT Cybersecurity Incident Response PLan has never been tested">Never Tested (Yes/No):&nbsp;&nbsp;&nbsp;</label>
+                                                    <input type="checkbox" id="ir_plan_ut" name="ir_plan_ut" style="transform: scale(2); margin-right: 5px;">
+
+                                                </div>
+                                            </div>
+                                            </div>
+
+                                            </div>
+                                        </div>
+
+
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <div class="form-group">
+                                                     <label for="selSL" style="color: white; font-size: 0.8em" title="SL-Ts are the desired level of security for a particular IACS, zone or conduit. Select the targeted security level, if applicable, per ISA-62443-3-2 Annex A">Target Security Level (SL-T):</label>
+                                                        <select class="form-control" name="selSL" style="font-size: 0.8em" id="selSL">
+                                                        <option value="0"> -- Select SL-T -- </option>
+                                                        {% for value, description in SECURITY_LEVELS %}
+                                                            <option value="{{ value }}"
+                                                            {% if current_pha_header.sl_t|stringformat:"s" == value|stringformat:"s" %}selected{% endif %}>
+                                                                {{ description }}</option>
+                                                        {% endfor %}
+                                                        </select>
+                                                    </div>
+
+                                                <div class="form-group">
+                                                    <label for="assessment_id" style="color: white; font-size: 0.8em" title="Select the control assessment questionnaire that applies to the facility. If no control assessment has been completed, click on Assessments in the menu to go to the assessments page">Control Assessment:</label>
+                                                    <select class="form-control"   id="assessment_id" name="assessment_id" style="font-size: 0.8em">
+                                                        <option value="">Select an Assessment</option>
+                                                        {% for assessment in assessments %}
+                                                            <option value="{{ assessment.id }}"
+                                                            {% if current_pha_header.assessment == assessment.id %}select{% endif %}>
+                                                                {{ assessment.name }}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                    <input type="hidden" id="last_assessment_score" name="last_assessment_score">
+                                                    <input type="hidden" id="last_assessment_summary" name="last_assessment_summary">
+
+                                                    <div id="assessmentspinnerContainer" style="display: none;">
+                                                        <div class="spinner-border" role="status">
+
+                                                            <span class="sr-only">Loading...</span>
+                                                             </div>
+                                                    </div>
+
+                                             <!-- Container to display the summary and score -->
+                                            <span id="assessment_summary" style="font-size:0.8em" ></span>
+                                            <br>
+                                            <span id="assessment_score" ></span>
+                                                 </div>
+
+                                                <div class="form-group">
+                                                    <label for="walkdown_id" style="color: white; font-size: 0.8em" title="Select the control assessment questionnaire that applies to the facility. If no control assessment has been completed, click on Assessments in the menu to go to the assessments page">Site Walk-Down Assessment:</label>
+                                                    <select class="form-control"   id="walkdown_id" name="walkdown_id" style="font-size: 0.8em">
+                                                        <option value="">Select the site walkdown</option>
+                                                        {% for walkdown in walkdowns %}
+                                                            <option value="{{ walkdown.id }}"
+                                                            {% if current_pha_header.walkdown == walkdown.id %}select{% endif %}>
+                                                                {{ walkdown.name }}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                    <div id="walkdownspinnerContainer" style="display: none;">
+                                                        <div class="spinner-border" role="status">
+
+                                                            <span class="sr-only">Loading...</span>
+                                                            <input type="hidden" id="last_walkdown_score" name="last_walkdown_score">
+                                                            <input type="hidden" id="last_walkdown_summary" name="last_walkdown_summary">
+                                                        </div>
+                                                    </div>
+
+                                             <!-- Container to display the summary and score -->
+                                            <span id="walkdown_summary" ></span>
+                                            <br>
+                                            <span id="walkdown_score" ></span>
+                                                 </div>
+                                                <div class="form-group" style="color: white">
+                                                        Current Group Assignments:
+                                                        <br>
+                                                        <div id="currentGroupsDiv" style="font-size: 16px">
+                                                        </div>
+                                                    <br>
+                                                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#assignGroupModal">
+                                                        Assign to Group
+                                                    </button>
+
+                                            </div>
+                                                <div class="form-group">
+                                                    <label for="workflow_selector" style="color: white; font-size: 0.8em">Workflow Status:</label>
+                                                    <select class="form-control" id="workflow_selector" name="workflow_selector" style="font-size: 0.8em">
+                                                        <option value="">Select a Status</option>
+                                                        {% for status, status_display in workflow_status_choices %}
+                                                            <option value="{{ status }}"
+                                                                    {% if current_workflow_status == status %} selected {% endif %}>
+                                                                {{ status_display }}
+                                                            </option>
+                                                        {% endfor %}
+                                                    </select>
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group" style="display: none">
+                                                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#moderatorModal" >
+                                                    Select CyberPHA Moderators
+                                                </button>
+                                            </div>
+                                            <script>
+
+                                                    $(document).ready(function() {
+
+                                                        let isUserChange = false;
+                                                        $("#assessment-select").selectmenu().selectmenu("menuWidget").addClass("overflow");
+
+                                                         $('#assessment_id').change(function() {
+                                                              if (!isUserChange) return;
+                                                        var assessmentId = $(this).val();
+                                                        var industry = document.getElementById('lblFacilityIndustry').textContent;
+                                                        var facilityType = document.getElementById('lblFacilityType').textContent;
+
+                                                        if(assessmentId  && isUserChange) {
+                                                            $('#assessmentspinnerContainer').show();
+                                                            $.ajax({
+                                                                url: '/OTRisk/get_assessment_summary/',  // Update with the actual URL
+                                                                type: 'POST',
+                                                                data: { 'assessment_id': assessmentId,
+                                                                            'industry': industry,
+                                                                            'facilityType': facilityType,
+                                                                        'csrfmiddlewaretoken': '{{ csrf_token }}'
+                                                                },
+                                                                success: function(response) {
+                                                                    $('#assessmentspinnerContainer').hide();
+                                                                    if(response.error) {
+                                                                        console.log(response.error);
+                                                                    } else {
+                                                                        $('#assessment_summary').text(response.summary);
+                                                                        $('#assessment_score').text('Score: ' + response.score  + '/100');
+                                                                        setBorderColorByScore(response.score);
+                                                                        drawControlGauge(response.score);
+                                                                        document.getElementById('last_assessment_score').value = response.score;
+                                                                        document.getElementById('last_assessment_summary').value = response.summary;
+
+                                                                    }
+                                                                },
+                                                                error: function(xhr, errmsg, err) {
+                                                                    $('#assessmentspinnerContainer').hide();
+                                                                    alert('AJAX call failed: ' + errmsg);
+                                                                }
+                                                            });
+                                                        }
+
+                                                     isUserChange = false;
+                                                    });
+
+                                                    $('#assessment_id').change(function() {
+                                                        isUserChange = true; // Set true on any change event
+                                                    });
+
+
+                                                     function setBorderColorByScore(score) {
+                                                        var borderColor = '#4CAF50'; // Default color
+                                                        score = parseInt(score); // Convert score to integer
+
+                                                        if (score < 30) {
+                                                            borderColor = 'red';
+                                                        } else if (score >= 30 && score <= 70) {
+                                                            borderColor = 'yellow';
+                                                        } // If score > 70, default green color is used
+
+                                                        $('#assessment_summary').css('border-left', '5px solid ' + borderColor);
+                                                    }
+                                                   });
+                                                </script>
+
+
+
+
+
+                                        </div>
+                                    </div>
+
+                                    <div class="modal" id="assignGroupModal">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h4 class="modal-title">Assign to Group</h4>
+                                                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <form id="group-assignment-form">
+                                                        <!-- Existing Groups -->
+                                                        <div class="form-group">
+                                                            <label for="existing_group">Existing Group:</label>
+                                                            <select class="form-control" id="existing_group" name="existing_group">
+                                                                <option value="">Select a Group</option>
+                                                                {% for group in all_groups %}
+                                                                    <option value="{{ group.id }}">{{ group.name }}</option>
+                                                                {% endfor %}
+                                                            </select>
+                                                        </div>
+                                                        <!-- New Group -->
+                                                        <div class="form-group">
+                                                            <label for="new_group_name">New Group Name:</label>
+                                                            <input type="text" class="form-control" id="new_group_name" name="new_group_name">
+                                                        </div>
+                                                        <div class="form-group">
+                                                        <label for="new_group_type">New Group Type:</label>
+                                                        <select class="form-control" id="new_group_type" name="new_group_type">
+                                                            {% for type_value, type_name in group_types %}
+                                                                <option value="{{ type_value }}">{{ type_name }}</option>
+                                                            {% endfor %}
+                                                        </select>
+                                                    </div>
+                                                        <!-- Hidden Field for CyberPHA ID -->
+                                                        <input type="hidden" name="cyberpha_id" value="{{ current_pha_header.ID }}">
+                                                        <!-- Submit Button -->
+                                                        <button type="button" id="assign-group-btn"  class="btn btn-primary">Assign</button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="flex-row">
+                        <div class="col-md-12 flex-col" id="block5">
+                            <div class="info-block" id="tools">
+                                    <div class="block-header">
+                                    Tools & Software
+                                    <button type="button" class="toggle-body">+</button>
+                                    </div>
+                                    <div class="block-body">
+                                        <div class="block-body-content" style="align-items: center; align-content: center">
+                                        <h3 style="color: white">OT Tools & Software</h3>
+                                        <div class="card mb-3 shadow-sm" style="background-color: #5E6266;">
+                                            <div class="card-body">
+                                                <label style="color:white">List tools and software purchased to mitigate OT cybersecurity risks</label>
+                                                <div class="table-responsive">
+                                                    <table class="table" id="investmentTable">
+                                                        <colgroup>
+                                                            <col span="1" style="width: 50%;"> <!-- Vendor Name -->
+                                                            <col span="1" style="width: 40%;"> <!-- Product Name -->
+                                                            <col span="1" style="width: 10%;"> <!-- Action -->
+                                                        </colgroup>
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Vendor Name</th>
+                                                                <th>Product Name</th>
+                                                                <th>Action</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <tr>
+                                                                <td>
+                                                                    <select name="vendor_name[]" class="form-control vendor-select">
+                                                                        <option value="">Select Vendor</option>
+                                                                        {% for vendor in unique_vendors_json %}
+                                                                            <option value="{{ vendor }}">{{ vendor }}</option>
+                                                                        {% endfor %}
+                                                                    </select>
+                                                                </td>
+                                                                <td>
+                                                                    <select name="product_name[]" class="form-control product-select">
+                                                                        <option value="">Select Product</option>
+                                                                    </select>
+                                                                </td>
+                                                                <td><button class="btn btn-danger removeRow">Remove</button></td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                    <button type="button" class="btn btn-primary" id="addRow">Add Row</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                            </div>
+                                    </div>
+                                        <script>
+                            $(document).ready(function() {
+                                var vendors = JSON.parse('{{ vendors_json|escapejs }}');
+                                var uniqueVendors = JSON.parse('{{ unique_vendors_json|escapejs }}');
+
+                                $("#addRow").click(function() {
+                                    var newRow = `<tr>
+                                        <td>
+                                            <select name="vendor_name[]" class="form-control vendor-select">
+                                                <option value="">Select Vendor</option>
+                                                ${uniqueVendors.map(v => `<option value="${v}">${v}</option>`).join('')}
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <select name="product_name[]" class="form-control product-select">
+                                                <option value="">Select Product</option>
+                                            </select>
+                                        </td>
+                                        <td><button type="button" class="btn btn-danger removeRow">Remove</button></td>
+                                    </tr>`;
+                                    $("#investmentTable tbody").append(newRow);
+                                });
+
+                                $(document).on('change', '.vendor-select', function() {
+                                    var vendor = $(this).val();
+                                    var productSelect = $(this).closest('tr').find('.product-select');
+                                    var products = vendors.filter(v => v.vendor === vendor).map(v => v.product);
+
+                                    productSelect.empty().append('<option value="">Select Product</option>');
+                                    products.forEach(function(product) {
+                                        productSelect.append(`<option value="${product}">${product}</option>`);
+                                    });
+                                });
+
+                                $(document).on('click', '.removeRow', function() {
+                                    $(this).closest('tr').remove();
+                                });
+                            });
+                            </script>
+
+                                </div>
+                        </div>
+
+                    </div>
+                    <div class="flex-row">
+                        <div class="col-md-12 flex-col" id="block7">
+                            <div class="info-block" id="asset">
+                                    <div class="block-header">
+                                    OT Asset Profile
+                                    <button type="button" class="toggle-body">+</button>
+                                    </div>
+                                    <div class="block-body">
+                                        <div class="block-body-content" style="align-items: center; align-content: center">
+                                            <p style="color:white">OT devices most likely to be present within the facility</p>
+                                                <div class="row" style="width:95%">
+                                                    <div class="col">
+                                                        <div class="form-group" style="width: 95%;">
+                                                            <div id="otherContainer" class="safety-summary-container"></div>
+                                                            <textarea rows="25" name="txtOther" id="txtOther" class="form-control" style="resize: none; background-color: white; border-width: 0px" readonly hidden>{{ current_pha_header.otherSummary }}</textarea>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                        </div>
+                                    </div>
+                                </div>
+                        </div>
+
+                    </div>
+                    <div class="flex-row">
+                        <div class="col-md-12 flex-col" id="block9">
+                            <div class="info-block" id="insight">
+                                    <div class="block-header">
+                                    Security Insights
+                                    <button type="button" class="toggle-body">+</button>
+                                    </div>
+                                    <div class="block-body">
+                                        <div class="block-body-content" style="align-items: center; align-content: center">
+                                        <p style="color:white">Relevant OT Cybersecurity insights to consider for the facility</p>
+                                         <div class="row" style="width:95%">
+                                                <div class="col">
+                                            <div class="form-group">
+                                         <div id="insightContainer" class="safety-summary-container"></div>
+                                                <textarea rows="25" name="insightSummary" id="insightSummary" class="form-control" style="resize: none; background-color: white; border-width: 0px" readonly hidden>{{ current_pha_header.insightSummary }}</textarea>
+                                         </div>
+                                                </div>
+                                         </div>
+                                        </div>
+                                    </div>
+                                </div>
+                        </div>
+
+                    </div>
+                    <div class="flex-row">
+                        <div class="col-md-12 flex-col" id="block11">
+                            <div class="info-block" id="safety">
+                                    <div class="block-header">
+                                    Safety Profile <img src="{% static 'images/osha_safety.png' %}" style="width: 50px" class="img-fluid" alt="Logo">
+                                    <button type="button" class="toggle-body">+</button>
+                                    </div>
+                                    <div class="block-body">
+                                    <div class="block-body-content" style="align-items: center; align-content: center">
+                                    <p style="color:white">Safety considerations for the facility</p>
+                                    <div class="row" style="width:95%">
+                                        <div class="col">
+                                    <div class="form-group">
+                                    <div id="safetySummaryContainer" class="safety-summary-container"></div>
+                                    <textarea rows="25" name="txtSafetySummary" id="txtSafetySummary" class="form-control" style="resize: none; background-color: white; border-width: 0px" readonly hidden>{{ current_pha_header.safetySummary }}</textarea>
+                                    </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                    </div>
+                                </div>
+                        </div>
+
+                    </div>
+                    <div class="flex-row">
+                        <div class="col-md-12 flex-col" id="block13">
+                            <div class="info-block" id="compliance">
+                                    <div class="block-header">
+                                    Compliance Profile
+                                    <button type="button" class="toggle-body">+</button>
+                                    </div>
+                                    <div class="block-body">
+                                    <div class="block-body-content" style="align-items: center; align-content: center">
+                                     <p style="color:white">Regulatory compliance requirements for this facility</p>
+                                     <div class="row" style="width:95%">
+                                                <div class="col">
+                                            <div class="form-group">
+                                     <div id="complianceContainer" class="safety-summary-container"></div>
+                                     <textarea rows="25" name="txtCompliance" id="txtCompliance" hidden class="form-control" style="resize: none; background-color: white; border-width: 0px" readonly hidden>{{ current_pha_header.complianceSummary }}</textarea>
+                                     </div>
+                                                </div>
+                                     </div>
+                                        </div>
+                                    </div>
+                                </div>
+                        </div>
+
+                        </div>
+                </div>
+
+            <div class="col-md-6" id="block_row_right">
+                    <div class="flex-row">
+                        <div class="col-md-12 flex-col" id="block2">
+                                <div class="info-block" id="detail">
+                                        <div class="block-header">
+                                            Assessment Facility
+                                            <button type="button" class="toggle-body">+</button>
+                                        </div>
+                                        <div class="block-body">
+                                            <div class="block-body-content" style="align-items: center; align-content: center">
+                                            <button type="button" class="btn btn-primary" id="loadFacilityButton" disabled>Load Facility</button>
+                                            <p></p>
+                                            <div class="row" style="width:95%"> <!-- data rows -->
+                                                <div class="col-md-6">
+
+                                                <div class="form-group">
+                                                <input type="hidden" id="facilityid" name="facilityid" >
+                                                <div class="row">
+                                                    <div class="col-md-12">
+                                                    <label style="color: #b7b9c0">Facility Name: &nbsp;&nbsp;</label><label name="lblFacilityName" id="lblFacilityName">{{ current_pha_header.FacilityName }}</label><br>
+                                                    <label style="color: #b7b9c0">Address: &nbsp;&nbsp;</label><label name="lblFacilityAddress" id="lblFacilityAddress" >{{ current_pha_header.facilityAddress }}</label><br>
+                                                    <label style="color: #b7b9c0">Industry: &nbsp;&nbsp;</label><label name="lblFacilityIndustry" id="lblFacilityIndustry" >{{ current_pha_header.Industry }}</label><br>
+                                                    <label style="color: #b7b9c0">Facility Type: &nbsp;&nbsp;</label><label name="lblFacilityType" id="lblFacilityType" >{{ current_pha_header.FacilityType }}</label><br>
+                                                    <label style="color: #b7b9c0">Shift Model: &nbsp;&nbsp;</label><label name="lblFacilityShiftModel" id="lblFacilityShiftModel" >{{ current_pha_header.shift_model }}</label><br>
+                                                    <label style="color: #b7b9c0">Employees: &nbsp;&nbsp;</label><label name="lblFacilityEmployees" id="lblFacilityEmployees" >{{ current_pha_header.EmployeesOnSite }}</label><br>
+                                                    <label style="color: #b7b9c0">Revenue: &nbsp;&nbsp;</label><label name="lblFacilityRevenue" id="lblFacilityRevenue" >{{ annual_revenue_str|default:'0' }}</label><br>
+                                                    <label style="color: #b7b9c0">Operating Cost/Hour: &nbsp;&nbsp;</label><label name="lblFacilityOC" id="lblFacilityOC" >{{ coho_str|default:'0' }}</label><br>
+                                                    <label style="color: #b7b9c0">Net Profit Margin: &nbsp;&nbsp;</label><label name="lblFacilityNPM" id="lblFacilityNPM" >{{ coho_str|default:'0' }}</label><br>
+                                                    <br>
+                                                        <div class="form-group">
+                                                    <label style="color: white">Air Quality Index (AQI):</label>
+                                                    <div id="aqiGlobe" class="aqi-globe">--</div>
+                                                        <input type="hidden" id="txthdnAQI">
+                                                </div>
+                                                    </div>
+                                                </div>
+
+
+
+                                        </div>
+
+                                     </div>
+
+                                                <div class="col-md-6" style="background-color: #464748;">
+                                                <div id="facility_map" style="height: 95%; border:1"></div>
+                                                <input type="hidden" id="txthdnLat" name="txthdnLat">
+                                                <input type="hidden" id="txthdnLong" name="txthdnLong">
+                                            </div>
+                                            </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                            </div>
+                    </div>
+                    <div class="flex-row">
+                        <div class="col-md-12 flex-col" id="block4">
+                                <div class="info-block" id="connector">
+                                        <div class="block-header">
+                                        Third Party Connectors
+                                        <button type="button" class="toggle-body">+</button>
+                                        </div>
+                                        <div class="block-body">
+                                        <div class="block-body-content" style="align-items: center; align-content: center">
+                                        <div class="form-group">
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <label for="connector_select" style="color: white" title="Select the relevant installed internal solution that AnzenOT can connect to">Select Product:</label>
+                                            <select class="form-control"   id="connector_select" name="connector_select">
+                                                <option value="">Select Connector</option>
+                                                <option value="Darktrace">Darktrace</option>
+                                                <option value="Exalens">Exalens</option>
+                                             </select>
+                                        </div>
+                                    </div>
+                                    <br><br>
+                                    <div id="darktraceConfig" style="display: none;">
+                                        <br>
+                                        <div class="row">
+                                            <div class="col-md-2">
+                                                <img src="{% static 'images/darktrace_logo.png' %}" alt="Darktrace Logo" class="mb-3" style="width: 100px;">
+                                            </div>
+                                            <div class="col-3">
+                                                <a href="#" id="useDefaultsLink_darktrace" style="color:white">Use Defaults</a>
+                                                    <script>
+                                                    $(document).ready(function() {
+                                                        $('#useDefaultsLink_darktrace').click(function(event) {
+                                                            event.preventDefault(); // Prevent the default link behavior
+
+                                                            $.ajax({
+                                                                url: '/OTRisk/darktrace_defaults/',
+                                                                type: 'GET',
+                                                                success: function(response) {
+                                                                    $('#darktrace_host').val(response.darktrace_host);
+                                                                    $('#darktrace_public_key').val(response.darktrace_public_key);
+                                                                    $('#darktrace_private_key').val(response.darktrace_private_key);
+
+                                                                    },
+                                                                error: function(error) {
+                                                                    console.log('Error fetching Exalens defaults:', error);
+                                                                }
+                                                            });
+                                                        });
+                                                    });
+                                                    </script>
+                                                </div>
+                                            <div class="col-7">
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <div class="row">
+                                                <div class="col-md-3">
+                                                    <label for="darktrace_public_key">Darktrace Public Key</label>
+                                                    <input type="text" class="form-control" id="darktrace_public_key" name="darktrace_public_key" placeholder="Enter Darktrace Public Key">
+                                                    <br>
+                                                    <label for="darktrace_private_key">Darktrace Private Key</label>
+                                                    <input type="password" class="form-control" id="darktrace_private_key" name="darktrace_private_key" placeholder="Enter Darktrace Private Key">
+                                                    <br>
+                                                    <label for="darktrace_host">Darktrace Host</label>
+                                                    <input type="text" class="form-control" id="darktrace_host" name="darktrace_host" placeholder="Enter Darktrace Host">
+                                                    <br>
+                                                    <button id="DarktraceConnectionBtn" type="button" class="btn btn-primary">Connect to Darktrace</button>
+                                                </div>
+                                                <div class="col-md-9">
+                                                    <div id="darktrace_risk_status" class="form-group">
+                                                    <br>
+                                                    <div class="row" >
+                                                        <div class="col-md-6">
+                                                            <div id="darktrace_control_status" class="scaled-text"></div>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <div id="darktrace_risk_statement" class="scaled-text"></div>
+                                                        </div>
+                                                    </div>
+                                                    <br>
+                                                    <div class="row">
+                                                        <div class="col-md-4">
+                                                            <label id="label_darktrace_incident_severity" name="label_darktrace_incident_severity" style="font-size: 1em">Incident Severity</label>
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            <label id="label_darktrace_category" name="label_darktrace_category" style="font-size: 1em">Incident Category</label>
+                                                         </div>
+                                                            <div class="col-md-4">
+                                                                <div id="darktrace_risk_score_number"></div>
+                                                         </div>
+                                                    </div>
+
+                                                    <div class="row" style="display: flex; align-items: center; justify-content: center">
+                                                        <div class="col-md-4">
+                                                            <div id="risk_score_container">
+                                                            <div id="darktrace_tactics" style="width: 100%; height: 200px;"></div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-4">
+                                                            <div id="risk_score_container">
+                                                            <div id="darktrace_mitre" style="width: 100%; height: 100%;"></div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-4"><div id="darktrace_risk_score_container">
+                                                            <div id="darktrace_risk_score_chart"></div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+
+                                                 <!-- Exalens configuration fields -->
+                                    <div id="exalensConfig" style="display: none;">
+                                    <br>
+                                        <div class="row">
+                                            <div class="col-md-2">
+                                                <img src="{% static 'images/exalenslogo.png' %}" alt="Exalens Logo" class="mb-3" style="width: 100px;">
+                                            </div>
+                                            <div class="col-3">
+                                                <a href="#" id="useDefaultsLink" style="color:white">Use Defaults</a>
+                                                    <script>
+                                                    $(document).ready(function() {
+                                                        $('#useDefaultsLink').click(function(event) {
+                                                            event.preventDefault(); // Prevent the default link behavior
+
+                                                            $.ajax({
+                                                                url: '/OTRisk/exalens_defaults/',
+                                                                type: 'GET',
+                                                                success: function(response) {
+                                                                    $('#exalensClientId').val(response.exalens_client_id);
+                                                                    $('#exalensIpAddress').val(response.exalens_ip_address);
+                                                                    $('#exalensApiKey').val(response.exalens_api);
+
+                                                                    },
+                                                                error: function(error) {
+                                                                    console.log('Error fetching Exalens defaults:', error);
+                                                                }
+                                                            });
+                                                        });
+                                                    });
+                                                    </script>
+                                                </div>
+                                            <div class="col-7">
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <div class="row">
+                                                <div class="col-md-3">
+                                                    <label for="exalensApiKey">Exalens API Key</label>
+                                                    <input type="password" class="form-control" id="exalensApiKey" name="exalensApiKey" placeholder="Enter Exalens API Key">
+                                                    <br>
+                                                    <label for="exalensClientId">Exalens Client ID</label>
+                                                    <input type="text" class="form-control" id="exalensClientId" name="exalensClientId" placeholder="Enter Exalens Client ID">
+                                                    <br>
+                                                    <label for="exalensIpAddress">Exalens IP Address</label>
+                                                    <input type="text" class="form-control" id="exalensIpAddress" name="exalensIpAddress" placeholder="Enter Exalens IP Address">
+                                                    <br>
+                                                    <button id="ExalensConnectionBtn" type="button" class="btn btn-primary">Connect to Exalens</button>
+                                                </div>
+                                                <div class="col-md-9">
+                                                    <div id="exalens_risk_status" class="form-group">
+                                                        <br>
+
+                                                        <div class="row">
+                                                            <div class="col-md-6">
+                                                                <div id="control_status" class="scaled-text"></div>
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <div id="risk_statement" class="scaled-text"></div>
+                                                            </div>
+                                                        </div>
+                                                        <br>
+                                                            <div class="row">
+                                                            <div class="col-md-4">
+                                                                <label id="label_exalens_incident_severity" name="label_exalens_incident_severity" style="font-size: 1em">Incident Severity</label>
+                                                            </div>
+                                                            <div class="col-md-4">
+                                                                <label id="label_exalens_category" name="label_exalens_category" style="font-size: 1em">Incident Category</label>
+                                                             </div>
+                                                                <div class="col-md-4">
+                                                                    <div id="risk_score_number"></div>
+                                                             </div>
+                                                        </div>
+                                                         <div class="row" style="display: flex; align-items: center; justify-content: center">
+                                                             <div class="col-md-4">
+                                                                 <div id="risk_score_container">
+                                                                <div id="exalens_severity_distribution" style="width: 100%; height: 200px;"></div>
+                                                                 </div>
+                                                            </div>
+
+                                                             <div class="col-md-4">
+                                                                 <div id="risk_score_container">
+                                                                <div id="exalens_category_distribution" style="width: 100%; height: 200px;"></div>
+                                                                 </div>
+                                                            </div>
+                                                             <div class="col-md-4"><div id="risk_score_container">
+                                                                    <div id="risk_score_chart"></div>
+                                                                </div></div>
+
+                                                         </div>
+                                                        <br>
+                                                        <div class="row" style="display: flex; align-items: center; justify-content: center">
+                                                            <div class="col-md-6">
+
+                                                                </div>
+                                                                <div class="col-md-6">
+                                                                    <div id="risk_score_number"></div>
+                                                                </div>
+                                                             </div>
+                                                         </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                    </div>
+                                                <input type="hidden" id="hdn_exalens_status" name="hdn_exalens_status">
+                                                <input type="hidden" id="hdn_exalens_risk" name="hdn_exalens_risk">
+                                                <input type="hidden" id="hdn_exalens_score" name="hdn_exalens_score">
+                                                <input type="hidden" id="hdn_darktrace_status" name="hdn_darktrace_status">
+                                                <input type="hidden" id="hdn_darktrace_risk" name="hdn_darktrace_risk">
+                                                <input type="hidden" id="hdn_darktrace_score" name="hdn_darktrace_score">
+
+                                                <script>
+
+
+
+
+
+                                                document.getElementById('DarktraceConnectionBtn').addEventListener('click', function() {
+                                                var darktrace_host = document.getElementById('darktrace_host').value;
+                                                var darktrace_public_key = document.getElementById('darktrace_public_key').value;
+                                                var darktrace_private_key = document.getElementById('darktrace_private_key').value;
+
+                                                $.ajax({
+                                                    url: '/OTRisk/cyberpha_darktrace_connection/',
+                                                    type: 'POST',
+                                                    data: {
+                                                        darktrace_host: darktrace_host,
+                                                        darktrace_public_key: darktrace_public_key,
+                                                        darktrace_private_key: darktrace_private_key,
+                                                        csrfmiddlewaretoken: $('input[name="csrfmiddlewaretoken"]').val()
+                                                    },
+                                                    beforeSend: function() {
+                                                        Swal.fire({
+                                                            title: 'Processing...',
+                                                            text: 'Please wait while we retrieve the data.',
+                                                            allowOutsideClick: false,
+                                                            didOpen: () => {
+                                                                Swal.showLoading()
+                                                            }
+                                                        });
+                                                    },
+                                                    success: function(response) {
+                                                        // Update text content
+                                                        document.getElementById('darktrace_control_status').innerHTML = "<b>Darktrace Status:</b> " + response["Control Status"];
+                                                        document.getElementById('darktrace_risk_statement').innerHTML = "<b>Inferred Risk:</b> " + response["Risk Statement"];
+
+                                                        document.getElementById('darktrace_risk_score_number').innerText = "Risk Score: " + response["Risk Score"] + "/100";
+                                                        document.getElementById('hdn_darktrace_status').value = response["Control Status"];
+                                                        document.getElementById('hdn_darktrace_risk').value = response["Risk Statement"];
+                                                        document.getElementById('hdn_darktrace_score').value = response["Risk Score"];
+
+                                                        darktrace_risk_score_chart(response["Risk Score"]);
+                                                        darktrace_incident_severity_DistributionChart(response["severity_of_incidents"]);
+                                                        darktrace_tactics_DistributionChart(response["mitre_tactics_count"]);
+
+
+                                                    },
+                                                    complete: function() {
+                                                        Swal.close();
+                                                    },
+                                                    error: function() {
+                                                        Swal.fire({
+                                                            icon: 'error',
+                                                            title: 'Error',
+                                                            text: 'Failed to retrieve the risk status.'
+                                                        });
+                                                    },
+
+                                                });
+                                            });
+
+
+
+                                                document.getElementById('ExalensConnectionBtn').addEventListener('click', function() {
+                                                var exalensIP = document.getElementById('exalensIpAddress').value;
+                                                var exalensClientID = document.getElementById('exalensClientId').value;
+                                                var exalensAPIKey = document.getElementById('exalensApiKey').value;
+
+                                                $.ajax({
+                                                    url: '/OTRisk/cyberpha_exalens_connection/',
+                                                    type: 'POST',
+                                                    data: {
+                                                        exalens_ip: exalensIP,
+                                                        client_id: exalensClientID,
+                                                        api_key: exalensAPIKey,
+                                                        csrfmiddlewaretoken: $('input[name="csrfmiddlewaretoken"]').val()
+                                                    },
+                                                    beforeSend: function() {
+                                                        Swal.fire({
+                                                            title: 'Processing...',
+                                                            text: 'Please wait while we retrieve the data.',
+                                                            allowOutsideClick: false,
+                                                            didOpen: () => {
+                                                                Swal.showLoading()
+                                                            }
+                                                        });
+                                                    },
+                                                    success: function(response) {
+                                                        // Update text content
+                                                        document.getElementById('control_status').innerHTML = "<b>Exalens Status:</b> " + response["Control Status"];
+                                                        document.getElementById('risk_statement').innerHTML = "<b>Inferred Risk:</b> " + response["Risk Statement"];
+
+                                                        document.getElementById('risk_score_number').innerText = "Risk Score: " + response["Risk Score"] + "/100";
+                                                        document.getElementById('hdn_exalens_status').value = response["Control Status"];
+                                                        document.getElementById('hdn_exalens_risk').value = response["Risk Statement"];
+                                                        document.getElementById('hdn_exalens_score').value = response["Risk Score"];
+                                                        exalens_createSeverityDistributionChart(response["Severity Distribution"]);
+                                                        exalens_createCategoryDistributionChart(response[ "Incident Category Breakdown"]);
+
+                                                        exalens_risk_score_chart(response["Risk Score"]);
+
+                                                    },
+                                                    complete: function() {
+                                                        Swal.close();
+                                                    },
+                                                    error: function() {
+                                                        Swal.fire({
+                                                            icon: 'error',
+                                                            title: 'Error',
+                                                            text: 'Failed to retrieve the risk status.'
+                                                        });
+                                                    },
+
+                                                });
+                                            });
+
+
+                                                $(document).ready(function() {
+                                                    $('#connector_select').change(function() {
+                                                        var selectedValue = $(this).val();
+                                                        if (selectedValue === 'Exalens') {
+                                                            $('#exalensConfig').show();
+                                                            $('#darktraceConfig').hide();
+                                                        } else if (selectedValue === 'Darktrace') {
+                                                            $('#darktraceConfig').show();
+                                                            $('#exalensConfig').hide();
+                                                        } else {
+                                                            $('#exalensConfig').hide();
+                                                            $('#darktraceConfig').hide();
+                                                        }
+                                                    });
+                                                });
+
+
+
+                                                </script>
+                                            </div>
+                                        </div>
+                                        </div>
+                                    </div>
+                            </div>
+                    </div>
+                    <div class="flex-row">
+                        <div class="col-md-12 flex-col" id="block6">
+                                <div class="info-block" id="physical">
+                                        <div class="block-header" >
+
+                                        Physical Security Profile <img src="{% static 'images/osha_exclamation.png' %}" style="width: 50px" class="img-fluid" alt="Logo">
+                                        <button type="button" class="toggle-body">+</button>
+                                        </div>
+                                        <div class="block-body">
+                                            <div class="block-body-content" style="align-items: center; align-content: center">
+                                                <p style="color:white">Physical security considerations for the location of the facility</p>
+                                                <div class="row" style="width:95%">
+                                                    <div class="col">
+                                                        <div class="form-group">
+                                                            <div id="physicalContainer" class="safety-summary-container"></div>
+                                                            <textarea rows="25" name="txtPhysical" id="txtPhysical" class="form-control" style="resize: none; background-color: white; border-width: 0px" readonly hidden>{{ current_pha_header.physicalSummary }}</textarea>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                            </div>
+                    </div>
+                    <div class="flex-row">
+                        <div class="col-md-12 flex-col" id="block8">
+                                <div class="info-block" id="threat">
+                                        <div class="block-header">
+                                        Threat Profile
+                                        <button type="button" class="toggle-body">+</button>
+                                        </div>
+                                        <div class="block-body">
+                                            <div class="block-body-content" style="align-items: center; align-content: center">
+                                            <p style="color:white">OT Cybersecurity threats most relevant to this facility</p>
+                                             <div class="row" style="width:95%">
+                                                <div class="col">
+                                                <div class="form-group">
+                                             <div id="threatContainer" class="safety-summary-container"></div>
+                                                    <textarea rows="25" name="threatSummary" id="threatSummary" class="form-control" style="resize: none; background-color: white; border-width: 0px" readonly hidden>{{ current_pha_header.threatSummary }}</textarea>
+                                             </div>
+                                                </div>
+                                             </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                            </div>
+                        </div>
+                    <div class="flex-row">
+                        <div class="col-md-12 flex-col" id="block10">
+                                <div class="info-block" id="strategy">
+                                        <div class="block-header">
+                                        OT Cybersecurity Strategy
+                                        <button type="button" class="toggle-body">+</button>
+                                        </div>
+                                        <div class="block-body">
+                                            <div class="block-body-content" style="align-items: center; align-content: center">
+                                            <p style="color:white">OT Cybersecurity strategy most relevant to this facility</p>
+                                                <div class="row" style="width:95%">
+                                                    <div class="col">
+                                                        <div class="form-group">
+                                                            <div id="strategyContainer" class="safety-summary-container"></div>
+                                                            <textarea rows="25" name="strategySummary" id="strategySummary" class="form-control" style="resize: none; background-color: white; border-width: 0px" readonly hidden>{{ current_pha_header.strategySummary }}</textarea>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                            </div>
+                    </div>
+                    <div class="flex-row">
+                        <div class="col-md-12 flex-col" id="block12">
+                                <div class="info-block" id="chemical">
+                                        <div class="block-header">
+                                        Chemical Profile <img src="{% static 'images/osha_chemical.png' %}" style="width: 50px" class="img-fluid" alt="Logo">
+                                        <button type="button" class="toggle-body">+</button>
+                                        </div>
+                                        <div class="block-body">
+                                            <div class="block-body-content" style="align-items: center; align-content: center">
+                                                <p style="color:white">Chemical storage and by-product profile for the facility</p>
+                                                <div class="row" style="width:95%">
+                                                    <div class="col">
+                                                <div class="form-group">
+                                                 <div id="chemicalContainer" class="safety-summary-container"></div>
+                                                 <textarea rows="25" name="txtChemical" id="txtChemical" class="form-control" style="resize: none; background-color: white; border-width: 0px" readonly hidden>{{ current_pha_header.chemicalSummary }}</textarea>
+                                             </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                            </div>
+                    </div>
+                    <div class="flex-row">
+                        <div class="col-md-12 flex-col" id="">
                     </div>
                 </div>
-            </div>
-    </div>
-</div>
-<div class="flex-row">
-    <div class="col-md-6 flex-col" id="block5">
-        <div class="info-block" id="tools">
-                <div class="block-header">
-                Tools & Software
-                <button type="button" class="toggle-body">+</button>
-                </div>
-                <div class="block-body">
-                    <h3 style="color: white">OT Tools & Software</h3>
-                    <div class="card mb-3 shadow-sm" style="background-color: #5E6266;">
-        <div class="card-body">
-            <label style="color:white">List tools and software purchased to mitigate OT cybersecurity risks</label>
-            <div class="table-responsive">
-                <table class="table" id="investmentTable">
-                    <colgroup>
-                        <col span="1" style="width: 50%;"> <!-- Vendor Name -->
-                        <col span="1" style="width: 40%;"> <!-- Product Name -->
-                        <col span="1" style="width: 10%;"> <!-- Action -->
-                    </colgroup>
-                    <thead>
-                        <tr>
-                            <th>Vendor Name</th>
-                            <th>Product Name</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>
-                                <select name="vendor_name[]" class="form-control vendor-select">
-                                    <option value="">Select Vendor</option>
-                                    {% for vendor in unique_vendors_json %}
-                                        <option value="{{ vendor }}">{{ vendor }}</option>
-                                    {% endfor %}
-                                </select>
-                            </td>
-                            <td>
-                                <select name="product_name[]" class="form-control product-select">
-                                    <option value="">Select Product</option>
-                                </select>
-                            </td>
-                            <td><button class="btn btn-danger removeRow">Remove</button></td>
-                        </tr>
-                    </tbody>
-                </table>
-                <button type="button" class="btn btn-primary" id="addRow">Add Row</button>
             </div>
         </div>
-    </div>
-                        </div>
-
-                    <script>
-        $(document).ready(function() {
-            var vendors = JSON.parse('{{ vendors_json|escapejs }}');
-            var uniqueVendors = JSON.parse('{{ unique_vendors_json|escapejs }}');
-
-            $("#addRow").click(function() {
-                var newRow = `<tr>
-                    <td>
-                        <select name="vendor_name[]" class="form-control vendor-select">
-                            <option value="">Select Vendor</option>
-                            ${uniqueVendors.map(v => `<option value="${v}">${v}</option>`).join('')}
-                        </select>
-                    </td>
-                    <td>
-                        <select name="product_name[]" class="form-control product-select">
-                            <option value="">Select Product</option>
-                        </select>
-                    </td>
-                    <td><button type="button" class="btn btn-danger removeRow">Remove</button></td>
-                </tr>`;
-                $("#investmentTable tbody").append(newRow);
-            });
-
-            $(document).on('change', '.vendor-select', function() {
-                var vendor = $(this).val();
-                var productSelect = $(this).closest('tr').find('.product-select');
-                var products = vendors.filter(v => v.vendor === vendor).map(v => v.product);
-
-                productSelect.empty().append('<option value="">Select Product</option>');
-                products.forEach(function(product) {
-                    productSelect.append(`<option value="${product}">${product}</option>`);
-                });
-            });
-
-            $(document).on('click', '.removeRow', function() {
-                $(this).closest('tr').remove();
-            });
-        });
-        </script>
-
-            </div>
-    </div>
-    <div class="col-md-6 flex-col" id="block6">
-        <div class="info-block" id="physical">
-                <div class="block-header" >
-                Physical Security Profile <img src="{% static 'images/osha_exclamation.png' %}" style="width: 50px" class="img-fluid" alt="Logo">
-                <button type="button" class="toggle-body">+</button>
-                </div>
-                <div class="block-body">
-
-                    <p style="color:white">Physical security considerations for the location of the facility</p>
-                     <div class="form-group">
-                     <div id="physicalContainer" class="safety-summary-container"></div>
-                            <textarea rows="25" name="txtPhysical" id="txtPhysical" class="form-control" style="resize: none; background-color: white; border-width: 0px" readonly hidden>{{ current_pha_header.physicalSummary }}</textarea>
-                         </div>
-                </div>
-            </div>
-    </div>
-</div>
-<div class="flex-row">
-    <div class="col-md-6 flex-col" id="block7">
-        <div class="info-block" id="asset">
-                <div class="block-header">
-                OT Asset Profile
-                <button type="button" class="toggle-body">+</button>
-                </div>
-                <div class="block-body">
-
-                    <p style="color:white">OT devices most likely to be present within the facility</p>
-                      <div class="form-group">
-                     <div id="otherContainer" class="safety-summary-container"></div>
-                            <textarea rows="25" name="txtOther" id="txtOther" class="form-control" style="resize: none; background-color: white; border-width: 0px" readonly hidden>{{ current_pha_header.otherSummary }}</textarea>
-                      </div>
-                </div>
-            </div>
-    </div>
-    <div class="col-md-6 flex-col" id="block8">
-        <div class="info-block" id="threat">
-                <div class="block-header">
-                Threat Profile
-                <button type="button" class="toggle-body">+</button>
-                </div>
-                <div class="block-body">
-
-                    <p style="color:white">OT Cybersecurity threats most relevant to this facility</p>
-                     <div class="form-group">
-                     <div id="threatContainer" class="safety-summary-container"></div>
-                            <textarea rows="25" name="threatSummary" id="threatSummary" class="form-control" style="resize: none; background-color: white; border-width: 0px" readonly hidden>{{ current_pha_header.threatSummary }}</textarea>
-                     </div>
-                </div>
-            </div>
-    </div>
-</div>
-<div class="flex-row">
-    <div class="col-md-6 flex-col" id="block9">
-        <div class="info-block" id="insight">
-                <div class="block-header">
-                Security Insights
-                <button type="button" class="toggle-body">+</button>
-                </div>
-                <div class="block-body">
-
-                    <p style="color:white">Relevant OT Cybersecurity insights to consider for the facility</p>
-                     <div class="form-group">
-                     <div id="insightContainer" class="safety-summary-container"></div>
-                            <textarea rows="25" name="insightSummary" id="insightSummary" class="form-control" style="resize: none; background-color: white; border-width: 0px" readonly hidden>{{ current_pha_header.insightSummary }}</textarea>
-                     </div>
-                </div>
-            </div>
-    </div>
-    <div class="col-md-6 flex-col" id="block10">
-        <div class="info-block" id="strategy">
-                <div class="block-header">
-                OT Cybersecurity Strategy
-                <button type="button" class="toggle-body">+</button>
-                </div>
-                <div class="block-body">
-
-                    <p style="color:white">OT Cybersecurity strategy most relevant to this facility</p>
-                    <div class="form-group">
-                        <div id="strategyContainer" class="safety-summary-container"></div>
-                        <textarea rows="25" name="strategySummary" id="strategySummary" class="form-control" style="resize: none; background-color: white; border-width: 0px" readonly hidden>{{ current_pha_header.strategySummary }}</textarea>
-                    </div>
-                </div>
-            </div>
-    </div>
-</div>
-<div class="flex-row">
-    <div class="col-md-6 flex-col" id="block11">
-        <div class="info-block" id="safety">
-                <div class="block-header">
-                Safety Profile <img src="{% static 'images/osha_safety.png' %}" style="width: 50px" class="img-fluid" alt="Logo">
-                <button type="button" class="toggle-body">+</button>
-                </div>
-                <div class="block-body">
-
-                <p style="color:white">Safety considerations for the facility</p>
-
-                <div class="form-group">
-            <div id="safetySummaryContainer" class="safety-summary-container"></div>
-            <textarea rows="25" name="txtSafetySummary" id="txtSafetySummary" class="form-control" style="resize: none; background-color: white; border-width: 0px" readonly hidden>{{ current_pha_header.safetySummary }}</textarea>
-
-
-            </div>
-                </div>
-            </div>
-    </div>
-    <div class="col-md-6 flex-col" id="block12">
-        <div class="info-block" id="chemical">
-                <div class="block-header">
-                Chemical Profile <img src="{% static 'images/osha_chemical.png' %}" style="width: 50px" class="img-fluid" alt="Logo">
-                <button type="button" class="toggle-body">+</button>
-                </div>
-                <div class="block-body">
-
-        <p style="color:white">Chemical storage and by-product profile for the facility</p>
-         <div class="form-group">
-         <div id="chemicalContainer" class="safety-summary-container"></div>
-         <textarea rows="25" name="txtChemical" id="txtChemical" class="form-control" style="resize: none; background-color: white; border-width: 0px" readonly hidden>{{ current_pha_header.chemicalSummary }}</textarea>
-         </div>
-                </div>
-            </div>
-    </div>
-</div>
-<div class="flex-row">
-    <div class="col-md-6 flex-col" id="block13">
-        <div class="info-block" id="compliance">
-                <div class="block-header">
-                Compliance Profile
-                <button type="button" class="toggle-body">+</button>
-                </div>
-                <div class="block-body">
-
-                 <p style="color:white">Regulatory compliance requirements most likely to apply for this facility</p>
-                 <div class="form-group">
-                 <div id="complianceContainer" class="safety-summary-container"></div>
-                 <textarea rows="25" name="txtCompliance" id="txtCompliance" hidden class="form-control" style="resize: none; background-color: white; border-width: 0px" readonly hidden>{{ current_pha_header.complianceSummary }}</textarea>
-                 </div>
-                </div>
-            </div>
-    </div>
-    <div class="col-md-6 flex-col" id="">
-    </div>
-</div>
      </div>
 
-<script>
 
-        var zIndexCounter = 1000;
-
-        $(document).ready(function() {
-            $(".info-block").each(function() {
-            var block = $(this);
-            block.data("originalWidth", block.width());
-            block.data("originalHeight", block.height());
-            block.data("originalPosition", block.position());
-        });
-
-        // Make info-blocks draggable
-        $(".info-block").draggable({
-            handle: ".block-header",
-            containment: "window",
-            start: function(event, ui) {
-                // Bring the dragged element to the front
-                $(this).css('z-index', ++zIndexCounter);
-
-            }
-        });
-
-        // Make info-blocks resizable
-        $(".info-block").resizable({
-            handles: 'n, e, s, w, ne, nw, se, sw'
-        });
-
-        // Toggle block-body visibility
-        $(".toggle-body").on('click', function() {
-        var block = $(this).closest(".info-block");
-        var blockBody = block.find(".block-body");
-        blockBody.toggle();
-        $(this).text(blockBody.is(":visible") ? "-" : "+");
-
-        if (blockBody.is(":visible")) {
-            block.css({
-                'z-index': ++zIndexCounter,
-                'height': 'auto'
-            });
-        } else {
-            // Reset the block size to its original dimensions
-            block.css({
-                'width': block.data("originalWidth"),
-                'height': block.data("originalHeight")
-            });
-        }
-    });
-
-        // Restore all blocks to their original sizes and positions
-    $("#restoreLink").on('click', function(event) {
-        event.preventDefault();
-        $(".info-block").each(function() {
-            var block = $(this);
-            var originalPosition = block.data("originalPosition");
-            block.animate({
-                width: block.data("originalWidth"),
-                height: block.data("originalHeight"),
-                top: originalPosition.top,
-                left: originalPosition.left
-            }, 500); // Duration of the animation in milliseconds
-        });
-    });
-
-    // Handle block selection
-    $("#block_selector input[type=checkbox]").on('change', function() {
-        var blockId = $(this).data('block-id');
-        var block = $("#" + blockId);
-        var isChecked = $(this).is(":checked");
-
-        if (isChecked) {
-            // Find the first available container
-            var availableContainer = $(".flex-col:has(.info-block)").not(":has(.info-block:visible)").first();
-            if (availableContainer.length) {
-                block.appendTo(availableContainer).show();
-                block.find(".block-body").hide();
-                block.find(".toggle-body").text("+");
-            }
-        } else {
-            // Move the block back to its original container and hide it
-            block.hide();
-        }
-    });
-
-        });
-    </script>
 
 {% if new_record_id %}
     <script>
@@ -3373,5 +3439,6 @@ $(document).ready(function() {
     </div>
 </div>
 </div>
+<script src="{% static "js/block_manager.js" %}"></script>
 </body>
 </html>

@@ -41,7 +41,7 @@ from django.utils.crypto import get_random_string
 from django.utils import timezone
 from datetime import timedelta
 from django_otp.plugins.otp_totp.models import TOTPDevice
-from .forms import TwoFactorSetupForm, TwoFactorVerifyForm
+from .forms import TwoFactorSetupForm, TwoFactorVerifyForm, AuthAppSetupForm, AuthAppVerifyForm
 import io
 import base64
 import pyotp
@@ -49,8 +49,25 @@ import qrcode
 from django.core.mail import send_mail
 from django import forms
 from twilio.rest import Client
+from io import BytesIO
+from django.core.files.base import ContentFile
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
+
+
+def generate_otp_secret():
+    return pyotp.random_base32()
+
+
+def generate_qr_code_base64(user, otp_secret):
+    otp_uri = pyotp.totp.TOTP(otp_secret).provisioning_uri(
+        name=user.email, issuer_name="AnzenOT"
+    )
+    qr = qrcode.make(otp_uri)
+    buffer = BytesIO()
+    qr.save(buffer, format="PNG")
+    qr_code_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+    return qr_code_base64
 
 
 class CustomLogoutView(LogoutView):
@@ -89,6 +106,22 @@ def send_verification_code(phone_number):
     return verification.sid  # Optionally return verification SID for tracking
 
 
+def two_factor_auth_app_verify(request):
+    if request.method == 'POST':
+        form = AuthAppVerifyForm(request.POST)
+        if form.is_valid():
+            otp_code = form.cleaned_data['otp_code']
+            user_profile = UserProfile.objects.get(user=request.user)
+            totp = pyotp.TOTP(user_profile.otp_secret)
+            if totp.verify(otp_code):
+                request.session['two_factor_authenticated'] = True
+                return redirect('OTRisk:dashboardhome')  # Change this to the appropriate post-login redirect
+            else:
+                messages.error(request, "Invalid code. Please try again.")
+    else:
+        form = AuthAppVerifyForm()
+
+    return render(request, 'accounts/two_factor_auth_app_verify.html', {'form': form})
 def two_factor_setup(request):
     if request.method == 'POST':
         form = TwoFactorSetupForm(request.POST)
@@ -107,6 +140,7 @@ def two_factor_setup(request):
 
 @login_required()
 def two_factor_verify(request):
+
     if request.method == 'GET':
         # Display the form for GET requests
         form = TwoFactorVerifyForm()
@@ -260,8 +294,10 @@ def password_reset_request(request):
 
     return render(request, 'accounts/password_reset_request.html', {'form': form})
 
+
 def home_view(request):
     return render(request, 'accounts/home.html')
+
 
 @csrf_exempt
 def password_reset(request, uid):
@@ -435,6 +471,32 @@ def setup_2fa(request):
     return render(request, 'accounts/setup_2fa.html', {'form': form})
 
 
+def setup_auth_app(request):
+    user_profile = UserProfile.objects.get(user=request.user)
+    if not user_profile.otp_secret:
+        user_profile.otp_secret = generate_otp_secret()
+        user_profile.save()
+
+    if request.method == 'POST':
+        form = AuthAppSetupForm(request.POST)
+        if form.is_valid():
+            otp_code = form.cleaned_data['otp_code']
+            totp = pyotp.TOTP(user_profile.otp_secret)
+            if totp.verify(otp_code):
+                user_profile.two_factor_confirmed = True
+                user_profile.save()
+                messages.success(request, "Authentication app successfully configured!")
+                return redirect('OTRisk:dashboardhome')
+            else:
+                messages.error(request, "Invalid code. Please try again.")
+    else:
+        form = AuthAppSetupForm()
+
+    qr_code_base64 = generate_qr_code_base64(request.user, user_profile.otp_secret)
+
+    return render(request, 'accounts/setup_auth_app.html', {'form': form, 'qr_code': qr_code_base64})
+
+
 def setup_2fa_bak(request):
     if not request.user.is_authenticated:
         return redirect('accounts:login')
@@ -534,13 +596,16 @@ def login_view(request):
             # Check if the user has 2FA set up and confirmed
             if user_profile.two_factor_confirmed:
                 try:
-                    # Send 2FA code via SMS
-                    verification_sid = send_verification_code(user_profile.phone_number)
-                    # Store the verification SID in the session for tracking (optional)
-                    ### request.session['verification_sid'] = verification_sid
-                    ### code = send_verification_code(user_profile.phone_number)
-                    #### request.session['verification_code'] = code
-                    return redirect('two_factor_verify')
+                    # Check if the user is using an authentication app or SMS
+                    if user_profile.otp_secret:
+                        # Direct to authentication app verification
+                        return redirect('accounts:two_factor_auth_app_verify')
+                    else:
+                        # Send 2FA code via SMS
+                        verification_sid = send_verification_code(user_profile.phone_number)
+                        # Store the verification SID in the session for tracking (optional)
+                        request.session['verification_sid'] = verification_sid
+                        return redirect('accounts:two_factor_verify')
                 except Exception as e:
                     messages.error(request,
                                    f"Error sending verification code - please check your Internet connection and try again")
@@ -828,8 +893,12 @@ def contact_form(request):
 
 def eula(request):
     return render(request, 'accounts/Terms.html')
+
+
 def privacy(request):
     return render(request, 'accounts/Privacy.html')
+
+
 @login_required()
 def get_organization_details(request):
     # Retrieve the organization instance from the user profile
@@ -885,3 +954,6 @@ def get_api_key(service_name):
     except ObjectDoesNotExist:
         # Handle the case where the key is not found
         return None
+
+def autocompletetest(request):
+    return render(request, 'accounts/autocompletetest.html')

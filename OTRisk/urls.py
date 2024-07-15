@@ -53,7 +53,7 @@ urlpatterns = [
     path('qraw', views.qraw, name='qraw'),
     path('raw_action', views.raw_action, name='raw_action'),
     path('get_techniques/', views.GetTechniquesView.as_view(), name='get_techniques'),
-    path('dashboardhome', views.dashboardhome, name='dashboardhome'),
+    path('dashboardhome', views.anzenot_dashboard, name='dashboardhome'),
     path('anzenot_dashboard', views.anzenot_dashboard, name='anzenot_dashboard'),
 
     path('iotaphamanager/', views.iotaphamanager, name='iotaphamanager'),
@@ -77,6 +77,7 @@ urlpatterns = [
 
     path('update_ra_action/', views.UpdateRAAction.as_view(), name='update_ra_action'),
     path('facility/', views.facility_view, name='facility_view'),
+    path('facility/<int:facility_id>/', views.facility_view, name='facility_with_id'),
     path('save_facility/', views.save_facility, name='save_facility'),
     path('get_facilities/', views.get_facilities, name='get_facilities'),
     path('get_facility/<int:facility_id>/', views.get_facility, name='get_facility'),
@@ -200,6 +201,8 @@ urlpatterns = [
     path('generate_cyberpha_scenario_description/', views.generate_cyberpha_scenario_description, name='generate_cyberpha_scenario_description'),
     path('generate_raw_scenario_description/', views.generate_raw_scenario_description, name='generate_raw_scenario_description'),
     path('network_risk_profile/', views.network_risk_profile, name='darktrace'),
+    path('get_facility_types/', views.get_facility_types, name='get_facility_types'),
+    path('search/', views.search, name='search'),
 ]
 
 if settings.DEBUG:

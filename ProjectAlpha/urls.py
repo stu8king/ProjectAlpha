@@ -16,6 +16,7 @@ urlpatterns = [
     path('logout/', auth_views.LogoutView.as_view(next_page='/'), name='logout'),
     path('token/', views.two_factor_verify, name='two_factor_verify'),
     path('logout/', views.CustomLogoutView.as_view(), name='logout'),
+    path('two-factor-auth-app-verify/', views.two_factor_auth_app_verify, name='two_factor_auth_app_verify'),
 ]
 
 

@@ -41,9 +41,8 @@ from OTRisk.models.Model_CyberPHA import tblIndustry, tblCyberPHAHeader, tblZone
     tblCyberPHAScenario, vulnerability_analysis, tblAssetType, MitreControlAssessment, \
     SECURITY_LEVELS, ScenarioConsequences, user_scenario_audit, auditlog, CyberPHAModerators, \
     WorkflowStatus, APIKey, CyberPHA_Group, ScenarioBuilder, PHA_Safeguard, CyberSecurityInvestment, UserScenarioHash, \
-    CyberPHACybersecurityDefaults, PHA_Observations, Country, OTVendor, Facility
+    CyberPHACybersecurityDefaults, PHA_Observations, Country, OTVendor, Facility, FacilityType
 from OTRisk.models.model_assessment import SelfAssessment, AssessmentQuestion
-from OTRisk.models.questionnairemodel import FacilityType
 from OTRisk.models.raw import MitreICSMitigations, RAActions
 from OTRisk.models.raw import SecurityControls
 from ProjectAlpha import settings
@@ -397,10 +396,12 @@ def iotaphamanager(request, record_id=None):
     )
 
     if record_id is not None:
+        pha_header = get_object_or_404(tblCyberPHAHeader, pk=record_id)
         first_record_id = record_id
     else:
         first_record = pha_header_records.first()
         first_record_id = first_record.ID if first_record else 0
+        pha_header = None
     # get the list of assessments
     # 0 means a global assessment that's built in for all customer
     # any other value is a customer specific assessment so should only be visible for the customer where their id matches
@@ -1428,11 +1429,9 @@ def scenario_analysis(request):
         regulatoryimpact = request.GET.get('regulatory')
         dataimpact = request.GET.get('data')
         supplyimpact = request.GET.get('supply')
-        severitymitigated = request.GET.get('sm')
-        mitigatedexposure = request.GET.get('mel')
-        residualrisk = request.GET.get('rrm')
+
         country = request.GET.get('country')
-        uel = request.GET.get('uel')
+
         financial = request.GET.get('financial')
         cyberPHAID = request.GET.get('cpha')
         exposed_system = request.GET.get('exposed_system')
@@ -1578,8 +1577,6 @@ def scenario_analysis(request):
         Data & Intellectual Property: {dataimpact}
         Estimated Current OT Cybersecurity Controls:
          OT Cybersecurity Control Effectiveness score: {last_assessment_score}/100.  OT Cybersecurity Control Effectiveness Summary: {last_assessment_summary}.
-        Mitigated Severity: {severitymitigated}/10, Risk Exposure: {mitigatedexposure}/10, Residual Risk: {residualrisk}/10
-        Estimated Unmitigated likelihood of all identified threats and vulnerabilities: {uel}/10
         Physical Security:
         Physical Safeguards: {physical_safeguards_str} (Assumed effective)
         Vulnerability Observations: {observations}

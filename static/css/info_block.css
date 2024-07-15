@@ -1,0 +1,94 @@
+
+#block_container {
+position: relative;
+width: 100%;
+height: 120vh; /* Adjust this based on your container height */
+}
+.info-block {
+    background-color: #313136;
+    color: #fff;
+    padding: 0;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Softer shadow */
+    position: relative;
+    border: none;
+    max-height: 90vh;
+    transform: scale(0.85);
+
+}
+.info-block:hover {
+
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); /* Enhanced shadow on hover */
+}
+.info-block .block-header {
+    background-color: #F5F5F7;
+    color: #000;
+    padding: 10px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: move; /* Change cursor to indicate draggable */
+    height: 50px; /* Fixed height for the header */
+    box-sizing: border-box;
+    border-bottom: 1px solid #E0E0E0;
+}
+.info-block .block-header img {
+    margin-left: 10px;
+    width: 24px;
+    height: 24px;
+}
+.info-block .block-body {
+    font-size: 0.9rem;
+    padding: 20px;
+    text-align: left;
+    flex-grow: 1;
+    display: none; /* Initially hidden */
+     box-sizing: border-box;
+    background-color: #2C2C2E; /* Slightly different background for body */
+    border-radius: 0 0 12px 12px; /* Matching radius for bottom */
+}
+.block-header button {
+    background: none;
+    border: none;
+    font-size: 1.2em;
+    cursor: pointer;
+    color: #000;
+    padding: 0 8px; /* Adding some padding */
+    transition: color 0.3s ease; /* Smooth color transition */
+}
+
+.block-header button:hover {
+    color: #007AFF; /* Apple-like blue on hover */
+}
+.block-body-content {
+/* max-height: 100%; /* Ensure the content does not exceed the height of the block body */
+overflow: hidden; /* Add scroll if content exceeds the block body */
+ height: calc(100% - 50px); /* Adjust height to exclude header height */
+box-sizing: border-box;
+padding: 10px;
+    width: 95%
+}
+.info-block .table-responsive {
+width: 100%;
+height: 100%;
+
+}
+.info-block .table {
+width: 100%;
+height: 100%;
+transform-origin: 0 0;
+}
+.flex-row {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 20px;
+}
+.flex-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
