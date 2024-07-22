@@ -65,7 +65,7 @@ from .pha_views import iotaphamanager, facility_risk_profile, get_headerrecord, 
     generate_ppt, analyze_scenario, assign_cyberpha_to_group, fetch_groups, fetch_all_groups, retrieve_scenario_builder, \
     facilities, air_quality_index, delete_pha_record, get_assessment_summary, copy_cyber_pha, assessment_gap_analysis, \
     load_default_facility, exalens_get_cyberpha_assets, generate_cyberpha_scenario_description, darktrace_assets, \
-    facility_risk_profile_newrecord
+    facility_risk_profile_newrecord, darktrace_asset_summary_info
 from .report_views import pha_reports, get_scenario_report_details, qraw_reports, get_qraw_scenario_report_details, \
     raw_reports
 from .scenario_builder import scenario_sim_v2, analyze_sim_scenario_v2, generate_sim_attack_tree_v2, \
@@ -97,6 +97,7 @@ import random
 import logging
 from OTRisk.models.darktraceapi import Darktrace
 from pinecone import Pinecone, ServerlessSpec
+from pinecone_plugins.assistant.models.chat import Message
 import networkx as nx
 
 app_name = 'OTRisk'
@@ -638,13 +639,11 @@ def setup_org(request):
     user_organization = request.user.userprofile.organization
     defaults_instance, created = OrganizationDefaults.objects.get_or_create(organization=user_organization)
     exalens_fields = ['exalens_api_key', 'exalens_client_id', 'exalens_ip_address']
+    darktrace_fields = ['darktrace_public_key', 'darktrace_private_key', 'darktrace_host']
 
     if request.method == 'POST':
-
         form = OrganizationDefaultsForm(request.POST, instance=defaults_instance)
         if form.is_valid():
-
-            # Set the organization to the current user's organization and save
             org_defaults = form.save(commit=False)
             org_defaults.organization = user_organization
 
@@ -660,9 +659,7 @@ def setup_org(request):
             address = ', '.join(filter(None, address_parts))
 
             geocode_url = f"https://maps.googleapis.com/maps/api/geocode/json?address={address}&key=AIzaSyBJu4p9r_vFL9g5nzctO4yLbNxjK08q4G0"
-
             response = requests.get(geocode_url)
-
             geocode_result = response.json()
 
             if geocode_result['status'] == 'OK':
@@ -673,11 +670,11 @@ def setup_org(request):
             org_defaults.save()
             request.session['language'] = request.POST.get('language')
             return redirect('OTRisk:setup_org')
-
     else:
         form = OrganizationDefaultsForm(instance=defaults_instance)
 
-    return render(request, 'org_setup.html', {'form': form, 'exalens_fields': exalens_fields})
+    return render(request, 'org_setup.html',
+                  {'form': form, 'exalens_fields': exalens_fields, 'darktrace_fields': darktrace_fields})
 
 
 @login_required
@@ -3683,6 +3680,29 @@ def darktrace_metrics(incidents):
     }
 
 
+def query_otrisk(prompt):
+    openai.api_key = get_api_key('openai')
+    url = f"https://api.openai.com/v1/assistants/asst_DxDBOe4QkMbhNUTBYAsRyTUI/runs"
+    headers = {
+        'Content-Type': 'application/json',
+        'Authorization': f'Bearer {openai.api_key}'
+    }
+    data = {
+        "messages": [
+            {"role": "user", "content": prompt}
+        ],
+        "temperature": 1
+    }
+
+    response = requests.post(url, headers=headers, json=data)
+
+    if response.status_code == 200:
+        response_json = response.json()
+        return response_json['choices'][0]['message']['content']
+    else:
+        response.raise_for_status()
+
+
 def cyberpha_darktrace_connection(request):
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -3755,13 +3775,18 @@ def cyberpha_darktrace_connection(request):
         }
         filtered_incidents.append(filtered_incident)
 
-    pinecone_query = f"Risk assessment, Incidents, darktrace, incident response, compliance "
+    pinecone_query = (
+        "Risk assessment, OT cybersecurity, incident response, Darktrace, compliance, "
+        "ISA/IEC 62443, network security, threat detection, incident analysis, "
+        "cyber-physical systems, risk management, OT network vulnerabilities"
+    )
+
     retrieved_chunks = query_index(pinecone_query)
     summarized_chunks = get_summarized_chunks(retrieved_chunks)
     documents_context = "\n\n".join(summarized_chunks)
 
     prompt = (
-        f"""You are an OT system risk analyst. Based on the following Incidents Data from OT devices analyze and make the following assertions:\n
+        f"""You are an OT system risk analyst. Based on the following Incidents Data from Darktrace, use your knowledge of darktrace, OT Cybersecurity risk and OT risk Assessments and make the following assertions:\n
         1. In 150 words write a concise bullet pointed analysis of network OT cyber-physical controls that can be objectively determined from the incident data. No preamble or additional narrative. \n
         2. In  150 words write a concise bullet point analysis of what the incidents suggest about OT network cybersecurity risks for the network and the potential impacts for safety and cyber-physical risk.\n
         3. An OT cyber-physical risk score on a scale of 1 to 100 where 1 is best and 100 is worst.\n
@@ -4052,7 +4077,7 @@ def get_facility_profile(userid, industry, facility_type, address, facility, emp
     # openai_api_key = os.environ.get('OPENAI_API_KEY')
     openai.api_key = openai_api_key
 
-    safety_query = f"Industrial safety, OSHA, chemical safety, manufacturing hazards, safety hazards, danger, safety in dangerous environments"
+    safety_query = f"Industrial safety for {industry} industry, OSHA, chemical safety for {industry} industry, manufacturing hazards for {facility_type}, safety hazards for {facility_type}, danger, safety in dangerous environments"
     retrieved_chunks = query_index(safety_query)
     summarized_chunks = get_summarized_chunks(retrieved_chunks)
     safety_context = "\n\n".join(summarized_chunks)
@@ -4062,12 +4087,12 @@ def get_facility_profile(userid, industry, facility_type, address, facility, emp
     summarized_chunks = get_summarized_chunks(retrieved_chunks)
     OT_context = "\n\n".join(summarized_chunks)
 
-    physical_query = f"physical security, industrial security, protecting facilities, industrial protection, physical security resources, physical security considerations "
+    physical_query = f"physical security for {facility_type}, industrial security, protecting facilities, industrial protection, physical security resources, physical security considerations "
     retrieved_chunks = query_index(physical_query)
     summarized_chunks = get_summarized_chunks(retrieved_chunks)
     physical_context = "\n\n".join(summarized_chunks)
 
-    compliance_query = f"regulatory compliance, regulations, cybersecurity laws, global cybersecurity index"
+    compliance_query = f"regulatory compliance for {industry}, regulations for {industry}, cybersecurity laws, global cybersecurity index"
     retrieved_chunks = query_index(compliance_query)
     summarized_chunks = get_summarized_chunks(retrieved_chunks)
     compliance_context = "\n\n".join(summarized_chunks)
@@ -4106,10 +4131,10 @@ def get_facility_profile(userid, industry, facility_type, address, facility, emp
 
         # Extract the individual responses
     safety_summary = responses[0]['choices'][0]['message']['content'].strip()
-    physical_security_summary = responses[2]['choices'][0]['message']['content'].strip()
+    physical_security_summary = responses[1]['choices'][0]['message']['content'].strip()
     # other_summary = responses[3]['choices'][0]['message']['content'].strip()
-    compliance_summary = responses[3]['choices'][0]['message']['content'].strip()
-    pha_score = responses[4]['choices'][0]['message']['content'].strip()
+    compliance_summary = responses[2]['choices'][0]['message']['content'].strip()
+    pha_score = responses[3]['choices'][0]['message']['content'].strip()
 
     ra_query = f"physical security, risk assessment, industrial risks, physical security risk"
     retrieved_chunks = query_index(ra_query)
@@ -4123,11 +4148,11 @@ def get_facility_profile(userid, industry, facility_type, address, facility, emp
             INSTRUCTION. Write a concise summary statement about the recommended physical security processes, procedures, and controls necessary to mitigate the key physical security risks for the given facility.  The physical security summary is an executive-level concisely worded narrative of no more than 150 words written as bullet points.
             IMPORTANT: do not offer solutions, consequences, or any narrative outside of the scope of a summary. CRITICAL : DO NOT MAKE ANY ASSUMPTIONS or STATEMENTS or COMMENT ABOUT THE CURRENT STATE OF SECURITY CONTROLS. 
             The output must strictly confirm to the following format with no additional lines of text that are not bullet points specific to the summary statement
-            
+
             - bullet point 1
             - bullet point 2
             further bullets points up to a maximum of 10
-            
+
             """
     ]
     with concurrent.futures.ThreadPoolExecutor() as executor:
@@ -4231,6 +4256,7 @@ def save_facility(request):
             ps_summary = risk_profile_data['ps_summary']
 
         if facility_id:
+
             facility = get_object_or_404(Facility, id=facility_id, organization=organization)
             facility.name = data['name']
             facility.industry = industry
@@ -4313,7 +4339,8 @@ def get_facilities(request):
 
     facilities = Facility.objects.filter(organization=user_profile.organization).values(
         'id', 'name', 'industry__Industry', 'type__FacilityType', 'employees', 'public_ips', 'shift_model', 'address',
-        'lat', 'lon', 'revenue', 'operating_cost', 'profit_margin', 'pha_score', 'chemicalSummary', 'physicalSummary',
+        'lat', 'lon', 'revenue', 'business_name', 'operating_cost', 'profit_margin', 'pha_score', 'chemicalSummary',
+        'physicalSummary',
         'safetySummary', 'complianceSummary', 'aqi_score'
     )
     return JsonResponse({'facilities': list(facilities)})
@@ -4338,6 +4365,7 @@ def get_facility(request, facility_id):
         'public_ips': facility.public_ips,
         'shift_model': facility.shift_model,
         'address': facility.address,
+        'business_name': facility.business_name,
         'lat': facility.lat,
         'lon': facility.lon,
         'revenue': facility.revenue,
@@ -4373,7 +4401,8 @@ def search(request):
             Q(insightSummary__icontains=query) |
             Q(strategySummary__icontains=query) |
             Q(threatSummary__icontains=query)
-        ).values('ID', 'title', 'safetySummary', 'physicalSummary', 'otherSummary', 'complianceSummary', 'insightSummary', 'strategySummary', 'threatSummary')
+        ).values('ID', 'title', 'safetySummary', 'physicalSummary', 'otherSummary', 'complianceSummary',
+                 'insightSummary', 'strategySummary', 'threatSummary')
 
         scenario_results = tblCyberPHAScenario.objects.filter(
             Q(Scenario__icontains=query) |
@@ -4403,3 +4432,22 @@ def search(request):
 
         return JsonResponse({'results': results})
     return JsonResponse({'results': []})
+
+@login_required()
+def get_darktrace_asset_summary_info(request):
+    target_asset_ip = request.GET.get('ip')
+    darktrace_host = "https://usw1-54655-01.cloud.darktrace.com"  # Replace with your Darktrace host
+    darktrace_public_token = "89521fffc67850d258904a64730556204dea6d3d"  # Replace with your public token
+    darktrace_private_token = "ba60376e3dff79ad2396bbccd1591ea0f14c23c7"  # Replace with your private token
+
+    summary_info = darktrace_asset_summary_info(
+        target_asset_ip,
+        darktrace_host,
+        darktrace_public_token,
+        darktrace_private_token
+    )
+
+    if summary_info:
+        return JsonResponse(summary_info)
+    else:
+        return JsonResponse({'error': 'Unable to fetch asset summary information'}, status=500)

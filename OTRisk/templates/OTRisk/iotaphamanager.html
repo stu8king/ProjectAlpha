@@ -60,6 +60,8 @@ body {
     background-color: #2D2E30; /* Darker shade for sidebar */
     padding: 1vw;
     width: 10vw; /* Sidebar width */
+    border-right: 0.5px solid #65c8d0; /* Added right border */
+    box-shadow: 1px 0 3px rgba(0, 0, 0, 0.1);
 }
 
 .sidebar-logo {
@@ -102,44 +104,6 @@ body {
     width: 100%;
 }
 
-    /* General table styles */
-#headertable {
-    width: 100%;
-    border-collapse: collapse;
-    font-family: "Segoe UI", Arial, sans-serif;
-    color: #333;
-}
-
-#headertable th {
-    background-color: #333;
-    color: #fff;
-    padding: 12px;
-    text-align: left;
-    font-weight: 600;
-    border: 1px solid #ccc;
-}
-
-#headertable td {
-    padding: 12px;
-    border: 1px solid #ccc;
-    background-color: #fff;
-    color: #333;
-}
-
-#headertable tbody tr {
-    border-bottom: 1px solid #ccc;
-}
-
-#headertable tbody tr:hover {
-    background-color: #f2f2f2;
-}
-
-#headertable .actions {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-}
-
 #headertable button {
     background-color: #007bff;
     color: #fff;
@@ -153,45 +117,35 @@ body {
 #headertable button:hover {
     background-color: #0056b3;
 }
+        table.dataTable thead th {
+            color: #ffffff;
+        }
+        table.dataTable tbody td {
+            color: #000B1D;
+        }
+        table.dataTable {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        table.dataTable thead th,
+        table.dataTable tbody td {
+            padding: 8px;
+            text-align: left;
+        }
 
-#headertable .second-row td {
-    border-top: none;
-    background-color: #f9f9f9;
-}
 
-/* Additional enhancements */
-#headertable th:first-child,
-#headertable td:first-child {
-    border-left: none;
-}
-
-#headertable th:last-child,
-#headertable td:last-child {
-    border-right: none;
-}
-
-#headertable tr:first-child th {
-    border-top: none;
-}
-
-#headertable tr:last-child td {
-    border-bottom: none;
-}
-
-/* For better accessibility */
-#headertable th, #headertable td {
-    text-align: center;
-}
-
-#headertable th, #headertable td.actions {
-    text-align: left;
-}
-
-/* Ensuring buttons are styled consistently */
-#headertable button {
-    font-size: 14px;
-    line-height: 1.5;
-}
+        table.dataTable tbody tr.selected {
+            background-color: #4CAF50 !important;
+            color: #ffffff;
+        }
+           .dataTables_wrapper .dataTables_paginate .paginate_button {
+            color: #d3d1cd !important;
+            background-color: #333333 !important;
+        }
+        .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+            color: #ffffff !important;
+            background-color: #565656 !important;
+        }
 
 #assessment_summary {
     display: block; /* Make the span behave like a block element */
@@ -239,6 +193,17 @@ body {
 .hidden-column {
     display: none;
 }
+.highlighted {
+    background-color: #65C8D0 !important;
+    color: black !important;
+}
+.selected {
+            background-color: #65C8D0 !important;
+            color: black !important;
+        }
+        .selectable-row {
+            cursor: pointer;
+        }
 /* Base style for the delete button */
 .delete-btn {
     background-color: #ff6666 !important; /* Base red color */
@@ -266,8 +231,8 @@ body {
             font-size: 16px;
             font-weight: 500;
             text-align: center;
-            color: #fff;
-            background-color: #007bff;
+            color: #000;
+            background-color: #65c8d0;
             border: none;
             border-radius: 8px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -310,6 +275,12 @@ body {
     box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.5); /* Outer shadow */
     background-color: #5E6266; /* Lighter shade of #464748 */
     padding: 5px; /* Optional: for internal spacing */
+}
+.form-group {
+    border: 1px solid #464748; /* Border color */
+    box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.5); /* Outer shadow */
+    background-color: #5E6266; /* Lighter shade of #464748 */
+    padding: 15px; /* Optional: for internal spacing */
 }
 #connector, #tools, #physical, #asset, #threat, #insight, #strategy, #safety, #chemical, #compliance {
         display: none;
@@ -355,7 +326,7 @@ body {
 }
 
 input:checked + .slider {
-  background-color: #2196F3;
+  background-color: #65c8d0;
 }
 
 input:checked + .slider:before {
@@ -447,6 +418,67 @@ min-height: 100vh; /* Ensure it fills the viewport height */
 .sub-menu li a:hover, .sub-menu li a.active {
     background-color: #57595b; /* Hover/active background color */
 }
+#darktrace_tactics {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+.anychart-container {
+    width: 100% !important;
+    height: 100% !important;
+    position: relative !important;
+}
+     .summary-box {
+            flex: 0 1 calc(33.333% - 20px); /* 1 boxes per row accounting for gap */
+            font-size: 0.7em;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* External shadow */
+            padding: 5px;
+            background-color: #fff;
+            border-radius: 5px; /* Slightly rounded corners for a modern look */
+            margin-bottom: 20px; /* Space between rows */
+            box-sizing: border-box;
+            height: auto; /* Adjust height based on content */
+            background-repeat: no-repeat;
+            background-position: 1px top; /* Adjust the position as needed */
+            background-size: 20px 20px; /* Adjust the size of the icon as needed */
+        }
+        .summary-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 7px; /* Space between boxes */
+            justify-content: flex-start;
+            padding: 20px;
+        }
+
+        .safety-summary-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px; /* Space between boxes */
+    justify-content: flex-start;
+    padding: 20px;
+}
+
+.safety-summary-box {
+    flex: 0 1 calc(33.333% - 20px); /* 3 boxes per row accounting for gap */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* External shadow */
+    padding: 10px;
+    background-color: #fff;
+    border-radius: 5px; /* Slightly rounded corners for a modern look */
+    margin-bottom: 20px; /* Space between rows */
+    box-sizing: border-box;
+    height: auto; /* Adjust height based on content */
+    /* background-image: url('/static/images/green_cube.png'); /* Path to your static image */
+    background-repeat: no-repeat;
+    background-position: 1px top; /* Adjust the position as needed */
+    background-size: 20px 20px; /* Adjust the size of the icon as needed */
+}
+.organize-container {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+
 </style>
 
 </head>
@@ -677,10 +709,11 @@ var map;
 
                 <div class="col-md-2">
                      <button type="button" id="copyAssessment" class="btn btn-custom nav-link" title="Creates a clone of the currently selected CyberPHA and related scenarios"><i class="bi bi-copy"></i> Clone</button>
-                    <a href="#" id="restoreLink" style="display: block; margin-top: 10px;">Restore</a>
+
                 </div>
 
             </div>
+            <p></p><br>
             <div class="row">
                 <div class="col-md-1"></div>
                 <div class="col-md-5">
@@ -701,6 +734,8 @@ var map;
         {% csrf_token %}
 
      <input type="hidden" name="txtHdnCyberPHAID" id="txtHdnCyberPHAID" value="0">
+
+
      <input type="hidden" id="hdn_pha_score" name="hdn_pha_score" value="{{ pha_header_records.pha_score }}">
 
     <div class="sub-menu sub-menu-container small-font">
@@ -708,7 +743,9 @@ var map;
 
         <br>
          <div id="block_selector">
-             <a href="#" id="organizeBlocks"  style="display: block; color: white; margin-top: 10px; align-self: center">Organize</a>
+             <div class="organize-container">
+                <a href="#" id="organizeBlocks" style="display: block; color: white; margin-top: 10px;">Organize</a>
+            </div>
              <br>
 
         <div class="switch-container">
@@ -782,8 +819,9 @@ var map;
             </label>
         </div>
     </div>
-        <div id="pha_gauge"></div>
-        <div id="control_gauge"></div>
+     <div id="pha_gauge" style="display: none;"></div>
+    <div id="control_gauge" style="display: none;"></div>
+
 </div>
 <script>
 $(document).ready(function() {
@@ -860,9 +898,10 @@ $(document).ready(function() {
                     $('#txthdnLat').val(data.facility.lat);
                     $('#txthdnLong').val(data.facility.lon);
                     populateSummary("safetySummaryContainer", data.facility.safetySummary);
-                    populateSummary("chemicalContainer", data.facility.chemicalSummary);
+                    // populateSummary("chemicalContainer", data.facility.chemicalSummary);
                     populateSummary("physicalContainer", data.facility.physicalSummary);
                     populateSummary("complianceContainer", data.facility.complianceSummary);
+                    populateChemicalJSON(JSON.parse(data.facility.type__chemprofile));
                     $('#txtChemical').val(data.facility.chemicalSummary);
                     $('#txtSafetySummary').val(data.facility.safetySummary);
                     $('#txtPhysical').val(data.facility.physicalSummary);
@@ -966,21 +1005,17 @@ $(document).ready(function() {
 
                                                 <div class="form-group">
                                                     <label class="form-label" style="color:white">Select a record in the table to view and edit the CyberPHA</label>
-                                                    <div class="table-responsive" >
-                                                        <table id="headertable" class="table small-font compact" style="transform: scale(0.9); transform-origin: 0 0;">
+                                                    <div >
+                                                        <table id="headertable" class="display" style="width:100%; table-layout: fixed;">
                                                             <thead >
-                                                                <tr>
+                                                                 <tr>
                                                                 <th class="th hidden-column">ID</th>
-                                                                <th>Title</th>
-                                                                <th>Site</th>
-                                                                <th>Type</th>
-                                                                <th>BIA</th>
-                                                                <th>Scenarios</th>
-                                                                <th>Status</th>
-                                                                <th>Actions</th>
-                                                                <th></th>
-                                                                <th></th>
-                                                                </tr>
+                                                                <th style="width:40% !important;">Title</th>
+                                                                <th style="width:20% !important;">Site</th>
+                                                                <th style="width:20% !important;">Type</th>
+                                                                <th style="width:10% !important;"></th>
+                                                                <th style="width:10% !important;"></th>
+                                                            </tr>
                                                             </thead>
                                                             <tbody style="font-size: 10px">
                                                                 {% for pha_header_records in pha_header_records %}
@@ -997,35 +1032,7 @@ $(document).ready(function() {
                                                                     <input type="hidden" name="AssessmentUnit_{{ pha_header_records.ID }}" value="{{ pha_header_records.AssessmentUnit }}">
                                                                     <input type="hidden" name="AssessmentZone_{{ pha_header_records.ID }}" value="{{ pha_header_records.AssessmentZone }}">
                                                                     <input type="hidden" name="Industry_{{ pha_header_records.ID }}" value="{{ pha_header_records.Industry }}">
-                                                                     <td style="text-align: center">
-                                                                        {% if pha_header_records.bia_scenarios == None %}
-                                                                            N/A
-                                                                        {% elif pha_header_records.bia_scenarios == 0 or pha_header_records.bia_scenarios == 1 or pha_header_records.bia_scenarios == 2 %}
-                                                                            Low
-                                                                        {% elif pha_header_records.bia_scenarios == 3 %}
-                                                                            Low/Medium
-                                                                        {% elif pha_header_records.bia_scenarios == 4 or pha_header_records.bia_scenarios == 5 %}
-                                                                            Medium
-                                                                        {% elif pha_header_records.bia_scenarios == 6 or pha_header_records.bia_scenarios == 7 %}
-                                                                            Medium/High
-                                                                        {% elif pha_header_records.bia_scenarios == 8 or pha_header_records.bia_scenarios == 9 %}
-                                                                            High
-                                                                        {% elif pha_header_records.bia_scenarios == 10 %}
-                                                                            Very High
-                                                                        {% else %}
-                                                                            N/A
-                                                                        {% endif %}
-                                                                    </td>
-                                                                    <td style="text-align: center">{{ pha_header_records.scenario_count }}</td>
-                                                                    <td>{{ pha_header_records.latest_workflow_status }}</td>
-                                                                     <td style="text-align: center">
-                                                                        {% if pha_header_records.ra_action_count > 0 %}
-                                                                            <a href="{% url 'OTRisk:ra_actions_view_pha' pha_id=pha_header_records.ID %}">{{ pha_header_records.ra_action_count }}</a>
 
-                                                                        {% else %}
-                                                                            {{ pha_header_records.ra_action_count }}
-                                                                        {% endif %}
-                                                                    </td>
                                                                     <td>
                                                                         {% if pha_header_records.scenario_count != 0 %}
                                                                             <button class="report-button" onclick="window.open('{% url 'OTRisk:pha_reports' cyber_pha_header_id=pha_header_records.ID %}', '_blank')">Report</button>
@@ -1048,21 +1055,20 @@ $(document).ready(function() {
 
 
                                         <script>
-                             $(document).ready(function() {
-                                      function minimizeBlock(block) {
+                                        $(document).ready(function() {
+                                            function minimizeBlock(block) {
 
-                                            var blockBody = block.find(".block-body");
-                                            if (blockBody.is(":visible")) {
-                                                blockBody.toggle();
-                                                block.find(".toggle-body").text("+");
+                                                var blockBody = block.find(".block-body");
+                                                if (blockBody.is(":visible")) {
+                                                    blockBody.toggle();
+                                                    block.find(".toggle-body").text("+");
+                                                }
                                             }
-                                        }
                                  // Event handler for clicking on a table row
                                  $('#headertable').on('click', 'tbody tr.selectable-row', function () {
-                                     // Remove 'highlighted' class from all other rows
-                                     $(this).toggleClass('selected');
-                                     $('tr.selectable-row').removeClass('highlighted');
 
+                                     $('tr.selectable-row').removeClass('highlighted');
+                                     $(this).addClass('highlighted');
 
                                      let recordId = $(this).data('id');  // get the ID of the clicked row
                                      let title = $(this).find('td:nth-child(2)').text();
@@ -1070,8 +1076,7 @@ $(document).ready(function() {
                                      document.getElementById("lblCyberPHATitle").textContent = 'CyberPHA: ' + title + '@' + facility ;
                                      //make all the sub menu tabs active
                                      fetchHeaderRecord(recordId);
-
-                                 });
+                  });
 
                                  // Check if a saved_record_id is provided in the rendered context
                                  let savedRecordId = "{{ saved_record_id }}";  // Get the saved_record_id from the Django context
@@ -1110,18 +1115,8 @@ $(document).ready(function() {
                                 </div>
                         </div>
                     </div>
-                    <div class="flex-row">
-                        <div class="col-md-12 flex-col" id="block3">
-                            <div class="info-block" id="config">
-                                    <div class="block-header">
-                                    CyberPHA Configuration
-                                    <button type="button" class="toggle-body">+</button>
-                                    </div>
-                                    <div class="block-body">
-                                    <div class="block-body-content" style="align-items: center; align-content: center">
-                                    <label id="cyberpha_detail_label" style="color:white">Information about the CyberPHA </label>
-
-                                    <script>
+                    <!--block 3 scripts -->
+                    <script>
                             $(document).ready(function() {
                             $('#assign-group-btn').on('click', function() {
 
@@ -1228,28 +1223,7 @@ $(document).ready(function() {
 
                     updateGroupList();
                     </script>
-
-                                    <div class="row" style="width:95%">
-
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                  <div class="col-md-12">
-                                    <div class="form-group d-flex align-items-center" >
-                                        <label for="txtTitle" style="color: white; margin-right: 0.6em; font-size: 0.8em" title="Enter a descriptive title for this assessment">CyberPHA Title</label>
-                                        <input type="text" class="form-control" name="txtTitle" id="txtTitle" value="{{ current_pha_header.title }}" maxlength="100" style="flex: 1;font-size: 0.8em">
-                                    </div>
-
-                                    <div class="form-group d-flex align-items-center">
-                                        <label for="txtLeader" style="color: white; margin-right: 10px; font-size: 0.8em" title="Enter the name of the person leading this assessment">CyberPHA Owner:</label>
-                                        <input type="text" class="form-control" name="txtLeader" id="txtLeader" value="{{ current_pha_header.PHALeader }}" maxlength="100" style="flex: 1;font-size: 0.8em">
-                                    </div>
-
-                                    <div class="form-group d-flex align-items-center">
-                                        <label for="txtLeaderEmail" style="color: white; margin-right: 10px; font-size: 0.8em" title="Enter the email address of the person leading this assessment">Email:</label>
-                                        <input type="email" class="form-control" name="txtLeaderEmail" id="txtLeaderEmail" value="{{ current_pha_header.PHALeaderEmail }}" onblur="validateEmail(this)" style="flex: 1;font-size: 0.8em">
-                                    </div>
-
-                                <script type="text/javascript">
+                    <script type="text/javascript">
                                     function validateEmail(input) {
                                         var regex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
                                         if (!regex.test(input.value)) {
@@ -1258,19 +1232,7 @@ $(document).ready(function() {
                                         }
                                     }
                                 </script>
-                    </div>
-
-                                            <div class="row">
-                                                <div class="col-md-6">
-                                                    <label for="txtStartDate" style="color: white; font-size: 0.8em" title="Enter the intended assessment start date">Start Date:</label>
-                                                    <input type="date" class="form-control" style="font-size: 0.8em"  name="txtStartDate" id="txtStartDate" value="{{ current_pha_header.AssessmentStartDate|date:'Y-m-d' }}" >
-
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <label for="txtEndDate" style="color: white; font-size: 0.8em" title="Enter the intended assessment end date">End Date:</label>
-                                                    <input type="date" class="form-control" style="font-size: 0.8em" name="txtEndDate" id="txtEndDate" value="{{ current_pha_header.AssessmentEndDate|date:'Y-m-d' }}" onchange="validateDates()">
-                                                </div>
-                                                 <script type="text/javascript">
+                    <script type="text/javascript">
                                                     function validateDates() {
                                                         var startDate = document.getElementById('txtStartDate').value;
                                                         var endDate = document.getElementById('txtEndDate').value;
@@ -1281,145 +1243,7 @@ $(document).ready(function() {
                                                         }
                                                     }
                                                     </script>
-                                            </div>
-                                            <br>
-                                            <div class="row">
-                                                <div class="col-md-6">
-                                                    <label for="txtUnit" style="color: white; font-size: 0.8em" title="Enter the facility unit, if applicable, that's in scope for the current assessment">Unit:</label>
-                                                    <input type="text" class="form-control" style="font-size: 0.8em"  name="txtUnit" id="txtUnit" value="{{ current_pha_header.AssessmentUnit }}"  maxlength="100">
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <label for="selZone" style="color: white; font-size: 0.8em" title="Enter the facility zone, if applicable, that's in scope for the current assessment">Zone:</label>
-                                                    <select class="form-control" name="selZone" id="selZone" style="font-size: 0.8em">
-                                                        <option value = ""> -- Select Plant Zone -- </option>
-                                                        {% for zone in zones %}
-                                                            <option value="{{ zone.PlantZone }}"
-                                                            {% if current_pha_header.AssessmentZone == zone.PlantZone %}selected{% endif %}>
-                                                                {{ zone.PlantZone }}</option>
-                                                        {% endfor %}
-                                                    </select>
-                                                </div>
-                                            </div>
-                                            <br>
-                                            <div class="form-group">
-                                                <label style="font-size: 0.8em">OT Incident Response (IR)</label>
-                                            <div class="col-md-12">
-                                                <div class="form-group d-flex align-items-center" >
-                                                    <label for="ir_plan" style="color: white; font-size: 0.8em" title="Check the box if there is an OT Cybersecurity Incident Response Plan for the facility">OT IR Plan (Yes/No):&nbsp;&nbsp;&nbsp;</label>
-                                                    <input type="checkbox" id="ir_plan" name="ir_plan" style="transform: scale(2); margin-right: 5px;">
-                                                    </div>
-                                                <div class="form-group d-flex align-items-center" >
-                                                    <label for="ir_plan_date" style="color: white; font-size: 0.8em" title="Enter the date that the Incident Response Plan was last tested">Last Tested Date:&nbsp;&nbsp;&nbsp;</label>
-                                                    <input type="date" class="form-control" name="ir_plan_date" id="ir_plan_date" value="" style="font-size: 0.8em">
-
-                                                </div>
-                                                <div class="form-group d-flex align-items-center" >
-                                                    <label for="ir_plan_ut" style="color: white; font-size: 0.8em" title="Check the box if the OT Cybersecurity Incident Response PLan has never been tested">Never Tested (Yes/No):&nbsp;&nbsp;&nbsp;</label>
-                                                    <input type="checkbox" id="ir_plan_ut" name="ir_plan_ut" style="transform: scale(2); margin-right: 5px;">
-
-                                                </div>
-                                            </div>
-                                            </div>
-
-                                            </div>
-                                        </div>
-
-
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <div class="form-group">
-                                                     <label for="selSL" style="color: white; font-size: 0.8em" title="SL-Ts are the desired level of security for a particular IACS, zone or conduit. Select the targeted security level, if applicable, per ISA-62443-3-2 Annex A">Target Security Level (SL-T):</label>
-                                                        <select class="form-control" name="selSL" style="font-size: 0.8em" id="selSL">
-                                                        <option value="0"> -- Select SL-T -- </option>
-                                                        {% for value, description in SECURITY_LEVELS %}
-                                                            <option value="{{ value }}"
-                                                            {% if current_pha_header.sl_t|stringformat:"s" == value|stringformat:"s" %}selected{% endif %}>
-                                                                {{ description }}</option>
-                                                        {% endfor %}
-                                                        </select>
-                                                    </div>
-
-                                                <div class="form-group">
-                                                    <label for="assessment_id" style="color: white; font-size: 0.8em" title="Select the control assessment questionnaire that applies to the facility. If no control assessment has been completed, click on Assessments in the menu to go to the assessments page">Control Assessment:</label>
-                                                    <select class="form-control"   id="assessment_id" name="assessment_id" style="font-size: 0.8em">
-                                                        <option value="">Select an Assessment</option>
-                                                        {% for assessment in assessments %}
-                                                            <option value="{{ assessment.id }}"
-                                                            {% if current_pha_header.assessment == assessment.id %}select{% endif %}>
-                                                                {{ assessment.name }}</option>
-                                                        {% endfor %}
-                                                    </select>
-                                                    <input type="hidden" id="last_assessment_score" name="last_assessment_score">
-                                                    <input type="hidden" id="last_assessment_summary" name="last_assessment_summary">
-
-                                                    <div id="assessmentspinnerContainer" style="display: none;">
-                                                        <div class="spinner-border" role="status">
-
-                                                            <span class="sr-only">Loading...</span>
-                                                             </div>
-                                                    </div>
-
-                                             <!-- Container to display the summary and score -->
-                                            <span id="assessment_summary" style="font-size:0.8em" ></span>
-                                            <br>
-                                            <span id="assessment_score" ></span>
-                                                 </div>
-
-                                                <div class="form-group">
-                                                    <label for="walkdown_id" style="color: white; font-size: 0.8em" title="Select the control assessment questionnaire that applies to the facility. If no control assessment has been completed, click on Assessments in the menu to go to the assessments page">Site Walk-Down Assessment:</label>
-                                                    <select class="form-control"   id="walkdown_id" name="walkdown_id" style="font-size: 0.8em">
-                                                        <option value="">Select the site walkdown</option>
-                                                        {% for walkdown in walkdowns %}
-                                                            <option value="{{ walkdown.id }}"
-                                                            {% if current_pha_header.walkdown == walkdown.id %}select{% endif %}>
-                                                                {{ walkdown.name }}</option>
-                                                        {% endfor %}
-                                                    </select>
-                                                    <div id="walkdownspinnerContainer" style="display: none;">
-                                                        <div class="spinner-border" role="status">
-
-                                                            <span class="sr-only">Loading...</span>
-                                                            <input type="hidden" id="last_walkdown_score" name="last_walkdown_score">
-                                                            <input type="hidden" id="last_walkdown_summary" name="last_walkdown_summary">
-                                                        </div>
-                                                    </div>
-
-                                             <!-- Container to display the summary and score -->
-                                            <span id="walkdown_summary" ></span>
-                                            <br>
-                                            <span id="walkdown_score" ></span>
-                                                 </div>
-                                                <div class="form-group" style="color: white">
-                                                        Current Group Assignments:
-                                                        <br>
-                                                        <div id="currentGroupsDiv" style="font-size: 16px">
-                                                        </div>
-                                                    <br>
-                                                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#assignGroupModal">
-                                                        Assign to Group
-                                                    </button>
-
-                                            </div>
-                                                <div class="form-group">
-                                                    <label for="workflow_selector" style="color: white; font-size: 0.8em">Workflow Status:</label>
-                                                    <select class="form-control" id="workflow_selector" name="workflow_selector" style="font-size: 0.8em">
-                                                        <option value="">Select a Status</option>
-                                                        {% for status, status_display in workflow_status_choices %}
-                                                            <option value="{{ status }}"
-                                                                    {% if current_workflow_status == status %} selected {% endif %}>
-                                                                {{ status_display }}
-                                                            </option>
-                                                        {% endfor %}
-                                                    </select>
-                                                </div>
-                                            </div>
-
-                                            <div class="form-group" style="display: none">
-                                                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#moderatorModal" >
-                                                    Select CyberPHA Moderators
-                                                </button>
-                                            </div>
-                                            <script>
+                     <script>
 
                                                     $(document).ready(function() {
 
@@ -1485,14 +1309,122 @@ $(document).ready(function() {
                                                     }
                                                    });
                                                 </script>
+                    <div class="flex-row">
+    <div class="col-md-12 flex-col" id="block3">
+        <div class="info-block" id="config">
+            <div class="block-header">
+                CyberPHA Configuration
+                <button type="button" class="toggle-body">+</button>
+            </div>
+            <div class="block-body">
+                <div class="block-body-content" style="align-items: center; align-content: center;">
 
+                    <div class="container-fluid" style="width: 100%;">
+                        <div class="row" style="width: 95%;">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="txtTitle" class="control-label text-light" title="Enter a descriptive title for this assessment">CyberPHA Title</label>
+                                    <input type="text" class="form-control" name="txtTitle" id="txtTitle" value="{{ current_pha_header.title }}" maxlength="100" style="font-size: 0.9em;">
 
+                                    <label for="txtLeader" class="control-label text-light" title="Enter the name of the person leading this assessment">CyberPHA Owner</label>
+                                    <input type="text" class="form-control" name="txtLeader" id="txtLeader" value="{{ current_pha_header.PHALeader }}" maxlength="100" style="font-size: 0.9em;">
 
+                                    <label for="txtLeaderEmail" class="control-label text-light" title="Enter the email address of the person leading this assessment">Email</label>
+                                    <input type="email" class="form-control" name="txtLeaderEmail" id="txtLeaderEmail" value="{{ current_pha_header.PHALeaderEmail }}" onblur="validateEmail(this)" style="font-size: 0.9em;">
+                                </div>
+                                <div class="form-group row">
+                                    <div class="col-md-6">
+                                        <label for="txtStartDate" class="control-label text-light" title="Enter the intended assessment start date">Start Date</label>
+                                        <input type="date" class="form-control" name="txtStartDate" id="txtStartDate" value="{{ current_pha_header.AssessmentStartDate|date:'Y-m-d' }}" style="font-size: 0.9em;">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="txtEndDate" class="control-label text-light" title="Enter the intended assessment end date">End Date</label>
+                                        <input type="date" class="form-control" name="txtEndDate" id="txtEndDate" value="{{ current_pha_header.AssessmentEndDate|date:'Y-m-d' }}" onchange="validateDates()" style="font-size: 0.9em;">
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <div class="col-md-6">
+                                        <label for="txtUnit" class="control-label text-light" title="Enter the facility unit, if applicable, that's in scope for the current assessment">Unit</label>
+                                        <input type="text" class="form-control" name="txtUnit" id="txtUnit" value="{{ current_pha_header.AssessmentUnit }}" maxlength="100" style="font-size: 0.9em;">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="selZone" class="control-label text-light" title="Enter the facility zone, if applicable, that's in scope for the current assessment">Zone</label>
+                                        <select class="form-control" name="selZone" id="selZone" style="font-size: 0.9em;">
+                                            <option value=""> -- Select Plant Zone -- </option>
+                                            {% for zone in zones %}
+                                                <option value="{{ zone.PlantZone }}" {% if current_pha_header.AssessmentZone == zone.PlantZone %}selected{% endif %}>{{ zone.PlantZone }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group p-3" style="background-color: #ccc; border: 0.5px solid #65C8D0; border-radius: 5px; box-shadow: 0 0 3px #65C8D0;">
+                                    <label class="control-label" style="color: black;" title="Check the box if there is an OT Cybersecurity Incident Response Plan for the facility">OT Incident Response (IR)</label>
 
-
-                                        </div>
+                                    <div class="form-check mb-3">
+                                        <input class="form-check-input" type="checkbox" id="ir_plan" name="ir_plan" style="transform: scale(1.5); margin-right: 10px;">
+                                        <label class="form-check-label" for="ir_plan" style="color: black;">OT IR Plan (Yes/No)</label>
                                     </div>
 
+                                    <div class="form-group mb-3">
+                                        <label for="ir_plan_date" class="control-label" style="color: black;" title="Enter the date that the Incident Response Plan was last tested">Last Tested Date</label>
+                                        <input type="date" class="form-control" name="ir_plan_date" id="ir_plan_date" value="" style="font-size: 0.9em; width: 80%;">
+                                    </div>
+
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="ir_plan_ut" name="ir_plan_ut" style="transform: scale(1.5); margin-right: 10px;">
+                                        <label class="form-check-label" for="ir_plan_ut" style="color: black;">Never Tested</label>
+                                    </div>
+                                </div>
+
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="selSL" class="control-label text-light" title="Select the targeted security level, if applicable, per ISA-62443-3-2 Annex A">Target Security Level (SL-T)</label>
+                                    <select class="form-control" name="selSL" id="selSL" style="font-size: 0.9em;">
+                                        <option value="0"> -- Select SL-T -- </option>
+                                        {% for value, description in SECURITY_LEVELS %}
+                                            <option value="{{ value }}" {% if current_pha_header.sl_t|stringformat:"s" == value|stringformat:"s" %}selected{% endif %}>{{ description }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="assessment_id" class="control-label text-light" title="Select the control assessment questionnaire that applies to the facility. If no control assessment has been completed, click on Assessments in the menu to go to the assessments page">Control Assessment</label>
+                                    <select class="form-control" id="assessment_id" name="assessment_id" style="font-size: 0.9em;">
+                                        <option value="">Select an Assessment</option>
+                                        {% for assessment in assessments %}
+                                            <option value="{{ assessment.id }}" {% if current_pha_header.assessment == assessment.id %}select{% endif %}>{{ assessment.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <input type="hidden" id="last_assessment_score" name="last_assessment_score">
+                                    <input type="hidden" id="last_assessment_summary" name="last_assessment_summary">
+                                    <div id="assessmentspinnerContainer" style="display: none;">
+                                        <div class="spinner-border" role="status">
+                                            <span class="sr-only">Loading...</span>
+                                        </div>
+                                    </div>
+                                    <span id="assessment_summary" style="font-size:0.9em;"></span>
+                                    <span id="assessment_score"></span>
+                                </div>
+                                <div class="form-group">
+                                    <label for="walkdown_id" class="control-label text-light" title="Select the site walkdown questionnaire that applies to the facility. If no site walkdown has been completed, click on Assessments in the menu to go to the assessments page">Site Walk-Down Assessment</label>
+                                    <select class="form-control" id="walkdown_id" name="walkdown_id" style="font-size: 0.9em;">
+                                        <option value="">Select the site walkdown</option>
+                                        {% for walkdown in walkdowns %}
+                                            <option value="{{ walkdown.id }}" {% if current_pha_header.walkdown == walkdown.id %}select{% endif %}>{{ walkdown.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <div id="walkdownspinnerContainer" style="display: none;">
+                                        <div class="spinner-border" role="status">
+                                            <span class="sr-only">Loading...</span>
+                                        </div>
+                                    </div>
+                                    <span id="walkdown_summary"></span>
+                                    <span id="walkdown_score"></span>
+                                </div>
+                                <div class="form-group text-light">
+                                    Current Group Assignments:
+                                    <div id="currentGroupsDiv" style="font-size: 0.9em;"></div>
+                                    <button type="button" class="btn btn-primary mt-2" data-toggle="modal" data-target="#assignGroupModal">Assign to Group</button>
                                     <div class="modal" id="assignGroupModal">
                                         <div class="modal-dialog">
                                             <div class="modal-content">
@@ -1502,7 +1434,6 @@ $(document).ready(function() {
                                                 </div>
                                                 <div class="modal-body">
                                                     <form id="group-assignment-form">
-                                                        <!-- Existing Groups -->
                                                         <div class="form-group">
                                                             <label for="existing_group">Existing Group:</label>
                                                             <select class="form-control" id="existing_group" name="existing_group">
@@ -1512,35 +1443,47 @@ $(document).ready(function() {
                                                                 {% endfor %}
                                                             </select>
                                                         </div>
-                                                        <!-- New Group -->
                                                         <div class="form-group">
                                                             <label for="new_group_name">New Group Name:</label>
                                                             <input type="text" class="form-control" id="new_group_name" name="new_group_name">
                                                         </div>
                                                         <div class="form-group">
-                                                        <label for="new_group_type">New Group Type:</label>
-                                                        <select class="form-control" id="new_group_type" name="new_group_type">
-                                                            {% for type_value, type_name in group_types %}
-                                                                <option value="{{ type_value }}">{{ type_name }}</option>
-                                                            {% endfor %}
-                                                        </select>
-                                                    </div>
-                                                        <!-- Hidden Field for CyberPHA ID -->
+                                                            <label for="new_group_type">New Group Type:</label>
+                                                            <select class="form-control" id="new_group_type" name="new_group_type">
+                                                                {% for type_value, type_name in group_types %}
+                                                                    <option value="{{ type_value }}">{{ type_name }}</option>
+                                                                {% endfor %}
+                                                            </select>
+                                                        </div>
                                                         <input type="hidden" name="cyberpha_id" value="{{ current_pha_header.ID }}">
-                                                        <!-- Submit Button -->
-                                                        <button type="button" id="assign-group-btn"  class="btn btn-primary">Assign</button>
+                                                        <button type="button" id="assign-group-btn" class="btn btn-primary">Assign</button>
                                                     </form>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-
-                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="workflow_selector" class="control-label text-light">Workflow Status</label>
+                                    <select class="form-control" id="workflow_selector" name="workflow_selector" style="font-size: 0.9em;">
+                                        <option value="">Select a Status</option>
+                                        {% for status, status_display in workflow_status_choices %}
+                                            <option value="{{ status }}" {% if current_workflow_status == status %} selected {% endif %}>{{ status_display }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="form-group" style="display: none;">
+                                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#moderatorModal">Select CyberPHA Moderators</button>
                                 </div>
                             </div>
                         </div>
-
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
                     <div class="flex-row">
                         <div class="col-md-12 flex-col" id="block5">
                             <div class="info-block" id="tools">
@@ -1675,6 +1618,7 @@ $(document).ready(function() {
                                                 <div class="col">
                                             <div class="form-group">
                                          <div id="insightContainer" class="safety-summary-container"></div>
+
                                                 <textarea rows="25" name="insightSummary" id="insightSummary" class="form-control" style="resize: none; background-color: white; border-width: 0px" readonly hidden>{{ current_pha_header.insightSummary }}</textarea>
                                          </div>
                                                 </div>
@@ -1751,11 +1695,11 @@ $(document).ready(function() {
                                                 <div class="col-md-6">
 
                                                 <div class="form-group">
-                                                <input type="hidden" id="facilityid" name="facilityid" >
+                                                <input type="hidden" id="facilityid" name="facilityid" value="{{ current_pha_header.facility_id }}">
                                                 <div class="row">
                                                     <div class="col-md-12">
-                                                    <label style="color: #b7b9c0">Facility Name: &nbsp;&nbsp;</label><label name="lblFacilityName" id="lblFacilityName">{{ current_pha_header.FacilityName }}</label><br>
-                                                    <label style="color: #b7b9c0">Address: &nbsp;&nbsp;</label><label name="lblFacilityAddress" id="lblFacilityAddress" >{{ current_pha_header.facilityAddress }}</label><br>
+                                                    <label style="color: #b7b9c0">Facility Name: &nbsp;&nbsp;</label><label name="lblFacilityName" id="lblFacilityName">{{ current_pha_header.facility.business_name }}</label><br>
+                                                    <label style="color: #b7b9c0">Address: &nbsp;&nbsp;</label><label name="lblFacilityAddress" id="lblFacilityAddress" >{{ current_pha_header.facility.address }}</label><br>
                                                     <label style="color: #b7b9c0">Industry: &nbsp;&nbsp;</label><label name="lblFacilityIndustry" id="lblFacilityIndustry" >{{ current_pha_header.Industry }}</label><br>
                                                     <label style="color: #b7b9c0">Facility Type: &nbsp;&nbsp;</label><label name="lblFacilityType" id="lblFacilityType" >{{ current_pha_header.FacilityType }}</label><br>
                                                     <label style="color: #b7b9c0">Shift Model: &nbsp;&nbsp;</label><label name="lblFacilityShiftModel" id="lblFacilityShiftModel" >{{ current_pha_header.shift_model }}</label><br>
@@ -1792,33 +1736,35 @@ $(document).ready(function() {
                     <div class="flex-row">
                         <div class="col-md-12 flex-col" id="block4">
                                 <div class="info-block" id="connector">
-                                        <div class="block-header">
-                                        Third Party Connectors
-                                        <button type="button" class="toggle-body">+</button>
-                                        </div>
-                                        <div class="block-body">
-                                        <div class="block-body-content" style="align-items: center; align-content: center">
-                                        <div class="form-group">
-                                    <div class="row">
+                                    <div class="block-header">
+                                    Third Party Connectors
+                                    <button type="button" class="toggle-body">+</button>
+                                    </div>
+                                    <div class="block-body">
+                                    <div class="block-body-content" style="align-items: center; align-content: center">
+                                    <div class="form-group">
+                                    <div class="row" style="width:98%">
                                         <div class="col-md-3">
                                             <label for="connector_select" style="color: white" title="Select the relevant installed internal solution that AnzenOT can connect to">Select Product:</label>
-                                            <select class="form-control"   id="connector_select" name="connector_select">
+                                            <select class="form-control" id="connector_select" name="connector_select">
                                                 <option value="">Select Connector</option>
-                                                <option value="Darktrace">Darktrace</option>
-                                                <option value="Exalens">Exalens</option>
-                                             </select>
+                                                <option value="Darktrace" {% if current_pha_header.darktrace_client %}selected{% endif %}>Darktrace</option>
+                                                <option value="Exalens" {% if current_pha_header.exalens_client and not current_pha_header.darktrace_client %}selected{% endif %}>Exalens</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-9">
                                         </div>
                                     </div>
                                     <br><br>
                                     <div id="darktraceConfig" style="display: none;">
                                         <br>
-                                        <div class="row">
-                                            <div class="col-md-2">
-                                                <img src="{% static 'images/darktrace_logo.png' %}" alt="Darktrace Logo" class="mb-3" style="width: 100px;">
+                                        <div class="row" style="width:98%">
+                                            <div class="col-md-2 d-flex align-items-start">
+                                                <img src="{% static 'images/darktrace_logo.png' %}" alt="Darktrace Logo" class="mb-3" style="width: 100px; margin-top: auto">
                                             </div>
-                                            <div class="col-3">
+                                            <div class="col-md-2 d-flex align-items-start">
                                                 <a href="#" id="useDefaultsLink_darktrace" style="color:white">Use Defaults</a>
-                                                    <script>
+                                                <script>
                                                     $(document).ready(function() {
                                                         $('#useDefaultsLink_darktrace').click(function(event) {
                                                             event.preventDefault(); // Prevent the default link behavior
@@ -1838,26 +1784,31 @@ $(document).ready(function() {
                                                             });
                                                         });
                                                     });
+
+
                                                     </script>
-                                                </div>
-                                            <div class="col-7">
                                             </div>
+                                            <div class="col-md-1">
+                                                <button id="toggleColumnBtn" type="button" class="btn btn-secondary" style="color: white;"><<</button>
+                                            </div>
+                                            <div class="col-md-7">
+                                             </div>
                                         </div>
                                         <div class="form-group">
-                                            <div class="row">
-                                                <div class="col-md-3">
-                                                    <label for="darktrace_public_key">Darktrace Public Key</label>
+                                            <div class="row" style="width:98%">
+                                                <div class="col-md-3" id="leftColumn">
+                                                    <label for="darktrace_public_key">Public Key</label>
                                                     <input type="text" class="form-control" id="darktrace_public_key" name="darktrace_public_key" placeholder="Enter Darktrace Public Key">
                                                     <br>
-                                                    <label for="darktrace_private_key">Darktrace Private Key</label>
+                                                    <label for="darktrace_private_key">Private Key</label>
                                                     <input type="password" class="form-control" id="darktrace_private_key" name="darktrace_private_key" placeholder="Enter Darktrace Private Key">
                                                     <br>
-                                                    <label for="darktrace_host">Darktrace Host</label>
+                                                    <label for="darktrace_host">Host</label>
                                                     <input type="text" class="form-control" id="darktrace_host" name="darktrace_host" placeholder="Enter Darktrace Host">
                                                     <br>
                                                     <button id="DarktraceConnectionBtn" type="button" class="btn btn-primary">Connect to Darktrace</button>
                                                 </div>
-                                                <div class="col-md-9">
+                                                <div class="col-md-9" id="rightColumn">
                                                     <div id="darktrace_risk_status" class="form-group">
                                                     <br>
                                                     <div class="row" >
@@ -1870,33 +1821,45 @@ $(document).ready(function() {
                                                     </div>
                                                     <br>
                                                     <div class="row">
-                                                        <div class="col-md-4">
+                                                        <div class="col-md-6">
                                                             <label id="label_darktrace_incident_severity" name="label_darktrace_incident_severity" style="font-size: 1em">Incident Severity</label>
                                                         </div>
-                                                        <div class="col-md-4">
+                                                        <div class="col-md-6">
                                                             <label id="label_darktrace_category" name="label_darktrace_category" style="font-size: 1em">Incident Category</label>
                                                          </div>
-                                                            <div class="col-md-4">
-                                                                <div id="darktrace_risk_score_number"></div>
-                                                         </div>
+
                                                     </div>
 
                                                     <div class="row" style="display: flex; align-items: center; justify-content: center">
-                                                        <div class="col-md-4">
+                                                        <div class="col-md-6">
                                                             <div id="risk_score_container">
-                                                            <div id="darktrace_tactics" style="width: 100%; height: 200px;"></div>
+                                                                <div id="darktrace_tactics_container" style="width: 100%; height: 200px; position: relative;">
+                                                                    <div id="darktrace_tactics" style="width: 100%; height: 100%;"></div>
+                                                                </div>
+                                                                                                                    <input type="hidden" id="hdn_darktrace_tactics" name="hdn_darktrace_tactics">
                                                             </div>
                                                         </div>
-                                                        <div class="col-md-4">
+                                                        <div class="col-md-6">
                                                             <div id="risk_score_container">
-                                                            <div id="darktrace_mitre" style="width: 100%; height: 100%;"></div>
+                                                                <div id="darktrace_tactics_container" style="width: 100%; height: 200px; position: relative;">
+                                                                <div id="darktrace_mitre" style="width: 100%; height: 100%; "></div>
+                                                                </div>
+                                                                <input type="hidden" id="hdn_darktrace_mitre" name="hdn_darktrace_mitre">
                                                             </div>
                                                         </div>
-                                                        <div class="col-md-4"><div id="darktrace_risk_score_container">
-                                                            <div id="darktrace_risk_score_chart"></div>
-                                                        </div>
+
+
                                                     </div>
-                                                </div>
+                                                        <div class="row">
+                                                            <div class="col">
+
+                                                            <div id="darktrace_risk_score_container">
+                                                                 <div id="darktrace_risk_score_number"></div>
+                                                            </div>
+                                                            </div>
+                                                        </div>
+
+
                                             </div>
                                         </div>
                                             </div>
@@ -1907,41 +1870,11 @@ $(document).ready(function() {
                                                  <!-- Exalens configuration fields -->
                                     <div id="exalensConfig" style="display: none;">
                                     <br>
-                                        <div class="row">
-                                            <div class="col-md-2">
-                                                <img src="{% static 'images/exalenslogo.png' %}" alt="Exalens Logo" class="mb-3" style="width: 100px;">
-                                            </div>
-                                            <div class="col-3">
-                                                <a href="#" id="useDefaultsLink" style="color:white">Use Defaults</a>
-                                                    <script>
-                                                    $(document).ready(function() {
-                                                        $('#useDefaultsLink').click(function(event) {
-                                                            event.preventDefault(); // Prevent the default link behavior
-
-                                                            $.ajax({
-                                                                url: '/OTRisk/exalens_defaults/',
-                                                                type: 'GET',
-                                                                success: function(response) {
-                                                                    $('#exalensClientId').val(response.exalens_client_id);
-                                                                    $('#exalensIpAddress').val(response.exalens_ip_address);
-                                                                    $('#exalensApiKey').val(response.exalens_api);
-
-                                                                    },
-                                                                error: function(error) {
-                                                                    console.log('Error fetching Exalens defaults:', error);
-                                                                }
-                                                            });
-                                                        });
-                                                    });
-                                                    </script>
-                                                </div>
-                                            <div class="col-7">
-                                            </div>
-                                        </div>
+                                       <div class="row" style="width:98%">
 
                                         <div class="form-group">
-                                            <div class="row">
-                                                <div class="col-md-3">
+                                            <div class="row" style="width:98%">
+                                                <div class="col-md-3" id="leftColumn">
                                                     <label for="exalensApiKey">Exalens API Key</label>
                                                     <input type="password" class="form-control" id="exalensApiKey" name="exalensApiKey" placeholder="Enter Exalens API Key">
                                                     <br>
@@ -1953,7 +1886,7 @@ $(document).ready(function() {
                                                     <br>
                                                     <button id="ExalensConnectionBtn" type="button" class="btn btn-primary">Connect to Exalens</button>
                                                 </div>
-                                                <div class="col-md-9">
+                                                <div class="col-md-9" id="rightColumn">
                                                     <div id="exalens_risk_status" class="form-group">
                                                         <br>
 
@@ -1966,34 +1899,38 @@ $(document).ready(function() {
                                                             </div>
                                                         </div>
                                                         <br>
-                                                            <div class="row">
-                                                            <div class="col-md-4">
+                                                        <div class="row">
+                                                            <div class="col-md-6">
                                                                 <label id="label_exalens_incident_severity" name="label_exalens_incident_severity" style="font-size: 1em">Incident Severity</label>
                                                             </div>
-                                                            <div class="col-md-4">
+                                                            <div class="col-md-6">
                                                                 <label id="label_exalens_category" name="label_exalens_category" style="font-size: 1em">Incident Category</label>
                                                              </div>
-                                                                <div class="col-md-4">
-                                                                    <div id="risk_score_number"></div>
-                                                             </div>
+
                                                         </div>
                                                          <div class="row" style="display: flex; align-items: center; justify-content: center">
-                                                             <div class="col-md-4">
+                                                             <div class="col-md-6">
                                                                  <div id="risk_score_container">
                                                                 <div id="exalens_severity_distribution" style="width: 100%; height: 200px;"></div>
                                                                  </div>
                                                             </div>
 
-                                                             <div class="col-md-4">
+                                                             <div class="col-md-6">
                                                                  <div id="risk_score_container">
                                                                 <div id="exalens_category_distribution" style="width: 100%; height: 200px;"></div>
                                                                  </div>
                                                             </div>
-                                                             <div class="col-md-4"><div id="risk_score_container">
-                                                                    <div id="risk_score_chart"></div>
-                                                                </div></div>
+
 
                                                          </div>
+                                                        <div class="row">
+                                                            <div class="col">
+                                                            <div id="risk_score_chart" style="display:none"></div>
+                                                            <div id="exalens_risk_score_container">
+                                                                 <div id="risk_score_number"></div>
+                                                            </div>
+                                                            </div>
+                                                        </div>
                                                         <br>
                                                         <div class="row" style="display: flex; align-items: center; justify-content: center">
                                                             <div class="col-md-6">
@@ -2014,10 +1951,34 @@ $(document).ready(function() {
                                                 <input type="hidden" id="hdn_darktrace_status" name="hdn_darktrace_status">
                                                 <input type="hidden" id="hdn_darktrace_risk" name="hdn_darktrace_risk">
                                                 <input type="hidden" id="hdn_darktrace_score" name="hdn_darktrace_score">
+                                                <div id="config-data"
+                                                     data-darktrace-client="{{ current_pha_header.darktrace_client }}"
+                                                     data-exalens-client="{{ current_pha_header.exalens_client }}"
+                                                     data-exalens-api="{{ current_pha_header.exalens_api }}"
+                                                     data-exalens-status="{{ current_pha_header.exalens_status }}"
+                                                     data-exalens-risk="{{ current_pha_header.exalens_risk }}"
+                                                     data-exalens-score="{{ current_pha_header.exalens_score }}"
+                                                     data-darktrace-public-api="{{ current_pha_header.darktrace_public_api }}"
+                                                     data-darktrace-private-api="{{ current_pha_header.darktrace_private_api }}"
+                                                     data-darktrace-status="{{ current_pha_header.darktrace_status }}"
+                                                     data-darktrace-risk="{{ current_pha_header.darktrace_risk }}"
+                                                     data-darktrace-score="{{ current_pha_header.darktrace_score }}"
+                                                     data-darktrace-tactics="{{ current_pha_header.darktrace_tactics_report }}"
+                                                     data-darktrace-mitre="{{ current_pha_header.darktrace_mitre_report }}">
+                                                </div>
 
                                                 <script>
+                                                function formatResponse(responseString) {
 
+                                                    if (responseString == null || responseString.trim() === '') {
+                                                        return '';
+                                                    }
+                                                    // Split the response string into an array using '-' as the delimiter and remove any empty elements
+                                                    let responseArray = responseString.split('- ').filter(item => item.trim() !== '');
 
+                                                    // Join the response array into a formatted string with each item as a list item
+                                                    return responseArray.map(item => `<li>${item.trim()}</li>`).join('');
+                                                }
 
 
 
@@ -2047,19 +2008,32 @@ $(document).ready(function() {
                                                     },
                                                     success: function(response) {
                                                         // Update text content
-                                                        document.getElementById('darktrace_control_status').innerHTML = "<b>Darktrace Status:</b> " + response["Control Status"];
-                                                        document.getElementById('darktrace_risk_statement').innerHTML = "<b>Inferred Risk:</b> " + response["Risk Statement"];
+                                                        let controlStatusString = Array.isArray(response["Control Status"]) ? response["Control Status"].join('- ') : response["Control Status"];
+                                                        let riskStatementString = Array.isArray(response["Risk Statement"]) ? response["Risk Statement"].join('- ') : response["Risk Statement"];
+
+                                                        // Format the responses
+                                                        let formattedControlStatus = formatResponse(controlStatusString);
+                                                        let formattedRiskStatement = formatResponse(riskStatementString);
+
+                                                        // Update the innerHTML of the elements with formatted content
+                                                        document.getElementById('darktrace_control_status').innerHTML = "<b>Darktrace Status:</b><ul>" + formattedControlStatus + "</ul>";
+                                                        document.getElementById('darktrace_risk_statement').innerHTML = "<b>Inferred Risk:</b><ul>" + formattedRiskStatement + "</ul>";
 
                                                         document.getElementById('darktrace_risk_score_number').innerText = "Risk Score: " + response["Risk Score"] + "/100";
                                                         document.getElementById('hdn_darktrace_status').value = response["Control Status"];
                                                         document.getElementById('hdn_darktrace_risk').value = response["Risk Statement"];
                                                         document.getElementById('hdn_darktrace_score').value = response["Risk Score"];
 
-                                                        darktrace_risk_score_chart(response["Risk Score"]);
+                                                        //darktrace_risk_score_chart(response["Risk Score"]);
                                                         darktrace_incident_severity_DistributionChart(response["severity_of_incidents"]);
                                                         darktrace_tactics_DistributionChart(response["mitre_tactics_count"]);
-
-
+                                                        var leftColumn = document.getElementById('leftColumn');
+                                                        var rightColumn = document.getElementById('rightColumn');
+                                                        var toggleButton = document.getElementById('toggleColumnBtn');
+                                                        leftColumn.style.display = 'none';
+                                                        rightColumn.classList.remove('col-md-9');
+                                                        rightColumn.classList.add('col-md-12');
+                                                        toggleButton.innerText = '>>';
                                                     },
                                                     complete: function() {
                                                         Swal.close();
@@ -2131,21 +2105,83 @@ $(document).ready(function() {
                                             });
 
 
-                                                $(document).ready(function() {
-                                                    $('#connector_select').change(function() {
-                                                        var selectedValue = $(this).val();
-                                                        if (selectedValue === 'Exalens') {
-                                                            $('#exalensConfig').show();
-                                                            $('#darktraceConfig').hide();
-                                                        } else if (selectedValue === 'Darktrace') {
-                                                            $('#darktraceConfig').show();
-                                                            $('#exalensConfig').hide();
+                                            $(document).ready(function() {
+                                                        var configData = $('#config-data').data();
+
+                                                        var darktraceClient = configData.darktraceClient;
+                                                        var exalensClient = configData.exalensClient;
+
+                                                        if (darktraceClient !== "") {
+                                                            $('#connector_select').val('Darktrace');
+                                                        } else if (exalensClient !== "") {
+                                                            $('#connector_select').val('Exalens');
                                                         } else {
-                                                            $('#exalensConfig').hide();
-                                                            $('#darktraceConfig').hide();
+                                                            $('#connector_select').val('');
                                                         }
+
+                                                        $('#connector_select').change(function() {
+                                                            var selectedValue = $(this).val();
+                                                            if (selectedValue === 'Exalens') {
+                                                                $('#exalensConfig').show();
+                                                                $('#darktraceConfig').hide();
+
+                                                                $('#exalensApiKey').val(configData.exalensApi);
+                                                                $('#exalensClientId').val(exalensClient);
+                                                                $('#exalensIpAddress').val(configData.exalensIp);
+
+                                                                document.getElementById('control_status').innerHTML = "<b>Exalens Status:</b> " + configData.exalensStatus;
+                                                                document.getElementById('risk_statement').innerHTML = "<b>Inferred Risk:</b> " + configData.exalensRisk;
+
+                                                                document.getElementById('risk_score_number').innerText = "Risk Score: " + configData.exalensScore + "/100";
+                                                                document.getElementById('hdn_exalens_status').value = configData.exalensStatus;
+                                                                document.getElementById('hdn_exalens_risk').value = configData.exalensRisk;
+                                                                document.getElementById('hdn_exalens_score').value = configData.exalensScore;
+
+                                                                exalens_risk_score_chart(configData.exalensScore);
+                                                            } else if (selectedValue === 'Darktrace') {
+                                                                $('#darktraceConfig').show();
+                                                                $('#exalensConfig').hide();
+
+                                                                 $('#darktrace_public_key').val(configData.darktracePublicApi);
+                                                                $('#darktrace_private_key').val(configData.darktracePrivateApi);
+                                                                $('#darktrace_host').val(darktraceClient);
+
+                                                                let controlStatusString = Array.isArray(configData.darkTraceStatus) ? configData.darkTraceStatus.join('- ') : configData.darkTraceStatus;
+                                                                let riskStatementString = Array.isArray(configData.darktraceRisk) ? configData.darktraceRisk.join('- ') : configData.darktraceRisk;
+
+                                                                // Format the responses
+                                                                let formattedControlStatus = formatResponse(controlStatusString);
+                                                                let formattedRiskStatement = formatResponse(riskStatementString);
+
+                                                                // Update the innerHTML of the elements with formatted content
+                                                                document.getElementById('darktrace_control_status').innerHTML = "<b>Darktrace Status:</b><ul>" + formattedControlStatus + "</ul>";
+                                                                document.getElementById('darktrace_risk_statement').innerHTML = "<b>Inferred Risk:</b><ul>" + formattedRiskStatement + "</ul>";
+
+                                                                document.getElementById('darktrace_risk_score_number').innerText = "Risk Score: " + configData.darktraceScore + "/100";
+                                                                document.getElementById('hdn_darktrace_status').value = configData.darktraceStatus;
+                                                                document.getElementById('hdn_darktrace_risk').value = configData.darktraceRisk;
+                                                                document.getElementById('hdn_darktrace_score').value = configData.darktraceScore;
+
+                                                                darktrace_incident_severity_DistributionChart(configData.darktraceTactics);
+                                                                darktrace_tactics_DistributionChart(configData.darktraceMitre);
+                                                                document.getElementById('hdn_darktrace_tactics').value = configData.darktraceTactics;
+                                                                document.getElementById('hdn_darktrace_mitre').value = configData.darktraceMitre;
+
+                                                                // darktrace_risk_score_chart(configData.darktraceScore);
+                                                                var leftColumn = document.getElementById('leftColumn');
+                                                                var rightColumn = document.getElementById('rightColumn');
+                                                                var toggleButton = document.getElementById('toggleColumnBtn');
+                                                                leftColumn.style.display = 'none';
+                                                                rightColumn.classList.remove('col-md-9');
+                                                                rightColumn.classList.add('col-md-12');
+                                                                toggleButton.innerText = '>>';
+                                                            } else {
+                                                                $('#exalensConfig').hide();
+                                                                $('#darktraceConfig').hide();
+                                                            }
+                                                        }).trigger('change'); // Trigger change event to set initial visibility
                                                     });
-                                                });
+
 
 
 
@@ -2271,7 +2307,8 @@ $(document).ready(function() {
 {% endif %}
 
 <script>
-    drawGauge({{ current_pha_header.pha_score }});
+    var pha_score = {{ current_pha_header.pha_score|default:0 }};
+    drawGauge(pha_score);
     drawControlGauge(0);
 
     $("#generatePPT").click(function(e) {
@@ -2709,6 +2746,10 @@ $(document).ready(function() {
 
 <script>
     $(document).ready(function() {
+    $('#txtTitle, #txtLeader, #txtUnit, #txtStartDate, #txtLeaderEmail, #txtEndDate, #txtSafetySummary, #txtChemical, #txtPhysical, #txtOther, #txtCompliance, #strategySummary, #insightSummary, #threatSummary,  #assessment_id,  #selZone, #selSL,  #btnformSubmit,  #risk-assessment-btn, #scenarioButton, #generatePPT').prop('disabled', false);
+     $('#btnformSubmit').prop('disabled', false);
+     $('#scenarioButton').prop('disabled', false);
+    $('#loadFacilityButton').prop('disabled', false);
         var table = $('#headertable').DataTable({
             "pageLength": 10,
             "lengthChange": false
@@ -2746,6 +2787,7 @@ $(document).ready(function() {
 
         $('#headertable').on('click', 'tbody tr.selectable-row', function() {
             let recordId = $(this).data('id');
+
             navigateToRecord(recordId);
         });
 });
@@ -2896,16 +2938,36 @@ function fetchHeaderRecord(recordId) {
                             $('#darktrace_private_key').val(data.headerrecord.darktrace_private_api);
                             $('#darktrace_host').val(data.headerrecord.darktrace_client);
 
-                            document.getElementById('darktrace_control_status').innerHTML = "<b>Darktrace Status:</b> " + data.headerrecord.darktrace_status;
-                            document.getElementById('darktrace_risk_statement').innerHTML = "<b>Inferred Risk:</b> " + data.headerrecord.darktrace_risk;
+                            let controlStatusString = Array.isArray(data.headerrecord.darktrace_status) ? data.headerrecord.darktrace_status.join('- ') : data.headerrecord.darktrace_status;
+                            let riskStatementString = Array.isArray(data.headerrecord.darktrace_risk) ? data.headerrecord.darktrace_risk.join('- ') : data.headerrecord.darktrace_risk;
+
+                            // Format the responses
+                            let formattedControlStatus = formatResponse(controlStatusString);
+                            let formattedRiskStatement = formatResponse(riskStatementString);
+
+                            // Update the innerHTML of the elements with formatted content
+                            document.getElementById('darktrace_control_status').innerHTML = "<b>Darktrace Status:</b><ul>" + formattedControlStatus + "</ul>";
+                            document.getElementById('darktrace_risk_statement').innerHTML = "<b>Inferred Risk:</b><ul>" + formattedRiskStatement + "</ul>";
+
 
                             document.getElementById('darktrace_risk_score_number').innerText = "Risk Score: " + data.headerrecord.darktrace_score + "/100";
                             document.getElementById('hdn_darktrace_status').value = data.headerrecord.darktrace_status;
                             document.getElementById('hdn_darktrace_risk').value = data.headerrecord.darktrace_risk;
                             document.getElementById('hdn_darktrace_score').value = data.headerrecord.darktrace_score;
 
-                            darktrace_risk_score_chart(data.headerrecord.darktrace_score);
+                            //darktrace_risk_score_chart(data.headerrecord.darktrace_score);
+                            darktrace_incident_severity_DistributionChart(data.headerrecord.darktrace_tactics_report);
+                            darktrace_tactics_DistributionChart(data.headerrecord.darktrace_mitre_report);
+                            document.getElementById('hdn_darktrace_tactics').value = data.headerrecord.darktrace_mitre_report;
+                            document.getElementById('hdn_darktrace_mitre').value = data.headerrecord.darktrace_mitre_report;
 
+                            var leftColumn = document.getElementById('leftColumn');
+                            var rightColumn = document.getElementById('rightColumn');
+                            var toggleButton = document.getElementById('toggleColumnBtn');
+                            leftColumn.style.display = 'none';
+                            rightColumn.classList.remove('col-md-9');
+                            rightColumn.classList.add('col-md-12');
+                            toggleButton.innerText = '>>';
 
                         } else {
                             $('#darktraceConfig').hide();
@@ -2919,7 +2981,7 @@ function fetchHeaderRecord(recordId) {
                             document.getElementById('hdn_darktrace_risk').value = '';
                             document.getElementById('hdn_darktrace_score').value = '';
 
-                            darktrace_risk_score_chart(0);
+                            //darktrace_risk_score_chart(0);
                         }
 
                         $('#defaultFacility').prop('checked', data.headerrecord.is_default);
@@ -2962,7 +3024,8 @@ function fetchHeaderRecord(recordId) {
                          populateSummary("complianceContainer", data.headerrecord.compliancesummary);
                          populateSummary("physicalContainer", data.headerrecord.physicalsummary);
                          populateSummary("otherContainer", data.headerrecord.othersummary);
-                         populateSummary("chemicalContainer", data.headerrecord.chemicalsummary);
+                         // populateSummary("chemicalContainer", data.headerrecord.chemicalsummary);
+                         populateChemicalJSON(JSON.parse(data.headerrecord.chemicalsummary));
                          populateThreatSummary("threatContainer", data.headerrecord.threatSummary);
                          populateSummary("insightContainer", data.headerrecord.insightSummary);
                          populateSummary("strategyContainer", data.headerrecord.strategySummary);
@@ -3411,7 +3474,56 @@ $(document).ready(function() {
         });
     }
 });
+
+function populateChemicalJSON(chemicalData) {
+    // Check if the data is a string, and if so, parse it into an object
+    if (typeof chemicalData === 'string') {
+        try {
+            chemicalData = JSON.parse(chemicalData);
+        } catch (e) {
+            console.error("Error parsing chemical data JSON:", e);
+            return;
+        }
+    }
+
+    // Clear existing content
+    $('#chemicalContainer').empty();
+
+    if (!chemicalData || !chemicalData.chemicals || !Array.isArray(chemicalData.chemicals)) {
+        console.error("Chemical data is invalid or missing. Expected an object with a 'chemicals' array.");
+        return;
+    }
+
+    // Iterate over the chemicals and create boxes
+    chemicalData.chemicals.forEach((chemical, index) => {
+        const toxicText = chemical.toxic ? 'Yes' : 'No';
+        const flammableText = chemical.flammable ? 'Yes' : 'No';
+        const boxText = `Name: ${chemical.chemicalName}\nToxic: ${toxicText}\nFlammable: ${flammableText}\nCAS: ${chemical.CAS}`;
+        const box = $('<div class="summary-box" style="color: #000; width: 100%; white-space: pre-line;"></div>').text(boxText);
+        $('#chemicalContainer').append(box);
+    });
+}
 </script>
+        <script>
+
+    document.getElementById('toggleColumnBtn').addEventListener('click', function() {
+    var leftColumn = document.getElementById('leftColumn');
+    var rightColumn = document.getElementById('rightColumn');
+    var toggleButton = document.getElementById('toggleColumnBtn');
+
+    if (leftColumn.style.display === 'none') {
+        leftColumn.style.display = 'block';
+        rightColumn.classList.remove('col-md-12');
+        rightColumn.classList.add('col-md-9');
+        toggleButton.innerText = '<<';
+    } else {
+        leftColumn.style.display = 'none';
+        rightColumn.classList.remove('col-md-9');
+        rightColumn.classList.add('col-md-12');
+        toggleButton.innerText = '>>';
+    }
+    });
+        </script>
 <div class="col-md-0" style="background-color: #464748; align-items: center; visibility: hidden">
 <div class="form-group">
 <button type="button" class="form-control" id="searchButton" >Search</button>

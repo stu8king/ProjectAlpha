@@ -41,11 +41,6 @@
         <h1 class="page-title">Defaults@AnzenOT</h1>
     </div>
 
-
-
-<div class="row" style="height: 10px">
-    <div class="col"></div>
-</div>
 <div class="container mt-4">
     <div class="row justify-content-center">
         <div class="col-md-8">
@@ -56,85 +51,73 @@
                 <div class="card-body">
                     <form method="post" class="form-horizontal">
                         {% csrf_token %}
-                        {% for field in form %}
-                            {% if field.name != 'exalens_api_key' and field.name != 'exalens_client_id' and field.name != 'exalens_ip_address' and field.name != 'business_unit_name' and field.name != 'business_unit_address_line1' and field.name != 'business_unit_address_line2' and field.name != 'business_unit_address_line3' and field.name != 'business_unit_country' and field.name != 'business_unit_postcode' and field.name != 'business_unit_city' and field.name != 'business_unit_state' %}
-                            <div class="form-group row mb-3">
-                                <label for="{{ field.id_for_label }}" >{{ field.label }}</label>
-                                <div class="col-sm-8">
-                                    {{ field }}
-                                    {% if field.help_text %}
-                                        <small class="form-text text-muted">{{ field.help_text }}</small>
-                                    {% endif %}
-                                </div>
-                            </div>
-                            {% endif %}
-                        {% endfor %}
-                        <div class="form-group row mb-3">
-                            <div class="col-sm-12">
 
-                            <!-- Business Unit Fields -->
+                        <!-- Dropdown Selector -->
                         <div class="form-group row mb-3">
-                            <div class="col-sm-12">
-                                <h5 class="text-center">Business Unit Information</h5>
+                            <label for="connector_select" class="col-sm-4 col-form-label">Select Connector</label>
+                            <div class="col-sm-8">
+                                <select class="form-control" id="connector_select" name="connector_select">
+                                    <option value="">Select Connector</option>
+                                    <option value="darktrace">Darktrace</option>
+                                    <option value="exalens">Exalens</option>
+                                </select>
                             </div>
-                            <div class="form-group row mb-3">
-                                <label for="{{ form.business_unit_name.id_for_label }}" class="col-sm-4 col-form-label">Business Unit</label>
-                                <div class="col-sm-8">
-                                    {{ form.business_unit_name }}
-                                </div>
+                        </div>
+
+                        <!-- Business Unit Fields -->
+                        <h5 class="text-center">Business Unit Information</h5>
+                        <div class="form-group row mb-3">
+                            <label for="{{ form.business_unit_name.id_for_label }}" class="col-sm-4 col-form-label">Business Unit</label>
+                            <div class="col-sm-8">
+                                {{ form.business_unit_name }}
                             </div>
-                            <div class="form-group row mb-3">
-                                <label for="{{ form.business_unit_address_line1.id_for_label }}" class="col-sm-4 col-form-label">Address Line 1</label>
-                                <div class="col-sm-8">
-                                    {{ form.business_unit_address_line1 }}
-                                </div>
+                        </div>
+                        <div class="form-group row mb-3">
+                            <label for="{{ form.business_unit_address_line1.id_for_label }}" class="col-sm-4 col-form-label">Address Line 1</label>
+                            <div class="col-sm-8">
+                                {{ form.business_unit_address_line1 }}
                             </div>
-                            <div class="form-group row mb-3">
-                                <label for="{{ form.business_unit_address_line2.id_for_label }}" class="col-sm-4 col-form-label">Address Line 2</label>
-                                <div class="col-sm-8">
-                                    {{ form.business_unit_address_line2 }}
-                                </div>
+                        </div>
+                        <div class="form-group row mb-3">
+                            <label for="{{ form.business_unit_address_line2.id_for_label }}" class="col-sm-4 col-form-label">Address Line 2</label>
+                            <div class="col-sm-8">
+                                {{ form.business_unit_address_line2 }}
                             </div>
-                            <div class="form-group row mb-3">
-                                <label for="{{ form.business_unit_address_line3.id_for_label }}" class="col-sm-4 col-form-label">Address Line 3</label>
-                                <div class="col-sm-8">
-                                    {{ form.business_unit_address_line3 }}
-                                </div>
+                        </div>
+                        <div class="form-group row mb-3">
+                            <label for="{{ form.business_unit_address_line3.id_for_label }}" class="col-sm-4 col-form-label">Address Line 3</label>
+                            <div class="col-sm-8">
+                                {{ form.business_unit_address_line3 }}
                             </div>
-                            <div class="form-group row mb-3">
-                                <label for="{{ form.business_unit_city.id_for_label }}" class="col-sm-4 col-form-label">City</label>
-                                <div class="col-sm-8">
-                                    {{ form.business_unit_city }}
-                                </div>
+                        </div>
+                        <div class="form-group row mb-3">
+                            <label for="{{ form.business_unit_city.id_for_label }}" class="col-sm-4 col-form-label">City</label>
+                            <div class="col-sm-8">
+                                {{ form.business_unit_city }}
                             </div>
-                            <div class="form-group row mb-3">
-                                <label for="{{ form.business_unit_state.id_for_label }}" class="col-sm-4 col-form-label">State</label>
-                                <div class="col-sm-8">
-                                    {{ form.business_unit_state }}
-                                </div>
+                        </div>
+                        <div class="form-group row mb-3">
+                            <label for="{{ form.business_unit_state.id_for_label }}" class="col-sm-4 col-form-label">State</label>
+                            <div class="col-sm-8">
+                                {{ form.business_unit_state }}
                             </div>
-                            <div class="form-group row mb-3">
-                                <label for="{{ form.business_unit_postcode.id_for_label }}" class="col-sm-4 col-form-label">Post Code/Zip</label>
-                                <div class="col-sm-8">
-                                    {{ form.business_unit_postcode }}
-                                </div>
+                        </div>
+                        <div class="form-group row mb-3">
+                            <label for="{{ form.business_unit_postcode.id_for_label }}" class="col-sm-4 col-form-label">Post Code/Zip</label>
+                            <div class="col-sm-8">
+                                {{ form.business_unit_postcode }}
                             </div>
-                            <div class="form-group row mb-3">
-                                <label for="{{ form.business_unit_country.id_for_label }}" class="col-sm-4 col-form-label">Country</label>
-                                <div class="col-sm-8">
-                                    {{ form.business_unit_country }}
-                                </div>
+                        </div>
+                        <div class="form-group row mb-3">
+                            <label for="{{ form.business_unit_country.id_for_label }}" class="col-sm-4 col-form-label">Country</label>
+                            <div class="col-sm-8">
+                                {{ form.business_unit_country }}
                             </div>
                         </div>
 
                         <!-- Exalens Fields -->
-                        <div class="form-group row mb-3">
-                            <div class="col-sm-12">
-
-
-                                <h5 class="text-center">Exalens Settings</h5>
-                            </div>
-                            <!-- Manually add each Exalens field -->
+                        <div id="exalensFields" style="display: none;">
+                            <h5 class="text-center">Exalens Settings</h5>
                             <div class="form-group row mb-3">
                                 <label for="{{ form.exalens_api_key.id_for_label }}" class="col-sm-4 col-form-label">{{ form.exalens_api_key.label }}</label>
                                 <div class="col-sm-8">
@@ -153,18 +136,34 @@
                                     {{ form.exalens_ip_address }}
                                 </div>
                             </div>
-
-                                <div class="form-group row mb-3">
-                                    <label for="{{ field.id_for_label }}" class="col-sm-4 col-form-label">{{ field.label }}</label>
-                                    <div class="col-sm-8">
-                                        {{ field }}
-                                    </div>
-                                </div>
-
                         </div>
+
+                        <!-- Darktrace Fields -->
+                        <div id="darktraceFields" style="display: none;">
+                            <h5 class="text-center">Darktrace Settings</h5>
+                            <div class="form-group row mb-3">
+                                <label for="{{ form.darktrace_public_key.id_for_label }}" class="col-sm-4 col-form-label">{{ form.darktrace_public_key.label }}</label>
+                                <div class="col-sm-8">
+                                    {{ form.darktrace_public_key }}
+                                </div>
+                            </div>
+                            <div class="form-group row mb-3">
+                                <label for="{{ form.darktrace_private_key.id_for_label }}" class="col-sm-4 col-form-label">{{ form.darktrace_private_key.label }}</label>
+                                <div class="col-sm-8">
+                                    {{ form.darktrace_private_key }}
+                                </div>
+                            </div>
+                            <div class="form-group row mb-3">
+                                <label for="{{ form.darktrace_host.id_for_label }}" class="col-sm-4 col-form-label">{{ form.darktrace_host.label }}</label>
+                                <div class="col-sm-8">
+                                    {{ form.darktrace_host }}
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="form-group row">
                             <div class="col-sm-12 text-center">
-                                <button type="button" class="btn btn-primary" id="submitBtn">Save</button>
+                                <button type="submit" class="btn btn-primary" id="submitBtn">Save</button>
                             </div>
                         </div>
                     </form>
@@ -173,6 +172,28 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var connectorSelect = document.getElementById('connector_select');
+    var exalensFields = document.getElementById('exalensFields');
+    var darktraceFields = document.getElementById('darktraceFields');
+
+    connectorSelect.addEventListener('change', function() {
+        if (connectorSelect.value === 'exalens') {
+            exalensFields.style.display = 'block';
+            darktraceFields.style.display = 'none';
+        } else if (connectorSelect.value === 'darktrace') {
+            darktraceFields.style.display = 'block';
+            exalensFields.style.display = 'none';
+        } else {
+            exalensFields.style.display = 'none';
+            darktraceFields.style.display = 'none';
+        }
+    });
+});
+</script>
+
 
 <script>
 document.getElementById('submitBtn').addEventListener('click', function(e) {

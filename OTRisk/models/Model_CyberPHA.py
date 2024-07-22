@@ -417,6 +417,8 @@ class tblCyberPHAHeader(models.Model):
     darktrace_status = models.TextField(null=True)
     darktrace_risk = models.TextField(null=True)
     darktrace_score = models.IntegerField(null=True)
+    darktrace_tactics_report = models.TextField(null=True)
+    darktrace_mitre_report = models.TextField(null=True)
     history = HistoricalRecords()
 
     def set_workflow_status(self, status):
@@ -1247,6 +1249,9 @@ class FacilityType(models.Model):
     FacilityType = models.CharField(max_length=50)
     Industry = models.ForeignKey(tblIndustry, on_delete=models.CASCADE, related_name='facility_types')
     chemical_profile = models.TextField(null=True)
+    safety_profile = models.TextField(null=True)
+    physical_profile = models.TextField(null=True)
+    ot_profile = models.TextField(null=True)
 
     class Meta:
         db_table = 'tblFacilityTypes'

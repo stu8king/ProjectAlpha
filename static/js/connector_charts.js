@@ -291,7 +291,7 @@ function exalens_createSeverityDistributionChart(severityData) {
                         }
 
 function darktrace_incident_severity_DistributionChart(categoryData) {
-
+    console.log(categoryData);
     var colorMapping = {
         "high": "#b42121",       // Red
         "critical": "#ff9100",   // Orange
@@ -303,112 +303,125 @@ function darktrace_incident_severity_DistributionChart(categoryData) {
         chartData.push({ x: category, value: categoryData[category], fill: colorMapping[category] });
     }
 
-    // Create the chart
-    anychart.onDocumentReady(function() {
-        // Create a pie chart
-        var chart = anychart.pie(chartData);
+    // Ensure the container is ready before drawing the chart
+    $(document).ready(function() {
+        var container = document.getElementById('darktrace_tactics');
+        if (!container) {
+            console.error('Container not found!');
+            return;
+        }
 
-        // Convert pie chart to doughnut chart
-        chart.innerRadius("80%");
+        // Clear previous chart instances
+        while (container.firstChild) {
+            container.removeChild(container.firstChild);
+        }
 
-        // Set the container id for the chart
-        chart.container("darktrace_tactics");
+        anychart.onDocumentReady(function() {
+            var chart = anychart.pie(chartData);
+            chart.innerRadius("80%");
+            chart.container("darktrace_tactics");
+            chart.bounds(0, 0, "100%", "100%");
 
-        // Set bounds to ensure the chart fills the container and adjust size
-        chart.bounds("0%", "0%", "100%", "100%");
+            chart.labels()
+                .position("outside")
+                .fontSize("8pt")
+                .fontColor("#ffffff")
+                .format("{%x}");
+            chart.legend(false);
+            var credits = chart.credits();
+            credits.enabled(false);
 
-        // Customize the chart labels and title font size
-        chart.labels()
-            .position("outside")
-            .fontSize("8pt") // Set font size for labels
-            .fontColor("#ffffff")
-            .format("{%x}");
+            var containerBackgroundColor = window.getComputedStyle(container).backgroundColor;
+            chart.background().fill(containerBackgroundColor || "transparent");
 
-        chart.legend(false); // Disable default legend
-        var credits = chart.credits();
-        credits.enabled(false);
+            chart.labels()
+                .useHtml(true)
+                .position("outside")
+                .anchor('center')
+                .format(function() {
+                    return `<span style="color: ${this.fill};">${this.x}</span>`;
+                })
+                .connectorStroke({
+                    color: "black",
+                    thickness: 1,
+                    dash: "2 2"
+                })
+                .hAlign('center')
+                .vAlign('middle');
 
-        // Match the canvas color to the container background
-        var containerBackgroundColor = window.getComputedStyle(document.getElementById('darktrace_tactics')).backgroundColor;
-        chart.background().fill(containerBackgroundColor || "transparent");
+            chart.draw();
 
-        // Add lines from segments to labels
-        chart.labels()
-            .useHtml(true)
-            .position("outside")
-            .anchor('center')
-            .format(function() {
-                return `<span style="color: ${this.fill};">${this.x}</span>`;
-            })
-            .connectorStroke({
-                color: "black",
-                thickness: 1,
-                dash: "2 2"
-            })
-            .hAlign('center') // Horizontally align labels to center
-            .vAlign('middle'); // Vertically align labels to middle
-
-        // Draw the chart
-        chart.draw();
+        });
     });
+    document.getElementById('hdn_darktrace_tactics').value = JSON.stringify(categoryData);
+
 }
 
-function darktrace_tactics_DistributionChart(categoryData) {
 
+function darktrace_tactics_DistributionChart(categoryData) {
+    console.log(categoryData);
 
     var chartData = [];
     for (var category in categoryData) {
         chartData.push({ x: category, value: categoryData[category] });
     }
 
-    // Create the chart
-    anychart.onDocumentReady(function() {
-        // Create a pie chart
-        var chart = anychart.pie(chartData);
+    // Ensure the container is ready before drawing the chart
+    $(document).ready(function() {
+        var container = document.getElementById('darktrace_mitre');
+        if (!container) {
+            console.error('Container not found!');
+            return;
+        }
 
-        // Convert pie chart to doughnut chart
-        chart.innerRadius("80%");
+        console.log('Container found:', container);
+        console.log('Container dimensions:', container.clientWidth, container.clientHeight);
 
-        // Set the container id for the chart
-        chart.container("darktrace_mitre");
+        // Clear previous chart instances
+        while (container.firstChild) {
+            container.removeChild(container.firstChild);
+        }
 
-        // Set bounds to ensure the chart fills the container and adjust size
-        chart.bounds("-10%", "-10%", "130%", "130%");
+        anychart.onDocumentReady(function() {
+            var chart = anychart.pie(chartData);
+            chart.innerRadius("80%");
+            chart.container("darktrace_mitre");
+            chart.bounds(0, 0, "100%", "100%");
 
-        // Customize the chart labels and title font size
-        chart.labels()
-            .position("outside")
-            .fontSize("8pt") // Set font size for labels
-            .fontColor("#ffffff")
-            .format("{%x}");
+            chart.labels()
+                .position("outside")
+                .fontSize("8pt")
+                .fontColor("#ffffff")
+                .format("{%x}");
+            chart.legend(false);
+            var credits = chart.credits();
+            credits.enabled(false);
 
-        chart.legend(false); // Disable default legend
-        var credits = chart.credits();
-        credits.enabled(false);
+            var containerBackgroundColor = window.getComputedStyle(container).backgroundColor;
+            chart.background().fill(containerBackgroundColor || "transparent");
 
-        // Match the canvas color to the container background
-        var containerBackgroundColor = window.getComputedStyle(document.getElementById('darktrace_mitre')).backgroundColor;
-        chart.background().fill(containerBackgroundColor || "transparent");
+            chart.labels()
+                .useHtml(true)
+                .position("outside")
+                .anchor('center')
+                .format(function() {
+                    return `<span style="color: ${this.fill};">${this.x}</span>`;
+                })
+                .connectorStroke({
+                    color: "black",
+                    thickness: 1,
+                    dash: "2 2"
+                })
+                .hAlign('center')
+                .vAlign('middle');
 
-        // Add lines from segments to labels
-        chart.labels()
-            .useHtml(true)
-            .position("outside")
-            .anchor('center')
-            .format(function() {
-                return `<span style="color: ${this.fill};">${this.x}</span>`;
-            })
-            .connectorStroke({
-                color: "black",
-                thickness: 1,
-                dash: "2 2"
-            })
-            .hAlign('center') // Horizontally align labels to center
-            .vAlign('middle'); // Vertically align labels to middle
-
-        // Draw the chart
-        chart.draw();
+            chart.draw();
+            console.log('Chart container after draw:', container.innerHTML);
+        });
     });
+        document.getElementById('hdn_darktrace_mitre').value = JSON.stringify(categoryData);
+
 }
+
 
 

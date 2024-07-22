@@ -102,6 +102,8 @@ body {
     background-color: #2D2E30; /* Darker shade for sidebar */
     padding: 1vw;
     width: 10vw; /* Sidebar width */
+    border-right: 0.5px solid #65c8d0; /* Added right border */
+    box-shadow: 1px 0 3px rgba(0, 0, 0, 0.1);
 }
 
 .sidebar-logo {
@@ -174,7 +176,7 @@ body {
         .pagination-container a {
             margin: 0 5px;
             text-decoration: none;
-            color: #007bff;
+            color: #65c8d0;
         }
 
         .pagination-container a:hover {
@@ -315,7 +317,7 @@ body {
 }
 
 input:checked + .slider {
-  background-color: #2196F3;
+  background-color: #65c8d0;
 }
 
 input:checked + .slider:before {
@@ -368,7 +370,11 @@ input:checked + .slider:before {
 .pac-container {
     z-index: 1050 !important; /* Ensure the autocomplete dropdown is above other elements */
 }
-
+.organize-container {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
     </style>
     <script>
         var autocomplete, map, marker;
@@ -479,6 +485,7 @@ input:checked + .slider:before {
         document.addEventListener('DOMContentLoaded', function() {
             initPage();
         });
+        anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
     </script>
 </head>
 <body style="background-color: #464748" onload="initAutocomplete()">
@@ -499,14 +506,16 @@ input:checked + .slider:before {
 
                 </div>
                 <div class="col-md-2">
-                    <button type="button" class="btn btn-primary form-control" id="saveFacility">Save Facility</button>
+                    <button type="button" class="btn btn-primary form-control" id="saveFacility" style="background-color: #65c8d0; color:#000">Save Facility</button>
                 </div>
                 <div class="col-md-5">
                 </div>
                 <div class="sub-menu sub-menu-container small-font">
                   <br><br><br><br><br><br><br><br><br><br>
                     <div id="block_selector">
-                     <a href="#" id="organizeBlocks"  style="display: block; color: white; margin-top: 10px; align-self: center">Organize</a>
+                     <div class="organize-container">
+                        <a href="#" id="organizeBlocks" style="display: block; color: white; margin-top: 10px;">Organize</a>
+                    </div>
              <br>
                     <div class="switch-container">
                         <span class="switch-label">Tools</span>
@@ -607,7 +616,11 @@ input:checked + .slider:before {
                                             </div>
                                             <div class="block-body">
                                                 <div class="block-body-content" style="align-items: center; align-content: center">
-                                                <div id="map"></div>
+                                                <div class="row" style="width:98%">
+                                                    <div class="col">
+                                                        <div id="map"></div>
+                                                    </div>
+                                                </div>
                                                 <br>
                                                 <div id="aqiGlobe" class="aqi-globe">--</div>
                                                 <input type="hidden" id="hdn_pha_score" name="hdn_pha_score">
@@ -663,7 +676,7 @@ input:checked + .slider:before {
                                             <div class="block-body-content" style="align-items: center; align-content: center">
                                             <input type="hidden" id="ps_summary" name="ps_summary">
                                             <div id="display_ps_summary"></div>
-                                            <div id="pha_gauge"></div></div>
+                                            <div id="pha_gauge" style="display:none"></div></div>
                                         </div>
                                     </div>
                                 </div>
@@ -1395,6 +1408,7 @@ function editFacility(facilityId) {
             $('#facilityName').val(facility.name);
             $('#facilityIndustry').val(facility.industry);
             $('#facilityType').val(facility.type);
+            $('#businessName').val(facility.business_name);
             $('#numEmployees').val(facility.employees);
             $('#publicIPs').val(facility.public_ips);
             $('#shiftModel').val(facility.shift_model);
@@ -1507,6 +1521,7 @@ function drawGauge(score) {
     gauge.title().fontSize(8);
     gauge.title().orientation("bottom");
 
+    credits.enabled(false);
 
     // Draw the chart
     gauge.container('pha_gauge').draw();

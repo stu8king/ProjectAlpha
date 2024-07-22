@@ -15,11 +15,12 @@
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css">
     <!-- Bootstrap Select CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.1/css/bootstrap-select.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js"></script>
+
 
     <!-- Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.1/font/bootstrap-icons.css" rel="stylesheet">
-
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.bundle.min.js">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.1/js/bootstrap-select.min.js"></script>
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <!-- jQuery UI -->
@@ -141,6 +142,9 @@ body {
     background-color: #2D2E30; /* Darker shade for sidebar */
     padding: 1vw;
     width: 10vw; /* Sidebar width */
+    border-right: 0.5px solid #65c8d0; /* Added right border */
+    box-shadow: 1px 0 3px rgba(0, 0, 0, 0.1);
+
 }
 
 .sidebar-logo {
@@ -214,7 +218,7 @@ body {
         .pagination-container a {
             margin: 0 5px;
             text-decoration: none;
-            color: #007bff;
+            color: #65c8d0;
         }
 
         .pagination-container a:hover {
@@ -304,7 +308,7 @@ body {
 }
 
 input:checked + .slider {
-  background-color: #2196F3;
+  background-color: #65c8d0;
 }
 
 input:checked + .slider:before {
@@ -398,6 +402,14 @@ input:checked + .slider:before {
     align-items: center; /* Centers items vertically */
     margin-bottom: 5px; /* Adds space between items */
 }
+.dropdown-menu {
+    background-color: #d3d1cd;
+    border: none;
+}
+.dropdown-item:hover, .dropdown-item:focus {
+    background-color: #fac330; /* Light orange background for hovered dropdown items */
+    color: #2D2E30;
+}
 
 .cube-icon {
     margin-right: 5px; /* Space between icon and text */
@@ -422,6 +434,12 @@ input:checked + .slider:before {
     overflow-y: auto; /* Adds scroll to the body if content exceeds the container height */
     flex-grow: 1; /* Allows the body to grow and take up available space */
 }
+.organize-container {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+
     </style>
 </head>
 <body style="background-color: #464748">
@@ -433,6 +451,12 @@ input:checked + .slider:before {
 <div class="container-fluid">
     <div class="row">
         {% include 'menu_bar.html' %}
+        <script>
+    $(document).ready(function () {
+        $('.dropdown-toggle').dropdown();
+        console.log("Dropdown initialized");
+    });
+</script>
         <main role="main" class="col-md-10 ml-sm-auto col-lg-12 custom-main-content">
         <br>
         <div class="row">
@@ -444,9 +468,11 @@ input:checked + .slider:before {
                 <div class="col-md-10"></div>
                 <div class="sub-menu sub-menu-container small-font">
                   <br><br><br><br><br><br><br><br><br><br>
-                    <div id="block_selector">
-                     <a href="#" id="organizeBlocks"  style="display: block; color: white; margin-top: 10px; align-self: center">Organize</a>
-             <br>
+                    <div id="block_selector" >
+                     <div class="organize-container">
+                        <a href="#" id="organizeBlocks" style="display: block; color: white; margin-top: 10px;">Organize</a>
+                    </div>
+                        <br>
                     <div class="switch-container">
                         <span class="switch-label">Facilities</span>
                         <label class="switch">
@@ -549,7 +575,7 @@ input:checked + .slider:before {
                                                 <td>{{ facility.name }}</td>
                                                 <td>{{ facility.address }}</td>
                                                 <td class="currency">
-                                                    <div style="font-weight: bold; font-size: 1.2em; color: #f0f0f0;">
+                                                    <div style="font-weight: normal; font-size: 1.1em; color: #817c7c;">
                                                         {{ facility.pha_score }}
                                                     </div>
                                                     <div class="progress" style="height: 20px; background-color: #444;">
@@ -621,13 +647,18 @@ input:checked + .slider:before {
                                                 <thead>
                                                     <tr>
                                                         <th>Title</th>
-                                                        <th>Total ALE Median</th>
+                                                        <th>ALE</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
                                                     {% for record in cyberpha_records %}
                                                         <tr class="selectable-row" data-id="{{ record.ID }}">
-                                                            <td>{{ record.title }}</td>
+                                                            <td>
+                                                            {{ record.title }}
+                                                            {% if record.darktrace_client %}
+                                                                <img src="{% static 'images/dt_d.png' %}" alt="Darktrace Client" style="height:1em; vertical-align:middle;" />
+                                                            {% endif %}
+                                                        </td>
                                                             <td class="currency">{{ record.total_ale_median }}</td>
                                                         </tr>
                                                     {% endfor %}

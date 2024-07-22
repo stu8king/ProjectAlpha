@@ -34,7 +34,7 @@ from django.views.decorators.http import require_POST, require_http_methods
 from pinecone import Pinecone, ServerlessSpec
 from pptx import Presentation
 from pptx.util import Pt
-from requests.exceptions import RequestException
+from requests.exceptions import RequestException, JSONDecodeError
 from urllib3.exceptions import InsecureRequestWarning
 
 from OTRisk.models.Model_CyberPHA import tblIndustry, tblCyberPHAHeader, tblZones, tblStandards, \
@@ -239,6 +239,9 @@ def iotaphamanager(request, record_id=None):
         pha_header.darktrace_private_api = request.POST.get('darktrace_private_key')
         pha_header.darktrace_status = request.POST.get('hdn_darktrace_status')
         pha_header.darktrace_risk = request.POST.get('hdn_darktrace_risk')
+        pha_header.darktrace_tactics_report = request.POST.get('hdn_darktrace_tactics')
+        pha_header.darktrace_mitre_report = request.POST.get('hdn_darktrace_mitre')
+
         darktrace_risk_score_string = request.POST.get('hdn_darktrace_score')
         try:
             darktrace_risk_score_int = int(darktrace_risk_score_string)
@@ -397,6 +400,7 @@ def iotaphamanager(request, record_id=None):
 
     if record_id is not None:
         pha_header = get_object_or_404(tblCyberPHAHeader, pk=record_id)
+        new_record_id = record_id
         first_record_id = record_id
     else:
         first_record = pha_header_records.first()
@@ -474,6 +478,7 @@ def iotaphamanager(request, record_id=None):
 
 
 def get_headerrecord(request):
+
     record_id = request.GET.get('record_id')
     headerrecord = get_object_or_404(tblCyberPHAHeader, ID=record_id)
     # Retrieve the latest workflow status for this header record
@@ -493,7 +498,8 @@ def get_headerrecord(request):
     # create a dictionary with the record data
     headerrecord_data = {
         'title': headerrecord.title,
-        'facility': headerrecord.FacilityName,
+        'facility': facility.name,
+        'business_name': facility.business_name,
         'leader': headerrecord.PHALeader,
         'leaderemail': headerrecord.PHALeaderEmail,
         'Industry': industry,
@@ -504,7 +510,7 @@ def get_headerrecord(request):
         'enddate': headerrecord.AssessmentEndDate.strftime('%Y-%m-%d'),
         'address': facility.address,
         'safetysummary': facility.safetySummary,
-        'chemicalsummary': facility.chemicalSummary,
+        'chemicalsummary': facility.type.chemical_profile,
         'physicalsummary': facility.physicalSummary,
         'othersummary': headerrecord.otherSummary,
         'compliancesummary': facility.complianceSummary,
@@ -553,7 +559,28 @@ def get_headerrecord(request):
         'facility_id': headerrecord.facility_id
     }
 
-    # Query for moderators associated with this header record
+    # Safely load JSON data for darktrace_mitre_report and darktrace_tactics_report
+    def load_json_field(json_field):
+        try:
+            return json.loads(json_field) if json_field else ""
+        except (JSONDecodeError, TypeError):
+            return ""
+
+    darktrace_mitre_report = headerrecord.darktrace_mitre_report
+    darktrace_tactics_report = headerrecord.darktrace_tactics_report
+
+
+    if darktrace_mitre_report is not None and darktrace_mitre_report != "":
+        headerrecord_data['darktrace_mitre_report'] = load_json_field(darktrace_mitre_report)
+    else:
+        headerrecord_data['darktrace_mitre_report'] = None  # Or handle the absence of data as needed
+
+    if darktrace_tactics_report is not None and darktrace_tactics_report != "":
+        headerrecord_data['darktrace_tactics_report'] = load_json_field(darktrace_tactics_report)
+    else:
+        headerrecord_data['darktrace_tactics_report'] = None
+
+        # Query for moderators associated with this header record
     moderators = CyberPHAModerators.objects.filter(pha_header=headerrecord)
     moderator_ids = [moderator.moderator.id for moderator in moderators]
 
@@ -603,6 +630,7 @@ def get_headerrecord(request):
     )
     investments_data = list(investments)
 
+    print(headerrecord_data)
 
     response_data = {
         'headerrecord': headerrecord_data,
@@ -1996,9 +2024,11 @@ def analyze_scenario(request):
                 cyber_pha = tblCyberPHAHeader.objects.get(ID=pha_id)
             except tblCyberPHAHeader.DoesNotExist:
                 return JsonResponse({'error': 'PHA record not found'}, status=404)
-
-            facility_type = cyber_pha.FacilityType
-            industry = cyber_pha.Industry
+            facility = Facility.objects.get(id=cyber_pha.facility_id)
+            facility_type_id = FacilityType.objects.get(ID=facility.type_id)
+            facility_type = facility_type_id.FacilityType
+            industry = facility.industry
+            chemical_profile = facility.chemicalSummary
             zone = cyber_pha.AssessmentZone
             unit = cyber_pha.AssessmentUnit
             address = cyber_pha.facilityAddress
@@ -2007,8 +2037,8 @@ def analyze_scenario(request):
 
             # Construct a prompt for GPT-4
             system_message = f"""
-            You are are expert in cyber-physical scenarios for industrial facilities.  TASK: Analyze and consider the following scenario as part of an OT/ICS focused Cyber HAZOPS/Layer of Protection Analysis (LOPA) assessment: {scenario} which occurs at a {facility_type} in the {industry} industry, located at {address} in {country}, specifically in the {zone} zone and the {unit} unit. 
-            The attacker is assumed to be: {attacker}. The attack vector is assumed to be {attack_vector}. The risk category is assumed to be {riskCategory}. Vulnerable systems with Internet exposed IP address {exposed_system}. Vulnerable systems with default or weak credentials {weak_credentials}.
+            You are are expert in cyber-physical scenarios for industrial facilities.  Analyze and consider the following scenario as part of an OT/ICS focused Cyber HAZOPS/Layer of Protection Analysis (LOPA) assessment: {scenario} which occurs at a {facility_type} in the {industry} industry, located at {address} in {country}. 
+            The attacker is assumed to be: {attacker}. The attack vector is assumed to be {attack_vector}. The risk category is assumed to be {riskCategory}. Vulnerable systems with Internet exposed IP address {exposed_system}. Vulnerable systems with default or weak credentials {weak_credentials}. Chemicals profile for the facility: {chemical_profile}
             Considering the likely presence of these OT devices: {devices}, concisely describe in 50 words in a list format (separated by semicolons) of a maximum of 5 of the most likely direct consequences of the given scenario. 
             The direct consequences should be specific to the facility and the mentioned details. 
             
@@ -2030,6 +2060,23 @@ def analyze_scenario(request):
             # Extract and process the text from the response
             consequence_text = response['choices'][0]['message']['content']
             consequence_list = consequence_text.split(';')  # Splitting based on the chosen delimiter
+
+            bia_prompt = f""" You are an expert in cyber-physical scenarios for industrial facilities. 
+                Given the following consequences from an OT/ICS focused Cyber HAZOPS/Layer of Protection Analysis (LOPA) assessment: 
+                Consequences: {consequence_text} Scenario details: {scenario}. 
+                Assess the business impact of these consequences under the following 9 categories: safety, danger to life, finance, operations, data, reputation, supply chain, environment, and regulatory compliance. 
+                For each category, provide an integer value from 0 to 10 representing the severity of the impact, where 0 means no impact and 10 means maximum impact. 
+                Output the result as a JSON object with the categories as keys and integers as values. No additional characters outside of the JSON. """
+            bia_response = openai.ChatCompletion.create(
+                model="gpt-4o",
+                messages=[
+                    {"role": "system", "content": bia_prompt},
+                    {"role": "user", "content": user_message}
+                ],
+                max_tokens=100,
+                temperature=0.1
+            )
+            biaData = bia_response['choices'][0]['message']['content']
 
             attack_tree_json = {}
 
@@ -2101,11 +2148,13 @@ def analyze_scenario(request):
                     # Parse the raw JSON string into a Python dictionary
                 attack_tree_json = json.loads(cleaned_json_str)
 
-            return JsonResponse({'consequence': consequence_list, 'attack_tree': attack_tree_json})
+
+
+            return JsonResponse({'consequence': consequence_list, 'attack_tree': attack_tree_json, 'biaData': biaData})
 
 
     else:
-        return JsonResponse({'consequence': [], 'attack_tree': {}, 'error': 'Not a valid scenario'}, status=400)
+        return JsonResponse({'consequence': [], 'attack_tree': {}, 'biaData': {},'error': 'Not a valid scenario'}, status=400)
 
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
@@ -2849,10 +2898,11 @@ from OTRisk.darktrace_integration.device import Device
 from OTRisk.darktrace_integration.model_breach import ModelBreach
 from OTRisk.darktrace_integration.ai_analyst_incident import AIAnalystIncident
 from OTRisk.darktrace_integration.endpoint import Endpoint
+from collections import Counter
 
 
-def darktrace_asset_detail(target_asset_ip: str, darktrace_host: str, darktrace_public_token: str,
-                           darktrace_private_token: str) -> Optional[str]:
+def darktrace_asset_summary_info(target_asset_ip: str, darktrace_host: str, darktrace_public_token: str,
+                                 darktrace_private_token: str) -> Optional[Dict[str, str]]:
     # Disable SSL warnings
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -2864,7 +2914,86 @@ def darktrace_asset_detail(target_asset_ip: str, darktrace_host: str, darktrace_
         timeout=30  # Increase the timeout value
     )
 
-    # Fetch the list of devices
+    try:
+        devices = Device.get_assets(dt_session)
+        asset_detail = next((device for device in devices if device.ip == target_asset_ip), None)
+
+        if asset_detail:
+            device_id = asset_detail.did
+
+            # Fetch incidents related to the asset
+            incidents = AIAnalystIncident.get_incidents(
+                session=dt_session,
+                init_date=datetime.datetime.strptime("2023-01-01 00:00:00", "%Y-%m-%d %H:%M:%S"),
+                end_date=datetime.datetime.now()
+            )
+
+            related_incidents = [incident for incident in incidents if
+                                 target_asset_ip in incident.breach_identifiers or
+                                 asset_detail.hostname in incident.breach_identifiers]
+            critical_incidents = [incident for incident in related_incidents if incident.score >= 90]
+
+            model_breaches = ModelBreach.get_model_breaches(session=dt_session, device=asset_detail)
+
+            total_breach_events = 0
+            # Collect detailed model breach information
+            model_breaches_details = []
+            for breach in model_breaches:
+                breach_data = breach.raw["model"]["then"]
+                model_breaches_details.append({
+                    "model_name": breach_data.get("name", "N/A"),
+                    "breach_time": breach.raw.get("breach_time", "N/A"),
+                    "score": breach_data.get("score", "N/A"),
+                    "description": breach_data.get("description", "N/A"),
+                    "actions": breach_data.get("actions", {})
+                })
+                total_breach_events += 1
+
+            breach_count = len(model_breaches_details)
+            if breach_count > 0:
+                most_frequent_breach_type = Counter(breach["model_name"] for breach in model_breaches_details).most_common(1)[0][0]
+                highest_score_breach = max(model_breaches_details, key=lambda x: x["score"])
+                earliest_breach_time = min(breach["breach_time"] for breach in model_breaches_details)
+                latest_breach_time = max(breach["breach_time"] for breach in model_breaches_details)
+            else:
+                most_frequent_breach_type = "N/A"
+                highest_score_breach = {"model_name": "N/A", "score": "N/A", "description": "N/A"}
+                earliest_breach_time = "N/A"
+                latest_breach_time = "N/A"
+
+            summary_info = {
+                "ip_address": asset_detail.ip,
+                "asset_type": asset_detail.typename,
+                "hostname": asset_detail.hostname,
+                "total_events": total_breach_events,
+                "breach_count": breach_count,
+                "incident_count": len(related_incidents),
+                "critical_incident_count": len(critical_incidents),
+                "most_frequent_breach_type": most_frequent_breach_type,
+                "highest_score_breach": highest_score_breach,
+                "earliest_breach_time": earliest_breach_time,
+                "latest_breach_time": latest_breach_time
+            }
+
+            return summary_info
+    except Exception as e:
+        logging.error(f"Error fetching asset details: {e}")
+
+    return None
+
+def darktrace_asset_detail(target_asset_ip: str, darktrace_host: str, darktrace_public_token: str,
+                           darktrace_private_token: str) -> Optional[Dict[str, str]]:
+    # Disable SSL warnings
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+    # Initialize the Darktrace session
+    dt_session = Darktrace.initialize_from_string(
+        host=darktrace_host,
+        public_token=darktrace_public_token,
+        private_token=darktrace_private_token,
+        timeout=30  # Increase the timeout value
+    )
+
     try:
         devices = Device.get_assets(dt_session)
         asset_detail = next((device for device in devices if device.ip == target_asset_ip), None)
@@ -2882,6 +3011,42 @@ def darktrace_asset_detail(target_asset_ip: str, darktrace_host: str, darktrace_
                                  target_asset_ip in incident.breach_identifiers]
 
             model_breaches = ModelBreach.get_model_breaches(session=dt_session, device=asset_detail)
+
+            # Collect detailed model breach information
+            model_breaches_details = []
+            for breach in model_breaches:
+                breach_data = breach.raw["model"]["then"]
+                model_breaches_details.append({
+                    "model_name": breach_data.get("name", "N/A"),
+                    "breach_time": breach.raw.get("breach_time", "N/A"),
+                    "score": breach_data.get("score", "N/A"),
+                    "description": breach_data.get("description", "N/A"),
+                    "actions": breach_data.get("actions", {})
+                })
+
+            breach_count = len(model_breaches_details)
+            if breach_count > 0:
+                most_frequent_breach_type = Counter(breach["model_name"] for breach in model_breaches_details).most_common(1)[0][0]
+                highest_score_breach = max(model_breaches_details, key=lambda x: x["score"])
+                earliest_breach_time = min(breach["breach_time"] for breach in model_breaches_details)
+                latest_breach_time = max(breach["breach_time"] for breach in model_breaches_details)
+            else:
+                most_frequent_breach_type = "N/A"
+                highest_score_breach = {"model_name": "N/A", "score": "N/A", "description": "N/A"}
+                earliest_breach_time = "N/A"
+                latest_breach_time = "N/A"
+
+            summary_info = {
+                "ip_address": asset_detail.ip,
+                "asset_type": asset_detail.typename,
+                "hostname": asset_detail.hostname,
+                "breach_count": breach_count,
+                "most_frequent_breach_type": most_frequent_breach_type,
+                "highest_score_breach": highest_score_breach,
+                "earliest_breach_time": earliest_breach_time,
+                "latest_breach_time": latest_breach_time
+            }
+
             endpoint_details = Endpoint.get_details(session=dt_session, ip=target_asset_ip)
             largest_data_transfers = Endpoint.get_largest_data_transfers(session=dt_session, ip=target_asset_ip)
 
@@ -2908,20 +3073,23 @@ def darktrace_asset_detail(target_asset_ip: str, darktrace_host: str, darktrace_
 
             # Create a condensed summary
             condensed_info = f"""
-                        IP: {asset_info['ip_address']}
-                        Type: {asset_info['asset_type']}
-                        Host: {asset_info['hostname']}
-                        First Seen: {asset_info['first_seen']}
-                        Last Seen: {asset_info['last_seen']}
-                        OS: {asset_info['os']}
-                        Tags: {', '.join(asset_info['tags'])}
-                        Incidents: {asset_info['related_incidents_count']} ({', '.join(asset_info['related_incidents_types'])})
-                        Breaches: {asset_info['model_breaches_count']} ({', '.join(asset_info['model_breaches_types'])})
-                        Endpoint Details: IP: {asset_info['endpoint_details_summary']}
-                        Data Transfers: {asset_info['largest_data_transfers_summary']}
-                        """.strip()
+                IP: {asset_info['ip_address']}
+                Type: {asset_info['asset_type']}
+                Host: {asset_info['hostname']}
+                First Seen: {asset_info['first_seen']}
+                Last Seen: {asset_info['last_seen']}
+                OS: {asset_info['os']}
+                Tags: {', '.join(asset_info['tags'])}
+                Incidents: {asset_info['related_incidents_count']} ({', '.join(asset_info['related_incidents_types'])})
+                Breaches: {asset_info['model_breaches_count']} ({', '.join(asset_info['model_breaches_types'])})
+                Endpoint Details: IP: {asset_info['endpoint_details_summary']}
+                Data Transfers: {asset_info['largest_data_transfers_summary']}
+            """.strip()
 
-            return condensed_info
+            return {
+                "condensed_info": condensed_info,
+                "summary_info": summary_info
+            }
     except Exception as e:
         logging.error(f"Error fetching asset details: {e}")
 
@@ -2933,6 +3101,7 @@ def generate_cyberpha_scenario_description(request):
     if request.method == 'POST':
         # Extracting existing form data
         cyberPHAID = request.POST.get('cyberPHA_ID')
+
         cyberPHAID = int(cyberPHAID)
         attack_vector = request.POST.get('attackVector', '').strip()
         attacker = request.POST.get('attacker', '').strip()
@@ -2940,10 +3109,16 @@ def generate_cyberpha_scenario_description(request):
         target_asset_purpose = request.POST.get('targetAssetPurpose', '').strip()
 
         cyberpha_header = get_object_or_404(tblCyberPHAHeader, ID=cyberPHAID)
-        industry = cyberpha_header.Industry
-        facility_type = cyberpha_header.FacilityType
-        employees_on_site = cyberpha_header.EmployeesOnSite
-        country = cyberpha_header.country
+
+        facilityid = cyberpha_header.facility_id
+        facility = get_object_or_404(Facility, id=facilityid)
+        facility_profile = facility.type
+        employees_on_site = facility.employees
+        address = facility.address
+        industry = facility.industry.Industry
+        facility_type = facility.type.FacilityType
+        chemical_profile = facility_profile.chemical_profile
+
         connectionFlag = int(request.POST.get('connectionFlag'))
 
         asset_data = {}
@@ -2977,11 +3152,12 @@ def generate_cyberpha_scenario_description(request):
 
         - Attacker: {attacker}
         - Attack Vector: {attack_vector}
-        - Country: {country}
+        - Country: {address}
         - Industry: {industry}
         - Facility Type: {facility_type}
         - Employee count: {employees_on_site}
         - Affected asset: {target_asset}
+        - Chemical profile for the facility: {chemical_profile}
         - Purpose of affected asset: {target_asset_purpose}
         - Asset data reported by threat management: {asset_data}
         - Pinecone index data: {documents_context}.
@@ -3004,7 +3180,7 @@ def generate_cyberpha_scenario_description(request):
             messages=[
                 {"role": "system", "content": prompt}
             ],
-            max_tokens=2500,
+            max_tokens=3500,
             temperature=0.1
         )
         # Extracting the generated scenario

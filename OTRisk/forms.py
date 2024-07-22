@@ -154,10 +154,11 @@ class OrganizationDefaultsForm(forms.ModelForm):
     class Meta:
         model = OrganizationDefaults
         exclude = (
-        'organization', 'cyber_insurance', 'insurance_deductible', 'impact_weight_safety', 'impact_weight_danger',
-        'impact_weight_data', 'impact_weight_supply', 'impact_weight_finance', 'impact_weight_production',
-        'impact_weight_regulation', 'impact_weight_reputation',
-        'impact_weight_environment', 'business_unit_lat', 'business_unit_lon')  # Exclude the organization field from the form
+            'organization', 'cyber_insurance', 'insurance_deductible', 'impact_weight_safety', 'impact_weight_danger',
+            'impact_weight_data', 'impact_weight_supply', 'impact_weight_finance', 'impact_weight_production',
+            'impact_weight_regulation', 'impact_weight_reputation',
+            'impact_weight_environment', 'business_unit_lat', 'business_unit_lon'
+        )
 
     industry = forms.ModelChoiceField(
         queryset=tblIndustry.objects.all(),
@@ -223,35 +224,49 @@ class OrganizationDefaultsForm(forms.ModelForm):
         label="Postcode"
     )
 
+    darktrace_public_key = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control'}),
+        label="Public Key"
+    )
+    darktrace_private_key = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control'}),
+        label="Private Key"
+    )
+    darktrace_host = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control'}),
+        label="Host"
+    )
 
     def __init__(self, *args, **kwargs):
         super(OrganizationDefaultsForm, self).__init__(*args, **kwargs)
         self.fields['industry'].label_from_instance = lambda obj: "{}".format(obj.Industry)
 
-        # Define currency fields
         currency_fields = ['annual_revenue', 'cyber_insurance', 'insurance_deductible']
         for field_name in currency_fields:
             if field_name in self.fields:
                 self.fields[field_name].widget = forms.NumberInput(attrs={
                     'class': 'form-control',
-                    'step': '0.01',  # Allows input to have two decimal places
-                    'min': '0',  # Optional: ensures that the value is not negative
-                    'type': 'text',  # Set as text to prevent spinner UI
-                    'pattern': '^\d+(\.?\d{2})?$'  # Pattern for currency (optional)
+                    'step': '0.01',
+                    'min': '0',
+                    'type': 'text',
+                    'pattern': '^\d+(\.?\d{2})?$'
                 })
 
-        # Add Bootstrap form-control class to all fields
         for field_name, field in self.fields.items():
             field.widget.attrs['class'] = 'form-control'
 
     def save(self, commit=True):
         instance = super(OrganizationDefaultsForm, self).save(commit=False)
-        # Set cyber_insurance and insurance_deductible to 0
         instance.cyber_insurance = 0
         instance.insurance_deductible = 0
         if commit:
             instance.save()
         return instance
+
+
 
 
 class RAWorksheetScenarioForm(forms.ModelForm):

@@ -203,6 +203,7 @@ urlpatterns = [
     path('network_risk_profile/', views.network_risk_profile, name='darktrace'),
     path('get_facility_types/', views.get_facility_types, name='get_facility_types'),
     path('search/', views.search, name='search'),
+    path('asset_summary_info/', views.get_darktrace_asset_summary_info, name='darktrace_asset_summary_info'),
 ]
 
 if settings.DEBUG:

@@ -1,132 +1,133 @@
 {% load static %}
 
  <nav class="col-md-3 col-lg-2 d-md-block sidebar collapse" id="sidebarMenu">
-                <div class="sidebar-sticky">
-                    <div class="sidebar-logo">
-                        <img src="{% static 'images/anzen_owl.png' %}" class="img-fluid" alt="Logo" width="120" height="150">
-                    </div>
-                    <ul class="nav flex-column nav-sidebar">
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'OTRisk:dashboardhome' %}" > <img src="{% static 'images/menu_dashboard.png' %}" alt=""> Dashboard</a>
+        <div class="sidebar-sticky">
+            <div class="sidebar-logo">
+                <img src="{% static 'images/anzen_owl.png' %}" class="img-fluid" alt="Logo" width="120" height="150">
+            </div>
+            <ul class="nav flex-column nav-sidebar">
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'OTRisk:dashboardhome' %}" > <img src="{% static 'images/menu_dashboard.png' %}" alt=""> Dashboard</a>
+                </li>
+                <li class="nav-item">
+                    <a  class="nav-link" href="{% url 'OTRisk:facility_view' %}"> <img src="{% static 'images/facility2.png' %}"> Facilities</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'OTRisk:qraw' %}" title="Click here for the Quick Risk Assessment worksheet"> <img src="{% static 'images/menu_qraw.png' %}"  alt="" > QRAW</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'OTRisk:iotaphamanager' %}" title="Click here for the CyberPHA"><img src="{% static 'images/menu_pha.png' %}"  alt=""> CyberPHA</a>
+                </li>
+                <li class="nav-item menu-item">
+                    <a class="nav-link" href="{% url 'OTRisk:scenario_sim_v2' %}" title="Click here for the scenario simulator"><img src="{% static 'images/menu_scenario.png' %}" alt=""> Scenarios</a>
+                </li>
+                <li class="nav-item menu-item">
+                    <a class="nav-link" href="{% url 'OTRisk:ra_actions_view_default' %}" title="Click here to view action items"><img src="{% static 'images/menu_actions.png' %}"  alt=""> Actions</a>
+                </li>
+                <li class="nav-item menu-item">
+                    <a class="nav-link" href="{% url 'OTRisk:risk_register' %}" title="Click here for the risk register"><img src="{% static 'images/menu_register.png' %}" alt=""> Risk Register</a>
+                </li>
+                <li class="nav-item menu-item">
+                    <a class="nav-link" href="{% url 'OTRisk:list_frameworks' %}" title="Click here for control assessment questionnaires"><img src="{% static 'images/menu_assess.png' %}"  alt="">Assessments</a>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <img src="{% static 'images/menu_admin.png' %}" width="20" height="20" alt=""> Admin
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                        <li>
+                            <a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:setup_org' %}" title="Click here to set defaults for your organization">Defaults</a>
                         </li>
-                        <li class="nav-item">
-                            <a  class="nav-link" href="{% url 'OTRisk:facility_view' %}"> <img src="{% static 'images/facility2.png' %}"> Facilities</a>
+                        <li>
+                            <a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:facility_view' %}">Facilities</a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'OTRisk:qraw' %}" title="Click here for the Quick Risk Assessment worksheet"> <img src="{% static 'images/menu_qraw.png' %}"  alt="" > QRAW</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'OTRisk:iotaphamanager' %}" title="Click here for the CyberPHA"><img src="{% static 'images/menu_pha.png' %}"  alt=""> CyberPHA</a>
-                        </li>
-                        <li class="nav-item menu-item">
-                            <a class="nav-link" href="{% url 'OTRisk:scenario_sim_v2' %}" title="Click here for the scenario simulator"><img src="{% static 'images/menu_scenario.png' %}" alt=""> Scenarios</a>
-                        </li>
-                        <li class="nav-item menu-item">
-                            <a class="nav-link" href="{% url 'OTRisk:ra_actions_view_default' %}" title="Click here to view action items"><img src="{% static 'images/menu_actions.png' %}"  alt=""> Actions</a>
-                        </li>
-                        <li class="nav-item menu-item">
-                            <a class="nav-link" href="{% url 'OTRisk:risk_register' %}" title="Click here for the risk register"><img src="{% static 'images/menu_register.png' %}" alt=""> Risk Register</a>
-                        </li>
-                        <li class="nav-item menu-item">
-                            <a class="nav-link" href="{% url 'OTRisk:list_frameworks' %}" title="Click here for control assessment questionnaires"><img src="{% static 'images/menu_assess.png' %}"  alt="">Assessments</a>
-                        </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <img src="{% static 'images/menu_admin.png' %}" width="20" height="20" alt=""> Admin
-                            </a>
-                            <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-                                <li>
-                                    <a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:setup_org' %}" title="Click here to set defaults for your organization">Defaults</a>
-                                </li>
-                                <li>
-                                    <a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:facility_view' %}">Facilities</a>
-                                </li>
-                                <li>
-                                    <a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:cybersecurity_defaults_view' %}" title="Click here for cyber insurance defaults">Cyber Insurance</a>
+                        <li>
+                            <a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:cybersecurity_defaults_view' %}" title="Click here for cyber insurance defaults">Cyber Insurance</a>
 
-                                </li>
-
-                                {% if user.is_staff %}
-                                <!-- Links visible only to superusers -->
-                                    <li>
-                                    <a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:admin_users' %}">Admin Users</a>
-                                </li>
-                                <li>
-                                    <a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:upload_questionnaire' %}">Upload Questionnaires</a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:user_admin' %}">User Administration</a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item"  style="font-size: 12px;" href="{% url 'OTRisk:organization_form' %}">Manage Organizations</a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:execute_sql' %}">Execute SQL</a>
-                                </li>
-                                    <li>
-                                    <a class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:get_asset_data' %}">Assets</a>
-                                </li>
-                                {% endif %}
-                            </ul>
-                         </li>
-                    <li class="nav-item menu-item">
-                        <a class="nav-link" href="{% url 'accounts:profile' %}">
-                        <i class="bi bi-person-fill"></i> {{ user.first_name }} {{ user.last_name }} | {{ user.userprofile.organization.name }}
-                        </a>
                         </li>
-                        <li class="nav-item menu-item">
-                           <a href="#" id="btnlogout" type="button" class="nav-link" onclick="logout();">
-                                <img src="{% static 'images/menu_logout.png' %}" alt=""> Logout
-                            </a>
+
+                        {% if user.is_staff %}
+                        <!-- Links visible only to superusers -->
+                            <li>
+                            <a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:admin_users' %}">Admin Users</a>
+                        </li>
+                        <li>
+                            <a  class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:upload_questionnaire' %}">Upload Questionnaires</a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:user_admin' %}">User Administration</a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item"  style="font-size: 12px;" href="{% url 'OTRisk:organization_form' %}">Manage Organizations</a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:execute_sql' %}">Execute SQL</a>
+                        </li>
+                            <li>
+                            <a class="dropdown-item" style="font-size: 12px;" href="{% url 'OTRisk:get_asset_data' %}">Assets</a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                 </li>
+            <li class="nav-item menu-item">
+                <a class="nav-link" href="{% url 'accounts:profile' %}">
+                <i class="bi bi-person-fill"></i> {{ user.first_name }} {{ user.last_name }} | {{ user.userprofile.organization.name }}
+                </a>
+                </li>
+                <li class="nav-item menu-item">
+                   <a href="#" id="btnlogout" type="button" class="nav-link" onclick="logout();">
+                        <img src="{% static 'images/menu_logout.png' %}" alt=""> Logout
+                    </a>
 
 
 
-                      <script>
-                        function logout() {
-                            // Using SweetAlert2 to confirm logout
-                            swal.fire({
-                                title: "Are you sure you want to log out?",
-                                iconHtml: '<img src="{% static "images/anzen_owl.png" %}" width="100px">', // Custom image as icon
-                                imageWidth: 100,
-                                imageHeight: 100,
-                                background: '#000', // Black background
-                                color: '#fff', // Set text color to white
-                                showCancelButton: true,
-                                confirmButtonColor: '#3085d6',
-                                cancelButtonColor: '#d33',
-                                confirmButtonText: 'Yes, log out',
-                                cancelButtonText: 'Cancel',
-                                customClass: {
-                                    popup: 'swal2-custom-border' // Apply custom class to the popup/dialog
+              <script>
+                function logout() {
+                    // Using SweetAlert2 to confirm logout
+                    swal.fire({
+                        title: "Are you sure you want to log out?",
+                        iconHtml: '<img src="{% static "images/anzen_owl.png" %}" width="100px">', // Custom image as icon
+                        imageWidth: 100,
+                        imageHeight: 100,
+                        background: '#000', // Black background
+                        color: '#fff', // Set text color to white
+                        showCancelButton: true,
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: 'Yes, log out',
+                        cancelButtonText: 'Cancel',
+                        customClass: {
+                            popup: 'swal2-custom-border' // Apply custom class to the popup/dialog
+                        }
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            // User confirmed logout, perform the fetch request
+                            fetch("{% url 'logout' %}", {
+                                method: 'POST',
+                                headers: {
+                                    'X-CSRFToken': '{{ csrf_token }}',
+                                    'Content-Type': 'application/x-www-form-urlencoded',
+                                },
+                                credentials: 'same-origin' // Necessary for including CSRF token in request
+                            }).then(response => {
+                                if (response.ok) {
+                                    // Logout successful, redirect to home page
+                                    window.location.href = '/';
+                                } else {
+                                    // Handle errors or unsuccessful logout
+                                    console.error('Logout failed.');
                                 }
-                            }).then((result) => {
-                                if (result.isConfirmed) {
-                                    // User confirmed logout, perform the fetch request
-                                    fetch("{% url 'logout' %}", {
-                                        method: 'POST',
-                                        headers: {
-                                            'X-CSRFToken': '{{ csrf_token }}',
-                                            'Content-Type': 'application/x-www-form-urlencoded',
-                                        },
-                                        credentials: 'same-origin' // Necessary for including CSRF token in request
-                                    }).then(response => {
-                                        if (response.ok) {
-                                            // Logout successful, redirect to home page
-                                            window.location.href = '/';
-                                        } else {
-                                            // Handle errors or unsuccessful logout
-                                            console.error('Logout failed.');
-                                        }
-                                    }).catch(error => {
-                                        // Handle any errors that occur during fetch
-                                        console.error('Error:', error);
-                                    });
-                                }
+                            }).catch(error => {
+                                // Handle any errors that occur during fetch
+                                console.error('Error:', error);
                             });
                         }
-                        </script>
+                    });
+                }
 
-                        </li>
-                        </ul>
-                </div>
-            </nav>
+                </script>
+
+                </li>
+                </ul>
+        </div>
+    </nav>

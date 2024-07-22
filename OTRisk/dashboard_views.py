@@ -657,6 +657,8 @@ def anzenot_dashboard(request):
     }
 
     for score in pha_scores:
+        if score is None:
+            score = 0
         if 0 <= score <= 25:
             pha_score_categories['Low'] += 1
         elif 26 <= score <= 45:
@@ -710,15 +712,21 @@ def anzenot_dashboard(request):
     user_profile = UserProfile.objects.get(user=request.user)
     cyberpha_records = (
         tblCyberPHAHeader.objects.filter(
-            UserID__in=UserProfile.objects.filter(organization_id=organization_id).values_list('user_id', flat=True)
+            UserID__in=UserProfile.objects.filter(organization_id=organization_id).values_list('user_id', flat=True),
+            Deleted=0
         )
         .filter(~Q(title='') & Q(title__isnull=False))
         .annotate(total_ale_median=Sum('tblcyberphascenario__ale_median'))
-        .values('ID', 'title', 'total_ale_median')
+        .values('ID', 'title', 'total_ale_median', 'darktrace_client')
     )
 
     cyberpha_records_list = [
-        {'ID': record['ID'], 'title': record['title'], 'total_ale_median': format_currency(record['total_ale_median'])}
+        {
+            'ID': record['ID'],
+            'title': record['title'],
+            'total_ale_median': format_currency(record['total_ale_median']),
+            'darktrace_client': record['darktrace_client']
+        }
         for record in cyberpha_records if record['title'].strip()
     ]
 
