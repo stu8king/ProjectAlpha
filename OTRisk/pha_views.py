@@ -650,8 +650,6 @@ def get_headerrecord(request):
     )
     investments_data = list(investments)
 
-    print(headerrecord_data)
-
     response_data = {
         'headerrecord': headerrecord_data,
         'control_assessments': control_assessments_data,
