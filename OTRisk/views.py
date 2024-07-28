@@ -42,7 +42,7 @@ from OTRisk.models.Model_CyberPHA import tblCyberPHAHeader, tblRiskCategories, \
     tblNodes, tblUnits, tblZones, tblCyberPHAScenario, tblIndustry, auditlog, tblStandards, MitreControlAssessment, \
     CyberPHAScenario_snapshot, Audit, PHAControlList, SECURITY_LEVELS, OrganizationDefaults, scenario_compliance, \
     ScenarioConsequences, APIKey, ScenarioBuilder, PHA_Safeguard, OpenAIAPILog, CybersecurityDefaults, PHA_Observations, \
-    Facility, OTVendor, CyberSecurityInvestment, FacilityType
+    Facility, OTVendor, CyberSecurityInvestment, FacilityType, Malware
 from django.shortcuts import render, redirect
 from .dashboard_views import get_user_organization_id, get_scenarios_for_regulation
 from django.contrib.auth.decorators import login_required
@@ -65,7 +65,7 @@ from .pha_views import iotaphamanager, facility_risk_profile, get_headerrecord, 
     generate_ppt, analyze_scenario, assign_cyberpha_to_group, fetch_groups, fetch_all_groups, retrieve_scenario_builder, \
     facilities, air_quality_index, delete_pha_record, get_assessment_summary, copy_cyber_pha, assessment_gap_analysis, \
     load_default_facility, exalens_get_cyberpha_assets, generate_cyberpha_scenario_description, darktrace_assets, \
-    facility_risk_profile_newrecord, darktrace_asset_summary_info
+    facility_risk_profile_newrecord, darktrace_asset_summary_info, scenario_analysis_report, generate_scenario_playbook
 from .report_views import pha_reports, get_scenario_report_details, qraw_reports, get_qraw_scenario_report_details, \
     raw_reports
 from .scenario_builder import scenario_sim_v2, analyze_sim_scenario_v2, generate_sim_attack_tree_v2, \
@@ -1185,6 +1185,12 @@ def save_or_update_cyberpha(request):
         cost_justification = request.POST.get('cost_projection_justification')
         asset_name = request.POST.get('asset_name')
         asset_purpose = request.POST.get('asset_purpose')
+        malware_id = request.POST.get('malware')
+        malware_instance = get_object_or_404(Malware, pk=malware_id) if malware_id else None
+        asset_critical = request.POST.get('asset_critical')
+        detection_time = request.POST.get('detection_time')
+        incident_complexity = request.POST.get('incident_complexity')
+        response_time = request.POST.get('response_time')
 
         if ai_bia_score in ('NaN', ''):
             ai_bia_score = 0
@@ -1360,8 +1366,12 @@ def save_or_update_cyberpha(request):
                 risk_recommendation=risk_recommendation,
                 cost_justification=cost_justification,
                 asset_name=asset_name,
-                asset_purpose=asset_purpose
-
+                asset_purpose=asset_purpose,
+                malware=malware_instance,
+                asset_critical=asset_critical,
+                detection_time=detection_time,
+                incident_complexity=incident_complexity,
+                response_time=response_time
             )
             snapshot_record.save()
         else:
@@ -1436,7 +1446,12 @@ def save_or_update_cyberpha(request):
                 'risk_rationale': risk_rationale,
                 'cost_justification': cost_justification,
                 'asset_name': asset_name,
-                'asset_purpose': asset_purpose
+                'asset_purpose': asset_purpose,
+                'malware': malware_instance,
+                'asset_critical': asset_critical,
+                'detection_time': detection_time,
+                'incident_complexity': incident_complexity,
+                'response_time': response_time
             }
 
             # If scenario_id is '0', create a new record, otherwise update the existing one
@@ -1603,6 +1618,7 @@ def assess_cyberpha(request, cyberPHAID=None):
     safeguards = tblSafeguards.objects.order_by('Safeguard').values('Safeguard').distinct()
     threatsources = tblThreatSources.objects.all().order_by('ThreatSource')
     threatactions = tblThreatActions.objects.all().order_by('ThreatAction')
+    malware = Malware.objects.all().order_by('name')
 
     scenario_status = tblCyberPHAScenario.SCENARIO_STATUSES
 
@@ -1695,7 +1711,8 @@ def assess_cyberpha(request, cyberPHAID=None):
         'scenario_form': scenario_form,
         'scenario_status': scenario_status,
         'assets_data': assets_data,
-        'darktrace_assets_data': darktrace_assets_data
+        'darktrace_assets_data': darktrace_assets_data,
+        'malware': malware
     })
 
 

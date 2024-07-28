@@ -18,7 +18,7 @@ class CyberSecurityScenarioForm(forms.Form):
     txtScenario = forms.CharField(
         widget=forms.Textarea(attrs={
             'class': 'form-control',
-            'rows': '8',
+            'rows': '20',
             'placeholder': 'Enter a detailed cybersecurity scenario...',
             'style': 'resize: none; border: 3px #97979A; border-radius: 10px; box-shadow: inset 3px 3px 8px rgba(0, 0, 0, 0.5); padding: 20px; background-color: white',
             'spellcheck': 'true'

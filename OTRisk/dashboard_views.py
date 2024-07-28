@@ -706,7 +706,7 @@ def anzenot_dashboard(request):
     ).order_by('-business_impact_score')[:10]
 
     # Format the top scenarios for easy parsing on the client side
-    top_scenarios_data = list(top_scenarios.values('Scenario', 'business_impact_score'))
+    top_scenarios_data = list(top_scenarios.values('Scenario', 'business_impact_score', 'CyberPHA'))
 
     # Query to get CyberPHA records and sum of ale_median for each
     user_profile = UserProfile.objects.get(user=request.user)
@@ -717,7 +717,9 @@ def anzenot_dashboard(request):
         )
         .filter(~Q(title='') & Q(title__isnull=False))
         .annotate(total_ale_median=Sum('tblcyberphascenario__ale_median'))
-        .values('ID', 'title', 'total_ale_median', 'darktrace_client')
+        .select_related('facility__type')  # Ensure related fields are available
+        .values('ID', 'title', 'total_ale_median', 'darktrace_client', 'facility__name', 'facility__type__FacilityType',
+                'AssessmentStatus')
     )
 
     cyberpha_records_list = [
@@ -725,7 +727,10 @@ def anzenot_dashboard(request):
             'ID': record['ID'],
             'title': record['title'],
             'total_ale_median': format_currency(record['total_ale_median']),
-            'darktrace_client': record['darktrace_client']
+            'darktrace_client': record['darktrace_client'],
+            'facility_name': record['facility__name'],
+            'facility_type': record['facility__type__FacilityType'],
+            'assessment_status': record['AssessmentStatus']
         }
         for record in cyberpha_records if record['title'].strip()
     ]
@@ -733,7 +738,7 @@ def anzenot_dashboard(request):
     # Query to get Facility records
     facility_records = Facility.objects.filter(
         organization=organization_id
-    ).values('id', 'name', 'address', 'pha_score')
+    ).values('id', 'name', 'address', 'pha_score', 'employees', 'industry__Industry', 'type__FacilityType')
 
     # Fetch active users in the same organization
     active_users = User.objects.filter(
@@ -756,7 +761,7 @@ def anzenot_dashboard(request):
             groups_with_cyberphas.append({
                 'id': group.id,
                 'group_name': group.name,
-                'cyberphas': [{'facility_name': cyberpha.FacilityName} for cyberpha in cyberphas]
+                'cyberphas': [{'id': cyberpha.ID, 'facility_name': cyberpha.FacilityName} for cyberpha in cyberphas]
             })
 
     context = {

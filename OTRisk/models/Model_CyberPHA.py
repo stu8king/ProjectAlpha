@@ -14,7 +14,18 @@ from OTRisk.models.raw import MitreICSMitigations, RAWorksheet
 from simple_history.models import HistoricalRecords
 # Import at the top of the file where Facility model is defined
 
+class Malware(models.Model):
+    name = models.CharField(max_length=255, unique=True)
+    description = models.TextField()
+    source_link = models.URLField(max_length=2000, null=True)
 
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        verbose_name = "Malware"
+        verbose_name_plural = "Malwares"
+        ordering = ['name']
 
 class user_scenario_audit(models.Model):
     # model that records the text entered into the scenario text box
@@ -759,7 +770,12 @@ class tblCyberPHAScenario(models.Model):
     risk_treatment_plan = models.TextField(null=True, blank=True)
     asset_name = models.TextField(null=True)
     asset_purpose = models.TextField(null=True)
+    malware = models.ForeignKey(Malware, on_delete=models.SET_NULL, null=True, blank=True)  # New field
     history = HistoricalRecords()
+    asset_critical = models.IntegerField(null=True)
+    incident_complexity = models.IntegerField(null=True)
+    detection_time = models.IntegerField(null=True)
+    response_time = models.IntegerField(null=True)
 
     class Meta:
         db_table = 'tblCyberPHAScenario'
@@ -1258,3 +1274,4 @@ class FacilityType(models.Model):
 
     def __str__(self):
         return self.FacilityType
+

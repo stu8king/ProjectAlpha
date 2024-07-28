@@ -32,9 +32,13 @@
 <script src="https://cdn.anychart.com/releases/8.11.1/js/anychart-circular-gauge.min.js" type="text/javascript"></script>
 <script src="https://cdn.anychart.com/releases/8.11.1/js/anychart-linear-gauge.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"/> <!-- FontAwesome CDN -->
+ <link rel="stylesheet" href="{% static 'tooltipster/dist/css/tooltipster.bundle.min.css' %}">
+<script type="text/javascript" src="{% static 'tooltipster/dist/js/tooltipster.bundle.min.js' %}"></script>
 
 <script src="{% static 'OTRisk/assesscyberpha.js' %}"></script>
+<script src="{% static 'js/phascenariomgr_texttips.js' %}"></script>
 <link rel="stylesheet" type="text/css" href="{% static 'css/info_block.css' %}">
+
 {% load django_bootstrap5 %}
 {% bootstrap_css %}
 {% bootstrap_javascript %}
@@ -524,6 +528,7 @@ input:checked + .slider1:before {
     padding: 14px 16px;
     text-align: center;
     cursor: pointer;
+    color: #0b2c4a;
     background-color: #e9e9e9; /* Light gray background */
     border-right: 1px solid #bbb;
 }
@@ -655,7 +660,7 @@ input:checked + .slider1:before {
 
 </style>
 <script>
-
+    sessionStorage.setItem("sid", 0);
      function getSeverityLabel(value) {
         switch (parseInt(value)) {
           case 1:
@@ -710,6 +715,8 @@ sessionStorage.setItem("ls", "0");
 $(function () {
   $('[data-bs-toggle="tooltip"]').tooltip()
 })
+
+
 </script>
 
 </head>
@@ -717,6 +724,167 @@ $(function () {
 <form id="cyberpha-form">
 {% csrf_token %}
 <script>
+function generate_playbook() {
+    var data = {
+        scenario: $('#id_txtScenario').val(),
+        recommendations: document.getElementById("hdnRecommendations").value,
+        compliance_map: document.getElementById('compliance_map_text').value,
+        cyberphaid: sessionStorage.getItem('activeCyberPHA'),
+        scenarioid: sessionStorage.getItem('sid')
+    };
+
+    // Ensure all required fields are filled
+    if (!data.scenario || !data.recommendations || !data.compliance_map || !data.cyberphaid) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Missing Data',
+            text: 'Please ensure all scenario details are filled in before generating the playbook.'
+        });
+        return;
+    }
+
+    Swal.fire({
+        title: 'Generate Playbook?',
+        text: "Do you want to generate a playbook for the current scenario? This will take a few moments. Do not navigate away from this screen or click other links while the operation is in progress.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes',
+        cancelButtonText: 'Cancel'
+    }).then((result) => {
+        if (result.isConfirmed) {
+             Swal.fire({
+                title: 'Generating Playbook',
+                text: 'Please wait while the playbook is being generated...',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+            $.ajax({
+                type: "POST",
+                url: "/OTRisk/generate_scenario_playbook/",
+                contentType: "application/json",
+                data: JSON.stringify(data),
+                xhrFields: {
+                    responseType: 'blob'
+                },
+                success: function(blob) {
+                    var url = window.URL.createObjectURL(blob);
+                    var a = document.createElement('a');
+                    a.href = url;
+                    a.download = "scenario_playbook.pdf";
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    window.open(url);
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Playbook Generated',
+                        text: 'The playbook has been successfully generated.'
+                    });
+                },
+                error: function(xhr, status, error) {
+                    console.log('Error:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'An error occurred while generating the playbook. Please try again.'
+                    });
+                }
+            });
+        }
+    });
+}
+
+function generateScenarioReport() {
+    // Get the values from the input fields
+    var scenario = $('#id_txtScenario').val();
+    var likelihood = document.getElementById('hdnLikelihood').value;
+    var adjustedRR = document.getElementById('txtRRa').value;
+    var costs_low = document.getElementById('txtEventCosts_low').value;
+    var costs = document.getElementById('txtEventCosts').value;
+    var costs_high = document.getElementById('txtEventCosts_high').value;
+    var probability = document.getElementById('txtProbability').value;
+    var frequency = document.getElementById('frequency').value;
+    var biaScore = document.getElementById('hdn_bia_score').value;
+    var projection = document.getElementById('scenario_12month_costs').value;
+    var cost_projection_justification = document.getElementById('cost_projection_justification').value;
+    var recommendations = document.getElementById("hdnRecommendations").value;
+    var select_level = document.getElementById('security_level').value;
+    var scenario_compliance_data = document.getElementById('compliance_map_text').value;
+    var rationale_recommendation = document.getElementById('hdnrationale_recommendation').value;
+    var rationale_rationale = document.getElementById('hdnrationale_Rationale').value;
+    var CyberPHAID = sessionStorage.getItem('activeCyberPHA');
+
+    // Check if all required fields are populated
+    if (!scenario || !likelihood || !adjustedRR || !costs_low || !costs || !costs_high ||
+        !probability || !frequency || !biaScore || !projection || !cost_projection_justification ||
+        !recommendations || !select_level || !scenario_compliance_data ||
+        !rationale_recommendation || !rationale_rationale || !CyberPHAID) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Incomplete Scenario',
+            text: 'Only completed scenarios can be printed.'
+        });
+        return;
+    }
+
+    // Confirm with the user if they want to generate the PDF report
+    Swal.fire({
+        title: 'Generate PDF Report?',
+        text: "Do you want to generate a PDF report for the current scenario?",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, generate it!',
+        cancelButtonText: 'Cancel'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Proceed with generating the report
+            var data = {
+                scenario: scenario,
+                likelihood: likelihood,
+                adjustedRR: adjustedRR,
+                costs: costs_low + '|' + costs + '|' + costs_high,
+                probability: probability,
+                frequency: frequency,
+                biaScore: biaScore,
+                projection: projection,
+                cost_projection_justification: cost_projection_justification,
+                control_effectiveness: 0,
+                recommendations: recommendations,
+                select_level: select_level,
+                scenario_compliance_data: scenario_compliance_data,
+                rationale: JSON.stringify({
+                    "Recommendation": rationale_recommendation,
+                    "Rationale": rationale_rationale
+                }),
+                CyberPHAID: CyberPHAID,
+                asset: 'N/A',
+                asset_purpose: 'N/A'
+            };
+
+            $.ajax({
+                type: "GET",
+                url: "/OTRisk/scenario_analysis_report/",
+                data: data,
+                xhrFields: {
+                    responseType: 'blob'
+                },
+                success: function(blob) {
+                    var link = document.createElement('a');
+                    link.href = window.URL.createObjectURL(blob);
+                    link.download = "scenario_analysis_report.pdf";
+                    link.click();
+                    window.open(link.href);
+                },
+                error: function(xhr, status, error) {
+                    console.log('Error: ' + error);
+                }
+            });
+        }
+    });
+}
+
 anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
 
 
@@ -729,7 +897,7 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
         <div class="col-md-9 col-lg-10">
             <div class="top-strip">
                 <div class="row" >
-                    <div class="col-md-1"></div>
+
                     <div class="col-md-3">
                         <a class="page-title" style="color: #d3d1cd" href="#" id="cyberPHALink"><span id="facilityName"></span></a>
 
@@ -803,6 +971,9 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                         });
                             </script>
                     </div>
+                    <div class="col-md-1" ><button type="button" class="btn btn-custom nav-link"  onclick="generateScenarioReport()" style="transform:scale(0.8)" >Print</button></div>
+                    <div class="col-md-1" ><button type="button" class="btn btn-custom nav-link"  onclick="generate_playbook()" style="transform:scale(0.8)" >Playbook</button></div>
+
                     <div class="col-md-1">
                         <div class="form-group" style="transform:scale(0.8)" >
                         <label for="risk_register">Risk Register</label>
@@ -827,8 +998,7 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                         <input type="checkbox" id="risk_snapshot" name="risk_snapshot">
                         </div>
                     </div>
-                    <div class="col-md-1">
-                    </div>
+
                 </div>
             </div>
             <div id="notificationMessage" class="notification-message" style="display: none;"></div>
@@ -951,7 +1121,7 @@ $(document).ready(function() {
 
                             <div class="col-md-12 flex-col" id="block1">
                             <div class="info-block" id="list">
-                        <div class="block-header">
+                        <div class="block-header" id="scenario-list">
                             Scenario List
                             <button type="button" class="toggle-body">+</button>
                         </div>
@@ -1346,16 +1516,16 @@ $(document).ready(function() {
                             <div class="flex-row" >
                                 <div class="col-md-12 flex-col" id="block2">
                                     <div class="info-block" id="scenarios">
-                                            <div class="block-header">
+                                            <div class="block-header" id="scenario-detail">
                                                 Scenario Detail
                                                 <button type="button" class="toggle-body">+</button>
                                             </div>
                                             <div class="block-body">
                                                 <ul class="tab-list">
-                                                    <li class="tab-link current" data-tab="tab-1">Configure</li>
-                                                    <li class="tab-link" data-tab="tab-2">Asset</li>
-                                                    <li class="tab-link" data-tab="tab-3">Scenario</li>
-                                                    <li class="tab-link" data-tab="tab-4">Consequences</li>
+                                                    <li class="tab-link current" data-tab="tab-1">1. Configure</li>
+                                                    <li class="tab-link" data-tab="tab-2">2. Assets</li>
+                                                    <li class="tab-link" data-tab="tab-3">3. Scenario</li>
+                                                    <li class="tab-link" data-tab="tab-4">4. Consequences</li>
                                                 </ul>
                                                 <br>
                                                 <div id="tab-1" class="tab-content current">
@@ -1364,17 +1534,25 @@ $(document).ready(function() {
                                                     <div class="row" style="width:97%">
                                                         <div class="col-md-6">
                                                             <div class="form-group">
-                                                <label class="form-label" for="threat-intelligence"><h6>Attacker/Bad Actor:</h6></label>
-                                                <select class="form-control small-font" name="threat-intelligence" id="threat-intelligence" style="border: 3px solid #97979A; border-radius: 10px; box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5);  padding: 5px; background-color: white">
+                                                <label for="threat-intelligence" id="bad-actor-label">Attacker/Bad Actor:</label>
+                                                <select class="form-control small-font" name="threat-intelligence" id="threat-intelligence" style="width: 100%;">
                                                     <option value="">-- Select a threat source --</option>
                                                     {% for threatsource in threatsources %}
                                                         <option value="{{ threatsource.ThreatSource }}">{{ threatsource.ThreatSource }}</option>
                                                     {% endfor %}
                                                 </select>
+                                                <script>
+                                                $(document).ready(function() {
+                                                    $('#threat-intelligence').select2({
+                                                        placeholder: 'Select a threat actor',
+                                                        allowClear: true
+                                                    });
+                                                });
+                                                </script>
                                                 <br>
-                                                <label for="selVectors" style="color: white">Attack Vector:</label>
+                                                <label for="selVectors" id="attack-vector-label" style="color: white">Attack Vector:</label>
                                                  <!-- store in the threat agent field -->
-                                                    <select class="form-control" name="selVectors" id="selVectors" >
+                                                    <select class="form-control" name="selVectors" id="selVectors" style="width:100%">
                                                     <option value=""> -- Select Attack Vector -- </option>
                                                     {% for threataction in threatactions %}
                                                     <option value="{{ threataction.ThreatAction }}">
@@ -1382,18 +1560,32 @@ $(document).ready(function() {
                                                     </option>
                                                     {% endfor %}
                                                 </select>
-
+                                                <script>
+                                                $(document).ready(function() {
+                                                    $('#selVectors').select2({
+                                                        placeholder: 'Select attack vector',
+                                                        allowClear: true
+                                                    });
+                                                });
+                                                </script>
                                                 <br>
-                                                <label class="form-label" for="risk-category"><h6>Risk Category</h6></label>
-                                                <select class="form-control small-font" name="risk-category" id="risk-category" style="border: 3px solid #97979A; border-radius: 10px; box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5);  padding:5px; background-color: white">
+                                                <label for="risk-category" id="risk-category-label" style="color: white">Risk Category</label>
+                                                <select class="form-control small-font" name="risk-category" id="risk-category" style="width:100%">
                                                     <option value="">Select a risk category</option>
                                                     {% for risk_category in risk_categories %}
                                                     <option value="{{ risk_category.CategoryName }}">{{ risk_category.CategoryName }}</option>
                                                     {% endfor %}
                                                 </select>
+                                                <script>
+                                                $(document).ready(function() {
+                                                    $('#risk-category').select2({
+                                                        placeholder: 'Select risk category',
+                                                        allowClear: true
+                                                    });
+                                                });
+                                                </script>
 
-
-                                                    <br>
+                                                    <br><br>
                                                     <div class="form-group">
                                                         <label class="switch-label"><h6>Internet Exposed IP Address</h6></label>
                                                         <label class="switch">
@@ -1421,34 +1613,55 @@ $(document).ready(function() {
                                                         </div>
                                                         <div class="col-md-6">
                                                             <div class="form-group">
-        <!-- Asset Criticality -->
-        <label for="assetCriticalityDial" class="form-label">Asset Criticality:</label>
-        <input type="range" class="custom-slider" id="assetCriticalityDial" min="1" max="4" step="1">
-        <div id="assetCriticalityLabels" class="slider-labels">
-            <span>Low</span><span>Medium</span><span>High</span><span>Critical</span>
-        </div>
+                                                                <label for="malware-select" id="malware-select-label">Select Malware:</label>
+                                                                    <select id="malware-select" class="form-control" style="width: 100%;">
+                                                                        <option></option>
+                                                                        {% for mal in malware %}
+                                                                            <option value="{{ mal.id }}">{{ mal.name }}</option>
+                                                                        {% endfor %}
+                                                                    </select>
+                                                                    <script>
+                                                                    $(document).ready(function() {
+                                                                        $('#malware-select').select2({
+                                                                            placeholder: 'Select a malware',
+                                                                            allowClear: true
+                                                                        });
+                                                                    });
+                                                                    </script>
+                                                            </div>
+                                                            <div class="form-group">
+                                                                    <script>
 
-        <!-- Incident Complexity -->
-        <label for="incidentComplexityDial" class="form-label">Incident Complexity:</label>
-        <input type="range" class="custom-slider" id="incidentComplexityDial" min="1" max="4" step="1">
-        <div id="incidentComplexityLabels" class="slider-labels">
-            <span>Simple</span><span>Moderate</span><span>Complex</span><span>Very Complex</span>
-        </div>
+                                                                </script>
+                                                                    <!-- Asset Criticality -->
+                                                                    <label for="assetCriticalityDial" class="form-label" style="color:white">Asset Criticality:</label>
+                                                                    <input type="range" class="custom-slider" id="assetCriticalityDial" min="1" max="4" step="1">
+                                                                    <div id="assetCriticalityLabels" class="slider-labels">
+                                                                        <span>Low</span><span>Medium</span><span>High</span><span>Critical</span>
+                                                                    </div>
 
-        <!-- Detection Time -->
-        <label for="detectionTimeDial" class="form-label">Detection Time:</label>
-        <input type="range" class="custom-slider" id="detectionTimeDial" min="1" max="4" step="1">
-        <div id="detectionTimeLabels" class="slider-labels">
-            <span>Fast</span><span>Moderate</span><span>Slow</span><span>Very Slow</span>
-        </div>
 
-        <!-- Response Time -->
-        <label for="responseTimeDial" class="form-label">Response Time:</label>
-        <input type="range" class="custom-slider" id="responseTimeDial" min="1" max="4" step="1">
-        <div id="responseTimeLabels" class="slider-labels">
-            <span>Fast</span><span>Moderate</span><span>Slow</span><span>Very Slow</span>
-        </div>
-    </div>
+                                                                    <!-- Incident Complexity -->
+                                                                    <label for="incidentComplexityDial" class="form-label" style="color:white">Incident Complexity:</label>
+                                                                    <input type="range" class="custom-slider" id="incidentComplexityDial" min="1" max="4" step="1">
+                                                                    <div id="incidentComplexityLabels" class="slider-labels">
+                                                                        <span>Simple</span><span>Moderate</span><span>Complex</span><span>Very Complex</span>
+                                                                    </div>
+
+                                                                    <!-- Detection Time -->
+                                                                    <label for="detectionTimeDial" class="form-label" style="color:white">Detection Time:</label>
+                                                                    <input type="range" class="custom-slider" id="detectionTimeDial" min="1" max="4" step="1">
+                                                                    <div id="detectionTimeLabels" class="slider-labels">
+                                                                        <span>Fast</span><span>Moderate</span><span>Slow</span><span>Very Slow</span>
+                                                                    </div>
+
+                                                                    <!-- Response Time -->
+                                                                    <label for="responseTimeDial" class="form-label" style="color:white">Response Time:</label>
+                                                                    <input type="range" class="custom-slider" id="responseTimeDial" min="1" max="4" step="1">
+                                                                    <div id="responseTimeLabels" class="slider-labels">
+                                                                        <span>Fast</span><span>Moderate</span><span>Slow</span><span>Very Slow</span>
+                                                                    </div>
+                                                                </div>
                                                         </div>
                                                     </div>
                                                     <script>
@@ -1478,77 +1691,77 @@ $(document).ready(function() {
                                                 </div>
                                             </div>
 
-                                            <!--form group for Exalens assets - will only display if there is an Exalens connector -->
-                                           <div class="form-group" id="exalens_asset_group" style="display: {% if not assets_data %}none{% endif %};">
-                                                <div class="row">
-                                                    <div class="col">
-                                                        <label for="asset_select">Select Asset</label><img src="{% static 'images/exalenslogo.png' %}" alt="" class="align-middle" style="max-height: 1rem; margin-left: 1em">
-                                                        <br>
-                                                        <select id="asset_select" name="asset_select" class="form-control select2-asset" style="width: 100%;">
-                                                            {% for asset in assets_data %}
-                                                            <option value="{{ asset.ip }}">{{ asset.mac_vendor }} - {{ asset.model }} - {{ asset.ip }}</option>
-                                                            {% endfor %}
-                                                        </select>
+                                                <!--form group for Exalens assets - will only display if there is an Exalens connector -->
+                                               <div class="form-group" id="exalens_asset_group" style="display: {% if not assets_data %}none{% endif %};">
+                                                    <div class="row">
+                                                        <div class="col">
+                                                            <label for="asset_select">Select Asset</label><img src="{% static 'images/exalenslogo.png' %}" alt="" class="align-middle" style="max-height: 1rem; margin-left: 1em">
+                                                            <br>
+                                                            <select id="asset_select" name="asset_select" class="form-control select2-asset" style="width: 100%;">
+                                                                {% for asset in assets_data %}
+                                                                <option value="{{ asset.ip }}">{{ asset.mac_vendor }} - {{ asset.model }} - {{ asset.ip }}</option>
+                                                                {% endfor %}
+                                                            </select>
 
-                                                        <label for="asset_purpose">Asset Purpose:</label>
-                                                        <input type="text" class="form-control" id="asset_purpose" name="asset_purpose" style="width: 100%; ">
+                                                            <label for="asset_purpose">Asset Purpose:</label>
+                                                            <input type="text" class="form-control" id="asset_purpose" name="asset_purpose" style="width: 100%; ">
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
 
-                                            <div class="form-group" id="darktrace_asset_group" style="display: {% if not darktrace_assets_data %}none{% endif %};">
+                                                <div class="form-group" id="darktrace_asset_group" style="display: {% if not darktrace_assets_data %}none{% endif %};">
 
-                                                <div class="row">
-                                                    <div class="col">
-                                                        <label for="darktrace_asset_select">Select Asset</label><img src="{% static 'images/darktrace_logo.png' %}" alt="" class="align-middle" style="max-height: 1rem; margin-left: 1em">
-                                                         <p>   </p>
-                                                         <script>
-                                                            $(document).ready(function() {
-                                                                $('#darktrace_asset_select').select2({
-                                                                    width: '95%' // or you can use 'style' as well to set this
+                                                    <div class="row">
+                                                        <div class="col">
+                                                            <label for="darktrace_asset_select" id="darktrace-asset-label">Select Asset</label><img src="{% static 'images/darktrace_logo.png' %}" alt="" class="align-middle" style="max-height: 1rem; margin-left: 1em">
+                                                             <p>   </p>
+                                                             <script>
+                                                                $(document).ready(function() {
+                                                                    $('#darktrace_asset_select').select2({
+                                                                        width: '95%' // or you can use 'style' as well to set this
+                                                                    });
                                                                 });
-                                                            });
 
-                                                            </script>
+                                                                </script>
 
-                                                        <select id="darktrace_asset_select" name="darktrace_asset_select" class="form-control select2-asset" style="width: 100%">
-                                                            {% for darktrace_asset in darktrace_assets_data %}
-                                                            <option value="{{ darktrace_asset.ip_address }}">{{ darktrace_asset.asset_type }} - {{ darktrace_asset.hostname }} - {{ darktrace_asset.ip_address }}</option>
-                                                            {% endfor %}
-                                                        </select>
-                                                        <br><p></p>
-                                                        <label for="darktrace_asset_purpose">Asset Purpose:</label>
-                                                        <input type="text" class="form-control" id="darktrace_asset_purpose" name="darktrace_asset_purpose" style="width: 100%; ">
-                                                    </div>
-                                                    <div id="summary-container">
-                                                            <div class="tab-handle"></div>
-                                                            <div id="summary-content">
-                                                                <div class="summary">
-                                                                    <h2 id="summary-title"></h2>
-                                                                    <div class="pyramid">
-                                                                        <div class="pyramid-block" id="events-block">
-                                                                            <span>Events</span>
-                                                                            <span id="summary-events"></span>
-                                                                        </div>
-                                                                        <div class="pyramid-block" id="breaches-block">
-                                                                            <span>Breaches</span>
-                                                                            <span id="summary-breaches"></span>
-                                                                        </div>
-                                                                        <div class="pyramid-block" id="incidents-block">
-                                                                            <span>Incidents</span>
-                                                                            <span id="summary-incidents"></span>
-                                                                        </div>
-                                                                        <div class="pyramid-block" id="critical-incidents-block">
-                                                                            <span>Critical Incidents</span>
-                                                                            <span id="summary-critical-incidents"></span>
+                                                            <select id="darktrace_asset_select" name="darktrace_asset_select" class="form-control select2-asset" style="width: 100%">
+                                                                {% for darktrace_asset in darktrace_assets_data %}
+                                                                <option value="{{ darktrace_asset.ip_address }}">{{ darktrace_asset.asset_type }} - {{ darktrace_asset.hostname }} - {{ darktrace_asset.ip_address }}</option>
+                                                                {% endfor %}
+                                                            </select>
+                                                            <br><p></p>
+                                                            <label for="darktrace_asset_purpose">Asset Purpose:</label>
+                                                            <input type="text" class="form-control" id="darktrace_asset_purpose" name="darktrace_asset_purpose" style="width: 100%; ">
+                                                        </div>
+                                                        <div id="summary-container">
+                                                                <div class="tab-handle"></div>
+                                                                <div id="summary-content">
+                                                                    <div class="summary">
+                                                                        <h2 id="summary-title"></h2>
+                                                                        <div class="pyramid">
+                                                                            <div class="pyramid-block" id="events-block">
+                                                                                <span>Events</span>
+                                                                                <span id="summary-events"></span>
+                                                                            </div>
+                                                                            <div class="pyramid-block" id="breaches-block">
+                                                                                <span>Breaches</span>
+                                                                                <span id="summary-breaches"></span>
+                                                                            </div>
+                                                                            <div class="pyramid-block" id="incidents-block">
+                                                                                <span>Incidents</span>
+                                                                                <span id="summary-incidents"></span>
+                                                                            </div>
+                                                                            <div class="pyramid-block" id="critical-incidents-block">
+                                                                                <span>Critical Incidents</span>
+                                                                                <span id="summary-critical-incidents"></span>
+                                                                            </div>
                                                                         </div>
                                                                     </div>
                                                                 </div>
                                                             </div>
-                                                        </div>
 
+                                                    </div>
                                                 </div>
-                                            </div>
 
                                             <script>
                                             $(document).ready(function() {
@@ -1557,17 +1770,20 @@ $(document).ready(function() {
 
                                                 var assetSelect = $('#asset_select');
                                                 var darktrace_assetSelect = $('#darktrace_asset_select');
-
+                                                sessionStorage.setItem('tpconnection', 0);
                                                 if (assetSelect.children('option').length === 0) {
                                                     $('#exalens_asset_group').hide();
                                                 } else {
                                                     $('#exalens_asset_group').show();
+                                                    sessionStorage.setItem('tpconnection', 1);
                                                 }
 
                                                 if (darktrace_assetSelect.children('option').length === 0) {
                                                     $('#darktrace_asset_group').hide();
                                                 } else {
                                                     $('#darktrace_asset_group').show();
+                                                    sessionStorage.setItem('tpconnection', 2);
+
                                                 }
                                                  $('#darktrace_asset_select').on('change', function() {
                                                     var targetAssetIp = $(this).val();
@@ -1616,13 +1832,15 @@ $(document).ready(function() {
                                                                     var attack_vector = document.getElementById('selVectors').value;
                                                                     var attacker = document.getElementById('threat-intelligence').value;
                                                                     var targetAsset, targetAssetPurpose;
+                                                                    var malware = document.getElementById('malware-select').value;
                                                                     var connectionFlag = 0;
-
-                                                                    if ($('#noconnect_asset_group').is(':visible')) {
+                                                                    var tpConnection;
+                                                                    tpConnection = sessionStorage.getItem('tpconnection');
+                                                                    if (tpConnection == 0) {
                                                                         targetAsset = document.getElementById('noconnect_asset').value;
                                                                         targetAssetPurpose = document.getElementById('noconnectasset_purpose').value;
                                                                         connectionFlag = 0; // no external connections
-                                                                    } else if ($('#darktrace_asset_group').is(':visible')) {
+                                                                    } else if (tpConnection == 2) {
                                                                         connectionFlag = 1; //darktrace connection
                                                                         targetAsset = document.getElementById('darktrace_asset_select').value;
                                                                         targetAssetPurpose = document.getElementById('darktrace_asset_purpose').value;
@@ -1650,6 +1868,7 @@ $(document).ready(function() {
                                                                             targetAsset: targetAsset,
                                                                             targetAssetPurpose: targetAssetPurpose,
                                                                             connectionFlag: connectionFlag,
+                                                                            malware: malware,
                                                                             csrfmiddlewaretoken: '{{ csrf_token }}'  // Ensure CSRF token is included for POST request
                                                                         },
                                                                         success: function(response) {
@@ -2354,6 +2573,12 @@ $(document).ready(function() {
                   const rationale_recommendation = document.getElementById('hdnrationale_recommendation').value;
                   const rationale_Rationale = document.getElementById('hdnrationale_Rationale').value;
                   const cost_projection_justification = document.getElementById('cost_projection_justification').value;
+                  const malware = document.getElementById('malware-select').value;
+                  const asset_critical = document.getElementById('assetCriticalityDial').value
+                  const incident_complexity = document.getElementById('incidentComplexityDial').value
+                  const detection_time= document.getElementById('detectionTimeDial').value
+                  const response_time= document.getElementById('responseTimeDial').value
+
                   // If outage is "yes", get the values for outageDuration and outageCost
                   let outageDuration = 0;
                   let outageCost = 0;
@@ -2465,6 +2690,11 @@ $(document).ready(function() {
                   formData.append('cost_projection_justification', cost_projection_justification);
                   formData.append('asset_name', asset_name);
                   formData.append('asset_purpose', asset_purpose);
+                  formData.append('malware', malware);
+                  formData.append('asset_critical', asset_critical);
+                  formData.append('detection_time', detection_time);
+                  formData.append('incident_complexity', incident_complexity);
+                  formData.append('response_time', response_time);
 
                   // Check if snapshot should be created
                   let snapshot = 0
@@ -3469,6 +3699,7 @@ $('#scenarioSelectModal').on('show.bs.modal', function (e) {
 
             let cpha = sessionStorage.getItem('activeCyberPHA');
             let scenario = document.getElementById('id_txtScenario').value;
+            let malware = document.getElementById('malware-select').value;
             let exposed_system = document.getElementById('exposed_system').checked;
             let weak_credentials = document.getElementById('weak_credentials').checked;
             // let consequence = document.getElementById('txtConsequence').value
@@ -3503,16 +3734,21 @@ $('#scenarioSelectModal').on('show.bs.modal', function (e) {
             let dangerJustification = document.getElementById('txtlifeJustify').value;
             var targetAsset, targetAssetPurpose;
             var partner_connection;
+            var tpConnection;
+            tpConnection = sessionStorage.getItem('tpconnection');
 
-            if ($('#noconnect_asset_group').is(':visible')) {
+            if (tpConnection == 0) {
+
                 targetAsset = document.getElementById('noconnect_asset').value;
                 targetAssetPurpose = document.getElementById('noconnectasset_purpose').value;
                 partner_connection = 0;
-            } else if ($('#darktrace_asset_group').is(':visible')) {
+            } else if (tpConnection == 2) {
+
                 targetAsset = document.getElementById('darktrace_asset_select').value;
                 targetAssetPurpose = document.getElementById('darktrace_asset_purpose').value;
                 partner_connection = 1;
             } else {
+
                 targetAsset = document.getElementById('asset_select').value;
                 targetAssetPurpose = document.getElementById('asset_purpose').value;
                 partner_connection = 2;
@@ -3597,7 +3833,8 @@ $('#scenarioSelectModal').on('show.bs.modal', function (e) {
                     dangerJustification: dangerJustification,
                     targetAsset: targetAsset,
                     targetAssetPurpose: targetAssetPurpose,
-                    partner_connection: partner_connection
+                    partner_connection: partner_connection,
+                    malware: malware,
                 },
                 success: function (response) {
                     // On success, set progress to 100% and hide the progress bar
@@ -3636,6 +3873,7 @@ $('#scenarioSelectModal').on('show.bs.modal', function (e) {
                         });
                     } else {
                         $('#loadingSpinner').hide();
+
                         document.getElementById('txtRRa').value = response.adjustedRR;
                         document.getElementById('hdnLikelihood').value = response.likelihood;
                         document.getElementById('txtLikelihood').value = response.likelihood + '%';
@@ -3800,7 +4038,26 @@ $('#scenarioSelectModal').on('show.bs.modal', function (e) {
                             "lengthChange": false,  // Disable the page length selection control
                             "info": false
                         });
-                    }
+                        var pdfBase64 = response.pdf;
+
+                        // Convert base64 to binary
+                        var binary = atob(pdfBase64.replace(/\s/g, ''));
+                        var len = binary.length;
+                        var buffer = new ArrayBuffer(len);
+                        var view = new Uint8Array(buffer);
+                        for (var i = 0; i < len; i++) {
+                            view[i] = binary.charCodeAt(i);
+                        }
+
+                        // Create a blob from the binary data
+                        var blob = new Blob([view], { type: 'application/pdf' });
+
+                        // Create a URL for the blob
+                        var url = URL.createObjectURL(blob);
+
+                        // Open the URL in a new window
+                        window.open(url, '_blank');
+                        }
                 },
                 error: function (xhr, status, error) {
 
@@ -4516,13 +4773,21 @@ function clearScenario(){
         $('#exposed_system').prop('checked', data.exposed_system);
         $('#weak_credentials').prop('checked', data.weak_credentials);
         $('#selVectors').val(data.ThreatAgent);
+        $('#selVectors').val(data.ThreatAgent).trigger('change');
         //$('#txtConsequence').val(data.Consequence);
         $('#threat-intelligence').val(data.ThreatClass);
-        //$('#selStandards').val(data.standards);
+        $('#threat-intelligence').val(data.ThreatClass).trigger('change');
+
+        if (data.malware) {
+        $('#malware-select').val(data.malware.id);
+        $('#malware-select').val(data.malware.id).trigger('change');
+            } else {
+                $('#malware-select').val(null).trigger('change');
+            }
 
 
          $('#risk-category').val(data.RiskCategory);
-         $('#risk-category').val(data.RiskCategory);
+        $('#risk-category').val(data.RiskCategory).trigger('change');
 
          $('#range_safety').val(data.impactSafety);
          $('#range_life').val(data.impactDanger);
@@ -4542,6 +4807,12 @@ function clearScenario(){
          $('#env_contamination').val(data.env_contamination);
          $('#env_population').val(data.env_population);
          $('#env_wildlife').val(data.env_wildlife);
+
+         $('#assetCriticalityDial').val(data.asset_critical);
+         $('#incidentComplexityDial').val(data.incident_complexity);
+         $('#detectionTimeDial').val(data.detection_time);
+         $('#responseTimeDial').val(data.response_time);
+
 
          if (document.getElementById('exalens_asset_group').style.display !== 'none') {
             const assetSelect = document.getElementById('asset_select');
@@ -4614,7 +4885,17 @@ function clearScenario(){
 
             var jsonStringFromDatabase = data.attack_tree_text;
             var jsonObject = JSON.parse(jsonStringFromDatabase);
+
+            $("input[type=checkbox][data-block-id='attacktree']").prop('checked', true).trigger('change');
+            var atBlock = $(".info-block:contains('Attack Tree')");
+            var blockBody = atBlock.find(".block-body");
+            blockBody.show();
+            atBlock.find(".toggle-body").text("-");
+            atBlock.css('z-index', ++zIndexCounter);
+
             drawAttackTree(jsonObject);
+            $("input[type=checkbox][data-block-id='attacktree']").prop('checked', false).trigger('change');
+
         }
 
 
@@ -5233,17 +5514,12 @@ function drawAttackTree(data) {
     convertSVGToPNG(d3.select(container).select('svg'), 'attack_tree');
 }
 
-
-
-
-
-
-
           function analyzeScenario(scenarioText, phaID, attacker, attack_vector) {
         var attackTreeDrawn = sessionStorage.getItem('attackTreeDrawn');
         var exposed_system = document.getElementById('exposed_system').checked;
         var weak_credentials = document.getElementById('weak_credentials').checked;
         var riskCategory = document.getElementById('risk-category').value;
+        var malware = document.getElementById('malware-select').value;
 
         $('#loadingProgressBar').show();
         $('#progressBarInner').css('width', '0%').attr('aria-valuenow', 0);
@@ -5278,6 +5554,7 @@ function drawAttackTree(data) {
                 'attack_vector': attack_vector,
                 'exposed_system': exposed_system,
                 'weak_credentials': weak_credentials,
+                'malware': malware,
                 'csrfmiddlewaretoken': '{{ csrf_token }}',
             },
             success: function(response) {
@@ -5305,8 +5582,9 @@ function drawAttackTree(data) {
                     var cell2 = row.insertCell(1);
 
                     cell1.innerHTML = item;
-                    cell2.innerHTML = '<input type="checkbox" id="validate' + index + '">';
+                    cell2.innerHTML = '<input type="checkbox" id="validate' + index + '" checked>';
                 });
+
 
                 if (sessionStorage.getItem('attackTreeDrawn') === 'false') {
                     var attackTreeData = response.attack_tree;
@@ -5323,6 +5601,7 @@ function drawAttackTree(data) {
                     }
                 }
                 Swal.close();
+
             },
             error: function(xhr, status, error) {
                 clearInterval(progressBarInterval);

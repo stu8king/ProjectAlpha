@@ -1,3 +1,4 @@
+import base64
 import concurrent.futures
 import hashlib
 import json
@@ -24,7 +25,7 @@ from django.db import transaction
 from django.db.models import Avg, Sum, F, Count, Subquery, OuterRef, Value, IntegerField, Q
 from django.db.models.functions import Coalesce
 from django.forms import model_to_dict
-from django.http import FileResponse
+from django.http import FileResponse, HttpResponse
 from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.utils import timezone
@@ -34,6 +35,7 @@ from django.views.decorators.http import require_POST, require_http_methods
 from pinecone import Pinecone, ServerlessSpec
 from pptx import Presentation
 from pptx.util import Pt
+from reportlab.graphics import renderPDF
 from requests.exceptions import RequestException, JSONDecodeError
 from urllib3.exceptions import InsecureRequestWarning
 
@@ -52,6 +54,27 @@ from accounts.views import get_client_ip
 from .dashboard_views import get_user_organization_id, get_organization_users
 from .forms import VulnerabilityAnalysisForm
 from OTRisk.models.darktraceapi import DarktraceAPI
+from reportlab.graphics.charts.barcharts import VerticalBarChart
+from reportlab.graphics.shapes import Drawing, Rect, Image, Line, Circle
+from reportlab.lib import colors
+from reportlab.lib.enums import TA_CENTER, TA_LEFT
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.sequencer import getSequencer
+from reportlab.lib.styles import ParagraphStyle
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.units import inch, mm
+from reportlab.graphics.charts.textlabels import Label
+from reportlab.lib.utils import ImageReader
+from reportlab.pdfgen.canvas import Canvas
+from reportlab.platypus import SimpleDocTemplate, PageBreak, Image, Frame, Image, Table, TableStyle, BaseDocTemplate, \
+    PageTemplate, ListFlowable, ListItem, Flowable
+from reportlab.platypus import Table, TableStyle, Paragraph, Spacer
+from io import BytesIO
+from reportlab.graphics.shapes import Drawing, String
+from reportlab.graphics.charts.linecharts import HorizontalLineChart
+from reportlab.graphics.widgetbase import Widget
+from diagrams import Diagram, Edge, Node
+from diagrams.custom import Custom
 
 
 def get_api_key(service_name):
@@ -126,9 +149,9 @@ def iotaphamanager(request, record_id=None):
         pha_header.PHALeader = PHALeaderName if PHALeaderName else "Not Given"
         PHALeaderEmail = request.POST.get('txtLeaderEmail')
         pha_header.PHALeaderEmail = PHALeaderEmail if PHALeaderEmail else "Not Given"
-        pha_header.FacilityName = '' ### request.POST.get('txtFacility')
-        pha_header.Industry = '' ### request.POST.get('selIndustry')
-        pha_header.FacilityType = '' ### request.POST.get('selFacilityType')
+        pha_header.FacilityName = ''  ### request.POST.get('txtFacility')
+        pha_header.Industry = ''  ### request.POST.get('selIndustry')
+        pha_header.FacilityType = ''  ### request.POST.get('selFacilityType')
 
         pha_header.AssessmentUnit = request.POST.get('txtUnit')
 
@@ -142,7 +165,7 @@ def iotaphamanager(request, record_id=None):
         end_date_str = request.POST.get('txtEndDate')
         pha_header.AssessmentEndDate = validate_and_format_date(end_date_str)
 
-        pha_header.facilityAddress = '' ### request.POST.get('txtAddress')
+        pha_header.facilityAddress = ''  ### request.POST.get('txtAddress')
 
         if is_new_record:
             risk_profile_data = facility_risk_profile_newrecord(request.user.id,
@@ -165,28 +188,28 @@ def iotaphamanager(request, record_id=None):
             ### pha_header.pha_score = risk_profile_data['pha_score']
 
         else:
-            pha_header.safetySummary = '' ###  request.POST.get('txtSafetySummary')
-            pha_header.chemicalSummary = '' ### request.POST.get('txtChemical')
-            pha_header.physicalSummary = '' ### request.POST.get('txtPhysical')
+            pha_header.safetySummary = ''  ###  request.POST.get('txtSafetySummary')
+            pha_header.chemicalSummary = ''  ### request.POST.get('txtChemical')
+            pha_header.physicalSummary = ''  ### request.POST.get('txtPhysical')
             pha_header.otherSummary = request.POST.get('txtOther')
             pha_header.threatSummary = request.POST.get('threatSummary')
             pha_header.insightSummary = request.POST.get('insightSummary')
             pha_header.strategySummary = request.POST.get('strategySummary')
-            pha_header.complianceSummary = '' ### request.POST.get('txtCompliance
+            pha_header.complianceSummary = ''  ### request.POST.get('txtCompliance
             pha_header.pha_score = 0
 
             pha_header.country = ""
             validated_date = validate_and_format_date(start_date_str)
             pha_header.Date = validated_date if validated_date else datetime.now()
-            pha_header.EmployeesOnSite = 0 ### int(request.POST.get('txtEmployees') or 0)
-            pha_header.facilityAQI = 0 ### request.POST.get('txthdnAQI')
+            pha_header.EmployeesOnSite = 0  ### int(request.POST.get('txtEmployees') or 0)
+            pha_header.facilityAQI = 0  ### request.POST.get('txthdnAQI')
             pha_header.facilityCity = ""
             pha_header.facilityCode = ""
             pha_header.facilityLat = ""
 
             pha_header.facilityLong = ""
             pha_header.facilityState = ""
-            pha_header.shift_model = "" #### request.POST.get('shift_model')
+            pha_header.shift_model = ""  #### request.POST.get('shift_model')
         try:
             assessment_id = int(request.POST.get('assessment_id')) if request.POST.get('assessment_id') else None
         except ValueError:
@@ -203,17 +226,17 @@ def iotaphamanager(request, record_id=None):
         pha_header.FacilityID = 0
         pha_header.Deleted = 0
 
-        annual_revenue_str = 0 ### request.POST.get('annual_revenue', '')
-        coho_str = '' ### request.POST.get('coho', '')
+        annual_revenue_str = 0  ### request.POST.get('annual_revenue', '')
+        coho_str = ''  ### request.POST.get('coho', '')
         # Strip out $ and , characters
-        cleaned_annual_revenue_str = '' ### .join(filter(str.isdigit, annual_revenue_str))
-        cleaned_coho_str = '' ### .join(filter(str.isdigit, coho_str))
+        cleaned_annual_revenue_str = ''  ### .join(filter(str.isdigit, annual_revenue_str))
+        cleaned_coho_str = ''  ### .join(filter(str.isdigit, coho_str))
 
         # Convert the cleaned string to an integer
         annual_revenue_int = 0  # Or handle this situation differently if needed
         coho_int = 0  # Or handle this situation differently if needed
         # Save to your model
-        pha_header.annual_revenue = 0 ### annual_revenue_int
+        pha_header.annual_revenue = 0  ### annual_revenue_int
         pha_header.coho = coho_int
 
         cyber_insurance_value = request.POST.get('cyber_insurance')
@@ -304,7 +327,6 @@ def iotaphamanager(request, record_id=None):
             )
 
         #### End save investments
-
 
         #### End save risk tolerance data
         # After saving pha_header, handle CyberPHACybersecurityDefaults
@@ -458,8 +480,8 @@ def iotaphamanager(request, record_id=None):
         'new_record_id': new_record_id,
         'mitigations': mitigations,
         'SHIFT_MODELS': tblCyberPHAHeader.SHIFT_MODELS,
-        'annual_revenue_str': '0', # annual_revenue_str,
-        'coho_str': '0' , # coho_str,
+        'annual_revenue_str': '0',  # annual_revenue_str,
+        'coho_str': '0',  # coho_str,
         'selected_record_id': first_record_id,
         'SECURITY_LEVELS': SECURITY_LEVELS,
         'assessments': assessments,
@@ -478,7 +500,6 @@ def iotaphamanager(request, record_id=None):
 
 
 def get_headerrecord(request):
-
     record_id = request.GET.get('record_id')
     headerrecord = get_object_or_404(tblCyberPHAHeader, ID=record_id)
     # Retrieve the latest workflow status for this header record
@@ -568,7 +589,6 @@ def get_headerrecord(request):
 
     darktrace_mitre_report = headerrecord.darktrace_mitre_report
     darktrace_tactics_report = headerrecord.darktrace_tactics_report
-
 
     if darktrace_mitre_report is not None and darktrace_mitre_report != "":
         headerrecord_data['darktrace_mitre_report'] = load_json_field(darktrace_mitre_report)
@@ -721,7 +741,7 @@ def make_request_with_backoff(openai_function, *args, **kwargs):
 
 def facility_threat_profile(security_level, facility, facility_type, country, industry,
 
-                            other_summary,  investment_statement,
+                            other_summary, investment_statement,
                             has_ir_plan_str, ir_plan_never_tested_str, ir_plan_date_str, connector_risk,
                             connector_status, connector_score):
     openai_api_key = get_api_key('openai')
@@ -868,18 +888,16 @@ def facility_risk_profile(request):
         # openai_api_key = os.environ.get('OPENAI_API_KEY')
         openai.api_key = openai_api_key
 
-
         OT_query = f"CyberPHA, OT Cybersecurity, Industrial Cyber, OT Device, Industrial control systems, Manufacturing, Industry, ICS Cybersecurity"
         retrieved_chunks = query_index(OT_query)
         summarized_chunks = get_summarized_chunks(retrieved_chunks)
         OT_context = "\n\n".join(summarized_chunks)
 
-
         context = f"You are an industrial safety and hazard expert. For the {facility} {facility_type} at {address}, {country} in the {Industry} industry, with {employees} employees working a {shift_model} shift model. The local Air Quality Index is {aqi}.  "
 
         prompts = [
             f"INSTRUCTION: DO NOT PRINT ** characters. If any words are emphasized with **, replace them with normal text without ** characters.   indexed pinecone content for context: {OT_context}.{context}, list of OT devices expected to be operating on the industrial networks at the given facility. Use the pinecone index for more context. .\n\nExample Format:\n 1. OT device (brief and concise purpose of device).\n 2. Another OT device (brief and concise purpose of device).",
-           ]
+        ]
 
         responses = []
 
@@ -906,6 +924,7 @@ def facility_risk_profile(request):
         def remove_emphasis(output):
             return output.replace("**", "")
             # Extract the individual responses
+
         other_summary = remove_emphasis(responses[0]['choices'][0]['message']['content'].strip())
 
         # Call to facility_threat_profile
@@ -1177,7 +1196,17 @@ def getSingleScenario(request):
         'risk_recommendation': scenario.risk_recommendation,
         'cost_justification': scenario.cost_justification,
         'asset_name': scenario.asset_name,
-        'asset_purpose': scenario.asset_purpose
+        'asset_purpose': scenario.asset_purpose,
+        'asset_critical': scenario.asset_critical,
+        'detection_time': scenario.detection_time,
+        'incident_complexity': scenario.incident_complexity,
+        'response_time': scenario.response_time,
+        'malware': {
+            'id': scenario.malware.id,
+            'name': scenario.malware.name,
+            'description': scenario.malware.description,
+            'source_link': scenario.malware.source_link
+        } if scenario.malware else None  # Serialize the Malware object
     }
     # Retrieve the related PHAControlList records
     control_list = []
@@ -1326,9 +1355,9 @@ def compliance_map_data(common_content):
         return f"Error: {str(e)}"
 
 
-def generate_recommendation_prompt(likelihood, adjustedRR, costs, probability, frequency, biaScore, scenario, cyberphaID):
+def generate_recommendation_prompt(likelihood, adjustedRR, costs, probability, frequency, biaScore, scenario,
+                                   cyberphaID):
     # Attempt to fetch the related CyberPHARiskTolerance record
-
 
     pinecone_query = "Cybersecurity Risk assessment, residual risk, threats, cybersecurity, hazops, cyberpha, risk mitigation, risk scoring"
     retrieved_chunks = query_index(pinecone_query)
@@ -1430,6 +1459,362 @@ def exalens_get_device_incident(ipaddress, exalens_api_key, exalens_ip_address, 
         return f'Error occurred: {str(e)}'
 
 
+def format_currency(value):
+    if value >= 1_000_000:
+        return f"${value // 1_000_000}m"
+    elif value >= 1_000:
+        return f"${value // 1_000}k"
+    else:
+        return f"${value}"
+
+
+def scenario_analysis_report(request):
+    # Get parameters from the request
+    scenario = request.GET.get('scenario')
+    likelihood = int(request.GET.get('likelihood'))
+    adjustedRR = request.GET.get('adjustedRR')
+    costs = request.GET.get('costs')
+
+    probability = request.GET.get('probability')
+    frequency = request.GET.get('frequency')
+    biaScore = int(request.GET.get('biaScore'))
+    projection = request.GET.get('projection')
+    cost_projection_justification = request.GET.get('cost_projection_justification')
+    control_effectiveness = request.GET.get('control_effectiveness')
+    recommendations = request.GET.get('recommendations')
+    select_level = request.GET.get('select_level')
+    scenario_compliance_data = request.GET.get('scenario_compliance_data')
+    rationale = json.loads(request.GET.get('rationale'))
+    CyberPHAID = request.GET.get('CyberPHAID')
+    asset = request.GET.get('asset')
+    asset_purpose = request.GET.get('asset_purpose')
+    # Retrieve the CyberPHAHeader and related Facility data
+    cyber_pha_header = get_object_or_404(tblCyberPHAHeader, pk=CyberPHAID)
+    facility = get_object_or_404(Facility, pk=cyber_pha_header.facility_id)
+    facility_type = get_object_or_404(FacilityType, pk=facility.type_id)
+
+    # Path to the logo image
+    logo_path = os.path.join('static/images', '65C8D0 - Light Blue-2.png')
+
+    # Create a PDF buffer
+    buffer = BytesIO()
+
+    class CustomDocTemplate(BaseDocTemplate):
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            self.page_count = 0
+            frame = Frame(self.leftMargin, self.bottomMargin, self.width, self.height, id='normal')
+            template = PageTemplate(id='test', frames=frame, onPage=self.add_page_number_and_footer)
+            self.addPageTemplates(template)
+
+        def add_page_number_and_footer(self, canvas, doc):
+            # Add page number
+            page_num_text = f"Page {doc.page}"
+            canvas.drawRightString(200 * mm, 10 * mm, page_num_text)
+            # Add "Confidential" at the center bottom
+            canvas.drawCentredString(self.leftMargin + self.width / 2, 10 * mm, "Confidential")
+
+    # Create a document template
+    doc = CustomDocTemplate(buffer, pagesize=letter)
+    elements = []
+
+    # Styles for paragraphs
+    styles = getSampleStyleSheet()
+    title_style = styles['Title']
+    heading_style = styles['Heading1']
+
+    helvetica_10 = ParagraphStyle(
+        'Helvetica10',
+        parent=styles['Normal'],
+        fontName='Helvetica',
+        fontSize=10,
+    )
+
+    # Title page
+    elements.append(Spacer(1, 2 * inch))
+    elements.append(Paragraph("CyberPHA Scenario Report", title_style))
+    elements.append(Spacer(1, 2 * inch))
+    elements.append(Image(logo_path, width=180, height=150))
+    elements.append(PageBreak())
+
+    # Executive summary page
+    elements.append(Paragraph("Executive Summary", heading_style))
+    elements.append(Spacer(1, 0.4 * inch))
+
+    summary_text = (f"The following scenario has been analyzed for CyberPHA: {cyber_pha_header.title} "
+                    f"for {facility.name}, a {facility_type.FacilityType} at {facility.address}.")
+
+    elements.append(Paragraph(summary_text, helvetica_10))
+    elements.append(Spacer(1, 0.2 * inch))
+    elements.append(Paragraph("The scenario under analysis is:", helvetica_10))
+    elements.append(Spacer(1, 0.2 * inch))
+
+    # Add the scenario text inside a box
+    scenario_paragraphs = scenario.split('\n\n')
+    scenario_content = [Paragraph(paragraph, helvetica_10) for paragraph in scenario_paragraphs]
+
+    table_data = [[Paragraph(scenario_paragraphs[0], helvetica_10)]]
+    for para in scenario_paragraphs[1:]:
+        table_data.append([Spacer(1, 0.2 * inch)])
+        table_data.append([Paragraph(para, helvetica_10)])
+
+    table = Table([[table_data]], colWidths=[doc.width])
+    table.setStyle(TableStyle([
+        ('BOX', (0, 0), (-1, -1), 0.5, colors.black),
+        ('LEFTPADDING', (0, 0), (-1, -1), 12),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 12),
+        ('TOPPADDING', (0, 0), (-1, -1), 12),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
+    ]))
+
+    elements.append(table)
+
+    elements.append(PageBreak())
+
+    # Scenario Event Costs page
+    elements.append(Paragraph("Scenario Event Costs", heading_style))
+    elements.append(Spacer(1, 0.4 * inch))
+    elements.append(
+        Paragraph("The financial impacts of the scenario have been estimated as follows below:", helvetica_10))
+    elements.append(Spacer(1, 0.4 * inch))
+
+    # Extract costs values
+    cost_values = [val.strip() for val in costs.split('|')]
+    cost_table_data = [
+        ['Best Case', 'Most Likely Case', 'Worst Case'],
+        [cost_values[0], cost_values[1], cost_values[2]]
+    ]
+    cost_table = Table(cost_table_data, hAlign='CENTER')
+    cost_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
+        ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('FONTNAME', (0, 0), (-1, -1), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 12),
+        ('FONTSIZE', (1, 0), (-1, -1), 10),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('TOPPADDING', (0, 0), (-1, 0), 12),
+        ('BOX', (0, 0), (-1, -1), 0.5, colors.black),
+        ('INNERGRID', (0, 0), (-1, -1), 0.5, colors.black),
+    ]))
+    elements.append(cost_table)
+    elements.append(Spacer(1, 0.2 * inch))
+
+    # Generate the line graph for projection values using ReportLab
+    projection_values = [int(val) for val in projection.split('|')]
+    months = [f"Month {i + 1}" for i in range(12)]
+
+    drawing = Drawing(400, 250)
+    line_chart = HorizontalLineChart()
+    line_chart.x = 50
+    line_chart.y = 50
+    line_chart.height = 125
+    line_chart.width = 300
+    line_chart.data = [projection_values]
+    line_chart.categoryAxis.categoryNames = months
+    line_chart.valueAxis.valueMin = 0
+    line_chart.valueAxis.valueMax = max(projection_values) * 1.1
+    line_chart.valueAxis.valueStep = max(projection_values) // 10
+
+    line_chart.valueAxis.labelTextFormat = format_currency
+    line_chart.categoryAxis.labels.angle = 45
+    line_chart.categoryAxis.labels.boxAnchor = 'n'
+    for y in range(int(line_chart.valueAxis.valueMin), int(line_chart.valueAxis.valueMax) + 1,
+                   int(line_chart.valueAxis.valueStep)):
+        drawing.add(Line(line_chart.x, line_chart.y + (line_chart.height * (y - line_chart.valueAxis.valueMin) / (
+                line_chart.valueAxis.valueMax - line_chart.valueAxis.valueMin)),
+                         line_chart.x + line_chart.width,
+                         line_chart.y + (line_chart.height * (y - line_chart.valueAxis.valueMin) / (
+                                 line_chart.valueAxis.valueMax - line_chart.valueAxis.valueMin)),
+                         strokeColor=colors.lightgrey))
+
+    drawing.add(line_chart)
+
+    title = String(200, 180, "Monthly Incident Cost Projection", fontName='Helvetica-Bold', fontSize=14,
+                   textAnchor='middle')
+    drawing.add(title)
+
+    elements.append(drawing)
+    elements.append(Spacer(1, 0.4 * inch))
+
+    # Cost projection justification
+    elements.append(Paragraph("Cost Projection Justification:", helvetica_10))
+    elements.append(Spacer(1, 0.2 * inch))
+
+    # Split the cost_projection_justification into lines and remove empty lines
+    justification_bullets = [line.strip() for line in cost_projection_justification.split('\n') if line.strip()]
+    for bullet in justification_bullets:
+        elements.append(Paragraph(f"• {bullet}", helvetica_10))
+        elements.append(Spacer(1, 0.1 * inch))
+
+    elements.append(PageBreak())
+    elements.append(Paragraph("Risk Outcomes", heading_style))
+    elements.append(Spacer(1, 0.4 * inch))
+
+    # Likelihood text
+    likelihood = int(likelihood)
+    likelihood_text = "The likelihood of this scenario occurring is considered to be: "
+    if likelihood < 25:
+        likelihood_text += "<b>Low</b>"
+    elif 25 <= likelihood <= 40:
+        likelihood_text += "<b>Low/Medium</b>"
+    elif 41 <= likelihood <= 65:
+        likelihood_text += "<b>Medium</b>"
+    elif 66 <= likelihood <= 80:
+        likelihood_text += "<b>Medium/High</b>"
+    elif 81 <= likelihood <= 95:
+        likelihood_text += "<b>High</b>"
+    elif 96 <= likelihood <= 100:
+        likelihood_text += "<b>Very High</b>"
+
+    elements.append(Paragraph(likelihood_text, helvetica_10))
+    elements.append(Spacer(1, 0.2 * inch))
+
+    # Residual Risk text
+    residual_risk_text = f"Residual Risk: <b>{adjustedRR}</b>"
+    elements.append(Paragraph(residual_risk_text, helvetica_10))
+    elements.append(Spacer(1, 0.2 * inch))
+
+    # Probability text
+    probability_text = f"The probability of an attack based on this scenario being successful is estimated at: <b>{probability}</b>"
+    elements.append(Paragraph(probability_text, helvetica_10))
+    elements.append(Spacer(1, 0.2 * inch))
+
+    # Overall Business Impact text
+    biaScore = int(biaScore)
+    bia_text = "Overall Business Impact: "
+    if biaScore < 25:
+        bia_text += "<b>Low</b>"
+    elif 25 <= biaScore <= 40:
+        bia_text += "<b>Low/Medium</b>"
+    elif 41 <= biaScore <= 65:
+        bia_text += "<b>Medium</b>"
+    elif 66 <= biaScore <= 80:
+        bia_text += "<b>Medium/High</b>"
+    elif 81 <= biaScore <= 95:
+        bia_text += "<b>High</b>"
+    elif 96 <= biaScore <= 100:
+        bia_text += "<b>Very High</b>"
+
+    elements.append(Paragraph(bia_text, helvetica_10))
+    elements.append(Spacer(1, 0.2 * inch))
+
+    # Rationale text
+    elements.append(Paragraph("Overall Recommendation: ", helvetica_10))
+    elements.append(Paragraph(f"<b>{rationale['Recommendation']}</b>", helvetica_10))
+    elements.append(Spacer(1, 0.2 * inch))
+
+    # Bullet points for Rationale details
+    rationale_points = rationale['Rationale'].split('\n')
+    for point in rationale_points:
+        elements.append(Paragraph(f"• {point}", helvetica_10))
+        elements.append(Spacer(1, 0.1 * inch))
+
+    # Scenario Recommendations page
+    elements.append(PageBreak())
+    elements.append(Paragraph("Scenario Recommendations", heading_style))
+    elements.append(Spacer(1, 0.4 * inch))
+
+    # Prepare the table data with word-wrapping
+    recommendations_list = recommendations.split('\n')
+    table_data = [['#', 'Recommendation', 'NIST Reference']]
+
+    styles = getSampleStyleSheet()
+    normal_style = styles['Normal']
+
+    for rec in recommendations_list:
+        if rec.strip():
+            parts = rec.split(' [')
+            number_and_recommendation = parts[0].split('. ', 1)
+            nist_reference = parts[1].strip(']')
+            table_data.append([
+                number_and_recommendation[0],
+                Paragraph(number_and_recommendation[1], normal_style),
+                Paragraph(nist_reference, normal_style)
+            ])
+
+    # Define the table with specific column widths
+    col_widths = [0.08 * doc.width, 0.70 * doc.width, 0.22 * doc.width]
+    recommendations_table = Table(table_data, colWidths=col_widths)
+
+    # Apply table style
+    recommendations_table.setStyle(TableStyle([
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
+        ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
+        ('ALIGN', (0, 0), (-1, 0), 'LEFT'),
+        ('ALIGN', (0, 0), (0, -1), 'LEFT'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 12),
+        ('FONTSIZE', (0, 1), (-1, -1), 10),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('LEFTPADDING', (0, 0), (-1, -1), 6),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
+        ('TOPPADDING', (0, 0), (-1, -1), 12),
+    ]))
+
+    elements.append(recommendations_table)
+    elements.append(Spacer(1, 0.4 * inch))
+
+    elements.append(PageBreak())
+    elements.append(Paragraph("Appendix: Regulatory Compliance Requirements", heading_style))
+    elements.append(Spacer(1, 0.4 * inch))
+    elements.append(Paragraph(
+        "The following table displays the regulatory compliance requirements considered to be most relevant to the given scenario.",
+        helvetica_10))
+    elements.append(Spacer(1, 0.4 * inch))
+
+    # Prepare the table data
+    compliance_data_list = scenario_compliance_data.split(' ||\n')
+    table_data = [['Issue', 'Framework', 'Link']]
+
+    for data in compliance_data_list:
+        if data.strip():
+            parts = data.split(' > ')
+            issue = parts[0]
+            framework = parts[1]
+            link = parts[2]
+            table_data.append([
+                Paragraph(issue, normal_style),
+                Paragraph(framework, normal_style),
+                Paragraph(f'<link href="{link}">{link}</link>', normal_style)
+            ])
+
+    # Define the table with specific column widths
+    col_widths = [0.33 * doc.width, 0.33 * doc.width, 0.33 * doc.width]
+    compliance_table = Table(table_data, colWidths=col_widths)
+
+    # Apply table style
+    compliance_table.setStyle(TableStyle([
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
+        ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
+        ('ALIGN', (0, 0), (-1, 0), 'LEFT'),
+        ('ALIGN', (0, 0), (0, -1), 'LEFT'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 12),
+        ('FONTSIZE', (0, 1), (-1, -1), 10),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('LEFTPADDING', (0, 0), (-1, -1), 6),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
+        ('TOPPADDING', (0, 0), (-1, -1), 12),
+    ]))
+
+    elements.append(compliance_table)
+    elements.append(Spacer(1, 0.4 * inch))
+
+    # Build the PDF
+    doc.build(elements)
+
+    # Get the PDF content
+    buffer.seek(0)
+    pdf_content = buffer.getvalue()
+    response = HttpResponse(pdf_content, content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="scenario_analysis_report.pdf"'
+    return response
+
+
 @login_required
 def scenario_analysis(request):
     # Log the user activity
@@ -1457,6 +1842,7 @@ def scenario_analysis(request):
         regulatoryimpact = request.GET.get('regulatory')
         dataimpact = request.GET.get('data')
         supplyimpact = request.GET.get('supply')
+        malware = request.GET.get('malware')
 
         country = request.GET.get('country')
 
@@ -1573,6 +1959,13 @@ def scenario_analysis(request):
         if connectionFlag == 0:
             asset_data = 'No detailed asset data available'
 
+        if malware != '':
+            malware_data_query = f"Details about {malware}"
+            retrieved_chunks = query_index(malware_data_query)
+            malware_data = get_summarized_chunks(retrieved_chunks)
+        else:
+            malware_data = ''
+
         openai.api_key = get_api_key('openai')
         # Define the common part of the user message
         pinecone_query = "FAIR, risk assessment, 62443, cybersecurity, hazops, cyberpha, incident, event costs, costs, cost of a security incident "
@@ -1593,6 +1986,7 @@ def scenario_analysis(request):
         Affected asset: {targetAsset},
         Purpose of Affected Asset: {targetAssetPurpose}
         Asset_Data : {asset_data},
+        Malware data: {malware_data},
         Credential Security: Systems with weak/default credentials: {weak_credentials}.
         OT Cybersecurity Incident Response:
         Presence of an Incident Response Plan: {has_incident_response_plan}.
@@ -1609,11 +2003,7 @@ def scenario_analysis(request):
         Physical Safeguards: {physical_safeguards_str} (Assumed effective)
         Vulnerability Observations: {observations}
         Investment Statement: {investment_statement}
-        Additional Information if given:
-        Explanation of safety score: {safetyJustification}
-        Explanation of supply chain score: {supplychainJustification}
-        Explanation of environmental score: {environmentJustification}
-        Explanation of life danger score: {dangerJustification}
+       
         """
 
         # Define the refined user messages
@@ -1675,7 +2065,7 @@ def scenario_analysis(request):
                 "role": "user",
                 "content": f"""{common_content}
                             You are an OT Cybersecurity expert. Consider the given scenario and all of the associated information.
-                            Using the given details, generate a concise priority ordered and numbered bullet point list of OT/ICS cybersecurity action items that are readily implementable, as a check list. Each action item must be specific to the given scenario and represent a task that can be quickly and readily completed without major effort AND that would represent some risk mitigation. Each action item MUST be pragmatic and reasonable to accomplish within an OT network environment without extensive effort and could be implemented by an engineer rather than an IT security expert. For example Implement network segmentation is a major effort. Action items are intended to be akin to an immediate action drill. Identify which section of NIST 800-82 OR NIST CSF the action items most closely aligns with and include the relevant NIST reference in brackets at the end of each recommendation however action items MUST NOT SIMPLY BE QUOTES FROM THE STANDARDS. The output should strictly adhere to the following format:
+                            Using the given details, generate a concise priority ordered and numbered bullet point list of OT/ICS cybersecurity action items that are readily implementable, as a check list, to PREVENT THE SCENARIO FROM OCCURRING ASSUMING IT HAS NOT YET OCCURRED. Each action item must be specific to the given scenario and represent a task that can be quickly and readily completed without major effort AND that would represent some risk mitigation. Each action item MUST be pragmatic and reasonable to accomplish within an OT network environment without extensive effort and could be implemented by an engineer rather than an IT security expert. For example Implement network segmentation is a major effort. Action items are intended to be akin to an immediate action drill. Identify which section of NIST 800-82 OR NIST CSF the action items most closely aligns with and include the relevant NIST reference in brackets at the end of each recommendation however action items MUST NOT SIMPLY BE QUOTES FROM THE STANDARDS. The output should strictly adhere to the following format:
 
                             Example Format:
                            1. Concise and pragmatic action item. [NIST Reference the action most closely relates to]
@@ -1738,6 +2128,26 @@ def scenario_analysis(request):
         cost_projection_justification = justification_parts[1].strip() if len(
             justification_parts) > 1 else "Justification not provided."
 
+        ## pdf_buffer = scenario_analysis_report(
+        ##    scenario=scenario,
+        ##    likelihood=responses[0],
+        ##    adjustedRR=responses[1],
+        ##    costs=responses[2],
+        ##    probability=responses[3],
+        ##    frequency=responses[4],
+        ##    biaScore=responses[5],
+        ##    projection=cost_projection,
+        ##    cost_projection_justification=cost_projection_justification,
+        ##    control_effectiveness=last_assessment_score,
+        ##    recommendations=responses[7],
+        ##    select_level=responses[8],
+        ##    scenario_compliance_data=responses[9],
+        ##    rationale=rationale,
+        ##    CyberPHAID=cyberPHAID,
+        ##    asset=targetAsset,
+        ##    asset_purpose=targetAssetPurpose,
+        ##)
+        ## pdf_base64 = base64.b64encode(pdf_buffer).decode('utf-8')
         # Return the responses as variables
         return JsonResponse({
             'likelihood': responses[0],
@@ -1753,6 +2163,7 @@ def scenario_analysis(request):
             'select_level': responses[8],
             'scenario_compliance_data': responses[9],
             'rationale': rationale
+            ## 'pdf': pdf_base64
         })
 
 
@@ -1982,6 +2393,7 @@ def analyze_scenario(request):
         attack_vector = request.POST.get('attack_vector')
         exposed_system = request.POST.get('exposed_system')
         weak_credentials = request.POST.get('weak_credentials')
+        malware = request.POST.get('malware')
 
         # Fetch the organization_id from the user's profile
         try:
@@ -2035,10 +2447,16 @@ def analyze_scenario(request):
             country = cyber_pha.country
             devices = cyber_pha.otherSummary
 
+            if malware != '':
+                malware_data_query = f"Details about {malware} malware. Ignore irrelevant detail"
+                retrieved_chunks = query_index(malware_data_query)
+                malware_data = get_summarized_chunks(retrieved_chunks)
+            else:
+                malware_data = ''
             # Construct a prompt for GPT-4
             system_message = f"""
             You are are expert in cyber-physical scenarios for industrial facilities.  Analyze and consider the following scenario as part of an OT/ICS focused Cyber HAZOPS/Layer of Protection Analysis (LOPA) assessment: {scenario} which occurs at a {facility_type} in the {industry} industry, located at {address} in {country}. 
-            The attacker is assumed to be: {attacker}. The attack vector is assumed to be {attack_vector}. The risk category is assumed to be {riskCategory}. Vulnerable systems with Internet exposed IP address {exposed_system}. Vulnerable systems with default or weak credentials {weak_credentials}. Chemicals profile for the facility: {chemical_profile}
+            The attacker is assumed to be: {attacker}. Malware data is {malware_data}. The attack vector is assumed to be {attack_vector}. The risk category is assumed to be {riskCategory}. Vulnerable systems with Internet exposed IP address {exposed_system}. Vulnerable systems with default or weak credentials {weak_credentials}. Chemicals profile for the facility: {chemical_profile}
             Considering the likely presence of these OT devices: {devices}, concisely describe in 50 words in a list format (separated by semicolons) of a maximum of 5 of the most likely direct consequences of the given scenario. 
             The direct consequences should be specific to the facility and the mentioned details. 
             
@@ -2123,7 +2541,7 @@ def analyze_scenario(request):
 
                   Please generate a similar structure for the provided cybersecurity scenario, adhering STRICTLY to the JSON format and ensuring at least two main branches are present.
                   """
-
+                user_message = user_message + f'Malware data: {malware_data}'
                 # Query OpenAI API for the attack tree
                 attack_tree_response = openai.ChatCompletion.create(
                     model="gpt-4o",
@@ -2148,13 +2566,12 @@ def analyze_scenario(request):
                     # Parse the raw JSON string into a Python dictionary
                 attack_tree_json = json.loads(cleaned_json_str)
 
-
-
             return JsonResponse({'consequence': consequence_list, 'attack_tree': attack_tree_json, 'biaData': biaData})
 
 
     else:
-        return JsonResponse({'consequence': [], 'attack_tree': {}, 'biaData': {},'error': 'Not a valid scenario'}, status=400)
+        return JsonResponse({'consequence': [], 'attack_tree': {}, 'biaData': {}, 'error': 'Not a valid scenario'},
+                            status=400)
 
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
@@ -2471,7 +2888,8 @@ def air_quality_index(request):
         return JsonResponse({'error': str(e)}, status=500)
 
 
-def facility_risk_profile_newrecord(userid, facility_id, assessment_id, sl, has_ir_plan, ir_plan_never, ir_plan_tested_date):
+def facility_risk_profile_newrecord(userid, facility_id, assessment_id, sl, has_ir_plan, ir_plan_never,
+                                    ir_plan_tested_date):
     language = 'en'
 
     facility = get_object_or_404(Facility, id=facility_id)
@@ -2549,7 +2967,7 @@ def facility_risk_profile_newrecord(userid, facility_id, assessment_id, sl, has_
     threatSummary, insightSummary, strategySummary = facility_threat_profile(sl, facility, facility_type, address,
                                                                              industry,
                                                                              other_summary,
-                                                                              '',
+                                                                             '',
                                                                              has_ir_plan, ir_plan_never_tested,
                                                                              ir_plan_tested_date, '', '', 0)
 
@@ -2951,7 +3369,8 @@ def darktrace_asset_summary_info(target_asset_ip: str, darktrace_host: str, dark
 
             breach_count = len(model_breaches_details)
             if breach_count > 0:
-                most_frequent_breach_type = Counter(breach["model_name"] for breach in model_breaches_details).most_common(1)[0][0]
+                most_frequent_breach_type = \
+                    Counter(breach["model_name"] for breach in model_breaches_details).most_common(1)[0][0]
                 highest_score_breach = max(model_breaches_details, key=lambda x: x["score"])
                 earliest_breach_time = min(breach["breach_time"] for breach in model_breaches_details)
                 latest_breach_time = max(breach["breach_time"] for breach in model_breaches_details)
@@ -2980,6 +3399,7 @@ def darktrace_asset_summary_info(target_asset_ip: str, darktrace_host: str, dark
         logging.error(f"Error fetching asset details: {e}")
 
     return None
+
 
 def darktrace_asset_detail(target_asset_ip: str, darktrace_host: str, darktrace_public_token: str,
                            darktrace_private_token: str) -> Optional[Dict[str, str]]:
@@ -3026,7 +3446,8 @@ def darktrace_asset_detail(target_asset_ip: str, darktrace_host: str, darktrace_
 
             breach_count = len(model_breaches_details)
             if breach_count > 0:
-                most_frequent_breach_type = Counter(breach["model_name"] for breach in model_breaches_details).most_common(1)[0][0]
+                most_frequent_breach_type = \
+                    Counter(breach["model_name"] for breach in model_breaches_details).most_common(1)[0][0]
                 highest_score_breach = max(model_breaches_details, key=lambda x: x["score"])
                 earliest_breach_time = min(breach["breach_time"] for breach in model_breaches_details)
                 latest_breach_time = max(breach["breach_time"] for breach in model_breaches_details)
@@ -3107,6 +3528,7 @@ def generate_cyberpha_scenario_description(request):
         attacker = request.POST.get('attacker', '').strip()
         target_asset = request.POST.get('targetAsset', '').strip()
         target_asset_purpose = request.POST.get('targetAssetPurpose', '').strip()
+        malware = request.POST.get('malware')
 
         cyberpha_header = get_object_or_404(tblCyberPHAHeader, ID=cyberPHAID)
 
@@ -3139,6 +3561,19 @@ def generate_cyberpha_scenario_description(request):
             # Fetch asset details from Darktrace
             asset_data = exalens_asset_detail(target_asset, exalens_url, exalens_api,
                                               exalens_client)
+        network_risk_status = 'unknown'
+        if cyberpha_header.darktrace_risk and cyberpha_header.darktrace_risk != '':
+            network_risk_status = cyberpha_header.darktrace_risk
+
+        if cyberpha_header.exalens_risk and cyberpha_header.exalens_risk != '':
+            network_risk_status = cyberpha_header.exalens_risk
+
+        if malware != '':
+            malware_data_query = f"Details about {malware} malware. Ignore irrelevant detail"
+            retrieved_chunks = query_index(malware_data_query)
+            malware_data = get_summarized_chunks(retrieved_chunks)
+        else:
+            malware_data = ''
 
         pinecone_query = f"CyberPHA, Hazops, PHA, CyberHAZOPs, OT Cybersecurity Incidents, OSHA, {industry}"
         retrieved_chunks = query_index(pinecone_query)
@@ -3160,6 +3595,8 @@ def generate_cyberpha_scenario_description(request):
         - Chemical profile for the facility: {chemical_profile}
         - Purpose of affected asset: {target_asset_purpose}
         - Asset data reported by threat management: {asset_data}
+        - Network work stats: {network_risk_status}
+        - Malware data: {malware_data}
         - Pinecone index data: {documents_context}.
 
         Use the given information above including the data reported by threat management and the information from the pinecone index. Generate a realistic feasible scenario focusing solely on the purpose and type of asset and the potential for that asset to be compromised and how it might be manipulated resulting in a bad outcome in the context of the other given information. INSTRUCTIONS a) If no asset detail is given then focus on the type of facility. b) Do not speculate on mitigation or describe the facility in detail. c) Do not repeat information about the targeted asset or other given detail in the output. d) Do not repeat information that the user is familiar with: industry, number of employees, country, facility type are for context  in generating the scenario and MUST NOT BE REPEATED IN THE RESPONSE. e) Use precise and concise language with as much technical detail as possible given the input details.
@@ -3208,11 +3645,38 @@ def summarize_text(text, max_tokens=200):
     return response.choices[0].message['content']
 
 
+def get_summarized_chunks_v2(chunks, max_tokens_per_chunk=200):
+    summarized_chunks = []
+    for chunk in chunks:
+        summarized_text = summarize_text(chunk, max_tokens=max_tokens_per_chunk)
+        summarized_chunks.append(summarized_text)
+    return summarized_chunks
+
+
 def get_summarized_chunks(chunks, max_tokens_per_chunk=200):
     summarized_chunks = []
     for chunk in chunks:
         summarized_text = summarize_text(chunk['metadata']['text'], max_tokens=max_tokens_per_chunk)
         summarized_chunks.append(summarized_text)
+    return summarized_chunks
+
+
+import pinecone
+
+
+def query_index_and_summarize(query, index_name, top_k=7):
+    pc = Pinecone(api_key=get_api_key('pinecone'))
+    index = pc.Index(index_name)
+
+    # Create an embedding for the query
+    response = openai.Embedding.create(input=query, model="text-embedding-ada-002")
+    query_embedding = response['data'][0]['embedding']
+
+    # Query Pinecone index
+    results = index.query(vector=query_embedding, top_k=top_k, include_metadata=True)
+
+    chunks = [match['metadata']['text'] for match in results['matches']]
+    summarized_chunks = get_summarized_chunks_v2(chunks)
     return summarized_chunks
 
 
@@ -3362,3 +3826,497 @@ def exalens_asset_detail(target_asset_ip: str, exalens_host: str, exalens_api_ke
     except Exception as e:
         print(f"Error fetching asset details: {e}")
         return None
+
+
+def create_incident_response_table(steps):
+    styles = getSampleStyleSheet()
+    helvetica_10 = ParagraphStyle(
+        name='Helvetica',
+        parent=styles['Normal'],
+        fontName='Helvetica',
+        fontSize=10,
+        leading=12,
+        alignment=TA_LEFT
+    )
+
+    helvetica_bold_10 = ParagraphStyle(
+        name='Helvetica-Bold',
+        parent=styles['Normal'],
+        fontName='Helvetica-Bold',
+        fontSize=10,
+        leading=12,
+        alignment=TA_LEFT
+    )
+    table_data = [['Step', 'Title', 'Description']]
+    step_counter = 1
+
+    for step in steps:
+        if step.strip():
+            step = re.sub(r'\*\*|\*\#|\#', '', step).strip()  # Remove any markdown characters
+            step_parts = re.split(r'\. ', step, 1)
+            if len(step_parts) == 2:
+                step_title_description = step_parts[1]
+                step_title_parts = step_title_description.split(': ', 1)
+                if len(step_title_parts) == 2:
+                    step_title = step_title_parts[0]
+                    step_description = step_title_parts[1]
+                    table_data.append([
+                        str(step_counter),
+                        Paragraph(step_title, helvetica_bold_10),
+                        Paragraph(step_description, helvetica_10)
+                    ])
+                    step_counter += 1
+
+    col_widths = [0.5 * inch, 2 * inch, 4 * inch]
+    incident_response_table = Table(table_data, colWidths=col_widths)
+
+    incident_response_table.setStyle(TableStyle([
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
+        ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
+        ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 12),
+        ('FONTSIZE', (0, 1), (-1, -1), 10),
+        ('LEFTPADDING', (0, 0), (-1, -1), 6),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+        ('TOPPADDING', (0, 0), (-1, -1), 6),
+    ]))
+
+    return incident_response_table
+
+
+def add_final_page(elements):
+    styles = getSampleStyleSheet()
+    helvetica_10 = ParagraphStyle(
+        name='Helvetica',
+        parent=styles['Normal'],
+        fontName='Helvetica',
+        fontSize=10,
+        leading=12,
+        alignment=TA_LEFT
+    )
+
+    helvetica_bold_10 = ParagraphStyle(
+        name='Helvetica-Bold',
+        parent=styles['Normal'],
+        fontName='Helvetica-Bold',
+        fontSize=10,
+        leading=12,
+        alignment=TA_LEFT
+    )
+    elements.append(PageBreak())
+    final_text = (
+        "This playbook is written to address the given scenario for the given facility. The playbook is intended as guidance and a reference, "
+        "and is dependent on the various data inputs that have been made to describe the scenario. It is essential that care is taken to verify "
+        "and review any actions that are taken within the operational environment based on this playbook to ensure that damage and disruption "
+        "is not caused as a consequence of following any of the steps. It is recommended that good change control practices are followed that include "
+        "risk assessment, testing, and verification of all changes to network and device configuration before they are deployed into production environments. "
+        "The data sources used as reference materials to produce this playbook are updated regularly. If this copy of the playbook is dated more than six months, "
+        "it is recommended to log into AnzenOT and print an updated copy."
+    )
+
+    elements.append(Spacer(1, 2 * inch))
+    elements.append(Paragraph(final_text, helvetica_10))
+    return elements
+
+
+class CustomDocTemplate(BaseDocTemplate):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.page_count = 0
+        frame = Frame(self.leftMargin, self.bottomMargin, self.width, self.height, id='normal')
+        template = PageTemplate(id='test', frames=frame, onPage=self.add_page_number_and_footer)
+        self.addPageTemplates(template)
+
+    def add_page_number_and_footer(self, canvas, doc):
+        # Add page number
+        page_num_text = f"Page {doc.page}"
+        canvas.drawRightString(200 * mm, 10 * mm, page_num_text)
+        # Add "Confidential" at the center bottom
+        canvas.drawCentredString(self.leftMargin + self.width / 2, 10 * mm, "Confidential")
+
+
+def generate_scenario_playbook(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+
+        scenario = data.get('scenario')
+        recommendations = data.get('recommendations')
+        compliancemap = data.get('compliance_map')
+        cyberphaid = data.get('cyberphaid')
+        scenarioid = data.get('scenarioid')
+
+        # Retrieve the CyberPHAHeader and related Facility data
+        cyber_pha_header = get_object_or_404(tblCyberPHAHeader, pk=cyberphaid)
+        facility = get_object_or_404(Facility, pk=cyber_pha_header.facility_id)
+        facility_type = get_object_or_404(FacilityType, pk=facility.type_id)
+        scenario_header = get_object_or_404(tblCyberPHAScenario, pk=scenarioid)
+        industry = facility_type.Industry.Industry
+
+        consequences = scenario_header.Consequence
+
+        # Construct detailed queries
+        playbook_query = f"incident response playbook, DRAGOS playbook, NIST 800-82"
+        risk_assessment_query = f"OT Cybersecurity, Industrial Control Systems"
+        incident_response_query = f"incident response procedures, NIST 800-61"
+        communication_plan_query = f"communication plan, incident response, comms plans"
+        tools_resources_query = f"tools and resources to prevent cybersecurity incidents"
+
+        # Query Pinecone and summarize results
+        playbook_data = query_index_and_summarize(playbook_query, "otcyber")
+        risk_assessment_data = query_index_and_summarize(risk_assessment_query, "otcyber")
+        incident_response_procedures = query_index_and_summarize(incident_response_query, "otcyber")
+        communication_plans = query_index_and_summarize(communication_plan_query, "otcyber")
+        tools_resources = query_index_and_summarize(tools_resources_query, "otcyber")
+
+        # Prepare the context from Pinecone results
+        pinecone_context = {
+            "playbook_data": "\n".join(playbook_data),
+            "risk_assessment_data": "\n".join(risk_assessment_data),
+            "incident_response_procedures": "\n".join(incident_response_procedures),
+            "communication_plans": "\n".join(communication_plans),
+            "tools_resources": "\n".join(tools_resources),
+        }
+
+        # Prepare the prompts for OpenAI API
+        messages = {
+            "action_items": [
+                {"role": "system", "content": "You are an expert in cybersecurity incident response."},
+                {"role": "user", "content": (
+                    f"""Using the following context from relevant playbooks and risk assessments:\n{pinecone_context['playbook_data']}\n{pinecone_context['risk_assessment_data']}\n
+                        Generate a list of up to a maximum of 20 practical, technical, cyber-physical action items for addressing the following scenario: {scenario}. The consequences of the scenario are assumed to be:{consequences}.
+                        The action items must be specific, measurable, achievable, relevant, and time-bound (SMART). 
+                        Each action item should be written such that an engineer or technology expert can implement it immediately during an ongoing incident without causing further damage or operational loss. 
+                        Each action items will include a description of no more than 20 words to support the action item headline
+                        Each action items should have a priority - High, Medium, or Low based on the degree of damage and disruption that performing the action item is expected to mitigate. 
+                        Do not include action items that require writing new plans, policies, or conducting exercises. 
+                        
+                        Format the output as follows where , is the delimiter between data fields:
+                        <Action Item Number>,<Action Item>,<Action Item Description>,<Priority Level>
+
+                        Example text to illustrate:
+                        1,Isolate Compromised PLCs,Immediately disconnect the compromised PLCs from the network to prevent further manipulation of control logic,High
+                        2,Activate Backup PLCs: Switch to backup PLCs that have not been compromised to restore control over the mixing and baking processes,Medium
+
+                        Ensure each action item is numbered, followed by a comma, then the action item, followed by a comma, the action item description then comma then the priority level (High, Medium, Low).
+                        ADDITIONAL INSTRUCTION: Do not include any markup characters. Do not include any additional narrative, text, or commentary outside of the formatted response."""
+                )}
+            ],
+            "incident_response": [
+                {"role": "system", "content": "You are an expert in cybersecurity incident response."},
+                {"role": "user", "content": (
+                    f"""Based on the following incident response procedures:{pinecone_context['incident_response_procedures']}\n
+                            Provide a step-by-step list of up tp a maximum of 20 incident response procedures for detecting, containing, eradicating, and recovering from the scenario: {scenario}. 
+                            IMPORTANT: Take into account that the incident is in a {facility_type} in the {industry} industry. 
+                            Format the response exactly as described using the guide below and the example as further guidance:
+
+                            <Procedure Heading>
+                            <Step number>. <Step Title>: <Step Content>
+                            <Step number>. <Step Title>: <Step Content>
+
+                            <Next Procedure Heading>
+                            <Step number>. <Step Title>: <Step Content>
+                            <Step number>. <Step Title>: <Step Content>
+
+                            And so on. For example:
+
+                            Detection and Analysis
+                            1. Incident Detection: Monitor and identify unusual activity.
+                            2. Next heading: next description etc etc
+
+                            ADDITIONAL INSTRUCTION: Do not include any markup characters. Do not include any additional narrative, text, or commentary outside of the formatted response."""
+                )}
+            ],
+
+            "communication_plan": [
+                {"role": "system", "content": "You are an expert in cybersecurity compliance."},
+                {"role": "user", "content": (
+                    f"""Given the following communication plan data: {pinecone_context['communication_plans']}, determine the most effective communication plan for the {facility_type} facility at {facility.address} in the {industry} industry to specifically address the scenario: {scenario}. The estimated consequences of the scenario are : {consequences}. 
+                        IMPORTANT: Take into account that the scenario applies to a {facility_type} in the {industry} industry. Take into account the scenario and the consequences in forming the communication plan.
+
+                        Format the response exactly as described using the guide below and the example as further guidance:
+
+                        {{
+                            "communication_plan": [
+                                {{
+                                    "item_number": <Communication plan item number>,
+                                    "heading": "<Communication Plan Heading>",
+                                    "objective": "<Communication Plan Item Objective>",
+                                    "actions": [
+                                        {{
+                                            "item": "<Action item>",
+                                            "description": "<Action description>"
+                                        }},
+                                        ...
+                                    ],
+                                    "communication_channels": [
+                                        {{
+                                            "item": "<Communication Channel>",
+                                            "description": "<Channel description>"
+                                        }},
+                                        ...
+                                    ]
+                                }},
+                                ...
+                            ]
+                        }}
+
+                        Example for formatting reference. 
+                        {{
+                            "communication_plan_items": [
+                                {{
+                                    "item_number": 1,
+                                    "heading": "Heading text",
+                                    "objective": "Descriptive objective",
+                                    "actions": [
+                                        {{
+                                            "item": "The action to be taken",
+                                            "description": "A description of the action to be taken"
+                                        }},
+                                        {{
+                                            "item": "The next action to be taken",
+                                            "description": "A description of the next action to be taken"
+                                        }},
+                                        
+                                    ],
+                                   and so on for the rest of the communication plan
+                                }},
+                                ...
+                            ]
+                        }}
+
+                        ADDITIONAL INSTRUCTION: Do not include any markup characters. Do not include any additional narrative, text, or commentary outside of the formatted response."""
+                )}
+            ],
+        }
+
+        # Query OpenAI API for each prompt
+        openai.api_key = get_api_key('openai')
+
+        def query_openai(messages):
+            openai.api_key = get_api_key('openai')
+            response = openai.ChatCompletion.create(
+                model="gpt-4o-mini",
+                messages=messages,
+                max_tokens=4000,
+                temperature=0.2
+            )
+            return response.choices[0].message['content'].strip()
+
+        action_items = query_openai(messages["action_items"])
+        incident_response = query_openai(messages["incident_response"])
+        comms_plan = query_openai(messages["communication_plan"])
+
+        # Structure the content for the playbook
+        playbook_content = {
+            "title": f"CyberPHA Scenario Playbook for {facility.name}",
+            "scenario": scenario,
+            "recommendations": recommendations,
+            "compliance_map": compliancemap,
+            "action_items": action_items,
+            "incident_response_procedures": incident_response,
+            "comms_plan": comms_plan,
+            "additional_resources": {
+                "playbooks": playbook_data,
+                "risk_assessments": risk_assessment_data,
+                "incident_response_procedures": incident_response_procedures,
+                "communication_plans": communication_plans,
+                "tools_resources": tools_resources
+            }
+        }
+
+        logo_path = os.path.join('static/images', '65C8D0 - Light Blue-2.png')
+        buffer = BytesIO()
+
+        doc = CustomDocTemplate(buffer, pagesize=letter)
+        elements = []
+
+        styles = getSampleStyleSheet()
+        title_style = styles['Title']
+        heading_style = styles['Heading1']
+
+        helvetica_10 = ParagraphStyle(
+            'Helvetica10',
+            parent=styles['Normal'],
+            fontName='Helvetica',
+            fontSize=10,
+        )
+
+        # Title page
+        elements.append(Spacer(1, 2 * inch))
+        elements.append(Paragraph("Scenario Response Playbook", title_style))
+        elements.append(Spacer(1, 2 * inch))
+        elements.append(Image(logo_path, width=180, height=150))
+
+        elements.append(PageBreak())
+
+        # Scenario page
+        elements.append(Paragraph("Scenario", heading_style))
+        elements.append(Spacer(1, 0.4 * inch))
+
+        scenario_intro = (
+            f"This playbook has been written to address an incident of the following scenario at: {facility.name}, "
+            f"a {facility_type.FacilityType} at {facility.address}."
+        )
+        elements.append(Paragraph(scenario_intro, helvetica_10))
+        elements.append(Spacer(1, 0.4 * inch))
+
+        # Add the scenario text inside a box
+        scenario_paragraphs = scenario.split('\n\n')
+        for paragraph in scenario_paragraphs:
+            elements.append(Paragraph(paragraph, helvetica_10))
+            elements.append(Spacer(1, 0.2 * inch))
+
+        elements.append(PageBreak())
+
+        # Immediate Actions page
+        elements.append(Paragraph("Immediate Actions", heading_style))
+        elements.append(Spacer(1, 0.4 * inch))
+
+        action_items_list = playbook_content['action_items'].split('\n')
+        table_data = [['#', 'Action Item', 'Description', 'Priority']]
+
+        for rec in action_items_list:
+            if rec.strip():
+                # Split the action item by its components
+                parts = rec.split(',')
+                if len(parts) == 4:
+                    number = parts[0].strip()
+                    action_item = parts[1].strip()
+                    description = parts[2].strip()
+                    priority = parts[3].strip()
+
+                    table_data.append([
+                        number,
+                        Paragraph(action_item, helvetica_10),
+                        Paragraph(description, helvetica_10),
+                        Paragraph(priority, helvetica_10)
+                    ])
+
+        # Define the table with specific column widths
+        col_widths = [0.05 * doc.width, 0.30 * doc.width, 0.55 * doc.width, 0.10 * doc.width]
+        recommendations_table = Table(table_data, colWidths=col_widths)
+
+        # Apply table style
+        recommendations_table.setStyle(TableStyle([
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
+            ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
+            ('ALIGN', (0, 0), (-1, 0), 'LEFT'),
+            ('ALIGN', (0, 0), (0, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 12),
+            ('FONTSIZE', (0, 1), (-1, -1), 10),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('LEFTPADDING', (0, 0), (-1, -1), 6),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
+            ('TOPPADDING', (0, 0), (-1, -1), 12),
+        ]))
+
+        elements.append(recommendations_table)
+        elements.append(Spacer(1, 0.4 * inch))
+
+        elements.append(PageBreak())
+        elements.append(Paragraph("Incident Response Procedures", heading_style))
+        elements.append(Spacer(1, 0.4 * inch))
+
+        incident_response_steps = [line.strip() for line in playbook_content['incident_response_procedures'].split('\n')
+                                   if line.strip()]
+        incident_response_table = create_incident_response_table(incident_response_steps)
+        elements.append(incident_response_table)
+
+        elements.append(PageBreak())
+        elements.append(Paragraph("Communication Plan", heading_style))
+        elements.append(Spacer(1, 0.4 * inch))
+
+        # Correctly load the JSON content
+        communication_plan_json = json.loads(playbook_content['comms_plan'])
+        if communication_plan_json:
+            communication_plan_items = communication_plan_json["communication_plan"]
+
+            table_data = []
+            spans = []
+
+            for index, item in enumerate(communication_plan_items):
+                item_number = item.get("item_number", "")
+                heading = item.get("heading", "")
+                objective = item.get("objective", "")
+                actions = item.get("actions", [])
+                communication_channels = item.get("communication_channels", [])
+
+                # Create bullet points for actions
+                actions_bullets = ListFlowable(
+                    [ListItem(Paragraph(f"{action['item']}: {action['description']}", helvetica_10)) for action in
+                     actions],
+                    bulletType='bullet'
+                )
+
+                # Create bullet points for communication channels
+                channels_bullets = ListFlowable(
+                    [ListItem(Paragraph(f"{channel['item']}: {channel['description']}", helvetica_10)) for channel in
+                     communication_channels],
+                    bulletType='bullet'
+                )
+
+                # Add data to the table
+                row_start = len(table_data)
+                table_data.extend([
+                    [str(item_number), Paragraph(heading, helvetica_10), "", ""],
+                    ["", Paragraph(objective, helvetica_10), actions_bullets, channels_bullets]
+                ])
+                row_end = row_start + 1
+
+                # Add span for item number
+                spans.append(('SPAN', (0, row_start), (0, row_end)))
+                # Add span for heading
+                spans.append(('SPAN', (1, row_start), (3, row_start)))
+
+            # Define the column widths for the entire table
+            col_widths = [0.05 * doc.width, 0.25 * doc.width, 0.35 * doc.width, 0.35 * doc.width]
+
+            communication_plan_table = Table(table_data, colWidths=col_widths)
+
+            # Apply table style
+            table_style = TableStyle([
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
+                ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
+                ('ALIGN', (0, 0), (-1, 0), 'LEFT'),
+                ('ALIGN', (0, 0), (0, -1), 'LEFT'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 12),
+                ('FONTSIZE', (0, 1), (-1, -1), 10),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ('LEFTPADDING', (0, 0), (-1, -1), 6),
+                ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
+                ('TOPPADDING', (0, 0), (-1, -1), 12),
+            ])
+
+            # Add the dynamic spans to the table style
+            for span in spans:
+                table_style.add(*span)
+
+            communication_plan_table.setStyle(table_style)
+
+            elements.append(communication_plan_table)
+            elements.append(Spacer(1, 0.4 * inch))
+
+        elements = add_final_page(elements)
+        # Build the PDF
+        doc.build(elements)
+
+        # Get the PDF content
+        buffer.seek(0)
+        pdf_content = buffer.getvalue()
+        buffer.close()
+
+        # Create the HTTP response
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = 'attachment; filename="scenario_playbook.pdf"'
+        response.write(pdf_content)
+
+        return response
+
+    return JsonResponse({"error": "Invalid request method."}, status=400)

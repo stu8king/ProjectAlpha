@@ -204,6 +204,8 @@ urlpatterns = [
     path('get_facility_types/', views.get_facility_types, name='get_facility_types'),
     path('search/', views.search, name='search'),
     path('asset_summary_info/', views.get_darktrace_asset_summary_info, name='darktrace_asset_summary_info'),
+    path('scenario_analysis_report/', views.scenario_analysis_report, name='scenario_analysis_report'),
+    path('generate_scenario_playbook/', views.generate_scenario_playbook, name='generate_scenario_playbook'),
 ]
 
 if settings.DEBUG:

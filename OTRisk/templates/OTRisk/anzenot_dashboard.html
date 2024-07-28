@@ -3,6 +3,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AnzenOT - GRC for OT</title>
     <link rel="icon" href="{% static 'images/AnzenOTIconBlack.png' %}" type="image/x-icon">
 
@@ -43,6 +44,7 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.25/css/jquery.dataTables.css">
     <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.js"></script>
+
 
     {% load django_bootstrap5 %}
     {% bootstrap_css %}
@@ -414,31 +416,96 @@ input:checked + .slider:before {
 .cube-icon {
     margin-right: 5px; /* Space between icon and text */
 }
+/* Base container for each group */
 .group-container {
-    background: #6c757d; /* Light grey background, can be changed */
-    border: 1px solid #ccc; /* Add a subtle border */
+    background: #f5f5f7; /* Light grey background */
+    border: 1px solid #65c8d0; /* Half-pixel border */
+    border-radius: 10px; /* Rounded corners */
     margin: 8px;
     flex-grow: 1; /* Allows the container to grow to fill the column if needed */
     display: flex;
     flex-direction: column;
     justify-content: space-between; /* Distributes space evenly */
     height: 100%; /* Full height of the parent column */
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1), 0 4px 8px rgba(0, 0, 0, 0.1); /* Inner and outer shadow */
+    transition: transform 0.3s ease, box-shadow 0.3s ease; /* Smooth transitions */
 }
 
-.group-header, .group-body {
-    padding: 10px;
-    font-size: 1em;
+/* Header of each group */
+.group-header {
+    background: #65c8d0; /* Apple-like blue color */
+    color: black; /* White text */
+    padding: 15px; /* Increased padding */
+    font-size: 1.1em; /* Slightly larger font */
+    font-weight: bold; /* Bold text */
+    border-top-left-radius: 10px; /* Match container's rounded corners */
+    border-top-right-radius: 10px; /* Match container's rounded corners */
+    text-align: center; /* Center text */
 }
 
+/* Body of each group */
 .group-body {
+    padding: 15px;
     overflow-y: auto; /* Adds scroll to the body if content exceeds the container height */
     flex-grow: 1; /* Allows the body to grow and take up available space */
+    background: white; /* White background for body */
+    border-bottom-left-radius: 10px; /* Match container's rounded corners */
+    border-bottom-right-radius: 10px; /* Match container's rounded corners */
 }
+
+.cyberpha-item {
+    margin-bottom: 10px; /* Space between items */
+    padding: 10px; /* Padding for each item */
+    background: #f9f9f9; /* Slightly off-white background */
+    border-radius: 5px; /* Rounded corners for items */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); /* Subtle shadow for items */
+    cursor: pointer; /* Change cursor to pointer on hover */
+}
+
+/* Facility name within each item */
+.facility-name {
+    color: #333; /* Dark grey text */
+    font-size: 0.95em; /* Slightly smaller font */
+}
+
+/* Hover effects for group containers */
+.group-container:hover {
+    transform: translateY(-5px); /* Slight lift effect */
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15); /* Stronger shadow on hover */
+}
+
+/* Ensure rows are spaced and aligned properly */
+.row.mb-2 {
+    margin-bottom: 1.5rem !important;
+}
+
 .organize-container {
     display: flex;
     justify-content: center;
     width: 100%;
 }
+ .tooltip-content {
+        padding: 10px;
+        font-size: 0.9em;
+        color: #333;
+        background-color: #f9f9f9;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+
+    .tooltipster-light .tooltipster-box {
+        z-index: 99999; /* Ensure the tooltip is in front */
+    }
+
+    .selectable-row-cyberpha:hover {
+        cursor: pointer;
+    }
+    .selectable-row-facility:hover {
+        cursor: pointer;
+    }
+   .selectable-row:hover {
+        cursor: pointer;
+    }
 
     </style>
 </head>
@@ -571,7 +638,10 @@ input:checked + .slider:before {
                                     </thead>
                                     <tbody>
                                         {% for facility in facility_records %}
-                                            <tr class="selectable-row" data-id="{{ facility.id }}">
+                                             <tr class="selectable-row-facility" data-id="{{ facility.id }}"
+                                                                data-industry="{{ facility.industry__Industry }}"
+                                                                data-facility-type="{{ facility.type__FacilityType }}"
+                                                                data-employees="{{ facility.employees }}">
                                                 <td>{{ facility.name }}</td>
                                                 <td>{{ facility.address }}</td>
                                                 <td class="currency">
@@ -595,22 +665,84 @@ input:checked + .slider:before {
                                         {% endfor %}
                                     </tbody>
                                 </table>
+
+                                    <link rel="stylesheet" href="{% static 'tooltipster/dist/css/tooltipster.bundle.min.css' %}">
+                                    <script type="text/javascript" src="{% static 'tooltipster/dist/js/tooltipster.bundle.min.js' %}"></script>
+
                                         <script>
                                             $(document).ready(function() {
 
+                                             var table = $('#facilityTable').DataTable({
+                                                        "paging": true,
+                                                        "pageLength": 10,
+                                                        "lengthChange": false,
+                                                        "info": false,
+                                                        "searching": false
+                                                    });
 
-                                                $('#facilityTable').DataTable({
-                                                    "paging": true,
-                                                    "pageLength": 10,
-                                                    "lengthChange": false,
-                                                    "info": false,
-                                                    "searching": false
-                                                });
 
                                                 $('#facilityTable tbody').on('click', 'tr', function () {
-                                                    var facilityId = $(this).data('id');
-                                                    window.location.href = `/OTRisk/facility/?facility_id=${facilityId}`;
+                                                    Swal.fire({
+                                                    title: 'Leave this page?',
+                                                    text: "You are about to leave this page for the selected Facility page.",
+                                                    imageUrl: '/static/images/anzen_owl.png',
+                                                    imageWidth: 150, // Adjust as necessary
+                                                    imageHeight: 150, // Adjust as necessary
+                                                    background: '#000', // Black background
+                                                    color: '#fff', // Set text color to white
+                                                    showCancelButton: true,
+                                                    confirmButtonColor: '#3085d6',
+                                                    cancelButtonColor: '#d33',
+                                                    confirmButtonText: 'Yes, proceed!',
+                                                    customClass: {
+                                                        popup: 'swal2-custom-border' // Apply custom class to the popup/dialog
+                                                    }
+
+                                                }).then((result) => {
+                                                        if (result.isConfirmed) {
+                                                            var facilityId = $(this).data('id');
+                                                            window.location.href = `/OTRisk/facility/?facility_id=${facilityId}`;
+                                                        }
+                                                    });
+
                                                 });
+
+                                                 function initializeTooltipster() {
+            $('.selectable-row-facility').each(function() {
+                var $row = $(this);
+                if ($row.data('tooltipster-initialized')) {
+                    $row.tooltipster('destroy');
+                }
+                $row.tooltipster({
+                    content: function() {
+                        var industry = $row.data('industry');
+                        var facilityType = $row.data('facility-type');
+                        var employees = $row.data('employees');
+                        var content = '<div class="tooltip-content">' +
+                            '<strong>Industry:</strong> ' + industry + '<br>' +
+                            '<strong>Facility Type:</strong> ' + facilityType + '<br>' +
+                            '<strong>Employees:</strong> ' + employees + '</div>';
+                        return $(content);
+                    },
+                    contentAsHTML: true,
+                    theme: 'tooltipster-light',
+                    delay: 100,
+                    animation: 'fade',
+                    interactive: true,
+                    side: ['right', 'top', 'bottom', 'left'],
+                }).data('tooltipster-initialized', true);
+            });
+        }
+
+                                                // Initialize Tooltipster for the first page
+                                                initializeTooltipster();
+
+                                                // Reinitialize Tooltipster every time the table is redrawn
+                                                table.on('draw.dt', function() {
+                                                    initializeTooltipster();
+                                                });
+
+
                                             });
                                         </script>
                                     </div>
@@ -652,7 +784,10 @@ input:checked + .slider:before {
                                                 </thead>
                                                 <tbody>
                                                     {% for record in cyberpha_records %}
-                                                        <tr class="selectable-row" data-id="{{ record.ID }}">
+                                                        <tr class="selectable-row-cyberpha" data-id="{{ record.ID }}"
+                                                            data-facility-name="{{ record.facility_name }}"
+                                                            data-facility-type="{{ record.facility_type }}"
+                                                            data-assessment-status="{{ record.assessment_status }}">
                                                             <td>
                                                             {{ record.title }}
                                                             {% if record.darktrace_client %}
@@ -686,6 +821,41 @@ input:checked + .slider:before {
                                                             $('#cyberphaTable tbody').on('mouseleave', 'tr', function () {
                                                                 $(this).removeClass('hovered');
                                                             });
+
+                                                            function initializeTooltipsterCyberPHA() {
+            $('.selectable-row-cyberpha').each(function() {
+                var $row = $(this);
+                if ($row.data('tooltipster-initialized')) {
+                    $row.tooltipster('destroy');
+                }
+                $row.tooltipster({
+                    content: function() {
+                        var facilityName = $row.data('facility-name');
+                        var facilityType = $row.data('facility-type');
+                        var assessmentStatus = $row.data('assessment-status');
+                        var content = '<div class="tooltip-content">' +
+                            '<strong>Facility Name:</strong> ' + facilityName + '<br>' +
+                            '<strong>Facility Type:</strong> ' + facilityType + '<br>' +
+                            '<strong>Assessment Status:</strong> ' + assessmentStatus + '</div>';
+                        return $(content);
+                    },
+                    contentAsHTML: true,
+                    theme: 'tooltipster-light',
+                    delay: 100,
+                    animation: 'fade',
+                    interactive: true,
+                    side: ['right', 'top', 'bottom', 'left'],
+                }).data('tooltipster-initialized', true);
+            });
+        }
+
+        // Initialize Tooltipster for the first page
+        initializeTooltipsterCyberPHA();
+
+        // Reinitialize Tooltipster every time the table is redrawn
+        $('#cyberphaTable').on('draw.dt', function() {
+            initializeTooltipsterCyberPHA();
+        });
                                                         });
                                                     </script>
                                                 </div>
@@ -706,38 +876,61 @@ input:checked + .slider:before {
                                         <div class="block-body">
                                             <div class="block-body-content">
                                                 <div class="row" style="width:95%">
-    <div class="col">
-        {% if groups_with_cyberphas %}
-            {% for group in groups_with_cyberphas %}
-                {% if forloop.first %}
-                    <div class="row mb-2">
-                {% endif %}
-                <div class="col-md-4">
-                    <div class="group-container" data-group-id="{{ group.id }}" onclick="getGroupReport(this.getAttribute('data-group-id'))">
-                        <div class="group-header">
-                            {{ group.group_name }}
-                        </div>
-                        <div class="group-body">
-                            {% for cyberpha in group.cyberphas %}
-                                <div class="cyberpha-item">
-                                    <span class="facility-name">{{ cyberpha.facility_name }}</span>
-                                </div>
-                            {% endfor %}
-                        </div>
-                    </div>
-                </div>
-                {% if forloop.counter|divisibleby:3 and not forloop.last %}
-                    </div><div class="row mb-2">
-                {% elif forloop.last %}
-                    </div>
-                {% endif %}
-            {% endfor %}
-        {% else %}
-            <p>No groups found.</p>
-        {% endif %}
-    </div>
-</div>
-
+                                                    <div class="col">
+                                                        {% if groups_with_cyberphas %}
+                                                            {% for group in groups_with_cyberphas %}
+                                                                {% if forloop.first %}
+                                                                    <div class="row mb-2">
+                                                                {% endif %}
+                                                                <div class="col-md-4">
+                                                                    <div class="group-container" data-group-id="{{ group.id }}" onclick="getGroupReport(this.getAttribute('data-group-id'))">
+                                                                        <div class="group-header">
+                                                                            {{ group.group_name }}
+                                                                        </div>
+                                                                        <div class="group-body">
+                                                                            {% for cyberpha in group.cyberphas %}
+                                                                                <div class="cyberpha-item" data-id="{{ cyberpha.id }}" onclick="navigateToCyberPHA(this.getAttribute('data-id'))">
+                                                                                    <span class="facility-name">{{ cyberpha.facility_name }}</span>
+                                                                                </div>
+                                                                            {% endfor %}
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                                {% if forloop.counter|divisibleby:3 and not forloop.last %}
+                                                                    </div><div class="row mb-2">
+                                                                {% elif forloop.last %}
+                                                                    </div>
+                                                                {% endif %}
+                                                            {% endfor %}
+                                                        {% else %}
+                                                            <p>No groups found.</p>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                                <script>
+                                                    function navigateToCyberPHA(recordId) {
+                                                        Swal.fire({
+                                                    title: 'Leave this page?',
+                                                    text: "You are about to leave this page for the selected CyberPHA page.",
+                                                    imageUrl: '/static/images/anzen_owl.png',
+                                                    imageWidth: 150, // Adjust as necessary
+                                                    imageHeight: 150, // Adjust as necessary
+                                                    background: '#000', // Black background
+                                                    color: '#fff', // Set text color to white
+                                                    showCancelButton: true,
+                                                    confirmButtonColor: '#3085d6',
+                                                    cancelButtonColor: '#d33',
+                                                    confirmButtonText: 'Yes, proceed!',
+                                                    customClass: {
+                                                        popup: 'swal2-custom-border' // Apply custom class to the popup/dialog
+                                                    }
+                                                        }).then((result) => {
+                                                            if (result.isConfirmed) {
+                                                                window.location.href = `/OTRisk/iotaphamanager/${recordId}/`;
+                                                            }
+                                                        });
+                                                    }
+                                                </script>
 
                                             </div>
                                         </div>
@@ -769,7 +962,7 @@ input:checked + .slider:before {
                                 <div class="col-md-12 flex-col" id="block4">
                                     <div class="info-block" id="risks">
                                         <div class="block-header">
-                                            <img src="{% static 'images/dashboard4.png' %}" alt="Statistics Icon"> Business Impact
+                                            <img src="{% static 'images/dashboard4.png' %}" alt="Statistics Icon"> High Risk Scenarios
                                             <button class="toggle-body">+</button>
                                         </div>
                                         <div class="block-body">
@@ -989,6 +1182,34 @@ input:checked + .slider:before {
                 </div>
             `;
             row.appendChild(cellScore);
+
+             row.addEventListener("click", function() {
+                Swal.fire({
+                    title: 'Leave this page?',
+                    text: "You are about to leave this page for the selected CyberPHA Scenario.",
+                    imageUrl: '/static/images/anzen_owl.png',
+                    imageWidth: 150, // Adjust as necessary
+                    imageHeight: 150, // Adjust as necessary
+                    background: '#000', // Black background
+                    color: '#fff', // Set text color to white
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Yes, proceed!',
+                    customClass: {
+                        popup: 'swal2-custom-border' // Apply custom class to the popup/dialog
+                    }
+
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Set the session variable
+                        sessionStorage.setItem('activeCyberPHA', scenario.CyberPHA);
+                        // Redirect to the link
+                        window.location.href = `/OTRisk/assess_cyberpha/${scenario.CyberPHA}/`;
+                    }
+                });
+            });
+
 
             tableBody.appendChild(row);
         });

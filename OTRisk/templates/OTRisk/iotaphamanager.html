@@ -478,6 +478,47 @@ min-height: 100vh; /* Ensure it fills the viewport height */
     justify-content: center;
     width: 100%;
 }
+.hidden-column {
+    display: none;
+}
+
+.th-title {
+    width: 40% !important;
+}
+
+.th-site, .td-site {
+    width: 20% !important;
+}
+
+.th-type, .td-type {
+    width: 20% !important;
+}
+
+.th-empty {
+    width: 10% !important;
+}
+
+.form-label {
+    color: white;
+}
+
+.report-button, .delete-btn {
+    width: 100%; /* Adjust as needed */
+}
+    .inset-container {
+        padding: 10px; /* Padding inside the container */
+        border: 0.5px solid #65c8d0; /* Half-pixel border */
+        background: inherit; /* Keep the same background color */
+        box-shadow: inset 3px 3px 6px rgba(0, 0, 0, 0.6), inset -3px -3px 6px rgba(255, 255, 255, 0.4); /* Enhanced inset shadow for a more obvious effect */
+        display: inline-block; /* Adjust to content size */
+        border-radius: 5px; /* Slight rounding for a smoother look */
+    }
+
+    .inset-label {
+        font-size: 18px;
+        color: #fff; /* White text */
+        margin: 0; /* Remove default margin */
+    }
 
 </style>
 
@@ -672,9 +713,11 @@ var map;
                              });
                         </script>
                 </div>
+
+
                 <div class="col-md-2">
-                    <button type="button" id="risk-assessment-btn" class="btn btn-custom nav-link" title="Click here to re-generate the PHA profile for the facility"><i class="bi bi-calculator"></i> Run Profile</button></div>
-                    <script>
+                     <button type="button" id="copyAssessment" class="btn btn-custom nav-link" title="Creates a clone of the currently selected CyberPHA and related scenarios"><i class="bi bi-copy"></i> Clone</button>
+                        <script>
                         $(document).ready(function() {
                         // Event handler for the Copy button
                          $('#copyAssessment').click(function() {
@@ -706,10 +749,6 @@ var map;
                     });
 
                     </script>
-
-                <div class="col-md-2">
-                     <button type="button" id="copyAssessment" class="btn btn-custom nav-link" title="Creates a clone of the currently selected CyberPHA and related scenarios"><i class="bi bi-copy"></i> Clone</button>
-
                 </div>
 
             </div>
@@ -717,8 +756,10 @@ var map;
             <div class="row">
                 <div class="col-md-1"></div>
                 <div class="col-md-5">
-                    <label id="lblCyberPHATitle" style="font-size: 18px;  color:#fff">CyberPHA Setup</label><p>
-                    <font style="font-size: 0.8em">Select an existing CyberPHA from the CyberPHA list or click New to begin a new CyberPHA assessment</font></p>
+                    <div class="inset-container">
+                    <label id="lblCyberPHATitle" class="inset-label">CyberPHA Setup</label>
+                    <p></p>
+                </div>
                     <div id="progressBarContainerProfile" class="progress" style="display: none;">
                         <div class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" id="progressBarProfile"></div>
                     </div>
@@ -1010,11 +1051,11 @@ $(document).ready(function() {
                                                             <thead >
                                                                  <tr>
                                                                 <th class="th hidden-column">ID</th>
-                                                                <th style="width:40% !important;">Title</th>
-                                                                <th style="width:20% !important;">Site</th>
-                                                                <th style="width:20% !important;">Type</th>
-                                                                <th style="width:10% !important;"></th>
-                                                                <th style="width:10% !important;"></th>
+                                                            <th class="th-title">Title</th>
+                                                            <th class="th-site">Site</th>
+                                                            <th class="th-type">Type</th>
+                                                            <th class="th-empty"></th>
+                                                            <th class="th-empty"></th>
                                                             </tr>
                                                             </thead>
                                                             <tbody style="font-size: 10px">
@@ -1257,7 +1298,14 @@ $(document).ready(function() {
                                                         var facilityType = document.getElementById('lblFacilityType').textContent;
 
                                                         if(assessmentId  && isUserChange) {
-                                                            $('#assessmentspinnerContainer').show();
+                                                            Swal.fire({
+                                                            title: 'Loading',
+                                                            text: 'Please wait while we check and update the assessment summary...',
+                                                            allowOutsideClick: false,
+                                                            didOpen: () => {
+                                                                Swal.showLoading();
+                                                            }
+                                                        });
                                                             $.ajax({
                                                                 url: '/OTRisk/get_assessment_summary/',  // Update with the actual URL
                                                                 type: 'POST',
@@ -1267,6 +1315,7 @@ $(document).ready(function() {
                                                                         'csrfmiddlewaretoken': '{{ csrf_token }}'
                                                                 },
                                                                 success: function(response) {
+                                                                    Swal.close();
                                                                     $('#assessmentspinnerContainer').hide();
                                                                     if(response.error) {
                                                                         console.log(response.error);
@@ -1281,7 +1330,7 @@ $(document).ready(function() {
                                                                     }
                                                                 },
                                                                 error: function(xhr, errmsg, err) {
-                                                                    $('#assessmentspinnerContainer').hide();
+                                                                    Swal.close();
                                                                     alert('AJAX call failed: ' + errmsg);
                                                                 }
                                                             });
@@ -1325,29 +1374,24 @@ $(document).ready(function() {
                                 <div class="form-group">
                                     <label for="txtTitle" class="control-label text-light" title="Enter a descriptive title for this assessment">CyberPHA Title</label>
                                     <input type="text" class="form-control" name="txtTitle" id="txtTitle" value="{{ current_pha_header.title }}" maxlength="100" style="font-size: 0.9em;">
-
+                                    <br>
                                     <label for="txtLeader" class="control-label text-light" title="Enter the name of the person leading this assessment">CyberPHA Owner</label>
                                     <input type="text" class="form-control" name="txtLeader" id="txtLeader" value="{{ current_pha_header.PHALeader }}" maxlength="100" style="font-size: 0.9em;">
-
+                                    <br>
                                     <label for="txtLeaderEmail" class="control-label text-light" title="Enter the email address of the person leading this assessment">Email</label>
                                     <input type="email" class="form-control" name="txtLeaderEmail" id="txtLeaderEmail" value="{{ current_pha_header.PHALeaderEmail }}" onblur="validateEmail(this)" style="font-size: 0.9em;">
-                                </div>
-                                <div class="form-group row">
-                                    <div class="col-md-6">
+                                    <br>
+
                                         <label for="txtStartDate" class="control-label text-light" title="Enter the intended assessment start date">Start Date</label>
                                         <input type="date" class="form-control" name="txtStartDate" id="txtStartDate" value="{{ current_pha_header.AssessmentStartDate|date:'Y-m-d' }}" style="font-size: 0.9em;">
-                                    </div>
-                                    <div class="col-md-6">
+                                        <br>
                                         <label for="txtEndDate" class="control-label text-light" title="Enter the intended assessment end date">End Date</label>
                                         <input type="date" class="form-control" name="txtEndDate" id="txtEndDate" value="{{ current_pha_header.AssessmentEndDate|date:'Y-m-d' }}" onchange="validateDates()" style="font-size: 0.9em;">
-                                    </div>
-                                </div>
-                                <div class="form-group row">
-                                    <div class="col-md-6">
+                                        <br>
+
                                         <label for="txtUnit" class="control-label text-light" title="Enter the facility unit, if applicable, that's in scope for the current assessment">Unit</label>
                                         <input type="text" class="form-control" name="txtUnit" id="txtUnit" value="{{ current_pha_header.AssessmentUnit }}" maxlength="100" style="font-size: 0.9em;">
-                                    </div>
-                                    <div class="col-md-6">
+                                        <br>
                                         <label for="selZone" class="control-label text-light" title="Enter the facility zone, if applicable, that's in scope for the current assessment">Zone</label>
                                         <select class="form-control" name="selZone" id="selZone" style="font-size: 0.9em;">
                                             <option value=""> -- Select Plant Zone -- </option>
@@ -1355,7 +1399,7 @@ $(document).ready(function() {
                                                 <option value="{{ zone.PlantZone }}" {% if current_pha_header.AssessmentZone == zone.PlantZone %}selected{% endif %}>{{ zone.PlantZone }}</option>
                                             {% endfor %}
                                         </select>
-                                    </div>
+
                                 </div>
                                 <div class="form-group p-3" style="background-color: #ccc; border: 0.5px solid #65C8D0; border-radius: 5px; box-shadow: 0 0 3px #65C8D0;">
                                     <label class="control-label" style="color: black;" title="Check the box if there is an OT Cybersecurity Incident Response Plan for the facility">OT Incident Response (IR)</label>
@@ -1733,6 +1777,7 @@ $(document).ready(function() {
                                     </div>
                             </div>
                     </div>
+
                     <div class="flex-row">
                         <div class="col-md-12 flex-col" id="block4">
                                 <div class="info-block" id="connector">
@@ -1742,7 +1787,7 @@ $(document).ready(function() {
                                     </div>
                                     <div class="block-body">
                                     <div class="block-body-content" style="align-items: center; align-content: center">
-                                    <div class="form-group">
+                                    <div class="form-group" >
                                     <div class="row" style="width:98%">
                                         <div class="col-md-3">
                                             <label for="connector_select" style="color: white" title="Select the relevant installed internal solution that AnzenOT can connect to">Select Product:</label>
@@ -2192,6 +2237,10 @@ $(document).ready(function() {
                                     </div>
                             </div>
                     </div>
+                    </div>
+
+
+
                     <div class="flex-row">
                         <div class="col-md-12 flex-col" id="block6">
                                 <div class="info-block" id="physical">
@@ -2286,7 +2335,22 @@ $(document).ready(function() {
                             </div>
                     </div>
                     <div class="flex-row">
-                        <div class="col-md-12 flex-col" id="">
+                        <div class="col-md-12 flex-col" id="block14">
+                            <div class="info-block" id="scenarios">
+                                        <div class="block-header">
+                                        Save Scenarios
+                                        <button type="button" class="toggle-body">+</button>
+                                        </div>
+                                        <div class="block-body">
+                                            <div class="block-body-content" style="align-items: center; align-content: center">
+                                                <p style="color:white"></p>
+                                                <div class="row" style="width:95%">
+                                                    <!-- put the scenario table here -->
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                        </div>
                     </div>
                 </div>
             </div>
