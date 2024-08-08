@@ -282,7 +282,7 @@ body {
     background-color: #5E6266; /* Lighter shade of #464748 */
     padding: 15px; /* Optional: for internal spacing */
 }
-#connector, #tools, #physical, #asset, #threat, #insight, #strategy, #safety, #chemical, #compliance {
+#list, #connector, #tools, #physical, #asset, #threat, #insight, #strategy, #safety, #chemical, #compliance {
         display: none;
     }
 .switch {
@@ -519,6 +519,10 @@ min-height: 100vh; /* Ensure it fills the viewport height */
         color: #fff; /* White text */
         margin: 0; /* Remove default margin */
     }
+.assignGroupModal
+ {
+/* bug fix - no overlay */
+display: none;}
 
 </style>
 
@@ -526,8 +530,9 @@ min-height: 100vh; /* Ensure it fills the viewport height */
 <body style="background-color: #464748">
 <script>
 
+isUserChange = false;
 anychart.licenseKey("{{ anychart_key }}");
-
+sessionStorage.setItem('fid', 0);
 
 sessionStorage.setItem('activeCyberPHA','');
 sessionStorage.setItem('sessionCountry','');
@@ -535,7 +540,14 @@ sessionStorage.setItem('sessionFacility','');
 sessionStorage.setItem('sessionFacilityType','');
 sessionStorage.setItem('sessionIndustry','');
 
-
+function expandFacilityDetails() {
+    var scenarioDetailsBlock = $(".info-block:contains('Assessment Facility')");
+    var blockBody = scenarioDetailsBlock.find(".block-body");
+    blockBody.show();
+    scenarioDetailsBlock.find(".toggle-body").text("-");
+    scenarioDetailsBlock.css('z-index', ++zIndexCounter);
+    //closeScenarioList();
+}
 
     //disable all controls and reset local session variable when form loads
     document.addEventListener('DOMContentLoaded', function() {
@@ -571,6 +583,7 @@ sessionStorage.setItem('sessionIndustry','');
         if (recordId) {
             // Call the function to fetch and display the record
             fetchHeaderRecord(recordId);
+
         }
 });
 
@@ -692,7 +705,7 @@ var map;
 
                 </div>
                 <div class="col-md-2">
-                    <button type="submit" id="btnformSubmit" class="btn btn-custom nav-link" title="Click here to save the current facility information"><i class="bi bi-floppy2-fill"></i> Save</button>
+                    <button type="submit" id="btnformSubmit" class="btn btn-custom nav-link" title="Click here to save the current facility information" style="transform: scale(0.8)"><i class="bi bi-floppy2-fill"></i> Save</button>
                     <div id="spinnerContainer" style="display: none;">
                         <div class="spinner-border" role="status">
                             <span class="sr-only">Loading...</span>
@@ -701,10 +714,10 @@ var map;
 
                 </div>
                 <div class="col-md-2">
-                    <button type="button" class="btn btn-custom nav-link " id="resetButton" title="Click here to begin a new CyberPHA"><i class="bi bi-plus-circle"></i> New</button>
+                    <button type="button" class="btn btn-custom nav-link " id="resetButton" title="Click here to begin a new CyberPHA" style="transform: scale(0.8)"><i class="bi bi-plus-circle"></i> New</button>
                 </div>
                 <div class="col-md-2">
-                    <button type="button" class="btn btn-custom nav-link " id="scenarioButton" title="Click here to view scenarios for the currently selected facility "><i class="bi bi-pencil-square"></i> Edit Scenarios</button>
+                    <button type="button" class="btn btn-custom nav-link " id="scenarioButton" title="Click here to view scenarios for the currently selected facility " style="transform: scale(0.8)"><i class="bi bi-pencil-square"></i> Edit Scenarios</button>
                         <script>
                              $(document).ready(function() {
                                 $('#scenarioButton').on('click', function() {
@@ -716,7 +729,7 @@ var map;
 
 
                 <div class="col-md-2">
-                     <button type="button" id="copyAssessment" class="btn btn-custom nav-link" title="Creates a clone of the currently selected CyberPHA and related scenarios"><i class="bi bi-copy"></i> Clone</button>
+                     <button type="button" id="copyAssessment" class="btn btn-custom nav-link" title="Creates a clone of the currently selected CyberPHA and related scenarios" style="transform: scale(0.8)"><i class="bi bi-copy"></i> Clone</button>
                         <script>
                         $(document).ready(function() {
                         // Event handler for the Copy button
@@ -788,7 +801,13 @@ var map;
                 <a href="#" id="organizeBlocks" style="display: block; color: white; margin-top: 10px;">Organize</a>
             </div>
              <br>
-
+        <div class="switch-container">
+            <span class="switch-label">CyberPHA List</span>
+            <label class="switch">
+                <input type="checkbox" data-block-id="list">
+                <span class="slider"></span>
+            </label>
+        </div>
         <div class="switch-container">
             <span class="switch-label">Connectors</span>
             <label class="switch">
@@ -927,6 +946,7 @@ $(document).ready(function() {
                 if (data && data.facility) {
                     // Populate form fields with the selected facility data
                     $('#facilityid').val(data.facility.id);
+                    sessionStorage.setItem('fid', data.facility.id);
                     $('#lblFacilityName').text(data.facility.name);
                     $('#lblFacilityAddress').text(data.facility.address);
                     $('#lblFacilityIndustry').text(data.facility.industry__Industry);
@@ -1047,7 +1067,7 @@ $(document).ready(function() {
                                                 <div class="form-group">
                                                     <label class="form-label" style="color:white">Select a record in the table to view and edit the CyberPHA</label>
                                                     <div >
-                                                        <table id="headertable" class="display" style="width:100%; table-layout: fixed;">
+                                                        <table id="headertable" class="table table-striped" style="color: #f0f0f0; ">
                                                             <thead >
                                                                  <tr>
                                                                 <th class="th hidden-column">ID</th>
@@ -1076,7 +1096,7 @@ $(document).ready(function() {
 
                                                                     <td>
                                                                         {% if pha_header_records.scenario_count != 0 %}
-                                                                            <button class="report-button" onclick="window.open('{% url 'OTRisk:pha_reports' cyber_pha_header_id=pha_header_records.ID %}', '_blank')">Report</button>
+                                                                            <button type="button" class="report-button" onclick="window.open('{% url 'OTRisk:pha_reports' cyber_pha_header_id=pha_header_records.ID %}', '_blank')">Report</button>
                                                                         {% endif %}
                                                                     </td>
 
@@ -1183,6 +1203,7 @@ $(document).ready(function() {
 
                                     updateGroupAssignmentsDisplay(cyberphaId); // Function to refresh group assignments on the page
                                     updateGroupList();
+                                    $('#assignGroupModal').modal('hide');
 
                                 },
                                 error: function(error) {
@@ -1316,6 +1337,7 @@ $(document).ready(function() {
                                                                 },
                                                                 success: function(response) {
                                                                     Swal.close();
+                                                                    isUserChange = false;
                                                                     $('#assessmentspinnerContainer').hide();
                                                                     if(response.error) {
                                                                         console.log(response.error);
@@ -1359,173 +1381,58 @@ $(document).ready(function() {
                                                    });
                                                 </script>
                     <div class="flex-row">
-    <div class="col-md-12 flex-col" id="block3">
-        <div class="info-block" id="config">
-            <div class="block-header">
-                CyberPHA Configuration
-                <button type="button" class="toggle-body">+</button>
-            </div>
-            <div class="block-body">
-                <div class="block-body-content" style="align-items: center; align-content: center;">
 
-                    <div class="container-fluid" style="width: 100%;">
-                        <div class="row" style="width: 95%;">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="txtTitle" class="control-label text-light" title="Enter a descriptive title for this assessment">CyberPHA Title</label>
-                                    <input type="text" class="form-control" name="txtTitle" id="txtTitle" value="{{ current_pha_header.title }}" maxlength="100" style="font-size: 0.9em;">
-                                    <br>
-                                    <label for="txtLeader" class="control-label text-light" title="Enter the name of the person leading this assessment">CyberPHA Owner</label>
-                                    <input type="text" class="form-control" name="txtLeader" id="txtLeader" value="{{ current_pha_header.PHALeader }}" maxlength="100" style="font-size: 0.9em;">
-                                    <br>
-                                    <label for="txtLeaderEmail" class="control-label text-light" title="Enter the email address of the person leading this assessment">Email</label>
-                                    <input type="email" class="form-control" name="txtLeaderEmail" id="txtLeaderEmail" value="{{ current_pha_header.PHALeaderEmail }}" onblur="validateEmail(this)" style="font-size: 0.9em;">
-                                    <br>
-
-                                        <label for="txtStartDate" class="control-label text-light" title="Enter the intended assessment start date">Start Date</label>
-                                        <input type="date" class="form-control" name="txtStartDate" id="txtStartDate" value="{{ current_pha_header.AssessmentStartDate|date:'Y-m-d' }}" style="font-size: 0.9em;">
-                                        <br>
-                                        <label for="txtEndDate" class="control-label text-light" title="Enter the intended assessment end date">End Date</label>
-                                        <input type="date" class="form-control" name="txtEndDate" id="txtEndDate" value="{{ current_pha_header.AssessmentEndDate|date:'Y-m-d' }}" onchange="validateDates()" style="font-size: 0.9em;">
-                                        <br>
-
-                                        <label for="txtUnit" class="control-label text-light" title="Enter the facility unit, if applicable, that's in scope for the current assessment">Unit</label>
-                                        <input type="text" class="form-control" name="txtUnit" id="txtUnit" value="{{ current_pha_header.AssessmentUnit }}" maxlength="100" style="font-size: 0.9em;">
-                                        <br>
-                                        <label for="selZone" class="control-label text-light" title="Enter the facility zone, if applicable, that's in scope for the current assessment">Zone</label>
-                                        <select class="form-control" name="selZone" id="selZone" style="font-size: 0.9em;">
-                                            <option value=""> -- Select Plant Zone -- </option>
-                                            {% for zone in zones %}
-                                                <option value="{{ zone.PlantZone }}" {% if current_pha_header.AssessmentZone == zone.PlantZone %}selected{% endif %}>{{ zone.PlantZone }}</option>
-                                            {% endfor %}
-                                        </select>
-
-                                </div>
-                                <div class="form-group p-3" style="background-color: #ccc; border: 0.5px solid #65C8D0; border-radius: 5px; box-shadow: 0 0 3px #65C8D0;">
-                                    <label class="control-label" style="color: black;" title="Check the box if there is an OT Cybersecurity Incident Response Plan for the facility">OT Incident Response (IR)</label>
-
-                                    <div class="form-check mb-3">
-                                        <input class="form-check-input" type="checkbox" id="ir_plan" name="ir_plan" style="transform: scale(1.5); margin-right: 10px;">
-                                        <label class="form-check-label" for="ir_plan" style="color: black;">OT IR Plan (Yes/No)</label>
-                                    </div>
-
-                                    <div class="form-group mb-3">
-                                        <label for="ir_plan_date" class="control-label" style="color: black;" title="Enter the date that the Incident Response Plan was last tested">Last Tested Date</label>
-                                        <input type="date" class="form-control" name="ir_plan_date" id="ir_plan_date" value="" style="font-size: 0.9em; width: 80%;">
-                                    </div>
-
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="ir_plan_ut" name="ir_plan_ut" style="transform: scale(1.5); margin-right: 10px;">
-                                        <label class="form-check-label" for="ir_plan_ut" style="color: black;">Never Tested</label>
-                                    </div>
-                                </div>
-
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label for="selSL" class="control-label text-light" title="Select the targeted security level, if applicable, per ISA-62443-3-2 Annex A">Target Security Level (SL-T)</label>
-                                    <select class="form-control" name="selSL" id="selSL" style="font-size: 0.9em;">
-                                        <option value="0"> -- Select SL-T -- </option>
-                                        {% for value, description in SECURITY_LEVELS %}
-                                            <option value="{{ value }}" {% if current_pha_header.sl_t|stringformat:"s" == value|stringformat:"s" %}selected{% endif %}>{{ description }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label for="assessment_id" class="control-label text-light" title="Select the control assessment questionnaire that applies to the facility. If no control assessment has been completed, click on Assessments in the menu to go to the assessments page">Control Assessment</label>
-                                    <select class="form-control" id="assessment_id" name="assessment_id" style="font-size: 0.9em;">
-                                        <option value="">Select an Assessment</option>
-                                        {% for assessment in assessments %}
-                                            <option value="{{ assessment.id }}" {% if current_pha_header.assessment == assessment.id %}select{% endif %}>{{ assessment.name }}</option>
-                                        {% endfor %}
-                                    </select>
-                                    <input type="hidden" id="last_assessment_score" name="last_assessment_score">
-                                    <input type="hidden" id="last_assessment_summary" name="last_assessment_summary">
-                                    <div id="assessmentspinnerContainer" style="display: none;">
-                                        <div class="spinner-border" role="status">
-                                            <span class="sr-only">Loading...</span>
+                    <div class="col-md-12 flex-col" id="block3">
+                                <div class="info-block" id="detail">
+                                        <div class="block-header">
+                                            Assessment Facility
+                                            <button type="button" class="toggle-body">+</button>
                                         </div>
-                                    </div>
-                                    <span id="assessment_summary" style="font-size:0.9em;"></span>
-                                    <span id="assessment_score"></span>
-                                </div>
-                                <div class="form-group">
-                                    <label for="walkdown_id" class="control-label text-light" title="Select the site walkdown questionnaire that applies to the facility. If no site walkdown has been completed, click on Assessments in the menu to go to the assessments page">Site Walk-Down Assessment</label>
-                                    <select class="form-control" id="walkdown_id" name="walkdown_id" style="font-size: 0.9em;">
-                                        <option value="">Select the site walkdown</option>
-                                        {% for walkdown in walkdowns %}
-                                            <option value="{{ walkdown.id }}" {% if current_pha_header.walkdown == walkdown.id %}select{% endif %}>{{ walkdown.name }}</option>
-                                        {% endfor %}
-                                    </select>
-                                    <div id="walkdownspinnerContainer" style="display: none;">
-                                        <div class="spinner-border" role="status">
-                                            <span class="sr-only">Loading...</span>
+                                        <div class="block-body">
+                                            <div class="block-body-content" style="align-items: center; align-content: center">
+                                            <button type="button" class="btn btn-primary" id="loadFacilityButton" disabled>Load Facility</button>
+                                            <p></p>
+                                            <div class="row" style="width:95%"> <!-- data rows -->
+                                                <div class="col-md-6">
+
+                                                <div class="form-group">
+                                                <input type="hidden" id="facilityid" name="facilityid" value="{{ current_pha_header.facility_id }}">
+                                                <div class="row">
+                                                    <div class="col-md-12">
+                                                    <label style="color: #b7b9c0">Facility Name: &nbsp;&nbsp;</label><label name="lblFacilityName" id="lblFacilityName">{{ current_pha_header.facility.business_name }}</label><br>
+                                                    <label style="color: #b7b9c0">Address: &nbsp;&nbsp;</label><label name="lblFacilityAddress" id="lblFacilityAddress" >{{ current_pha_header.facility.address }}</label><br>
+                                                    <label style="color: #b7b9c0">Industry: &nbsp;&nbsp;</label><label name="lblFacilityIndustry" id="lblFacilityIndustry" >{{ current_pha_header.Industry }}</label><br>
+                                                    <label style="color: #b7b9c0">Facility Type: &nbsp;&nbsp;</label><label name="lblFacilityType" id="lblFacilityType" >{{ current_pha_header.FacilityType }}</label><br>
+                                                    <label style="color: #b7b9c0">Shift Model: &nbsp;&nbsp;</label><label name="lblFacilityShiftModel" id="lblFacilityShiftModel" >{{ current_pha_header.shift_model }}</label><br>
+                                                    <label style="color: #b7b9c0">Employees: &nbsp;&nbsp;</label><label name="lblFacilityEmployees" id="lblFacilityEmployees" >{{ current_pha_header.EmployeesOnSite }}</label><br>
+                                                    <label style="color: #b7b9c0">Revenue: &nbsp;&nbsp;</label><label name="lblFacilityRevenue" id="lblFacilityRevenue" >{{ annual_revenue_str|default:'0' }}</label><br>
+                                                    <label style="color: #b7b9c0">Operating Cost/Hour: &nbsp;&nbsp;</label><label name="lblFacilityOC" id="lblFacilityOC" >{{ coho_str|default:'0' }}</label><br>
+                                                    <label style="color: #b7b9c0">Net Profit Margin: &nbsp;&nbsp;</label><label name="lblFacilityNPM" id="lblFacilityNPM" >{{ coho_str|default:'0' }}</label><br>
+                                                    <br>
+                                                        <div class="form-group">
+                                                    <label style="color: white">Air Quality Index (AQI):</label>
+                                                    <div id="aqiGlobe" class="aqi-globe">--</div>
+                                                        <input type="hidden" id="txthdnAQI">
+                                                </div>
+                                                    </div>
+                                                </div>
+
+
+
                                         </div>
-                                    </div>
-                                    <span id="walkdown_summary"></span>
-                                    <span id="walkdown_score"></span>
-                                </div>
-                                <div class="form-group text-light">
-                                    Current Group Assignments:
-                                    <div id="currentGroupsDiv" style="font-size: 0.9em;"></div>
-                                    <button type="button" class="btn btn-primary mt-2" data-toggle="modal" data-target="#assignGroupModal">Assign to Group</button>
-                                    <div class="modal" id="assignGroupModal">
-                                        <div class="modal-dialog">
-                                            <div class="modal-content">
-                                                <div class="modal-header">
-                                                    <h4 class="modal-title">Assign to Group</h4>
-                                                    <button type="button" class="close" data-dismiss="modal">&times;</button>
-                                                </div>
-                                                <div class="modal-body">
-                                                    <form id="group-assignment-form">
-                                                        <div class="form-group">
-                                                            <label for="existing_group">Existing Group:</label>
-                                                            <select class="form-control" id="existing_group" name="existing_group">
-                                                                <option value="">Select a Group</option>
-                                                                {% for group in all_groups %}
-                                                                    <option value="{{ group.id }}">{{ group.name }}</option>
-                                                                {% endfor %}
-                                                            </select>
-                                                        </div>
-                                                        <div class="form-group">
-                                                            <label for="new_group_name">New Group Name:</label>
-                                                            <input type="text" class="form-control" id="new_group_name" name="new_group_name">
-                                                        </div>
-                                                        <div class="form-group">
-                                                            <label for="new_group_type">New Group Type:</label>
-                                                            <select class="form-control" id="new_group_type" name="new_group_type">
-                                                                {% for type_value, type_name in group_types %}
-                                                                    <option value="{{ type_value }}">{{ type_name }}</option>
-                                                                {% endfor %}
-                                                            </select>
-                                                        </div>
-                                                        <input type="hidden" name="cyberpha_id" value="{{ current_pha_header.ID }}">
-                                                        <button type="button" id="assign-group-btn" class="btn btn-primary">Assign</button>
-                                                    </form>
-                                                </div>
+
+                                     </div>
+
+                                                <div class="col-md-6" style="background-color: #464748;">
+                                                <div id="facility_map" style="height: 95%; border:1"></div>
+                                                <input type="hidden" id="txthdnLat" name="txthdnLat">
+                                                <input type="hidden" id="txthdnLong" name="txthdnLong">
+                                            </div>
+                                            </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                                <div class="form-group">
-                                    <label for="workflow_selector" class="control-label text-light">Workflow Status</label>
-                                    <select class="form-control" id="workflow_selector" name="workflow_selector" style="font-size: 0.9em;">
-                                        <option value="">Select a Status</option>
-                                        {% for status, status_display in workflow_status_choices %}
-                                            <option value="{{ status }}" {% if current_workflow_status == status %} selected {% endif %}>{{ status_display }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                                <div class="form-group" style="display: none;">
-                                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#moderatorModal">Select CyberPHA Moderators</button>
-                                </div>
                             </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 </div>
 
                     <div class="flex-row">
@@ -1726,56 +1633,146 @@ $(document).ready(function() {
             <div class="col-md-6" id="block_row_right">
                     <div class="flex-row">
                         <div class="col-md-12 flex-col" id="block2">
-                                <div class="info-block" id="detail">
-                                        <div class="block-header">
-                                            Assessment Facility
-                                            <button type="button" class="toggle-body">+</button>
-                                        </div>
-                                        <div class="block-body">
-                                            <div class="block-body-content" style="align-items: center; align-content: center">
-                                            <button type="button" class="btn btn-primary" id="loadFacilityButton" disabled>Load Facility</button>
-                                            <p></p>
-                                            <div class="row" style="width:95%"> <!-- data rows -->
-                                                <div class="col-md-6">
+        <div class="info-block" id="config">
+            <div class="block-header">
+                CyberPHA Configuration
+                <button type="button" class="toggle-body">+</button>
+            </div>
+            <div class="block-body">
+                <div class="block-body-content" style="align-items: center; align-content: center;">
 
-                                                <div class="form-group">
-                                                <input type="hidden" id="facilityid" name="facilityid" value="{{ current_pha_header.facility_id }}">
-                                                <div class="row">
-                                                    <div class="col-md-12">
-                                                    <label style="color: #b7b9c0">Facility Name: &nbsp;&nbsp;</label><label name="lblFacilityName" id="lblFacilityName">{{ current_pha_header.facility.business_name }}</label><br>
-                                                    <label style="color: #b7b9c0">Address: &nbsp;&nbsp;</label><label name="lblFacilityAddress" id="lblFacilityAddress" >{{ current_pha_header.facility.address }}</label><br>
-                                                    <label style="color: #b7b9c0">Industry: &nbsp;&nbsp;</label><label name="lblFacilityIndustry" id="lblFacilityIndustry" >{{ current_pha_header.Industry }}</label><br>
-                                                    <label style="color: #b7b9c0">Facility Type: &nbsp;&nbsp;</label><label name="lblFacilityType" id="lblFacilityType" >{{ current_pha_header.FacilityType }}</label><br>
-                                                    <label style="color: #b7b9c0">Shift Model: &nbsp;&nbsp;</label><label name="lblFacilityShiftModel" id="lblFacilityShiftModel" >{{ current_pha_header.shift_model }}</label><br>
-                                                    <label style="color: #b7b9c0">Employees: &nbsp;&nbsp;</label><label name="lblFacilityEmployees" id="lblFacilityEmployees" >{{ current_pha_header.EmployeesOnSite }}</label><br>
-                                                    <label style="color: #b7b9c0">Revenue: &nbsp;&nbsp;</label><label name="lblFacilityRevenue" id="lblFacilityRevenue" >{{ annual_revenue_str|default:'0' }}</label><br>
-                                                    <label style="color: #b7b9c0">Operating Cost/Hour: &nbsp;&nbsp;</label><label name="lblFacilityOC" id="lblFacilityOC" >{{ coho_str|default:'0' }}</label><br>
-                                                    <label style="color: #b7b9c0">Net Profit Margin: &nbsp;&nbsp;</label><label name="lblFacilityNPM" id="lblFacilityNPM" >{{ coho_str|default:'0' }}</label><br>
-                                                    <br>
-                                                        <div class="form-group">
-                                                    <label style="color: white">Air Quality Index (AQI):</label>
-                                                    <div id="aqiGlobe" class="aqi-globe">--</div>
-                                                        <input type="hidden" id="txthdnAQI">
-                                                </div>
-                                                    </div>
-                                                </div>
+                    <div class="container-fluid" style="width: 100%;">
+                        <div class="row" style="width: 95%;">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="txtTitle" class="control-label text-light" title="Enter a descriptive title for this assessment">CyberPHA Title</label>
+                                    <input type="text" class="form-control" name="txtTitle" id="txtTitle" value="{{ current_pha_header.title }}" maxlength="100" style="font-size: 0.9em;">
+                                    <br>
+                                    <label for="txtLeader" class="control-label text-light" title="Enter the name of the person leading this assessment">CyberPHA Owner</label>
+                                    <input type="text" class="form-control" name="txtLeader" id="txtLeader" value="{{ current_pha_header.PHALeader }}" maxlength="100" style="font-size: 0.9em;">
+                                    <br>
+                                    <label for="txtLeaderEmail" class="control-label text-light" title="Enter the email address of the person leading this assessment">Email</label>
+                                    <input type="email" class="form-control" name="txtLeaderEmail" id="txtLeaderEmail" value="{{ current_pha_header.PHALeaderEmail }}" onblur="validateEmail(this)" style="font-size: 0.9em;">
+                                    <br>
 
+                                        <label for="txtStartDate" class="control-label text-light" title="Enter the intended assessment start date">Start Date</label>
+                                        <input type="date" class="form-control" name="txtStartDate" id="txtStartDate" value="{{ current_pha_header.AssessmentStartDate|date:'Y-m-d' }}" style="font-size: 0.9em;">
+                                        <br>
+                                        <label for="txtEndDate" class="control-label text-light" title="Enter the intended assessment end date">End Date</label>
+                                        <input type="date" class="form-control" name="txtEndDate" id="txtEndDate" value="{{ current_pha_header.AssessmentEndDate|date:'Y-m-d' }}" onchange="validateDates()" style="font-size: 0.9em;">
+                                        <br>
 
+                                        <label for="txtUnit" class="control-label text-light" title="Enter the facility unit, if applicable, that's in scope for the current assessment">Unit</label>
+                                        <input type="text" class="form-control" name="txtUnit" id="txtUnit" value="{{ current_pha_header.AssessmentUnit }}" maxlength="100" style="font-size: 0.9em;">
+                                        <br>
+                                        <label for="selZone" class="control-label text-light" title="Enter the facility zone, if applicable, that's in scope for the current assessment">Zone</label>
+                                        <select class="form-control" name="selZone" id="selZone" style="font-size: 0.9em;">
+                                            <option value=""> -- Select Plant Zone -- </option>
+                                            {% for zone in zones %}
+                                                <option value="{{ zone.PlantZone }}" {% if current_pha_header.AssessmentZone == zone.PlantZone %}selected{% endif %}>{{ zone.PlantZone }}</option>
+                                            {% endfor %}
+                                        </select>
 
-                                        </div>
+                                </div>
+                                <div class="form-group p-3" style="background-color: #ccc; border: 0.5px solid #65C8D0; border-radius: 5px; box-shadow: 0 0 3px #65C8D0;">
+                                    <label class="control-label" style="color: black;" title="Check the box if there is an OT Cybersecurity Incident Response Plan for the facility">OT Incident Response (IR)</label>
 
-                                     </div>
+                                    <div class="form-check mb-3">
+                                        <input class="form-check-input" type="checkbox" id="ir_plan" name="ir_plan" style="transform: scale(1.5); margin-right: 10px;">
+                                        <label class="form-check-label" for="ir_plan" style="color: black;">OT IR Plan (Yes/No)</label>
+                                    </div>
 
-                                                <div class="col-md-6" style="background-color: #464748;">
-                                                <div id="facility_map" style="height: 95%; border:1"></div>
-                                                <input type="hidden" id="txthdnLat" name="txthdnLat">
-                                                <input type="hidden" id="txthdnLong" name="txthdnLong">
-                                            </div>
-                                            </div>
-                                            </div>
+                                    <div class="form-group mb-3">
+                                        <label for="ir_plan_date" class="control-label" style="color: black;" title="Enter the date that the Incident Response Plan was last tested">Last Tested Date</label>
+                                        <input type="date" class="form-control" name="ir_plan_date" id="ir_plan_date" value="" style="font-size: 0.9em; width: 80%;">
+                                    </div>
+
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="ir_plan_ut" name="ir_plan_ut" style="transform: scale(1.5); margin-right: 10px;">
+                                        <label class="form-check-label" for="ir_plan_ut" style="color: black;">Never Tested</label>
+                                    </div>
+                                </div>
+
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="selSL" class="control-label text-light" title="Select the targeted security level, if applicable, per ISA-62443-3-2 Annex A">Target Security Level (SL-T)</label>
+                                    <select class="form-control" name="selSL" id="selSL" style="font-size: 0.9em;">
+                                        <option value="0"> -- Select SL-T -- </option>
+                                        {% for value, description in SECURITY_LEVELS %}
+                                            <option value="{{ value }}" {% if current_pha_header.sl_t|stringformat:"s" == value|stringformat:"s" %}selected{% endif %}>{{ description }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="assessment_id" class="control-label text-light" title="Select the control assessment questionnaire that applies to the facility. If no control assessment has been completed, click on Assessments in the menu to go to the assessments page">Control Assessment</label>
+                                    <select class="form-control" id="assessment_id" name="assessment_id" style="font-size: 0.9em;">
+                                        <option value="">Select an Assessment</option>
+                                        {% for assessment in assessments %}
+                                            <option value="{{ assessment.id }}" {% if current_pha_header.assessment == assessment.id %}select{% endif %}>{{ assessment.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <input type="hidden" id="last_assessment_score" name="last_assessment_score">
+                                    <input type="hidden" id="last_assessment_summary" name="last_assessment_summary">
+                                    <div id="assessmentspinnerContainer" style="display: none;">
+                                        <div class="spinner-border" role="status">
+                                            <span class="sr-only">Loading...</span>
                                         </div>
                                     </div>
+                                    <span id="assessment_summary" style="font-size:0.9em;"></span>
+                                    <span id="assessment_score"></span>
+                                </div>
+                                <div class="form-group">
+                                    <label for="walkdown_id" class="control-label text-light" title="Select the site walkdown questionnaire that applies to the facility. If no site walkdown has been completed, click on Assessments in the menu to go to the assessments page">Site Walk-Down Assessment</label>
+                                    <select class="form-control" id="walkdown_id" name="walkdown_id" style="font-size: 0.9em;">
+                                        <option value="">Select the site walkdown</option>
+                                        {% for walkdown in walkdowns %}
+                                            <option value="{{ walkdown.id }}" {% if current_pha_header.walkdown == walkdown.id %}select{% endif %}>{{ walkdown.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <div id="walkdownspinnerContainer" style="display: none;">
+                                        <div class="spinner-border" role="status">
+                                            <span class="sr-only">Loading...</span>
+                                        </div>
+                                    </div>
+                                    <span id="walkdown_summary"></span>
+                                    <span id="walkdown_score"></span>
+                                </div>
+                                <div class="form-group text-light">
+                                    Current Group Assignments:
+                                    <div id="currentGroupsDiv" style="font-size: 0.9em;"></div>
+                                    <button type="button" class="btn btn-primary mt-2" id="assigntogroupbtn" >Assign to Group</button>
+                                    <script>
+                                    $(document).ready(function() {
+
+                                        $('#assigntogroupbtn').on('click', function () {
+                                            $('#assignGroupModal').modal('show');
+
+                                        })
+                                    })
+                                    </script>
+
+
+                                </div>
+                                <div class="form-group">
+                                    <label for="workflow_selector" class="control-label text-light">Workflow Status</label>
+                                    <select class="form-control" id="workflow_selector" name="workflow_selector" style="font-size: 0.9em;">
+                                        <option value="">Select a Status</option>
+                                        {% for status, status_display in workflow_status_choices %}
+                                            <option value="{{ status }}" {% if current_workflow_status == status %} selected {% endif %}>{{ status_display }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="form-group" style="display: none;">
+                                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#moderatorModal">Select CyberPHA Moderators</button>
+                                </div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
                     </div>
 
                     <div class="flex-row">
@@ -1787,8 +1784,10 @@ $(document).ready(function() {
                                     </div>
                                     <div class="block-body">
                                     <div class="block-body-content" style="align-items: center; align-content: center">
-                                    <div class="form-group" >
-                                    <div class="row" style="width:98%">
+                                    <div class="row" style="width: 98%">
+                                    <div class="col">
+                                    <div class="form-group">
+                                    <div class="row" >
                                         <div class="col-md-3">
                                             <label for="connector_select" style="color: white" title="Select the relevant installed internal solution that AnzenOT can connect to">Select Product:</label>
                                             <select class="form-control" id="connector_select" name="connector_select">
@@ -1912,7 +1911,7 @@ $(document).ready(function() {
                                     </div>
 
 
-                                                 <!-- Exalens configuration fields -->
+                                             <!-- Exalens configuration fields -->
                                     <div id="exalensConfig" style="display: none;">
                                     <br>
                                        <div class="row" style="width:98%">
@@ -2235,6 +2234,8 @@ $(document).ready(function() {
                                         </div>
                                         </div>
                                     </div>
+                                    </div>
+                                    </div>
                             </div>
                     </div>
                     </div>
@@ -2315,7 +2316,7 @@ $(document).ready(function() {
                         <div class="col-md-12 flex-col" id="block12">
                                 <div class="info-block" id="chemical">
                                         <div class="block-header">
-                                        Chemical Profile <img src="{% static 'images/osha_chemical.png' %}" style="width: 50px" class="img-fluid" alt="Logo">
+                                        Chemical Profile
                                         <button type="button" class="toggle-body">+</button>
                                         </div>
                                         <div class="block-body">
@@ -2338,14 +2339,25 @@ $(document).ready(function() {
                         <div class="col-md-12 flex-col" id="block14">
                             <div class="info-block" id="scenarios">
                                         <div class="block-header">
-                                        Save Scenarios
+                                        Saved Scenarios
                                         <button type="button" class="toggle-body">+</button>
                                         </div>
                                         <div class="block-body">
                                             <div class="block-body-content" style="align-items: center; align-content: center">
                                                 <p style="color:white"></p>
                                                 <div class="row" style="width:95%">
-                                                    <!-- put the scenario table here -->
+                                                    <table class="table table-striped" style="color: #f0f0f0; ">
+                                                        <thead>
+                                                            <tr style="color: #ffffff;">
+                                                                <th scope="col">#</th>
+                                                                <th scope="col" style="width:70%">Scenario</th>
+                                                                <th scope="col">BIA Score</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody id="scenarios-table-body">
+                                                            <!-- Table rows will be inserted here by JavaScript -->
+                                                        </tbody>
+                                                    </table>
                                                 </div>
                                             </div>
                                         </div>
@@ -2898,6 +2910,52 @@ function minimizeBlock(block) {
     }
 }
 
+function scenarioTable(scenarios){
+
+    const tableBody = document.getElementById("scenarios-table-body");
+
+    scenarios.forEach((scenario, index) => {
+        const row = document.createElement("tr");
+
+        const cellIndex = document.createElement("th");
+        cellIndex.scope = "row";
+        cellIndex.textContent = index + 1;
+        cellIndex.style.color = '#f0f0f0';
+        row.appendChild(cellIndex);
+
+        const cellScenario = document.createElement("td");
+        let scenarioText = scenario.Scenario.split(" ").slice(0, 20).join(" ");
+        if (scenario.Scenario.split(" ").length > 20) {
+            scenarioText += '...';
+        }
+        cellScenario.textContent = scenarioText;
+        cellScenario.style.color = '#f0f0f0';
+         cellScenario.style.fontSize = '80%';
+        row.appendChild(cellScenario);
+
+        const cellScore = document.createElement("td");
+        const score = scenario.business_impact_score;
+        let color;
+        if (score <= 30) {
+            color = '#66c2a5'; // Color-blind friendly green
+        } else if (score <= 70) {
+            color = '#fc8d62'; // Color-blind friendly orange
+        } else {
+            color = '#8da0cb'; // Color-blind friendly purple
+        }
+        cellScore.innerHTML = `
+            <div style="font-weight: bold; font-size: 1.2em; color: #f0f0f0;">
+                ${score}
+            </div>
+            <div class="progress" style="height: 20px; background-color: #444;">
+                <div class="progress-bar" role="progressbar" style="width: ${score}%; background-color: ${color};" aria-valuenow="${score}" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+        `;
+        row.appendChild(cellScore);
+
+        tableBody.appendChild(row);
+        });
+}
 
 function fetchHeaderRecord(recordId) {
 
@@ -2959,6 +3017,7 @@ function fetchHeaderRecord(recordId) {
                          $('#txthdnAQI').val(data.headerrecord.facilityAQI);
 
                          $('#facilityid').val(data.headerrecord.facility_id);
+                         sessionStorage.setItem('fid', data.headerrecord.facility_id);
                          // Populate the new incident response planning fields
                         $('#ir_plan').prop('checked', data.headerrecord.has_incident_response_plan);
                         $('#ir_plan_date').val(data.headerrecord.plan_last_tested_date);
@@ -3095,6 +3154,8 @@ function fetchHeaderRecord(recordId) {
                          populateSummary("strategyContainer", data.headerrecord.strategySummary);
 
 
+                         scenarioTable(data.scenarios);
+
                          sessionStorage.setItem('sessionIndustry', data.headerrecord.industry);
                          sessionStorage.setItem('sessionFacilityType', data.headerrecord.facilitytype);
                          sessionStorage.setItem('sessionFacility', data.headerrecord.facility);
@@ -3141,15 +3202,17 @@ function fetchHeaderRecord(recordId) {
                          $('#last_assessment_summary').text(data.headerrecord.last_assessment_summary);
                         $('#last_assessment_score').text(data.headerrecord.last_assessment_score);
 
+
                         var infoBlock = $(".info-block:has(#headertable)");
                         minimizeBlock(infoBlock);
+                        expandFacilityDetails();
                         // expandFacilityDetailsBlock();
 
                      }
                  });
              }
 
-function formatAsCurrency(value) {
+            function formatAsCurrency(value) {
                  // Strip any non-digit characters
                  let cleanedValue = String(value).replace(/\D/g, '');
 
@@ -3413,10 +3476,13 @@ document.getElementById('btnformSubmit').addEventListener('click', function(even
 
 
                     var title = document.getElementById('txtTitle').value.trim();
-
+                    var fid = sessionStorage.getItem('fid');
                     var missingFields = [];
 
                     if (!title) missingFields.push('CyberPHA Title');
+                    if (!fid || parseInt(fid) <= 0) {
+                        missingFields.push('Select Facility');
+                    }
 
                      // Check if all required fields have values
                     if (missingFields.length > 0) {
@@ -3600,7 +3666,7 @@ function populateChemicalJSON(chemicalData) {
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="loadFacilityModalLabel">Select a Facility</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
                   <span aria-hidden="true">&times;</span>
                 </button>
             </div>
@@ -3616,5 +3682,44 @@ function populateChemicalJSON(chemicalData) {
 </div>
 </div>
 <script src="{% static "js/block_manager.js" %}"></script>
+ <div class="modal fade" id="assignGroupModal" tabindex="-1"  role="dialog"  aria-labelledby="assignGroupModalLabel" aria-hidden="true">>
+                                        <div class="modal-dialog" role="document">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h4 class="modal-title">Assign to Group</h4>
+                                                    <button type="button" class="close" data-bs-dismiss="modal">&times;</button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <form id="group-assignment-form">
+                                                        <div class="form-group">
+                                                            <label for="existing_group">Existing Group:</label>
+                                                            <select class="form-control" id="existing_group" name="existing_group">
+                                                                <option value="">Select a Group</option>
+                                                                {% for group in all_groups %}
+                                                                    <option value="{{ group.id }}">{{ group.name }}</option>
+                                                                {% endfor %}
+                                                            </select>
+                                                        </div>
+                                                        <div class="form-group">
+                                                            <label for="new_group_name">New Group Name:</label>
+                                                            <input type="text" class="form-control" id="new_group_name" name="new_group_name">
+                                                        </div>
+                                                        <div class="form-group">
+                                                            <label for="new_group_type">New Group Type:</label>
+                                                            <select class="form-control" id="new_group_type" name="new_group_type">
+                                                                {% for type_value, type_name in group_types %}
+                                                                    <option value="{{ type_value }}">{{ type_name }}</option>
+                                                                {% endfor %}
+                                                            </select>
+                                                        </div>
+                                                        <input type="hidden" name="cyberpha_id" value="{{ current_pha_header.ID }}">
+                                                        <button type="button" id="assign-group-btn" class="btn btn-primary">Assign</button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+    </div>
+</div>
 </body>
 </html>

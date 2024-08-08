@@ -65,7 +65,7 @@ from .pha_views import iotaphamanager, facility_risk_profile, get_headerrecord, 
     generate_ppt, analyze_scenario, assign_cyberpha_to_group, fetch_groups, fetch_all_groups, retrieve_scenario_builder, \
     facilities, air_quality_index, delete_pha_record, get_assessment_summary, copy_cyber_pha, assessment_gap_analysis, \
     load_default_facility, exalens_get_cyberpha_assets, generate_cyberpha_scenario_description, darktrace_assets, \
-    facility_risk_profile_newrecord, darktrace_asset_summary_info, scenario_analysis_report, generate_scenario_playbook
+    facility_risk_profile_newrecord, darktrace_asset_summary_info, scenario_analysis_report, generate_scenario_playbook,generate_dashboard_playbook
 from .report_views import pha_reports, get_scenario_report_details, qraw_reports, get_qraw_scenario_report_details, \
     raw_reports
 from .scenario_builder import scenario_sim_v2, analyze_sim_scenario_v2, generate_sim_attack_tree_v2, \
@@ -1420,6 +1420,7 @@ def save_or_update_cyberpha(request):
                 'ale_high': ale_high,
                 'aro': aro,
                 'ale': ale,
+                'RRa': rra,
                 'countermeasureCosts': countermeasureCosts,
                 'outage': outage,
                 'outageDuration': outageDuration,
@@ -4450,6 +4451,7 @@ def search(request):
         return JsonResponse({'results': results})
     return JsonResponse({'results': []})
 
+
 @login_required()
 def get_darktrace_asset_summary_info(request):
     target_asset_ip = request.GET.get('ip')
@@ -4468,3 +4470,23 @@ def get_darktrace_asset_summary_info(request):
         return JsonResponse(summary_info)
     else:
         return JsonResponse({'error': 'Unable to fetch asset summary information'}, status=500)
+
+
+@login_required()
+def add_scenario_to_risk_register(request):
+    if request.method == 'POST':
+        scenario_id = request.POST.get('ID')
+
+        try:
+            scenario = tblCyberPHAScenario.objects.get(ID=scenario_id)
+        except tblCyberPHAScenario.DoesNotExist:
+            return JsonResponse({'status': -1})  # Invalid ID
+
+        if scenario.risk_register:
+            return JsonResponse({'status': -2})  # Already set to true
+
+        scenario.risk_register = True
+        scenario.save()
+        return JsonResponse({'status': 1})  # Success
+
+    return JsonResponse({'status': 0})  # Invalid request method

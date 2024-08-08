@@ -206,6 +206,8 @@ urlpatterns = [
     path('asset_summary_info/', views.get_darktrace_asset_summary_info, name='darktrace_asset_summary_info'),
     path('scenario_analysis_report/', views.scenario_analysis_report, name='scenario_analysis_report'),
     path('generate_scenario_playbook/', views.generate_scenario_playbook, name='generate_scenario_playbook'),
+    path('add_scenario_to_risk_register/', views.add_scenario_to_risk_register, name='add_scenario_to_risk_register'),
+    path('generate_dashboard_playbook/', views.generate_dashboard_playbook, name='generate_dashboard_playbook'),
 ]
 
 if settings.DEBUG:

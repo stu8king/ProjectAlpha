@@ -9,7 +9,9 @@ import re
 import tempfile
 import time
 import uuid
+import graphviz
 import datetime
+from concurrent.futures import ThreadPoolExecutor
 from decimal import Decimal
 from urllib.parse import urljoin
 from datetime import datetime
@@ -17,6 +19,7 @@ from datetime import datetime
 import openai
 import requests
 import urllib3
+from diagrams.generic.blank import Blank
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
@@ -35,7 +38,7 @@ from django.views.decorators.http import require_POST, require_http_methods
 from pinecone import Pinecone, ServerlessSpec
 from pptx import Presentation
 from pptx.util import Pt
-from reportlab.graphics import renderPDF
+from reportlab.graphics import renderPDF, renderPM
 from requests.exceptions import RequestException, JSONDecodeError
 from urllib3.exceptions import InsecureRequestWarning
 
@@ -43,7 +46,7 @@ from OTRisk.models.Model_CyberPHA import tblIndustry, tblCyberPHAHeader, tblZone
     tblCyberPHAScenario, vulnerability_analysis, tblAssetType, MitreControlAssessment, \
     SECURITY_LEVELS, ScenarioConsequences, user_scenario_audit, auditlog, CyberPHAModerators, \
     WorkflowStatus, APIKey, CyberPHA_Group, ScenarioBuilder, PHA_Safeguard, CyberSecurityInvestment, UserScenarioHash, \
-    CyberPHACybersecurityDefaults, PHA_Observations, Country, OTVendor, Facility, FacilityType
+    CyberPHACybersecurityDefaults, PHA_Observations, Country, OTVendor, Facility, FacilityType, ScenarioPlaybook
 from OTRisk.models.model_assessment import SelfAssessment, AssessmentQuestion
 from OTRisk.models.raw import MitreICSMitigations, RAActions
 from OTRisk.models.raw import SecurityControls
@@ -73,7 +76,7 @@ from io import BytesIO
 from reportlab.graphics.shapes import Drawing, String
 from reportlab.graphics.charts.linecharts import HorizontalLineChart
 from reportlab.graphics.widgetbase import Widget
-from diagrams import Diagram, Edge, Node
+from diagrams import Diagram, Edge, Node, Cluster
 from diagrams.custom import Custom
 
 
@@ -125,6 +128,7 @@ def iotaphamanager(request, record_id=None):
     ### annual_revenue_str = "$0" coho_str = "$0"
 
     if request.method == 'POST':
+
         is_new_record = False  # Initialize flag
         title = request.POST.get('txtTitle')
         ### facility_name = request.POST.get('txtFacility')
@@ -502,6 +506,21 @@ def iotaphamanager(request, record_id=None):
 def get_headerrecord(request):
     record_id = request.GET.get('record_id')
     headerrecord = get_object_or_404(tblCyberPHAHeader, ID=record_id)
+    scenarios = tblCyberPHAScenario.objects.filter(CyberPHA=headerrecord).annotate(
+        business_impact_score=(
+                F('impactSafety') +
+                F('impactDanger') +
+                F('impactProduction') +
+                F('impactFinance') +
+                F('impactReputation') +
+                F('impactEnvironment') +
+                F('impactRegulation') +
+                F('impactData') +
+                F('impactSupply')
+        )
+    ).order_by('-business_impact_score')
+    scenarios = list(scenarios.values('Scenario', 'business_impact_score', 'CyberPHA'))
+
     # Retrieve the latest workflow status for this header record
     latest_status = headerrecord.workflow_statuses.last()
     current_workflow_status = latest_status.status if latest_status else "Started"
@@ -657,7 +676,8 @@ def get_headerrecord(request):
         'organization_moderators': organization_moderators_data,  # All moderators in the organization
         'current_moderators': moderators_data,  # Moderators for the specific header record
         'moderator_ids': moderator_ids,  # IDs of Moderators for the specific header record
-        'investments': investments_data
+        'investments': investments_data,
+        'scenarios': scenarios,
     }
 
     return JsonResponse(response_data)
@@ -1292,7 +1312,7 @@ def calculate_effectiveness(cyberPHA_value):
 
 
 def get_response(user_message):
-    openai_model = get_api_key("OpenAI_Model")
+    openai_model = 'gpt-4o-mini'  # get_api_key("OpenAI_Model")
     message = [
         {
             "role": "system",
@@ -1312,8 +1332,8 @@ def get_response(user_message):
 
 
 def compliance_map_data(common_content):
-    pinecone_query = "Compliance, regulations, cybersecurity, law, regulatory compliance"
-    retrieved_chunks = query_index(pinecone_query)
+    pinecone_query_compliance = "Compliance, regulations, cybersecurity, law, regulatory compliance"
+    retrieved_chunks = query_index_compliance(pinecone_query_compliance)
     summarized_chunks = get_summarized_chunks(retrieved_chunks)
     documents_context = "\n\n".join(summarized_chunks)
 
@@ -1322,13 +1342,15 @@ def compliance_map_data(common_content):
         "content": f""""
             {common_content}. 
             
-            Based on the provided information, please map the current OT security posture to a maximum of 10 of the MOST RELEVANT AND IMPORTANT industry regulatory compliance regulations for this organization in the given country. 
+            Based on the provided information, please map the current OT security posture to a maximum of 10 of the MOST RELEVANT AND IMPORTANT industry regulatory compliance regulations and standards for this organization in the given country. 
             When naming these regulations, use their official titles as recognized by the issuing bodies or as commonly used in official publications. 
             
             Extra guidance:
-            - Be relevant to the given industry and type of facility
+            - Be relevant and specific to the given industry and type of facility
             - Be relevant to OT cybersecurity
             - Be relevant to country
+            - Consider standards and regulations that focus on safety instrumentation systems and alarm management
+            - Prioritize standards and regulations that focus on safety
             
             Formatting instruction for output: 
             
@@ -1971,37 +1993,51 @@ def scenario_analysis(request):
         summarized_chunks = get_summarized_chunks(retrieved_chunks)
         documents_context = "\n\n".join(summarized_chunks)
 
+        pine_asset_query = f"{targetAssetPurpose} related to OT cybersecurity risk and security"
+        retrieved_asset_chunks = query_index(pine_asset_query)
+        summarized_asset_chunks = get_summarized_chunks(retrieved_asset_chunks)
+        asset_context = "\n\n".join(summarized_asset_chunks)
+
         common_content = f"""
         Pinecone index data for reference: {documents_context}.
-        Act as both an Insurance Actuary and an OT Cybersecurity HAZOPS Risk Expert. You're tasked with analyzing a specific scenario for a facility in the industry sector, located in a particular country. Your analysis should cover various risk outcomes based on the detailed context provided.
+
+        Act as both an Insurance Actuary and an OT Cybersecurity HAZOPS Risk Expert. You're tasked with analyzing a specific scenario for a facility in the industry sector, located in a particular country.
 
         Scenario Details:
-
         Facility Type & Industry: A {facility_type} in the {industry} industry, located in {country}.
         Scenario Overview: {scenario}.
+
         Critical System Exposures:
-        Internet Exposure: Systems with public IP addresses: {exposed_system}.
-        Affected asset: {targetAsset},
-        Purpose of Affected Asset: {targetAssetPurpose}
-        Asset_Data : {asset_data},
-        Malware data: {malware_data},
-        Credential Security: Systems with weak/default credentials: {weak_credentials}.
+        - Internet Exposure: Systems with public IP addresses: {exposed_system}
+        - Affected asset: {targetAsset}
+        - Purpose of Affected Asset: {targetAssetPurpose}
+        - Asset Data: {asset_data}
+        - Asset Context: {asset_context}
+        - Malware Data: {malware_data}
+        - Credential Security: Systems with weak/default credentials: {weak_credentials}
+
         OT Cybersecurity Incident Response:
-        Presence of an Incident Response Plan: {has_incident_response_plan}.
-        Last Tested Date: {plan_last_tested_date_str}.
+        - Incident Response Plan: {has_incident_response_plan} (Last Tested: {plan_last_tested_date_str})
+
         Estimated Business Impact Scores:
-        Safety: {safetyimpact}, Life Danger: {lifeimpact}
-        Production: {productionimpact}, Production Outage: {production_outage} (Duration: {production_outage_length} hours)
-        Reputation: {reputationimpact}, Environmental: {environmentimpact}
-        Regulatory Compliance: {regulatoryimpact}, Supply Chain: {supplyimpact}
-        Data & Intellectual Property: {dataimpact}
+        - Safety: {safetyimpact}
+        - Life Danger: {lifeimpact}
+        - Production: {productionimpact} (Outage Duration: {production_outage_length} hours)
+        - Reputation: {reputationimpact}
+        - Environmental: {environmentimpact}
+        - Regulatory Compliance: {regulatoryimpact}
+        - Supply Chain: {supplyimpact}
+        - Data & Intellectual Property: {dataimpact}
+
         Estimated Current OT Cybersecurity Controls:
-         OT Cybersecurity Control Effectiveness score: {last_assessment_score}/100.  OT Cybersecurity Control Effectiveness Summary: {last_assessment_summary}.
+        - Effectiveness Score: {last_assessment_score}/100
+        - Summary: {last_assessment_summary}
+
         Physical Security:
-        Physical Safeguards: {physical_safeguards_str} (Assumed effective)
+        - Safeguards: {physical_safeguards_str} (Assumed effective)
+
         Vulnerability Observations: {observations}
         Investment Statement: {investment_statement}
-       
         """
 
         # Define the refined user messages
@@ -2061,16 +2097,27 @@ def scenario_analysis(request):
 
             {
                 "role": "user",
-                "content": f"""{common_content}
-                            You are an OT Cybersecurity expert. Consider the given scenario and all of the associated information.
-                            Using the given details, generate a concise priority ordered and numbered bullet point list of OT/ICS cybersecurity action items that are readily implementable, as a check list, to PREVENT THE SCENARIO FROM OCCURRING ASSUMING IT HAS NOT YET OCCURRED. Each action item must be specific to the given scenario and represent a task that can be quickly and readily completed without major effort AND that would represent some risk mitigation. Each action item MUST be pragmatic and reasonable to accomplish within an OT network environment without extensive effort and could be implemented by an engineer rather than an IT security expert. For example Implement network segmentation is a major effort. Action items are intended to be akin to an immediate action drill. Identify which section of NIST 800-82 OR NIST CSF the action items most closely aligns with and include the relevant NIST reference in brackets at the end of each recommendation however action items MUST NOT SIMPLY BE QUOTES FROM THE STANDARDS. The output should strictly adhere to the following format:
-
-                            Example Format:
-                           1. Concise and pragmatic action item. [NIST Reference the action most closely relates to]
-                           2. Another concise and pragmatic action item . [NIST Reference the action most closely relates to]
-
-                            Following this example format, provide the actions in order of priority, specific to the given scenario without any additional narrative, description, advice, or guidance. The actions should be clear and easily parsable within an HTML page.
-                            """
+                "content": f"""
+                    {common_content}
+                    You are an OT Cybersecurity expert. Consider the given scenario and all of the associated information. Using the given details, generate a concise priority-ordered and numbered bullet point list of OT/ICS cybersecurity action items that are readily implementable, as a checklist, to PREVENT THE SCENARIO FROM OCCURRING ASSUMING IT HAS NOT YET OCCURRED.
+                
+                    Each action item must be specific to the given scenario and represent a task that can be quickly and readily completed without major effort AND that would represent some risk mitigation. Each action item MUST be pragmatic and reasonable to accomplish within an OT network environment without extensive effort and could be implemented by an engineer rather than an IT security expert.
+                
+                   IMPORTANT:
+                    - You must consider the asset purpose and the type of asset when defining the action items.
+                    - Ensure that the action items are relevant to the given asset, its operational context, and typical constraints of industrial devices.
+                    - Avoid recommendations such as conducting vulnerability scans on assets like valves, plcs and other field devices, as they are inappropriate for such devices.
+                    - Action items should be akin to an immediate action drill.
+                    
+                    For example, "Implement network segmentation" is a major effort. Action items are intended to be akin to an immediate action drill. Identify which section of NIST 800-82 OR NIST CSF the action items most closely align with and include the relevant NIST reference in brackets at the end of each recommendation. However, action items MUST NOT SIMPLY BE QUOTES FROM THE STANDARDS.
+                
+                    The output should strictly adhere to the following format:
+                
+                    1. Concise and pragmatic action item. [NIST Reference the action most closely relates to]
+                    2. Another concise and pragmatic action item. [NIST Reference the action most closely relates to]
+                    
+                    Following this example format, provide the actions in order of priority specific to the given scenario without any additional narrative, description, advice, or guidance. The actions should be clear and easily parsed within an HTML page.
+                    """
 
             },
             {
@@ -3527,6 +3574,7 @@ def generate_cyberpha_scenario_description(request):
         target_asset = request.POST.get('targetAsset', '').strip()
         target_asset_purpose = request.POST.get('targetAssetPurpose', '').strip()
         malware = request.POST.get('malware')
+        risk_category = request.POST.get('risk_category')
 
         cyberpha_header = get_object_or_404(tblCyberPHAHeader, ID=cyberPHAID)
 
@@ -3573,7 +3621,7 @@ def generate_cyberpha_scenario_description(request):
         else:
             malware_data = ''
 
-        pinecone_query = f"CyberPHA, Hazops, PHA, CyberHAZOPs, OT Cybersecurity Incidents, OSHA, {industry}"
+        pinecone_query = f"CyberPHA, Hazops, PHA, CyberHAZOPs, OT Cybersecurity Incidents, OSHA, {industry}, {risk_category}"
         retrieved_chunks = query_index(pinecone_query)
         summarized_chunks = get_summarized_chunks(retrieved_chunks)
         documents_context = "\n\n".join(summarized_chunks)
@@ -3584,6 +3632,7 @@ def generate_cyberpha_scenario_description(request):
         You are an OT Cybersecurity expert responsible for safeguarding operations for a {facility_type}. Write a technical OT cybersecurity scenario for a CYBERPHA/ Cyber HAZOPS assessment using LOPA methodology, detailing a credible event specific to manipulation, control, or subversion of given asset. The narrative must be technical, factual, specific to the details given, and concise. Write up to a maximum of 250 words. IMPORTANT: DO NOT describe the consequences, long-term impacts, or make any assumptions about operational disruption and what the scenario means is lacking. No preamble or additional narrative. No repeating of input variables:
 
         - Attacker: {attacker}
+        - Risk Category: {risk_category}
         - Attack Vector: {attack_vector}
         - Country: {address}
         - Industry: {industry}
@@ -3595,9 +3644,12 @@ def generate_cyberpha_scenario_description(request):
         - Asset data reported by threat management: {asset_data}
         - Network work stats: {network_risk_status}
         - Malware data: {malware_data}
+       
         - Pinecone index data: {documents_context}.
 
         Use the given information above including the data reported by threat management and the information from the pinecone index. Generate a realistic feasible scenario focusing solely on the purpose and type of asset and the potential for that asset to be compromised and how it might be manipulated resulting in a bad outcome in the context of the other given information. INSTRUCTIONS a) If no asset detail is given then focus on the type of facility. b) Do not speculate on mitigation or describe the facility in detail. c) Do not repeat information about the targeted asset or other given detail in the output. d) Do not repeat information that the user is familiar with: industry, number of employees, country, facility type are for context  in generating the scenario and MUST NOT BE REPEATED IN THE RESPONSE. e) Use precise and concise language with as much technical detail as possible given the input details.
+        
+        (IMPORTANT: If Risk Category is given then ensure to consider the given value of Risk Category and ensure scenario description consistent) 
         
         The structure of the scenario must be exactly as follows with nothing further:
         <Paragraph describing what is going to happen to the selected asset>.
@@ -3694,8 +3746,45 @@ def query_index(query, top_k=7):
 
     # Connect to the index
     index = pc.Index(index_name)
+    refined_query = f"{query} related to OT cybersecurity risk and security and safety"
+
     # Create an embedding for the query
-    response = openai.Embedding.create(input=query, model="text-embedding-ada-002")
+    response = openai.Embedding.create(input=refined_query, model="text-embedding-ada-002")
+    query_embedding = response['data'][0]['embedding']
+
+    # Ensure the query_embedding is a list of floats
+    if not isinstance(query_embedding, list) or not all(isinstance(x, float) for x in query_embedding):
+        raise ValueError("Query embedding is not in the correct format.")
+
+    # Query Pinecone index
+    results = index.query(vector=query_embedding, top_k=top_k, include_metadata=True)
+
+    return results['matches']
+
+
+def query_index_compliance(query, top_k=7):
+    pinecone_api = get_api_key('pinecone')
+    pc = Pinecone(api_key=pinecone_api)
+    index_name = get_api_key('pinecone_index')
+    dimension = 1536  # This should match the dimension of the OpenAI embeddings
+    # Create the index if it doesn't exist
+    if index_name not in pc.list_indexes().names():
+        pc.create_index(
+            name=index_name,
+            dimension=dimension,
+            metric='cosine',
+            spec=ServerlessSpec(cloud='aws', region='us-east-1')
+        )
+
+    # Connect to the index
+    index = pc.Index(index_name)
+    refined_query = (
+        f"{query} related to industrial control systems, "
+        "safety instrumented systems, functional safety, alarm management for process industry, "
+        "enterprise control systems, industry regulations containing cybersecurity requirements"
+    )
+    # Create an embedding for the query
+    response = openai.Embedding.create(input=refined_query, model="text-embedding-ada-002")
     query_embedding = response['data'][0]['embedding']
 
     # Ensure the query_embedding is a list of floats
@@ -3822,11 +3911,11 @@ def exalens_asset_detail(target_asset_ip: str, exalens_host: str, exalens_api_ke
         return condensed_info
 
     except Exception as e:
-        print(f"Error fetching asset details: {e}")
+
         return None
 
 
-def create_incident_response_table(steps):
+def create_incident_response_table(procedures):
     styles = getSampleStyleSheet()
     helvetica_10 = ParagraphStyle(
         name='Helvetica',
@@ -3845,46 +3934,132 @@ def create_incident_response_table(steps):
         leading=12,
         alignment=TA_LEFT
     )
+
     table_data = [['Step', 'Title', 'Description']]
     step_counter = 1
 
-    for step in steps:
-        if step.strip():
-            step = re.sub(r'\*\*|\*\#|\#', '', step).strip()  # Remove any markdown characters
-            step_parts = re.split(r'\. ', step, 1)
-            if len(step_parts) == 2:
-                step_title_description = step_parts[1]
-                step_title_parts = step_title_description.split(': ', 1)
-                if len(step_title_parts) == 2:
-                    step_title = step_title_parts[0]
-                    step_description = step_title_parts[1]
-                    table_data.append([
-                        str(step_counter),
-                        Paragraph(step_title, helvetica_bold_10),
-                        Paragraph(step_description, helvetica_10)
-                    ])
-                    step_counter += 1
+    for procedure in procedures:
+        steps = procedure['steps']
+        for step in steps:
+            step_number = step['step_number']
+            step_title = step['step_title']
+            step_content = step['step_content']
+
+            table_data.append([
+                str(step_number),
+                Paragraph(step_title, helvetica_bold_10),
+                Paragraph(step_content, helvetica_10)
+            ])
+            step_counter += 1
 
     col_widths = [0.5 * inch, 2 * inch, 4 * inch]
     incident_response_table = Table(table_data, colWidths=col_widths)
 
     incident_response_table.setStyle(TableStyle([
-        ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
-        ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
-        ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
-        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, 0), (-1, 0), 12),
-        ('FONTSIZE', (0, 1), (-1, -1), 10),
-        ('LEFTPADDING', (0, 0), (-1, -1), 6),
-        ('RIGHTPADDING', (0, 0), (-1, -1), 6),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-        ('TOPPADDING', (0, 0), (-1, -1), 6),
+        ('BOX', (0, 0), (-1, 0), 0, colors.white),  # No border for the outer box
+        ('LINEBEFORE', (1, 1), (-1, -1), 0, colors.white),  # No border before each column
+        ('LINEAFTER', (0, 0), (-1, 0), 0, colors.white),  # No border after the header row
+        ('TOPPADDING', (0, 0), (-1, -1), 5),  # Padding inside each cell
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
+        ('ROWBACKGROUNDS', (0, 0), (-1, 0), [colors.lightgrey]),  # Light grey background for header row
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),  # Align text to the top of the cell
+        ('LINEABOVE', (0, 1), (-1, -1), 1, colors.HexColor('#65C8D0'), None, (2, 2)),  # Dashed line above each row
+        ('LINEBELOW', (0, 0), (-1, -2), 1, colors.HexColor('#65C8D0'), None, (2, 2)),  # Dashed line below each row
     ]))
 
     return incident_response_table
 
 
+def create_flow_chart_image(procedures):
+    step_counter = 1
+    node_height = 50  # Increased height for better readability
+    node_width = 350  # Increased width for better readability
+    spacing = 40
+
+    # Calculate the required height for the drawing
+    total_steps = sum(len(procedure['steps']) for procedure in procedures)
+    required_height = (total_steps * (node_height + spacing)) - spacing
+
+    # Create the drawing with the calculated height
+    d = Drawing(node_width + 100, required_height)
+
+    y_position = required_height - node_height  # Start from the top
+
+    for procedure in procedures:
+        steps = procedure['steps']
+        for step in steps:
+            step_number = step['step_number']
+            step_title = step['step_title']
+
+            # Draw rectangle (node)
+            node = Rect(50, y_position, node_width, node_height, strokeColor=colors.darkgray, fillColor=colors.white,
+                        strokeWidth=1.5)
+            d.add(node)
+
+            # Add text inside the rectangle
+            text = String(225, y_position + (node_height / 2.2) - 1, f"{step_number}. {step_title}",
+                          textAnchor="middle", fontSize=11)
+            d.add(text)
+
+            # Draw arrow from the current node to the next node
+            if step_counter < total_steps:
+                arrow_start_y = y_position - (spacing / 2)
+                arrow_end_y = y_position - (node_height + spacing)
+                arrow = Line(225, arrow_start_y, 225, arrow_end_y, strokeColor=colors.black)
+                arrow_head_left = Line(220, arrow_end_y + 10, 225, arrow_end_y, strokeColor=colors.black)
+                arrow_head_right = Line(225, arrow_end_y, 230, arrow_end_y + 10, strokeColor=colors.black)
+                d.add(arrow)
+                d.add(arrow_head_left)
+                d.add(arrow_head_right)
+
+            y_position -= (node_height + spacing)
+            step_counter += 1
+
+    # Create a temporary file for the image
+    tmpfile = tempfile.NamedTemporaryFile(delete=False, suffix=".png")
+    image_path = tmpfile.name
+    tmpfile.close()
+
+    # Render the drawing to an image with higher resolution
+    renderPM.drawToFile(d, image_path, fmt='PNG', dpi=300)
+
+    # Check if the image file exists and is readable
+    if not os.path.exists(image_path):
+        raise FileNotFoundError(f"Image file '{image_path}' was not created.")
+    if not os.access(image_path, os.R_OK):
+        raise PermissionError(f"Image file '{image_path}' is not readable.")
+
+    return image_path
+
+
+def create_playbook_flow_chart_image(incident_response_procedures, image_path):
+    dot = graphviz.Digraph(comment='Incident Response Procedures', format='png')
+    dot.attr(rankdir='TB')  # Top to bottom layout
+
+    # Flatten steps and sort by step number
+    steps = []
+    for procedure in incident_response_procedures:
+        steps.extend(procedure['steps'])
+
+    steps.sort(key=lambda x: x['step_number'])
+
+    # Find the maximum width for the nodes
+    max_label_length = max(len(f"{step['step_number']}. {step['step_title']}") for step in steps)
+    node_width = max_label_length * 0.1  # Adjust this multiplier as needed for better sizing
+
+    # Create nodes with controlled dimensions and proper font size
+    for step in steps:
+        step_id = f"{step['step_number']}"
+        step_label = f"{step['step_number']}. {step['step_title']}"
+        dot.node(step_id, label=step_label, shape='rect', style='filled', width=str(node_width), height='0.5',
+                 fixedsize='shape', color='lightgrey', fontname='Helvetica', fontsize='12', fontcolor='black')
+
+    # Create edges
+    for i in range(len(steps) - 1):
+        dot.edge(f"{steps[i]['step_number']}", f"{steps[i + 1]['step_number']}")
+
+    # Render the image
+    dot.render(image_path, cleanup=True)
 def add_final_page(elements):
     styles = getSampleStyleSheet()
     helvetica_10 = ParagraphStyle(
@@ -3936,6 +4111,352 @@ class CustomDocTemplate(BaseDocTemplate):
         canvas.drawCentredString(self.leftMargin + self.width / 2, 10 * mm, "Confidential")
 
 
+def custom_page_layout(canvas, doc):
+    canvas.saveState()
+    canvas.setStrokeColor(colors.HexColor('#65C8D0'))
+    canvas.setLineWidth(5)
+    canvas.line(0, doc.pagesize[1], doc.pagesize[0], doc.pagesize[1])  # Draw line at the very top of the page
+    # Draw the header text below the accent line
+    header_text = "AnzenOT Scenario Playbook"
+    header_font = "Helvetica-Bold"
+    header_font_size = 12
+    canvas.setFont(header_font, header_font_size)
+    canvas.drawCentredString(doc.pagesize[0] / 2.0, doc.pagesize[1] - 20, header_text)
+
+    # Footer
+    footer_text = "Confidential"
+    footer_font = "Helvetica"
+    footer_font_size = 8
+
+    # Draw the footer text (center-aligned)
+    canvas.setFont(footer_font, footer_font_size)
+    canvas.drawCentredString(doc.pagesize[0] / 2.0, 0.5 * inch, footer_text)
+
+    # Draw the page number (right-aligned)
+    page_number_text = f"{doc.page} "
+    canvas.drawRightString(doc.pagesize[0] - doc.rightMargin, 0.5 * inch, page_number_text)
+
+    canvas.restoreState()
+
+
+def add_title_page(elements, logo_path, title_style):
+    # Add the logo to the top quarter of the page
+    elements.append(Spacer(1, 1 * inch))
+    elements.append(Image(logo_path, width=180, height=150))
+    elements.append(Spacer(1, 1 * inch))
+
+    # Add the title text below the logo with suitable spacing
+    elements.append(Paragraph("Scenario Response Playbook", title_style))
+    elements.append(Spacer(1, 2 * inch))
+
+    elements.append(PageBreak())
+    return elements
+
+
+def add_accent_line(elements, width):
+    accent_line = Drawing(width, 2)
+    accent_line.add(Line(0, 1, width, 1, strokeColor=colors.HexColor('#65C8D0'), strokeWidth=2))
+    elements.append(accent_line)
+    elements.append(Spacer(1, 0.1 * inch))
+
+
+def add_scenario_page(elements, playbook_content, facility, facility_type, heading_style, helvetica_10):
+    styles = getSampleStyleSheet()
+    custom_bold_style = ParagraphStyle('CustomBold', parent=styles['BodyText'], fontName='Helvetica-Bold')
+
+    elements.append(Paragraph("Scenario", heading_style))
+    elements.append(Spacer(1, 0.4 * inch))
+
+    scenario_intro = (
+        f"This playbook has been written to address an incident of the following scenario at: {facility.name}, "
+        f"a {facility_type.FacilityType} at {facility.address}."
+    )
+    elements.append(Paragraph(scenario_intro, helvetica_10))
+    elements.append(Spacer(1, 0.4 * inch))
+    add_accent_line(elements, 500)
+    scenario_paragraphs = playbook_content['scenario'].split('\n\n')
+    for paragraph in scenario_paragraphs:
+        elements.append(Paragraph(paragraph, helvetica_10))
+        elements.append(Spacer(1, 0.2 * inch))
+    add_accent_line(elements, 500)
+    elements.append(PageBreak())
+    return elements
+
+
+def add_immediate_actions_page(elements, playbook_content, doc, heading_style, helvetica_10, body_style):
+    elements.append(Paragraph("Actions", heading_style))
+    elements.append(Spacer(1, 0.2 * inch))
+    action_text = (
+        "The action items in the table below are designed to address the given incident scenario. All actions should be reviewed and assessed prior to execution to ensure that appropriate change control and other internal procedures followed in accordance with organization policies and standards."
+    )
+    elements.append(Paragraph(action_text, body_style))
+    elements.append(Spacer(1, 0.2 * inch))
+    action_items_json = json.loads(playbook_content['action_items'])
+    action_items_list = action_items_json['action_items']
+
+    table_data = [['#', 'Action Item', 'Description', 'Priority']]
+
+    for item in action_items_list:
+        number = item['item_number']
+        action_item = item['action_item']
+        description = item['description']
+        priority = item['priority']
+
+        table_data.append([
+            number,
+            Paragraph(action_item, ParagraphStyle('tableContent', fontSize=8, parent=helvetica_10)),
+            Paragraph(description, ParagraphStyle('tableContent', fontSize=8, parent=helvetica_10)),
+            Paragraph(priority, ParagraphStyle('tableContent', fontSize=8, parent=helvetica_10))
+        ])
+
+    col_widths = [0.05 * doc.width, 0.30 * doc.width, 0.55 * doc.width, 0.10 * doc.width]
+    recommendations_table = Table(table_data, colWidths=col_widths)
+
+    recommendations_table.setStyle(TableStyle([
+        ('BOX', (0, 0), (-1, 0), 0, colors.white),  # No border for the outer box
+        ('LINEBEFORE', (1, 1), (-1, -1), 0, colors.white),  # No border before each column
+        ('LINEAFTER', (0, 0), (-1, 0), 0, colors.white),  # No border after the header row
+        ('TOPPADDING', (0, 0), (-1, -1), 5),  # Padding inside each cell
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
+        ('ROWBACKGROUNDS', (0, 0), (-1, 0), [colors.lightgrey]),  # Light grey background for header row
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),  # Align text to the top of the cell
+        ('LINEABOVE', (0, 1), (-1, -1), 1, colors.HexColor('#65C8D0'), None, (2, 2)),  # Dashed line above each row
+        ('LINEBELOW', (0, 0), (-1, -2), 1, colors.HexColor('#65C8D0'), None, (2, 2)),  # Dashed line below each row
+    ]))
+
+    elements.append(recommendations_table)
+    elements.append(Spacer(1, 0.4 * inch))
+    elements.append(PageBreak())
+    return elements
+
+
+def add_incident_response_flow_page(elements, playbook_content, heading_style, body_style):
+    incident_response_json = json.loads(playbook_content['incident_response_procedures'])
+
+    incident_response_procedures = incident_response_json['incident_response_procedures']
+    image_path = 'incident_response_flow_chart'
+
+    # Create the flow chart image
+    create_playbook_flow_chart_image(incident_response_procedures, image_path)
+
+    elements.append(Paragraph("Incident Response Flow", heading_style))
+    elements.append(Spacer(1, 0.2 * inch))
+    action_text = (
+        "The incident response flow chart is a high-level representation of the process flow to follow to successfully manage and recover from the incident scenario."
+    )
+    elements.append(Paragraph(action_text, body_style))
+    elements.append(Spacer(1, 0.2 * inch))
+
+    image_path_with_ext = f"{image_path}.png"
+    if os.path.exists(image_path_with_ext) and os.access(image_path_with_ext, os.R_OK):
+        img = Image(image_path_with_ext, width=270, height=550)  # Adjust to fit the page
+        elements.append(img)
+    else:
+        elements.append(Paragraph("Error: Flow chart image could not be created or accessed.",
+                                  getSampleStyleSheet()['BodyText']))
+
+    elements.append(PageBreak())
+
+    return elements
+
+
+def add_incident_response_procedures_page(elements, playbook_content, heading_style):
+    elements.append(Paragraph("Incident Response Procedures", heading_style))
+    elements.append(Spacer(1, 0.4 * inch))
+
+    incident_response_json = json.loads(playbook_content['incident_response_procedures'])
+    incident_response_procedures = incident_response_json['incident_response_procedures']
+    incident_response_table = create_incident_response_table(incident_response_procedures)
+
+    elements.append(incident_response_table)
+    elements.append(Spacer(1, 0.4 * inch))
+    elements.append(PageBreak())
+    return elements
+
+
+def add_communication_plan_page(elements, playbook_content, doc, heading_style, helvetica_10):
+    elements.append(Paragraph("Communication Plan", heading_style))
+    elements.append(Spacer(1, 0.4 * inch))
+
+    communication_plan_json = json.loads(playbook_content['comms_plan'])
+    if communication_plan_json:
+        communication_plan_items = communication_plan_json["communication_plan"]
+
+        table_data = []
+        spans = []
+
+        for index, item in enumerate(communication_plan_items):
+            item_number = item.get("item_number", "")
+            heading = item.get("heading", "")
+            objective = item.get("objective", "")
+            actions = item.get("actions", [])
+            communication_channels = item.get("communication_channels", [])
+
+            actions_bullets = ListFlowable(
+                [ListItem(Paragraph(f"{action['item']}: {action['description']}", helvetica_10)) for action in actions],
+                bulletType='bullet'
+            )
+
+            channels_bullets = ListFlowable(
+                [ListItem(Paragraph(f"{channel['item']}: {channel['description']}", helvetica_10)) for channel in
+                 communication_channels],
+                bulletType='bullet'
+            )
+
+            row_start = len(table_data)
+            table_data.extend([
+                [str(item_number), Paragraph(heading, helvetica_10), "", ""],
+                ["", Paragraph(objective, helvetica_10), actions_bullets, channels_bullets]
+            ])
+            row_end = row_start + 1
+
+            spans.append(('SPAN', (0, row_start), (0, row_end)))
+            spans.append(('SPAN', (1, row_start), (3, row_start)))
+
+        col_widths = [0.05 * doc.width, 0.25 * doc.width, 0.35 * doc.width, 0.35 * doc.width]
+
+        communication_plan_table = Table(table_data, colWidths=col_widths)
+
+        table_style = TableStyle([
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
+            ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
+            ('ALIGN', (0, 0), (-1, 0), 'LEFT'),
+            ('ALIGN', (0, 0), (0, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 12),
+            ('FONTSIZE', (0, 1), (-1, -1), 10),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('LEFTPADDING', (0, 0), (-1, -1), 6),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
+            ('TOPPADDING', (0, 0), (-1, -1), 12),
+        ])
+
+        for span in spans:
+            table_style.add(*span)
+
+        communication_plan_table.setStyle(table_style)
+
+        elements.append(communication_plan_table)
+        elements.append(Spacer(1, 0.4 * inch))
+        elements.append(PageBreak())
+    return elements
+
+
+def add_playbook_final_page(elements):
+    # Add the final page content here
+    elements.append(Paragraph("Final Page Content", getSampleStyleSheet()['BodyText']))
+    return elements
+
+def add_intro_audience_page(elements, heading_style, body_style):
+    # Add section 1: Introduction
+    elements.append(Paragraph("Introduction", heading_style))
+    elements.append(Spacer(1, 0.2 * inch))
+    intro_text = (
+        "This document is to assist in mitigating the risks of the given scenario by providing practical guidelines "
+        "for responding effectively and efficiently. It includes action items specific to the scenario with a focus "
+        "on analyzing, prioritizing, and handling the incident."
+    )
+    elements.append(Paragraph(intro_text, body_style))
+    elements.append(Spacer(1, 0.4 * inch))
+
+    # Add section 2: Audience
+    elements.append(Paragraph("Audience", heading_style))
+    elements.append(Spacer(1, 0.2 * inch))
+    audience_text = (
+        "This document has been created for computer security incident response teams (CSIRTs), system and network "
+        "administrators, security staff, technical support staff, chief information security officers (CISOs), chief "
+        "information officers (CIOs), computer security program managers, and others who are responsible for preparing "
+        "for, or responding to, security incidents."
+    )
+    elements.append(Paragraph(audience_text, body_style))
+    elements.append(Spacer(1, 0.4 * inch))
+
+    elements.append(PageBreak())
+    return elements
+
+
+def add_table_of_contents(elements, heading_style):
+
+    # Add the title "Contents"
+    elements.append(Paragraph("Playbook Contents", heading_style))
+    elements.append(Spacer(1, 0.4 * inch))  # Spacer after title
+    # Add the table of contents
+    toc_data = [
+        ['1. Introduction'],
+        ['2. Scenario'],
+        ['3. Action Plan'],
+        ['4. Incident Response Flow'],
+        ['5. Incident Response Procedures'],
+        ['6. Communication Plan']
+    ]
+    table = Table(toc_data, hAlign='LEFT')
+    table.setStyle(TableStyle([
+        ('BOX', (0, 0), (-1, 0), 0, colors.white),  # No border for the outer box
+        ('LINEBEFORE', (1, 1), (-1, -1), 0, colors.white),  # No border before each column
+        ('LINEAFTER', (0, 0), (-1, 0), 0, colors.white),  # No border after the header row
+        ('TOPPADDING', (0, 0), (-1, -1), 5),  # Padding inside each cell
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
+        ('ROWBACKGROUNDS', (0, 0), (-1, 0), [colors.white]),  # Light grey background for header row
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),  # Align text to the top of the cell
+        ('LINEABOVE', (0, 1), (-1, -1), 1, colors.HexColor('#65C8D0'), None, (2, 2)),  # Dashed line above each row
+        ('LINEBELOW', (0, 0), (-1, -2), 1, colors.HexColor('#65C8D0'), None, (2, 2)),
+    ]))
+
+    elements.append(table)
+    elements.append(Spacer(1, 0.2 * inch))  # Spacer after table
+
+
+
+    elements.append(PageBreak())
+
+def generate_scenario_playbook_pdf(playbook_content, facility, facility_type):
+    logo_path = os.path.join('static/images', '65C8D0 - Light Blue-2.png')
+    buffer = BytesIO()
+
+    doc = BaseDocTemplate(buffer, pagesize=letter)
+    elements = []
+
+    styles = getSampleStyleSheet()
+    title_style = styles['Title']
+    heading_style = styles['Heading1']
+    body_style = ParagraphStyle(
+        'BodyText',
+        parent=styles['Normal'],
+        fontName='Helvetica',
+        fontSize=10,
+        leading=12,
+        alignment=0
+    )
+    helvetica_10 = ParagraphStyle(
+        'Helvetica9',
+        parent=styles['Normal'],
+        fontName='Helvetica',
+        fontSize=9,
+    )
+    frame = Frame(doc.leftMargin, doc.bottomMargin, doc.width, doc.height, id='normal')
+    template = PageTemplate(id='test', frames=frame, onPage=custom_page_layout, onPageEnd=custom_page_layout)
+    doc.addPageTemplates([template])
+
+    elements = add_title_page(elements, logo_path, title_style)
+    add_table_of_contents(elements, heading_style)
+    elements = add_intro_audience_page(elements, heading_style, body_style)
+    elements = add_scenario_page(elements, playbook_content, facility, facility_type, heading_style, helvetica_10)
+    elements = add_immediate_actions_page(elements, playbook_content, doc, heading_style, helvetica_10, body_style)
+    elements = add_incident_response_flow_page(elements, playbook_content, heading_style, body_style)
+    elements = add_incident_response_procedures_page(elements, playbook_content, heading_style)
+    elements = add_communication_plan_page(elements, playbook_content, doc, heading_style, helvetica_10)
+    elements = add_playbook_final_page(elements)
+
+    doc.build(elements)
+
+    buffer.seek(0)
+    pdf_content = buffer.getvalue()
+    buffer.close()
+
+    return pdf_content
+
+
 def generate_scenario_playbook(request):
     if request.method == 'POST':
         data = json.loads(request.body)
@@ -3954,160 +4475,282 @@ def generate_scenario_playbook(request):
         industry = facility_type.Industry.Industry
 
         consequences = scenario_header.Consequence
+        try:
+            scenario_playbook = ScenarioPlaybook.objects.get(scenario_id=scenarioid)
+            playbook_id = scenario_playbook.pk
+        except ScenarioPlaybook.DoesNotExist:
+            playbook_id = 0
 
-        # Construct detailed queries
-        playbook_query = f"incident response playbook, DRAGOS playbook, NIST 800-82"
-        risk_assessment_query = f"OT Cybersecurity, Industrial Control Systems"
-        incident_response_query = f"incident response procedures, NIST 800-61"
-        communication_plan_query = f"communication plan, incident response, comms plans"
-        tools_resources_query = f"tools and resources to prevent cybersecurity incidents"
-
-        # Query Pinecone and summarize results
-        playbook_data = query_index_and_summarize(playbook_query, "otcyber")
-        risk_assessment_data = query_index_and_summarize(risk_assessment_query, "otcyber")
-        incident_response_procedures = query_index_and_summarize(incident_response_query, "otcyber")
-        communication_plans = query_index_and_summarize(communication_plan_query, "otcyber")
-        tools_resources = query_index_and_summarize(tools_resources_query, "otcyber")
-
-        # Prepare the context from Pinecone results
-        pinecone_context = {
-            "playbook_data": "\n".join(playbook_data),
-            "risk_assessment_data": "\n".join(risk_assessment_data),
-            "incident_response_procedures": "\n".join(incident_response_procedures),
-            "communication_plans": "\n".join(communication_plans),
-            "tools_resources": "\n".join(tools_resources),
+        if playbook_id == 0:
+            queries = {
+                "playbook_query": """Retrieve a comprehensive cybersecurity incident response playbook for [specific incident type, e.g., ransomware attack on OT systems]. The playbook should include detailed steps for:
+                    1. Incident identification and initial response
+                    2. Containment strategies
+                    3. Eradication procedures
+                    4. Recovery actions
+                    5. Post-incident analysis and lessons learned
+                    
+                    Focus on incidents affecting industrial control systems (ICS) and Operational Technology (OT). Exclude general IT incidents and unrelated cybersecurity topics and miscellaneous irrelevant detail.""",
+            "risk_assessment_query": """
+                    Retrieve comprehensive information on OT cybersecurity risks and their impact on industrial control systems (ICS). The information should cover the following elements:
+                    1. Specific cybersecurity threats and vulnerabilities affecting OT environments and ICS
+                    2. Impact of cybersecurity incidents on operational technology and industrial processes
+                    3. Detailed risk assessments for various types of ICS (e.g., SCADA systems, DCS, PLCs)
+                    4. Mitigation strategies and best practices for protecting OT environments from cyber threats
+                    5. Case studies and examples of past cybersecurity incidents in OT environments
+                    6. Consequences of cybersecurity incidents on safety, reliability, and operational continuity of ICS
+                    
+                    Focus on OT cybersecurity risks that are directly relevant to industrial control systems. Exclude general IT cybersecurity risks and unrelated topics.
+                    """,
+            "incident_response_query": """
+                Retrieve comprehensive information on cybersecurity incident response procedures, focusing on the best practices and guidelines. The information should cover the following elements:
+                1. Detailed steps and phases of the incident response lifecycle according to NIST 800-61 (Preparation, Detection and Analysis, Containment, Eradication, and Recovery, Post-Incident Activity)
+                2. Roles and responsibilities of the incident response team members
+                3. Tools and technologies recommended for incident detection, analysis, and response
+                4. Procedures for incident communication and reporting, including templates and formats
+                5. Metrics and KPIs for measuring the effectiveness of incident response
+                6. Case studies and examples of effective incident response practices
+                7. Integration of incident response procedures with other cybersecurity frameworks and standards
+                
+                Focus on information that provides practical, actionable guidance for writing and implementing incident response procedures. Exclude outdated practices and general cybersecurity information not specific to incident response.
+                """,
+            "communication_plan_query": """
+                Retrieve a comprehensive cybersecurity incident communication plan that includes the following elements:
+                1. Identification of stakeholders and communication roles
+                2. Communication protocols and channels
+                3. Message templates and formats for different incident scenarios
+                4. Procedures for internal and external communication during an incident
+                5. Steps for coordinating communication with external parties (e.g., regulatory bodies, customers, media)
+                6. Timelines and frequency of communication
+                7. Post-incident communication and debriefing
+                
+                Focus on communication plans specific to cybersecurity incidents. Exclude general IT communication plans and unrelated topics.
+                """,
         }
 
-        # Prepare the prompts for OpenAI API
-        messages = {
-            "action_items": [
-                {"role": "system", "content": "You are an expert in cybersecurity incident response."},
-                {"role": "user", "content": (
-                    f"""Using the following context from relevant playbooks and risk assessments:\n{pinecone_context['playbook_data']}\n{pinecone_context['risk_assessment_data']}\n
-                        Generate a list of up to a maximum of 20 practical, technical, cyber-physical action items for addressing the following scenario: {scenario}. The consequences of the scenario are assumed to be:{consequences}.
-                        The action items must be specific, measurable, achievable, relevant, and time-bound (SMART). 
-                        Each action item should be written such that an engineer or technology expert can implement it immediately during an ongoing incident without causing further damage or operational loss. 
-                        Each action items will include a description of no more than 20 words to support the action item headline
-                        Each action items should have a priority - High, Medium, or Low based on the degree of damage and disruption that performing the action item is expected to mitigate. 
-                        Do not include action items that require writing new plans, policies, or conducting exercises. 
-                        
-                        Format the output as follows where , is the delimiter between data fields:
-                        <Action Item Number>,<Action Item>,<Action Item Description>,<Priority Level>
+            # Function to query Pinecone and summarize results
+            def query_pinecone(query, index):
+                return query_index_and_summarize(query, index)
 
-                        Example text to illustrate:
-                        1,Isolate Compromised PLCs,Immediately disconnect the compromised PLCs from the network to prevent further manipulation of control logic,High
-                        2,Activate Backup PLCs: Switch to backup PLCs that have not been compromised to restore control over the mixing and baking processes,Medium
+            # Parallelize Pinecone queries
+            with ThreadPoolExecutor() as executor:
+                futures = {executor.submit(query_pinecone, q, "otcyber"): k for k, q in queries.items()}
+                pinecone_results = {k: future.result() for future, k in futures.items()}
 
-                        Ensure each action item is numbered, followed by a comma, then the action item, followed by a comma, the action item description then comma then the priority level (High, Medium, Low).
-                        ADDITIONAL INSTRUCTION: Do not include any markup characters. Do not include any additional narrative, text, or commentary outside of the formatted response."""
-                )}
-            ],
-            "incident_response": [
-                {"role": "system", "content": "You are an expert in cybersecurity incident response."},
-                {"role": "user", "content": (
-                    f"""Based on the following incident response procedures:{pinecone_context['incident_response_procedures']}\n
-                            Provide a step-by-step list of up tp a maximum of 20 incident response procedures for detecting, containing, eradicating, and recovering from the scenario: {scenario}. 
-                            IMPORTANT: Take into account that the incident is in a {facility_type} in the {industry} industry. 
-                            Format the response exactly as described using the guide below and the example as further guidance:
+            # Prepare the context from Pinecone results
+            pinecone_context = {
+                "playbook_data": "\n".join(pinecone_results["playbook_query"]),
+                "risk_assessment_data": "\n".join(pinecone_results["risk_assessment_query"]),
+                "incident_response_procedures": "\n".join(pinecone_results["incident_response_query"]),
+                "communication_plans": "\n".join(pinecone_results["communication_plan_query"]),
+            }
 
-                            <Procedure Heading>
-                            <Step number>. <Step Title>: <Step Content>
-                            <Step number>. <Step Title>: <Step Content>
-
-                            <Next Procedure Heading>
-                            <Step number>. <Step Title>: <Step Content>
-                            <Step number>. <Step Title>: <Step Content>
-
-                            And so on. For example:
-
-                            Detection and Analysis
-                            1. Incident Detection: Monitor and identify unusual activity.
-                            2. Next heading: next description etc etc
-
+            # Prepare the prompts for OpenAI API
+            messages = {
+                "action_items": [
+                    {"role": "system", "content": "You are an expert in cybersecurity incident response responding to an incident."},
+                    {"role": "user", "content": (
+                        f"""Using the following context from relevant playbooks and risk assessments:\n{pinecone_context['playbook_data']}\n{pinecone_context['risk_assessment_data']}\n
+                            
+                            Generate a list of UP TO a maximum of 20 practical, technical, cyber-physical action items for addressing the following scenario in the context of it being an incident that is occurring: {scenario}. WHILE you may generate up to 20 action items, between 10 and 15 action items would be preferable HOWEVER generate the most appropriate actions for the scenario event irregardless of the county.
+                            
+                            The consequences of the incident scenario are assumed to be:{consequences}.
+                            
+                            The action items must be specific, measurable, achievable, relevant, and time-bound (SMART). 
+                            
+                            VERY IMPORTANT: The action items MUST be actionable for the given asset within the context of the scenario taking into account the type of asset and the context in which is operates (for example: do not suggest installing new software, creating new documentation, or beginning new projects because such actions will not address an ongoing incident).
+                            
+                            CRITICAL: Only list action items that assist in addressing and mitigating the incident scenario. Do not introduce work that has no benefit and does not help with restoring normal operations. THIS IS CRITICAL.
+                            
+                            Each action item should be written such that an engineer or technology expert can implement it immediately during this specific ongoing incident without causing further damage or operational loss. 
+                            
+                            Each action items will include a description of no more than 20 words to support the action item headline
+                            
+                            Each action items should have a priority, High, Medium, or Low, based on the degree of damage and disruption that performing the action item is expected to mitigate. 
+                            
+                            Do not include action items that require writing new plans, policies, or conducting exercises. 
+                            
+                            Format the output as follows in JSON format:
+            
+                            {{
+                                "action_items": [
+                                    {{
+                                        "item_number": <Action Item Number>,
+                                        "action_item": "<Action Item>",
+                                        "description": "<Action Item Description>",
+                                        "priority": "<Priority Level>"
+                                    }},
+                                    ...
+                                ]
+                            }}
+            
+                            Example for formatting reference:
+                            {{
+                                "action_items": [
+                                    {{
+                                        "item_number": 1,
+                                        "action_item": "[write out the text of the first action item]",
+                                        "description": "[write a description of the first action item up to 20 words]",
+                                        "priority": "Low" or "Medium" or "High"
+                                    }},
+                                    {{
+                                        "item_number": 2,
+                                        "action_item": "[write out the text of the second action item"],
+                                        "description": "[write a description of the first action item up to 20 words]",
+                                        "priority": "Low" or "Medium" or "High"
+                                    }},
+                                    ...
+                                ]
+                            }}
+            
                             ADDITIONAL INSTRUCTION: Do not include any markup characters. Do not include any additional narrative, text, or commentary outside of the formatted response."""
-                )}
-            ],
+                    )}
+                ],
+                "incident_response": [
+                    {"role": "system", "content": "You are an expert in cybersecurity incident response."},
+                    {"role": "user", "content": (
+                        f"""Based on the following incident response procedures:{pinecone_context['incident_response_procedures']}\n
+                                           Provide a step-by-step ordered list of between 10 and 18 incident response procedures for detecting, containing, eradicating, and recovering from the scenario: {scenario}. 18 is the maximum. Fewer is acceptable depending on the scenario.
+                                           IMPORTANT: Take into account that the incident is in a {facility_type} in the {industry} industry. 
+                                           Format the response exactly as described using the guide below and the example as further guidance:
+        
+                                           {{
+                                               "incident_response_procedures": [
+                                                   {{
+                                                       "procedure_heading": "<Procedure Heading>",
+                                                       "steps": [
+                                                           {{
+                                                               "step_number": <Step Number>,
+                                                               "step_title": "<Step Title>",
+                                                               "step_content": "<Step Content>"
+                                                           }},
+                                                           ...
+                                                       ]
+                                                   }},
+                                                   ...
+                                               ]
+                                           }}
+        
+                                           Example for formatting reference:
+                                           {{
+                                               "incident_response_procedures": [
+                                                   {{
+                                                       "procedure_heading": "Detection and Analysis",
+                                                       "steps": [
+                                                           {{
+                                                               "step_number": 1,
+                                                               "step_title": "Incident Detection",
+                                                               "step_content": "Monitor and identify unusual activity."
+                                                           }},
+                                                           {{
+                                                               "step_number": 2,
+                                                               "step_title": "Next heading",
+                                                               "step_content": "Next description etc etc"
+                                                           }},
+                                                           ...
+                                                       ]
+                                                   }},
+                                                   ...
+                                               ]
+                                           }}
+        
+                                           ADDITIONAL INSTRUCTION: Do not include any markup characters. Do not include any additional narrative, text, or commentary outside of the formatted response."""
+                    )}
+                ],
 
-            "communication_plan": [
-                {"role": "system", "content": "You are an expert in cybersecurity compliance."},
-                {"role": "user", "content": (
-                    f"""Given the following communication plan data: {pinecone_context['communication_plans']}, determine the most effective communication plan for the {facility_type} facility at {facility.address} in the {industry} industry to specifically address the scenario: {scenario}. The estimated consequences of the scenario are : {consequences}. 
-                        IMPORTANT: Take into account that the scenario applies to a {facility_type} in the {industry} industry. Take into account the scenario and the consequences in forming the communication plan.
+                "communication_plan": [
+                    {"role": "system", "content": "You are an expert in cybersecurity incident management and and an expert in crisis management. You are managing an incident that is occurring now. "},
+                    {"role": "user", "content": (
+                        f"""Given the following communication plan data: {pinecone_context['communication_plans']}, determine the most effective communication plan for the {facility_type} facility at {facility.address} in the {industry} industry to specifically address the scenario: {scenario}. The estimated consequences of the scenario are : {consequences}. 
+                            IMPORTANT: Take into account that the scenario applies to a {facility_type} in the {industry} industry. Take into account the scenario and the consequences in forming the communication plan.
+    
+                            Format the response exactly as described using the guide below and the example as further guidance:
+    
+                            {{
+                                "communication_plan": [
+                                    {{
+                                        "item_number": <Communication plan item number>,
+                                        "heading": "<Communication Plan Heading>",
+                                        "objective": "<Communication Plan Item Objective>",
+                                        "actions": [
+                                            {{
+                                                "item": "<Action item>",
+                                                "description": "<Action description>"
+                                            }},
+                                            ...
+                                        ],
+                                        "communication_channels": [
+                                            {{
+                                                "item": "<Communication Channel>",
+                                                "description": "<Channel description>"
+                                            }},
+                                            ...
+                                        ]
+                                    }},
+                                    ...
+                                ]
+                            }}
+    
+                            Example for formatting reference. 
+                            {{
+                                "communication_plan_items": [
+                                    {{
+                                        "item_number": 1,
+                                        "heading": "Heading text",
+                                        "objective": "Descriptive objective",
+                                        "actions": [
+                                            {{
+                                                "item": "The action to be taken",
+                                                "description": "A description of the action to be taken"
+                                            }},
+                                            {{
+                                                "item": "The next action to be taken",
+                                                "description": "A description of the next action to be taken"
+                                            }},
+                                            
+                                        ],
+                                       and so on for the rest of the communication plan
+                                    }},
+                                    ...
+                                ]
+                            }}
+    
+                            ADDITIONAL INSTRUCTION: Do not include any markup characters. Do not include any additional narrative, text, or commentary outside of the formatted response."""
+                    )}
+                ],
+            }
 
-                        Format the response exactly as described using the guide below and the example as further guidance:
-
-                        {{
-                            "communication_plan": [
-                                {{
-                                    "item_number": <Communication plan item number>,
-                                    "heading": "<Communication Plan Heading>",
-                                    "objective": "<Communication Plan Item Objective>",
-                                    "actions": [
-                                        {{
-                                            "item": "<Action item>",
-                                            "description": "<Action description>"
-                                        }},
-                                        ...
-                                    ],
-                                    "communication_channels": [
-                                        {{
-                                            "item": "<Communication Channel>",
-                                            "description": "<Channel description>"
-                                        }},
-                                        ...
-                                    ]
-                                }},
-                                ...
-                            ]
-                        }}
-
-                        Example for formatting reference. 
-                        {{
-                            "communication_plan_items": [
-                                {{
-                                    "item_number": 1,
-                                    "heading": "Heading text",
-                                    "objective": "Descriptive objective",
-                                    "actions": [
-                                        {{
-                                            "item": "The action to be taken",
-                                            "description": "A description of the action to be taken"
-                                        }},
-                                        {{
-                                            "item": "The next action to be taken",
-                                            "description": "A description of the next action to be taken"
-                                        }},
-                                        
-                                    ],
-                                   and so on for the rest of the communication plan
-                                }},
-                                ...
-                            ]
-                        }}
-
-                        ADDITIONAL INSTRUCTION: Do not include any markup characters. Do not include any additional narrative, text, or commentary outside of the formatted response."""
-                )}
-            ],
-        }
-
-        # Query OpenAI API for each prompt
-        openai.api_key = get_api_key('openai')
-
-        def query_openai(messages):
+            # Query OpenAI API for each prompt
             openai.api_key = get_api_key('openai')
-            response = openai.ChatCompletion.create(
-                model="gpt-4o-mini",
-                messages=messages,
-                max_tokens=4000,
-                temperature=0.2
+
+            def query_openai(message):
+                response = openai.ChatCompletion.create(
+                    model="gpt-4o-mini",
+                    messages=message,
+                    max_tokens=4000,
+                    temperature=0.2
+                )
+                return response.choices[0].message['content'].strip()
+
+            with ThreadPoolExecutor() as executor:
+                openai_futures = {executor.submit(query_openai, m): k for k, m in messages.items()}
+                openai_results = {k: future.result() for future, k in openai_futures.items()}
+
+            action_items = openai_results["action_items"]
+            incident_response = openai_results["incident_response"]
+            comms_plan = openai_results["communication_plan"]
+            scenario_playbook = ScenarioPlaybook.objects.create(
+                scenario=scenario_header,
+                action_items=action_items,
+                incident_response_plan=incident_response,
+                comms_plan=comms_plan
             )
-            return response.choices[0].message['content'].strip()
 
-        action_items = query_openai(messages["action_items"])
-        incident_response = query_openai(messages["incident_response"])
-        comms_plan = query_openai(messages["communication_plan"])
+        if playbook_id > 0:
+            action_items = scenario_playbook.action_items
+            incident_response = scenario_playbook.incident_response_plan
+            comms_plan = scenario_playbook.comms_plan
 
-        # Structure the content for the playbook
         playbook_content = {
             "title": f"CyberPHA Scenario Playbook for {facility.name}",
             "scenario": scenario,
@@ -4116,199 +4759,10 @@ def generate_scenario_playbook(request):
             "action_items": action_items,
             "incident_response_procedures": incident_response,
             "comms_plan": comms_plan,
-            "additional_resources": {
-                "playbooks": playbook_data,
-                "risk_assessments": risk_assessment_data,
-                "incident_response_procedures": incident_response_procedures,
-                "communication_plans": communication_plans,
-                "tools_resources": tools_resources
-            }
+
         }
 
-        logo_path = os.path.join('static/images', '65C8D0 - Light Blue-2.png')
-        buffer = BytesIO()
-
-        doc = CustomDocTemplate(buffer, pagesize=letter)
-        elements = []
-
-        styles = getSampleStyleSheet()
-        title_style = styles['Title']
-        heading_style = styles['Heading1']
-
-        helvetica_10 = ParagraphStyle(
-            'Helvetica10',
-            parent=styles['Normal'],
-            fontName='Helvetica',
-            fontSize=10,
-        )
-
-        # Title page
-        elements.append(Spacer(1, 2 * inch))
-        elements.append(Paragraph("Scenario Response Playbook", title_style))
-        elements.append(Spacer(1, 2 * inch))
-        elements.append(Image(logo_path, width=180, height=150))
-
-        elements.append(PageBreak())
-
-        # Scenario page
-        elements.append(Paragraph("Scenario", heading_style))
-        elements.append(Spacer(1, 0.4 * inch))
-
-        scenario_intro = (
-            f"This playbook has been written to address an incident of the following scenario at: {facility.name}, "
-            f"a {facility_type.FacilityType} at {facility.address}."
-        )
-        elements.append(Paragraph(scenario_intro, helvetica_10))
-        elements.append(Spacer(1, 0.4 * inch))
-
-        # Add the scenario text inside a box
-        scenario_paragraphs = scenario.split('\n\n')
-        for paragraph in scenario_paragraphs:
-            elements.append(Paragraph(paragraph, helvetica_10))
-            elements.append(Spacer(1, 0.2 * inch))
-
-        elements.append(PageBreak())
-
-        # Immediate Actions page
-        elements.append(Paragraph("Immediate Actions", heading_style))
-        elements.append(Spacer(1, 0.4 * inch))
-
-        action_items_list = playbook_content['action_items'].split('\n')
-        table_data = [['#', 'Action Item', 'Description', 'Priority']]
-
-        for rec in action_items_list:
-            if rec.strip():
-                # Split the action item by its components
-                parts = rec.split(',')
-                if len(parts) == 4:
-                    number = parts[0].strip()
-                    action_item = parts[1].strip()
-                    description = parts[2].strip()
-                    priority = parts[3].strip()
-
-                    table_data.append([
-                        number,
-                        Paragraph(action_item, helvetica_10),
-                        Paragraph(description, helvetica_10),
-                        Paragraph(priority, helvetica_10)
-                    ])
-
-        # Define the table with specific column widths
-        col_widths = [0.05 * doc.width, 0.30 * doc.width, 0.55 * doc.width, 0.10 * doc.width]
-        recommendations_table = Table(table_data, colWidths=col_widths)
-
-        # Apply table style
-        recommendations_table.setStyle(TableStyle([
-            ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
-            ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
-            ('ALIGN', (0, 0), (-1, 0), 'LEFT'),
-            ('ALIGN', (0, 0), (0, -1), 'LEFT'),
-            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, 0), 12),
-            ('FONTSIZE', (0, 1), (-1, -1), 10),
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-            ('LEFTPADDING', (0, 0), (-1, -1), 6),
-            ('RIGHTPADDING', (0, 0), (-1, -1), 6),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
-            ('TOPPADDING', (0, 0), (-1, -1), 12),
-        ]))
-
-        elements.append(recommendations_table)
-        elements.append(Spacer(1, 0.4 * inch))
-
-        elements.append(PageBreak())
-        elements.append(Paragraph("Incident Response Procedures", heading_style))
-        elements.append(Spacer(1, 0.4 * inch))
-
-        incident_response_steps = [line.strip() for line in playbook_content['incident_response_procedures'].split('\n')
-                                   if line.strip()]
-        incident_response_table = create_incident_response_table(incident_response_steps)
-        elements.append(incident_response_table)
-
-        elements.append(PageBreak())
-        elements.append(Paragraph("Communication Plan", heading_style))
-        elements.append(Spacer(1, 0.4 * inch))
-
-        # Correctly load the JSON content
-        communication_plan_json = json.loads(playbook_content['comms_plan'])
-        if communication_plan_json:
-            communication_plan_items = communication_plan_json["communication_plan"]
-
-            table_data = []
-            spans = []
-
-            for index, item in enumerate(communication_plan_items):
-                item_number = item.get("item_number", "")
-                heading = item.get("heading", "")
-                objective = item.get("objective", "")
-                actions = item.get("actions", [])
-                communication_channels = item.get("communication_channels", [])
-
-                # Create bullet points for actions
-                actions_bullets = ListFlowable(
-                    [ListItem(Paragraph(f"{action['item']}: {action['description']}", helvetica_10)) for action in
-                     actions],
-                    bulletType='bullet'
-                )
-
-                # Create bullet points for communication channels
-                channels_bullets = ListFlowable(
-                    [ListItem(Paragraph(f"{channel['item']}: {channel['description']}", helvetica_10)) for channel in
-                     communication_channels],
-                    bulletType='bullet'
-                )
-
-                # Add data to the table
-                row_start = len(table_data)
-                table_data.extend([
-                    [str(item_number), Paragraph(heading, helvetica_10), "", ""],
-                    ["", Paragraph(objective, helvetica_10), actions_bullets, channels_bullets]
-                ])
-                row_end = row_start + 1
-
-                # Add span for item number
-                spans.append(('SPAN', (0, row_start), (0, row_end)))
-                # Add span for heading
-                spans.append(('SPAN', (1, row_start), (3, row_start)))
-
-            # Define the column widths for the entire table
-            col_widths = [0.05 * doc.width, 0.25 * doc.width, 0.35 * doc.width, 0.35 * doc.width]
-
-            communication_plan_table = Table(table_data, colWidths=col_widths)
-
-            # Apply table style
-            table_style = TableStyle([
-                ('GRID', (0, 0), (-1, -1), 0.5, colors.black),
-                ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
-                ('ALIGN', (0, 0), (-1, 0), 'LEFT'),
-                ('ALIGN', (0, 0), (0, -1), 'LEFT'),
-                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                ('FONTSIZE', (0, 0), (-1, 0), 12),
-                ('FONTSIZE', (0, 1), (-1, -1), 10),
-                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-                ('LEFTPADDING', (0, 0), (-1, -1), 6),
-                ('RIGHTPADDING', (0, 0), (-1, -1), 6),
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
-                ('TOPPADDING', (0, 0), (-1, -1), 12),
-            ])
-
-            # Add the dynamic spans to the table style
-            for span in spans:
-                table_style.add(*span)
-
-            communication_plan_table.setStyle(table_style)
-
-            elements.append(communication_plan_table)
-            elements.append(Spacer(1, 0.4 * inch))
-
-        elements = add_final_page(elements)
-        # Build the PDF
-        doc.build(elements)
-
-        # Get the PDF content
-        buffer.seek(0)
-        pdf_content = buffer.getvalue()
-        buffer.close()
+        pdf_content = generate_scenario_playbook_pdf(playbook_content, facility, facility_type)
 
         # Create the HTTP response
         response = HttpResponse(content_type='application/pdf')
@@ -4318,3 +4772,45 @@ def generate_scenario_playbook(request):
         return response
 
     return JsonResponse({"error": "Invalid request method."}, status=400)
+
+
+@csrf_exempt
+def generate_dashboard_playbook(request):
+
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body.decode('utf-8'))  # Parse JSON body
+            scenario_id = data.get('scenario_id')
+            print(scenario_id)
+            # Retrieve the scenario, playbook, and facility information
+            scenario = tblCyberPHAScenario.objects.get(ID=scenario_id)
+            playbook = ScenarioPlaybook.objects.get(scenario=scenario)
+            facility = scenario.CyberPHA.facility
+
+            # Construct playbook content
+            playbook_content = {
+                "title": f"CyberPHA Scenario Playbook for {facility.name}",
+                "scenario": scenario.Scenario,
+                "recommendations": scenario.recommendations,
+                "compliance_map": scenario.compliance_map,
+                "action_items": playbook.action_items,
+                "incident_response_procedures": playbook.incident_response_plan,
+                "comms_plan": playbook.comms_plan,
+            }
+
+            # Generate the PDF content
+            pdf_content = generate_scenario_playbook_pdf(playbook_content, facility, facility.type)
+
+            # Return the PDF as a response
+            response = HttpResponse(pdf_content, content_type='application/pdf')
+            response['Content-Disposition'] = f'attachment; filename="scenario_playbook_{scenario_id}.pdf"'
+            return response
+
+        except tblCyberPHAScenario.DoesNotExist:
+            return JsonResponse({"error": "Scenario not found"}, status=404)
+        except ScenarioPlaybook.DoesNotExist:
+            return JsonResponse({"error": "Playbook not found"}, status=404)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+
+    return JsonResponse({"error": "Invalid request method"}, status=400)

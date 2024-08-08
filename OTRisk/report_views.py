@@ -1,4 +1,5 @@
 import base64
+import json
 import os
 import re
 from datetime import date
@@ -14,26 +15,31 @@ from django.http import JsonResponse, HttpResponseRedirect, HttpResponseForbidde
 from django.shortcuts import get_object_or_404
 from django.shortcuts import render
 from django.urls import reverse
+from reportlab.graphics.charts.axes import YValueAxis, XValueAxis, CategoryAxis, ValueAxis, XCategoryAxis
 from reportlab.graphics.charts.barcharts import VerticalBarChart
-from reportlab.graphics.shapes import Drawing, Rect, Image
+from reportlab.graphics.charts.linecharts import HorizontalLineChart
+from reportlab.graphics.charts.lineplots import LinePlot
+from reportlab.graphics.shapes import Drawing, Rect, Image, String, Line
 from reportlab.lib import colors
-from reportlab.lib.enums import TA_CENTER
+from reportlab.lib.colors import HexColor, black, lightgrey
+from reportlab.lib.enums import TA_CENTER, TA_LEFT
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.sequencer import getSequencer
-from reportlab.lib.styles import ParagraphStyle
+from reportlab.lib.styles import ParagraphStyle, ListStyle
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import inch
 from reportlab.graphics.charts.textlabels import Label
 from reportlab.lib.utils import ImageReader
 from reportlab.pdfgen.canvas import Canvas
-from reportlab.platypus import SimpleDocTemplate, PageBreak, Image
+from reportlab.platypus import SimpleDocTemplate, PageBreak, Image, ListFlowable, ListItem
 from reportlab.platypus import Table, TableStyle, Paragraph, Spacer
 
 from OTRisk.models.Model_CyberPHA import tblCyberPHAHeader, tblCyberPHAScenario, vulnerability_analysis, \
-    MitreControlAssessment, ScenarioConsequences, CyberSecurityInvestment, PHA_Observations
+    MitreControlAssessment, ScenarioConsequences, CyberSecurityInvestment, PHA_Observations, GlossaryTerm
 from OTRisk.models.raw import RAActions
 from OTRisk.models.raw import RAWorksheet, RAWorksheetScenario
 from accounts.models import UserProfile
+from OTRisk.models.model_assessment import SelfAssessment
 from .pha_views import get_overall_control_effectiveness_score, get_api_key
 
 
@@ -50,6 +56,7 @@ class FooterCanvas(Canvas):
         page_count = len(self.pages)
         for page in self.pages:
             self.__dict__.update(page)
+            self.draw_stripe()
             self.draw_footer(page_count)
             Canvas.showPage(self)
         Canvas.save(self)
@@ -70,6 +77,10 @@ class FooterCanvas(Canvas):
         self.drawCentredString(width / 2, 0.75 * inch, "Confidential")
 
         self.restoreState()
+
+    def draw_stripe(self):
+        self.setFillColor("#65C8D0")
+        self.rect(0, self._pagesize[1] - 10, self._pagesize[0], 10, fill=1, stroke=0)
 
 
 def create_bar_chart(scenario):
@@ -130,6 +141,342 @@ def create_bar_chart(scenario):
     return drawing
 
 
+def custom_label_formatter(value):
+    if value >= 1000000:
+        return f'${value / 1000000:.2f}m'
+    elif value >= 1000:
+        return f'${value / 1000:.1f}k'
+    else:
+        return f'${value:.0f}'
+
+
+def add_cost_projection_chart(story, scenario):
+    # Create caption
+    styles = getSampleStyleSheet()
+    center_style = ParagraphStyle(name='Center', parent=styles['BodyText'], alignment=TA_CENTER, spaceBefore=6,
+                                  spaceAfter=4, fontSize=10)
+    caption = Paragraph("Scenario Cost Impact Projection", center_style)
+    story.append(caption)
+    story.append(Spacer(1, 12))
+
+    # Parse cost projection values
+    data = [float(x) for x in scenario.cost_projection.split('|')]
+
+    # Determine the max value for setting the value axis increments
+    max_value = max(data)
+    if max_value < 100000:
+        value_increment = 10000
+        value_max = 100000
+    else:
+        value_increment = 50000
+        value_max = ((max_value // 500000) + 1) * 500000
+
+    # Creating a drawing for the chart
+    width, height = 250, 200
+    drawing = Drawing(width, height)
+    chart = HorizontalLineChart()
+    chart.x = 30
+    chart.y = 30
+    chart.height = 200
+    chart.width = 200
+    chart.data = [data]
+    chart.lines[0].strokeColor = colors.orange
+
+    # Setting the categories
+    categories = ['Month 1', 'Month 2', 'Month 3', 'Month 4', 'Month 5', 'Month 6',
+                  'Month 7', 'Month 8', 'Month 9', 'Month 10', 'Month 11', 'Month 12']
+    chart.categoryAxis.categoryNames = categories
+    chart.categoryAxis.labels.angle = 45
+    chart.categoryAxis.labels.fontSize = 8
+    chart.categoryAxis.labels.dy = -10
+    chart.categoryAxis.labels.dx = -10
+
+    # Value axis settings
+    chart.valueAxis.valueMin = 0
+    chart.valueAxis.valueMax = value_max
+    chart.valueAxis.valueStep = value_increment
+    chart.valueAxis.labelTextFormat = custom_label_formatter
+
+    # Adding grid lines
+    chart.valueAxis.gridStrokeColor = colors.white
+    chart.categoryAxis.gridStrokeColor = colors.white
+
+    # Add the chart to the drawing
+    drawing.add(chart)
+
+    # Parse cost justification text into bullet points
+    cost_justification = scenario.cost_justification
+    bullet_points = [ListItem(Paragraph(f"{sentence.strip()}.", styles['BodyText']), leftIndent=10) for sentence in
+                     cost_justification.split('.') if sentence]
+
+    # Create a ListFlowable for bullet points
+    bullet_list = ListFlowable(bullet_points, bulletType='bullet')
+
+    # Create table with chart and bullet points
+    table = Table([[drawing, bullet_list]], colWidths=[3.25 * inch, 3.25 * inch])
+
+    # Add table styling for vertical alignment and spacing between columns
+    table.setStyle(TableStyle([
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('LEFTPADDING', (1, 0), (1, 0), 15)
+    ]))
+
+    # Add table to story
+    story.append(table)
+    story.append(Spacer(1, 20))
+
+
+def add_impact_chart(story, scenario):
+    styles = getSampleStyleSheet()
+    center_style = ParagraphStyle(name='Center', parent=styles['BodyText'], alignment=TA_CENTER, spaceBefore=6,
+                                  spaceAfter=4, fontSize=10)
+    # Create caption
+    caption = Paragraph("Scenario Business Impact Analysis", center_style)
+    story.append(caption)
+    story.append(Spacer(1, 5))
+    impact_values = [
+        scenario.impactSafety, scenario.impactData, scenario.impactDanger,
+        scenario.impactSupply, scenario.impactProduction, scenario.impactFinance,
+        scenario.impactEnvironment, scenario.impactSupply
+    ]
+
+    # Creating a drawing for the chart
+    width, height = 350, 180
+    drawing = Drawing(width, height)
+    chart = VerticalBarChart()
+    chart.x = 50
+    chart.y = 75
+    chart.height = 100
+    chart.width = 350
+    chart.data = [impact_values]
+    chart.valueAxis.valueMin = 0
+    chart.valueAxis.valueMax = 11  # Set max value slightly higher than the max data value
+
+    # Add category names
+    chart.categoryAxis.categoryNames = [
+        'Safety', 'Data', 'Danger', 'Supply', 'Production', 'Finance', 'Environment', 'Supply'
+    ]
+    greyscale_colors = [colors.grey, colors.lightgrey, colors.darkgrey]
+    for i in range(len(chart.data)):
+        chart.bars[i].fillColor = greyscale_colors[i % len(greyscale_colors)]
+        chart.bars[i].strokeColor = colors.black
+        chart.bars[i].strokeWidth = 0.5
+
+    # Chart styles
+    chart.categoryAxis.labels.boxAnchor = 'n'  # North alignment for category labels
+    chart.categoryAxis.labels.angle = 45  # Optional: tilt the labels for better fit
+    chart.categoryAxis.labels.fontSize = 8
+    chart.categoryAxis.labels.dy = -10
+    chart.categoryAxis.labels.dx = -10
+
+    drawing.add(chart)
+    story.append(drawing)
+    story.append(Spacer(1, 20))
+
+
+def add_risk_rationale_table(story, scenario):
+    styles = getSampleStyleSheet()
+    normal_style = styles['BodyText']
+    small_style = ParagraphStyle('small', parent=styles['BodyText'], fontSize=8)
+
+    # Create caption row
+    caption = Paragraph("Risk Rationale",
+                        ParagraphStyle(name='caption', fontSize=10, alignment=TA_CENTER, backColor=colors.lightgrey,
+                                       textColor=colors.black, spaceAfter=10, borderPadding=5,
+                                       borderColor=colors.darkgrey, borderWidth=0, borderBottom=1))
+
+    # Parse risk rationale text into bullet points
+    risk_rationale = scenario.risk_rationale.replace(" - ", "• ")
+    bullet_points = [f"{sentence.strip()}" for sentence in risk_rationale.split('\n') if sentence.strip()]
+
+    # Split bullet points into two columns
+    half = (len(bullet_points) + 1) // 2
+    col1 = bullet_points[:half]
+    col2 = bullet_points[half:]
+
+    # Create the table with caption row and two columns of bullet points
+    table_data = [
+        [caption, ''],
+        [Paragraph('<br/><br/>'.join(col1), small_style), Paragraph('<br/><br/>'.join(col2), small_style)]
+    ]
+
+    table = Table(table_data, colWidths=[3.25 * inch, 3.25 * inch])
+
+    # Add table styling for padding and borders
+    table.setStyle(TableStyle([
+        ('SPAN', (0, 0), (-1, 0)),
+        ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
+        ('LINEBELOW', (0, 0), (-1, 0), 1, colors.darkgrey),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 10),
+        ('TOPPADDING', (0, 1), (-1, -1), 10),
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('LEFTPADDING', (0, 1), (0, -1), 12),
+        ('LEFTPADDING', (1, 1), (1, -1), 12),
+    ]))
+
+    # Add table to story
+    story.append(table)
+    story.append(Spacer(1, 20))
+
+
+def pdf_print_compliance_table(story, scenario, styles):
+
+    compliance_entries = scenario.compliance_map.split(" || ")
+
+    compliance_table_data = [['Issue', 'Regulation']]  # Initialize table data with headers
+
+    for entry in compliance_entries:
+        entry = entry.strip()
+        if entry:  # Ensure entry is not empty
+            parts = entry.split(" > ")
+            if len(parts) == 3:
+                framework, rule, _ = parts  # Ignore the third part (URL)
+                compliance_table_data.append([Paragraph(framework.strip(), styles['BodyText']),
+                                              Paragraph(rule.strip(), styles['BodyText'])])
+
+    if len(compliance_table_data) > 1:  # Ensure there's data beyond the header row
+        col_widths = [0.50 * 450, 0.50 * 450]
+        compliance_table = Table(compliance_table_data, colWidths=col_widths, hAlign='LEFT')
+        compliance_table.setStyle(TableStyle([
+            ('BOX', (0, 0), (-1, 0), 0, colors.white),
+            ('LINEBEFORE', (1, 1), (-1, -1), 0, colors.white),
+            ('LINEAFTER', (0, 0), (-1, 0), 0, colors.white),
+            ('TOPPADDING', (0, 0), (-1, -1), 5),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
+            ('ROWBACKGROUNDS', (0, 0), (-1, 0), [colors.lightgrey]),
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ('LINEABOVE', (0, 1), (-1, -1), 1, colors.HexColor('#65C8D0'), None, (2, 2)),
+            ('LINEBELOW', (0, 0), (-1, -2), 1, colors.HexColor('#65C8D0'), None, (2, 2)),
+        ]))
+
+        caption_text = "Compliance Map"
+        caption_paragraph = Paragraph(caption_text, styles['Title'])
+        story.append(caption_paragraph)
+        story.append(Spacer(1, 10))
+
+        # Add the table to the story
+        story.append(compliance_table)
+        story.append(Spacer(1, 20))
+
+
+def pdf_print_safety_profile(story, safety_profile_data, styles):
+    safety_profile = safety_profile_data.get('safetyProfile', [])
+
+    table_text_style = ParagraphStyle('TableText', parent=styles['BodyText'], fontName='Helvetica', fontSize=8)
+
+    # Initialize table data with headers
+    table_data = [['Hazard', 'Details']]
+
+    # Process each safety profile entry
+    for entry in safety_profile:
+        hazard = entry.get('hazard', '')
+        details = entry.get('details', '')
+        table_data.append([Paragraph(hazard, table_text_style), Paragraph(details, table_text_style)])
+
+    if len(table_data) > 1:  # Ensure there's data beyond the header row
+        col_widths = [0.30 * 450, 0.70 * 450]
+        safety_profile_table = Table(table_data, colWidths=col_widths, hAlign='LEFT')
+        safety_profile_table.setStyle(TableStyle([
+            ('BOX', (0, 0), (-1, 0), 0, colors.white),
+            ('LINEBEFORE', (1, 1), (-1, -1), 0, colors.white),
+            ('LINEAFTER', (0, 0), (-1, 0), 0, colors.white),
+            ('TOPPADDING', (0, 0), (-1, -1), 5),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
+            ('ROWBACKGROUNDS', (0, 0), (-1, 0), [colors.lightgrey]),
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ('LINEABOVE', (0, 1), (-1, -1), 1, colors.HexColor('#65C8D0'), None, (2, 2)),
+            ('LINEBELOW', (0, 0), (-1, -2), 1, colors.HexColor('#65C8D0'), None, (2, 2)),
+        ]))
+
+        # Add the table to the story
+        story.append(safety_profile_table)
+        story.append(Spacer(1, 20))
+
+    # Add the narrative paragraph below the table
+    narrative = safety_profile_data.get('narrative', '')
+    narrative_paragraph = Paragraph(narrative, table_text_style)
+    story.append(narrative_paragraph)
+    story.append(Spacer(1, 20))
+
+
+def pdf_print_chemical_profile(story, chemical_profile_data, styles):
+    chemicals = chemical_profile_data.get('chemicals', [])
+
+    # Create a custom ParagraphStyle for the table content
+    table_text_style = ParagraphStyle('TableText', parent=styles['BodyText'], fontName='Helvetica', fontSize=8)
+
+    # Initialize table data with headers
+    table_data = [['Chemical', 'Toxic', 'Flammable', 'State']]
+
+    # Process each chemical profile entry
+    for entry in chemicals:
+        chemical_name = entry.get('chemicalName', '')
+        toxic = 'Yes' if entry.get('toxic', False) else 'No'
+        flammable = 'Yes' if entry.get('flammable', False) else 'No'
+        state = entry.get('state', '')
+        table_data.append([Paragraph(chemical_name, table_text_style),
+                           Paragraph(toxic, table_text_style),
+                           Paragraph(flammable, table_text_style),
+                           Paragraph(state, table_text_style)])
+
+    if len(table_data) > 1:  # Ensure there's data beyond the header row
+        col_widths = [0.40 * 450, 0.20 * 450, 0.20 * 450, 0.20 * 450]
+        chemical_profile_table = Table(table_data, colWidths=col_widths, hAlign='LEFT')
+        chemical_profile_table.setStyle(TableStyle([
+            ('BOX', (0, 0), (-1, 0), 0, colors.white),
+            ('LINEBEFORE', (1, 1), (-1, -1), 0, colors.white),
+            ('LINEAFTER', (0, 0), (-1, 0), 0, colors.white),
+            ('TOPPADDING', (0, 0), (-1, -1), 5),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
+            ('ROWBACKGROUNDS', (0, 0), (-1, 0), [colors.lightgrey]),
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ('LINEABOVE', (0, 1), (-1, -1), 1, colors.HexColor('#65C8D0'), None, (2, 2)),
+            ('LINEBELOW', (0, 0), (-1, -2), 1, colors.HexColor('#65C8D0'), None, (2, 2)),
+        ]))
+
+        # Add the table to the story
+        story.append(chemical_profile_table)
+        story.append(Spacer(1, 20))
+
+    # Add the narrative paragraph below the table
+    narrative = chemical_profile_data.get('narrative', '')
+    narrative_paragraph = Paragraph(narrative, table_text_style)
+    story.append(narrative_paragraph)
+    story.append(Spacer(1, 20))
+
+
+def pdf_print_glossary(story, styles):
+    glossary_terms = GlossaryTerm.objects.all().order_by('term')
+
+    # Create a custom ParagraphStyle for the table content
+    table_text_style = ParagraphStyle('TableText', parent=styles['BodyText'], fontName='Helvetica', fontSize=8)
+
+    table_data = []
+
+    # Process each glossary term
+    for term in glossary_terms:
+        term_paragraph = Paragraph(f"<b>{term.term}</b>", table_text_style)
+        definition_paragraph = Paragraph(term.definition, table_text_style)
+        table_data.append([term_paragraph, definition_paragraph])
+
+    if table_data:  # Ensure there's data to display
+        glossary_table = Table(table_data, colWidths=[0.25 * 450, 0.75 * 450], hAlign='LEFT')
+        glossary_table.setStyle(TableStyle([
+            ('BOX', (0, 0), (-1, -1), 0, colors.white),  # No borders
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+            ('LEFTPADDING', (0, 0), (-1, -1), 0),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 0),
+        ]))
+
+        caption_text = "Glossary"
+        caption_paragraph = Paragraph(caption_text, styles['Title'])
+        story.append(PageBreak())  # Add a page break before the glossary
+        story.append(caption_paragraph)
+        story.append(Spacer(1, 10))
+
+        # Add the table to the story
+        story.append(glossary_table)
+        story.append(Spacer(1, 20))
 @login_required()
 def pha_reports(request, cyber_pha_header_id):
     cyber_pha_header = get_object_or_404(tblCyberPHAHeader, ID=cyber_pha_header_id)
@@ -170,16 +517,20 @@ def pha_reports(request, cyber_pha_header_id):
         width, height = letter
 
         # Assuming the logo is stored correctly in your static directory
-        logo_path = os.path.join('static/images', 'anzenot_highres_small.jpg')
-        canvas.drawImage(logo_path, width / 2.1 - 50, height / 1.8, 150, 150, mask='auto')  # Center the logo
+        logo_path = os.path.join('static/images', '65C8D0 - Light Blue-2.png')
+        logo_y_position = height / 1.4
+        canvas.drawImage(logo_path, width / 2.1 - 70, logo_y_position, 175, 150, mask='auto')  # Center the logo
 
         # Draw 'Report for' and 'Prepared for' text
         canvas.setFont('Helvetica-Bold', 12)
-        canvas.drawString(inch, height / 2 - 40, f"Report for: {cyber_pha_header.FacilityName}")
-        canvas.drawString(inch, height / 2 - 70, f"Prepared for: {organization.name}")
+        text_y_position = logo_y_position - 30  # Position text directly below the logo
+        canvas.drawCentredString(width / 2, text_y_position, f"Report for: {cyber_pha_header.FacilityName}")
+        text_y_position -= 40  # Adjust for next line of text
+        canvas.drawCentredString(width / 2, text_y_position, f"Prepared for: {organization.name}")
         current_date = date.today().strftime("%B %d, %Y")
+        text_y_position -= 50  # Adjust for next line of text
         canvas.setFont('Helvetica', 12)
-        canvas.drawString(inch, height / 2 - 120, current_date)
+        canvas.drawCentredString(width / 2, text_y_position, current_date)
         canvas.restoreState()
 
     doc.build(story, onFirstPage=onFirstPage)
@@ -188,19 +539,28 @@ def pha_reports(request, cyber_pha_header_id):
     body_text_style = ParagraphStyle('BodyTextWithMarkup', parent=styles['BodyText'], fontName='Helvetica',
                                      allowMarkup=True)
 
-    # Add a title
-    report_title = f"CyberPHA Report for {cyber_pha_header.FacilityName}"
-    title = Paragraph(report_title, styles['Title'])
-    story.append(title)
-    story.append(Spacer(1, 20))  # Add some space below the title
+    # Add the header for the second page
+    header_texts = ['Executive Summary', 'Scenarios', 'Summary', 'Appendix']
+    header_html = '<para alignment="center">'
+    for text in header_texts:
+        if text == 'Executive Summary':
+            header_html += f'<u color="#65C8D0">{text}</u>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'
+        else:
+            header_html += f'{text}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'
+    header_html += '</para>'
 
+    header_paragraph = Paragraph(header_html, custom_bold_style)
+    # Add header paragraph close to the top
+    story.append(Spacer(1, -30))
+    story.append(header_paragraph)
+    story.append(Spacer(1, 20))
     # Add Executive Summary section
     executive_summary_title = "Executive Summary"
     executive_summary = Paragraph(executive_summary_title, styles['Heading2'])
     story.append(executive_summary)
     story.append(Spacer(1, 12))
 
-    executive_summary_text = f"This is a report for a CyberPHA risk assessment conducted at {cyber_pha_header.FacilityName}, a {cyber_pha_header.FacilityType} at {cyber_pha_header.facilityAddress}, {cyber_pha_header.facilityCity}, {cyber_pha_header.facilityCode}, {cyber_pha_header.country}. The assessment was conducted between {cyber_pha_header.AssessmentStartDate} and {cyber_pha_header.AssessmentEndDate}. The assessment leader was {cyber_pha_header.PHALeader}"
+    executive_summary_text = f"This is a report for a CyberPHA risk assessment conducted at {cyber_pha_header.facility.name}, a {cyber_pha_header.facility.type.FacilityType} at {cyber_pha_header.facility.address}. The assessment was conducted between {cyber_pha_header.AssessmentStartDate} and {cyber_pha_header.AssessmentEndDate}. The assessment leader was {cyber_pha_header.PHALeader}"
     summary_paragraph = Paragraph(executive_summary_text, styles['BodyText'])
     story.append(summary_paragraph)
     story.append(Spacer(1, 12))
@@ -216,26 +576,6 @@ def pha_reports(request, cyber_pha_header_id):
     story.append(Spacer(1, 12))
 
     # Determine the likelihood description based on the overall_likelihood value
-    overall_likelihood = context['overall_likelihood']
-    if 0 <= overall_likelihood <= 25:
-        likelihood_description = "Very Low"
-    elif 26 <= overall_likelihood <= 35:
-        likelihood_description = "Low"
-    elif 36 <= overall_likelihood <= 55:
-        likelihood_description = "Medium"
-    elif 56 <= overall_likelihood <= 70:
-        likelihood_description = "Medium to High"
-    elif 71 <= overall_likelihood <= 90:
-        likelihood_description = "High"
-    elif 91 <= overall_likelihood <= 100:
-        likelihood_description = "Very High"
-    else:
-        likelihood_description = "Unknown"  # Just in case the value is out of expected range
-
-    likelihood_summary_text = f"Overall likelihood of the facility being affected by the given scenarios is: {overall_likelihood}% ({likelihood_description})"
-    likelihood_summary_paragraph = Paragraph(likelihood_summary_text, body_text_style)
-    story.append(likelihood_summary_paragraph)
-    story.append(Spacer(1, 12))
 
     styles = getSampleStyleSheet()
     center_style = ParagraphStyle(name='Center', parent=styles['BodyText'], alignment=1, spaceBefore=6, spaceAfter=6,
@@ -258,7 +598,12 @@ def pha_reports(request, cyber_pha_header_id):
     chart.categoryAxis.categoryNames = categories
     chart.valueAxis.valueMin = 0
     chart.valueAxis.valueMax = max(data[0]) + 1  # Set max value slightly higher than the max data value
-    chart.bars[0].fillColor = colors.skyblue
+
+    greyscale_colors = [colors.grey, colors.lightgrey, colors.darkgrey]
+    for i in range(len(chart.data)):
+        chart.bars[i].fillColor = greyscale_colors[i % len(greyscale_colors)]
+        chart.bars[i].strokeColor = colors.black
+        chart.bars[i].strokeWidth = 0.5
 
     # Chart styles
     chart.categoryAxis.labels.boxAnchor = 'n'  # North alignment for category labels
@@ -272,85 +617,251 @@ def pha_reports(request, cyber_pha_header_id):
 
     # Create a table with the chart and caption
     caption_text = "<b>Overall Scenario Business Impact Analysis</b>"
+    center_style = ParagraphStyle(name='Center', parent=styles['BodyText'], alignment=1, spaceBefore=6, spaceAfter=6,
+                                  fontSize=10)
     caption_paragraph = Paragraph(caption_text, center_style)
 
     # Adjusting the column width to bring the caption closer to the chart
     chart_and_caption_table = Table(
-        [[drawing, caption_paragraph]],
-        colWidths=[width, 100],  # Adjust the width of the caption column
-        rowHeights=[height]
+        [[caption_paragraph], [drawing]],
+        colWidths=[width],  # Adjust the width to center the chart
+        rowHeights=[None, height]
     )
 
     # Style the table to align the caption to the left and position it
     chart_and_caption_table.setStyle(TableStyle([
-        ('VALIGN', (0, 0), (0, 0), 'TOP'),  # Align the chart to the top
-        ('VALIGN', (1, 0), (1, 0), 'TOP'),  # Align the caption to the top
-        ('LEFTPADDING', (1, 0), (1, 0), 0),  # Remove left padding for the caption
-        ('TOPPADDING', (1, 0), (1, 0), height * 0.25),  # Move the caption down 25% of the chart height
-        ('ALIGN', (1, 0), (1, 0), 'LEFT')  # Left align the caption text
+        ('ALIGN', (0, 0), (0, 0), 'CENTER'),  # Center align the caption
+        ('ALIGN', (0, 1), (0, 1), 'CENTER'),  # Center align the chart
+        ('VALIGN', (0, 1), (0, 1), 'TOP'),  # Align the chart to the top
+        ('TOPPADDING', (0, 1), (0, 1), 0),  # Add padding above the chart
     ]))
     # Add the table to the story
     story.append(chart_and_caption_table)
-    story.append(Spacer(1, 20))
-
-    assessment_summary_text = f"OT Cybersecurity Controls are assessed as: {cyber_pha_header.last_assessment_score}/100: <b>{cyber_pha_header.last_assessment_summary} </b>"
-    assessment_summary_paragraph = Paragraph(assessment_summary_text, body_text_style)
-    story.append(assessment_summary_paragraph)
-    story.append(Spacer(1, 12))
-
-    # Dynamic summary based on PHA Score
-    pha_score = cyber_pha_header.pha_score
-    if pha_score < 25:
-        risk_level = "<b>A moderately safe environment with few hazards.</b>"
-    elif 25 <= pha_score < 50:
-        risk_level = "<b>Facility has health and safety hazards. Visitors should be trained and aware of hazards while on site.</b>"
-    elif 50 <= pha_score < 75:
-        risk_level = "<b>Facility is likely to contain significant health and safety hazards. Proper training and/or PPE should be provided.</b>"
+    story.append(Spacer(1, 5))
+    pha_score = cyber_pha_header.facility.pha_score
+    overall_likelihood = context['overall_likelihood']
+    if 0 <= overall_likelihood <= 25:
+        likelihood_description = "Very Low"
+    elif 26 <= overall_likelihood <= 35:
+        likelihood_description = "Low"
+    elif 36 <= overall_likelihood <= 55:
+        likelihood_description = "Medium"
+    elif 56 <= overall_likelihood <= 70:
+        likelihood_description = "Medium to High"
+    elif 71 <= overall_likelihood <= 90:
+        likelihood_description = "High"
+    elif 91 <= overall_likelihood <= 100:
+        likelihood_description = "Very High"
     else:
-        risk_level = "<b>Facility contains hazards likely to represent a significant safety concern. Proper training and PPE is essential.</b>"
+        likelihood_description = "Unknown"  # Just in case the value is out of expected range
 
-    score_summary_text = f"The facility AnzenOT PHA Score is assessed as: {pha_score}/100, indicating: <b>{risk_level}</b>"
-    score_summary_paragraph = Paragraph(score_summary_text, body_text_style)
-    story.append(score_summary_paragraph)
-    story.append(Spacer(1, 12))
+    styles = getSampleStyleSheet()
+    caption_style = ParagraphStyle(name='Caption', parent=styles['BodyText'], alignment=TA_CENTER, fontSize=10,
+                                   spaceBefore=5)
+    center_style = ParagraphStyle(name='Center', parent=styles['BodyText'], alignment=TA_CENTER, spaceBefore=6,
+                                  spaceAfter=4, fontSize=10)
 
-    story.append(PageBreak())
+    # Define the table data for risk likelihood, control score, and PHA score
+    risk_likelihood_heading = Paragraph("<b>Risk Likelihood</b>", center_style)
+    risk_likelihood_value = Paragraph(f"{overall_likelihood}%", center_style)
+    control_score_heading = Paragraph("<b>Control Score</b>", center_style)
+    control_score_value = Paragraph(f"{cyber_pha_header.last_assessment_score}/100", center_style)
+    pha_score_heading = Paragraph("<b>PHA Score</b>", center_style)
+    pha_score_value = Paragraph(f"{pha_score}/100", center_style)
+
+    # Create the table data
+    data = [
+        [risk_likelihood_heading, control_score_heading, pha_score_heading],
+        [risk_likelihood_value, control_score_value, pha_score_value]
+    ]
+
+    # Create the table
+    table = Table(data, colWidths=[None, None, None], rowHeights=[30, 30])
+
+    # Style the table
+    table.setStyle(TableStyle([
+        # Header row style
+        ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+        ('LINEBELOW', (0, 0), (-1, 0), 1, colors.darkgrey),
+        ('TOPPADDING', (0, 0), (-1, 0), 5),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 5),
+        ('LEFTPADDING', (0, 0), (-1, 0), 10),
+        ('RIGHTPADDING', (0, 0), (-1, 0), 10),
+
+        # Remove borders from header row except bottom
+        ('LINEABOVE', (0, 0), (-1, 0), 0, colors.white),
+        ('LINEBEFORE', (0, 0), (0, 0), 0, colors.white),
+        ('LINEAFTER', (-1, 0), (-1, 0), 0, colors.white),
+
+        # Data row style
+        ('BOTTOMPADDING', (0, 1), (-1, 1), 5),
+        ('TOPPADDING', (0, 1), (-1, 1), 5),
+        ('LINEBELOW', (0, 1), (-1, 1), 1, colors.darkgrey),
+        ('LEFTPADDING', (0, 1), (-1, 1), 10),
+        ('RIGHTPADDING', (0, 1), (-1, 1), 10),
+
+        # Remove other borders from data row
+        ('LINEABOVE', (0, 1), (-1, 1), 0, colors.white),
+        ('LINEBEFORE', (0, 1), (0, 1), 0, colors.white),
+        ('LINEAFTER', (-1, 1), (-1, 1), 0, colors.white),
+
+        # Center align all cells
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE')
+    ]))
+
+    caption_style = ParagraphStyle(name='Caption', parent=styles['BodyText'], alignment=TA_CENTER, fontSize=10,
+                                   spaceBefore=5)
+    caption_text = "Key Indicators"
+    caption_paragraph = Paragraph(caption_text, caption_style)
+    styles = getSampleStyleSheet()
+    caption_style = ParagraphStyle(name='Caption', parent=styles['BodyText'], alignment=TA_CENTER, fontSize=10,
+                                   spaceBefore=5)
+    center_style = ParagraphStyle(name='Center', parent=styles['BodyText'], alignment=TA_CENTER, spaceBefore=6,
+                                  spaceAfter=4, fontSize=10)
+    # Add the table to the story
+    story.append(caption_paragraph)
+    story.append(table)
+    story.append(Spacer(1, 20))
 
     caption_style = ParagraphStyle(name='Caption', parent=styles['BodyText'], alignment=TA_CENTER, fontSize=10,
                                    spaceBefore=5)
     caption_text = "Overall cost impact (all scenarios)"
     caption_paragraph = Paragraph(caption_text, caption_style)
-    story.append(caption_paragraph)
+
     styles = getSampleStyleSheet()
+    caption_style = ParagraphStyle(name='Caption', parent=styles['BodyText'], alignment=TA_CENTER, fontSize=10,
+                                   spaceBefore=5)
     center_style = ParagraphStyle(name='Center', parent=styles['BodyText'], alignment=TA_CENTER, spaceBefore=6,
                                   spaceAfter=4, fontSize=10)
+
+    # Define the table data
     data = [
-        [Paragraph(f"<b>Best Case:</b><br/>{context['total_cost_impact_low']}", center_style)],
-        [Paragraph(f"<b>Most Likely:</b><br/>{context['total_cost_impact']}", center_style)],
-        [Paragraph(f"<b>Worst Case:</b><br/>{context['total_cost_impact_high']}", center_style)]
+        [
+            Paragraph("<b>Best Case</b>", center_style),
+            Paragraph("<b>Most Likely</b>", center_style),
+            Paragraph("<b>Worst Case</b>", center_style)
+        ],
+        [
+            Paragraph(f"{context['total_cost_impact_low']}", center_style),
+            Paragraph(f"{context['total_cost_impact']}", center_style),
+            Paragraph(f"{context['total_cost_impact_high']}", center_style)
+        ]
     ]
 
     # Create the table
-    table = Table(data, colWidths=[300], rowHeights=[30, 30, 30])
+    table = Table(data, colWidths=[None, None, None], rowHeights=[30, 30])
 
-    # Style the table to have borders around each cell
+    # Style the table
     table.setStyle(TableStyle([
+        # Header row style
+        ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+        ('LINEBELOW', (0, 0), (-1, 0), 1, colors.darkgrey),
+        ('TOPPADDING', (0, 0), (-1, 0), 5),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 5),
+        ('LEFTPADDING', (0, 0), (-1, 0), 10),
+        ('RIGHTPADDING', (0, 0), (-1, 0), 10),
+
+        # Remove borders from header row except bottom
+        ('LINEABOVE', (0, 0), (-1, 0), 0, colors.white),
+        ('LINEBEFORE', (0, 0), (0, 0), 0, colors.white),
+        ('LINEAFTER', (-1, 0), (-1, 0), 0, colors.white),
+
+        # Data row style
+        ('BOTTOMPADDING', (0, 1), (-1, 1), 5),
+        ('TOPPADDING', (0, 1), (-1, 1), 5),
+        ('LINEBELOW', (0, 1), (-1, 1), 1, colors.darkgrey),
+        ('LEFTPADDING', (0, 1), (-1, 1), 10),
+        ('RIGHTPADDING', (0, 1), (-1, 1), 10),
+
+        # Remove other borders from data row
+        ('LINEABOVE', (0, 1), (-1, 1), 0, colors.white),
+        ('LINEBEFORE', (0, 1), (0, 1), 0, colors.white),
+        ('LINEAFTER', (-1, 1), (-1, 1), 0, colors.white),
+
+        # Center align all cells
         ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-        ('GRID', (0, 0), (-1, -1), 1, colors.black),
-        ('BACKGROUND', (0, 0), (-1, -1), colors.whitesmoke),
-        ('LEFTPADDING', (0, 0), (-1, -1), 10),
-        ('RIGHTPADDING', (0, 0), (-1, -1), 10),
-        ('TOPPADDING', (0, 0), (-1, -1), 5),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 5)
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE')
     ]))
 
-    # Add the table to the story
+    # Add the caption and table to the story
+    story.append(caption_paragraph)
     story.append(table)
-
     story.append(Spacer(1, 12))
 
     story.append(PageBreak())
+    # page 2 of executive summary
+    custom_bold_style = ParagraphStyle('CustomBold', parent=styles['BodyText'], fontName='Helvetica-Bold')
+    body_text_style = ParagraphStyle('BodyTextWithMarkup', parent=styles['BodyText'], fontName='Helvetica',
+                                     allowMarkup=True)
+
+    # Add the header for the second page
+    header_texts = ['Executive Summary', 'Scenarios', 'Summary', 'Appendix']
+    header_html = '<para alignment="center">'
+    for text in header_texts:
+        if text == 'Executive Summary':
+            header_html += f'<u color="#65C8D0">{text}</u>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'
+        else:
+            header_html += f'{text}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'
+    header_html += '</para>'
+
+    header_paragraph = Paragraph(header_html, custom_bold_style)
+    # Add header paragraph close to the top
+    story.append(Spacer(1, -30))
+    story.append(header_paragraph)
+    # end of header paragraph
+
+    # start of main content for page 2 of executive summary
+    subheading_style = ParagraphStyle(name='Subheading', parent=styles['Heading2'], fontName='Helvetica-Bold',
+                                      fontSize=14, spaceBefore=16, spaceAfter=6)
+    body_text_style = ParagraphStyle(name='BodyText', parent=styles['BodyText'], fontName='Helvetica', fontSize=12,
+                                     spaceBefore=6, spaceAfter=6)
+
+    # Fetch the framework value
+    try:
+        self_assessment = SelfAssessment.objects.get(pk=cyber_pha_header.assessment)
+
+        framework_name = self_assessment.framework.name
+    except SelfAssessment.DoesNotExist:
+        framework_name = "No assessment saved"
+
+    # Create the subheading and body text paragraphs
+    subheading_paragraph = Paragraph("Control Assessment", subheading_style)
+    body_text_paragraph = Paragraph(f"A control assessment was performed against: {framework_name}", body_text_style)
+
+    # Add the paragraphs to the story
+    story.append(subheading_paragraph)
+    story.append(Spacer(1, 12))
+    story.append(body_text_paragraph)
+    story.append(Spacer(1, 12))
+    assessment_summary = cyber_pha_header.last_assessment_summary
+    bullet_points = assessment_summary.split('. ')
+
+    # Create the bullet list paragraphs
+    for point in bullet_points:
+        if point.strip():  # Check if the point is not empty
+            bullet_paragraph = Paragraph(f"• {point.strip()}.", body_text_style)
+            story.append(bullet_paragraph)
+            story.append(Spacer(1, 6))  # Add some space between bullet points
+
+    story.append(PageBreak())
+    # end of page 2 of executive summary
+    header_texts = ['Executive Summary', 'Scenarios', 'Summary', 'Appendix']
+    header_html = '<para alignment="center">'
+    for text in header_texts:
+        if text == 'Scenarios':
+            header_html += f'<u color="#65C8D0">{text}</u>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'
+        else:
+            header_html += f'{text}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'
+    header_html += '</para>'
+
+    header_paragraph = Paragraph(header_html, custom_bold_style)
+    # Add header paragraph close to the top
+    story.append(Spacer(1, -30))
+    story.append(header_paragraph)
+    story.append(Spacer(1, 12))
     scenarios_title = "Scenarios"
     scenarios_header = Paragraph(scenarios_title, styles['Heading2'])
     story.append(scenarios_header)
@@ -359,310 +870,361 @@ def pha_reports(request, cyber_pha_header_id):
 
     # Get the list of scenarios from the context
     cyber_pha_scenarios = context['cyber_pha_scenarios']
+    scenario_text_style = ParagraphStyle(name='ScenarioText', parent=styles['BodyText'], alignment=TA_LEFT,
+                                         spaceBefore=6, spaceAfter=6)
     first_scenario = True
     # Iterate through each scenario in the list
     for index, scenario in enumerate(cyber_pha_scenarios, start=1):
-        if index > 1:
-            # Add a PageBreak before every new scenario after the first
-            story.append(PageBreak())
+        if index > 0:
 
-        # Create a header for each scenario using its 'Scenario' attribute
-        scenario_title = f"Scenario {index}: {scenario.Scenario}"
-        scenario_header = Paragraph(scenario_title, styles['Heading3'])
-        story.append(scenario_header)
-        story.append(Spacer(1, 10))
-
-        observations = scenario.observations.all() if hasattr(scenario, 'observations') else []
-
-        styles = getSampleStyleSheet()
-        center_style = ParagraphStyle(name='Center', parent=styles['BodyText'], alignment=TA_CENTER, spaceBefore=6,
-                                      spaceAfter=6, fontSize=12)
-
-        # Modify the data preparation
-        data = [
-            [Paragraph(f"<b>Scenario Residual Risk:</b><br/>{scenario.RRa}", center_style)],
-            [Paragraph(f"<b>Scenario Probability:</b><br/>{scenario.probability}", center_style)],
-            [Paragraph(f"<b>Risk Recommendation:</b><br/>{scenario.risk_recommendation}", center_style)]
-        ]
-
-        # Create the table
-        info_table = Table(data, colWidths=[300], rowHeights=[40, 40, 40])  # Adjust dimensions as needed
-
-        # Define table style with added padding and spacing adjustments
-        info_table.setStyle(TableStyle([
-            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-            ('GRID', (0, 0), (-1, -1), 1, colors.black),
-            ('BACKGROUND', (0, 0), (-1, -1), colors.whitesmoke),
-            ('LEFTPADDING', (0, 0), (-1, -1), 10),
-            ('RIGHTPADDING', (0, 0), (-1, -1), 10),
-            ('TOPPADDING', (0, 0), (-1, -1), 5),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 5)
-        ]))
-
-        # Add the table to the story
-        story.append(info_table)
-        story.append(Spacer(1, 12))
-
-        styles = getSampleStyleSheet()
-        center_style = ParagraphStyle(name='Center', parent=styles['BodyText'], alignment=TA_CENTER, spaceBefore=6,
-                                      spaceAfter=4, fontSize=10)
-
-        impact_values = [
-            scenario.impactSafety, scenario.impactData, scenario.impactDanger,
-            scenario.impactSupply, scenario.impactProduction, scenario.impactFinance,
-            scenario.impactEnvironment, scenario.impactSupply
-        ]
-
-        # Creating a drawing for the chart
-        width, height = 450, 250
-        drawing = Drawing(width, height)
-        chart = VerticalBarChart()
-        chart.x = 50
-        chart.y = 75
-        chart.height = 125
-        chart.width = 300
-        chart.data = [impact_values]
-        chart.valueAxis.valueMin = 0
-        chart.valueAxis.valueMax = 11  # Set max value slightly higher than the max data value
-        chart.bars[0].fillColor = colors.skyblue
-        # Add category names
-        chart.categoryAxis.categoryNames = [
-            'Safety', 'Data', 'Danger', 'Supply', 'Production', 'Finance', 'Environment', 'Supply'
-        ]
-
-        # Chart styles
-        # chart.bars.fillColor = colors.royalblue
-        chart.categoryAxis.labels.boxAnchor = 'n'  # North alignment for category labels
-        chart.categoryAxis.labels.angle = 45  # Optional: tilt the labels for better fit
-        chart.categoryAxis.labels.fontSize = 8
-        chart.categoryAxis.labels.dy = -10
-        chart.categoryAxis.labels.dx = -10
-
-        drawing.add(chart)
-        border = Rect(0, 0, width, height, strokeColor=colors.black, strokeWidth=1, fillColor=None)
-        drawing.add(border)
-
-        caption_text = "Scenario Business Impact Analysis"
-        caption_paragraph = Paragraph(caption_text, center_style)
-        story.append(caption_paragraph)  # Adding caption above the chart in the story
-        story.append(drawing)
-        story.append(Spacer(1, 20))
-
-        titles = ['Best Case:', 'Most Likely Case:', 'Worst Case:']
-        values = [
-            "${:,}".format(int(scenario.sle_low)),  # Assuming scenario.sle_low and others are integers
-            "${:,}".format(int(scenario.sle)),
-            "${:,}".format(int(scenario.sle_high))
-        ]
-
-        # Create data array for the table
-        data = [[Paragraph(f"<b>{title}</b><br/>{value}", center_style)] for title, value in zip(titles, values)]
-
-        # Define the table dimensions
-        table = Table(data, colWidths=[300] * len(data), rowHeights=[30] * len(data))
-
-        # Styling the table
-        table.setStyle(TableStyle([
-            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-            ('GRID', (0, 0), (-1, -1), 1, colors.black),
-            ('BACKGROUND', (0, 0), (-1, -1), colors.whitesmoke),
-            ('LEFTPADDING', (0, 0), (-1, -1), 10),
-            ('RIGHTPADDING', (0, 0), (-1, -1), 10),
-            ('TOPPADDING', (0, 0), (-1, -1), 5),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 5)
-        ]))
-
-        # Caption for the table
-        caption_style = ParagraphStyle(name='Caption', parent=styles['BodyText'], alignment=TA_CENTER, fontSize=10,
-                                       spaceBefore=5)
-        caption_text = "Scenario Estimated Cost Impact"
-        caption_paragraph = Paragraph(caption_text, caption_style)
-
-        # Add the caption and the table to the story
-        story.append(caption_paragraph)
-        story.append(table)
-        story.append(Spacer(1, 20))
-
-        if observations:
-            observations_header = Paragraph("Observations:", styles['Heading4'])
-            story.append(observations_header)
+            # Create a header for each scenario using its 'Scenario' attribute
+            scenario_title = f"Scenario: {index}"
+            scenario_header = Paragraph(scenario_title, styles['Heading3'])
+            story.append(scenario_header)
             story.append(Spacer(1, 10))
 
-            for obs in observations:
-                observation_paragraph = Paragraph(obs.observation_description, styles['BodyText'])
-                story.append(observation_paragraph)
-                story.append(Spacer(1, 10))
+            # Split the scenario text into sentences
+            scenario_sentences = scenario.Scenario.split('. ')
+            formatted_scenario_text = ""
+            for sentence in scenario_sentences:
+                if sentence.strip():
+                    formatted_scenario_text += f"{sentence.strip()}.\n"
 
-        story.append(Spacer(1, 20))
-        recommendations_list = scenario.recommendations.strip().split('\n')
+            # Create the scenario paragraph
+            scenario_paragraph = Paragraph(formatted_scenario_text, scenario_text_style)
 
-        # Create table data, where each recommendation is in its own row and cell
-        table_data = [[Paragraph(rec, styles['BodyText'])] for rec in recommendations_list]
-
-        # Define the table
-        recommendations_table = Table(table_data, colWidths=[450])  # Set column width to fit your page
-
-        # Define table style to add borders and spacing
-        recommendations_table.setStyle(TableStyle([
-            ('BOX', (0, 0), (-1, -1), 1, colors.black),  # Border around each cell
-            ('INNERGRID', (0, 0), (-1, -1), 1, colors.black),  # Grid lines between cells
-            ('TOPPADDING', (0, 0), (-1, -1), 5),  # Padding inside each cell
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
-            ('ROWBACKGROUNDS', (0, 0), (-1, -1), [None, colors.whitesmoke]),  # Alternate background colors
-            ('VALIGN', (0, 0), (-1, -1), 'TOP'),  # Align text to the top of the cell
-        ]))
-        caption_text = "Recommendations"
-        caption_paragraph = Paragraph(caption_text, styles['Title'])
-        story.append(caption_paragraph)
-        story.append(Spacer(1, 12))
-        # Add the table to the story, with a Spacer to add space after the table
-        story.append(recommendations_table)
-        story.append(Spacer(1, 12))  # Space after the table before the next content
-
-        # Check if the risk_treatment_plan field exists and is not empty
-        if hasattr(scenario, 'risk_treatment_plan') and scenario.risk_treatment_plan:
-            # Split the risk treatment plan into individual steps
-            treatment_steps = scenario.risk_treatment_plan.strip().split('\n')
-
-            # Prepare table data, where each step is in its own row and cell
-            table_data = [[Paragraph(step, styles['BodyText'])] for step in treatment_steps]
-
-            # Create the table and define styles
-            risk_treatment_table = Table(table_data, colWidths=[450])  # Set column width to fit your page
-            risk_treatment_table.setStyle(TableStyle([
-                ('BOX', (0, 0), (-1, -1), 1, colors.black),  # Border around each cell
-                ('INNERGRID', (0, 0), (-1, -1), 1, colors.black),  # Grid lines between cells
-                ('TOPPADDING', (0, 0), (-1, -1), 5),  # Padding inside each cell
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
-                ('ROWBACKGROUNDS', (0, 0), (-1, -1), [None, colors.whitesmoke]),  # Alternate background colors
-                ('VALIGN', (0, 0), (-1, -1), 'TOP'),  # Align text to the top of the cell
+            # Create a table to enclose the scenario paragraph with a border
+            scenario_table = Table(
+                [[scenario_paragraph]],
+                colWidths=[0.8 * letter[0]]  # 50% of the page width
+            )
+            scenario_table.setStyle(TableStyle([
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ('BOX', (0, 0), (-1, -1), 1, lightgrey),
+                ('LEFTPADDING', (0, 0), (-1, -1), 10),
+                ('RIGHTPADDING', (0, 0), (-1, -1), 10),
+                ('TOPPADDING', (0, 0), (-1, -1), 10),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
             ]))
 
-            # Add a caption above the table
-            caption_text = "Risk Treatment Plan"
+            # Add the scenario table to the story
+            story.append(scenario_table)
+            story.append(Spacer(1, 20))
+
+            observations = scenario.observations.all() if hasattr(scenario, 'observations') else []
+
+            styles = getSampleStyleSheet()
+            center_style = ParagraphStyle(name='Center', parent=styles['BodyText'], alignment=TA_CENTER, spaceBefore=2,
+                                          spaceAfter=6, fontSize=9)
+
+            data = [
+                [
+                    Paragraph("<b>Residual Risk</b>", center_style),
+                    Paragraph("<b>Probability</b>", center_style),
+                    Paragraph("<b>Recommendation</b>", center_style)
+                ],
+                [
+                    Paragraph(f"{scenario.RRa}", center_style),
+                    Paragraph(f"{scenario.probability}", center_style),
+                    Paragraph(f"{scenario.risk_recommendation}", center_style)
+                ]
+                    ]
+
+            table = Table(data, colWidths=[None, None, None], rowHeights=[30, 30])
+            # Style the table
+            table.setStyle(TableStyle([
+                # Header row style
+                ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+                ('LINEBELOW', (0, 0), (-1, 0), 1, colors.darkgrey),
+                ('TOPPADDING', (0, 0), (-1, 0), 5),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 5),
+                ('LEFTPADDING', (0, 0), (-1, 0), 10),
+                ('RIGHTPADDING', (0, 0), (-1, 0), 10),
+
+                # Remove borders from header row except bottom
+                ('LINEABOVE', (0, 0), (-1, 0), 0, colors.white),
+                ('LINEBEFORE', (0, 0), (0, 0), 0, colors.white),
+                ('LINEAFTER', (-1, 0), (-1, 0), 0, colors.white),
+
+                # Data row style
+                ('BOTTOMPADDING', (0, 1), (-1, 1), 5),
+                ('TOPPADDING', (0, 1), (-1, 1), 5),
+                ('LINEBELOW', (0, 1), (-1, 1), 1, colors.darkgrey),
+                ('LEFTPADDING', (0, 1), (-1, 1), 10),
+                ('RIGHTPADDING', (0, 1), (-1, 1), 10),
+
+                # Remove other borders from data row
+                ('LINEABOVE', (0, 1), (-1, 1), 0, colors.white),
+                ('LINEBEFORE', (0, 1), (0, 1), 0, colors.white),
+                ('LINEAFTER', (-1, 1), (-1, 1), 0, colors.white),
+
+                # Center align all cells
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE')
+            ]))
+            # Add the table to the story
+            story.append(table)
+            story.append(Spacer(1, 20))
+            # End residual risk table
+
+            add_risk_rationale_table(story, scenario)
+            story.append(PageBreak())
+            custom_bold_style = ParagraphStyle('CustomBold', parent=styles['BodyText'], fontName='Helvetica-Bold')
+            body_text_style = ParagraphStyle('BodyTextWithMarkup', parent=styles['BodyText'], fontName='Helvetica',
+                                             allowMarkup=True)
+
+            # Add the header for the second page
+            header_texts = ['Executive Summary', 'Scenarios', 'Summary', 'Appendix']
+            header_html = '<para alignment="center">'
+            for text in header_texts:
+                if text == 'Executive Summary':
+                    header_html += f'<u color="#65C8D0">{text}</u>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'
+                else:
+                    header_html += f'{text}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'
+            header_html += '</para>'
+
+            header_paragraph = Paragraph(header_html, custom_bold_style)
+            # Add header paragraph close to the top
+            story.append(Spacer(1, -30))
+            story.append(header_paragraph)
+            # start scenario cost impact
+            caption_style = ParagraphStyle(name='Caption', parent=styles['BodyText'], alignment=TA_CENTER, fontSize=10,
+                                           spaceBefore=15)
+            caption_text = "Scenario cost impact"
+            caption_paragraph = Paragraph(caption_text, caption_style)
+
+            styles = getSampleStyleSheet()
+            caption_style = ParagraphStyle(name='Caption', parent=styles['BodyText'], alignment=TA_CENTER, fontSize=10,
+                                           spaceBefore=5)
+            center_style = ParagraphStyle(name='Center', parent=styles['BodyText'], alignment=TA_CENTER, spaceBefore=6,
+                                          spaceAfter=4, fontSize=10)
+
+            best_case = format_currency(scenario.sle_low)
+            mid_case = format_currency(scenario.sle_low)
+            worst_case = format_currency(scenario.sle_high)
+            # Define the table data
+            data = [
+                [
+                    Paragraph("<b>Best Case</b>", center_style),
+                    Paragraph("<b>Most Likely</b>", center_style),
+                    Paragraph("<b>Worst Case</b>", center_style)
+                ],
+                [
+                    Paragraph(f"{best_case}", center_style),
+                    Paragraph(f"{mid_case}", center_style),
+                    Paragraph(f"{worst_case}", center_style)
+                ]
+            ]
+
+            table = Table(data, colWidths=[None, None, None], rowHeights=[30, 30])
+
+            table.setStyle(TableStyle([
+                # Header row style
+                ('BACKGROUND', (0, 0), (-1, 0), colors.lightgrey),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+                ('LINEBELOW', (0, 0), (-1, 0), 1, colors.darkgrey),
+                ('TOPPADDING', (0, 0), (-1, 0), 5),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 5),
+                ('LEFTPADDING', (0, 0), (-1, 0), 10),
+                ('RIGHTPADDING', (0, 0), (-1, 0), 10),
+
+                # Remove borders from header row except bottom
+                ('LINEABOVE', (0, 0), (-1, 0), 0, colors.white),
+                ('LINEBEFORE', (0, 0), (0, 0), 0, colors.white),
+                ('LINEAFTER', (-1, 0), (-1, 0), 0, colors.white),
+
+                # Data row style
+                ('BOTTOMPADDING', (0, 1), (-1, 1), 5),
+                ('TOPPADDING', (0, 1), (-1, 1), 5),
+                ('LINEBELOW', (0, 1), (-1, 1), 1, colors.darkgrey),
+                ('LEFTPADDING', (0, 1), (-1, 1), 10),
+                ('RIGHTPADDING', (0, 1), (-1, 1), 10),
+
+                # Remove other borders from data row
+                ('LINEABOVE', (0, 1), (-1, 1), 0, colors.white),
+                ('LINEBEFORE', (0, 1), (0, 1), 0, colors.white),
+                ('LINEAFTER', (-1, 1), (-1, 1), 0, colors.white),
+
+                # Center align all cells
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE')
+            ]))
+
+            story.append(caption_paragraph)
+            story.append(table)
+            story.append(Spacer(1, 12))
+            # end cost impact
+
+            story.append(Spacer(1, 20))
+            # add cost projection
+
+            add_cost_projection_chart(story, scenario)
+            # end cost projection
+            story.append(PageBreak())
+            custom_bold_style = ParagraphStyle('CustomBold', parent=styles['BodyText'], fontName='Helvetica-Bold')
+            body_text_style = ParagraphStyle('BodyTextWithMarkup', parent=styles['BodyText'], fontName='Helvetica',
+                                             allowMarkup=True)
+
+            # Add the header for the second page
+            header_texts = ['Executive Summary', 'Scenarios', 'Summary', 'Appendix']
+            header_html = '<para alignment="center">'
+            for text in header_texts:
+                if text == 'Scenarios':
+                    header_html += f'<u color="#65C8D0">{text}</u>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'
+                else:
+                    header_html += f'{text}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'
+            header_html += '</para>'
+
+            header_paragraph = Paragraph(header_html, custom_bold_style)
+            # Add header paragraph close to the top
+            story.append(Spacer(1, -30))
+            story.append(header_paragraph)
+            story.append(Spacer(1, 20))
+            add_impact_chart(story, scenario)
+
+            accent_line = Drawing(400, 2)
+            accent_line.add(Line(0, 1, 400, 1, strokeColor=colors.HexColor('#65C8D0'), strokeWidth=2))
+            story.append(accent_line)
+            story.append(Spacer(1, 12))
+
+            # Add a heading for the data
+            styles = getSampleStyleSheet()
+            heading_style = ParagraphStyle('heading', parent=styles['Heading4'], alignment=1, spaceAfter=12)
+            heading = Paragraph("Scenario Business Impact Analysis Justification", heading_style)
+            story.append(heading)
+            story.append(Spacer(1, 12))
+
+            # Print each field as a bullet point item
+            bullet_style = ParagraphStyle('bullet', parent=styles['BodyText'], fontSize=8, leftIndent=20, spaceAfter=6)
+            bullet_points = [
+                scenario.justifySafety,
+                scenario.justifyLife,
+                scenario.justifyReputation,
+                scenario.justifyProduction,
+                scenario.justifyFinancial,
+                scenario.justifyData,
+                scenario.justifySupply,
+                scenario.justifyReputation
+            ]
+
+            for point in bullet_points:
+                if point:  # Only include non-empty and non-null points
+                    story.append(Paragraph(f'• {point}', bullet_style))
+                    story.append(Spacer(1, 6))
+            story.append(PageBreak())
+            # page 2 of executive summary
+            custom_bold_style = ParagraphStyle('CustomBold', parent=styles['BodyText'], fontName='Helvetica-Bold')
+            body_text_style = ParagraphStyle('BodyTextWithMarkup', parent=styles['BodyText'], fontName='Helvetica',
+                                             allowMarkup=True)
+
+            # Add the header for the second page
+            header_texts = ['Executive Summary', 'Scenarios', 'Summary', 'Appendix']
+            header_html = '<para alignment="center">'
+            for text in header_texts:
+                if text == 'Scenarios':
+                    header_html += f'<u color="#65C8D0">{text}</u>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'
+                else:
+                    header_html += f'{text}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'
+            header_html += '</para>'
+
+            header_paragraph = Paragraph(header_html, custom_bold_style)
+            # Add header paragraph close to the top
+            story.append(Spacer(1, -30))
+            story.append(header_paragraph)
+            story.append(Spacer(1, 20))
+            story.append(scenario_table)
+            story.append(Spacer(1, 20))
+
+            ref_text_style = ParagraphStyle('RefText', parent=styles['BodyText'], fontName='Helvetica', fontSize=8)
+
+            recommendations_list = scenario.recommendations.strip().split('\n')
+
+            # Parse the recommendations into structured data
+            parsed_recommendations = []
+            for rec in recommendations_list:
+                num, rest = rec.split('.', 1)
+                rec_text, ref = rest.rsplit('[', 1)
+                ref = ref.rstrip(']')
+                parsed_recommendations.append(
+                    [num.strip(), Paragraph(rec_text.strip(), styles['BodyText']), Paragraph(ref.strip(), ref_text_style)])
+
+            # Add header row to the table data
+            table_data = [['#', 'Recommendation', 'Ref.']] + parsed_recommendations
+
+            # Define the table
+            col_widths = [0.08 * 450, 0.72 * 450, 0.20 * 450]
+            recommendations_table = Table(table_data, colWidths=col_widths)
+
+            # Define table style to add borders and spacing
+            recommendations_table.setStyle(TableStyle([
+                ('BOX', (0, 0), (-1, 0), 0, colors.white),  # No border for the outer box
+                ('LINEBEFORE', (1, 1), (-1, -1), 0, colors.white),  # No border before each column
+                ('LINEAFTER', (0, 0), (-1, 0), 0, colors.white),  # No border after the header row
+                ('TOPPADDING', (0, 0), (-1, -1), 5),  # Padding inside each cell
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
+                ('ROWBACKGROUNDS', (0, 0), (-1, 0), [colors.lightgrey]),  # Light grey background for header row
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),  # Align text to the top of the cell
+                ('LINEABOVE', (0, 1), (-1, -1), 1, colors.HexColor('#65C8D0'), None, (2, 2)),  # Dashed line above each row
+                ('LINEBELOW', (0, 0), (-1, -2), 1, colors.HexColor('#65C8D0'), None, (2, 2)),  # Dashed line below each row
+            ]))
+
+            caption_text = "Recommendations"
             caption_paragraph = Paragraph(caption_text, styles['Title'])
             story.append(caption_paragraph)
             story.append(Spacer(1, 12))
-
-            # Add the table to the story
-            story.append(risk_treatment_table)
-            story.append(Spacer(1, 12))  # Space after the table before the next content
-        else:
-            # Handle the case where the risk_treatment_plan field is missing or empty
-            no_data_paragraph = Paragraph("Risk treatment plan has not been defined.", styles['BodyText'])
-            story.append(no_data_paragraph)
+            # Add the table to the story, with a Spacer to add space after the table
+            story.append(recommendations_table)
             story.append(Spacer(1, 12))
 
-        # Checking if the compliance_map field exists and is not empty
-        if hasattr(scenario, 'compliance_map') and scenario.compliance_map:
-            compliance_entries = scenario.compliance_map.split(" || ")
-            table_data = []
+            story.append(PageBreak())
+            # page 2 of executive summary
+            custom_bold_style = ParagraphStyle('CustomBold', parent=styles['BodyText'], fontName='Helvetica-Bold')
+            body_text_style = ParagraphStyle('BodyTextWithMarkup', parent=styles['BodyText'], fontName='Helvetica',
+                                             allowMarkup=True)
 
-            # Process each compliance entry if not empty
-            for entry in compliance_entries:
-                parts = entry.split(" > ")
-                if len(parts) == 3:
-                    framework, rule, url = parts
-                    table_data.append([Paragraph(framework, styles['BodyText']),
-                                       Paragraph(rule, styles['BodyText']),
-                                       Paragraph(url, styles['BodyText'])])
+            # Add the header for the second page
+            header_texts = ['Executive Summary', 'Scenarios', 'Summary', 'Appendix']
+            header_html = '<para alignment="center">'
+            for text in header_texts:
+                if text == 'Scenarios':
+                    header_html += f'<u color="#65C8D0">{text}</u>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'
+                else:
+                    header_html += f'{text}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'
+            header_html += '</para>'
 
-            # Only create the table if there are entries to display
-            if table_data:
-                # Create the table and define styles
-                compliance_table = Table(table_data, colWidths=[150, 150, 150], hAlign='LEFT')
-                compliance_table.setStyle(TableStyle([
-                    ('GRID', (0, 0), (-1, -1), 1, colors.black),
-                    ('BACKGROUND', (0, 0), (-1, 0), colors.white),
-                    ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-                    ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                ]))
+            header_paragraph = Paragraph(header_html, custom_bold_style)
+            # Add header paragraph close to the top
+            story.append(Spacer(1, -30))
+            story.append(header_paragraph)
+            story.append(Spacer(1, 20))
 
-                # Add a title for the table
-                compliance_title = Paragraph('Compliance Map', styles['Heading4'])
-                story.append(compliance_title)
-                story.append(Spacer(1, 10))
+            pdf_print_compliance_table(story, scenario, styles)
 
-                # Add the table to the story
-                story.append(compliance_table)
-                story.append(Spacer(1, 20))
-            else:
-                # Handle the case where there are no valid entries
-                no_data_paragraph = Paragraph("No compliance data available.", styles['BodyText'])
-                story.append(no_data_paragraph)
-                story.append(Spacer(1, 10))
-        else:
-            # Handle the case where the compliance_map field is missing or empty
-            no_data_paragraph = Paragraph("No compliance map provided.", styles['BodyText'])
-            story.append(no_data_paragraph)
-            story.append(Spacer(1, 10))
+            story.append(PageBreak())
 
-    story.append(PageBreak())
-    safety_summary_title = "Appendix - Facility Safety Summary"
+    safety_summary_title = "Appendix - Facility Safety Profile"
     safety_summary = Paragraph(safety_summary_title, styles['Heading2'])
     story.append(safety_summary)
     story.append(Spacer(1, 12))
 
+    safety_profile_json = cyber_pha_header.facility.type.safety_profile
+    safety_profile_data = json.loads(safety_profile_json)
+    pdf_print_safety_profile(story, safety_profile_data, styles)
     # Cleaning and preparing the safety summary list
-    safety_summary_list = context['safety_summary_list']
-    safety_summary_cleaned = [item.strip() for item in safety_summary_list if item.strip() != '']
 
-    safety_summary_cleaned = [re.sub(r'^\d+\.\s*', '', item) for item in safety_summary_cleaned]
-
-    # Constructing the numbered list string
-    sequencer = getSequencer()
-    sequencer.reset('safetySummary')  # Resetting the sequencer
-    safety_summary_text = "<br/>".join(f"<seq id='safetySummary'>. {item}" for item in safety_summary_cleaned)
-
-    # Define the paragraph style for the list with indentation for better readability
-    list_style = ParagraphStyle(
-        name='ListStyle',
-        parent=styles['BodyText'],
-        leftIndent=0,
-        firstLineIndent=-0,
-        spaceBefore=10,
-        bulletIndent=10,
-        allowOrphans=1
-    )
-
-    # Creating the paragraph with the list
-    safety_summary_paragraph = Paragraph(safety_summary_text, list_style)
-    story.append(safety_summary_paragraph)
-    story.append(Spacer(1, 20))
     story.append(PageBreak())
-    # Chemical summary
-    chemical_summary_title = "Appendix - Facility Chemical Summary"
+
+    chemical_summary_title = "Appendix - Facility Chemical Profile"
     chemical_summary = Paragraph(chemical_summary_title, styles['Heading2'])
     story.append(chemical_summary)
     story.append(Spacer(1, 12))
+    chemical_profile_json = cyber_pha_header.facility.type.chemical_profile
+    chemical_profile_data = json.loads(chemical_profile_json)
+    pdf_print_chemical_profile(story, chemical_profile_data, styles)
 
-    # Cleaning and preparing the safety summary list
-    chemical_summary_list = context['chemical_summary_list']
-    chemical_summary_cleaned = [item.strip() for item in chemical_summary_list if item.strip() != '']
 
-    chemical_summary_cleaned = [re.sub(r'^\d+\.\s*', '', item) for item in chemical_summary_cleaned]
-
-    # Constructing the numbered list string
-    sequencer = getSequencer()
-    sequencer.reset('chemicalSummary')  # Resetting the sequencer
-    chemical_summary_text = "<br/>".join(f"<seq id='chemicalSummary'>. {item}" for item in chemical_summary_cleaned)
-
-    # Define the paragraph style for the list with indentation for better readability
-    list_style = ParagraphStyle(
-        name='ListStyle',
-        parent=styles['BodyText'],
-        leftIndent=0,
-        firstLineIndent=-0,
-        spaceBefore=10,
-        bulletIndent=10,
-        allowOrphans=1
-    )
-
-    # Creating the paragraph with the list
-    chemical_summary_paragraph = Paragraph(chemical_summary_text, list_style)
-    story.append(chemical_summary_paragraph)
     story.append(Spacer(1, 20))
 
     # Add the Threat Summary section as an appendix
@@ -743,6 +1305,9 @@ def pha_reports(request, cyber_pha_header_id):
     strategy_summary_paragraph = Paragraph(strategy_summary_text, strategy_summary_style)
     story.append(strategy_summary_paragraph)
     story.append(Spacer(1, 20))
+
+    story.append(PageBreak())
+    pdf_print_glossary(story, styles)
 
     story.append(PageBreak())
     doc_summary_title = "Appendix - Report Description"
@@ -1408,6 +1973,7 @@ def raw_reports(request, raw_id):
         # Add the bar chart
         bar_chart = create_bar_chart(scenario)
         story.append(bar_chart)
+
         story.append(Spacer(1, 14))
 
         styles = getSampleStyleSheet()
@@ -1428,7 +1994,6 @@ def raw_reports(request, raw_id):
         story.append(Spacer(1, 10))
         story.append(scenario_probability_paragraph)
         story.append(Spacer(1, 12))
-
 
         bullet_point_style = ParagraphStyle(name='Bullet', parent=styles['BodyText'], spaceBefore=3, spaceAfter=3,
                                             leftIndent=20)

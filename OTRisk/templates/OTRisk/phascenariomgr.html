@@ -732,7 +732,15 @@ function generate_playbook() {
         cyberphaid: sessionStorage.getItem('activeCyberPHA'),
         scenarioid: sessionStorage.getItem('sid')
     };
-
+    var sid = sessionStorage.getItem('sid');
+    if (!sid || parseInt(sid) <= 0) {
+        Swal.fire({
+            icon: 'error',
+            title: 'No Scenario Selected',
+            text: 'Select a scenario for the playbook.'
+        });
+        return;
+    }
     // Ensure all required fields are filled
     if (!data.scenario || !data.recommendations || !data.compliance_map || !data.cyberphaid) {
         Swal.fire({
@@ -816,18 +824,34 @@ function generateScenarioReport() {
     var rationale_rationale = document.getElementById('hdnrationale_Rationale').value;
     var CyberPHAID = sessionStorage.getItem('activeCyberPHA');
 
-    // Check if all required fields are populated
-    if (!scenario || !likelihood || !adjustedRR || !costs_low || !costs || !costs_high ||
-        !probability || !frequency || !biaScore || !projection || !cost_projection_justification ||
-        !recommendations || !select_level || !scenario_compliance_data ||
-        !rationale_recommendation || !rationale_rationale || !CyberPHAID) {
-        Swal.fire({
-            icon: 'error',
-            title: 'Incomplete Scenario',
-            text: 'Only completed scenarios can be printed.'
-        });
-        return;
-    }
+    var missingFields = [];
+
+if (!scenario) missingFields.push('Scenario');
+if (!likelihood) missingFields.push('Likelihood');
+if (!adjustedRR) missingFields.push('Adjusted Risk Reduction');
+if (!costs_low) missingFields.push('Event Costs Low');
+if (!costs) missingFields.push('Event Costs');
+if (!costs_high) missingFields.push('Event Costs High');
+if (!probability) missingFields.push('Probability');
+if (!frequency) missingFields.push('Frequency');
+if (!biaScore) missingFields.push('BIA Score');
+if (!projection) missingFields.push('Projection');
+if (!cost_projection_justification) missingFields.push('Cost Projection Justification');
+if (!recommendations) missingFields.push('Recommendations');
+if (!select_level) missingFields.push('Security Level');
+if (!scenario_compliance_data) missingFields.push('Scenario Compliance Data');
+if (!rationale_recommendation) missingFields.push('Rationale Recommendation');
+if (!rationale_rationale) missingFields.push('Rationale Rationale');
+if (!CyberPHAID) missingFields.push('Cyber PHA ID');
+
+if (missingFields.length > 0) {
+    Swal.fire({
+        icon: 'error',
+        title: 'Incomplete Scenario',
+        text: 'Only completed scenarios can be printed. Missing fields: ' + missingFields.join(', ')
+    });
+    return;
+}
 
     // Confirm with the user if they want to generate the PDF report
     Swal.fire({
@@ -887,6 +911,8 @@ function generateScenarioReport() {
 
 anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
 
+sessionStorage.setItem("rr",'false')
+
 
 </script>
 
@@ -901,7 +927,7 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                     <div class="col-md-3">
                         <a class="page-title" style="color: #d3d1cd" href="#" id="cyberPHALink"><span id="facilityName"></span></a>
 
-                        <span id="user_role" class="text-decoration-underline text-body-emphasis"></span>
+                        <span id="user_role" class="text-decoration-underline text-body-emphasis" style="display: none"></span>
                           <script>
                             $(document).ready(function() {
                             // Get the activeCyberPHA value from the session storage
@@ -914,7 +940,7 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                                 window.location.href = "{% url 'OTRisk:iotaphamanager' %}";
                             }
                         });
-                        document.getElementById('facilityName').textContent = sessionStorage.getItem('sessionFacility');
+                        document.getElementById('facilityName').textContent = "Facility: " + sessionStorage.getItem('sessionFacility');
 
 
                         </script>
@@ -973,25 +999,8 @@ anychart.licenseKey("iotarisk.com-f1ad231c-886c1b88");
                     </div>
                     <div class="col-md-1" ><button type="button" class="btn btn-custom nav-link"  onclick="generateScenarioReport()" style="transform:scale(0.8)" >Print</button></div>
                     <div class="col-md-1" ><button type="button" class="btn btn-custom nav-link"  onclick="generate_playbook()" style="transform:scale(0.8)" >Playbook</button></div>
+                    <div class="col-md-1" ><button type="button" class="btn btn-custom nav-link" id="btnRiskRegister" name="btnRiskRegister" onclick="addScenarioToRiskRegister()" style="transform:scale(0.8);" disabled >Risk Reg.</button></div>
 
-                    <div class="col-md-1">
-                        <div class="form-group" style="transform:scale(0.8)" >
-                        <label for="risk_register">Risk Register</label>
-                        <input type="checkbox" id="risk_register" name="risk_register">
-                            </div>
-                    </div>
-                    <script>
-                        document.addEventListener('DOMContentLoaded', function() {
-                            var riskRegisterCheckbox = document.getElementById('risk_register');
-
-                            riskRegisterCheckbox.addEventListener('change', function() {
-                                if (!riskRegisterCheckbox.checked) {
-                                    // Re-check the checkbox if it was unchecked
-                                    riskRegisterCheckbox.checked = true;
-                                }
-                            });
-                        });
-                        </script>
                     <div class="col-md-1">
                         <div class="form-group" style="transform:scale(0.8)" >
                         <label for="risk_snapshot">Create Snapshot</label>
@@ -1833,6 +1842,8 @@ $(document).ready(function() {
                                                                     var attacker = document.getElementById('threat-intelligence').value;
                                                                     var targetAsset, targetAssetPurpose;
                                                                     var malware = document.getElementById('malware-select').value;
+                                                                    var risk_category = document.getElementById('risk-category').value;
+
                                                                     var connectionFlag = 0;
                                                                     var tpConnection;
                                                                     tpConnection = sessionStorage.getItem('tpconnection');
@@ -1869,11 +1880,11 @@ $(document).ready(function() {
                                                                             targetAssetPurpose: targetAssetPurpose,
                                                                             connectionFlag: connectionFlag,
                                                                             malware: malware,
+                                                                            risk_category: risk_category,
                                                                             csrfmiddlewaretoken: '{{ csrf_token }}'  // Ensure CSRF token is included for POST request
                                                                         },
                                                                         success: function(response) {
                                                                             $('#id_txtScenario').val(response.scenario_description);
-                                                                            $('#analyzeScenarioBtn').prop('disabled', false);
 
                                                                             analyzeScenario(response.scenario_description, phaID, attacker, attack_vector);
                                                                             Swal.close();
@@ -2528,6 +2539,8 @@ $(document).ready(function() {
                   const recommendations = document.getElementById('hdnRecommendations').value;
                   const likelihood = document.getElementById('hdnLikelihood').value
                   const rra = document.getElementById('txtResidualRisk').value
+
+                  // const rra = document.getElementById('txtRRa').value
                   const justifySafety = document.getElementById('txtsafetyJustify').value
                   const justifyLife = document.getElementById('txtlifeJustify').value
                   const justifyProduction = document.getElementById('txtproductionJustify').value
@@ -2558,7 +2571,6 @@ $(document).ready(function() {
                   const frequency = document.getElementById('frequency').value;
                   //const standards = document.getElementById('selStandards').value;
                   const aro = document.getElementById('aro').value;
-                  const risk_register = document.getElementById('risk_register').checked;
                   const sis_outage = document.getElementById('sisOutageYes').checked;
                   const sis_compromise = document.getElementById('sisIntegrityYes').checked;
                   const safety_hazard = document.getElementById('hazardNature').value;
@@ -2633,6 +2645,7 @@ $(document).ready(function() {
                   formData.append('scenario', scenario);
                   formData.append('exposed_system', exposed_system);
                   formData.append('weak_credentials', weak_credentials);
+                  formData.append('rra',rra);
                   // formData.append('consequence', consequence);
                   formData.append('threatSource', threatSource);
                   formData.append('threatAgent', threatAgent);
@@ -3875,6 +3888,7 @@ $('#scenarioSelectModal').on('show.bs.modal', function (e) {
                         $('#loadingSpinner').hide();
 
                         document.getElementById('txtRRa').value = response.adjustedRR;
+                        document.getElementById('txtResidualRisk').value = response.adjustedRR;
                         document.getElementById('hdnLikelihood').value = response.likelihood;
                         document.getElementById('txtLikelihood').value = response.likelihood + '%';
 
@@ -4038,25 +4052,7 @@ $('#scenarioSelectModal').on('show.bs.modal', function (e) {
                             "lengthChange": false,  // Disable the page length selection control
                             "info": false
                         });
-                        var pdfBase64 = response.pdf;
 
-                        // Convert base64 to binary
-                        var binary = atob(pdfBase64.replace(/\s/g, ''));
-                        var len = binary.length;
-                        var buffer = new ArrayBuffer(len);
-                        var view = new Uint8Array(buffer);
-                        for (var i = 0; i < len; i++) {
-                            view[i] = binary.charCodeAt(i);
-                        }
-
-                        // Create a blob from the binary data
-                        var blob = new Blob([view], { type: 'application/pdf' });
-
-                        // Create a URL for the blob
-                        var url = URL.createObjectURL(blob);
-
-                        // Open the URL in a new window
-                        window.open(url, '_blank');
                         }
                 },
                 error: function (xhr, status, error) {
@@ -4651,7 +4647,7 @@ function resetformcontrols() {
       document.getElementById('txt_ale_high').value = '';
       document.getElementById('frequency').value = '';
       document.getElementById('txtResidualRisk').value = '';
-      document.getElementById('risk_register').checked = false;
+
         var tableBody = $('#consequenceTable tbody');
         tableBody.empty(); // Clear existing rows
       // document.getElementById('has_controls').value = 0;
@@ -4726,7 +4722,6 @@ function clearScenario(){
       document.getElementById('txt_ale_high').value = '';
       document.getElementById('frequency').value = '';
       document.getElementById('txtResidualRisk').value = '';
-      document.getElementById('risk_register').checked = false;
         var tableBody = $('#consequenceTable tbody');
         tableBody.empty(); // Clear existing rows
       // document.getElementById('has_controls').value = 0;
@@ -4812,7 +4807,12 @@ function clearScenario(){
          $('#incidentComplexityDial').val(data.incident_complexity);
          $('#detectionTimeDial').val(data.detection_time);
          $('#responseTimeDial').val(data.response_time);
-
+         sessionStorage.setItem("rr",data.risk_register)
+        if (!data.risk_register) {
+        $('#btnRiskRegister').prop('disabled', false);
+            } else {
+                $('#btnRiskRegister').prop('disabled', true);
+            }
 
          if (document.getElementById('exalens_asset_group').style.display !== 'none') {
             const assetSelect = document.getElementById('asset_select');
@@ -4973,6 +4973,7 @@ function clearScenario(){
         document.getElementById('txt_ale_median').value= ale_formattedCosts_median;
 
         document.getElementById('txtResidualRisk').value= data.RRa;
+        document.getElementById('txtRRa').value= data.RRa;
         document.getElementById('txtProbability').value= data.probability;
         document.getElementById('hdn_control_effectiveness').value= data.control_effectiveness;
         document.getElementById('hdn_bia_score').value= data.ai_bia_score;
@@ -5624,6 +5625,74 @@ function drawAttackTree(data) {
             }
         });
     }
+
+   function addScenarioToRiskRegister() {
+    var scenarioID = sessionStorage.getItem('sid');
+
+    if (!scenarioID || scenarioID <= 0) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Missing Scenario ID',
+            text: 'No scenario loaded.'
+        });
+        return;
+    }
+
+    Swal.fire({
+        title: 'Are you sure?',
+        text: "Do you want to add this scenario to the risk register?",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes',
+        cancelButtonText: 'Cancel'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                type: 'POST',
+                url: '/OTRisk/add_scenario_to_risk_register/',
+                data: {
+                    'ID': scenarioID,
+                    'csrfmiddlewaretoken': '{{ csrf_token }}'  // Ensure you include CSRF token
+                },
+                success: function(response) {
+                    if (response.status === -1) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Invalid Scenario ID',
+                            text: 'The scenario ID provided does not exist.'
+                        });
+                    } else if (response.status === -2) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Already in Risk Register',
+                            text: 'This scenario is already in the risk register.'
+                        });
+                    } else if (response.status === 1) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success',
+                            text: 'Scenario added to risk register successfully.'
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'An unknown error occurred.'
+                        });
+                    }
+                },
+                error: function() {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Server Error',
+                        text: 'An error occurred while processing your request.'
+                    });
+                }
+            });
+        }
+    });
+}
+
         </script>
 </body>
 </html>

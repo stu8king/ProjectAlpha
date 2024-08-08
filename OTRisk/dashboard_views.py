@@ -1,5 +1,6 @@
 from collections import defaultdict
 
+from django.db.models.functions import Substr
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.core.serializers import serialize
@@ -9,7 +10,7 @@ from django.utils.html import mark_safe
 from OTRisk.models.raw import RAWorksheet, RAWorksheetScenario, RAActions
 from django.contrib.auth.decorators import login_required
 from OTRisk.models.Model_CyberPHA import tblCyberPHAHeader, tblCyberPHAScenario, OrganizationDefaults, auditlog, \
-    CyberPHAModerators, CyberPHA_Group, Facility
+    CyberPHAModerators, CyberPHA_Group, Facility, ScenarioPlaybook
 from django.db.models import Count, Sum, Q, Case, When, Value, CharField
 from django.db.models import Avg
 from accounts.models import Organization, UserProfile
@@ -764,6 +765,45 @@ def anzenot_dashboard(request):
                 'cyberphas': [{'id': cyberpha.ID, 'facility_name': cyberpha.FacilityName} for cyberpha in cyberphas]
             })
 
+    # get a list of any scenario playbooks that are ready to print
+    scenario_playbooks = ScenarioPlaybook.objects.filter(
+        scenario__CyberPHA__UserID__in=organization_users
+    ).annotate(
+        scenario_identifier=F('scenario__ID'),  # Renaming the annotation to avoid conflicts
+        title=F('scenario__CyberPHA__title'),
+        short_scenario=Substr('scenario__Scenario', 1, 150)
+    ).values('scenario_identifier', 'title', 'short_scenario')
+
+    risk_register_data = tblCyberPHAScenario.objects.filter(
+        risk_register=1,
+        Deleted=0,
+        CyberPHA__UserID__in=organization_users
+    ).annotate(
+        short_scenario=Substr('Scenario', 1, 150),
+        overall_bia_score=(
+                (F('impactSafety') * 10 +
+                 F('impactDanger') * 10 +
+                 F('impactProduction') * 10 +
+                 F('impactFinance') * 10 +
+                 F('impactReputation') * 10 +
+                 F('impactEnvironment') * 10 +
+                 F('impactRegulation') * 10 +
+                 F('impactData') * 10 +
+                 F('impactSupply') * 10) / 9
+        )
+    ).values('ID', 'short_scenario', 'sle', 'overall_bia_score')
+
+    risk_register_summarized_data = tblCyberPHAScenario.objects.filter(
+        risk_register=1,
+        Deleted=0,
+        CyberPHA__UserID__in=organization_users
+    ).aggregate(
+        avg_sle=Avg('sle'),
+        avg_ale_median=Avg('ale_median'),
+        sum_sle=Sum('sle'),
+        sum_ale_median=Sum('ale_median')
+    )
+
     context = {
         'num_facilities': num_facilities,
         'total_revenue': total_revenue,
@@ -781,7 +821,10 @@ def anzenot_dashboard(request):
         'cyberpha_records': list(cyberpha_records_list),
         'facility_records': list(facility_records),
         'active_users': list(active_users),
-        'groups_with_cyberphas': groups_with_cyberphas
+        'groups_with_cyberphas': groups_with_cyberphas,
+        'playbooks': json.dumps(list(scenario_playbooks)),
+        'risk_register': list(risk_register_data),
+        'risk_register_summarized_data': risk_register_summarized_data
     }
 
     return render(request, 'anzenot_dashboard.html', context)
