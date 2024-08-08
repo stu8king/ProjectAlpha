@@ -653,6 +653,7 @@ def generate_unique_id():
     return random.randint(1, 999999999)
 
 
+
 class tblCyberPHAScenario(models.Model):
     ID = models.IntegerField(primary_key=True)
     CyberPHA = models.ForeignKey(tblCyberPHAHeader, on_delete=models.CASCADE, db_column='CyberPHA')
@@ -805,6 +806,15 @@ class tblCyberPHAScenario(models.Model):
     def set_current_user(cls, user):
         cls._current_user = user
 
+class ScenarioPlaybook(models.Model):
+    scenario = models.OneToOneField(tblCyberPHAScenario, on_delete=models.CASCADE, primary_key=True, related_name='playbook')
+    action_items = models.TextField()  # JSON format
+    incident_response_plan = models.TextField()  # JSON format
+    comms_plan = models.TextField()  # JSON format
+    history = HistoricalRecords()
+
+    class Meta:
+        db_table = 'scenario_playbook'
 
 class ScenarioModeration(models.Model):
     scenario = models.ForeignKey(tblCyberPHAScenario, on_delete=models.CASCADE)
@@ -1275,3 +1285,10 @@ class FacilityType(models.Model):
     def __str__(self):
         return self.FacilityType
 
+
+class GlossaryTerm(models.Model):
+    term = models.CharField(max_length=255, unique=True)
+    definition = models.TextField()
+
+    def __str__(self):
+        return self.term
